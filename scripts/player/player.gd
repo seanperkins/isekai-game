@@ -24,6 +24,8 @@ const KNOCKBACK := Vector2(160.0, -140.0)
 const EAT_HEAL := 5
 const BASE_STATS := {"max_hp": 30, "atk": 1, "def": 0, "spd": 100, "max_mp": 20, "mp_regen": 100}
 const EAT_MP := 4
+## Stick/keys below this length cast forward instead of aiming.
+const AIM_DEADZONE := 0.35
 const MAX_MP_PER_THREE_EATS := 2
 const LAND_SQUASH_SECONDS := 0.12
 const BODY_BOTTOM := 6.0  # collision box bottom, where sprites stand
@@ -221,10 +223,22 @@ func use_active(i: int) -> void:
 		not_enough_mp.emit(id)
 		return
 	ability.level = _rules.level_of(id)
+	ability.aim = aim_vector()
 	ability.activate()
 	_emit.call(Events.SKILL_USED, {"id": id})
 	for _point in cost:
 		_emit.call(Events.MANA_SPENT, {})
+
+## The held direction snapped to 8 ways, or forward (facing) when nothing is held.
+static func resolve_aim(raw: Vector2, p_facing: int) -> Vector2:
+	if raw.length() < AIM_DEADZONE:
+		return Vector2(p_facing, 0)
+	var snapped := snappedf(raw.angle(), PI / 4.0)
+	var dir := Vector2.from_angle(snapped)
+	return Vector2(snappedf(dir.x, 0.0001), snappedf(dir.y, 0.0001)).normalized()
+
+func aim_vector() -> Vector2:
+	return resolve_aim(Input.get_vector("move_left", "move_right", "aim_up", "aim_down"), facing)
 
 ## `from` is the attacker's position for contact hits; the slime is knocked away from it.
 func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF) -> void:

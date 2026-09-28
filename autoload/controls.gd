@@ -6,7 +6,9 @@ extends Node
 const BINDINGS := {
 	"move_left": [KEY_A, KEY_LEFT],
 	"move_right": [KEY_D, KEY_RIGHT],
-	"jump": [KEY_SPACE, KEY_W, KEY_UP],
+	"jump": [KEY_SPACE],
+	"aim_up": [KEY_W, KEY_UP],
+	"aim_down": [KEY_S, KEY_DOWN],
 	"tackle": [KEY_J],
 	"predate": [KEY_K],
 	"inspect": [KEY_I],
@@ -31,6 +33,8 @@ const PAD_BUTTONS := {
 const PAD_AXES := {
 	"move_left": [JOY_AXIS_LEFT_X, -1.0],
 	"move_right": [JOY_AXIS_LEFT_X, 1.0],
+	"aim_up": [JOY_AXIS_LEFT_Y, -1.0],
+	"aim_down": [JOY_AXIS_LEFT_Y, 1.0],
 }
 
 const STICK_DEADZONE := 0.25
