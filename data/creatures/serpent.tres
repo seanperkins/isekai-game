@@ -21,3 +21,4 @@ skills = [{
 }]
 predatable = false
 appraisal_target = false
+xp = 20

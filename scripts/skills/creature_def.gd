@@ -14,3 +14,5 @@ extends Resource
 @export var eat_bonus: Dictionary = {}
 @export var predatable: bool = true
 @export var appraisal_target: bool = true
+## XP for downing this creature (and again for eating it).
+@export var xp: int = 0

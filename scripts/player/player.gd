@@ -24,6 +24,7 @@ const KNOCKBACK := Vector2(160.0, -140.0)
 const EAT_HEAL := 5
 const BASE_STATS := {"max_hp": 30, "atk": 1, "def": 0, "spd": 100, "max_mp": 20, "mp_regen": 100}
 const EAT_MP := 4
+const LEVEL_UP_BONUS := {"max_hp": 2, "max_mp": 1}
 ## Stick/keys below this length cast forward instead of aiming.
 const AIM_DEADZONE := 0.35
 const MAX_MP_PER_THREE_EATS := 2
@@ -35,6 +36,7 @@ var facing := 1
 var stats: Stats
 var health: Health
 var mana: Mana
+var progression := Progression.new()
 var skillset: PlayerSkillSet
 var sensors := PlayerSensors.new()
 var predation := PredationHold.new()
@@ -69,6 +71,7 @@ func setup(rules: SkillRulesEngine, compendium: CompendiumModel, creature_defs: 
 	health.emit_event = emit
 	health.died.connect(_on_health_died)
 	mana = Mana.new(BASE_STATS["max_mp"])
+	progression.leveled_up.connect(_on_leveled_up)
 	sensors.emit_event = emit
 	skillset = PlayerSkillSet.new(rules, stats)
 	rules.skill_unlocked.connect(_on_skill_unlocked)
@@ -234,6 +237,26 @@ func use_active(i: int) -> void:
 	for _point in cost:
 		_emit.call(Events.MANA_SPENT, {})
 
+func award_xp(amount: int) -> void:
+	if not health.is_dead():
+		progression.add_xp(amount)
+
+## Connected to every enemy's `downed` signal.
+func on_enemy_downed(def: CreatureDef) -> void:
+	award_xp(def.xp)
+
+## Spends EP to unlock a ready evolution. False when not ready or not enough EP.
+func try_evolve(id: String) -> bool:
+	if not _rules.is_evolution_ready(id) or progression.ep < _rules.evolution_cost(id):
+		return false
+	progression.spend_ep(_rules.evolution_cost(id))
+	return _rules.evolve(id)
+
+func _on_leveled_up(_level: int) -> void:
+	for stat in LEVEL_UP_BONUS:
+		stats.add_level_bonus(stat, LEVEL_UP_BONUS[stat])
+	_sync_max_hp()
+
 ## The held direction snapped to 8 ways, or forward (facing) when nothing is held.
 static func resolve_aim(raw: Vector2, p_facing: int) -> Vector2:
 	if raw.length() < AIM_DEADZONE:
@@ -302,6 +325,7 @@ func _complete_predation(t) -> void:
 	_sync_max_hp()
 	health.heal(EAT_HEAL + skillset.heal_on(Events.PREDATED, {"source": c.id, "kind": kind}))
 	if kind == "creature":
+		award_xp(c.xp)
 		mana.restore(EAT_MP)
 		_creatures_eaten += 1
 		if _creatures_eaten % 3 == 0:

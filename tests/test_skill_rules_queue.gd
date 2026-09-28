@@ -54,7 +54,7 @@ func test_work_queue_cap_reports_and_stops() -> void:
 func test_events_emitted_by_handlers_are_queued_not_recursed() -> void:
 	var a := TestDefs.skill("a", {"unlock": [TestDefs.counter("jumped", 1)]})
 	var b := TestDefs.skill("b", {"unlock": [TestDefs.counter("wall_touched", 1)]})
-	var c := TestDefs.skill("c", {"source": "evolution", "unlock": [TestDefs.level("a", 1)]})
+	var c := TestDefs.skill("c", {"unlock": [TestDefs.level("a", 1)]})  # non-evolution: unlocks on its own
 	_make([a, b, c])
 	var order: Array = []
 	engine.skill_unlocked.connect(func(id: String) -> void:

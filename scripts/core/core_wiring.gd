@@ -9,5 +9,9 @@ static func connect_core(rules: SkillRulesEngine, compendium: CompendiumModel, a
 		announcer.push_unlock(id, d.announce if d != null else id))
 	rules.skill_leveled.connect(func(id: String, level: int) -> void: announcer.push_level(id, level))
 	rules.run_started.connect(func() -> void: compendium.on_run_started(rules))
+	rules.evolution_ready.connect(func(id: String) -> void:
+		compendium.raise(id, CompendiumModel.State.NAMED)
+		var d: SkillDef = rules.get_def(id)
+		announcer.push_unlock(id, "Evolution available: [%s] — %d EP in Skills" % [d.display_name, rules.evolution_cost(id)]))
 	rules.inspect_processed.connect(func(tags: Dictionary, level: int) -> void:
 		compendium.on_inspect_processed(tags, level, rules))

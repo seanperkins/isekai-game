@@ -28,3 +28,4 @@ eat_bonus = {
 "per": 3,
 "stat": "def"
 }
+xp = 5

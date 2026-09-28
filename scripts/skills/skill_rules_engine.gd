@@ -9,6 +9,8 @@ signal skill_unlocked(id: String)
 signal skill_leveled(id: String, level: int)
 signal run_started
 signal inspect_processed(tags: Dictionary, appraisal_level: int)
+## An evolution's conditions are met; it unlocks only when the player spends EP (evolve()).
+signal evolution_ready(id: String)
 
 const MAX_ITERATIONS := 64
 const APPRAISAL_ID := "appraisal"
@@ -25,6 +27,7 @@ var _unlock_log: Array = []
 var _queue: Array = []
 var _draining := false
 var _run_start := 0.0
+var _ready_evolutions := {}
 
 func setup(defs: Array) -> void:
 	_defs.clear()
@@ -53,6 +56,7 @@ func reset_run() -> void:
 	_owned.clear()
 	_unlock_log.clear()
 	_queue.clear()
+	_ready_evolutions.clear()
 
 func handle_event(event_name: String, tags: Dictionary = {}) -> void:
 	if not run_active:
@@ -73,6 +77,27 @@ func unlock_log() -> Array:
 
 func get_def(id: String) -> SkillDef:
 	return _defs.get(id)
+
+func is_evolution_ready(id: String) -> bool:
+	return _ready_evolutions.has(id)
+
+func ready_evolutions() -> Array:
+	return _ready_evolutions.keys()
+
+## EP cost to evolve: one per parent skill (Water Blade 1, Swing Thread and Jet Dash 2).
+func evolution_cost(id: String) -> int:
+	var d: SkillDef = _defs.get(id)
+	return maxi(1, d.parent_ids().size()) if d != null else 0
+
+## Unlocks a ready evolution. The caller has already paid its EP.
+func evolve(id: String) -> bool:
+	if not run_active or not _ready_evolutions.has(id) or _owned.has(id):
+		return false
+	_ready_evolutions.erase(id)
+	_grant(_defs[id], true)
+	if not _draining:
+		_drain()
+	return true
 
 ## Progress of an owned skill toward its next level: {current, target}; zeros at max level.
 func level_progress(id: String) -> Dictionary:
@@ -132,7 +157,12 @@ func _drain() -> void:
 func _evaluate(d: SkillDef) -> void:
 	if not _owned.has(d.id):
 		if not d.starting and _conditions_met(d):
-			_grant(d, true)
+			if d.source == "evolution":
+				if not _ready_evolutions.has(d.id):
+					_ready_evolutions[d.id] = true
+					evolution_ready.emit(d.id)
+			else:
+				_grant(d, true)
 		return
 	_check_level(d)
 

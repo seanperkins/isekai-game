@@ -66,7 +66,11 @@ func test_evolution_unlocks_from_parent_level_and_parent_is_announced_first() ->
 		engine.handle_event("absorbed", {"essence": "water", "source": "water_pool"})
 	for i in 6:
 		engine.handle_event("skill_used", {"id": "hydraulic_propulsion"})
-	assert_eq(log, ["unlock:hydraulic_propulsion", "level:hydraulic_propulsion:2", "unlock:water_blade"])
+	# Evolutions become ready rather than unlocking; the player spends EP to evolve.
+	assert_eq(log, ["unlock:hydraulic_propulsion", "level:hydraulic_propulsion:2"])
+	assert_true(engine.is_evolution_ready("water_blade"))
+	engine.evolve("water_blade")
+	assert_eq(log.back(), "unlock:water_blade")
 
 func test_two_parent_evolution_needs_both() -> void:
 	var leap := _leap()
@@ -81,4 +85,6 @@ func test_two_parent_evolution_needs_both() -> void:
 	engine.handle_event("skill_used", {"id": "hydraulic_propulsion"})
 	assert_eq(engine.level_of("jet_dash"), 0)
 	_jump(80)
+	assert_true(engine.is_evolution_ready("jet_dash"))
+	assert_true(engine.evolve("jet_dash"))
 	assert_eq(engine.level_of("jet_dash"), 1)

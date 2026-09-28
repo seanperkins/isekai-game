@@ -94,9 +94,14 @@ func selected_id() -> String:
 		return ""
 	return _rows[_selectable[_sel]].get("id", "")
 
-## Moves the selected active to the next slot (U → O → H → L → U).
+## Evolves a ready evolution (spending EP), or moves the selected active to the next slot
+## (U → O → H → L → U).
 func accept() -> void:
 	var id := selected_id()
+	if id != "" and _rows[_selectable[_sel]]["kind"] == "ready":
+		_player.try_evolve(id)
+		_refresh()
+		return
 	if tab() != "skills" or id == "" or SkillEffects.active_scene(_defs[id]) == "":
 		return
 	var slots := _player.skillset.slots
@@ -113,6 +118,8 @@ func row_texts() -> Array:
 				out.append("%s Lv%d" % [r["name"], r["level"]])
 			"locked":
 				out.append("???")
+			"ready":
+				out.append("%s  EVOLVE %d EP" % [r["name"], r["cost"]])
 			"slot":
 				out.append(r["name"])
 	return out
@@ -178,7 +185,7 @@ func _refresh() -> void:
 	_rows = SkillScreenModel.skill_rows(_rules, _all) if tab() == "skills" else SkillScreenModel.compendium_rows(_compendium, _all)
 	_selectable = []
 	for i in _rows.size():
-		if _rows[i]["kind"] == "skill" or _rows[i]["kind"] == "slot":
+		if ["skill", "slot", "ready"].has(_rows[i]["kind"]):
 			_selectable.append(i)
 	_sel = clampi(_sel, 0, maxi(0, _selectable.size() - 1))
 	_hint.text = "LB/RB Tabs    A Assign    B Back" if Controls.using_joypad else "Q/E Tabs    Enter Assign    Esc Back"
@@ -192,15 +199,18 @@ func _build_stats() -> void:
 	portrait.texture = Art.texture("slime_idle")
 	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	portrait.position = Vector2(40, 48)
-	portrait.size = Vector2(100, 58)
+	portrait.position = Vector2(40, 44)
+	portrait.size = Vector2(100, 46)
 	_stats.add_child(portrait)
 	var h := _player.health
 	var m := _player.mana
-	_label(_stats, "HP  %d/%d" % [h.hp, h.max_hp], Vector2(36, 112), Vector2(110, 12), FONT_MAIN, Color.WHITE)
-	_bar(_stats, Vector2(36, 126), Vector2(108, 6), float(h.hp) / h.max_hp, Color(0.85, 0.25, 0.3))
-	_label(_stats, "MP  %d/%d" % [m.mp, m.max_mp], Vector2(36, 136), Vector2(110, 12), FONT_MAIN, Color.WHITE)
-	_bar(_stats, Vector2(36, 150), Vector2(108, 6), float(m.mp) / maxi(1, m.max_mp), Color(0.3, 0.6, 1.0))
+	var p := _player.progression
+	_label(_stats, "Lv %d    EP %d" % [p.level, p.ep], Vector2(36, 92), Vector2(110, 12), FONT_MAIN, Color(1.0, 0.85, 0.45))
+	_bar(_stats, Vector2(36, 106), Vector2(108, 4), float(p.xp) / Progression.xp_to_next(p.level), Color(1.0, 0.8, 0.3))
+	_label(_stats, "HP  %d/%d" % [h.hp, h.max_hp], Vector2(36, 114), Vector2(110, 12), FONT_MAIN, Color.WHITE)
+	_bar(_stats, Vector2(36, 128), Vector2(108, 6), float(h.hp) / h.max_hp, Color(0.85, 0.25, 0.3))
+	_label(_stats, "MP  %d/%d" % [m.mp, m.max_mp], Vector2(36, 138), Vector2(110, 12), FONT_MAIN, Color.WHITE)
+	_bar(_stats, Vector2(36, 152), Vector2(108, 6), float(m.mp) / maxi(1, m.max_mp), Color(0.3, 0.6, 1.0))
 	var y := 166.0
 	for key in ["atk", "def", "spd"]:
 		_label(_stats, "%s   %d" % [key.to_upper(), _player.stats.get_stat(key)], Vector2(36, y), Vector2(110, 12), FONT_MAIN, Color.WHITE)
@@ -245,6 +255,8 @@ func _build_row(r: Dictionary, y: float, selected: bool) -> void:
 	if r["kind"] == "skill":
 		_label(_list, "Lv%d" % r["level"], Vector2(LIST_X + 156, y + 4), Vector2(28, 12), FONT_MAIN, Color.WHITE)
 		_pips(_list, Vector2(LIST_X + 186, y + 8), r["level"], r["max_level"])
+	elif r["kind"] == "ready":
+		_label(_list, "EVOLVE %d EP" % r["cost"], Vector2(LIST_X + 170, y + 5), Vector2(70, 10), FONT_SMALL, Color(1.0, 0.85, 0.45))
 	elif r["kind"] == "slot":
 		var state_text: String = ["", "known", "hinted", "found"][r["state"]]
 		_label(_list, state_text, Vector2(LIST_X + 186, y + 5), Vector2(54, 10), FONT_SMALL, COL_DIM)
@@ -268,6 +280,17 @@ func _build_detail() -> void:
 			y += 38.0
 		if r.has("condition"):
 			_label(_detail, "How: " + r["condition"], Vector2(DETAIL_X, y), Vector2(190, 46), FONT_SMALL, COL_DIM, true)
+		return
+	if _rows[_selectable[_sel]]["kind"] == "ready":
+		var cost: int = _rules.evolution_cost(id)
+		_icon(_detail, "icon_" + id, Vector2(DETAIL_X, 50), 40)
+		_label(_detail, d.display_name, Vector2(DETAIL_X + 46, 50), Vector2(146, 16), FONT_BIG, Color.WHITE)
+		_label(_detail, "Ready to evolve", Vector2(DETAIL_X + 46, 68), Vector2(146, 12), FONT_MAIN, Color(1.0, 0.85, 0.45))
+		_label(_detail, d.description, Vector2(DETAIL_X, 100), Vector2(190, 30), FONT_SMALL, Color.WHITE, true)
+		_label(_detail, "Costs %d EP  (you have %d)" % [cost, _player.progression.ep], Vector2(DETAIL_X, 134), Vector2(190, 12), FONT_MAIN, COL_TITLE)
+		var can := _player.progression.ep >= cost
+		_label(_detail, ("[%s] Evolve" % ("A" if Controls.using_joypad else "Enter")) if can else "Level up to earn EP",
+			Vector2(DETAIL_X, 152), Vector2(190, 12), FONT_MAIN, Color.WHITE if can else COL_DIM)
 		return
 	var card := SkillScreenModel.detail(_rules, d, _player.skillset.slots)
 	_icon(_detail, "icon_" + id, Vector2(DETAIL_X, 50), 40)

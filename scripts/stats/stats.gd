@@ -11,6 +11,7 @@ var _base := {}
 var _eat := {}     # stat -> bonus
 var _eaten := {}   # creature id -> count this run
 var _mods := {}    # source id -> [{"stat", "op", "value"}]
+var _level := {}   # stat -> bonus from character level-ups (this run)
 
 func _init(base: Dictionary = {}) -> void:
 	set_base(base)
@@ -43,18 +44,25 @@ func set_modifiers(source_id: String, mods: Array) -> void:
 func eat_bonus(key: String) -> int:
 	return int(_eat.get(key, 0))
 
+## Character level-up bonuses. Kept apart from skill modifiers, which are rebuilt on refresh.
+func add_level_bonus(stat: String, amount: int) -> void:
+	_level[stat] = int(_level.get(stat, 0)) + amount
+
+func level_bonus(key: String) -> int:
+	return int(_level.get(key, 0))
+
 func base(key: String) -> int:
 	return int(_base.get(key, 0))
 
 ## The part of get_stat() that comes from skill modifiers (for the status screen split).
 func skill_bonus(key: String) -> int:
-	return get_stat(key) - base(key) - eat_bonus(key)
+	return get_stat(key) - base(key) - eat_bonus(key) - level_bonus(key)
 
 func clear_modifiers() -> void:
 	_mods.clear()
 
 func get_stat(key: String) -> int:
-	var value: int = int(_base.get(key, 0)) + int(_eat.get(key, 0))
+	var value: int = int(_base.get(key, 0)) + int(_eat.get(key, 0)) + int(_level.get(key, 0))
 	var override = null
 	for source in _mods:
 		for m in _mods[source]:
@@ -67,6 +75,7 @@ func get_stat(key: String) -> int:
 	return override if override != null else value
 
 func reset_run() -> void:
+	_level.clear()
 	_eat.clear()
 	_eaten.clear()
 	_mods.clear()

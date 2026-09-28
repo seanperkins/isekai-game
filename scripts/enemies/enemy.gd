@@ -1,5 +1,8 @@
 class_name Enemy
 extends CharacterBody2D
+
+## Reaches 0 HP. The game awards the player XP for it (a direct signal, not an EventBus event).
+signal downed(def: CreatureDef)
 ## A creature built from its CreatureDef: stats, its own skills, simple AI.
 ## Enemies never emit gameplay events (Health has no emitter).
 
@@ -104,6 +107,7 @@ func _on_died() -> void:
 		status.down()
 	else:
 		status.consume()  # Plan 3 turns the serpent's death into victory
+	downed.emit(def)
 
 func _physics_process(delta: float) -> void:
 	status.update(delta)

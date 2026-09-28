@@ -147,6 +147,8 @@ static func _check_creatures(creatures: Array, by_id: Dictionary, errors: Packed
 				errors.append("%s: skill '%s' level %d is outside 1..%d" % [w, sid, lv, by_id[sid].max_level])
 		if not c.eat_bonus.is_empty() and not StatKeys.ALL.has(c.eat_bonus.get("stat", "")):
 			errors.append("%s: eat_bonus stat '%s' is not in StatKeys" % [w, c.eat_bonus.get("stat", "")])
+		if c.xp < 0:
+			errors.append("%s: xp must not be negative" % w)
 		if not c.appraisal_target and c.predatable:
 			errors.append("%s: appraisal_target may be false only on non-predatable sources" % w)
 	for sid in Sources.ALL:

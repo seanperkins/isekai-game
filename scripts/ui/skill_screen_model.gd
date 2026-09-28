@@ -26,9 +26,20 @@ static func skill_rows(rules, all_defs: Array) -> Array:
 					"level": rules.level_of(d.id), "max_level": d.max_level})
 			elif not d.secret:
 				locked = true
+		if g[1] == "evolution":
+			for id in rules.ready_evolutions():
+				var d = _find(all_defs, id)
+				if d != null:
+					rows.append({"kind": "ready", "id": id, "name": d.display_name, "cost": rules.evolution_cost(id)})
 		if locked:
 			rows.append({"kind": "locked"})
 	return rows
+
+static func _find(defs: Array, id: String):
+	for d in defs:
+		if d.id == id:
+			return d
+	return null
 
 ## Compendium tab: every slot at its discovery state. Exact conditions only once owned.
 static func compendium_rows(compendium: CompendiumModel, all_defs: Array) -> Array:

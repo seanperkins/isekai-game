@@ -44,6 +44,7 @@ func _ready() -> void:
 		else:
 			node = Enemy.new()
 			node.setup(def, skills_by_id)
+			node.downed.connect(player.on_enemy_downed)
 		node.position = spawn["pos"]
 		add_child(node)
 	player.skillset.slot_replaced.connect(Announcer.queue.push_slot_replaced)

@@ -401,6 +401,27 @@ anime-style status screen showing:
 - Actives cast toward the held direction (stick, or W/S/↑/↓ with A/D), snapped to 8 ways. With nothing held, they cast forward.
 - Keyboard jump is Space only.
 
+## Character levels and evolution points (added after playtest)
+
+This replaces the earlier "no XP levels" rule.
+
+- **XP:** downing a creature gives XP, and eating it gives the same amount again. Values: bat 2, toad 3, spider 3, lizard 5, serpent 20; water pools give none. `CreatureDef.xp` holds the value.
+- **Level curve:** Lv1 → Lv2 needs 10 XP, and each later level needs 5 more (10, 15, 20, …). Levels reset each run.
+- **Each level-up gives:**
+  - +1 Evolution Point (EP);
+  - +2 max HP and +1 max MP. These are level bonuses, kept separate from skill modifiers and eat bonuses.
+- **Evolutions no longer unlock automatically:**
+  - When an evolution's conditions are met, `SkillRules` emits `evolution_ready` once. A Great Sage pop-up reads "Evolution available: [X] — N EP in Skills", and the Compendium names the slot.
+  - The player evolves it on the skill screen by spending EP: 1 per parent skill (Water Blade 1, Swing Thread and Jet Dash 2).
+- **Enemies** emit a direct `downed` signal (not an EventBus event) that awards the player XP.
+
+## Four skill slots (added after playtest)
+
+- **Buttons:** LB, RB, LT, RT on controller (triggers count at a half-pull); U, O, H, L on keyboard.
+- **Removed:** the Cycle action. The D-pad's up and down aim instead.
+- **Slot rules:** a new active fills the first empty slot, else replaces the least recently used. On the skill screen, Enter / A moves an active to the next slot.
+- **Debugging:** F1 / Back toggles an input debug overlay showing the raw stick, the resolved aim and the last cast's direction.
+
 ## Content
 
 These are starting values for tuning. The pacing column is a hypothesis, to be

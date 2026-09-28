@@ -28,3 +28,4 @@ eat_bonus = {
 "per": 1,
 "stat": "max_hp"
 }
+xp = 3

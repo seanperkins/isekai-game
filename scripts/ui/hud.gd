@@ -16,6 +16,7 @@ var _hp := Label.new()
 var _mp := Label.new()
 var _menu_hint := Label.new()
 var _input_debug := Label.new()
+var _level := Label.new()
 var _slots := Label.new()
 var _popup := Label.new()
 var _popup_panel := PanelContainer.new()
@@ -38,7 +39,10 @@ func _ready() -> void:
 	_ticker.position = Vector2(6, 318)
 	_panel.position = Vector2(420, 40)
 	_menu_hint.position = Vector2(560, 344)
-	_input_debug.position = Vector2(6, 44)
+	_input_debug.position = Vector2(6, 56)
+	_level.position = Vector2(6, 40)
+	_level.add_theme_font_size_override("font_size", FONT_SMALL)
+	_level.add_theme_color_override("font_color", Color(1.0, 0.85, 0.45))
 	_input_debug.visible = false
 	_input_debug.add_theme_font_size_override("font_size", FONT_SMALL)
 	_input_debug.add_theme_color_override("font_color", Color(1.0, 0.9, 0.4))
@@ -60,7 +64,7 @@ func _ready() -> void:
 	_popup_panel.position = Vector2(VIEW.x / 2.0, 6)
 	_popup.position = Vector2.ZERO
 	_popup_panel.add_child(_popup)
-	for l in [_hp, _mp, _slots, _popup_panel, _ticker, _panel, _menu_hint, _input_debug]:
+	for l in [_hp, _mp, _slots, _popup_panel, _ticker, _panel, _menu_hint, _input_debug, _level]:
 		add_child(l)
 
 func _process(delta: float) -> void:
@@ -69,6 +73,7 @@ func _process(delta: float) -> void:
 	_hp.text = hp_text()
 	_mp.text = mp_text()
 	_menu_hint.text = menu_hint_text()
+	_level.text = level_text()
 	if Input.is_action_just_pressed("debug_input"):
 		toggle_input_debug()
 	if _input_debug.visible:
@@ -112,6 +117,10 @@ static func _vec(v: Vector2) -> String:
 
 static func _num(x: float) -> String:
 	return str(int(roundf(x))) if is_equal_approx(x, roundf(x)) else "%.2f" % x
+
+func level_text() -> String:
+	var p := _player.progression
+	return "Lv %d  XP %d/%d  EP %d" % [p.level, p.xp, Progression.xp_to_next(p.level), p.ep]
 
 func menu_hint_text() -> String:
 	return "%s  Skills" % ("Start" if Controls.using_joypad else "Esc")
