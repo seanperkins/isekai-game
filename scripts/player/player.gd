@@ -30,6 +30,9 @@ const AIM_DEADZONE := 0.35
 const MAX_MP_PER_THREE_EATS := 2
 const LAND_SQUASH_SECONDS := 0.12
 const MAX_SWING_SPEED := 520.0
+## After letting go of a rope, air speed eases toward walking speed at this rate (px/s^2)
+## instead of snapping to it, so the swing's momentum carries you.
+const CARRY_DRAG := 240.0
 const BODY_BOTTOM := 6.0  # collision box bottom, where sprites stand
 
 var team := "player"
@@ -63,6 +66,7 @@ var last_cast := {}
 ## The thread the slime is swinging from, or null.
 var rope: Rope = null
 var rope_line := Line2D.new()
+var _carrying := false
 
 func setup(rules: SkillRulesEngine, compendium: CompendiumModel, creature_defs: Array, emit: Callable) -> void:
 	_rules = rules
@@ -96,7 +100,10 @@ func _physics_process(delta: float) -> void:
 		facing = 1 if dir > 0.0 else -1
 	if _dash > 0.0:
 		_dash -= delta
+	elif _carrying and not is_on_floor():
+		velocity.x = move_toward(velocity.x, dir * SPEED * stats.get_stat("spd") / 100.0, CARRY_DRAG * delta)
 	elif rope == null or is_on_floor():  # on the ground a roped slime walks normally
+		_carrying = false
 		velocity.x = dir * SPEED * stats.get_stat("spd") / 100.0
 	if not is_on_floor():
 		velocity.y += GRAVITY * delta
@@ -259,6 +266,7 @@ func attach_rope(anchor: Vector2, max_length: float, reel_speed: float, boost: f
 		return
 	rope = Rope.new(anchor, global_position, max_length, reel_speed, boost)
 	_dash = 0.0
+	_carrying = false
 	_update_rope_line()
 
 ## Jump off the rope, keeping the swing's momentum times the thread's boost.
@@ -267,6 +275,7 @@ func release_rope() -> void:
 		return
 	velocity = rope.release_velocity(velocity)
 	drop_rope()
+	_carrying = true
 
 func drop_rope() -> void:
 	rope = null

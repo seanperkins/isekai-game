@@ -75,3 +75,22 @@ func test_jumping_off_the_ground_while_roped_is_a_full_jump() -> void:
 	player.do_jump()
 	assert_null(player.rope)
 	assert_eq(player.velocity.y, Player.JUMP_VELOCITY)
+
+func test_letting_go_in_the_air_carries_the_swing_momentum() -> void:
+	player.attach_rope(player.global_position + Vector2(0, -80), 200.0, 120.0, 1.4)
+	player.velocity = Vector2(250, 0)
+	player.do_jump()
+	Input.action_press("move_right")
+	await wait_physics_frames(3)
+	Input.action_release("move_right")
+	assert_gt(player.velocity.x, 300.0)
+
+func test_carried_momentum_ends_on_landing() -> void:
+	_floor_under_player()
+	player.global_position = Vector2(0, -40)
+	player.attach_rope(player.global_position + Vector2(0, -80), 200.0, 120.0, 1.4)
+	player.velocity = Vector2(200, 0)
+	player.do_jump()
+	await wait_physics_frames(60)
+	assert_true(player.is_on_floor())
+	assert_eq(player.velocity.x, 0.0)
