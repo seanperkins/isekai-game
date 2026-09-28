@@ -1,8 +1,7 @@
 extends Node2D
-## The vertical slice: builds the test room, spawns actors and the HUD, starts a run.
+## The vertical slice: builds the starting cave, spawns actors and the HUD, starts a run.
 ## Death resets the run and reloads the scene (the full death screen is Plan 3).
 
-const ROOM_SIZE := Vector2(1600, 360)
 const AMBIENT := Color(0.6, 0.6, 0.78)  # dim cave; lights bring colour back
 const BACKDROP_TINT := Color(0.22, 0.21, 0.34)  # far cave wall, pushed back
 const BACKDROP := Color(0.06, 0.06, 0.12)
@@ -14,7 +13,8 @@ var skill_screen: SkillScreen
 func _ready() -> void:
 	Controls.ensure_actions()
 	var layout: Dictionary = RoomLayout.TEST_ROOM
-	_build_backdrop()
+	var room_size: Vector2 = layout["size"]
+	_build_backdrop(room_size)
 	RoomBuilder.build(self, layout)
 	RoomBuilder.build_decor(self, layout)
 	var skills_by_id := {}
@@ -32,8 +32,8 @@ func _ready() -> void:
 	cam.zoom = Vector2(1, 1)  # the 640x360 internal resolution is scaled to the window
 	cam.limit_left = 0
 	cam.limit_top = 0
-	cam.limit_right = int(ROOM_SIZE.x)
-	cam.limit_bottom = int(ROOM_SIZE.y)
+	cam.limit_right = int(room_size.x)
+	cam.limit_bottom = int(room_size.y)
 	player.add_child(cam)
 	for spawn in layout["spawns"]:
 		var def: CreatureDef = creatures[spawn["id"]]
@@ -66,11 +66,11 @@ func _on_player_died() -> void:
 	Announcer.queue.clear()
 	get_tree().reload_current_scene.call_deferred()
 
-func _build_backdrop() -> void:
+func _build_backdrop(room_size: Vector2) -> void:
 	var back := ColorRect.new()
 	back.color = BACKDROP
 	back.position = Vector2(-40, -40)
-	back.size = ROOM_SIZE + Vector2(80, 80)
+	back.size = room_size + Vector2(80, 80)
 	back.z_index = -10
 	add_child(back)
 	var wall := TextureRect.new()

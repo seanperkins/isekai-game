@@ -75,6 +75,8 @@ func test_room_visual_kinds() -> void:
 	assert_eq(RoomBuilder.visual_kind(Rect2(-20, 0, 20, 360)), "wall")
 	assert_eq(RoomBuilder.visual_kind(Rect2(1600, 0, 20, 360)), "wall")
 	assert_eq(RoomBuilder.visual_kind(Rect2(0, -20, 1600, 20)), "wall")
+	assert_eq(RoomBuilder.visual_kind(Rect2(3200, 0, 20, 1080), 3200.0), "wall")
+	assert_eq(RoomBuilder.visual_kind(Rect2(1700, 986, 120, 12), 3200.0), "ground")
 
 func test_room_solids_are_textured() -> void:
 	var root := Node2D.new()
@@ -96,7 +98,8 @@ func test_game_is_lit_framed_and_fully_sprited() -> void:
 	assert_gte(game.find_children("*", "PointLight2D", true, false).size(), lit.size() + 1)
 	var cam: Camera2D = game.player.get_node("Camera")
 	assert_eq(cam.zoom, Vector2(1, 1))  # 640x360 internal resolution
-	assert_eq([cam.limit_left, cam.limit_top, cam.limit_right, cam.limit_bottom], [0, 0, 1600, 360])
+	var size: Vector2 = RoomLayout.TEST_ROOM["size"]
+	assert_eq([cam.limit_left, cam.limit_top, cam.limit_right, cam.limit_bottom], [0, 0, int(size.x), int(size.y)])
 	for n in get_tree().get_nodes_in_group("predatable"):
 		assert_not_null(_sprite(n).texture, str(n))
 	assert_false(game.find_children("*", "ColorRect", true, false).any(func(r): return r.get_parent() is Enemy or r.get_parent() is Player))

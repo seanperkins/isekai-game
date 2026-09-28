@@ -3,6 +3,7 @@ extends RefCounted
 ## Builds static solids from a layout. Geometry lives in data, not in .tscn files.
 
 static func build(parent: Node, layout: Dictionary) -> void:
+	var width: float = layout.get("size", Vector2(1600, 360)).x
 	for r in layout["solids"]:
 		var body := StaticBody2D.new()
 		body.position = r.position + r.size / 2.0
@@ -11,7 +12,7 @@ static func build(parent: Node, layout: Dictionary) -> void:
 		rect.size = r.size
 		shape.shape = rect
 		body.add_child(shape)
-		var kind := visual_kind(r)
+		var kind := visual_kind(r, width)
 		var visual := TextureRect.new()
 		visual.texture = Art.texture(kind)
 		visual.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
