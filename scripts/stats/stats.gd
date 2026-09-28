@@ -40,6 +40,16 @@ func set_modifiers(source_id: String, mods: Array) -> void:
 func eat_bonus(key: String) -> int:
 	return int(_eat.get(key, 0))
 
+func base(key: String) -> int:
+	return int(_base.get(key, 0))
+
+## The part of get_stat() that comes from skill modifiers (for the status screen split).
+func skill_bonus(key: String) -> int:
+	return get_stat(key) - base(key) - eat_bonus(key)
+
+func clear_modifiers() -> void:
+	_mods.clear()
+
 func get_stat(key: String) -> int:
 	var value: int = int(_base.get(key, 0)) + int(_eat.get(key, 0))
 	var override = null

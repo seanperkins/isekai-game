@@ -74,6 +74,10 @@ func unlock_log() -> Array:
 func get_def(id: String) -> SkillDef:
 	return _defs.get(id)
 
+## Events of this run matching `tags` (superset match), e.g. essence totals for the status screen.
+func count(event_name: String, tags: Dictionary = {}) -> int:
+	return _ledger.counter(event_name, tags)
+
 ## Progress of a locked skill toward unlock, for the Appraisal bands. Never shown as numbers.
 func progress(id: String) -> Dictionary:
 	var d: SkillDef = _defs.get(id)
