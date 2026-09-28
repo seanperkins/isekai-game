@@ -22,6 +22,9 @@ func _init(p_path: String, p_legacy_path: String = "") -> void:
 func reload() -> void:
 	_sections = {}
 	var tmp := path + ".tmp"
+	# Only a first launch migrates: a profile that exists but is corrupt starts fresh instead
+	# of resurrecting the stale pre-migration compendium.json.
+	var had_profile := FileAccess.file_exists(path) or FileAccess.file_exists(tmp)
 	var data = null
 	if FileAccess.file_exists(path):
 		data = _parse(path)
@@ -36,7 +39,7 @@ func reload() -> void:
 			if key != "version":
 				_sections[key] = data[key]
 		return
-	if legacy_path != "" and FileAccess.file_exists(legacy_path):
+	if not had_profile and legacy_path != "" and FileAccess.file_exists(legacy_path):
 		_migrate()
 
 func set_section(name: String, value) -> void:

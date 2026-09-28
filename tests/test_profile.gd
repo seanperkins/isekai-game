@@ -81,3 +81,9 @@ func test_the_compendium_model_saves_through_a_profile() -> void:
 func test_the_autoload_uses_a_profile() -> void:
 	assert_true(Compendium.profile is Profile)
 	assert_eq(Compendium.model.store, Compendium.profile)
+
+func test_a_corrupt_profile_is_not_replaced_by_the_legacy_file() -> void:
+	_write("profile.json", "{not json")
+	_write("compendium.json", '{"version": 1, "slots": {"leap": "owned-once"}}')
+	var p := _profile(true)
+	assert_eq(p.load_states(CompendiumModel.STATE_NAMES), {})

@@ -176,6 +176,8 @@ func _process(delta: float) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("menu"):
+		if not visible and _player != null and _player.health.is_dead():
+			return  # no menu over the death card: the restart would inherit the pause
 		toggle()
 		get_viewport().set_input_as_handled()
 		return

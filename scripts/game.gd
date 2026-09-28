@@ -69,6 +69,11 @@ func _emit_game_event(event_name: String, tags: Dictionary) -> void:
 	EventBus.game_event.emit(event_name, tags)
 
 func _restart() -> void:
+	_prepare_restart()
+	get_tree().reload_current_scene.call_deferred()
+
+## Everything a fresh run needs before the scene reloads. A pause never carries over.
+func _prepare_restart() -> void:
+	get_tree().paused = false
 	SkillRules.reset_run()
 	Announcer.queue.clear()
-	get_tree().reload_current_scene.call_deferred()
