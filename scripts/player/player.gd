@@ -96,7 +96,7 @@ func _physics_process(delta: float) -> void:
 		facing = 1 if dir > 0.0 else -1
 	if _dash > 0.0:
 		_dash -= delta
-	elif rope == null:
+	elif rope == null or is_on_floor():  # on the ground a roped slime walks normally
 		velocity.x = dir * SPEED * stats.get_stat("spd") / 100.0
 	if not is_on_floor():
 		velocity.y += GRAVITY * delta
@@ -165,7 +165,9 @@ func _update_visual(delta: float) -> void:
 func do_jump() -> void:
 	if health.is_dead() or predation.active():
 		return
-	if rope != null:
+	if rope != null and is_on_floor():
+		drop_rope()  # then a normal ground jump
+	elif rope != null:
 		release_rope()
 		return
 	var boost := sqrt(stats.get_stat("jump_height") / 100.0)
@@ -270,17 +272,28 @@ func drop_rope() -> void:
 	rope = null
 	_update_rope_line()
 
-## Pump with left/right, reel with up/down, and never move outward past the rope.
+## Reel with up/down; in the air, pump with left/right and never move outward past the rope.
+## On the ground the slime walks and the rope pays out (see _stay_on_rope).
 func _swing(dir: float, delta: float) -> void:
-	velocity = rope.pump(global_position, velocity, dir, delta)
 	var reel_axis := raw_aim().y
 	if absf(reel_axis) >= AIM_DEADZONE:
 		rope.reel(signf(reel_axis), delta)
+	if is_on_floor():
+		return
+	velocity = rope.pump(global_position, velocity, dir, delta)
 	velocity = velocity.limit_length(MAX_SWING_SPEED)
 	velocity = rope.constrain_velocity(global_position, velocity)
 
 ## After moving, slide back onto the rope (colliding, so the pull never goes through walls).
+## On the ground the rope pays out instead, until it runs out.
 func _stay_on_rope() -> void:
+	if is_on_floor():
+		rope.pay_out(global_position)
+		var slack := rope.correction(global_position)
+		if slack.x != 0.0:  # out of rope: held back sideways, never lifted
+			move_and_collide(Vector2(slack.x, 0.0))
+			velocity.x = 0.0
+		return
 	var fix := rope.correction(global_position)
 	if fix != Vector2.ZERO:
 		move_and_collide(fix)

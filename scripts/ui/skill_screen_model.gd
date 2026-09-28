@@ -4,7 +4,8 @@ extends RefCounted
 
 const GROUPS := [["PROFICIENCY", "proficiency"], ["ESSENCE", "essence"], ["EVOLUTION", "evolution"]]
 const ACTIVE_LABEL := {"poison_breath": "Damage", "water_blade": "Damage",
-	"hydraulic_propulsion": "Distance %", "sticky_thread": "Hold tier"}
+	"hydraulic_propulsion": "Distance %", "sticky_thread": "Hold tier",
+	"swing_thread": "Hold tier"}
 const STAT_LABEL := {"max_hp": "Max HP", "atk": "ATK", "def": "DEF", "spd": "SPD",
 	"jump_height": "Jump height", "slide_speed": "Slide speed", "predation_time": "Eat time",
 	"max_mp": "Max MP", "mp_regen": "MP regen"}

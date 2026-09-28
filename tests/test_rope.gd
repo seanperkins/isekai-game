@@ -43,3 +43,12 @@ func test_release_keeps_momentum_times_the_boost_with_some_lift() -> void:
 	var r := _rope()
 	assert_eq(r.release_velocity(Vector2(200, -300)), Vector2(280, -420))
 	assert_eq(r.release_velocity(Vector2(200, 100)).y, Rope.RELEASE_LIFT)
+
+func test_pay_out_lengthens_to_the_body_up_to_max() -> void:
+	var r := _rope()
+	r.pay_out(Vector2(0, 100))
+	assert_eq(r.length, 100.0)
+	r.pay_out(Vector2(0, 50))  # never shortens
+	assert_eq(r.length, 100.0)
+	r.pay_out(Vector2(0, 300))
+	assert_eq(r.length, 120.0)

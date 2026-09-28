@@ -25,6 +25,10 @@ func _init(p_anchor: Vector2, from: Vector2, p_max_length: float, p_reel_speed: 
 func reel(axis: float, delta: float) -> void:
 	length = clampf(length + axis * reel_speed * delta, MIN_LENGTH, max_length)
 
+## Lets out rope to reach `pos` (never shortens, never past max): walking on the ground pays it out.
+func pay_out(pos: Vector2) -> void:
+	length = clampf(pos.distance_to(anchor), length, max_length)
+
 ## The velocity with its outward part removed while the rope is taut.
 func constrain_velocity(pos: Vector2, vel: Vector2) -> Vector2:
 	var off := pos - anchor
