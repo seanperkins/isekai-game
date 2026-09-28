@@ -230,9 +230,10 @@ func use_active(i: int) -> void:
 		not_enough_mp.emit(id)
 		return
 	ability.level = _rules.level_of(id)
-	ability.aim = aim_vector()
+	# Nothing held: zero, so each ability uses its own default (forward, or up-forward for Swing).
+	ability.aim = aim_vector() if aim_held() else Vector2.ZERO
 	ability.activate()
-	last_cast = {"id": id, "aim": ability.aim}
+	last_cast = {"id": id, "aim": ability.aim_dir()}
 	_emit.call(Events.SKILL_USED, {"id": id})
 	for _point in cost:
 		_emit.call(Events.MANA_SPENT, {})
@@ -249,8 +250,11 @@ func on_enemy_downed(def: CreatureDef) -> void:
 func try_evolve(id: String) -> bool:
 	if not _rules.is_evolution_ready(id) or progression.ep < _rules.evolution_cost(id):
 		return false
-	progression.spend_ep(_rules.evolution_cost(id))
-	return _rules.evolve(id)
+	var cost := _rules.evolution_cost(id)
+	if not _rules.evolve(id):
+		return false
+	progression.spend_ep(cost)
+	return true
 
 func _on_leveled_up(_level: int) -> void:
 	for stat in LEVEL_UP_BONUS:
@@ -265,8 +269,19 @@ static func resolve_aim(raw: Vector2, p_facing: int) -> Vector2:
 	var dir := Vector2.from_angle(snapped)
 	return Vector2(snappedf(dir.x, 0.0001), snappedf(dir.y, 0.0001)).normalized()
 
+## The held direction before snapping. The stick is read raw from the pad that last moved:
+## Input.get_vector() applies the action deadzone first (so a light tilt read as "no aim"),
+## and it merges every device (so a stale second pad could cancel the stick out).
+func raw_aim() -> Vector2:
+	if Controls.last_stick.length() >= AIM_DEADZONE:
+		return Controls.last_stick
+	return Input.get_vector("move_left", "move_right", "aim_up", "aim_down", 0.0)
+
+func aim_held() -> bool:
+	return raw_aim().length() >= AIM_DEADZONE
+
 func aim_vector() -> Vector2:
-	return resolve_aim(Input.get_vector("move_left", "move_right", "aim_up", "aim_down"), facing)
+	return resolve_aim(raw_aim(), facing)
 
 ## `from` is the attacker's position for contact hits; the slime is knocked away from it.
 func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF) -> void:
@@ -309,8 +324,10 @@ func tick(delta: float) -> void:
 	else:
 		_regen_acc = 0.0
 
+## Sets horizontal speed, and vertical speed too when the impulse has a vertical part, so an
+## upward cast works mid-fall instead of cancelling against the fall speed.
 func apply_impulse(v: Vector2) -> void:
-	velocity = Vector2(v.x, velocity.y + v.y)
+	velocity = Vector2(v.x, v.y if not is_zero_approx(v.y) else velocity.y)
 	_dash = 0.25
 
 func _complete_predation(t) -> void:
@@ -389,6 +406,8 @@ func _on_skill_leveled(_id: String, _level: int) -> void:
 	_sync_max_hp()
 
 func _on_run_started() -> void:
+	progression = Progression.new()  # levels are per run
+	progression.leveled_up.connect(_on_leveled_up)
 	skillset.reset()
 	stats.reset_run()
 	_sync_max_hp()

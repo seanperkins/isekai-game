@@ -420,7 +420,7 @@ This replaces the earlier "no XP levels" rule.
 - **Buttons:** LB, RB, LT, RT on controller (triggers count at a half-pull); U, O, H, L on keyboard.
 - **Removed:** the Cycle action. The D-pad's up and down aim instead.
 - **Slot rules:** a new active fills the first empty slot, else replaces the least recently used. On the skill screen, Enter / A moves an active to the next slot.
-- **Debugging:** F1 / Back toggles an input debug overlay showing the raw stick, the resolved aim and the last cast's direction.
+- **Debugging:** F3 / Back toggles an input debug overlay showing the raw stick, the resolved aim and the last cast's direction.
 
 ## Content
 

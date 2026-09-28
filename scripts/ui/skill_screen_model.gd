@@ -24,7 +24,7 @@ static func skill_rows(rules, all_defs: Array) -> Array:
 			if rules.level_of(d.id) > 0:
 				rows.append({"kind": "skill", "id": d.id, "name": d.display_name,
 					"level": rules.level_of(d.id), "max_level": d.max_level})
-			elif not d.secret:
+			elif not d.secret and not rules.is_evolution_ready(d.id):
 				locked = true
 		if g[1] == "evolution":
 			for id in rules.ready_evolutions():

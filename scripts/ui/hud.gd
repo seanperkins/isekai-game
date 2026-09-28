@@ -39,8 +39,8 @@ func _ready() -> void:
 	_ticker.position = Vector2(6, 318)
 	_panel.position = Vector2(420, 40)
 	_menu_hint.position = Vector2(560, 344)
-	_input_debug.position = Vector2(6, 56)
-	_level.position = Vector2(6, 40)
+	_input_debug.position = Vector2(6, 58)
+	_level.position = Vector2(6, 43)
 	_level.add_theme_font_size_override("font_size", FONT_SMALL)
 	_level.add_theme_color_override("font_color", Color(1.0, 0.85, 0.45))
 	_input_debug.visible = false
@@ -108,8 +108,10 @@ func input_debug_text() -> String:
 	var held := Input.get_vector("move_left", "move_right", "aim_up", "aim_down")
 	var cast: Dictionary = _player.last_cast
 	var cast_text := "—" if cast.is_empty() else "%s %s" % [cast["id"], _vec(cast["aim"])]
-	return "stick %s  pad: %s\nheld %s  aim %s\nlast cast: %s" % [_vec(Controls.last_stick),
-		Controls.last_pad_name if Controls.last_pad_name != "" else "none",
+	return "stick %s  pad: %s  dev %d\npads %s  raw up %s down %s\nheld %s  aim %s\nlast cast: %s" % [
+		_vec(Controls.last_stick), Controls.last_pad_name if Controls.last_pad_name != "" else "none",
+		Controls.last_device, Input.get_connected_joypads(),
+		_num(Input.get_action_raw_strength("aim_up")), _num(Input.get_action_raw_strength("aim_down")),
 		_vec(held), _vec(_player.aim_vector()), cast_text]
 
 static func _vec(v: Vector2) -> String:

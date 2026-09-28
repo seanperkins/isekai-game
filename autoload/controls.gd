@@ -16,7 +16,7 @@ const BINDINGS := {
 	"active_2": [KEY_O],
 	"active_3": [KEY_H],
 	"active_4": [KEY_L],
-	"debug_input": [KEY_F1],
+	"debug_input": [KEY_F3],
 	"menu": [KEY_ESCAPE],
 	"tab_prev": [KEY_Q],
 	"tab_next": [KEY_E],
@@ -61,6 +61,7 @@ var using_joypad := false
 ## Last raw left-stick reading and controller name, for the input debug overlay.
 var last_stick := Vector2.ZERO
 var last_pad_name := ""
+var last_device := -1
 
 func _ready() -> void:
 	ensure_actions()
@@ -71,6 +72,7 @@ func _input(event: InputEvent) -> void:
 			last_stick.x = event.axis_value
 		elif event.axis == JOY_AXIS_LEFT_Y:
 			last_stick.y = event.axis_value
+		last_device = event.device
 		last_pad_name = Input.get_joy_name(event.device)
 	if event is InputEventJoypadButton and event.pressed:
 		using_joypad = true

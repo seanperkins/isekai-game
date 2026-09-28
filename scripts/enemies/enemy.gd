@@ -1,10 +1,10 @@
 class_name Enemy
 extends CharacterBody2D
+## A creature built from its CreatureDef: stats, its own skills, simple AI.
+## Enemies never emit gameplay events (Health has no emitter).
 
 ## Reaches 0 HP. The game awards the player XP for it (a direct signal, not an EventBus event).
 signal downed(def: CreatureDef)
-## A creature built from its CreatureDef: stats, its own skills, simple AI.
-## Enemies never emit gameplay events (Health has no emitter).
 
 const GRAVITY := 900.0
 const BASE_SPEED := 60.0

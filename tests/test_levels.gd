@@ -135,6 +135,7 @@ func test_skill_screen_lists_ready_evolutions_and_evolves_on_accept() -> void:
 	while screen.selected_id() != "water_blade":
 		screen.move(1)
 	assert_string_contains("\n".join(screen.detail_texts()), "Ready to evolve")
+	assert_string_contains(screen.hint_text(), "Evolve")
 	screen.accept()
 	assert_eq(rules.level_of("water_blade"), 1)
 	screen.close()
@@ -147,3 +148,15 @@ func test_hud_shows_level_xp_and_ep_and_enemies_award_xp_in_game() -> void:
 	var bat: Enemy = get_tree().get_nodes_in_group("actors").filter(func(n): return n is Enemy and n.def.id == "bat")[0]
 	bat.receive_hit(99, "physical")
 	assert_eq(game.player.progression.xp, 2)
+
+func test_locked_teaser_ignores_evolutions_that_are_ready() -> void:
+	_emit("absorbed", {"essence": "water"}, 4)
+	_emit("skill_used", {"id": "hydraulic_propulsion"}, 6)
+	_emit("skill_used", {"id": "hydraulic_propulsion"}, 6)  # Lv3
+	_emit("jumped", {}, 80)  # Leap Lv2: Jet Dash ready too
+	var rows := SkillScreenModel.skill_rows(rules, skills_by_id.values())
+	var evo_start := rows.find(rows.filter(func(r): return r.get("text") == "EVOLUTION")[0])
+	var evo_rows := rows.slice(evo_start + 1)
+	# Swing Thread is still locked, so one teaser remains; ready ones don't add another.
+	assert_eq(evo_rows.filter(func(r): return r["kind"] == "locked").size(), 1)
+	assert_eq(evo_rows.filter(func(r): return r["kind"] == "ready").size(), 2)

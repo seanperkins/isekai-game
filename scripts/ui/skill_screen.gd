@@ -124,6 +124,9 @@ func row_texts() -> Array:
 				out.append(r["name"])
 	return out
 
+func hint_text() -> String:
+	return _hint.text
+
 func detail_texts() -> Array:
 	return _detail.find_children("*", "Label", true, false).map(func(l): return l.text)
 
@@ -188,7 +191,8 @@ func _refresh() -> void:
 		if ["skill", "slot", "ready"].has(_rows[i]["kind"]):
 			_selectable.append(i)
 	_sel = clampi(_sel, 0, maxi(0, _selectable.size() - 1))
-	_hint.text = "LB/RB Tabs    A Assign    B Back" if Controls.using_joypad else "Q/E Tabs    Enter Assign    Esc Back"
+	var verb := "Evolve" if not _selectable.is_empty() and _rows[_selectable[_sel]]["kind"] == "ready" else "Assign"
+	_hint.text = ("LB/RB Tabs    A %s    B Back" if Controls.using_joypad else "Q/E Tabs    Enter %s    Esc Back") % verb
 	_build_stats()
 	_build_list()
 	_build_detail()
