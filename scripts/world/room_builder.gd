@@ -99,3 +99,52 @@ static func _piece(band: Rect2, along_x: bool, a: float, b: float) -> Rect2:
 	if along_x:
 		return Rect2(a, band.position.y, b - a, band.size.y)
 	return Rect2(band.position.x, a, band.size.x, b - a)
+
+const BACKDROP := Color(0.06, 0.06, 0.12)
+const BACKDROP_TINT := Color(0.22, 0.21, 0.34)  # far cave wall, pushed back
+
+## One room as a node at its world position: backdrop, boundary walls with exit gaps, gates for
+## closed shortcuts, interior solids, decor, and fresh spawns (so enemies respawn on every
+## entry). `ctx` may carry "spawn", "progress", "compendium" and "announce".
+static func build_room(def: RoomDef, ctx: Dictionary) -> Node2D:
+	var node := Node2D.new()
+	node.name = def.id
+	node.position = def.world_rect().position
+	var size := def.pixel_size()
+	_backdrop(node, size)
+	for w in edge_walls(size, def.exits):
+		add_solid(node, w["rect"], w["kind"])
+	var progress = ctx.get("progress")
+	for e in def.exits:
+		if not is_exit_open(e, progress):
+			var gate := add_solid(node, gate_rect(size, e), "ground" if e["edge"] == "bottom" else "wall")
+			gate.add_to_group("gate_" + str(e["shortcut"]))
+	for r in def.solids:
+		add_solid(node, r, visual_kind(r, size.x))
+	build_decor(node, {"decor": def.decor})
+	var spawn: Callable = ctx.get("spawn", Callable())
+	if spawn.is_valid():
+		for s in def.spawns:
+			var n = spawn.call(s["id"], s["pos"])
+			if n != null:
+				node.add_child(n)
+	return node
+
+## Open unless it is a shortcut nobody has opened yet.
+static func is_exit_open(e: Dictionary, progress) -> bool:
+	return not e.has("shortcut") or (progress != null and progress.is_open(e["shortcut"]))
+
+static func _backdrop(node: Node2D, size: Vector2) -> void:
+	var back := ColorRect.new()
+	back.color = BACKDROP
+	back.size = size
+	back.z_index = -10
+	node.add_child(back)
+	var wall := TextureRect.new()
+	wall.texture = Art.texture("wall")
+	wall.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	wall.stretch_mode = TextureRect.STRETCH_TILE
+	wall.size = size
+	wall.modulate = BACKDROP_TINT
+	wall.z_index = -9
+	node.add_child(wall)
