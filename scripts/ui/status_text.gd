@@ -49,8 +49,9 @@ static func creature_lines(report: Dictionary) -> PackedStringArray:
 		lines.append("ATK %d  DEF %d  SPD %d" % [s.get("atk", 0), s.get("def", 0), s.get("spd", 0)])
 	if report.has("essences"):
 		var parts: Array = []
-		for ess in report["essences"]:
-			parts.append("%s %d" % [ess, report["essences"][ess]])
+		for ess in Essences.ALL:  # canonical order; .tres files store dictionary keys sorted
+			if report["essences"].has(ess):
+				parts.append("%s %d" % [ess, report["essences"][ess]])
 		lines.append("Essences: " + ", ".join(parts))
 	if report.has("eat_bonus") and not report["eat_bonus"].is_empty():
 		var b: Dictionary = report["eat_bonus"]
