@@ -442,9 +442,9 @@ This replaces the earlier "no XP levels" rule.
 
 ## HUD slots, menu controls and the Bestiary (added after playtest)
 
-- HUD skill slots mirror the pad: LB (U) and RB (O) on the bottom row, LT (H) and RT (L) above,
-  left pair bottom-left, right pair bottom-right. Each shows button, icon and name; it dims
-  when empty or unaffordable. The ticker moved to bottom-centre, the menu hint to top-right.
+- HUD skill slots form one joined block top-right shaped like the pad: LT (H) and RT (L) on top,
+  LB (U) and RB (O) under them. Each shows button, icon and name; it dims
+  when empty or unaffordable. Pop-ups sit under the block; the menu hint is bottom-right.
 - Menus: `menu_accept` (Enter/Space/A) and `menu_back` (Backspace/B). The stick moves one row
   per push, repeating after 0.35 s every 0.12 s; stick motion events are ignored.
 - Bestiary (third tab): one entry per creature (not water pools). Records persist in the

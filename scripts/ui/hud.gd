@@ -8,12 +8,12 @@ const TICKER_SECONDS := 3.0
 const VIEW := Vector2(640, 360)
 const FONT_MAIN := 10
 const FONT_SMALL := 8
-## Skill slots sit where their buttons are on the pad: bumpers (slots 0, 1) on the bottom row,
-## triggers (slots 2, 3) above them; left buttons bottom-left, right buttons bottom-right.
-const SLOT_SIZE := Vector2(128, 20)
+## Skill slots form one block in the top-right corner, shaped like the pad's shoulders:
+## triggers (slots 2, 3) on top, bumpers (slots 0, 1) under them, left buttons on the left.
+const SLOT_SIZE := Vector2(108, 20)
 const SLOT_MARGIN := 6.0
-const SLOT_GAP := 3.0
 const SLOT_CELL := [Vector2i(0, 1), Vector2i(1, 1), Vector2i(0, 0), Vector2i(1, 0)]  # (side, row)
+const POPUP_TOP := 52.0
 
 var _player: Player
 var _rules
@@ -45,8 +45,8 @@ func _ready() -> void:
 	_ticker.size = Vector2(360, 56)
 	_ticker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_ticker.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
-	_panel.position = Vector2(420, 40)
-	_menu_hint.position = Vector2(572, 4)
+	_panel.position = Vector2(420, 88)
+	_menu_hint.position = Vector2(560, 344)
 	_input_debug.position = Vector2(6, 43)
 	_level.position = Vector2(6, 28)
 	_level.add_theme_font_size_override("font_size", FONT_SMALL)
@@ -69,7 +69,7 @@ func _ready() -> void:
 	style.set_corner_radius_all(4)
 	style.set_content_margin_all(5)
 	_popup_panel.add_theme_stylebox_override("panel", style)
-	_popup_panel.position = Vector2(VIEW.x / 2.0, 6)
+	_popup_panel.position = Vector2(VIEW.x / 2.0, POPUP_TOP)
 	_popup.position = Vector2.ZERO
 	_popup_panel.add_child(_popup)
 	for l in [_hp, _mp, _popup_panel, _ticker, _panel, _menu_hint, _input_debug, _level]:
@@ -105,9 +105,8 @@ func _process(delta: float) -> void:
 
 func _slot_pos(i: int) -> Vector2:
 	var cell: Vector2i = SLOT_CELL[i]
-	var x := SLOT_MARGIN if cell.x == 0 else VIEW.x - SLOT_MARGIN - SLOT_SIZE.x
-	var y := VIEW.y - SLOT_MARGIN - SLOT_SIZE.y - (1 - cell.y) * (SLOT_SIZE.y + SLOT_GAP)
-	return Vector2(x, y)
+	var origin := Vector2(VIEW.x - SLOT_MARGIN - SLOT_SIZE.x * 2.0, SLOT_MARGIN)
+	return origin + Vector2(cell.x * SLOT_SIZE.x, cell.y * SLOT_SIZE.y)
 
 func _build_slots() -> void:
 	for i in SLOT_CELL.size():
@@ -117,8 +116,7 @@ func _build_slots() -> void:
 		style.bg_color = Color(0.03, 0.07, 0.2, 0.8)
 		style.border_color = Color(0.45, 0.8, 1.0, 0.8)
 		style.set_border_width_all(1)
-		style.set_corner_radius_all(3)
-		panel.add_theme_stylebox_override("panel", style)
+		panel.add_theme_stylebox_override("panel", style)  # square cells: the four share edges
 		panel.position = _slot_pos(i)
 		panel.size = SLOT_SIZE
 		add_child(panel)
@@ -171,6 +169,12 @@ func slot_view(i: int) -> Dictionary:
 	var n: Dictionary = _slot_nodes[i]
 	return {"label": n["chip"].text, "name": n["name"].text, "icon": n["icon_id"],
 		"pos": n["panel"].position, "dim": _slot_dim(i)}
+
+func menu_hint_position() -> Vector2:
+	return _menu_hint.position
+
+func popup_top() -> float:
+	return _popup_panel.position.y
 
 func hp_text() -> String:
 	return "HP %d/%d" % [_player.health.hp, _player.health.max_hp]

@@ -1,6 +1,6 @@
 extends GutTest
-## Skill slots on the HUD sit where their buttons are on the pad: bumpers on the bottom row,
-## triggers above them, left buttons on the left. Each shows the button, icon and name.
+## Skill slots on the HUD form one block top-right shaped like the pad's shoulders: triggers
+## on top, bumpers under them, left buttons on the left. Each shows the button, icon and name.
 
 func after_each() -> void:
 	SkillRules.reset_run()
@@ -13,19 +13,25 @@ func _game():
 	await wait_physics_frames(2)
 	return game
 
-func test_slots_are_laid_out_like_the_shoulder_buttons() -> void:
+func test_slots_form_one_controller_shaped_block_top_right() -> void:
 	var game = await _game()
 	var lb: Dictionary = game.hud.slot_view(0)
 	var rb: Dictionary = game.hud.slot_view(1)
 	var lt: Dictionary = game.hud.slot_view(2)
 	var rt: Dictionary = game.hud.slot_view(3)
-	assert_lt(lb["pos"].x, 320.0)
-	assert_lt(lt["pos"].x, 320.0)
-	assert_gt(rb["pos"].x, 320.0)
-	assert_gt(rt["pos"].x, 320.0)
-	assert_lt(lt["pos"].y, lb["pos"].y)  # triggers above bumpers
-	assert_lt(rt["pos"].y, rb["pos"].y)
-	assert_gt(lb["pos"].y, 300.0)  # bottom of the screen
+	var size: Vector2 = Hud.SLOT_SIZE
+	assert_gt(lt["pos"].x, 320.0)  # right half
+	assert_lt(lt["pos"].y, 20.0)   # top edge
+	assert_eq(rt["pos"], lt["pos"] + Vector2(size.x, 0))  # triggers side by side, touching
+	assert_eq(lb["pos"], lt["pos"] + Vector2(0, size.y))  # bumpers right under them
+	assert_eq(rb["pos"], lt["pos"] + size)
+	assert_lte(rt["pos"].x + size.x, 640.0)
+
+func test_the_menu_hint_and_popup_stay_clear_of_the_slots() -> void:
+	var game = await _game()
+	var block := Rect2(game.hud.slot_view(2)["pos"], Hud.SLOT_SIZE * 2)
+	assert_false(block.has_point(game.hud.menu_hint_position()))
+	assert_gt(game.hud.popup_top(), block.end.y)
 
 func test_a_slot_shows_button_icon_and_name() -> void:
 	var game = await _game()
