@@ -5,13 +5,14 @@ Status: draft for review (2026-09-28). Builds on `2026-09-27-slime-prototype-des
 
 ## Goal
 
-Make the slime feel alive and give a run a long arc. The slime gets real animation (running,
+Make the slime feel alive, give a run a long arc, and make a bigger world cheaper to revisit
+(you choose where to be reborn). The slime gets real animation (running,
 jumping, climbing, spreading flat, and eating by covering its prey). Enemies die in ways that
 match how they were killed. The slime evolves through a branching tree, spider-anime style,
 with skill levels held back until it does. The Fungal Grotto is built last, on the new art and
 kit.
 
-This is four sub-projects, each its own plan that ends in something you can play. The order
+This is five sub-projects, each its own plan that ends in something you can play. The order
 is fixed by your answers.
 
 | # | Sub-project | Ends with |
@@ -19,7 +20,8 @@ is fixed by your answers.
 | 1 | Slime feel: animation set, spread, eating cover, no torches | A slime that moves and eats with drawn animation |
 | 2 | Enemies: individual sprites and kill-type death animations | Every enemy has frames, and dies to match the blow |
 | 3 | Evolution: stages, forms, level cap, skill caps, raised skill maxima | You can evolve a slime through the tree |
-| 4 | Fungal Grotto (Plan 2 of the exploration spec) | The next location, using the new art and kit |
+| 4 | Reincarnation: choose where (and, later, as what) you are reborn | A death card that lets you pick an unlocked rebirth pool |
+| 5 | Fungal Grotto (Plan 2 of the exploration spec) | The next location, using the new art and kit, with its rebirth pool |
 
 ## Decisions (from the interview)
 
@@ -27,7 +29,11 @@ is fixed by your answers.
 |---|---|
 | Sprite production | Generate every frame **individually**, then a tool assembles frames into sheets. A whole sheet is never generated in one shot |
 | Torches | None anywhere in the wilderness. Light comes from glowing fungus, lichen and crystals. Human-made things (tablets, cracked stone) stay, and an unlit brazier may mark an abandoned camp later |
-| Order | Slime feel → enemies → evolution → Fungal Grotto |
+| Order | Slime feel → enemies → evolution → reincarnation → Fungal Grotto |
+| Reincarnation locations | Distinct rebirth pools, unlocked by finding them, kept across runs. Glow Pools stay rest-only |
+| Reincarnation power | A small head start sized to the location (a few basic skills, some levels), not a full reset and not a full carry-over |
+| Species (spider, human, goblin...) | Data hooks now, Slime only. Other species arrive later as content |
+| Reincarnation UI | On the death card, with the last choice pre-selected |
 | Evolution structure | Spider-style choice: at the stage cap you pick one of 2–3 offered forms |
 | Stages | 4 stages. The level cap is 10 per stage, and your level resets to 1 on evolving |
 | First-stage lineages | Weaver (thread), Tide (water), Toxic (poison), Bulwark (armor + earth), Echo (sound + flight) |
@@ -256,9 +262,84 @@ Shell), with these additions from this spec:
 - Its skills are written for levels up to 15.
 - An abandoned camp is allowed here as a story beat: a cold, unlit brazier by a tablet.
 
+## 5. Reincarnation
+
+This replaces the exploration spec's rule that death always restarts in C1, and its rule that
+Glow Pools are not respawn points (they still are not).
+
+### 5.1 Rebirth pools
+
+- A **rebirth pool** is a room feature (`"kind": "rebirth_pool"`) with an `id`, an `area` and
+  a `kit`. It looks different from a Glow Pool (pale violet-white glow, a ring of small
+  motes), so the two never blur together.
+- Reaching one (Inspect: "Y: attune") unlocks it for every future run. The Cave's first room
+  (C1) has one, already unlocked, so the game always has a default spawn.
+- Each later area has one, placed a little way in from the area's entrance (the Grotto's is
+  in G1).
+- Unlocked pools are saved in the Profile under `rebirths` (a list of pool ids). Unknown ids
+  are dropped on load, like any other section.
+
+### 5.2 The death card
+
+1. The "You dissolve." card shows as now.
+2. If more than one location (or species) is unlocked, a menu follows:
+   ```
+   Reincarnate at:
+     ▸ Cave mouth
+       Grotto rebirth pool
+       ???  (not found yet)
+   [A] Confirm     [Y] Species (only once more than one is unlocked)
+   ```
+   Locked entries show as "???" and cannot be picked. The last choice is pre-selected, so
+   pressing Accept repeats it. With only one unlocked location, the menu is skipped and the
+   run restarts there.
+3. The `Run` restarts the game with that pool's room as the start room and its kit applied.
+   A second `died` during the menu does nothing (the existing guard).
+- After a victory (Plan 3), the same menu opens.
+
+### 5.3 The head start
+
+Each pool defines a `kit`, sized to the area:
+
+| Pool | Kit |
+|---|---|
+| Cave mouth (C1) | Nothing |
+| Grotto (G1) | Leap and Wall Cling unlocked at Lv1, stage-1 level 3 |
+| Flooded Tunnels (F1) | Adds Sticky Thread, level 6 |
+
+- Kit skills are **granted** at level 1. They count as known (Compendium `NAMED`), not as
+  discovered, so their conditions stay hidden until you earn them the normal way, and
+  exploring still matters. Their counters start from zero.
+- A starting level gives the level's stat bonuses but **no EP**. EP is still earned.
+- A kit never goes above the current stage's cap. The stage is always 1 on reincarnating.
+- Kits are data on the pool, tested against the skill list (every id exists) and the cap.
+
+### 5.4 Species hooks
+
+- `SpeciesDef` is a Resource in `data/species/`: `id`, `display_name`, the sprite set, base
+  stats, starting skills, movement rules, and an `unlock` condition.
+- Only `slime` ships. The death card's "Species" row and screen appear once a second species
+  is unlocked, and are not built visible now.
+- Species unlocks are saved under `species` in the Profile.
+- A species changes the body, the skills it can learn, and the evolution tree it walks
+  (Sub-project 3's forms belong to a species). Spider, human and goblin are named here as
+  examples only, and will each get their own design before shipping.
+
+### 5.5 Code
+
+- `RebirthPool`: an interactable, like `GlowPool` and `Tablet`, and built by `RoomFeatures`.
+- `WorldProgress` gains `rebirths` (with `attune(id)` / `is_attuned(id)`), saved through the
+  Profile.
+- `Run` gains `start_choice` (`{pool, species}`), a `ReincarnationMenu` step between the
+  death card and the restart, and a `pending_start` the game reads on load.
+- `SkillRulesEngine` gains `grant(id)`: unlocks a skill at level 1 without counters and
+  without a Compendium reveal.
+- `Progression` gains `start_at(level)`.
+
 ## Testing approach
 
-- Pure logic gets unit tests: `SlimeState.pick`, the spread rules, form offers and eligibility,
+- Pure logic gets unit tests: reincarnation menu rules (skipped with one option, last choice
+  pre-selected, locked entries unpickable), kits, `grant`, `SlimeState.pick`, the spread rules, form offers and eligibility,
   the skill cap, the level curve per stage, and death-cause plumbing.
 - Every frame and sheet has a test that its JSON matches the image and that no frame is
   missing from its set.
@@ -272,11 +353,14 @@ Shell), with these additions from this spec:
 - A crawlway that needs Spread to pass.
 - Naming beyond Stage 4's draft.
 
-## Build order (four plans)
+## Build order (five plans)
 
 1. **Slime feel:** the art pipeline, the slime's frame sets, `SlimeState`, `Animator`, the
    spread, the `EatCover` node, and the torch replacement with its decor art.
 2. **Enemies:** frames for each creature, the `cause` argument, and the death effects.
 3. **Evolution:** `FormDef`, the stage state, offers, the skill caps and raised maxima, the
    form screen, and one lineage's art end to end (the rest follow in the same pipeline).
-4. **Fungal Grotto:** Plan 2 of the exploration spec.
+4. **Reincarnation:** rebirth pools, the death-card menu, kits and `grant`, the species
+   hooks, and C1's pool. It ships testable with just the Cave, and the Grotto adds the
+   second pool.
+5. **Fungal Grotto:** Plan 2 of the exploration spec, including G1's rebirth pool.
