@@ -19,6 +19,8 @@ const PREDATE_RANGE := 32.0
 ## A hold breaks if the target ends up farther than this (eating leaves you rooted and vulnerable).
 const PREDATE_BREAK_RANGE := 40.0
 const INSPECT_RANGE := 96.0
+## Glow Pools, tablets and other interactables answer Inspect within this range, before creatures.
+const INTERACT_RANGE := 24.0
 const INVULN_SECONDS := 1.0
 const KNOCKBACK := Vector2(160.0, -140.0)
 const EAT_HEAL := 5
@@ -140,11 +142,17 @@ func _physics_process(delta: float) -> void:
 	_update_visual(delta)
 	_update_prompt()
 
-## Shows "Hold K/B to eat" above the slime while something edible is in reach.
+## Shows what Inspect or Eat would do here: "I: read" by a tablet, "Hold K to eat" by food.
 func _update_prompt() -> void:
-	var target = null
-	if not predation.active() and not health.is_dead():
-		target = _nearest_in_group("predatable", PREDATE_RANGE, func(n): return n.can_be_predated())
+	if health.is_dead() or predation.active():
+		eat_prompt.visible = false
+		return
+	var thing = _nearest_in_group("interactable", INTERACT_RANGE, func(_n): return true)
+	if thing != null:
+		eat_prompt.visible = true
+		eat_prompt.text = "%s: %s" % ["Y" if Controls.using_joypad else "I", thing.prompt()]
+		return
+	var target = _nearest_in_group("predatable", PREDATE_RANGE, func(n): return n.can_be_predated())
 	eat_prompt.visible = target != null
 	if target != null:
 		eat_prompt.text = "Hold %s to eat" % ("B" if Controls.using_joypad else "K")
@@ -226,6 +234,10 @@ func cancel_predate() -> void:
 
 func do_inspect() -> void:
 	if health.is_dead():
+		return
+	var thing = _nearest_in_group("interactable", INTERACT_RANGE, func(_n): return true)
+	if thing != null:
+		thing.interact(self)
 		return
 	var target = _nearest_in_group("inspectable", INSPECT_RANGE, func(_n): return true)
 	if target == null:

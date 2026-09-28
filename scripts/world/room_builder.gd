@@ -123,6 +123,10 @@ static func build_room(def: RoomDef, ctx: Dictionary) -> Node2D:
 			var n = spawn.call(s["id"], s["pos"])
 			if n != null:
 				node.add_child(n)
+	for f in def.features:
+		var feature := RoomFeatures.make(f, ctx)
+		if feature != null:
+			node.add_child(feature)
 	return node
 
 ## Open unless it is a shortcut nobody has opened yet.
