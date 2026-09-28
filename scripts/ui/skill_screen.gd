@@ -4,7 +4,7 @@ extends CanvasLayer
 ## detail card. Esc / Start opens it and pauses the game; Q/E or LB/RB switch tabs;
 ## Enter / A assigns an active to the U/O slots; Esc / B closes. Laid out for 640x360.
 
-const TABS := ["skills", "compendium", "bestiary"]
+const TABS := ["skills", "compendium", "bestiary", "map"]
 ## Sprite frame used as each creature's Bestiary portrait.
 const PORTRAIT := {"bat": "bat_1", "toad": "toad_idle", "lizard": "lizard_1", "spider": "spider_crawl",
 	"serpent": "serpent"}
@@ -15,6 +15,8 @@ const LIST_W := 244.0
 const LIST_TOP := 46.0
 const LIST_BOTTOM := 320.0
 const DETAIL_X := 418.0
+const MAP_BOX := Rect2(158, 60, 454, 236)
+const COL_MAP_POOL := Color(0.4, 1.0, 0.9)
 const COL_DIM_BG := Color(0.0, 0.0, 0.05, 0.6)
 const COL_BG := Color(0.03, 0.07, 0.2, 0.94)
 const COL_BORDER := Color(0.45, 0.8, 1.0)
@@ -49,6 +51,10 @@ var _stats := Control.new()
 var _tab_labels: Array = []
 var _hint := Label.new()
 var _nav_dir := 0
+var _world: World
+var _progress
+var _map_found := ""
+var _map_rooms := 0
 var _nav_timer := 0.0
 
 func bind(player: Player, rules, compendium: CompendiumModel, skill_defs: Array) -> void:
@@ -226,6 +232,15 @@ func _refresh() -> void:
 	for i in _tab_labels.size():
 		var style: StyleBoxFlat = _tab_labels[i].get_theme_stylebox("panel")
 		style.bg_color = COL_SELECTED if i == _tab else COL_ROW
+	if tab() == "map":
+		_rows = []
+		_selectable = []
+		_hint.text = "LB/RB Tabs    B Back" if Controls.using_joypad else "Q/E Tabs    Esc Back"
+		_build_stats()
+		_clear(_list)
+		_clear(_detail)
+		_build_map()
+		return
 	match tab():
 		"skills":
 			_rows = SkillScreenModel.skill_rows(_rules, _all)
@@ -419,6 +434,50 @@ func _portrait(parent: Node, id: String, seen: bool, pos: Vector2, px: float) ->
 	if not seen:
 		t.modulate = Color(0, 0, 0, 0.8)  # silhouette
 	parent.add_child(t)
+
+## The Map tab needs the world's rooms and what the player has visited.
+func bind_world(world: World, progress) -> void:
+	_world = world
+	_progress = progress
+
+func map_found_text() -> String:
+	return _map_found
+
+func map_room_count() -> int:
+	return _map_rooms
+
+func _build_map() -> void:
+	_map_found = ""
+	_map_rooms = 0
+	_label(_list, "MAP", Vector2(LIST_X + 4, LIST_TOP + 2), Vector2(200, 12), FONT_SMALL, COL_TITLE)
+	if _world == null or _progress == null or _world.rooms.is_empty():
+		_label(_list, "No map yet.", Vector2(LIST_X + 4, LIST_TOP + 20), Vector2(200, 12), FONT_MAIN, COL_DIM)
+		return
+	var m := SkillScreenModel.map_view(_world.rooms, _progress, _world.current_id)
+	var bounds: Rect2 = m["bounds"]
+	var scale := minf(MAP_BOX.size.x / bounds.size.x, MAP_BOX.size.y / bounds.size.y)
+	for r in m["rooms"]:
+		var rect: Rect2 = r["rect"]
+		var pos := MAP_BOX.position + (rect.position - bounds.position) * scale
+		_panel(_list, pos, rect.size * scale, COL_SELECTED if r["current"] else COL_ROW, 2 if r["current"] else 1)
+		var mark := pos + Vector2(3, 3)
+		for key in ["pool", "tablet"]:
+			if r[key]:
+				var dot := ColorRect.new()
+				dot.color = COL_MAP_POOL if key == "pool" else Color(1.0, 0.85, 0.45)
+				dot.position = mark
+				dot.size = Vector2(3, 3)
+				_list.add_child(dot)
+				mark.x += 5.0
+		_map_rooms += 1
+	for s in m["stubs"]:
+		var stub := ColorRect.new()
+		stub.color = COL_PIP_ON
+		stub.size = Vector2(4, 4)
+		stub.position = MAP_BOX.position + (s["point"] - bounds.position) * scale - Vector2(2, 2)
+		_list.add_child(stub)
+	_map_found = m["found"]
+	_label(_list, _map_found, Vector2(LIST_X + 4, MAP_BOX.end.y + 6), Vector2(220, 12), FONT_SMALL, COL_DIM)
 
 # --- helpers --------------------------------------------------------------
 

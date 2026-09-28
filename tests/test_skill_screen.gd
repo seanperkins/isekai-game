@@ -162,10 +162,12 @@ func test_bestiary_tab_lists_creatures_and_shows_a_card() -> void:
 		var r: Rect2 = c.get_global_rect()
 		assert_true(r.position.x >= 0.0 and r.end.x <= 640.0 and r.position.y >= 0.0 and r.end.y <= 360.0, str(c.name, r))
 
-func test_tabs_cycle_through_all_three() -> void:
+func test_tabs_cycle_through_all_four() -> void:
 	_screen()
 	screen.open()
 	screen.switch_tab(3)
+	assert_eq(screen.tab(), "map")
+	screen.switch_tab(4)
 	assert_eq(screen.tab(), "skills")
 	screen.switch_tab(-1)
-	assert_eq(screen.tab(), "bestiary")
+	assert_eq(screen.tab(), "map")

@@ -39,6 +39,7 @@ func _ready() -> void:
 	skill_screen = SkillScreen.new()
 	add_child(skill_screen)
 	skill_screen.bind(player, SkillRules, Compendium.model, SkillRules.skill_defs)
+	skill_screen.bind_world(world, Compendium.progress)
 	skill_screen.visibility_changed.connect(func() -> void: hud.visible = not skill_screen.visible)
 	run = Run.new()
 	add_child(run)

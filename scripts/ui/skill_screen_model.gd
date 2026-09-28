@@ -160,3 +160,38 @@ static func _sorted(defs: Array) -> Array:
 	var out := defs.filter(func(d): return d.source != "enemy_only")
 	out.sort_custom(func(a, b): return a.display_name < b.display_name)
 	return out
+
+## Map tab data: visited rooms (with the current one flagged, plus pool and tablet marks),
+## stubs for exits from visited rooms into rooms not yet visited, the bounds of the whole
+## world (so the map's scale never shifts), and the "Rooms found" count.
+static func map_view(rooms: Dictionary, progress, current_id: String) -> Dictionary:
+	var shown: Array = []
+	var stubs: Array = []
+	var bounds := Rect2()
+	var ids := rooms.keys()
+	ids.sort()
+	for id in ids:
+		var r: RoomDef = rooms[id]
+		bounds = r.world_rect() if bounds.size == Vector2.ZERO else bounds.merge(r.world_rect())
+		if not progress.is_visited(id):
+			continue
+		var rect := r.world_rect()
+		shown.append({"id": id, "rect": rect, "current": id == current_id,
+			"pool": r.features.any(func(f: Dictionary) -> bool: return f.get("kind", "") == "glow_pool"),
+			"tablet": r.features.any(func(f: Dictionary) -> bool: return f.get("kind", "") == "tablet")})
+		for e in r.exits:
+			if progress.is_visited(e["room"]):
+				continue
+			var span := WorldValidator.world_span(r, e)
+			var mid := (span.x + span.y) / 2.0
+			var point := Vector2(mid, rect.position.y)
+			match e["edge"]:
+				"right":
+					point = Vector2(rect.end.x, mid)
+				"left":
+					point = Vector2(rect.position.x, mid)
+				"bottom":
+					point = Vector2(mid, rect.end.y)
+			stubs.append({"room": id, "edge": e["edge"], "point": point})
+	return {"rooms": shown, "stubs": stubs, "bounds": bounds,
+		"found": "Rooms found %d/%d" % [shown.size(), rooms.size()]}
