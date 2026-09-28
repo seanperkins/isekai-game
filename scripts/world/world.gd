@@ -12,8 +12,11 @@ extends Node2D
 signal room_entered(id: String)
 
 const SLIDE_SECONDS := 0.35
-## Entering a room through its floor pushes you up at least this fast, so you clear the lip.
-const ENTRY_BOOST := -300.0
+## Entering a room through its floor pushes you up at least this fast, so you clear the lip. It must
+## lift the feet (BodyConfig.BOTTOM below the origin) over the floor lip (RoomDef.FLOOR) with a margin:
+## 330^2 / (2 * 900) = 60 px for the 40 px lip + 12 px feet + 8 px spare. tests/test_world_entry.gd
+## fails if the body or the lip changes and this is left behind.
+const ENTRY_BOOST := -330.0
 const VIEW := Vector2(640, 360)
 
 var rooms := {}
