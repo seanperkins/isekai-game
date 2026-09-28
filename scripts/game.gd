@@ -1,55 +1,37 @@
 extends Node2D
-## The vertical slice: builds the starting cave, spawns actors and the HUD, starts a run.
-## Death resets the run and reloads the scene (the full death screen is Plan 3).
+## The game: the World (rooms), the player, the HUD, the skill screen and the Run.
+## Death shows the Run's card, then resets the run and reloads the scene.
 
-const VIEW_SIZE := Vector2(640, 360)
+const ROOMS_DIR := "res://data/rooms"
 const AMBIENT := Color(0.6, 0.6, 0.78)  # dim cave; lights bring colour back
-const BACKDROP_TINT := Color(0.22, 0.21, 0.34)  # far cave wall, pushed back
-const BACKDROP := Color(0.06, 0.06, 0.12)
 
 var player: Player
 var hud: Hud
 var skill_screen: SkillScreen
+var world: World
+var run: Run
+var _skills_by_id := {}
+var _creatures := {}
 
 func _ready() -> void:
 	Controls.ensure_actions()
-	var layout: Dictionary = RoomLayout.TEST_ROOM
-	var room_size: Vector2 = layout["size"]
-	_build_backdrop(room_size)
-	RoomBuilder.build(self, layout)
-	RoomBuilder.build_decor(self, layout)
-	var skills_by_id := {}
+	var ambient := CanvasModulate.new()
+	ambient.color = AMBIENT
+	add_child(ambient)
 	for d in SkillRules.skill_defs:
-		skills_by_id[d.id] = d
-	var creatures := {}
+		_skills_by_id[d.id] = d
 	for c in SkillRules.creature_defs:
-		creatures[c.id] = c
+		_creatures[c.id] = c
 	player = Player.new()
 	player.setup(SkillRules, Compendium.model, SkillRules.creature_defs, _emit_game_event)
-	player.position = layout["player"]
-	add_child(player)
-	var cam := Camera2D.new()
-	cam.name = "Camera"
-	cam.zoom = Vector2(1, 1)  # the 640x360 internal resolution is scaled to the window
-	cam.limit_left = 0
-	cam.limit_top = 0
-	cam.limit_right = int(room_size.x)
-	cam.limit_bottom = int(room_size.y)
-	player.add_child(cam)
-	for spawn in layout["spawns"]:
-		var def: CreatureDef = creatures[spawn["id"]]
-		var node: Node2D
-		if def.id == Sources.WATER_POOL:
-			node = WaterPool.new()
-			node.setup(def)
-		else:
-			node = Enemy.new()
-			node.setup(def, skills_by_id)
-			node.downed.connect(player.on_enemy_downed)
-			node.downed.connect(func(d: CreatureDef) -> void: Compendium.model.on_creature_defeated(d.id))
-
-		node.position = spawn["pos"]
-		add_child(node)
+	world = World.new()
+	add_child(world)
+	var rooms := World.load_rooms(ROOMS_DIR)
+	for e in WorldValidator.validate(rooms):
+		push_error(e)
+	world.setup(rooms, player, {"spawn": _spawn, "progress": Compendium.progress,
+		"compendium": Compendium.model, "announce": Announcer.queue.push_unlock})
+	world.enter_start()
 	player.skillset.slot_replaced.connect(Announcer.queue.push_slot_replaced)
 	hud = Hud.new()
 	add_child(hud)
@@ -58,41 +40,34 @@ func _ready() -> void:
 	add_child(skill_screen)
 	skill_screen.bind(player, SkillRules, Compendium.model, SkillRules.skill_defs)
 	skill_screen.visibility_changed.connect(func() -> void: hud.visible = not skill_screen.visible)
-	player.died.connect(_on_player_died)
+	run = Run.new()
+	add_child(run)
+	run.bind(player, world)
+	run.restart_requested.connect(_restart)
 	SkillRules.start_run()
 
-## Bestiary: a creature counts as seen once it is inside the camera's view.
-func _physics_process(_delta: float) -> void:
-	var cam: Camera2D = player.get_node("Camera")
-	var view := Rect2(cam.get_screen_center_position() - VIEW_SIZE / 2.0, VIEW_SIZE)
-	for n in get_tree().get_nodes_in_group("actors"):
-		if n is Enemy and view.has_point(n.global_position):
-			Compendium.model.on_creature_seen(n.def.id)
+## A fresh creature (or water pool) for a room, wired to XP and the Bestiary.
+func _spawn(id: String, pos: Vector2) -> Node2D:
+	var def: CreatureDef = _creatures.get(id)
+	if def == null:
+		push_error("room spawn: unknown creature '%s'" % id)
+		return null
+	var node: Node2D
+	if def.id == Sources.WATER_POOL:
+		node = WaterPool.new()
+		node.setup(def)
+	else:
+		node = Enemy.new()
+		node.setup(def, _skills_by_id)
+		node.downed.connect(player.on_enemy_downed)
+		node.downed.connect(func(d: CreatureDef) -> void: Compendium.model.on_creature_defeated(d.id))
+	node.position = pos
+	return node
 
 func _emit_game_event(event_name: String, tags: Dictionary) -> void:
 	EventBus.game_event.emit(event_name, tags)
 
-func _on_player_died() -> void:
+func _restart() -> void:
 	SkillRules.reset_run()
 	Announcer.queue.clear()
 	get_tree().reload_current_scene.call_deferred()
-
-func _build_backdrop(room_size: Vector2) -> void:
-	var back := ColorRect.new()
-	back.color = BACKDROP
-	back.position = Vector2(-40, -40)
-	back.size = room_size + Vector2(80, 80)
-	back.z_index = -10
-	add_child(back)
-	var wall := TextureRect.new()
-	wall.texture = Art.texture("wall")
-	wall.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	wall.stretch_mode = TextureRect.STRETCH_TILE
-	wall.position = back.position
-	wall.size = back.size
-	wall.modulate = BACKDROP_TINT
-	wall.z_index = -9
-	add_child(wall)
-	var ambient := CanvasModulate.new()
-	ambient.color = AMBIENT
-	add_child(ambient)

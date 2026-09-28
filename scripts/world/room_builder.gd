@@ -28,11 +28,6 @@ static func build_decor(parent: Node, layout: Dictionary) -> void:
 			holder.add_child(l)
 		parent.add_child(holder)
 
-static func build(parent: Node, layout: Dictionary) -> void:
-	var width: float = layout.get("size", Vector2(1600, 360)).x
-	for r in layout["solids"]:
-		add_solid(parent, r, visual_kind(r, width))
-
 ## A static solid drawn with the given tile ("ground", "wall" or "column").
 static func add_solid(parent: Node, r: Rect2, kind: String) -> StaticBody2D:
 	var body := StaticBody2D.new()

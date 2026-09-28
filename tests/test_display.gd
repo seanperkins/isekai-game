@@ -30,7 +30,7 @@ func test_hud_fits_the_view_and_shows_mp() -> void:
 		if c is Control:
 			assert_between(c.position.x, 0.0, 639.0, c.name)
 			assert_between(c.position.y, 0.0, 359.0, c.name)
-	var cam: Camera2D = game.player.get_node("Camera")
+	var cam: Camera2D = game.world.camera
 	assert_eq(cam.zoom, Vector2(1, 1))
 
 func test_hud_hides_behind_the_skill_screen_and_hints_how_to_open_it() -> void:
