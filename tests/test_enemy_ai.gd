@@ -63,5 +63,5 @@ func test_downed_enemy_runs_no_ai_and_deals_no_contact_damage() -> void:
 func test_toad_spits_poison_in_range_then_waits_for_cooldown() -> void:
 	_enemy("toad", Vector2(0, 0))
 	fake_player.global_position = Vector2(80, 0)
-	await wait_physics_frames(10)
+	await wait_seconds(1.5)  # wind-up, then the blob's flight
 	assert_eq(fake_player.poisons, [[4, 1, 3.0]])

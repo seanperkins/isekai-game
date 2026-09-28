@@ -453,6 +453,20 @@ This replaces the earlier "no XP levels" rule.
   Card: name when seen; Appraisal reveals HP → stats → skills; eating reveals essences and eat
   bonus.
 
+## Enemy behaviour (added after playtest)
+
+- Sight: an enemy notices you only within 160 px and with no rock between you. It keeps
+  hunting for 2 s after it last saw you, then patrols home. Walkers probe a step ahead and
+  turn at ledges and walls; while chasing they stop at the edge instead of falling.
+- Every attack is telegraphed (a flashing tint) and dodgeable:
+  - Toad: 0.4 s puff-up, then a poison glob (`SpitBlob`) lobbed in a 0.6 s arc at where you
+    stood; rock stops it. Cooldown 5 s.
+  - Lizard: when you're level and 32–120 px in front: 0.5 s wind-up, 0.6 s charge at 3×
+    speed (stops at ledges and walls), 1 s rest.
+  - Bat: hovers 60 px above you for 0.8–1.2 s (its own rhythm), flashes for 0.3 s, then
+    dives in a straight line at where you were for 0.6 s at 2.2× speed, then climbs 0.8 s.
+  - Spider: drops only when it can see you below it.
+
 ## Content
 
 These are starting values for tuning. The pacing column is a hypothesis, to be

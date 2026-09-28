@@ -74,11 +74,8 @@ func test_tackle_reaches_farther_and_higher() -> void:
 	player.do_tackle()
 	assert_eq(high.status.state, EnemyStatus.STUNNED)
 
-func test_bat_swoop_alternates_dive_and_retreat() -> void:
-	assert_eq(Enemy.swoop_phase(0.0), "dive")
-	assert_eq(Enemy.swoop_phase(1.1), "dive")
-	assert_eq(Enemy.swoop_phase(1.3), "retreat")
-	assert_eq(Enemy.swoop_phase(2.3), "dive")
+func test_bat_swoop_has_a_readable_rhythm() -> void:
+	assert_eq([Enemy.WARN_SECONDS, Enemy.DIVE_SECONDS, Enemy.CLIMB_SECONDS], [0.3, 0.6, 0.8])
 
 func test_eat_prompt_appears_near_an_edible_target_with_device_label() -> void:
 	player._update_prompt()

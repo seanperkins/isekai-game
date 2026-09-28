@@ -39,3 +39,7 @@ Gamepad: left stick / D-pad move (stick also aims) · A jump · X tackle · B ho
 - [ ] Inspect by the C6 tablet shows its lore. Inspect in C4's Glow Pool refills HP and MP, and a pop-up says "A voice — Your body settles."
 - [ ] Menu → Map tab (fourth tab): visited rooms, a highlight on your room, dots for exits you haven't taken, and "Rooms found N/6".
 - [ ] Dying shows "You dissolve." for a moment, then the run restarts in C1. The map and the opened shortcut stay.
+- [ ] Enemies only notice you with a clear line of sight (rock blocks it) and give up about 2 s after losing you. Walkers turn at ledges and walls instead of falling off.
+- [ ] Toads puff up (flashing) and lob a green glob in an arc: step aside and it misses; rock stops it.
+- [ ] Lizards stop and flash, charge fast, then pant for a second: that's the moment to tackle them from behind.
+- [ ] Bats hover above you, flash, then dive in a straight line at where you were; sidestep and they miss, then climb back.

@@ -1,6 +1,12 @@
 class_name Enemy
 extends CharacterBody2D
-## A creature built from its CreatureDef: stats, its own skills, simple AI.
+## A creature built from its CreatureDef: stats, its own skills, and its behaviour.
+## Every enemy needs line of sight to notice you and forgets you ALERT_MEMORY seconds after
+## losing you; walkers turn at ledges and walls; every attack is telegraphed:
+##   swoop (bats):     hover above you, flash, dive at where you were, climb back
+##   charger (lizard): stop and flick, charge, then rest (hit it from behind)
+##   spitter (toad):   puff up, then lob a poison glob in an arc
+##   dropper (spider): hang until you pass under, then drop and walk
 ## Enemies never emit gameplay events (Health has no emitter).
 
 ## Reaches 0 HP. The game awards the player XP for it (a direct signal, not an EventBus event).
@@ -16,9 +22,27 @@ const SPIT_COOLDOWN := 5.0
 const SPIT_TICK := 1
 const SPIT_SECONDS := 3.0
 const SLOW_SECONDS := 2.0
-## Bats dive at the player, then pull back up: a rhythm with windows to tackle them.
-const SWOOP_DIVE_SECONDS := 1.2
-const SWOOP_RETREAT_SECONDS := 1.0
+## Seconds an enemy keeps hunting after it last saw you.
+const ALERT_MEMORY := 2.0
+## Walkers probe this far ahead and this far down for the ground before stepping on.
+const LEDGE_PROBE := 10.0
+const LEDGE_DEPTH := 16.0
+const SPIT_WINDUP := 0.4
+const CHARGE_RANGE := 120.0
+const CHARGE_LEVEL := 24.0
+const CHARGE_WINDUP := 0.5
+const CHARGE_SECONDS := 0.6
+const CHARGE_REST := 1.0
+const CHARGE_MULT := 3.0
+## Bats hover this high over you for HOVER_SECONDS (+ up to HOVER_JITTER, per bat).
+const HOVER_HEIGHT := 60.0
+const HOVER_SECONDS := 0.8
+const HOVER_JITTER := 0.4
+const WARN_SECONDS := 0.3
+const DIVE_SECONDS := 0.6
+const DIVE_MULT := 2.2
+const CLIMB_SECONDS := 0.8
+const TELEGRAPH_TINT := Color(1.0, 0.8, 0.45)
 ## Ground enemies do not turn while the player is this close, so jumping over one opens
 ## a window to hit it from behind (the lizard is only stunned from behind).
 const TURN_LOCK_RANGE := 32.0
@@ -41,6 +65,14 @@ var _spit_cd := 0.0
 var _slow := 0.0
 var _sprite: Sprite2D
 var _anim_t := 0.0
+var _alert := 0.0
+var _spit_windup := 0.0
+var _charge := ""  # "", "windup", "charge", "rest"
+var _charge_t := 0.0
+var _swoop := "idle"  # idle, hover, warn, dive, climb
+var _swoop_t := 0.0
+var _dive_dir := Vector2.ZERO
+var _rng := RandomNumberGenerator.new()
 
 func setup(p_def: CreatureDef, skill_defs_by_id: Dictionary) -> void:
 	def = p_def
@@ -63,6 +95,7 @@ func setup(p_def: CreatureDef, skill_defs_by_id: Dictionary) -> void:
 
 func _ready() -> void:
 	_home_x = global_position.x
+	_rng.seed = get_instance_id()  # each bat keeps its own rhythm
 	if get_child_count() == 0:
 		_build_body()
 
@@ -120,9 +153,12 @@ func _physics_process(delta: float) -> void:
 	var player: Node2D = get_tree().get_first_node_in_group("player")
 	var active := status.state == EnemyStatus.ACTIVE
 	if active and player != null:
-		_act(player)
+		_sense(player, delta)
+		_act(player, delta)
 	else:
 		velocity.x = 0.0
+		_charge = ""
+		_spit_windup = 0.0
 	var flying := capabilities.has("flight") and active
 	if not flying and not (_on_ceiling and active):
 		velocity.y += GRAVITY * delta
@@ -131,8 +167,32 @@ func _physics_process(delta: float) -> void:
 		player.receive_hit(stats.get_stat("atk"), "physical", global_position)
 	_update_visual()
 
-static func swoop_phase(t: float) -> String:
-	return "dive" if fmod(t, SWOOP_DIVE_SECONDS + SWOOP_RETREAT_SECONDS) < SWOOP_DIVE_SECONDS else "retreat"
+func is_alert() -> bool:
+	return _alert > 0.0
+
+func charge_state() -> String:
+	return _charge
+
+func swoop_state() -> String:
+	return _swoop
+
+## True when no rock lies between this enemy and `target`.
+func can_see(target: Node2D) -> bool:
+	var query := PhysicsRayQueryParameters2D.create(global_position + Vector2(0, -4), target.global_position + Vector2(0, -4))
+	var skip: Array[RID] = []
+	for n in get_tree().get_nodes_in_group("actors"):
+		if n is CollisionObject2D:
+			skip.append(n.get_rid())
+	if target is CollisionObject2D:
+		skip.append(target.get_rid())
+	query.exclude = skip
+	return get_world_2d().direct_space_state.intersect_ray(query).is_empty()
+
+func _sense(player: Node2D, delta: float) -> void:
+	if global_position.distance_to(player.global_position) < CHASE_RANGE and can_see(player):
+		_alert = ALERT_MEMORY
+	else:
+		_alert = maxf(0.0, _alert - delta)
 
 ## Which sprite to draw for this creature right now. All sheets face right.
 func frame_name() -> String:
@@ -141,7 +201,7 @@ func frame_name() -> String:
 		"bat":
 			return "bat_2" if alternate else "bat_1"
 		"toad":
-			return "toad_spit" if _spit_cd > SPIT_COOLDOWN - SPIT_POSE_SECONDS else "toad_idle"
+			return "toad_spit" if _spit_windup > 0.0 or _spit_cd > SPIT_COOLDOWN - SPIT_POSE_SECONDS else "toad_idle"
 		"lizard":
 			return "lizard_2" if alternate and absf(velocity.x) > 1.0 else "lizard_1"
 		"spider":
@@ -154,39 +214,149 @@ func _update_visual() -> void:
 	Art.set_frame(_sprite, frame_name(), BODY_BOTTOM)
 	_sprite.flip_h = facing < 0
 	_sprite.flip_v = status.state == EnemyStatus.DOWNED
-	_sprite.modulate = STUNNED_TINT if status.state == EnemyStatus.STUNNED else Color.WHITE
+	if status.state == EnemyStatus.STUNNED:
+		_sprite.modulate = STUNNED_TINT
+	elif _telegraphing() and int(_anim_t / 0.08) % 2 == 0:
+		_sprite.modulate = TELEGRAPH_TINT
+	else:
+		_sprite.modulate = Color.WHITE
 
-func _act(player: Node2D) -> void:
-	var speed := BASE_SPEED * stats.get_stat("spd") / 100.0 * (0.5 if _slow > 0.0 else 1.0)
+func _telegraphing() -> bool:
+	return _charge == "windup" or _swoop == "warn" or _spit_windup > 0.0
+
+func _speed() -> float:
+	return BASE_SPEED * stats.get_stat("spd") / 100.0 * (0.5 if _slow > 0.0 else 1.0)
+
+func _act(player: Node2D, delta: float) -> void:
 	var to_player: Vector2 = player.global_position - global_position
 	if _on_ceiling:
 		velocity = Vector2.ZERO
-		if absf(to_player.x) < 40.0 and to_player.y > 0.0:
+		if is_alert() and absf(to_player.x) < 40.0 and to_player.y > 0.0:
 			_on_ceiling = false  # drop on prey
 		return
 	if capabilities.has("flight"):
-		if to_player.length() < CHASE_RANGE:
-			if swoop_phase(_anim_t) == "dive":
-				velocity = to_player.normalized() * speed
-			else:
-				velocity = Vector2(-to_player.normalized().x * speed * 0.5, -speed * 0.8)
-		else:
-			velocity = Vector2(0.0, sin(Time.get_ticks_msec() / 300.0) * 20.0)
-		facing = 1 if velocity.x >= 0.0 else -1
+		_swoop_act(player, delta)
 		return
-	if absf(to_player.x) < CHASE_RANGE and absf(to_player.y) < 48.0:
+	if def.id == Sources.LIZARD and _charger_act(to_player, delta):
+		return
+	if _spit_damage > 0 and _spitter_act(player, to_player, delta):
+		return
+	_walk(to_player)
+
+## Chase while alert (holding at a ledge or wall rather than walking off it), else patrol home.
+func _walk(to_player: Vector2) -> void:
+	var speed := _speed()
+	if is_alert() and absf(to_player.y) < 48.0:
 		if absf(to_player.x) > TURN_LOCK_RANGE:
 			facing = 1 if to_player.x > 0.0 else -1
-		velocity.x = facing * speed
-	else:
-		if global_position.x > _home_x + PATROL_RANGE:
-			facing = -1
-		elif global_position.x < _home_x - PATROL_RANGE:
-			facing = 1
-		velocity.x = facing * speed * 0.5
-	if _spit_damage > 0 and _spit_cd <= 0.0 and to_player.length() < SPIT_RANGE:
-		_spit_cd = SPIT_COOLDOWN
-		player.receive_poison(_spit_damage, SPIT_TICK, SPIT_SECONDS)
+		velocity.x = 0.0 if _blocked_ahead() else facing * speed
+		return
+	if global_position.x > _home_x + PATROL_RANGE:
+		facing = -1
+	elif global_position.x < _home_x - PATROL_RANGE:
+		facing = 1
+	if _blocked_ahead():
+		facing = -facing
+	velocity.x = facing * speed * 0.5
+
+## A wall in front, or no ground a step ahead. Only meaningful on the floor.
+func _blocked_ahead() -> bool:
+	if not is_on_floor():
+		return false
+	if is_on_wall() and get_wall_normal().x * facing < 0.0:
+		return true
+	var ahead := global_position + Vector2(facing * LEDGE_PROBE, 0)
+	var query := PhysicsRayQueryParameters2D.create(ahead, ahead + Vector2(0, BODY_BOTTOM + LEDGE_DEPTH))
+	query.exclude = [get_rid()]
+	return get_world_2d().direct_space_state.intersect_ray(query).is_empty()
+
+## Wind-up, charge, rest. Returns true while the charge sequence owns movement.
+func _charger_act(to_player: Vector2, delta: float) -> bool:
+	match _charge:
+		"windup":
+			velocity.x = 0.0
+			_charge_t -= delta
+			if _charge_t <= 0.0:
+				_charge = "charge"
+				_charge_t = CHARGE_SECONDS
+			return true
+		"charge":
+			_charge_t -= delta
+			if _charge_t <= 0.0 or _blocked_ahead():
+				_charge = "rest"
+				_charge_t = CHARGE_REST
+				velocity.x = 0.0
+			else:
+				velocity.x = facing * _speed() * CHARGE_MULT
+			return true
+		"rest":
+			velocity.x = 0.0
+			_charge_t -= delta
+			if _charge_t <= 0.0:
+				_charge = ""
+			return true
+	var ahead := to_player.x * facing
+	if is_alert() and absf(to_player.y) < CHARGE_LEVEL and ahead > TURN_LOCK_RANGE and ahead <= CHARGE_RANGE:
+		_charge = "windup"
+		_charge_t = CHARGE_WINDUP
+		velocity.x = 0.0
+		return true
+	return false
+
+## Puff up, then lob a glob at where the player stands. Returns true while winding up.
+func _spitter_act(player: Node2D, to_player: Vector2, delta: float) -> bool:
+	if _spit_windup > 0.0:
+		velocity.x = 0.0
+		_spit_windup -= delta
+		if _spit_windup <= 0.0:
+			var blob := SpitBlob.new()
+			get_parent().add_child(blob)
+			blob.launch(global_position + Vector2(facing * 8.0, -6.0), player.global_position, _spit_damage, SPIT_TICK, SPIT_SECONDS)
+			_spit_cd = SPIT_COOLDOWN
+		return true
+	if is_alert() and _spit_cd <= 0.0 and to_player.length() < SPIT_RANGE:
+		facing = 1 if to_player.x > 0.0 else -1
+		_spit_windup = SPIT_WINDUP
+		velocity.x = 0.0
+		return true
+	return false
+
+## Hover above you, flash, dive in a straight line at where you were, climb back up.
+func _swoop_act(player: Node2D, delta: float) -> void:
+	var speed := _speed()
+	_swoop_t -= delta
+	match _swoop:
+		"idle":
+			velocity = Vector2(0.0, sin(_anim_t * 3.3) * 20.0)
+			if is_alert():
+				_swoop = "hover"
+				_swoop_t = HOVER_SECONDS + _rng.randf() * HOVER_JITTER
+		"hover":
+			var spot := player.global_position + Vector2(0.0, -HOVER_HEIGHT)
+			velocity = (spot - global_position).limit_length(speed)
+			if not is_alert():
+				_swoop = "idle"
+			elif _swoop_t <= 0.0:
+				_swoop = "warn"
+				_swoop_t = WARN_SECONDS
+		"warn":
+			velocity = Vector2.ZERO
+			if _swoop_t <= 0.0:
+				_swoop = "dive"
+				_swoop_t = DIVE_SECONDS
+				_dive_dir = (player.global_position - global_position).normalized()
+		"dive":
+			velocity = _dive_dir * speed * DIVE_MULT
+			if _swoop_t <= 0.0 or is_on_floor() or is_on_wall():
+				_swoop = "climb"
+				_swoop_t = CLIMB_SECONDS
+		"climb":
+			velocity = Vector2(-_dive_dir.x * speed * 0.5, -speed * 0.8)
+			if _swoop_t <= 0.0:
+				_swoop = "hover" if is_alert() else "idle"
+				_swoop_t = HOVER_SECONDS + _rng.randf() * HOVER_JITTER
+	if absf(velocity.x) > 1.0:
+		facing = 1 if velocity.x > 0.0 else -1
 
 func _build_body() -> void:
 	var shape := CollisionShape2D.new()
