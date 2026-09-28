@@ -1,0 +1,116 @@
+class_name SkillScreenModel
+extends RefCounted
+## Pure data for the Skills / Compendium screen.
+
+const GROUPS := [["PROFICIENCY", "proficiency"], ["ESSENCE", "essence"], ["EVOLUTION", "evolution"]]
+const ACTIVE_LABEL := {"poison_breath": "Damage", "water_blade": "Damage",
+	"hydraulic_propulsion": "Distance %", "sticky_thread": "Hold tier"}
+const STAT_LABEL := {"max_hp": "Max HP", "atk": "ATK", "def": "DEF", "spd": "SPD",
+	"jump_height": "Jump height", "slide_speed": "Slide speed", "predation_time": "Eat time",
+	"max_mp": "Max MP", "mp_regen": "MP regen"}
+const EVENT_TEXT := {"jumped": "Jump", "wall_touched": "Touch a wall mid-air",
+	"hp_low_exited": "Recover from low HP", "predated": "Eat creatures", "mana_spent": "Spend MP",
+	"inspected": "Appraise", "skill_used": "Use the skill", "stunned_enemy": "Stun enemies"}
+
+## Skills tab: owned skills per group, plus one "???" row where unowned, non-secret skills remain.
+static func skill_rows(rules, all_defs: Array) -> Array:
+	var rows: Array = []
+	for g in GROUPS:
+		rows.append({"kind": "header", "text": g[0]})
+		var locked := false
+		for d in _sorted(all_defs):
+			if d.source != g[1]:
+				continue
+			if rules.level_of(d.id) > 0:
+				rows.append({"kind": "skill", "id": d.id, "name": d.display_name,
+					"level": rules.level_of(d.id), "max_level": d.max_level})
+			elif not d.secret:
+				locked = true
+		if locked:
+			rows.append({"kind": "locked"})
+	return rows
+
+## Compendium tab: every slot at its discovery state. Exact conditions only once owned.
+static func compendium_rows(compendium: CompendiumModel, all_defs: Array) -> Array:
+	var by_id := {}
+	for d in all_defs:
+		by_id[d.id] = d
+	var rows: Array = []
+	for g in GROUPS:
+		rows.append({"kind": "header", "text": g[0]})
+		for d in _sorted(all_defs):
+			if d.source != g[1]:
+				continue
+			var state := compendium.state(d.id)
+			var row := {"kind": "slot", "id": d.id, "state": state,
+				"name": "???" if state == CompendiumModel.State.UNKNOWN else d.display_name}
+			if state >= CompendiumModel.State.HINTED and d.hint != "":
+				row["hint"] = d.hint
+			if state == CompendiumModel.State.OWNED_ONCE:
+				row["condition"] = condition_text(d, by_id)
+				if d.hint != "":
+					row["hint"] = d.hint
+			rows.append(row)
+	return rows
+
+static func detail(rules, d: SkillDef, slots: ActiveSlots) -> Dictionary:
+	var level: int = rules.level_of(d.id)
+	var p: Dictionary = rules.level_progress(d.id)
+	var slot := ""
+	if slots.slots[0] == d.id:
+		slot = "U"
+	elif slots.slots[1] == d.id:
+		slot = "O"
+	return {"id": d.id, "name": d.display_name, "level": level, "max_level": d.max_level,
+		"description": d.description, "mp_cost": d.mp_cost, "lines": effect_lines(d, maxi(level, 1)),
+		"progress": float(p["current"]) / p["target"] if p["target"] > 0 else -1.0, "slot": slot}
+
+static func effect_lines(d: SkillDef, level: int) -> Array:
+	var lines: Array = []
+	for e in d.effects:
+		var v := int(SkillEffects.value_at(e, level))
+		match e.get("kind", ""):
+			"active":
+				if e.has("values"):
+					lines.append("%s %d" % [ACTIVE_LABEL.get(d.id, "Power"), v])
+			"modifier", "conditional_modifier":
+				var stat: String = e.get("stat", "")
+				if stat == SkillEffects.DAMAGE_TAKEN:
+					var kind: String = e.get("scope", {}).get("damage_type", "")
+					var what := (kind.capitalize() + " damage") if kind != "" else "Damage"
+					if e.get("op", "") == "percent_off":
+						lines.append("%s −%d%%" % [what, v])
+					else:
+						lines.append("%s −%d at low HP" % [what, v])
+				elif stat == StatKeys.REGEN_INTERVAL:
+					lines.append("Regen 1 HP every %d s" % v)
+				else:
+					var pct := "%" if StatKeys.PERCENT.has(stat) else ""
+					lines.append("%s %+d%s" % [STAT_LABEL.get(stat, stat), v, pct])
+	return lines
+
+static func condition_text(d: SkillDef, by_id: Dictionary) -> String:
+	var parts: Array = []
+	for c in d.unlock:
+		match c.get("kind", ""):
+			"counter":
+				parts.append("%s ×%d" % [_event_text(c["event"], c.get("tags", {})), c["n"]])
+			"reset_counter":
+				parts.append("Eat creatures in a row without taking damage ×%d" % c["n"])
+			"skill_level":
+				var parent = by_id.get(c["id"])
+				parts.append("%s Lv%d" % [parent.display_name if parent != null else c["id"], c["n"]])
+	return " and ".join(parts)
+
+static func _event_text(event: String, tags: Dictionary) -> String:
+	match event:
+		"absorbed":
+			return "Absorb %s essence" % tags.get("essence", "")
+		"damaged":
+			return "Take %s hits" % tags.get("damage_type", "any") if tags.has("damage_type") else "Take hits"
+	return EVENT_TEXT.get(event, event)
+
+static func _sorted(defs: Array) -> Array:
+	var out := defs.filter(func(d): return d.source != "enemy_only")
+	out.sort_custom(func(a, b): return a.display_name < b.display_name)
+	return out

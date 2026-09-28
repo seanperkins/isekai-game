@@ -22,3 +22,4 @@ Gamepad: left stick / D-pad move (stick also aims) · A jump · X tackle · B ho
 - [ ] Every active shows an effect: green cloud (Poison Breath), blue streak (Water Blade), thread line, dash afterimages.
 - [ ] Fullscreen: HUD text scales up and stays crisp.
 - [ ] Holding a direction while casting aims the skill (8-way); with nothing held it fires forward. Up + Hydraulic Propulsion = vertical boost.
+- [ ] Esc / Start opens the Skills screen (game pauses): stats, grouped skills with icons and level pips, detail card with MP cost and next-level bar. Q/E or LB/RB switch to Compendium. Enter / A on an active assigns it to U (again: O). Esc / B closes.

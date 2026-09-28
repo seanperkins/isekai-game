@@ -386,6 +386,21 @@ anime-style status screen showing:
 - **Why:** text and pixel art scale together in fullscreen.
 - **Camera:** zoom is 1.
 
+## Skill screen and aiming (added after playtest)
+
+**Skill screen** (approved concept: `art_source/skill_screen_concept.png`)
+- **Opening:** Esc / Start opens it and pauses the game.
+- **Skills tab:**
+  - A stats panel: portrait, HP and MP bars, ATK/DEF/SPD, essence totals.
+  - Owned skills grouped by Proficiency, Essence and Evolution, each with an icon, level and pips. A "???" row is shown where unowned, non-secret skills remain.
+  - A detail card: description, MP cost, effect lines, a next-level bar, and a U/O slot badge.
+- **Compendium tab:** every slot at its discovery state. The exact condition shows only once a skill is owned.
+- **Controls:** Enter / A on an active assigns it to U, and pressing again assigns it to O. Q/E or LB/RB switch tabs. Esc / B closes.
+
+**Aiming**
+- Actives cast toward the held direction (stick, or W/S/↑/↓ with A/D), snapped to 8 ways. With nothing held, they cast forward.
+- Keyboard jump is Space only.
+
 ## Content
 
 These are starting values for tuning. The pacing column is a hypothesis, to be

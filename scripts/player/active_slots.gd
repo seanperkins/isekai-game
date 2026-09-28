@@ -46,6 +46,17 @@ func cycle() -> void:
 	slots[last_used] = next
 	_touch(last_used)
 
+## Puts an owned active into slot `i` (from the skill screen). If it was already in the
+## other slot, the two slots swap.
+func assign(i: int, id: String) -> void:
+	if not owned.has(id):
+		return
+	var other := 1 - i
+	if slots[other] == id:
+		slots[other] = slots[i]
+	slots[i] = id
+	_touch(i)
+
 func reset() -> void:
 	slots = ["", ""]
 	owned = []

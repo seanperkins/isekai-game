@@ -22,3 +22,16 @@ func test_hud_fits_the_view_and_shows_mp() -> void:
 			assert_between(c.position.y, 0.0, 359.0, c.name)
 	var cam: Camera2D = game.player.get_node("Camera")
 	assert_eq(cam.zoom, Vector2(1, 1))
+
+func test_hud_hides_behind_the_skill_screen_and_hints_how_to_open_it() -> void:
+	var game = load("res://scenes/main.tscn").instantiate()
+	add_child_autofree(game)
+	await wait_physics_frames(1)
+	assert_eq(game.hud.menu_hint_text(), "Esc  Skills")
+	Controls.using_joypad = true
+	assert_eq(game.hud.menu_hint_text(), "Start  Skills")
+	Controls.using_joypad = false
+	game.skill_screen.open()
+	assert_false(game.hud.visible)
+	game.skill_screen.close()
+	assert_true(game.hud.visible)

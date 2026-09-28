@@ -9,6 +9,7 @@ const BACKDROP := Color(0.06, 0.06, 0.12)
 
 var player: Player
 var hud: Hud
+var skill_screen: SkillScreen
 
 func _ready() -> void:
 	Controls.ensure_actions()
@@ -49,6 +50,10 @@ func _ready() -> void:
 	hud = Hud.new()
 	add_child(hud)
 	hud.bind(player, SkillRules, Compendium.model, Announcer.queue)
+	skill_screen = SkillScreen.new()
+	add_child(skill_screen)
+	skill_screen.bind(player, SkillRules, Compendium.model, SkillRules.skill_defs)
+	skill_screen.visibility_changed.connect(func() -> void: hud.visible = not skill_screen.visible)
 	player.died.connect(_on_player_died)
 	SkillRules.start_run()
 

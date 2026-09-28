@@ -74,6 +74,18 @@ func unlock_log() -> Array:
 func get_def(id: String) -> SkillDef:
 	return _defs.get(id)
 
+## Progress of an owned skill toward its next level: {current, target}; zeros at max level.
+func level_progress(id: String) -> Dictionary:
+	var none := {"current": 0, "target": 0}
+	if not _owned.has(id):
+		return none
+	var d: SkillDef = _defs[id]
+	var level := level_of(id)
+	if d.levels_on.is_empty() or d.level_curve <= 0 or level >= d.max_level:
+		return none
+	var gained: int = _ledger.counter(d.levels_on["event"], d.levels_on.get("tags", {})) - int(_owned[id]["base"])
+	return {"current": clampi(gained - (level - 1) * d.level_curve, 0, d.level_curve), "target": d.level_curve}
+
 ## Events of this run matching `tags` (superset match), e.g. essence totals for the status screen.
 func count(event_name: String, tags: Dictionary = {}) -> int:
 	return _ledger.counter(event_name, tags)

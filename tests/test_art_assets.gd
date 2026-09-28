@@ -13,7 +13,7 @@ func before_all() -> void:
 				tile_names.append(sprite)
 
 func test_manifest_lists_every_sprite() -> void:
-	assert_eq(names.size(), 26)
+	assert_eq(names.size(), 44)
 
 func test_every_sprite_loads_through_art() -> void:
 	for n in names:
@@ -43,3 +43,9 @@ func test_tiles_are_exactly_32_px() -> void:
 func test_slime_idle_is_game_sized() -> void:
 	var size := Art.texture("slime_idle").get_size()
 	assert_between(size.y, 14.0, 22.0)
+
+func test_every_player_skill_has_an_icon() -> void:
+	for d in DefLoader.load_dir("res://data/skills"):
+		if d.source != "enemy_only":
+			assert_not_null(Art.texture("icon_" + d.id), d.id)
+	assert_not_null(Art.texture("icon_locked"))

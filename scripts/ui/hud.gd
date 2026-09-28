@@ -14,6 +14,7 @@ var _rules
 var _queue: AnnouncerQueue
 var _hp := Label.new()
 var _mp := Label.new()
+var _menu_hint := Label.new()
 var _slots := Label.new()
 var _popup := Label.new()
 var _popup_panel := PanelContainer.new()
@@ -35,6 +36,9 @@ func _ready() -> void:
 	_slots.position = Vector2(6, 28)
 	_ticker.position = Vector2(6, 318)
 	_panel.position = Vector2(420, 40)
+	_menu_hint.position = Vector2(560, 344)
+	_menu_hint.add_theme_font_size_override("font_size", FONT_SMALL)
+	_menu_hint.add_theme_color_override("font_color", Color(0.6, 0.7, 0.85))
 	for l in [_hp, _mp, _slots, _popup]:
 		l.add_theme_font_size_override("font_size", FONT_MAIN)
 	for l in [_ticker, _panel]:
@@ -51,7 +55,7 @@ func _ready() -> void:
 	_popup_panel.position = Vector2(VIEW.x / 2.0, 6)
 	_popup.position = Vector2.ZERO
 	_popup_panel.add_child(_popup)
-	for l in [_hp, _mp, _slots, _popup_panel, _ticker, _panel]:
+	for l in [_hp, _mp, _slots, _popup_panel, _ticker, _panel, _menu_hint]:
 		add_child(l)
 
 func _process(delta: float) -> void:
@@ -59,6 +63,7 @@ func _process(delta: float) -> void:
 		return
 	_hp.text = hp_text()
 	_mp.text = mp_text()
+	_menu_hint.text = menu_hint_text()
 	_slots.text = StatusText.slot_line(_player.skillset.slots, _rules, Controls.slot_labels())
 	_popup.text = popup_text()
 	_popup_panel.visible = _popup.text != ""
@@ -77,6 +82,9 @@ func _process(delta: float) -> void:
 
 func hp_text() -> String:
 	return "HP %d/%d" % [_player.health.hp, _player.health.max_hp]
+
+func menu_hint_text() -> String:
+	return "%s  Skills" % ("Start" if Controls.using_joypad else "Esc")
 
 func mp_text() -> String:
 	return "MP %d/%d" % [_player.mana.mp, _player.mana.max_mp]

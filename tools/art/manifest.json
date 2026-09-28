@@ -2,34 +2,466 @@
   "_doc": "Sprite boxes on the Codex-generated Style D sheets (found with find_sprites.py). scale = downscale factor; size = exact output size (tiles).",
   "sheets": {
     "art_source/sprites_characters_d.png": {
-      "slime_idle":   {"box": [220, 96, 347, 199],   "scale": 0.17},
-      "slime_land":   {"box": [550, 110, 728, 203],  "scale": 0.17},
-      "slime_jump":   {"box": [917, 41, 1074, 210],  "scale": 0.17},
-      "slime_eat":    {"box": [1259, 71, 1506, 206], "scale": 0.17},
-      "bat_1":        {"box": [111, 245, 407, 406],  "scale": 0.09},
-      "bat_2":        {"box": [494, 276, 759, 395],  "scale": 0.09},
-      "toad_idle":    {"box": [871, 273, 1088, 415], "scale": 0.14},
-      "toad_spit":    {"box": [1215, 262, 1444, 417],"scale": 0.14},
-      "spit_glob":    {"box": [1457, 308, 1587, 369],"scale": 0.14},
-      "lizard_1":     {"box": [63, 465, 455, 610],   "scale": 0.11},
-      "lizard_2":     {"box": [517, 464, 920, 610],  "scale": 0.11},
-      "spider_hang":  {"box": [1076, 434, 1178, 612],"scale": 0.09},
-      "spider_crawl": {"box": [1346, 506, 1535, 606],"scale": 0.09},
-      "serpent":      {"box": [316, 635, 1331, 915], "scale": 0.12}
+      "slime_idle": {
+        "box": [
+          220,
+          96,
+          347,
+          199
+        ],
+        "scale": 0.17
+      },
+      "slime_land": {
+        "box": [
+          550,
+          110,
+          728,
+          203
+        ],
+        "scale": 0.17
+      },
+      "slime_jump": {
+        "box": [
+          917,
+          41,
+          1074,
+          210
+        ],
+        "scale": 0.17
+      },
+      "slime_eat": {
+        "box": [
+          1259,
+          71,
+          1506,
+          206
+        ],
+        "scale": 0.17
+      },
+      "bat_1": {
+        "box": [
+          111,
+          245,
+          407,
+          406
+        ],
+        "scale": 0.09
+      },
+      "bat_2": {
+        "box": [
+          494,
+          276,
+          759,
+          395
+        ],
+        "scale": 0.09
+      },
+      "toad_idle": {
+        "box": [
+          871,
+          273,
+          1088,
+          415
+        ],
+        "scale": 0.14
+      },
+      "toad_spit": {
+        "box": [
+          1215,
+          262,
+          1444,
+          417
+        ],
+        "scale": 0.14
+      },
+      "spit_glob": {
+        "box": [
+          1457,
+          308,
+          1587,
+          369
+        ],
+        "scale": 0.14
+      },
+      "lizard_1": {
+        "box": [
+          63,
+          465,
+          455,
+          610
+        ],
+        "scale": 0.11
+      },
+      "lizard_2": {
+        "box": [
+          517,
+          464,
+          920,
+          610
+        ],
+        "scale": 0.11
+      },
+      "spider_hang": {
+        "box": [
+          1076,
+          434,
+          1178,
+          612
+        ],
+        "scale": 0.09
+      },
+      "spider_crawl": {
+        "box": [
+          1346,
+          506,
+          1535,
+          606
+        ],
+        "scale": 0.09
+      },
+      "serpent": {
+        "box": [
+          316,
+          635,
+          1331,
+          915
+        ],
+        "scale": 0.12
+      }
     },
     "art_source/sprites_tiles_d.png": {
-      "column":          {"box": [1155, 99, 1286, 438],  "scale": 0.2},
-      "ground":          {"box": [32, 201, 270, 438],    "size": [32, 32]},
-      "wall":            {"box": [308, 211, 528, 438],   "size": [32, 32]},
-      "platform_moss":   {"box": [565, 242, 835, 449],   "scale": 0.2},
-      "plank":           {"box": [874, 277, 1119, 376],  "scale": 0.2},
-      "water_pool":      {"box": [1327, 244, 1638, 438], "scale": 0.12},
-      "crystal_purple":  {"box": [33, 594, 272, 828],    "scale": 0.12},
-      "crystal_teal":    {"box": [331, 557, 578, 828],   "scale": 0.12},
-      "crystal_blue":    {"box": [643, 585, 848, 828],   "scale": 0.12},
-      "vine":            {"box": [915, 516, 1045, 852],  "scale": 0.12},
-      "torch":           {"box": [1143, 524, 1270, 817], "scale": 0.12},
-      "stalactite":      {"box": [1392, 551, 1573, 820], "scale": 0.12}
+      "column": {
+        "box": [
+          1155,
+          99,
+          1286,
+          438
+        ],
+        "scale": 0.2
+      },
+      "ground": {
+        "box": [
+          32,
+          201,
+          270,
+          438
+        ],
+        "size": [
+          32,
+          32
+        ]
+      },
+      "wall": {
+        "box": [
+          308,
+          211,
+          528,
+          438
+        ],
+        "size": [
+          32,
+          32
+        ]
+      },
+      "platform_moss": {
+        "box": [
+          565,
+          242,
+          835,
+          449
+        ],
+        "scale": 0.2
+      },
+      "plank": {
+        "box": [
+          874,
+          277,
+          1119,
+          376
+        ],
+        "scale": 0.2
+      },
+      "water_pool": {
+        "box": [
+          1327,
+          244,
+          1638,
+          438
+        ],
+        "scale": 0.12
+      },
+      "crystal_purple": {
+        "box": [
+          33,
+          594,
+          272,
+          828
+        ],
+        "scale": 0.12
+      },
+      "crystal_teal": {
+        "box": [
+          331,
+          557,
+          578,
+          828
+        ],
+        "scale": 0.12
+      },
+      "crystal_blue": {
+        "box": [
+          643,
+          585,
+          848,
+          828
+        ],
+        "scale": 0.12
+      },
+      "vine": {
+        "box": [
+          915,
+          516,
+          1045,
+          852
+        ],
+        "scale": 0.12
+      },
+      "torch": {
+        "box": [
+          1143,
+          524,
+          1270,
+          817
+        ],
+        "scale": 0.12
+      },
+      "stalactite": {
+        "box": [
+          1392,
+          551,
+          1573,
+          820
+        ],
+        "scale": 0.12
+      }
+    },
+    "art_source/skill_icons_d.png": {
+      "icon_leap": {
+        "box": [
+          42,
+          73,
+          272,
+          295
+        ],
+        "size": [
+          32,
+          32
+        ]
+      },
+      "icon_wall_cling": {
+        "box": [
+          312,
+          73,
+          542,
+          295
+        ],
+        "size": [
+          32,
+          32
+        ]
+      },
+      "icon_poison_resistance": {
+        "box": [
+          582,
+          73,
+          813,
+          295
+        ],
+        "size": [
+          32,
+          32
+        ]
+      },
+      "icon_pain_resistance": {
+        "box": [
+          859,
+          73,
+          1089,
+          295
+        ],
+        "size": [
+          32,
+          32
+        ]
+      },
+      "icon_toughness": {
+        "box": [
+          1131,
+          73,
+          1361,
+          295
+        ],
+        "size": [
+          32,
+          32
+        ]
+      },
+      "icon_appraisal": {
+        "box": [
+          1400,
+          73,
+          1630,
+          295
+        ],
+        "size": [
+          32,
+          32
+        ]
+      },
+      "icon_glutton": {
+        "box": [
+          42,
+          338,
+          272,
+          562
+        ],
+        "size": [
+          32,
+          32
+        ]
+      },
+      "icon_mana_recovery": {
+        "box": [
+          312,
+          338,
+          542,
+          562
+        ],
+        "size": [
+          32,
+          32
+        ]
+      },
+      "icon_echolocation": {
+        "box": [
+          582,
+          338,
+          813,
+          562
+        ],
+        "size": [
+          32,
+          32
+        ]
+      },
+      "icon_poison_breath": {
+        "box": [
+          859,
+          338,
+          1089,
+          562
+        ],
+        "size": [
+          32,
+          32
+        ]
+      },
+      "icon_body_armor": {
+        "box": [
+          1131,
+          338,
+          1361,
+          562
+        ],
+        "size": [
+          32,
+          32
+        ]
+      },
+      "icon_sticky_thread": {
+        "box": [
+          1400,
+          338,
+          1630,
+          562
+        ],
+        "size": [
+          32,
+          32
+        ]
+      },
+      "icon_hydraulic_propulsion": {
+        "box": [
+          42,
+          607,
+          272,
+          834
+        ],
+        "size": [
+          32,
+          32
+        ]
+      },
+      "icon_regeneration": {
+        "box": [
+          312,
+          607,
+          542,
+          834
+        ],
+        "size": [
+          32,
+          32
+        ]
+      },
+      "icon_water_blade": {
+        "box": [
+          582,
+          607,
+          813,
+          834
+        ],
+        "size": [
+          32,
+          32
+        ]
+      },
+      "icon_swing_thread": {
+        "box": [
+          859,
+          607,
+          1089,
+          834
+        ],
+        "size": [
+          32,
+          32
+        ]
+      },
+      "icon_jet_dash": {
+        "box": [
+          1131,
+          607,
+          1361,
+          834
+        ],
+        "size": [
+          32,
+          32
+        ]
+      },
+      "icon_locked": {
+        "box": [
+          1400,
+          607,
+          1630,
+          834
+        ],
+        "size": [
+          32,
+          32
+        ]
+      }
     }
   }
 }

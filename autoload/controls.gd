@@ -15,6 +15,9 @@ const BINDINGS := {
 	"active_1": [KEY_U],
 	"active_2": [KEY_O],
 	"cycle": [KEY_TAB],
+	"menu": [KEY_ESCAPE],
+	"tab_prev": [KEY_Q],
+	"tab_next": [KEY_E],
 }
 
 const PAD_BUTTONS := {
@@ -27,6 +30,9 @@ const PAD_BUTTONS := {
 	"active_1": [JOY_BUTTON_LEFT_SHOULDER],
 	"active_2": [JOY_BUTTON_RIGHT_SHOULDER],
 	"cycle": [JOY_BUTTON_DPAD_UP],
+	"menu": [JOY_BUTTON_START],
+	"tab_prev": [JOY_BUTTON_LEFT_SHOULDER],
+	"tab_next": [JOY_BUTTON_RIGHT_SHOULDER],
 }
 
 ## Left stick direction per action: [axis, sign].
