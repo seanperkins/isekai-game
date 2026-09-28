@@ -29,58 +29,71 @@ rewarded for its own sake, not only with items.
 | Goal | Cave 1 → … → Serpent Lair. Beating the serpent wins the run |
 | Content | 2 new areas, 6 creatures, new essences and skills, with Swim as the traversal skill |
 | Deep water | Before you have Swim it slows you and you slowly sink. With Swim you move freely |
+| Loaded rooms | One room is live at a time, and nothing carries across an exit. This is an accepted trade-off: it is simple and matches Hollow Knight, but seamless streaming later would mean rewriting the transition and entity lifecycle |
 
 ## World layout
 
-About 16 rooms. Sizes are in screens (1 screen = 640×360). The arrows are the main route;
+19 rooms: 16 on the routes plus 3 nooks (C6, G6 and F7, one per area). Sizes are in screens (1 screen = 640×360). The arrows are the main route;
 the dotted links are soft-gated.
 
 ```
-            [C3 Spider Loft 1×2]
+     [C6 nook]─[C3 Spider Loft 1×2]
                    │ up (wall cling or swing)
 [C1 Start 2×1]─[C2 Thread Gap 2×1]─[C4 Glow Pool 1×1]─[C5 Drop Shaft 1×3]
       ⋮ shortcut back (opened from G4)                     │ down
-                                                     [G1 Grotto Mouth 2×1]─[G2 Spore Hall 3×2]
+                                                     [G1 Grotto Mouth 2×1]─[G2 Spore Hall 3×2]─[G6 nook]
                                                                                 │
                               [G5 Rare: Pale Moth 1×1]⋯(wall cling)⋯[G3 Vine Maze 2×2]─[G4 Glow Pool 1×1]
                                                                                 │ down
                                                            [F1 Flood Gate 2×1]─[F2 Eel Channel 3×1]
                                                                   │                  ⋮ (Swim)
-                                                           [F3 Sunken Hall 2×2]    [F6 Rare: Storm Eel 1×1]
+                                                  [F7 nook]─[F3 Sunken Hall 2×2]    [F6 Rare: Storm Eel 1×1]
                                                                   │
                                                            [F4 Glow Pool 1×1]─[F5 Serpent Lair 3×2]
 ```
-
 - **Cave (C1–C5):** today's cave, cut into rooms. The layout, lights and food are kept, so
   every Plan 2 skill can still be earned here.
 - **Fungal Grotto (G1–G5):** glowing mushrooms, spore haze, vines. It adds spore and shell
   essences.
 - **Flooded Tunnels (F1–F6):** shallow and deep water, and shock creatures. It adds shock
   essence and Swim.
-- Every area also has at least one **dead-end nook** that holds only a vista, a lore tablet
-  or a lit crystal cavern. These count toward the map, so finding them feels like progress.
+- Every area has one **nook**: C6 off C3, G6 off G2, and F7 off F3. A nook is a small 1×1
+  dead-end room that holds only a vista, a tablet or a lit crystal cavern. Nooks are ordinary
+  rooms, so they count toward "Rooms found".
 
 ## Rooms and transitions
 
 - `RoomDef` is a resource in `data/rooms/*.tres`, generated from `tools/build_world.gd`
   (content stays data-driven, like skills). It holds:
-  - `id`, `area`, and `size` in pixels, always a whole number of screens;
+  - `id` and `area`;
+  - `cell`: the room's top-left corner on the world grid, in screens. For example,
+    C2 = (2, 0). All rooms share one world coordinate space, so a room's world rect is
+    `cell × (640, 360)` plus its size. Rooms never overlap (tested);
+  - `size`, in screens (for example, 2×1);
   - `solids`, `decor`, `spawns` and `water` (see below), in the same format as today's
     `RoomLayout`;
-  - `exits`: `[{edge, from, to, room, entry}]`. `edge` is left, right, top or bottom.
-    `from`–`to` is the span of that edge that is open. `room` is the target room id, and
-    `entry` is the matching exit id in that room.
+  - `exits`: `[{edge, from, to, room}]`. `edge` is left, right, top or bottom. `from`–`to`
+    is the open span in pixels along that edge, measured in the room's local coordinates.
+    `room` is the neighbour's id. There is no separate entry id: because rooms share world
+    coordinates, the matching exit is simply the neighbour's opposite edge, and the two
+    spans must overlap in world space (tested). The player keeps their world position when
+    they cross, so they arrive exactly where they left.
   - `gate` on an exit (optional): the skill the path is designed around. This is
     documentation for level design and tests. The game does not check it.
   - `features`: glow pools, tablets and shortcut switches.
-- **World:** one node owns the current room. When the player's body crosses an open exit
+- **World:** one node owns the current room. When the player's centre crosses an open exit
   span, the world:
-  1. builds the target room beside the current one;
-  2. slides the camera across (0.35 s, eased);
-  3. places the player at the matching entry, keeping their velocity; and
-  4. frees the old room.
+  1. builds the target room at its world position;
+  2. applies the saved state to it (see Persistence);
+  3. **freezes the player**: stores their velocity and turns off their physics, so nothing
+     moves during the slide;
+  4. turns off the camera limits and slides the camera from the old view to the target
+     room's clamped view (0.35 s, eased);
+  5. sets the camera limits to the target room's world rect;
+  6. frees the old room; and
+  7. unfreezes the player with the stored velocity.
 
-  Input is locked during the slide. Bodies and projectiles never carry over between rooms.
+  Bodies and projectiles never carry over between rooms.
 - **Entering from below** gives a small upward boost, so a jump through a floor hole always
   clears the lip. **Falling in from above** keeps its fall speed.
 - **Tests:**
@@ -101,6 +114,9 @@ the dotted links are soft-gated.
 ## Deep water and Swim
 
 - `water` rects in a room mark deep water. Shallow water is decor only.
+- `submerged` is a new player event. It goes into `Events.ALL` and the event table in the
+  prototype spec, so the validator accepts the Swim skill. The player emits it once per
+  second of time underwater, and only the player emits it (the actor boundary).
 - **Without Swim:**
   - horizontal speed ×0.6;
   - gravity ×0.35, with a sink cap of 60 px/s;
@@ -145,6 +161,11 @@ Each skill needs an icon, generated like the existing icons.
 
 ## Glow Pools, tablets, shortcuts
 
+- **Interaction:** a new `interactable` group, whose members have `interact(player)` and
+  `prompt()`. Inspect checks these first: the nearest interactable within 24 px wins. Then it
+  checks creatures (`inspectable`, as today), and then yourself. The "Hold K to eat" prompt
+  gains a sibling "I: soak" / "I: read".
+
 - **Glow Pool** (C4, G4 and F4, plus one in a secret nook):
   - Stand in it and press Inspect to soak. This refills HP and MP, and the pop-up reads "A
     voice: Your body settles."
@@ -164,9 +185,32 @@ Each skill needs an icon, generated like the existing icons.
   - exits you've seen but not taken, as stubs;
   - the current room, highlighted;
   - glow pools and tablets, as icons.
-- It also counts how much you've explored: "Rooms found 11/16", with nooks included.
-- Visited rooms, read tablets and opened shortcuts are saved with the Compendium, as optional
-  keys in the same file.
+- It also counts how much you've explored: "Rooms found N/19". Nooks are included, because
+  they are rooms.
+
+## Persistence and the run lifecycle
+
+- **Profile:** one save file, `user://profile.json`, owned by a `Profile` store. It is the
+  only thing that reads or writes persistent data. It holds sections — `compendium`,
+  `bestiary`, `map` (visited room ids), `shortcuts` (opened ids) and `tablets` (read ids) —
+  and always writes every section together, using the same safe write as today (tmp file,
+  verify, rename, backup).
+  - The Compendium, Bestiary and Map models keep their data in memory and ask `Profile` to
+    save. None of them writes a file itself.
+  - On first launch it migrates an existing `compendium.json` (slots and creatures) into the
+    new file.
+  - A bad section is dropped on its own. The other sections still load.
+- **Room state:** when the World builds a room, it asks `Profile` which of that room's
+  shortcuts are open and which tablets are read, and applies both before the room enters
+  the tree. It also asks the run which switches were hit this run.
+- **Run:** a `Run` node owns everything that lasts one run:
+  - the player's skills, levels and stats;
+  - which room you are in;
+  - Glow Pool use.
+
+  The Run handles death (the death card, then reset, then C1) and victory (the summary, then
+  reset). The World only handles space: rooms, exits and the camera. `game.gd` shrinks to
+  wiring the Run, the World and the HUD together.
 
 ## Serpent and victory
 
@@ -193,8 +237,9 @@ Each skill needs an icon, generated like the existing icons.
 ## Suggested build order (three plans)
 
 1. **World system:**
+   - `Profile` (with the migration), `Run`, and interactables;
    - `RoomDef`, the world node, camera-slide transitions and edge exits;
-   - cutting the Cave into C1–C5, and respawn on entry;
+   - cutting the Cave into C1–C6, and respawn on entry;
    - the Map tab and its persistence;
    - Glow Pools, tablets and shortcuts;
    - the "A voice" label.
