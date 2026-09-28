@@ -1,6 +1,8 @@
 # Slime Forms, Animation, Reincarnation and the Next Location — Design
 
-Status: revised after a six-reviewer panel (2026-09-28). Builds on
+Status: revised after a six-reviewer panel (2026-09-28). Section 0 (hitboxes and rigging) was
+added afterwards and has **not** been through the panel; the panel reviewed the frame-by-frame
+path in sections 1 and 2, which stays as the fallback (see 0.4). Builds on
 `2026-09-27-slime-prototype-design.md` and `2026-09-28-exploration-world-design.md`.
 
 ## Goal
@@ -16,7 +18,7 @@ is fixed by your answers.
 
 | # | Sub-project | Ends with |
 |---|---|---|
-| 1 | Slime feel: art pipeline, animation set, spread, eating cover, no torches | A slime that moves and eats with drawn animation |
+| 1 | Slime feel: **rig spike first**, then art pipeline, animation set, spread, eating cover, no torches | A slime that moves and eats with drawn animation |
 | 2 | Enemies: individual sprites and kill-type death animations | Every enemy has frames, and dies to match the blow |
 | 3 | Evolution: stages, forms, level cap, skill caps, raised skill maxima | You can evolve a slime through the tree |
 | 4 | Reincarnation: rebirth pools, kits, the choice logic | Dying can send you back to any unlocked pool |
@@ -26,7 +28,9 @@ is fixed by your answers.
 
 | Topic | Decision |
 |---|---|
-| Sprite production | Generate every frame **individually**, then a tool assembles frames into sheets. A whole sheet is never generated in one shot |
+| Sprite production | Generate every image **individually** (a frame, or a body part for a rig), then a tool assembles them. A whole sheet is never generated in one shot |
+| Bodies and hitboxes | Hitboxes follow the skin. Bodies are **rigged** (parts on a skeleton, with hurt and attack shapes attached to bones), adopted through a **slime-only spike** first. If the spike fails, fall back to per-frame art with hurt and attack shapes traced from each frame (section 0) |
+| Pixel look under rigging | Decided after the spike. The spike renders each rig at native pixel size (a low-resolution viewport with no smoothing) and you judge it |
 | Torches | None anywhere in the wilderness. Light comes from glowing fungus, lichen and crystals. Human-made things (tablets, cracked stone) stay, and an unlit brazier may mark an abandoned camp later |
 | Order | Slime feel → enemies → evolution → reincarnation → Fungal Grotto |
 | Evolution structure | Spider-style choice: at the stage cap you pick one of 2–3 offered forms |
@@ -56,6 +60,82 @@ the corrected one. The biggest corrections:
 - **Kill causes.** Only `tackle`, `blade` and `poison` have a live source today. `blast` is
   reserved (2.2).
 - **Tree gaps.** The fallback form and stage 3→4 had no defined path (3.2, 3.3).
+
+## 0. Hitboxes and rigging
+
+### 0.1 The hit model (both art paths)
+
+- Every body has two kinds of shape: **hurt shapes** (where it can be hit) and **attack shapes**
+  (what hurts: a lizard's charging head, a bat's diving body, the slime's tackle). A hit
+  happens when an attack shape overlaps a hurt shape of the other team.
+- The shapes follow the skin. On the rig path they are polygons attached to bones, so they
+  move and deform with the animation. On the frame path, the sheet-assembly tool traces each
+  frame's drawn pixels into a simple polygon and stores it with the frame, so the shape
+  changes as the body squashes, spreads or drapes over prey.
+- **Movement stays a single simple box.** The physics body that walks, jumps and lands is one
+  stable rectangle per creature, not the skin, so platforming stays smooth. (Skin-shaped
+  movement collision jitters on ledges and corners.) It keeps the re-centring rule from 1.2.
+- **Collision layers are new.** Nothing sets a layer or mask today, so every body blocks every
+  other body. The hit model needs them: world, player body, enemy body, player hurt, enemy
+  hurt, player attack, enemy attack. Hits are `Area2D` overlaps on the hurt and attack
+  layers, so they never depend on the movement bodies (which block each other and can only
+  touch).
+- **A tolerance margin.** The movement bodies stop at each other's edge, so shape overlap must
+  allow for two shapes that merely touch: attack shapes are grown by 2 px when tested.
+- The centre-distance checks (`CONTACT_RANGE`, the glob radius) are replaced by these shape
+  hits. Spit globs get an attack shape too.
+- **Spread and dodging.** A spread slime's hurt shape is flat, so an attack whose shape passes
+  above it misses. Whether that dodges anything real depends on each attack's shape (a bat's
+  dive ends on the floor). Sub-project 2 tests each attack against a spread slime and
+  documents the result. No dodge is promised in advance.
+- Tests: shapes attach to the right bones or frames, a hit needs overlap of an attack and a
+  hurt shape on opposite teams, friendly shapes never hit, a touching pair still registers,
+  and every creature's shapes stay inside its sprite's bounds.
+
+### 0.2 The rig (if the spike passes)
+
+- A creature is a set of separately generated **parts** (for the slime: the body, eyes, and a
+  few pseudopods; for a lizard: head, body, tail, legs) on a `Skeleton2D`. Soft bodies
+  (the slime, jelly) use a skinned `Polygon2D`, with vertex weights generated from the part's
+  outline and the bones' positions. Rigid limbs (a lizard's leg) are ordinary sprites on bones.
+- **Animations are data.** Keyframes live in JSON tables that a loader turns into an
+  `AnimationPlayer` at startup, so no editor is needed. The states from 1.1 map to animations,
+  with a short blend between them.
+- **The same skeleton serves every form of a species.** A form swaps and rescales parts and
+  changes tint, without new animations, so a form costs its parts (a handful of images), not
+  21 frames. This makes the 24-form tree much cheaper than on the frame path.
+- The death effects (2.2) work on a rig: the melt is a shader over the whole body, the tumble
+  is the body's physics, and the blade cut clips the skinned polygon along the blade's line
+  into two halves.
+- Eating by covering (1.3) uses the slime's deformable body: the mesh widens and drapes over
+  the prey's silhouette, and the prey's rig is hidden and scaled inside it.
+
+### 0.3 The spike (first task of Sub-project 1)
+
+A rigged **slime alone**, judged by you in real screenshots before anything else is rigged:
+
+- Parts generated individually (body, two eyes, pseudopods), keyed and assembled by a small
+  tool into a parts atlas and a rig description.
+- One skeleton, a skinned body, bone-attached hurt shape and tackle attack shape.
+- Native-pixel rendering: the rig is drawn into a small viewport at 1× with no smoothing and
+  scaled up.
+- Animations for: idle, run, rise, fall, land, wall, spread, tackle and the eating cover.
+- A scripted contact sheet of every animation (several frames each), plus a short capture of
+  the run and the spread.
+
+**Success looks like:** the body stays crisp at native size; squash and stretch read as a
+slime, not a rubber sheet; spread and the eating cover look deliberate; the hitboxes track the
+body; and one rig costs little enough to run 30 on screen. You decide from the screenshots.
+
+### 0.4 The gate
+
+- **Pass:** the rig path is adopted. Sections 1.1, 1.5, 2.1 and 3.2 are rewritten for parts
+  and animations instead of frames (the state list, the eating cover, the death effects, the
+  forms and the hit model stay). Enemies are rigged in Sub-project 2, and the rewritten spec
+  goes through the review panel again.
+- **Fail:** the frame path in sections 1 and 2 is built as written, plus traced per-frame hurt
+  and attack shapes (0.1). The panel already reviewed that path.
+- Nothing after the spike is built on either path until you have chosen.
 
 ## 1. Slime feel
 
@@ -575,11 +655,13 @@ Each pool defines a `kit`, sized to the area:
 - Enemy poison-over-time.
 - A fifth active slot.
 - A `SpeciesDef` and any second species.
+- Rigging enemies or forms before the slime spike passes (0.4).
 - Naming beyond Stage 4's draft.
 
 ## Build order (five plans)
 
-1. **Slime feel:** the art-pipeline spike, then the pipeline, the slime's frame sets,
+1. **Slime feel:** **the rig spike (0.3) and your decision (0.4)**, then either the rigged slime
+   or the art-pipeline spike and the pipeline, the slime's frame sets,
    `SlimeState`, `Animator`, spread (a pose, with the re-centred collision shape), `EatCover`, and the torch replacement
    with its decor art.
 2. **Enemies:** frames for each creature, the `receive_hit` arguments (Enemy gains two), and the death
