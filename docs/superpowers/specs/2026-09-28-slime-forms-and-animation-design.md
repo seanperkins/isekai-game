@@ -137,6 +137,21 @@ body; and one rig costs little enough to run 30 on screen. You decide from the s
   and attack shapes (0.1). The panel already reviewed that path.
 - Nothing after the spike is built on either path until you have chosen.
 
+**Outcome (2026-09-28): the frame path.** The rig spike (branch `feat/rig-spike`) worked: the body
+deformed and stayed crisp, 30 rigs cost 3.6 ms a frame, and every animation read. Sean judged the
+per-frame approach the better one, so **sections 1 and 2 stand as written**, with hurt and attack
+shapes traced from each frame (0.1). Decisions that came with it:
+
+- **Size: 2x.** Slime frames are drawn about twice today's size (the body about 44x36), with a
+  28x24 collision box and a 28x10 spread box. Enemies are redrawn at a matching scale in
+  Sub-project 2; until then the slime is larger than them, and every room exit is checked to fit
+  it (a test).
+- **The spike code:** carried over, because it does not depend on a rig: `SlimeState` (which
+  animation plays), Spread (input, half speed, the re-centred collision box, no jump under a low
+  ceiling), the tackle timer, and `PredationHold.progress()`. Everything rig-specific (`SlimeRig`,
+  `RigShapes`, `EatCover` as built, the rig tools and parts) stays on the archived spike branch.
+- The 2x scale constant (`RigConfig.SCALE`) moves to a plain `BodyScale` config.
+
 ## 1. Slime feel
 
 ### 1.1 Movement states and frames
