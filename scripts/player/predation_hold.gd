@@ -19,6 +19,12 @@ func update(delta: float) -> bool:
 	_elapsed += delta
 	return _elapsed >= _required - 0.0001
 
+## How far through the hold we are, 0 to 1.
+func progress() -> float:
+	if target == null or _required <= 0.0:
+		return 0.0
+	return clampf(_elapsed / _required, 0.0, 1.0)
+
 func cancel() -> void:
 	target = null
 	_elapsed = 0.0

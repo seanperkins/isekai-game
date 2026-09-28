@@ -15,7 +15,10 @@ signal downed(def: CreatureDef)
 const GRAVITY := 900.0
 const BASE_SPEED := 60.0
 const CHASE_RANGE := 160.0
-const CONTACT_RANGE := 18.0
+const CONTACT_RANGE := 18.0  # centre distance, for a player with no body box (test stubs)
+## The enemy's collision box, and the slack that lets two touching boxes count as in contact.
+const BODY_SIZE := Vector2(16, 12)
+const CONTACT_MARGIN := 2.0
 const PATROL_RANGE := 48.0
 const SPIT_RANGE := 90.0
 const SPIT_COOLDOWN := 5.0
@@ -163,9 +166,18 @@ func _physics_process(delta: float) -> void:
 	if not flying and not (_on_ceiling and active):
 		velocity.y += GRAVITY * delta
 	move_and_slide()
-	if active and player != null and global_position.distance_to(player.global_position) <= CONTACT_RANGE:
+	if active and player != null and is_touching(player):
 		player.receive_hit(stats.get_stat("atk"), "physical", global_position)
 	_update_visual()
+
+## True when this enemy's box touches the player's. The bodies block each other, so they can only
+## touch, never overlap: the margin bridges that. A player with no body box (a test stub) falls back
+## to the old centre distance.
+func is_touching(player: Node2D) -> bool:
+	if player.has_method("body_rect"):
+		var mine := Rect2(global_position - BODY_SIZE / 2.0, BODY_SIZE).grow(CONTACT_MARGIN)
+		return mine.intersects(player.body_rect())
+	return global_position.distance_to(player.global_position) <= CONTACT_RANGE
 
 func is_alert() -> bool:
 	return _alert > 0.0
@@ -361,7 +373,7 @@ func _swoop_act(player: Node2D, delta: float) -> void:
 func _build_body() -> void:
 	var shape := CollisionShape2D.new()
 	var rect := RectangleShape2D.new()
-	rect.size = Vector2(16, 12)
+	rect.size = BODY_SIZE
 	shape.shape = rect
 	add_child(shape)
 	if def != null:

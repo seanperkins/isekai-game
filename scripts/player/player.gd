@@ -35,7 +35,12 @@ const MAX_SWING_SPEED := 520.0
 ## After letting go of a rope, air speed eases toward walking speed at this rate (px/s^2)
 ## instead of snapping to it, so the swing's momentum carries you.
 const CARRY_DRAG := 240.0
-const BODY_BOTTOM := 6.0  # collision box bottom, where sprites stand
+const BODY_BOTTOM := BodyConfig.BOTTOM  # collision box bottom, where the body stands
+## Hold down (aim snapped straight down) on the floor and the slime flattens into a puddle.
+## SPREAD_STICK_Y is a stick magnitude (0 to 1), not a time.
+const SPREAD_STICK_Y := 0.6
+const SPREAD_SPEED := 0.5
+const HURT_FLASH := 0.25
 
 var team := "player"
 var facing := 1
@@ -59,6 +64,10 @@ var _poison_acc := 0.0
 var _regen_acc := 0.0
 var _abilities := {}
 var _sprite: Sprite2D
+var spreading := false
+var _shape: CollisionShape2D
+var _rect: RectangleShape2D
+var _tackle_time := 0.0
 var _land_timer := 0.0
 var _was_on_floor := true
 var eat_prompt := Label.new()
@@ -98,15 +107,17 @@ func _physics_process(delta: float) -> void:
 	var dir := Input.get_axis("move_left", "move_right")
 	if predation.active():
 		dir = 0.0
+	set_spread(wants_spread(is_on_floor(), aim_vector(), raw_aim().y, spreading))
+	_tackle_time = maxf(0.0, _tackle_time - delta)
 	if dir != 0.0:
 		facing = 1 if dir > 0.0 else -1
 	if _dash > 0.0:
 		_dash -= delta
 	elif _carrying and not is_on_floor():
-		velocity.x = move_toward(velocity.x, dir * SPEED * stats.get_stat("spd") / 100.0, CARRY_DRAG * delta)
+		velocity.x = move_toward(velocity.x, dir * _walk_speed(), CARRY_DRAG * delta)
 	elif rope == null or is_on_floor():  # on the ground a roped slime walks normally
 		_carrying = false
-		velocity.x = dir * SPEED * stats.get_stat("spd") / 100.0
+		velocity.x = dir * _walk_speed()
 	if not is_on_floor():
 		velocity.y += GRAVITY * delta
 	if rope != null:
@@ -176,10 +187,61 @@ func _update_visual(delta: float) -> void:
 	_update_rope_line()
 	Art.set_frame(_sprite, pick_frame(predation.active(), on_floor, _land_timer), BODY_BOTTOM)
 	_sprite.flip_h = facing < 0
+	# Until the 2x frames are drawn, the old frames are shown at the body's scale.
+	_sprite.scale = Vector2(BodyConfig.SCALE, BodyConfig.SCALE)
+	if _sprite.texture != null:
+		_sprite.position.y = BODY_BOTTOM - _sprite.texture.get_height() * BodyConfig.SCALE / 2.0
+
+## Spread starts on the floor with the aim snapped straight down and the stick (or keys) held at
+## least SPREAD_STICK_Y; once spread, it holds while `raw_y` stays at or above SPREAD_STICK_Y.
+static func wants_spread(on_floor: bool, snapped: Vector2, raw_y: float, was_spread: bool) -> bool:
+	if not on_floor:
+		return false
+	if was_spread:
+		return raw_y >= SPREAD_STICK_Y
+	return snapped == Vector2.DOWN and raw_y >= SPREAD_STICK_Y
+
+func _walk_speed() -> float:
+	return SPEED * stats.get_stat("spd") / 100.0 * (SPREAD_SPEED if spreading else 1.0)
+
+## Flattens or stands the slime. The collision box keeps its bottom on the floor, and standing
+## needs room above.
+func set_spread(value: bool) -> void:
+	if value == spreading:
+		return
+	if not value and not _can_stand():
+		return
+	spreading = value
+	var size := BodyConfig.spread_size() if value else BodyConfig.size()
+	_rect.size = size
+	_shape.position.y = BODY_BOTTOM - size.y / 2.0
+
+## True when nothing solid sits within the extra height a standing slime needs.
+func _can_stand() -> bool:
+	var rise := BodyConfig.size().y - BodyConfig.spread_size().y
+	return not test_move(global_transform, Vector2(0.0, -rise))
+
+## Whether the body is drawn mirrored. The wall grip is drawn on the wall's side, from the wall
+## normal (a wall on the left has a normal pointing right); every other state follows `facing`.
+func _faces_left(state: String, wall_normal: Vector2) -> bool:
+	if state == "wall":
+		return wall_normal.x > 0.0
+	return facing < 0
+
+func _clinging() -> bool:
+	return skillset.has("wall_cling") and is_on_wall() and not is_on_floor() and velocity.y > 0.0
+
+## The body's collision box in world space (it shrinks when spread). Enemies use it for contact.
+func body_rect() -> Rect2:
+	return Rect2(global_position + _shape.position - _rect.size / 2.0, _rect.size)
 
 func do_jump() -> void:
 	if health.is_dead() or predation.active():
 		return
+	if spreading:
+		if not _can_stand():
+			return
+		set_spread(false)
 	if rope != null and is_on_floor():
 		drop_rope()  # then a normal ground jump
 	elif rope != null:
@@ -200,6 +262,7 @@ func do_tackle() -> void:
 		return
 	velocity.x = facing * TACKLE_SPEED
 	_dash = TACKLE_SECONDS
+	_tackle_time = TACKLE_SECONDS
 	var target = _nearest_in_front(TACKLE_RANGE)
 	if target == null or not target.has_method("receive_tackle"):
 		return
@@ -506,11 +569,11 @@ func _on_health_died() -> void:
 	died.emit()
 
 func _build_body() -> void:
-	var shape := CollisionShape2D.new()
-	var rect := RectangleShape2D.new()
-	rect.size = Vector2(14, 12)
-	shape.shape = rect
-	add_child(shape)
+	_shape = CollisionShape2D.new()
+	_rect = RectangleShape2D.new()
+	_rect.size = BodyConfig.size()
+	_shape.shape = _rect
+	add_child(_shape)
 	_sprite = Art.sprite("slime_idle", BODY_BOTTOM)
 	add_child(_sprite)
 	add_child(Art.light(Color(0.4, 0.75, 1.0), 0.8, 1.2))  # the slime's soft inner glow
