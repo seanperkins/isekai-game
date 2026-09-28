@@ -4,3 +4,10 @@ config_version=5
 
 config/name="Slime Isekai Prototype"
 config/features=PackedStringArray("4.7")
+
+[autoload]
+
+EventBus="*res://autoload/event_bus.gd"
+SkillRules="*res://autoload/skill_rules.gd"
+Compendium="*res://autoload/compendium.gd"
+Announcer="*res://autoload/announcer.gd"
