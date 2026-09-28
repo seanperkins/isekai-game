@@ -245,6 +245,8 @@ Each skill needs an icon, generated like the existing icons.
    - the "A voice" label.
 
    Playable at the end: the Cave explored room by room.
+
+   Status: built in Plan 1 (docs/superpowers/plans/2026-09-28-world-system.md).
 2. **Fungal Grotto:**
    - the G rooms and their art;
    - Spore Moth, Mushroom Crab, Vine Snake and Pale Moth;

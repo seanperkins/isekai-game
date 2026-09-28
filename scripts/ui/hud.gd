@@ -1,6 +1,6 @@
 class_name Hud
 extends CanvasLayer
-## HP, active slots, the Great Sage pop-up, the ticker, and the inspect/status panel.
+## HP, active slots, the voice's pop-ups, the ticker, and the inspect/status panel.
 
 const PANEL_SECONDS := 4.0
 const TICKER_SECONDS := 3.0
@@ -14,6 +14,8 @@ const SLOT_SIZE := Vector2(108, 20)
 const SLOT_MARGIN := 6.0
 const SLOT_CELL := [Vector2i(0, 1), Vector2i(1, 1), Vector2i(0, 0), Vector2i(1, 0)]  # (side, row)
 const POPUP_TOP := 52.0
+## Every pop-up is spoken by the inner voice.
+const VOICE := "A voice — "
 
 var _player: Player
 var _rules
@@ -214,7 +216,7 @@ func mp_text() -> String:
 
 func popup_text() -> String:
 	var current := _queue.current()
-	return current.get("text", "") if not current.is_empty() else ""
+	return VOICE + current["text"] if not current.is_empty() else ""
 
 func _on_inspect_report(lines: PackedStringArray) -> void:
 	_panel.text = "\n".join(lines)

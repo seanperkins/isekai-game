@@ -34,3 +34,8 @@ Gamepad: left stick / D-pad move (stick also aims) · A jump · X tackle · B ho
 - [ ] HUD skill slots form one block top-right shaped like the pad: LT/RT on top, LB/RB under them; each shows the button, icon and name, and dims when you can't afford it.
 - [ ] Skill screen: the stick moves one row per push (hold to scroll slowly); A accepts; B closes.
 - [ ] Bestiary tab (third tab): creatures appear once seen on screen; appraising reveals stats/skills; eating shows essences and eat bonus; counts eaten and defeated; persists after death.
+- [ ] The Cave is six rooms. Walking off a room's edge slides the camera into the next room, and you keep your speed. Enemies are back when you return.
+- [ ] C2's chimney (Wall Cling) leads up to C3, and C3 leads left to the C6 nook. Tackle the cracked stone in C6: the floor opens and drops you into C1. On a new run the hole is still open.
+- [ ] Inspect by the C6 tablet shows its lore. Inspect in C4's Glow Pool refills HP and MP, and a pop-up says "A voice — Your body settles."
+- [ ] Menu → Map tab (fourth tab): visited rooms, a highlight on your room, dots for exits you haven't taken, and "Rooms found N/6".
+- [ ] Dying shows "You dissolve." for a moment, then the run restarts in C1. The map and the opened shortcut stay.

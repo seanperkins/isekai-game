@@ -47,3 +47,11 @@ func test_eating_and_defeating_reach_the_bestiary() -> void:
 	var after: Dictionary = Compendium.model.creature_record("toad")
 	assert_eq(after["eaten"], before["eaten"] + 1)
 	assert_eq(after["defeated"], before["defeated"] + 1)
+
+func test_pop_ups_are_labelled_a_voice() -> void:
+	var game = load("res://scenes/main.tscn").instantiate()
+	add_child_autofree(game)
+	await wait_physics_frames(2)
+	Announcer.queue.push_unlock("leap", "Acquired [Leap].")
+	await wait_process_frames(2)
+	assert_string_starts_with(game.hud.popup_text(), "A voice — ")
