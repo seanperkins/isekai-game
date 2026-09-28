@@ -422,6 +422,24 @@ This replaces the earlier "no XP levels" rule.
 - **Slot rules:** a new active fills the first empty slot, else replaces the least recently used. On the skill screen, Enter / A moves an active to the next slot.
 - **Debugging:** F3 / Back toggles an input debug overlay showing the raw stick, the resolved aim and the last cast's direction.
 
+## Thread grapple and the bigger cave (added after playtest)
+
+- A thread flies along the aim and hits whatever it touches first. An enemy is slowed or held,
+  as before. Terrain becomes an anchor: the slime swings on a rope (pendulum, never longer than
+  its length).
+- While swinging: left/right pump the swing, up/down reel the rope in and out, Jump lets go
+  (momentum × boost, always at least a small upward pop), firing again re-aims. The rope is drawn
+  until released. A new run, death or eating drops it.
+- | Thread | Range | Reel | Release boost | Enemy tier |
+  |---|---|---|---|---|
+  | Sticky Thread | 120 px | 60 px/s | ×1.0 | 1–2 by level |
+  | Swing Thread | 200 px | 120 px/s | ×1.4 | 2 (hold) |
+- Swing Thread defaults to up-and-forward when nothing is held. `SkillDef.replaces` names the
+  parent whose slot an evolution takes over; the parent leaves the slot list.
+- The starting cave is 3200×1080 (five screens by three): lower hall, middle tier, upper tier and
+  top gallery, joined by stair towers so every ledge is reachable by plain jumps (tested). Anchor
+  rocks over the upper tier's swing gap reward the thread; falling lands on the middle tier.
+
 ## Content
 
 These are starting values for tuning. The pacing column is a hypothesis, to be
@@ -452,7 +470,7 @@ creature has.
 | Echolocation | `counter(absorbed, {essence: sound}) >= 3` (3 bats) | 3 bats ✓ | capability: `reveals_hidden`, radius values 1/2/3 | `absorbed{essence: sound}` ×1/level, max 3 (bonus-room bats) |
 | Poison Breath | `counter(absorbed, {essence: poison}) >= 4` | 4 toads + 3 spiders = 7 ✓ | active: short-range poison cone; damage 2/3/4/5/6 | `skill_used{id: poison_breath}` ×8/level, max 5 |
 | Body Armor | `counter(absorbed, {essence: armor}) >= 3` (3 lizards) | 3 lizards ✓ | modifier: DEF +1/+2/+3 (absolute per level, like every `values` row) | `damaged{}` ×10/level, max 3 |
-| Sticky Thread | `counter(absorbed, {essence: thread}) >= 3` (3 spiders) | 3 spiders ✓ | active: thread that slows (Lv1–2) or holds (Lv3+) an enemy | `skill_used{id: sticky_thread}` ×8/level, max 5 |
+| Sticky Thread | `counter(absorbed, {essence: thread}) >= 3` (3 spiders) | 3 spiders ✓ | active: thread that slows (Lv1–2) or holds (Lv3+) an enemy, or sticks to terrain as a swing rope | `skill_used{id: sticky_thread}` ×8/level, max 5 |
 | Hydraulic Propulsion | `counter(absorbed, {essence: water}) >= 4` | 2 pools × 2 + 4 toads = 8 ✓ | active: short water-powered burst; distance values 1/1.2/1.4/1.6/1.8 | `skill_used{id: hydraulic_propulsion}` ×6/level, max 5 |
 | Regeneration | `counter(predated, {kind: creature}) >= 10` | 13 creatures ✓ | modifier: regen 1 HP every 8/6/4 s | `predated{kind: creature}` ×8/level, max 3 (Lv2–3 are intended to need bonus-room creatures) |
 
@@ -479,7 +497,7 @@ condition may reference one.
 | Skill | Unlock | Effect |
 |---|---|---|
 | Water Blade | `skill_level(hydraulic_propulsion) >= 2` | active: ranged water projectile, 3 damage |
-| Swing Thread | `skill_level(sticky_thread) >= 3` AND `skill_level(wall_cling) >= 2` | active: grappling hook |
+| Swing Thread | `skill_level(sticky_thread) >= 3` AND `skill_level(wall_cling) >= 2` | active: upgraded rope; takes over Sticky Thread's slot (`replaces`) |
 | Jet Dash | `skill_level(hydraulic_propulsion) >= 3` AND `skill_level(leap) >= 2` | active: long horizontal dash |
 
 **Reachability check:**

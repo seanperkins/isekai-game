@@ -26,3 +26,8 @@ Gamepad: left stick / D-pad move (stick also aims) · A jump · X tackle · B ho
 - [ ] Downing and eating creatures earns XP (gold line under the slots); each level gives 1 EP, +2 max HP, +1 max MP.
 - [ ] When an evolution is ready the Great Sage announces it; spend EP on it in the skill screen to evolve.
 - [ ] Controller aiming: press Back to show the input overlay; tilt the stick and cast — "last cast" should show the aimed direction.
+- [ ] The cave scrolls in both directions: stair towers at x ~1400 and the far east lead up to the middle and upper tiers, and stairs above the upper tier reach the top gallery.
+- [ ] Sticky Thread aimed at rock (up, diagonal, or at a wall) sticks and draws a rope; you swing on it. Left/right pump, up/down reel, Jump lets go with your momentum.
+- [ ] Sticky Thread aimed at an enemy still slows/holds it. Aimed at nothing in range, it just flashes.
+- [ ] Upper tier swing gap: the three rocks with vines are anchors; chaining swings crosses the gap.
+- [ ] Evolving Swing Thread puts it in Sticky Thread's slot; its rope is longer and launches harder.
