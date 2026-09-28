@@ -10,13 +10,13 @@ const STATE_NAMES := ["unknown", "named", "hinted", "owned-once"]
 const BAND_STIRS := "stirs"
 const BAND_CLOSE := "close"
 
-var store: CompendiumStore
+var store  # CompendiumStore or Profile: load_states / load_creatures / save_states
 var _defs := {}       # id -> SkillDef (enemy_only excluded)
 var _creatures := {}  # id -> CreatureDef
 var _states := {}     # id -> State
 var _records := {}    # creature id -> {seen, appraisal, eaten, defeated} (Bestiary)
 
-func _init(skill_defs: Array, creature_defs: Array, p_store: CompendiumStore = null) -> void:
+func _init(skill_defs: Array, creature_defs: Array, p_store = null) -> void:
 	for d in skill_defs:
 		if d.source != "enemy_only":
 			_defs[d.id] = d

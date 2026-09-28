@@ -1,9 +1,12 @@
 extends Node
-## The Compendium autoload: persistent knowledge, saved to user://compendium.json.
+## The Compendium autoload: persistent knowledge. Everything saves through one Profile
+## (user://profile.json); the old user://compendium.json is migrated on first load.
 
+var profile: Profile
 var model: CompendiumModel
 
 func _ready() -> void:
-	model = CompendiumModel.new(SkillRules.skill_defs, SkillRules.creature_defs,
-		CompendiumStore.new("user://compendium.json"))
+	profile = Profile.new("user://profile.json", "user://compendium.json")
+	profile.reload()
+	model = CompendiumModel.new(SkillRules.skill_defs, SkillRules.creature_defs, profile)
 	EventBus.game_event.connect(model.on_game_event)  # Bestiary: creatures eaten
