@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_uwvtj"]
+
+[resource]
+script = ExtResource("1_uwvtj")
+id = "poison_resistance"
+display_name = "Poison Resistance"
+description = "Take less poison damage."
+hint = "Poison stings a little less each time."
+announce = "Proficiency reached. Acquired [Poison Resistance]."
+unlock = [{
+"event": "damaged",
+"kind": "counter",
+"n": 6,
+"tags": {
+"damage_type": "poison"
+}
+}]
+levels_on = {
+"event": "damaged",
+"tags": {
+"damage_type": "poison"
+}
+}
+level_curve = 6
+max_level = 5
+effects = [{
+"kind": "modifier",
+"op": "percent_off",
+"scope": {
+"damage_type": "poison"
+},
+"stat": "damage_taken",
+"values": [20, 35, 50, 65, 80]
+}]

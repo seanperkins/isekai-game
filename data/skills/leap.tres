@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_w58cm"]
+
+[resource]
+script = ExtResource("1_w58cm")
+id = "leap"
+display_name = "Leap"
+description = "Jump higher."
+hint = "Your body remembers every leap."
+announce = "Proficiency reached. Acquired [Leap]."
+unlock = [{
+"event": "jumped",
+"kind": "counter",
+"n": 40,
+"tags": {}
+}]
+levels_on = {
+"event": "jumped",
+"tags": {}
+}
+level_curve = 40
+max_level = 5
+effects = [{
+"kind": "modifier",
+"op": "add",
+"stat": "jump_height",
+"values": [10, 15, 20, 25, 30]
+}]

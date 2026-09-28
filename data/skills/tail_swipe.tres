@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_epv5n"]
+
+[resource]
+script = ExtResource("1_epv5n")
+id = "tail_swipe"
+display_name = "Tail Swipe"
+description = "5 physical damage and knockback."
+source = "enemy_only"
+hidden = false
+effects = [{
+"kind": "active",
+"scene": "res://scenes/abilities/tail_swipe.tscn",
+"values": [5]
+}]

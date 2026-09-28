@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_6pdi2"]
+
+[resource]
+script = ExtResource("1_6pdi2")
+id = "toughness"
+display_name = "Toughness"
+description = "Raise max HP."
+hint = "Every bruise makes you sturdier."
+announce = "Proficiency reached. Acquired [Toughness]."
+unlock = [{
+"event": "damaged",
+"kind": "counter",
+"n": 20,
+"tags": {
+"damage_type": "physical"
+}
+}]
+levels_on = {
+"event": "damaged",
+"tags": {
+"damage_type": "physical"
+}
+}
+level_curve = 20
+max_level = 5
+effects = [{
+"kind": "modifier",
+"op": "add",
+"stat": "max_hp",
+"values": [3, 6, 9, 12, 15]
+}]

@@ -1,0 +1,42 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_pg8gi"]
+
+[resource]
+script = ExtResource("1_pg8gi")
+id = "glutton"
+display_name = "Glutton"
+description = "Eat faster and heal more from creatures."
+announce = "Unique condition met. Acquired [Glutton]."
+secret = true
+unlock = [{
+"event": "predated",
+"kind": "reset_counter",
+"n": 5,
+"reset_on": "damaged",
+"tags": {
+"kind": "creature"
+}
+}]
+levels_on = {
+"event": "predated",
+"tags": {
+"kind": "creature"
+}
+}
+level_curve = 5
+max_level = 3
+effects = [{
+"kind": "modifier",
+"op": "add",
+"stat": "predation_time",
+"values": [-30, -45, -60]
+}]
+trigger = {
+"action": "heal",
+"amount": 3,
+"on": "predated",
+"tags": {
+"kind": "creature"
+}
+}

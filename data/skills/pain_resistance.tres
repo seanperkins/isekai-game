@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_r6bj6"]
+
+[resource]
+script = ExtResource("1_r6bj6")
+id = "pain_resistance"
+display_name = "Pain Resistance"
+description = "Take less damage while badly hurt."
+hint = "Surviving the brink hardens you."
+announce = "Proficiency reached. Acquired [Pain Resistance]."
+unlock = [{
+"event": "hp_low_exited",
+"kind": "counter",
+"n": 2,
+"tags": {}
+}]
+levels_on = {
+"event": "hp_low_exited",
+"tags": {}
+}
+level_curve = 2
+max_level = 3
+effects = [{
+"condition": {
+"hp_below_percent": 30
+},
+"kind": "conditional_modifier",
+"op": "flat_off",
+"stat": "damage_taken",
+"values": [1, 2, 3]
+}]

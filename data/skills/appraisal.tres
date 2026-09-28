@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_khkoh"]
+
+[resource]
+script = ExtResource("1_khkoh")
+id = "appraisal"
+display_name = "Appraisal"
+description = "Inspect creatures and yourself."
+hint = "Look closely at new things."
+hidden = false
+starting = true
+levels_on = {
+"event": "inspected",
+"tags": {
+"appraisal_target": true,
+"first_time": true
+}
+}
+level_curve = 2
+max_level = 4
+effects = [{
+"flag": "appraise",
+"kind": "capability"
+}]

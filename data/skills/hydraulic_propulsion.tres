@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rd58h"]
+
+[resource]
+script = ExtResource("1_rd58h")
+id = "hydraulic_propulsion"
+display_name = "Hydraulic Propulsion"
+description = "A short water-powered burst."
+hint = "Water sloshes eagerly inside you."
+announce = "Analysis complete. Acquired [Hydraulic Propulsion]."
+source = "essence"
+hidden = false
+unlock = [{
+"event": "absorbed",
+"kind": "counter",
+"n": 4,
+"tags": {
+"essence": "water"
+}
+}]
+levels_on = {
+"event": "skill_used",
+"tags": {
+"id": "hydraulic_propulsion"
+}
+}
+level_curve = 6
+max_level = 5
+effects = [{
+"kind": "active",
+"scene": "res://scenes/abilities/hydraulic_propulsion.tscn",
+"values": [100, 120, 140, 160, 180]
+}]

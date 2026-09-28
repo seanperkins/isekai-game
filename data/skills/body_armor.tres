@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_hrkxy"]
+
+[resource]
+script = ExtResource("1_hrkxy")
+id = "body_armor"
+display_name = "Body Armor"
+description = "Raise DEF."
+hint = "Your skin wants to harden."
+announce = "Analysis complete. Acquired [Body Armor]."
+source = "essence"
+hidden = false
+unlock = [{
+"event": "absorbed",
+"kind": "counter",
+"n": 3,
+"tags": {
+"essence": "armor"
+}
+}]
+levels_on = {
+"event": "damaged",
+"tags": {}
+}
+level_curve = 10
+max_level = 3
+effects = [{
+"kind": "modifier",
+"op": "add",
+"stat": "def",
+"values": [1, 2, 3]
+}]

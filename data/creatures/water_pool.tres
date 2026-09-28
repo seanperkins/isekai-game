@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CreatureDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/creature_def.gd" id="1_wvtoa"]
+
+[resource]
+script = ExtResource("1_wvtoa")
+id = "water_pool"
+display_name = "Water Pool"
+essences = {
+"water": 2
+}

@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_gq45y"]
+
+[resource]
+script = ExtResource("1_gq45y")
+id = "water_blade"
+display_name = "Water Blade"
+description = "Fire a blade of water."
+announce = "Skill evolved. Acquired [Water Blade]."
+source = "evolution"
+unlock = [{
+"id": "hydraulic_propulsion",
+"kind": "skill_level",
+"n": 2
+}]
+effects = [{
+"kind": "active",
+"scene": "res://scenes/abilities/water_blade.tscn",
+"values": [3]
+}]

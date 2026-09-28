@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_7er6v"]
+
+[resource]
+script = ExtResource("1_7er6v")
+id = "wall_cling"
+display_name = "Wall Cling"
+description = "Stick to walls and slide down slowly."
+hint = "Walls feel less slippery than before."
+announce = "Proficiency reached. Acquired [Wall Cling]."
+unlock = [{
+"event": "wall_touched",
+"kind": "counter",
+"n": 15,
+"tags": {}
+}]
+levels_on = {
+"event": "wall_touched",
+"tags": {}
+}
+level_curve = 20
+max_level = 3
+effects = [{
+"flag": "wall_cling",
+"kind": "capability"
+}, {
+"kind": "modifier",
+"op": "add",
+"stat": "slide_speed",
+"values": [-30, -45, -60]
+}]

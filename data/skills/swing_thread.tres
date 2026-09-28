@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_7uyeh"]
+
+[resource]
+script = ExtResource("1_7uyeh")
+id = "swing_thread"
+display_name = "Swing Thread"
+description = "Swing from a thread like a grappling hook."
+announce = "Skill evolved. Acquired [Swing Thread]."
+source = "evolution"
+unlock = [{
+"id": "sticky_thread",
+"kind": "skill_level",
+"n": 3
+}, {
+"id": "wall_cling",
+"kind": "skill_level",
+"n": 2
+}]
+effects = [{
+"kind": "active",
+"scene": "res://scenes/abilities/swing_thread.tscn"
+}]

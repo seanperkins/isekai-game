@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="CreatureDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/creature_def.gd" id="1_uxtl1"]
+
+[resource]
+script = ExtResource("1_uxtl1")
+id = "bat"
+display_name = "Cave Bat"
+stats = {
+"atk": 3,
+"def": 0,
+"max_hp": 2,
+"spd": 140
+}
+essences = {
+"flight": 1,
+"sound": 1
+}
+skills = [{
+"id": "echolocation",
+"level": 1
+}, {
+"id": "flight",
+"level": 1
+}]
+eat_bonus = {
+"amount": 2,
+"per": 1,
+"stat": "spd"
+}

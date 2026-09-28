@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="CreatureDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/creature_def.gd" id="1_oruco"]
+
+[resource]
+script = ExtResource("1_oruco")
+id = "lizard"
+display_name = "Armored Lizard"
+stats = {
+"atk": 5,
+"def": 1,
+"max_hp": 5,
+"spd": 80
+}
+essences = {
+"armor": 1,
+"earth": 1
+}
+skills = [{
+"id": "body_armor",
+"level": 2
+}, {
+"id": "tail_swipe",
+"level": 1
+}]
+eat_bonus = {
+"amount": 1,
+"per": 3,
+"stat": "def"
+}

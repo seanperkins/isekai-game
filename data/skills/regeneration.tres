@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_ghjmr"]
+
+[resource]
+script = ExtResource("1_ghjmr")
+id = "regeneration"
+display_name = "Regeneration"
+description = "Slowly regain HP."
+hint = "Everything you eat makes you whole."
+announce = "Analysis complete. Acquired [Regeneration]."
+source = "essence"
+hidden = false
+unlock = [{
+"event": "predated",
+"kind": "counter",
+"n": 10,
+"tags": {
+"kind": "creature"
+}
+}]
+levels_on = {
+"event": "predated",
+"tags": {
+"kind": "creature"
+}
+}
+level_curve = 8
+max_level = 3
+effects = [{
+"kind": "modifier",
+"op": "set",
+"stat": "regen_interval",
+"values": [8, 6, 4]
+}]

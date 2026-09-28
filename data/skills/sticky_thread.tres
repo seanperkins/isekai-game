@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_om3n3"]
+
+[resource]
+script = ExtResource("1_om3n3")
+id = "sticky_thread"
+display_name = "Sticky Thread"
+description = "Shoot a thread that slows, then holds, an enemy."
+hint = "Something silky stirs within."
+announce = "Analysis complete. Acquired [Sticky Thread]."
+source = "essence"
+hidden = false
+unlock = [{
+"event": "absorbed",
+"kind": "counter",
+"n": 3,
+"tags": {
+"essence": "thread"
+}
+}]
+levels_on = {
+"event": "skill_used",
+"tags": {
+"id": "sticky_thread"
+}
+}
+level_curve = 8
+max_level = 5
+effects = [{
+"kind": "active",
+"scene": "res://scenes/abilities/sticky_thread.tscn",
+"values": [1, 1, 2, 2, 2]
+}]
