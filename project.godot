@@ -13,3 +13,7 @@ EventBus="*res://autoload/event_bus.gd"
 SkillRules="*res://autoload/skill_rules.gd"
 Compendium="*res://autoload/compendium.gd"
 Announcer="*res://autoload/announcer.gd"
+
+[rendering]
+
+textures/canvas_textures/default_texture_filter=0

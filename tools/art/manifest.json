@@ -1,0 +1,35 @@
+{
+  "_doc": "Sprite boxes on the Codex-generated Style D sheets (found with find_sprites.py). scale = downscale factor; size = exact output size (tiles).",
+  "sheets": {
+    "art_source/sprites_characters_d.png": {
+      "slime_idle":   {"box": [220, 96, 347, 199],   "scale": 0.17},
+      "slime_land":   {"box": [550, 110, 728, 203],  "scale": 0.17},
+      "slime_jump":   {"box": [917, 41, 1074, 210],  "scale": 0.17},
+      "slime_eat":    {"box": [1259, 71, 1506, 206], "scale": 0.17},
+      "bat_1":        {"box": [111, 245, 407, 406],  "scale": 0.09},
+      "bat_2":        {"box": [494, 276, 759, 395],  "scale": 0.09},
+      "toad_idle":    {"box": [871, 273, 1088, 415], "scale": 0.14},
+      "toad_spit":    {"box": [1215, 262, 1444, 417],"scale": 0.14},
+      "spit_glob":    {"box": [1457, 308, 1587, 369],"scale": 0.14},
+      "lizard_1":     {"box": [63, 465, 455, 610],   "scale": 0.11},
+      "lizard_2":     {"box": [517, 464, 920, 610],  "scale": 0.11},
+      "spider_hang":  {"box": [1076, 434, 1178, 612],"scale": 0.09},
+      "spider_crawl": {"box": [1346, 506, 1535, 606],"scale": 0.09},
+      "serpent":      {"box": [316, 635, 1331, 915], "scale": 0.12}
+    },
+    "art_source/sprites_tiles_d.png": {
+      "column":          {"box": [1155, 99, 1286, 438],  "scale": 0.2},
+      "ground":          {"box": [32, 201, 270, 438],    "size": [32, 32]},
+      "wall":            {"box": [308, 211, 528, 438],   "size": [32, 32]},
+      "platform_moss":   {"box": [565, 242, 835, 449],   "scale": 0.2},
+      "plank":           {"box": [874, 277, 1119, 376],  "scale": 0.2},
+      "water_pool":      {"box": [1327, 244, 1638, 438], "scale": 0.12},
+      "crystal_purple":  {"box": [33, 594, 272, 828],    "scale": 0.12},
+      "crystal_teal":    {"box": [331, 557, 578, 828],   "scale": 0.12},
+      "crystal_blue":    {"box": [643, 585, 848, 828],   "scale": 0.12},
+      "vine":            {"box": [915, 516, 1045, 852],  "scale": 0.12},
+      "torch":           {"box": [1143, 524, 1270, 817], "scale": 0.12},
+      "stalactite":      {"box": [1392, 551, 1573, 820], "scale": 0.12}
+    }
+  }
+}
