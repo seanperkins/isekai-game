@@ -1,0 +1,47 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_y5g08"]
+
+[resource]
+script = ExtResource("1_y5g08")
+id = "C4"
+area = "cave"
+cell = Vector2i(4, 2)
+solids = [Rect2(100, 266, 100, 12), Rect2(440, 266, 100, 12)]
+decor = [{
+"id": "torch",
+"light": Color(1, 0.6, 0.25, 1),
+"pos": Vector2(150, 236)
+}, {
+"id": "crystal_teal",
+"light": Color(0.3, 1, 0.9, 1),
+"pos": Vector2(470, 266)
+}, {
+"id": "crystal_blue",
+"light": Color(0.3, 0.5, 1, 1),
+"pos": Vector2(250, 320)
+}, {
+"id": "crystal_blue",
+"light": Color(0.3, 0.5, 1, 1),
+"pos": Vector2(390, 320)
+}]
+spawns = [{
+"id": "toad",
+"pos": Vector2(520, 300)
+}]
+exits = [{
+"edge": "left",
+"from": 200.0,
+"room": "C2",
+"to": 320.0
+}, {
+"edge": "right",
+"from": 200.0,
+"room": "C5",
+"to": 320.0
+}]
+features = [{
+"id": "c4_pool",
+"kind": "glow_pool",
+"pos": Vector2(320, 320)
+}]

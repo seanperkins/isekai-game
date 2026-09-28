@@ -1,0 +1,54 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_a4hbi"]
+
+[resource]
+script = ExtResource("1_a4hbi")
+id = "C5"
+area = "cave"
+cell = Vector2i(5, 2)
+size = Vector2i(1, 3)
+solids = [Rect2(20, 320, 180, 12), Rect2(100, 988, 100, 12), Rect2(240, 936, 100, 12), Rect2(100, 884, 100, 12), Rect2(240, 832, 100, 12), Rect2(100, 780, 100, 12), Rect2(240, 728, 100, 12), Rect2(100, 676, 100, 12), Rect2(240, 624, 100, 12), Rect2(100, 572, 100, 12), Rect2(240, 520, 100, 12), Rect2(100, 468, 100, 12), Rect2(240, 416, 100, 12), Rect2(100, 364, 100, 12)]
+decor = [{
+"id": "torch",
+"light": Color(1, 0.6, 0.25, 1),
+"pos": Vector2(150, 290)
+}, {
+"id": "torch",
+"light": Color(1, 0.6, 0.25, 1),
+"pos": Vector2(290, 490)
+}, {
+"id": "crystal_purple",
+"light": Color(0.8, 0.4, 1, 1),
+"pos": Vector2(500, 1040)
+}, {
+"id": "crystal_teal",
+"light": Color(0.3, 1, 0.9, 1),
+"pos": Vector2(150, 1040)
+}, {
+"anchor": "top",
+"id": "stalactite",
+"pos": Vector2(400, 20)
+}]
+spawns = [{
+"id": "bat",
+"pos": Vector2(450, 500)
+}, {
+"id": "bat",
+"pos": Vector2(420, 800)
+}, {
+"id": "lizard",
+"pos": Vector2(400, 1020)
+}, {
+"id": "spider",
+"pos": Vector2(500, 32)
+}, {
+"id": "water_pool",
+"pos": Vector2(560, 1036)
+}]
+exits = [{
+"edge": "left",
+"from": 200.0,
+"room": "C4",
+"to": 320.0
+}]

@@ -1,0 +1,52 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_v66ca"]
+
+[resource]
+script = ExtResource("1_v66ca")
+id = "C6"
+area = "cave"
+cell = Vector2i(1, 1)
+solids = [Rect2(440, 266, 120, 12)]
+decor = [{
+"id": "crystal_purple",
+"light": Color(0.8, 0.4, 1, 1),
+"pos": Vector2(100, 320)
+}, {
+"id": "crystal_purple",
+"light": Color(0.8, 0.4, 1, 1),
+"pos": Vector2(160, 320)
+}, {
+"id": "crystal_blue",
+"light": Color(0.3, 0.5, 1, 1),
+"pos": Vector2(380, 320)
+}, {
+"id": "crystal_teal",
+"light": Color(0.3, 1, 0.9, 1),
+"pos": Vector2(500, 266)
+}]
+exits = [{
+"edge": "right",
+"from": 200.0,
+"room": "C3",
+"to": 320.0
+}, {
+"edge": "bottom",
+"from": 200.0,
+"room": "C1",
+"shortcut": "c6_drop",
+"to": 260.0
+}]
+features = [{
+"hint": "echolocation",
+"id": "c6_tablet",
+"kind": "tablet",
+"pos": Vector2(480, 320),
+"text": "Eat what hunts by sound in the dark, and you will hear as it does.",
+"title": "Worn tablet"
+}, {
+"id": "c6_switch",
+"kind": "switch",
+"pos": Vector2(290, 320),
+"shortcut": "c6_drop"
+}]

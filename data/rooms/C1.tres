@@ -1,0 +1,89 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_35trx"]
+
+[resource]
+script = ExtResource("1_35trx")
+id = "C1"
+area = "cave"
+cell = Vector2i(0, 2)
+size = Vector2i(2, 1)
+start = Vector2(60, 310)
+solids = [Rect2(260, 266, 120, 12), Rect2(420, 214, 100, 12), Rect2(760, 140, 16, 180), Rect2(900, 266, 140, 12), Rect2(1060, 214, 100, 12)]
+decor = [{
+"id": "crystal_teal",
+"light": Color(0.3, 1, 0.9, 1),
+"pos": Vector2(110, 320)
+}, {
+"id": "crystal_purple",
+"light": Color(0.8, 0.4, 1, 1),
+"pos": Vector2(610, 320)
+}, {
+"id": "crystal_blue",
+"light": Color(0.3, 0.5, 1, 1),
+"pos": Vector2(1010, 320)
+}, {
+"id": "crystal_purple",
+"light": Color(0.8, 0.4, 1, 1),
+"pos": Vector2(470, 214)
+}, {
+"id": "torch",
+"light": Color(1, 0.6, 0.25, 1),
+"pos": Vector2(330, 236)
+}, {
+"anchor": "top",
+"id": "vine",
+"pos": Vector2(300, 278)
+}, {
+"anchor": "top",
+"id": "vine",
+"pos": Vector2(980, 278)
+}, {
+"anchor": "top",
+"id": "stalactite",
+"pos": Vector2(470, 226)
+}, {
+"anchor": "top",
+"id": "stalactite",
+"pos": Vector2(1110, 226)
+}]
+spawns = [{
+"id": "bat",
+"pos": Vector2(300, 200)
+}, {
+"id": "bat",
+"pos": Vector2(470, 170)
+}, {
+"id": "bat",
+"pos": Vector2(980, 180)
+}, {
+"id": "toad",
+"pos": Vector2(200, 300)
+}, {
+"id": "toad",
+"pos": Vector2(420, 300)
+}, {
+"id": "toad",
+"pos": Vector2(680, 300)
+}, {
+"id": "toad",
+"pos": Vector2(1100, 300)
+}, {
+"id": "lizard",
+"pos": Vector2(860, 300)
+}, {
+"id": "water_pool",
+"pos": Vector2(150, 316)
+}]
+exits = [{
+"edge": "right",
+"from": 200.0,
+"room": "C2",
+"to": 320.0
+}, {
+"edge": "top",
+"from": 840.0,
+"room": "C6",
+"shortcut": "c6_drop",
+"to": 900.0
+}]

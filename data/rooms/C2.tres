@@ -1,0 +1,62 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_q4o63"]
+
+[resource]
+script = ExtResource("1_q4o63")
+id = "C2"
+area = "cave"
+cell = Vector2i(2, 2)
+size = Vector2i(2, 1)
+solids = [Rect2(280, 20, 16, 220), Rect2(384, 20, 16, 220), Rect2(160, 266, 90, 12), Rect2(40, 214, 90, 12), Rect2(560, 266, 120, 12), Rect2(740, 214, 120, 12), Rect2(920, 266, 120, 12)]
+decor = [{
+"id": "torch",
+"light": Color(1, 0.6, 0.25, 1),
+"pos": Vector2(800, 184)
+}, {
+"id": "crystal_teal",
+"light": Color(0.3, 1, 0.9, 1),
+"pos": Vector2(500, 320)
+}, {
+"id": "crystal_blue",
+"light": Color(0.3, 0.5, 1, 1),
+"pos": Vector2(1200, 320)
+}, {
+"anchor": "top",
+"id": "vine",
+"pos": Vector2(620, 20)
+}, {
+"anchor": "top",
+"id": "stalactite",
+"pos": Vector2(1150, 20)
+}]
+spawns = [{
+"id": "spider",
+"pos": Vector2(700, 32)
+}, {
+"id": "spider",
+"pos": Vector2(1000, 32)
+}, {
+"id": "lizard",
+"pos": Vector2(600, 300)
+}, {
+"id": "lizard",
+"pos": Vector2(1100, 300)
+}]
+exits = [{
+"edge": "left",
+"from": 200.0,
+"room": "C1",
+"to": 320.0
+}, {
+"edge": "right",
+"from": 200.0,
+"room": "C4",
+"to": 320.0
+}, {
+"edge": "top",
+"from": 300.0,
+"gate": "wall_cling",
+"room": "C3",
+"to": 380.0
+}]

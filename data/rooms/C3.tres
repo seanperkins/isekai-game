@@ -1,0 +1,50 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_kapcn"]
+
+[resource]
+script = ExtResource("1_kapcn")
+id = "C3"
+area = "cave"
+cell = Vector2i(2, 0)
+size = Vector2i(1, 2)
+solids = [Rect2(60, 626, 100, 12), Rect2(200, 574, 100, 12), Rect2(60, 522, 100, 12), Rect2(200, 470, 100, 12), Rect2(340, 418, 120, 12), Rect2(500, 366, 100, 12), Rect2(340, 314, 100, 12), Rect2(180, 262, 100, 12), Rect2(40, 210, 120, 12)]
+decor = [{
+"id": "crystal_teal",
+"light": Color(0.3, 1, 0.9, 1),
+"pos": Vector2(100, 210)
+}, {
+"id": "torch",
+"light": Color(1, 0.6, 0.25, 1),
+"pos": Vector2(390, 388)
+}, {
+"anchor": "top",
+"id": "vine",
+"pos": Vector2(560, 20)
+}, {
+"anchor": "top",
+"id": "vine",
+"pos": Vector2(120, 20)
+}]
+spawns = [{
+"id": "spider",
+"pos": Vector2(240, 32)
+}, {
+"id": "spider",
+"pos": Vector2(520, 32)
+}, {
+"id": "bat",
+"pos": Vector2(450, 300)
+}]
+exits = [{
+"edge": "bottom",
+"from": 300.0,
+"gate": "wall_cling",
+"room": "C2",
+"to": 380.0
+}, {
+"edge": "left",
+"from": 560.0,
+"room": "C6",
+"to": 680.0
+}]
