@@ -1,0 +1,58 @@
+extends GutTest
+
+func _lizard() -> CreatureDef:
+	return TestDefs.creature("lizard", {"eat_bonus": {"stat": "def", "amount": 1, "per": 3}})
+
+func _toad() -> CreatureDef:
+	return TestDefs.creature("toad", {"eat_bonus": {"stat": "max_hp", "amount": 1}})
+
+func test_final_value_is_base_plus_eat_plus_modifiers() -> void:
+	var s := Stats.new({"max_hp": 30, "atk": 1, "def": 0, "spd": 100})
+	s.apply_eat(_toad())
+	s.set_modifiers("toughness", [{"stat": "max_hp", "op": "add", "value": 3}])
+	assert_eq(s.get_stat("max_hp"), 34)
+	assert_eq(s.get_stat("jump_height"), 100)
+	assert_eq(s.get_stat("regen_interval"), 0)
+
+func test_per_n_bonus_applies_on_the_nth_eat() -> void:
+	var s := Stats.new({"def": 0})
+	s.apply_eat(_lizard())
+	s.apply_eat(_lizard())
+	assert_eq(s.get_stat("def"), 0)
+	s.apply_eat(_lizard())
+	assert_eq(s.get_stat("def"), 1)
+
+func test_eat_bonus_stops_at_cap_but_skill_modifiers_do_not() -> void:
+	var s := Stats.new({"max_hp": 30})
+	for i in 15:
+		s.apply_eat(_toad())
+	assert_eq(s.eat_bonus("max_hp"), 10)
+	s.set_modifiers("toughness", [{"stat": "max_hp", "op": "add", "value": 15}])
+	assert_eq(s.get_stat("max_hp"), 55)
+
+func test_set_modifier_overrides_and_removal_restores() -> void:
+	var s := Stats.new()
+	s.set_modifiers("regeneration", [{"stat": "regen_interval", "op": "set", "value": 8}])
+	assert_eq(s.get_stat("regen_interval"), 8)
+	s.set_modifiers("regeneration", [])
+	assert_eq(s.get_stat("regen_interval"), 0)
+
+func test_reset_run_clears_eat_bonus_and_modifiers() -> void:
+	var s := Stats.new({"max_hp": 30})
+	s.apply_eat(_toad())
+	s.set_modifiers("x", [{"stat": "max_hp", "op": "add", "value": 5}])
+	s.reset_run()
+	assert_eq(s.get_stat("max_hp"), 30)
+
+func test_direct_hit_percent_then_flat_then_floor_min_one() -> void:
+	assert_eq(Damage.direct_hit(4, 20, 0), 3)    # 3.2 -> 3
+	assert_eq(Damage.direct_hit(4, 80, 0), 1)    # 0.8 -> min 1
+	assert_eq(Damage.direct_hit(3, 0, 5), 1)     # DEF above damage -> min 1
+	assert_eq(Damage.direct_hit(6, 0, 1), 5)
+	assert_eq(Damage.direct_hit(10, 90, 0), 1)   # integer math, no 0.999 error
+
+func test_tick_takes_percent_only_and_may_reach_zero() -> void:
+	assert_eq(Damage.tick(2, 0), 2)
+	assert_eq(Damage.tick(2, 35), 1)   # 1.3 -> 1
+	assert_eq(Damage.tick(2, 65), 0)   # 0.7 -> 0
+	assert_eq(Damage.tick(10, 90), 1)  # exactly 1, not 0.999
