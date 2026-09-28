@@ -20,6 +20,8 @@ const INSPECT_RANGE := 96.0
 const INVULN_SECONDS := 0.6
 const EAT_HEAL := 5
 const BASE_STATS := {"max_hp": 30, "atk": 1, "def": 0, "spd": 100}
+const LAND_SQUASH_SECONDS := 0.12
+const BODY_BOTTOM := 6.0  # collision box bottom, where sprites stand
 
 var team := "player"
 var facing := 1
@@ -40,6 +42,9 @@ var _poison_tick := 0
 var _poison_acc := 0.0
 var _regen_acc := 0.0
 var _abilities := {}
+var _sprite: Sprite2D
+var _land_timer := 0.0
+var _was_on_floor := true
 
 func setup(rules: SkillRulesEngine, compendium: CompendiumModel, creature_defs: Array, emit: Callable) -> void:
 	_rules = rules
@@ -99,6 +104,26 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	sensors.physics_update(is_on_wall(), is_on_floor())
 	tick(delta)
+	_update_visual(delta)
+
+## Which slime pose to draw: eating, airborne, briefly squashed after landing, or idle.
+static func pick_frame(predating: bool, on_floor: bool, land_timer: float) -> String:
+	if predating:
+		return "slime_eat"
+	if not on_floor:
+		return "slime_jump"
+	if land_timer > 0.0:
+		return "slime_land"
+	return "slime_idle"
+
+func _update_visual(delta: float) -> void:
+	var on_floor := is_on_floor()
+	if on_floor and not _was_on_floor:
+		_land_timer = LAND_SQUASH_SECONDS
+	_was_on_floor = on_floor
+	_land_timer = maxf(0.0, _land_timer - delta)
+	Art.set_frame(_sprite, pick_frame(predation.active(), on_floor, _land_timer), BODY_BOTTOM)
+	_sprite.flip_h = facing < 0
 
 func do_jump() -> void:
 	if health.is_dead() or predation.active():
@@ -295,8 +320,6 @@ func _build_body() -> void:
 	rect.size = Vector2(14, 12)
 	shape.shape = rect
 	add_child(shape)
-	var visual := ColorRect.new()
-	visual.size = Vector2(14, 12)
-	visual.position = Vector2(-7, -6)
-	visual.color = Color(0.4, 0.8, 1.0)
-	add_child(visual)
+	_sprite = Art.sprite("slime_idle", BODY_BOTTOM)
+	add_child(_sprite)
+	add_child(Art.light(Color(0.4, 0.75, 1.0), 0.8, 1.2))  # the slime's soft inner glow

@@ -18,6 +18,21 @@ const TEST_ROOM := {
 		Rect2(1060, 214, 100, 12),    # platform
 		Rect2(1200, 162, 120, 12),    # platform
 	],
+	"decor": [
+		{"id": "crystal_teal", "pos": Vector2(110, 320), "light": Color(0.3, 1.0, 0.9)},
+		{"id": "crystal_purple", "pos": Vector2(610, 320), "light": Color(0.8, 0.4, 1.0)},
+		{"id": "crystal_blue", "pos": Vector2(1010, 320), "light": Color(0.3, 0.5, 1.0)},
+		{"id": "crystal_teal", "pos": Vector2(1520, 320), "light": Color(0.3, 1.0, 0.9)},
+		{"id": "crystal_purple", "pos": Vector2(470, 214), "light": Color(0.8, 0.4, 1.0)},
+		{"id": "torch", "pos": Vector2(330, 236), "light": Color(1.0, 0.6, 0.25)},
+		{"id": "torch", "pos": Vector2(1260, 150), "light": Color(1.0, 0.6, 0.25)},
+		# Hanging decor sits under platforms: the ceiling is above the camera's view.
+		{"id": "vine", "pos": Vector2(300, 278), "anchor": "top"},
+		{"id": "vine", "pos": Vector2(980, 278), "anchor": "top"},
+		{"id": "vine", "pos": Vector2(1280, 174), "anchor": "top"},
+		{"id": "stalactite", "pos": Vector2(470, 226), "anchor": "top"},
+		{"id": "stalactite", "pos": Vector2(1110, 226), "anchor": "top"},
+	],
 	"spawns": [
 		{"id": "bat", "pos": Vector2(300, 200)},
 		{"id": "bat", "pos": Vector2(470, 170)},

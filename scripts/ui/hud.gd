@@ -11,6 +11,7 @@ var _queue: AnnouncerQueue
 var _hp := Label.new()
 var _slots := Label.new()
 var _popup := Label.new()
+var _popup_panel := PanelContainer.new()
 var _ticker := Label.new()
 var _panel := Label.new()
 var _panel_left := 0.0
@@ -28,7 +29,18 @@ func _ready() -> void:
 	_popup.position = Vector2(320, 24)
 	_ticker.position = Vector2(12, 300)
 	_panel.position = Vector2(700, 60)
-	for l in [_hp, _slots, _popup, _ticker, _panel]:
+	# Great Sage window: translucent blue with a glowing border.
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.04, 0.1, 0.28, 0.85)
+	style.border_color = Color(0.45, 0.8, 1.0)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(4)
+	style.set_content_margin_all(8)
+	_popup_panel.add_theme_stylebox_override("panel", style)
+	_popup_panel.position = Vector2(360, 16)
+	_popup.position = Vector2.ZERO
+	_popup_panel.add_child(_popup)
+	for l in [_hp, _slots, _popup_panel, _ticker, _panel]:
 		add_child(l)
 
 func _process(delta: float) -> void:
@@ -37,6 +49,7 @@ func _process(delta: float) -> void:
 	_hp.text = hp_text()
 	_slots.text = StatusText.slot_line(_player.skillset.slots, _rules)
 	_popup.text = popup_text()
+	_popup_panel.visible = _popup.text != ""
 	var entry := _queue.pop_ticker()
 	while not entry.is_empty():
 		_ticker_lines.append([StatusText.ticker_text(entry, _rules), TICKER_SECONDS])

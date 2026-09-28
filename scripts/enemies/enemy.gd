@@ -16,8 +16,10 @@ const SLOW_SECONDS := 2.0
 ## Ground enemies do not turn while the player is this close, so jumping over one opens
 ## a window to hit it from behind (the lizard is only stunned from behind).
 const TURN_LOCK_RANGE := 32.0
-const COLORS := {"bat": Color(0.45, 0.35, 0.6), "toad": Color(0.3, 0.7, 0.3),
-	"lizard": Color(0.6, 0.5, 0.3), "spider": Color(0.15, 0.15, 0.15), "serpent": Color(0.2, 0.4, 0.8)}
+const ANIM_SECONDS := 0.25
+const SPIT_POSE_SECONDS := 0.4
+const BODY_BOTTOM := 6.0
+const STUNNED_TINT := Color(0.6, 0.6, 0.85)
 
 var def: CreatureDef
 var stats: Stats
@@ -31,6 +33,8 @@ var _on_ceiling := false
 var _spit_damage := 0
 var _spit_cd := 0.0
 var _slow := 0.0
+var _sprite: Sprite2D
+var _anim_t := 0.0
 
 func setup(p_def: CreatureDef, skill_defs_by_id: Dictionary) -> void:
 	def = p_def
@@ -100,6 +104,7 @@ func _on_died() -> void:
 
 func _physics_process(delta: float) -> void:
 	status.update(delta)
+	_anim_t += delta
 	if status.state == EnemyStatus.GONE:
 		queue_free()
 		return
@@ -117,6 +122,29 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	if active and player != null and global_position.distance_to(player.global_position) <= CONTACT_RANGE:
 		player.receive_hit(stats.get_stat("atk"), "physical")
+	_update_visual()
+
+## Which sprite to draw for this creature right now. All sheets face right.
+func frame_name() -> String:
+	var alternate := int(_anim_t / ANIM_SECONDS) % 2 == 1
+	match def.id:
+		"bat":
+			return "bat_2" if alternate else "bat_1"
+		"toad":
+			return "toad_spit" if _spit_cd > SPIT_COOLDOWN - SPIT_POSE_SECONDS else "toad_idle"
+		"lizard":
+			return "lizard_2" if alternate and absf(velocity.x) > 1.0 else "lizard_1"
+		"spider":
+			return "spider_hang" if _on_ceiling else "spider_crawl"
+	return def.id
+
+func _update_visual() -> void:
+	if _sprite == null:
+		return
+	Art.set_frame(_sprite, frame_name(), BODY_BOTTOM)
+	_sprite.flip_h = facing < 0
+	_sprite.flip_v = status.state == EnemyStatus.DOWNED
+	_sprite.modulate = STUNNED_TINT if status.state == EnemyStatus.STUNNED else Color.WHITE
 
 func _act(player: Node2D) -> void:
 	var speed := BASE_SPEED * stats.get_stat("spd") / 100.0 * (0.5 if _slow > 0.0 else 1.0)
@@ -153,8 +181,7 @@ func _build_body() -> void:
 	rect.size = Vector2(16, 12)
 	shape.shape = rect
 	add_child(shape)
-	var visual := ColorRect.new()
-	visual.size = Vector2(16, 12)
-	visual.position = Vector2(-8, -6)
-	visual.color = COLORS.get(def.id if def != null else "", Color.WHITE)
-	add_child(visual)
+	if def != null:
+		_sprite = Art.sprite(frame_name(), BODY_BOTTOM)
+		add_child(_sprite)
+		_update_visual()
