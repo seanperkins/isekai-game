@@ -14,6 +14,7 @@ var store: CompendiumStore
 var _defs := {}       # id -> SkillDef (enemy_only excluded)
 var _creatures := {}  # id -> CreatureDef
 var _states := {}     # id -> State
+var _records := {}    # creature id -> {seen, appraisal, eaten, defeated} (Bestiary)
 
 func _init(skill_defs: Array, creature_defs: Array, p_store: CompendiumStore = null) -> void:
 	for d in skill_defs:
@@ -28,6 +29,10 @@ func _init(skill_defs: Array, creature_defs: Array, p_store: CompendiumStore = n
 		for id in saved:
 			if _states.has(id):
 				_states[id] = maxi(_states[id], int(saved[id]))
+		var records: Dictionary = store.load_creatures()
+		for id in records:
+			if _creatures.has(id):
+				_records[id] = records[id]
 
 func state(id: String) -> int:
 	return _states.get(id, State.UNKNOWN)
@@ -40,9 +45,52 @@ func raise(id: String, new_state: int) -> bool:
 		return false
 	_states[id] = new_state
 	slot_changed.emit(id, new_state)
-	if store != null:
-		store.save_states(_states, STATE_NAMES)
+	_save()
 	return true
+
+func _save() -> void:
+	if store != null:
+		store.save_states(_states, STATE_NAMES, _records)
+
+# --- Bestiary ---------------------------------------------------------------
+
+## Creatures the Bestiary lists (not terrain like water pools), by name.
+func bestiary_ids() -> Array:
+	var ids := _creatures.keys().filter(func(id): return id != Sources.WATER_POOL)
+	ids.sort_custom(func(a, b): return _creatures[a].display_name < _creatures[b].display_name)
+	return ids
+
+## A skill's display name; enemy-only skills are not in the Compendium, so fall back to the id.
+func skill_name(id: String) -> String:
+	return _defs[id].display_name if _defs.has(id) else id.capitalize()
+
+func creature_def(id: String) -> CreatureDef:
+	return _creatures.get(id)
+
+func creature_record(id: String) -> Dictionary:
+	return _records.get(id, {"seen": false, "appraisal": 0, "eaten": 0, "defeated": 0}).duplicate()
+
+func on_creature_seen(id: String) -> void:
+	if _creatures.has(id) and not creature_record(id)["seen"]:
+		_update_record(id, "seen", true)
+
+func on_creature_defeated(id: String) -> void:
+	if _creatures.has(id):
+		_update_record(id, "defeated", creature_record(id)["defeated"] + 1)
+
+## Connected to EventBus.game_event: counts creatures eaten.
+func on_game_event(event_name: String, tags: Dictionary) -> void:
+	var id: String = tags.get("source", "")
+	if event_name == Events.PREDATED and tags.get("kind", "") == "creature" and _creatures.has(id):
+		_update_record(id, "eaten", creature_record(id)["eaten"] + 1)
+
+func _update_record(id: String, key: String, value) -> void:
+	var rec := creature_record(id)
+	rec[key] = value
+	if key != "seen":
+		rec["seen"] = true  # you can't eat or appraise what you haven't met
+	_records[id] = rec
+	_save()
 
 func on_skill_unlocked(id: String) -> void:
 	raise(id, State.OWNED_ONCE)
@@ -57,6 +105,8 @@ func on_inspect_processed(tags: Dictionary, appraisal_level: int, rules) -> void
 	if not tags.get("appraisal_target", false):
 		return
 	var target: String = tags.get("target", "")
+	if _creatures.has(target) and appraisal_level > creature_record(target)["appraisal"]:
+		_update_record(target, "appraisal", appraisal_level)
 	if target == "self":
 		self_report(appraisal_level, rules, true)
 	else:

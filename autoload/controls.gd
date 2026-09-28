@@ -21,6 +21,8 @@ const BINDINGS := {
 	"tab_prev": [KEY_Q],
 	"tab_next": [KEY_E],
 	"fullscreen": [KEY_F11],
+	"menu_accept": [KEY_ENTER, KEY_KP_ENTER, KEY_SPACE],
+	"menu_back": [KEY_BACKSPACE],
 }
 
 const PAD_BUTTONS := {
@@ -38,6 +40,8 @@ const PAD_BUTTONS := {
 	"menu": [JOY_BUTTON_START],
 	"tab_prev": [JOY_BUTTON_LEFT_SHOULDER],
 	"tab_next": [JOY_BUTTON_RIGHT_SHOULDER],
+	"menu_accept": [JOY_BUTTON_A],
+	"menu_back": [JOY_BUTTON_B],
 }
 
 ## Left stick direction per action: [axis, sign].

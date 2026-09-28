@@ -65,6 +65,44 @@ static func compendium_rows(compendium: CompendiumModel, all_defs: Array) -> Arr
 			rows.append(row)
 	return rows
 
+## Bestiary tab: every creature, named once seen, with how far you've got with it.
+static func bestiary_rows(compendium: CompendiumModel) -> Array:
+	var rows: Array = [{"kind": "header", "text": "CREATURES"}]
+	for id in compendium.bestiary_ids():
+		var rec := compendium.creature_record(id)
+		rows.append({"kind": "creature", "id": id, "seen": rec["seen"],
+			"name": compendium.creature_def(id).display_name if rec["seen"] else "???",
+			"status": _bestiary_status(rec)})
+	return rows
+
+static func _bestiary_status(rec: Dictionary) -> String:
+	if rec["eaten"] > 0:
+		return "eaten ×%d" % rec["eaten"]
+	if rec["appraisal"] > 0:
+		return "appraised"
+	return "seen" if rec["seen"] else ""
+
+## What the Bestiary card shows. Seen: name. Appraised: what that Appraisal level reveals
+## (HP; then stats, essences and eat bonus; then skills). Eaten: essences and eat bonus too.
+static func bestiary_detail(compendium: CompendiumModel, id: String) -> Dictionary:
+	var rec := compendium.creature_record(id)
+	var c := compendium.creature_def(id)
+	if c == null or not rec["seen"]:
+		return {"id": id, "name": "???", "seen": false}
+	var out := {"id": id, "name": c.display_name, "seen": true, "status": _bestiary_status(rec),
+		"eaten": rec["eaten"], "defeated": rec["defeated"]}
+	var report := compendium.creature_report(id, rec["appraisal"]) if rec["appraisal"] > 0 else {}
+	if report.has("hp"):
+		out["hp"] = report["hp"]
+	if report.has("stats"):
+		out["stats"] = report["stats"]
+	if report.has("skills"):
+		out["skills"] = report["skills"].map(func(s): return compendium.skill_name(s.get("id", "")))
+	if report.has("essences") or rec["eaten"] > 0:
+		out["essences"] = c.essences.duplicate()
+		out["eat_bonus"] = c.eat_bonus.duplicate()
+	return out
+
 static func detail(rules, d: SkillDef, slots: ActiveSlots) -> Dictionary:
 	var level: int = rules.level_of(d.id)
 	var p: Dictionary = rules.level_progress(d.id)

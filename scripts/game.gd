@@ -2,6 +2,7 @@ extends Node2D
 ## The vertical slice: builds the starting cave, spawns actors and the HUD, starts a run.
 ## Death resets the run and reloads the scene (the full death screen is Plan 3).
 
+const VIEW_SIZE := Vector2(640, 360)
 const AMBIENT := Color(0.6, 0.6, 0.78)  # dim cave; lights bring colour back
 const BACKDROP_TINT := Color(0.22, 0.21, 0.34)  # far cave wall, pushed back
 const BACKDROP := Color(0.06, 0.06, 0.12)
@@ -45,6 +46,8 @@ func _ready() -> void:
 			node = Enemy.new()
 			node.setup(def, skills_by_id)
 			node.downed.connect(player.on_enemy_downed)
+			node.downed.connect(func(d: CreatureDef) -> void: Compendium.model.on_creature_defeated(d.id))
+
 		node.position = spawn["pos"]
 		add_child(node)
 	player.skillset.slot_replaced.connect(Announcer.queue.push_slot_replaced)
@@ -57,6 +60,14 @@ func _ready() -> void:
 	skill_screen.visibility_changed.connect(func() -> void: hud.visible = not skill_screen.visible)
 	player.died.connect(_on_player_died)
 	SkillRules.start_run()
+
+## Bestiary: a creature counts as seen once it is inside the camera's view.
+func _physics_process(_delta: float) -> void:
+	var cam: Camera2D = player.get_node("Camera")
+	var view := Rect2(cam.get_screen_center_position() - VIEW_SIZE / 2.0, VIEW_SIZE)
+	for n in get_tree().get_nodes_in_group("actors"):
+		if n is Enemy and view.has_point(n.global_position):
+			Compendium.model.on_creature_seen(n.def.id)
 
 func _emit_game_event(event_name: String, tags: Dictionary) -> void:
 	EventBus.game_event.emit(event_name, tags)

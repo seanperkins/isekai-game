@@ -6,3 +6,4 @@ var model: CompendiumModel
 func _ready() -> void:
 	model = CompendiumModel.new(SkillRules.skill_defs, SkillRules.creature_defs,
 		CompendiumStore.new("user://compendium.json"))
+	EventBus.game_event.connect(model.on_game_event)  # Bestiary: creatures eaten

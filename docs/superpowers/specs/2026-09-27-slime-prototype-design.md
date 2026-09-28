@@ -440,6 +440,19 @@ This replaces the earlier "no XP levels" rule.
   top gallery, joined by stair towers so every ledge is reachable by plain jumps (tested). Anchor
   rocks over the upper tier's swing gap reward the thread; falling lands on the middle tier.
 
+## HUD slots, menu controls and the Bestiary (added after playtest)
+
+- HUD skill slots mirror the pad: LB (U) and RB (O) on the bottom row, LT (H) and RT (L) above,
+  left pair bottom-left, right pair bottom-right. Each shows button, icon and name; it dims
+  when empty or unaffordable. The ticker moved to bottom-centre, the menu hint to top-right.
+- Menus: `menu_accept` (Enter/Space/A) and `menu_back` (Backspace/B). The stick moves one row
+  per push, repeating after 0.35 s every 0.12 s; stick motion events are ignored.
+- Bestiary (third tab): one entry per creature (not water pools). Records persist in the
+  Compendium save under an optional `creatures` key (older saves still load; a bad record is
+  dropped alone): seen (entered the camera view), best Appraisal level used, eaten, defeated.
+  Card: name when seen; Appraisal reveals HP → stats → skills; eating reveals essences and eat
+  bonus.
+
 ## Content
 
 These are starting values for tuning. The pacing column is a hypothesis, to be

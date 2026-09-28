@@ -1,6 +1,8 @@
 class_name CompendiumStore
 extends RefCounted
-## Safe JSON persistence for Compendium slot states.
+## Safe JSON persistence for Compendium slot states and Bestiary records.
+## Bestiary records ("creatures") are optional, so saves from before the Bestiary still load,
+## and a malformed record is dropped on its own rather than costing the skill states.
 ## Save: write <path>.tmp, verify it parses, then rename over <path>.
 ## Load: parse only as JSON (never str_to_var), type-check everything, never overwrite a bad file.
 ## Windows' rename is remove-then-rename, so a missing main file with a valid .tmp is recovered.
@@ -27,11 +29,42 @@ func load_states(state_names: Array) -> Dictionary:
 			DirAccess.rename_absolute(_abs(tmp), _abs(path))
 	return data if data != null else {}
 
-func save_states(states: Dictionary, state_names: Array) -> bool:
+## Bestiary records from the save: id -> {seen, appraisal, eaten, defeated}. Bad entries are
+## skipped. Call after load_states, which handles recovery and backups.
+func load_creatures() -> Dictionary:
+	var json := JSON.new()
+	if not FileAccess.file_exists(path) or json.parse(FileAccess.get_file_as_string(path)) != OK:
+		return {}
+	var data = json.data
+	if typeof(data) != TYPE_DICTIONARY or typeof(data.get("creatures")) != TYPE_DICTIONARY:
+		return {}
+	var out := {}
+	for id in data["creatures"]:
+		var rec = data["creatures"][id]
+		var clean := _clean_record(rec)
+		if not clean.is_empty():
+			out[str(id)] = clean
+	return out
+
+static func _clean_record(rec) -> Dictionary:
+	if typeof(rec) != TYPE_DICTIONARY or typeof(rec.get("seen")) != TYPE_BOOL:
+		return {}
+	var out := {"seen": rec["seen"]}
+	for key in ["appraisal", "eaten", "defeated"]:
+		var v = rec.get(key)
+		if not (typeof(v) == TYPE_INT or typeof(v) == TYPE_FLOAT) or v < 0:
+			return {}
+		out[key] = int(v)
+	return out
+
+func save_states(states: Dictionary, state_names: Array, creatures: Dictionary = {}) -> bool:
 	var slots := {}
 	for id in states:
 		slots[id] = state_names[int(states[id])]
-	var text := JSON.stringify({"version": VERSION, "slots": slots}, "\t", true)
+	var body := {"version": VERSION, "slots": slots}
+	if not creatures.is_empty():
+		body["creatures"] = creatures
+	var text := JSON.stringify(body, "\t", true)
 	var tmp := path + ".tmp"
 	DirAccess.make_dir_recursive_absolute(_abs(path.get_base_dir()))
 	var f := FileAccess.open(tmp, FileAccess.WRITE)

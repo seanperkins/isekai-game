@@ -1,10 +1,13 @@
 class_name SkillScreen
 extends CanvasLayer
-## Great Sage skill window (Style D): Skills and Compendium tabs, stats, grouped list and a
+## Great Sage skill window (Style D): Skills, Compendium and Bestiary tabs, stats, grouped list and a
 ## detail card. Esc / Start opens it and pauses the game; Q/E or LB/RB switch tabs;
 ## Enter / A assigns an active to the U/O slots; Esc / B closes. Laid out for 640x360.
 
-const TABS := ["skills", "compendium"]
+const TABS := ["skills", "compendium", "bestiary"]
+## Sprite frame used as each creature's Bestiary portrait.
+const PORTRAIT := {"bat": "bat_1", "toad": "toad_idle", "lizard": "lizard_1", "spider": "spider_crawl",
+	"serpent": "serpent"}
 const ROW_H := 22.0
 const HEADER_H := 16.0
 const LIST_X := 158.0
@@ -24,6 +27,10 @@ const COL_PIP_OFF := Color(0.2, 0.28, 0.42)
 const FONT_BIG := 12
 const FONT_MAIN := 10
 const FONT_SMALL := 8
+## Stick navigation: one row per push; held past NAV_DELAY it repeats every NAV_REPEAT.
+const NAV_THRESHOLD := 0.5
+const NAV_DELAY := 0.35
+const NAV_REPEAT := 0.12
 
 var _player: Player
 var _rules
@@ -41,6 +48,8 @@ var _detail := Control.new()
 var _stats := Control.new()
 var _tab_labels: Array = []
 var _hint := Label.new()
+var _nav_dir := 0
+var _nav_timer := 0.0
 
 func bind(player: Player, rules, compendium: CompendiumModel, skill_defs: Array) -> void:
 	_player = player
@@ -120,7 +129,7 @@ func row_texts() -> Array:
 				out.append("???")
 			"ready":
 				out.append("%s  EVOLVE %d EP" % [r["name"], r["cost"]])
-			"slot":
+			"slot", "creature":
 				out.append(r["name"])
 	return out
 
@@ -130,12 +139,44 @@ func hint_text() -> String:
 func detail_texts() -> Array:
 	return _detail.find_children("*", "Label", true, false).map(func(l): return l.text)
 
+## Rows to move for a stick reading: an edge-triggered step, then slow repeats while held.
+## Stick motion arrives as a stream of events, so reading it per event skipped rows.
+func nav_step(stick_y: float, delta: float) -> int:
+	var dir := 0
+	if stick_y <= -NAV_THRESHOLD:
+		dir = -1
+	elif stick_y >= NAV_THRESHOLD:
+		dir = 1
+	if dir == 0:
+		_nav_dir = 0
+		return 0
+	if dir != _nav_dir:
+		_nav_dir = dir
+		_nav_timer = NAV_DELAY
+		return dir
+	_nav_timer -= delta
+	if _nav_timer <= 0.0:
+		_nav_timer = NAV_REPEAT
+		return dir
+	return 0
+
+func _process(delta: float) -> void:
+	if not visible:
+		_nav_dir = 0
+		return
+	var step := nav_step(Controls.last_stick.y, delta)
+	if step != 0:
+		move(step)
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("menu"):
 		toggle()
 		get_viewport().set_input_as_handled()
 		return
 	if not visible:
+		return
+	if event is InputEventJoypadMotion:
+		get_viewport().set_input_as_handled()  # the stick is read in _process
 		return
 	if event.is_action_pressed("ui_up") or event.is_action_pressed("aim_up"):
 		move(-1)
@@ -145,9 +186,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		switch_tab(_tab - 1)
 	elif event.is_action_pressed("tab_next"):
 		switch_tab(_tab + 1)
-	elif event.is_action_pressed("ui_accept"):
+	elif event.is_action_pressed("menu_accept") or event.is_action_pressed("ui_accept"):
 		accept()
-	elif event.is_action_pressed("ui_cancel"):
+	elif event.is_action_pressed("menu_back") or event.is_action_pressed("ui_cancel"):
 		close()
 	else:
 		return
@@ -185,14 +226,23 @@ func _refresh() -> void:
 	for i in _tab_labels.size():
 		var style: StyleBoxFlat = _tab_labels[i].get_theme_stylebox("panel")
 		style.bg_color = COL_SELECTED if i == _tab else COL_ROW
-	_rows = SkillScreenModel.skill_rows(_rules, _all) if tab() == "skills" else SkillScreenModel.compendium_rows(_compendium, _all)
+	match tab():
+		"skills":
+			_rows = SkillScreenModel.skill_rows(_rules, _all)
+		"compendium":
+			_rows = SkillScreenModel.compendium_rows(_compendium, _all)
+		_:
+			_rows = SkillScreenModel.bestiary_rows(_compendium)
 	_selectable = []
 	for i in _rows.size():
-		if ["skill", "slot", "ready"].has(_rows[i]["kind"]):
+		if ["skill", "slot", "ready", "creature"].has(_rows[i]["kind"]):
 			_selectable.append(i)
 	_sel = clampi(_sel, 0, maxi(0, _selectable.size() - 1))
 	var verb := "Evolve" if not _selectable.is_empty() and _rows[_selectable[_sel]]["kind"] == "ready" else "Assign"
-	_hint.text = ("LB/RB Tabs    A %s    B Back" if Controls.using_joypad else "Q/E Tabs    Enter %s    Esc Back") % verb
+	if tab() == "skills" or verb == "Evolve":
+		_hint.text = ("LB/RB Tabs    A %s    B Back" if Controls.using_joypad else "Q/E Tabs    Enter %s    Esc Back") % verb
+	else:
+		_hint.text = "LB/RB Tabs    B Back" if Controls.using_joypad else "Q/E Tabs    Esc Back"
 	_build_stats()
 	_build_list()
 	_build_detail()
@@ -251,6 +301,12 @@ func _build_list() -> void:
 		y += _row_height(r)
 
 func _build_row(r: Dictionary, y: float, selected: bool) -> void:
+	if r["kind"] == "creature":
+		_panel(_list, Vector2(LIST_X, y), Vector2(LIST_W, ROW_H - 2), COL_SELECTED if selected else COL_ROW, 2 if selected else 1)
+		_portrait(_list, r["id"], r["seen"], Vector2(LIST_X + 3, y + 2), 16)
+		_label(_list, r["name"], Vector2(LIST_X + 24, y + 4), Vector2(140, 12), FONT_MAIN, Color.WHITE if r["seen"] else COL_DIM)
+		_label(_list, r["status"], Vector2(LIST_X + 170, y + 5), Vector2(70, 10), FONT_SMALL, COL_DIM)
+		return
 	var locked: bool = r["kind"] == "locked" or r.get("state", -1) == CompendiumModel.State.UNKNOWN
 	_panel(_list, Vector2(LIST_X, y), Vector2(LIST_W, ROW_H - 2), COL_SELECTED if selected else COL_ROW, 2 if selected else 1)
 	_icon(_list, "icon_locked" if locked else "icon_" + r.get("id", ""), Vector2(LIST_X + 3, y + 2), 16)
@@ -270,6 +326,9 @@ func _build_detail() -> void:
 	var id := selected_id()
 	if id == "":
 		_label(_detail, "No skills yet.", Vector2(DETAIL_X, 52), Vector2(190, 12), FONT_MAIN, COL_DIM)
+		return
+	if tab() == "bestiary":
+		_build_creature_card(id)
 		return
 	var d: SkillDef = _defs[id]
 	if tab() == "compendium":
@@ -319,6 +378,47 @@ func _build_detail() -> void:
 		var badge := _panel(_detail, Vector2(DETAIL_X + 160, 276), Vector2(28, 18), COL_ROW, 1)
 		var l := _label(badge, "[%s]" % labels[card["slot"]], Vector2(0, 2), Vector2(28, 14), FONT_SMALL, Color.WHITE)
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+
+func _build_creature_card(id: String) -> void:
+	var c := SkillScreenModel.bestiary_detail(_compendium, id)
+	_portrait(_detail, id, c["seen"], Vector2(DETAIL_X, 50), 40)
+	_label(_detail, c["name"], Vector2(DETAIL_X + 46, 52), Vector2(146, 16), FONT_BIG, Color.WHITE)
+	if not c["seen"]:
+		_label(_detail, "Not yet encountered.", Vector2(DETAIL_X + 46, 70), Vector2(146, 12), FONT_SMALL, COL_DIM)
+		return
+	_label(_detail, c["status"].capitalize() if c["status"] != "" else "Seen", Vector2(DETAIL_X + 46, 70), Vector2(146, 12), FONT_SMALL, COL_TITLE)
+	var lines: Array = []
+	if c.has("stats"):
+		var st: Dictionary = c["stats"]
+		lines.append("HP %d   ATK %d   DEF %d   SPD %d" % [st.get("max_hp", 0), st.get("atk", 0), st.get("def", 0), st.get("spd", 0)])
+	elif c.has("hp"):
+		lines.append("HP %d" % c["hp"])
+	if c.has("essences"):
+		var ess: Dictionary = c["essences"]
+		lines.append("Essences: " + ", ".join(ess.keys().map(func(k): return "%s %d" % [k, ess[k]])))
+		var b: Dictionary = c["eat_bonus"]
+		if not b.is_empty():
+			lines.append("Eat bonus: +%d %s per %d eaten" % [b.get("amount", 0), str(b.get("stat", "")).to_upper(), b.get("per", 1)])
+	if c.has("skills"):
+		lines.append("Skills: " + ", ".join(c["skills"]))
+	if not c.has("stats") and not c.has("hp"):
+		lines.append("Appraise it (I / Y) to learn more.")
+	lines.append("Eaten %d    Defeated %d" % [c["eaten"], c["defeated"]])
+	var y := 100.0
+	for line in lines:
+		var l := _label(_detail, line, Vector2(DETAIL_X, y), Vector2(190, 28), FONT_SMALL, Color.WHITE, true)
+		y += maxf(14.0, l.get_line_count() * 11.0 + 3.0)
+
+func _portrait(parent: Node, id: String, seen: bool, pos: Vector2, px: float) -> void:
+	var t := TextureRect.new()
+	t.texture = Art.texture(PORTRAIT.get(id, "icon_locked"))
+	t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	t.position = pos
+	t.size = Vector2(px, px)
+	if not seen:
+		t.modulate = Color(0, 0, 0, 0.8)  # silhouette
+	parent.add_child(t)
 
 # --- helpers --------------------------------------------------------------
 

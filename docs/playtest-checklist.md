@@ -31,3 +31,6 @@ Gamepad: left stick / D-pad move (stick also aims) · A jump · X tackle · B ho
 - [ ] Sticky Thread aimed at an enemy still slows/holds it. Aimed at nothing in range, it just flashes.
 - [ ] Upper tier swing gap: the three rocks with vines are anchors; chaining swings crosses the gap.
 - [ ] Evolving Swing Thread puts it in Sticky Thread's slot; its rope is longer and launches harder.
+- [ ] HUD skill slots sit in the bottom corners like the pad: LB/RB on the bottom row, LT/RT above; each shows the button, icon and name, and dims when you can't afford it.
+- [ ] Skill screen: the stick moves one row per push (hold to scroll slowly); A accepts; B closes.
+- [ ] Bestiary tab (third tab): creatures appear once seen on screen; appraising reveals stats/skills; eating shows essences and eat bonus; counts eaten and defeated; persists after death.

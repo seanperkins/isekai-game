@@ -141,3 +141,31 @@ func test_screen_fits_the_640x360_view() -> void:
 	for c in screen.find_children("*", "Control", true, false):
 		var r: Rect2 = c.get_global_rect()
 		assert_true(r.position.x >= 0.0 and r.end.x <= 640.0 and r.position.y >= 0.0 and r.end.y <= 360.0, str(c.name, r))
+
+func test_bestiary_tab_lists_creatures_and_shows_a_card() -> void:
+	compendium.on_creature_seen("bat")
+	compendium.on_game_event(Events.PREDATED, {"source": "bat", "kind": "creature"})
+	_screen()
+	screen.open()
+	screen.switch_tab(2)
+	assert_eq(screen.tab(), "bestiary")
+	assert_true(screen.row_texts().has("Cave Bat"))
+	assert_true(screen.row_texts().has("???"))
+	var bat := screen.row_texts().find("Cave Bat") - 1  # minus the header row
+	screen.move(bat)
+	assert_eq(screen.selected_id(), "bat")
+	var card := "\n".join(screen.detail_texts())
+	assert_string_contains(card, "Cave Bat")
+	assert_string_contains(card, "Eaten 1")
+	screen.accept()  # nothing to assign here; must not crash
+	for c in screen.find_children("*", "Control", true, false):
+		var r: Rect2 = c.get_global_rect()
+		assert_true(r.position.x >= 0.0 and r.end.x <= 640.0 and r.position.y >= 0.0 and r.end.y <= 360.0, str(c.name, r))
+
+func test_tabs_cycle_through_all_three() -> void:
+	_screen()
+	screen.open()
+	screen.switch_tab(3)
+	assert_eq(screen.tab(), "skills")
+	screen.switch_tab(-1)
+	assert_eq(screen.tab(), "bestiary")

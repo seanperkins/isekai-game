@@ -74,3 +74,21 @@ func test_every_ledge_is_reachable_from_the_floor_by_base_jumps() -> void:
 				frontier.append(q)
 	for q in ledges:
 		assert_true(reached.has(q), "ledge at %s" % q)
+
+func test_creatures_on_screen_at_the_start_enter_the_bestiary() -> void:
+	var game = load("res://scenes/main.tscn").instantiate()
+	add_child_autofree(game)
+	await wait_physics_frames(5)
+	assert_true(Compendium.model.creature_record("bat")["seen"])
+
+func test_eating_and_defeating_reach_the_bestiary() -> void:
+	var game = load("res://scenes/main.tscn").instantiate()
+	add_child_autofree(game)
+	await wait_physics_frames(2)
+	var before: Dictionary = Compendium.model.creature_record("toad")
+	EventBus.game_event.emit(Events.PREDATED, {"source": "toad", "kind": "creature"})
+	var toad: Enemy = get_tree().get_nodes_in_group("actors").filter(func(n): return n is Enemy and n.def.id == "toad")[0]
+	toad.downed.emit(toad.def)
+	var after: Dictionary = Compendium.model.creature_record("toad")
+	assert_eq(after["eaten"], before["eaten"] + 1)
+	assert_eq(after["defeated"], before["defeated"] + 1)
