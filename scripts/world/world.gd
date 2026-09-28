@@ -39,6 +39,9 @@ func setup(p_rooms: Dictionary, p_player: CharacterBody2D, p_ctx: Dictionary) ->
 	add_child(camera)
 	player.z_index = 5  # over the room's contents
 	add_child(player)
+	var progress = ctx.get("progress")
+	if progress != null:
+		progress.shortcut_opened.connect(_open_gate)
 	if is_inside_tree():
 		camera.make_current()
 
@@ -138,6 +141,14 @@ func _transition(e: Dictionary) -> void:
 	player.set_physics_process(true)
 	sliding = false
 	room_entered.emit(current_id)
+
+## A shortcut was opened in this room: its gate solids go at once.
+func _open_gate(id: String) -> void:
+	if room == null:
+		return
+	for n in room.get_children():
+		if n.is_in_group("gate_" + id):
+			n.queue_free()
 
 ## Bestiary: a creature counts as seen once it is inside the camera's view.
 func _note_seen() -> void:

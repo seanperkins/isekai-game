@@ -13,4 +13,11 @@ static func make(f: Dictionary, ctx: Dictionary) -> Node2D:
 			var tablet := Tablet.new()
 			tablet.setup(f, ctx)
 			return tablet
+		"switch":
+			var progress = ctx.get("progress")
+			if progress != null and progress.is_open(f["shortcut"]):
+				return null  # already broken open
+			var sw := ShortcutSwitch.new()
+			sw.setup(f, ctx)
+			return sw
 	return null
