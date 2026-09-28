@@ -8,11 +8,14 @@ const BASE_SPEED := 60.0
 const CHASE_RANGE := 160.0
 const CONTACT_RANGE := 18.0
 const PATROL_RANGE := 48.0
-const SPIT_RANGE := 120.0
-const SPIT_COOLDOWN := 3.0
-const SPIT_TICK := 2
+const SPIT_RANGE := 90.0
+const SPIT_COOLDOWN := 5.0
+const SPIT_TICK := 1
 const SPIT_SECONDS := 3.0
 const SLOW_SECONDS := 2.0
+## Bats dive at the player, then pull back up: a rhythm with windows to tackle them.
+const SWOOP_DIVE_SECONDS := 1.2
+const SWOOP_RETREAT_SECONDS := 1.0
 ## Ground enemies do not turn while the player is this close, so jumping over one opens
 ## a window to hit it from behind (the lizard is only stunned from behind).
 const TURN_LOCK_RANGE := 32.0
@@ -121,8 +124,11 @@ func _physics_process(delta: float) -> void:
 		velocity.y += GRAVITY * delta
 	move_and_slide()
 	if active and player != null and global_position.distance_to(player.global_position) <= CONTACT_RANGE:
-		player.receive_hit(stats.get_stat("atk"), "physical")
+		player.receive_hit(stats.get_stat("atk"), "physical", global_position)
 	_update_visual()
+
+static func swoop_phase(t: float) -> String:
+	return "dive" if fmod(t, SWOOP_DIVE_SECONDS + SWOOP_RETREAT_SECONDS) < SWOOP_DIVE_SECONDS else "retreat"
 
 ## Which sprite to draw for this creature right now. All sheets face right.
 func frame_name() -> String:
@@ -156,7 +162,10 @@ func _act(player: Node2D) -> void:
 		return
 	if capabilities.has("flight"):
 		if to_player.length() < CHASE_RANGE:
-			velocity = to_player.normalized() * speed
+			if swoop_phase(_anim_t) == "dive":
+				velocity = to_player.normalized() * speed
+			else:
+				velocity = Vector2(-to_player.normalized().x * speed * 0.5, -speed * 0.8)
 		else:
 			velocity = Vector2(0.0, sin(Time.get_ticks_msec() / 300.0) * 20.0)
 		facing = 1 if velocity.x >= 0.0 else -1

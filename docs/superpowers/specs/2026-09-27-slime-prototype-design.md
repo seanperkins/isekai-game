@@ -257,7 +257,7 @@ event whose tags are a **superset** of the query tags. So
 ## Gameplay loop
 
 1. Reborn as a weak slime at the cave entrance (base stats: HP 30, ATK 1,
-   DEF 0, SPD 100). Tackle deals ATK damage and stuns for 2 s. The stun timer doesn't expire during a
+   DEF 0, SPD 100). Tackle deals ATK damage and stuns for 3 s (tuned from 2 s after playtest). The stun timer doesn't expire during a
    predate hold. A cancelled hold leaves the remaining timer intact. The serpent
    can't be stunned.
    - **Damage math:** start from the attacker's ATK (or the skill's damage
@@ -330,7 +330,7 @@ Contact damage = ATK (physical).
 | Source | HP | ATK | DEF | SPD | Essences | Skills it uses (level) | Eat bonus to slime |
 |---|---|---|---|---|---|---|---|
 | Bat | 2 | 3 | 0 | 140 | sound 1, flight 1 | Echolocation (1): finds you in the dark; Flight (1, enemy-only) | +2 SPD |
-| Toad | 3 | 3 | 0 | 70 | poison 1, water 1 | Poison Spit (1, enemy-only): 4 poison on application, then 2/s DoT for 3 s; Poison Resistance (2) | +1 max HP |
+| Toad | 3 | 3 | 0 | 70 | poison 1, water 1 | Poison Spit (1, enemy-only): 4 poison on application, then 1/s DoT for 3 s, every 5 s, 90 px range (tuned after playtest); Poison Resistance (2) | +1 max HP |
 | Lizard | 5 | 5 | 1 | 80 | armor 1, earth 1 | Body Armor (2); Tail Swipe (1, enemy-only). Armored front: tackle only stuns from behind | +1 DEF per 3 eaten |
 | Spider | 3 | 4 | 0 | 110 | thread 1, poison 1 | Sticky Thread (1); Ceiling Walk (1, enemy-only): drops from ceilings | +1 ATK per 3 eaten |
 | Water pool | — | — | — | — | water 2 | — (terrain) | — |
@@ -400,7 +400,7 @@ Compendium doesn't list them.
 |---|---|
 | Flight | capability `flight` (AI flies and ignores ground pathing) |
 | Ceiling Walk | capability `ceiling_walk` (AI clings to ceilings and drops on the player) |
-| Poison Spit | active projectile: 4 poison on application, then 2/s DoT for 3 s |
+| Poison Spit | active projectile: 4 poison on application, then 1/s DoT for 3 s (tuned after playtest) |
 | Tail Swipe | active melee: 5 physical and knockback |
 | Constrict | active grab: a 3-physical direct hit each second for 2 s (DEF applies, minimum 1); jumping twice breaks free |
 

@@ -6,7 +6,7 @@ class StubPlayer extends Node2D:
 	var facing := 1
 	var hits: Array = []
 	var poisons: Array = []
-	func receive_hit(raw: int, damage_type: String) -> void:
+	func receive_hit(raw: int, damage_type: String, _from: Vector2 = Vector2.INF) -> void:
 		hits.append([raw, damage_type])
 	func receive_poison(application: int, tick_amount: int, seconds: float) -> void:
 		poisons.append([application, tick_amount, seconds])
@@ -64,4 +64,4 @@ func test_toad_spits_poison_in_range_then_waits_for_cooldown() -> void:
 	_enemy("toad", Vector2(0, 0))
 	fake_player.global_position = Vector2(80, 0)
 	await wait_physics_frames(10)
-	assert_eq(fake_player.poisons, [[4, 2, 3.0]])
+	assert_eq(fake_player.poisons, [[4, 1, 3.0]])

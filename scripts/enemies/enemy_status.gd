@@ -6,7 +6,7 @@ const ACTIVE := 0
 const STUNNED := 1
 const DOWNED := 2
 const GONE := 3
-const STUN_SECONDS := 2.0
+const STUN_SECONDS := 3.0
 const DOWNED_SECONDS := 5.0
 
 var state := ACTIVE

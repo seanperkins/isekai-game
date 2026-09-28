@@ -10,14 +10,16 @@ const JUMP_VELOCITY := -330.0
 const WALL_JUMP_PUSH := 180.0
 const GRAVITY := 900.0
 const WALL_SLIDE_SPEED := 90.0
-const TACKLE_RANGE := 28.0
+const TACKLE_RANGE := 36.0
+const TACKLE_REACH_Y := 28.0
 const TACKLE_SPEED := 260.0
 const TACKLE_SECONDS := 0.15
 const PREDATE_RANGE := 32.0
 ## A hold breaks if the target ends up farther than this (eating leaves you rooted and vulnerable).
 const PREDATE_BREAK_RANGE := 40.0
 const INSPECT_RANGE := 96.0
-const INVULN_SECONDS := 0.6
+const INVULN_SECONDS := 1.0
+const KNOCKBACK := Vector2(160.0, -140.0)
 const EAT_HEAL := 5
 const BASE_STATS := {"max_hp": 30, "atk": 1, "def": 0, "spd": 100}
 const LAND_SQUASH_SECONDS := 0.12
@@ -45,6 +47,7 @@ var _abilities := {}
 var _sprite: Sprite2D
 var _land_timer := 0.0
 var _was_on_floor := true
+var eat_prompt := Label.new()
 
 func setup(rules: SkillRulesEngine, compendium: CompendiumModel, creature_defs: Array, emit: Callable) -> void:
 	_rules = rules
@@ -105,6 +108,16 @@ func _physics_process(delta: float) -> void:
 	sensors.physics_update(is_on_wall(), is_on_floor())
 	tick(delta)
 	_update_visual(delta)
+	_update_prompt()
+
+## Shows "Hold K/B to eat" above the slime while something edible is in reach.
+func _update_prompt() -> void:
+	var target = null
+	if not predation.active() and not health.is_dead():
+		target = _nearest_in_group("predatable", PREDATE_RANGE, func(n): return n.can_be_predated())
+	eat_prompt.visible = target != null
+	if target != null:
+		eat_prompt.text = "Hold %s to eat" % ("B" if Controls.using_joypad else "K")
 
 ## Which slime pose to draw: eating, airborne, briefly squashed after landing, or idle.
 static func pick_frame(predating: bool, on_floor: bool, land_timer: float) -> String:
@@ -199,12 +212,17 @@ func use_active(i: int) -> void:
 	if ability.activate():
 		_emit.call(Events.SKILL_USED, {"id": id})
 
-func receive_hit(raw: int, damage_type: String) -> void:
+## `from` is the attacker's position for contact hits; the slime is knocked away from it.
+func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF) -> void:
 	if _invuln > 0.0 or health.is_dead():
 		return
 	var m := skillset.incoming(damage_type, health.hp, health.max_hp)
 	health.take_hit(Damage.direct_hit(raw, m["percent_off"], m["flat_off"] + stats.get_stat("def")), damage_type)
 	_invuln = INVULN_SECONDS
+	if from != Vector2.INF and not health.is_dead():
+		var away := 1.0 if global_position.x >= from.x else -1.0
+		velocity = Vector2(away * KNOCKBACK.x, KNOCKBACK.y)
+		_dash = 0.2
 
 func receive_poison(application: int, tick_amount: int, seconds: float) -> void:
 	if _invuln > 0.0 or health.is_dead():
@@ -275,7 +293,7 @@ func _nearest_in_front(range_px: float):
 		if n == self or n.get("team") == team:
 			continue
 		var dx: float = (n.global_position.x - global_position.x) * facing
-		if dx < -4.0 or dx > range_px or absf(n.global_position.y - global_position.y) > 20.0:
+		if dx < -4.0 or dx > range_px or absf(n.global_position.y - global_position.y) > TACKLE_REACH_Y:
 			continue
 		if dx < best_dx:
 			best = n
@@ -323,3 +341,10 @@ func _build_body() -> void:
 	_sprite = Art.sprite("slime_idle", BODY_BOTTOM)
 	add_child(_sprite)
 	add_child(Art.light(Color(0.4, 0.75, 1.0), 0.8, 1.2))  # the slime's soft inner glow
+	eat_prompt.visible = false
+	eat_prompt.scale = Vector2(0.5, 0.5)  # the camera zooms 2x
+	eat_prompt.position = Vector2(-26, -26)
+	eat_prompt.add_theme_color_override("font_color", Color(0.75, 0.95, 1.0))
+	eat_prompt.add_theme_color_override("font_outline_color", Color(0.02, 0.05, 0.15))
+	eat_prompt.add_theme_constant_override("outline_size", 4)
+	add_child(eat_prompt)

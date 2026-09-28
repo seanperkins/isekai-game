@@ -46,7 +46,7 @@ func test_stun_then_recover() -> void:
 	var s := EnemyStatus.new()
 	s.stun()
 	assert_true(s.predatable())
-	s.update(1.9)
+	s.update(2.9)
 	assert_eq(s.state, EnemyStatus.STUNNED)
 	s.update(0.2)
 	assert_eq(s.state, EnemyStatus.ACTIVE)

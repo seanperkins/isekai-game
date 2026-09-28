@@ -114,7 +114,7 @@ func test_direct_hit_emits_and_grants_invulnerability() -> void:
 	player.receive_hit(3, "physical")
 	player.receive_hit(3, "physical")
 	assert_eq(player.health.hp, 27)
-	player.tick(0.6)
+	player.tick(1.0)
 	player.receive_hit(3, "physical")
 	assert_eq(player.health.hp, 24)
 	assert_eq(_names().count("damaged"), 2)
