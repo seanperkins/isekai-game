@@ -7,9 +7,10 @@ var creature_defs: Array = []
 var _unknown_seen := {}
 
 func _ready() -> void:
-	skill_defs = DefLoader.load_dir("res://data/skills")
-	creature_defs = DefLoader.load_dir("res://data/creatures")
-	var errors := DefValidator.validate(skill_defs, creature_defs)
+	var content := DefLoader.load_content("res://data/skills", "res://data/creatures")
+	skill_defs = content["skills"]
+	creature_defs = content["creatures"]
+	var errors: Array = content["errors"]
 	if not errors.is_empty():
 		for e in errors:
 			push_error(e)

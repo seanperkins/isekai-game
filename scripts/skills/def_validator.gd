@@ -13,6 +13,9 @@ static func validate(skills: Array, creatures: Array) -> PackedStringArray:
 		return errors
 	var by_id := {}
 	for d in skills:
+		if not (d is SkillDef):
+			errors.append("%s: is not a SkillDef" % _where(d))
+			continue
 		if d.id == "":
 			errors.append("%s: missing id" % _where(d))
 			continue
@@ -121,6 +124,9 @@ static func _check_creatures(creatures: Array, by_id: Dictionary, errors: Packed
 	var seen := {}
 	for c in creatures:
 		var w := _where(c)
+		if not (c is CreatureDef):
+			errors.append("%s: is not a CreatureDef" % w)
+			continue
 		if not Sources.ALL.has(c.id):
 			errors.append("%s: unknown source id '%s'" % [w, c.id])
 			continue

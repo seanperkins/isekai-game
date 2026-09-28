@@ -131,3 +131,12 @@ func test_missing_and_duplicate_creature_defs_fail() -> void:
 	var errors := _errors_with(_valid_skills(), creatures)
 	assert_string_contains(errors, "missing CreatureDef for source 'serpent'")
 	assert_string_contains(errors, "duplicate CreatureDef for 'bat'")
+
+func test_wrong_resource_type_is_an_error_not_a_crash() -> void:
+	var s := _valid_skills()
+	s.append(TestDefs.creature("bat"))
+	var c := TestDefs.all_creatures()
+	c.append(TestDefs.skill("oops"))
+	var errors := _errors_with(s, c)
+	assert_string_contains(errors, "<bat>: is not a SkillDef")
+	assert_string_contains(errors, "<oops>: is not a CreatureDef")
