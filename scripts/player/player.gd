@@ -55,6 +55,8 @@ var _land_timer := 0.0
 var _was_on_floor := true
 var eat_prompt := Label.new()
 var _creatures_eaten := 0
+## The most recent cast, for the input debug overlay: {"id", "aim"}.
+var last_cast := {}
 
 func setup(rules: SkillRulesEngine, compendium: CompendiumModel, creature_defs: Array, emit: Callable) -> void:
 	_rules = rules
@@ -110,8 +112,10 @@ func _physics_process(delta: float) -> void:
 		use_active(0)
 	if Input.is_action_just_pressed("active_2"):
 		use_active(1)
-	if Input.is_action_just_pressed("cycle"):
-		skillset.slots.cycle()
+	if Input.is_action_just_pressed("active_3"):
+		use_active(2)
+	if Input.is_action_just_pressed("active_4"):
+		use_active(3)
 	move_and_slide()
 	sensors.physics_update(is_on_wall(), is_on_floor())
 	tick(delta)
@@ -225,6 +229,7 @@ func use_active(i: int) -> void:
 	ability.level = _rules.level_of(id)
 	ability.aim = aim_vector()
 	ability.activate()
+	last_cast = {"id": id, "aim": ability.aim}
 	_emit.call(Events.SKILL_USED, {"id": id})
 	for _point in cost:
 		_emit.call(Events.MANA_SPENT, {})

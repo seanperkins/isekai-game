@@ -56,11 +56,7 @@ static func compendium_rows(compendium: CompendiumModel, all_defs: Array) -> Arr
 static func detail(rules, d: SkillDef, slots: ActiveSlots) -> Dictionary:
 	var level: int = rules.level_of(d.id)
 	var p: Dictionary = rules.level_progress(d.id)
-	var slot := ""
-	if slots.slots[0] == d.id:
-		slot = "U"
-	elif slots.slots[1] == d.id:
-		slot = "O"
+	var slot := slots.slots.find(d.id)  # -1 when not slotted
 	return {"id": d.id, "name": d.display_name, "level": level, "max_level": d.max_level,
 		"description": d.description, "mp_cost": d.mp_cost, "lines": effect_lines(d, maxi(level, 1)),
 		"progress": float(p["current"]) / p["target"] if p["target"] > 0 else -1.0, "slot": slot}

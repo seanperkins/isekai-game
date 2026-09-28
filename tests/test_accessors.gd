@@ -25,7 +25,7 @@ func test_stats_split_base_eat_and_skill() -> void:
 
 func test_controls_register_every_action() -> void:
 	Controls.ensure_actions()
-	for action in ["move_left", "move_right", "jump", "tackle", "predate", "inspect", "active_1", "active_2", "cycle"]:
+	for action in ["move_left", "move_right", "jump", "tackle", "predate", "inspect", "active_1", "active_2", "active_3", "active_4", "aim_up", "aim_down"]:
 		assert_true(InputMap.has_action(action), action)
 		assert_gt(InputMap.action_get_events(action).size(), 0, action)
 	Controls.ensure_actions()  # idempotent

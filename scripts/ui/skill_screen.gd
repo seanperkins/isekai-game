@@ -94,13 +94,13 @@ func selected_id() -> String:
 		return ""
 	return _rows[_selectable[_sel]].get("id", "")
 
-## Assigns the selected active to U, or to O if it's already in U.
+## Moves the selected active to the next slot (U → O → H → L → U).
 func accept() -> void:
 	var id := selected_id()
 	if tab() != "skills" or id == "" or SkillEffects.active_scene(_defs[id]) == "":
 		return
 	var slots := _player.skillset.slots
-	slots.assign(1 if slots.slots[0] == id else 0, id)
+	slots.assign(slots.next_slot_for(id), id)
 	_refresh()
 
 func row_texts() -> Array:
@@ -287,10 +287,10 @@ func _build_detail() -> void:
 		_bar(_detail, Vector2(DETAIL_X, 286), Vector2(150, 6), card["progress"], COL_PIP_ON)
 	else:
 		_label(_detail, "MAX LEVEL", Vector2(DETAIL_X, 280), Vector2(100, 12), FONT_SMALL, COL_TITLE)
-	if card["slot"] != "":
+	if card["slot"] >= 0:
 		var labels: Array = Controls.slot_labels()
 		var badge := _panel(_detail, Vector2(DETAIL_X + 160, 276), Vector2(28, 18), COL_ROW, 1)
-		var l := _label(badge, "[%s]" % labels[0 if card["slot"] == "U" else 1], Vector2(0, 2), Vector2(28, 14), FONT_SMALL, Color.WHITE)
+		var l := _label(badge, "[%s]" % labels[card["slot"]], Vector2(0, 2), Vector2(28, 14), FONT_SMALL, Color.WHITE)
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
 # --- helpers --------------------------------------------------------------

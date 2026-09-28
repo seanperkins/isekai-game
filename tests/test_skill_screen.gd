@@ -82,7 +82,7 @@ func test_detail_card_for_an_active() -> void:
 	assert_eq(card["mp_cost"], 4)
 	assert_eq(card["lines"], ["Damage 2"])
 	assert_almost_eq(card["progress"], 0.5, 0.001)
-	assert_eq(card["slot"], "U")
+	assert_eq(card["slot"], 0)
 
 func test_detail_lines_for_passives() -> void:
 	var by_id := {}
@@ -97,14 +97,10 @@ func test_assign_puts_an_active_in_a_slot_and_swaps_duplicates() -> void:
 	var s := ActiveSlots.new()
 	s.add("a")
 	s.add("b")
-	s.add("c")  # c replaces a (LRU)
-	s.assign(0, "a")
-	assert_eq(s.slots[0], "a")
-	s.assign(1, "a")  # already in slot 0: swap
-	assert_eq(s.slots, [s.slots[0], "a"])
-	assert_ne(s.slots[0], "a")
+	s.assign(1, "a")  # a was in slot 0: the two swap
+	assert_eq(s.slots, ["b", "a", "", ""])
 	s.assign(0, "not_owned")
-	assert_ne(s.slots[0], "not_owned")
+	assert_eq(s.slots[0], "b")
 
 func test_screen_opens_paused_and_closes() -> void:
 	_screen()
@@ -125,10 +121,12 @@ func test_screen_lists_navigates_and_assigns() -> void:
 	while screen.selected_id() != "poison_breath":
 		screen.move(1)
 	assert_string_contains("\n".join(screen.detail_texts()), "MP cost 4")
-	screen.accept()  # assign to U
-	assert_eq(player.skillset.slots.slots[0], "poison_breath")
-	screen.accept()  # again: to O
-	assert_eq(player.skillset.slots.slots[1], "poison_breath")
+	assert_eq(player.skillset.slots.slots[1], "poison_breath")  # auto-slotted second
+	screen.accept()  # moves to the next slot: H
+	assert_eq(player.skillset.slots.slots[2], "poison_breath")
+	screen.accept()  # then L
+	assert_eq(player.skillset.slots.slots[3], "poison_breath")
+	assert_eq(player.skillset.slots.slots[1], "")
 
 func test_compendium_tab_shows_unknown_slots() -> void:
 	_screen()

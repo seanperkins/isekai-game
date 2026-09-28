@@ -36,7 +36,7 @@ func test_toughness_raises_max_hp() -> void:
 
 func test_active_unlocks_fill_slots() -> void:
 	_emit("absorbed", {"essence": "water", "source": "water_pool"}, 4)
-	assert_eq(set.slots.slots, ["hydraulic_propulsion", ""])
+	assert_eq(set.slots.slots, ["hydraulic_propulsion", "", "", ""])
 
 func test_incoming_damage_mods() -> void:
 	_emit("damaged", {"damage_type": "poison"}, 6)   # Poison Resistance Lv1
@@ -57,16 +57,15 @@ func test_reset_clears_slots_flags_and_modifiers() -> void:
 	rules.reset_run()
 	set.reset()
 	assert_false(set.has("wall_cling"))
-	assert_eq(set.slots.slots, ["", ""])
+	assert_eq(set.slots.slots, ["", "", "", ""])
 	assert_eq(stats.get_stat("slide_speed"), 100)
 
 func test_slot_replaced_is_forwarded() -> void:
 	var seen: Array = []
 	set.slot_replaced.connect(func(n: String, o: String) -> void: seen.append([n, o]))
-	set.slots.add("a")
-	set.slots.add("b")
-	set.slots.add("c")
-	assert_eq(seen, [["c", "a"]])
+	for id in ["a", "b", "c", "d", "e"]:
+		set.slots.add(id)
+	assert_eq(seen, [["e", "a"]])
 
 func test_skill_set_is_freed_when_dropped() -> void:
 	# A lambda capturing self in the slot_replaced forward made a RefCounted cycle that

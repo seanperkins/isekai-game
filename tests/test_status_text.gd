@@ -53,11 +53,11 @@ func test_creature_lines_for_empty_report() -> void:
 
 func test_slot_and_ticker_text() -> void:
 	var slots := ActiveSlots.new()
-	assert_eq(StatusText.slot_line(slots, rules), "[U] —   [O] —")
+	assert_eq(StatusText.slot_line(slots, rules), "[U] —  [O] —  [H] —  [L] —")
 	for i in 4:
 		rules.handle_event("absorbed", {"essence": "water"})
 	slots.add("hydraulic_propulsion")
-	assert_eq(StatusText.slot_line(slots, rules), "[U] Hydraulic Propulsion   [O] —")
+	assert_eq(StatusText.slot_line(slots, rules), "[U] Hydraulic Propulsion  [O] —  [H] —  [L] —")
 	assert_eq(StatusText.ticker_text({"kind": "level", "id": "hydraulic_propulsion", "level": 2}, rules), "Hydraulic Propulsion Lv2")
 	assert_eq(StatusText.ticker_text({"kind": "slot_replaced", "new_id": "water_blade", "old_id": "hydraulic_propulsion"}, rules),
 		"Water Blade replaced Hydraulic Propulsion")
