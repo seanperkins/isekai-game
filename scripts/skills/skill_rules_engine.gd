@@ -74,6 +74,22 @@ func unlock_log() -> Array:
 func get_def(id: String) -> SkillDef:
 	return _defs.get(id)
 
+## Progress of a locked skill toward unlock, for the Appraisal bands. Never shown as numbers.
+func progress(id: String) -> Dictionary:
+	var d: SkillDef = _defs.get(id)
+	var best := {"current": 0, "target": 0}
+	if d == null or d.unlock.is_empty():
+		return best
+	var best_ratio := INF
+	for c in d.unlock:
+		var target := int(c["n"])
+		var current := mini(_current(c), target)
+		var ratio := float(current) / target
+		if ratio < best_ratio:
+			best_ratio = ratio
+			best = {"current": current, "target": target}
+	return best
+
 func _drain() -> void:
 	_draining = true
 	var iterations := 0
