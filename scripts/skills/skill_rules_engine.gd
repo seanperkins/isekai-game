@@ -101,6 +101,20 @@ func _evaluate(d: SkillDef) -> void:
 	if not _owned.has(d.id):
 		if not d.starting and _conditions_met(d):
 			_grant(d, true)
+		return
+	_check_level(d)
+
+## Level = 1 + (levels_on events since unlock) / level_curve, capped at max_level.
+func _check_level(d: SkillDef) -> void:
+	if d.levels_on.is_empty() or d.level_curve <= 0:
+		return
+	var entry: Dictionary = _owned[d.id]
+	var gained: int = _ledger.counter(d.levels_on["event"], d.levels_on.get("tags", {})) - int(entry["base"])
+	var target: int = mini(d.max_level, 1 + int(floor(float(gained) / d.level_curve)))
+	while int(entry["level"]) < target:
+		entry["level"] = int(entry["level"]) + 1
+		_queue.append([Events.SKILL_LEVELED, {"id": d.id, "level": entry["level"]}])
+		skill_leveled.emit(d.id, entry["level"])
 
 func _grant(d: SkillDef, announce: bool) -> void:
 	var base := 0
