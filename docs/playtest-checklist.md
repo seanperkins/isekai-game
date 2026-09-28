@@ -3,6 +3,7 @@
 Run: open the project in Godot 4.7 and press F5 (or `godot` in the project folder).
 
 Controls: A/D move · Space jump · J tackle · K hold to eat · I inspect · U/O actives · Tab cycle
+Gamepad: left stick / D-pad move · A jump · X tackle · B hold to eat · Y inspect · LB/RB actives · D-pad ↑ cycle
 
 - [ ] Jump feels responsive; after ~40 jumps a Great Sage pop-up announces Leap and jumps get higher.
 - [ ] Touching the tall column mid-air ~15 times unlocks Wall Cling; sliding down it is slower; Space jumps off it.

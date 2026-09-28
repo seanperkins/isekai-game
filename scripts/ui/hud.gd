@@ -47,7 +47,7 @@ func _process(delta: float) -> void:
 	if _player == null:
 		return
 	_hp.text = hp_text()
-	_slots.text = StatusText.slot_line(_player.skillset.slots, _rules)
+	_slots.text = StatusText.slot_line(_player.skillset.slots, _rules, Controls.slot_labels())
 	_popup.text = popup_text()
 	_popup_panel.visible = _popup.text != ""
 	var entry := _queue.pop_ticker()

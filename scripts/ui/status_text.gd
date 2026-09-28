@@ -64,11 +64,12 @@ static func creature_lines(report: Dictionary) -> PackedStringArray:
 		lines.append("Skills: " + ", ".join(parts))
 	return lines
 
-static func slot_line(slots: ActiveSlots, rules) -> String:
+## `labels` are the two slot buttons for the current device, e.g. ["U", "O"] or ["LB", "RB"].
+static func slot_line(slots: ActiveSlots, rules, labels: Array = ["U", "O"]) -> String:
 	var names: Array = []
 	for id in slots.slots:
 		names.append(rules.get_def(id).display_name if id != "" and rules.get_def(id) != null else "—")
-	return "[U] %s   [O] %s" % names
+	return "[%s] %s   [%s] %s" % [labels[0], names[0], labels[1], names[1]]
 
 static func ticker_text(entry: Dictionary, rules) -> String:
 	match entry.get("kind", ""):
