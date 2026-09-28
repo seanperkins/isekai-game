@@ -14,6 +14,8 @@ const TACKLE_RANGE := 28.0
 const TACKLE_SPEED := 260.0
 const TACKLE_SECONDS := 0.15
 const PREDATE_RANGE := 32.0
+## A hold breaks if the target ends up farther than this (eating leaves you rooted and vulnerable).
+const PREDATE_BREAK_RANGE := 40.0
 const INSPECT_RANGE := 96.0
 const INVULN_SECONDS := 0.6
 const EAT_HEAL := 5
@@ -99,7 +101,7 @@ func _physics_process(delta: float) -> void:
 	tick(delta)
 
 func do_jump() -> void:
-	if health.is_dead():
+	if health.is_dead() or predation.active():
 		return
 	var boost := sqrt(stats.get_stat("jump_height") / 100.0)
 	if is_on_floor():
@@ -134,7 +136,8 @@ func begin_predate() -> void:
 
 func process_predate(delta: float) -> void:
 	var t = predation.target
-	if health.is_dead() or not is_instance_valid(t) or not t.can_be_predated():
+	if health.is_dead() or not is_instance_valid(t) or not t.can_be_predated() \
+			or global_position.distance_to(t.global_position) > PREDATE_BREAK_RANGE:
 		cancel_predate()
 		return
 	if predation.update(delta):
@@ -159,7 +162,7 @@ func do_inspect() -> void:
 	inspect_report.emit(StatusText.creature_lines(_compendium.creature_report(c.id, _rules.level_of("appraisal"))))
 
 func use_active(i: int) -> void:
-	if health.is_dead():
+	if health.is_dead() or predation.active():
 		return
 	var id := skillset.slots.use(i)
 	if id == "":

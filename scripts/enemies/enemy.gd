@@ -13,6 +13,9 @@ const SPIT_COOLDOWN := 3.0
 const SPIT_TICK := 2
 const SPIT_SECONDS := 3.0
 const SLOW_SECONDS := 2.0
+## Ground enemies do not turn while the player is this close, so jumping over one opens
+## a window to hit it from behind (the lizard is only stunned from behind).
+const TURN_LOCK_RANGE := 32.0
 const COLORS := {"bat": Color(0.45, 0.35, 0.6), "toad": Color(0.3, 0.7, 0.3),
 	"lizard": Color(0.6, 0.5, 0.3), "spider": Color(0.15, 0.15, 0.15), "serpent": Color(0.2, 0.4, 0.8)}
 
@@ -131,7 +134,8 @@ func _act(player: Node2D) -> void:
 		facing = 1 if velocity.x >= 0.0 else -1
 		return
 	if absf(to_player.x) < CHASE_RANGE and absf(to_player.y) < 48.0:
-		facing = 1 if to_player.x > 0.0 else -1
+		if absf(to_player.x) > TURN_LOCK_RANGE:
+			facing = 1 if to_player.x > 0.0 else -1
 		velocity.x = facing * speed
 	else:
 		if global_position.x > _home_x + PATROL_RANGE:

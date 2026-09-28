@@ -10,15 +10,17 @@ const TEST_ROOM := {
 		Rect2(-20, 0, 20, 360),       # left wall
 		Rect2(1600, 0, 20, 360),      # right wall
 		Rect2(0, -20, 1600, 20),      # ceiling
-		Rect2(260, 250, 120, 12),     # platform
-		Rect2(520, 200, 100, 12),     # platform
+		# Platforms step up at most 54 px (base jump apex ~60 px), each within reach of the one below.
+		Rect2(260, 266, 120, 12),     # platform (54 px above the floor)
+		Rect2(420, 214, 100, 12),     # platform (52 px above the previous)
 		Rect2(760, 140, 16, 180),     # wall-cling column
-		Rect2(900, 230, 140, 12),     # platform
-		Rect2(1200, 180, 120, 12),    # platform
+		Rect2(900, 266, 140, 12),     # platform
+		Rect2(1060, 214, 100, 12),    # platform
+		Rect2(1200, 162, 120, 12),    # platform
 	],
 	"spawns": [
 		{"id": "bat", "pos": Vector2(300, 200)},
-		{"id": "bat", "pos": Vector2(560, 150)},
+		{"id": "bat", "pos": Vector2(470, 170)},
 		{"id": "bat", "pos": Vector2(980, 180)},
 		{"id": "toad", "pos": Vector2(200, 300)},
 		{"id": "toad", "pos": Vector2(420, 300)},

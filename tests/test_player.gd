@@ -195,3 +195,22 @@ func test_jump_on_floor_emits_jumped() -> void:
 	player.do_jump()
 	assert_true(events.has(["jumped", {"from": "ground"}]))
 	assert_lt(player.velocity.y, 0.0)
+
+func test_predate_hold_cancels_when_the_target_is_out_of_range() -> void:
+	var bat := _enemy("bat", 20)
+	bat.receive_tackle(1, true)
+	player.begin_predate()
+	player.global_position = Vector2(200, 0)
+	player.process_predate(2.0)
+	assert_false(player.predation.active())
+	assert_false(bat.status.held)
+	assert_false(_names().has("predated"))
+
+func test_jump_and_actives_are_blocked_during_a_hold() -> void:
+	for i in 4:
+		rules.handle_event("absorbed", {"essence": "water", "source": "water_pool"})
+	var bat := _enemy("bat", 20)
+	bat.receive_tackle(1, true)
+	player.begin_predate()
+	player.use_active(0)
+	assert_false(_names().has("skill_used"))
