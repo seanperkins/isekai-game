@@ -72,8 +72,7 @@ func test_movement_abilities_push_the_actor_in_facing_direction() -> void:
 	player.facing = -1
 	_ability("res://scenes/abilities/hydraulic_propulsion.tscn", [100, 120, 140, 160, 180], 2).activate()
 	_ability("res://scenes/abilities/jet_dash.tscn", []).activate()
-	_ability("res://scenes/abilities/swing_thread.tscn", []).activate()
-	assert_eq(player.impulses.size(), 3)
+	assert_eq(player.impulses.size(), 2)
 	assert_eq(player.impulses[0], Vector2(-456.0, -140.0))
 	for v in player.impulses:
 		assert_lt(v.x, 0.0)

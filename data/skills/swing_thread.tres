@@ -6,7 +6,7 @@
 script = ExtResource("1_7uyeh")
 id = "swing_thread"
 display_name = "Swing Thread"
-description = "Swing from a thread like a grappling hook."
+description = "A longer, faster thread: swing farther and launch harder. Holds enemies."
 announce = "Skill evolved. Acquired [Swing Thread]."
 source = "evolution"
 unlock = [{
@@ -20,6 +20,8 @@ unlock = [{
 }]
 effects = [{
 "kind": "active",
-"scene": "res://scenes/abilities/swing_thread.tscn"
+"scene": "res://scenes/abilities/swing_thread.tscn",
+"values": [2]
 }]
 mp_cost = 4
+replaces = "sticky_thread"

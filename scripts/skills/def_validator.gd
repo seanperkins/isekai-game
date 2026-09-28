@@ -75,6 +75,8 @@ static func _check_skill(d: SkillDef, by_id: Dictionary, errors: PackedStringArr
 		_check_effect(w, d, e, errors)
 	if d.source != "enemy_only" and SkillEffects.active_scene(d) != "" and d.mp_cost <= 0:
 		errors.append("%s: player active skill needs a positive mp_cost" % w)
+	if d.replaces != "" and not d.parent_ids().has(d.replaces):
+		errors.append("%s: replaces '%s', which is not a parent" % [w, d.replaces])
 
 static func _check_event_ref(w: String, field: String, event: String, tags: Dictionary, errors: PackedStringArray) -> void:
 	if not Events.ALL.has(event):

@@ -140,3 +140,10 @@ func test_wrong_resource_type_is_an_error_not_a_crash() -> void:
 	var errors := _errors_with(s, c)
 	assert_string_contains(errors, "<bat>: is not a SkillDef")
 	assert_string_contains(errors, "<oops>: is not a CreatureDef")
+
+func test_replaces_must_name_a_parent() -> void:
+	var s := _valid_skills()
+	s.append(TestDefs.skill("evo", {"source": "evolution", "unlock": [TestDefs.level("leap", 1)], "replaces": "appraisal"}))
+	assert_string_contains(_errors_with(s), "replaces 'appraisal', which is not a parent")
+	s[-1].replaces = "leap"
+	assert_eq(_errors_with(s), "")

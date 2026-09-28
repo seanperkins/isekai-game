@@ -30,6 +30,18 @@ func add(id: String) -> void:
 	_touch(lru)
 	slot_replaced.emit(id, old)
 
+## Puts `new_id` into `old_id`'s slot and retires `old_id` (an evolution taking over).
+## Without `old_id` in a slot this is a plain add.
+func replace(old_id: String, new_id: String) -> void:
+	var i := slots.find(old_id)
+	owned.erase(old_id)
+	if i < 0 or owned.has(new_id):
+		add(new_id)
+		return
+	owned.append(new_id)
+	slots[i] = new_id
+	_touch(i)
+
 func use(i: int) -> String:
 	if slots[i] == "":
 		return ""

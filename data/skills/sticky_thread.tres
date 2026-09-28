@@ -6,7 +6,7 @@
 script = ExtResource("1_om3n3")
 id = "sticky_thread"
 display_name = "Sticky Thread"
-description = "Shoot a thread that slows, then holds, an enemy."
+description = "Shoot a thread: it slows, then holds, an enemy, or sticks to rock so you can swing."
 hint = "Something silky stirs within."
 announce = "Analysis complete. Acquired [Sticky Thread]."
 source = "essence"

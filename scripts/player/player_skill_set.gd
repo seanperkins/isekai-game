@@ -20,7 +20,10 @@ func _init(p_rules: SkillRulesEngine, p_stats: Stats) -> void:
 func on_skill_unlocked(id: String) -> void:
 	var d := rules.get_def(id)
 	if d != null and SkillEffects.active_scene(d) != "":
-		slots.add(id)
+		if d.replaces != "":
+			slots.replace(d.replaces, id)
+		else:
+			slots.add(id)
 	refresh()
 
 func refresh() -> void:

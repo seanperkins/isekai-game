@@ -56,7 +56,7 @@ func test_nothing_held_lets_abilities_use_their_default() -> void:
 	player.use_active(0)
 	var swing: Ability = player._abilities["swing_thread"]
 	assert_eq(swing.aim, Vector2.ZERO)
-	assert_eq(player.last_cast["aim"], Vector2(1, 0))  # recorded as the direction actually used
+	assert_eq(player.last_cast["aim"], Vector2(1, -1).normalized())  # recorded as the direction actually used
 
 func test_levels_reset_when_a_run_restarts_in_place() -> void:
 	player.award_xp(25)

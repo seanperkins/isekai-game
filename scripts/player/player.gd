@@ -29,6 +29,7 @@ const LEVEL_UP_BONUS := {"max_hp": 2, "max_mp": 1}
 const AIM_DEADZONE := 0.35
 const MAX_MP_PER_THREE_EATS := 2
 const LAND_SQUASH_SECONDS := 0.12
+const MAX_SWING_SPEED := 520.0
 const BODY_BOTTOM := 6.0  # collision box bottom, where sprites stand
 
 var team := "player"
@@ -59,6 +60,9 @@ var eat_prompt := Label.new()
 var _creatures_eaten := 0
 ## The most recent cast, for the input debug overlay: {"id", "aim"}.
 var last_cast := {}
+## The thread the slime is swinging from, or null.
+var rope: Rope = null
+var rope_line := Line2D.new()
 
 func setup(rules: SkillRulesEngine, compendium: CompendiumModel, creature_defs: Array, emit: Callable) -> void:
 	_rules = rules
@@ -92,10 +96,12 @@ func _physics_process(delta: float) -> void:
 		facing = 1 if dir > 0.0 else -1
 	if _dash > 0.0:
 		_dash -= delta
-	else:
+	elif rope == null:
 		velocity.x = dir * SPEED * stats.get_stat("spd") / 100.0
 	if not is_on_floor():
 		velocity.y += GRAVITY * delta
+	if rope != null:
+		_swing(dir, delta)
 	if skillset.has("wall_cling") and is_on_wall() and not is_on_floor() and velocity.y > 0.0:
 		velocity.y = minf(velocity.y, WALL_SLIDE_SPEED * stats.get_stat("slide_speed") / 100.0)
 	if Input.is_action_just_pressed("jump"):
@@ -120,6 +126,8 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed("active_4"):
 		use_active(3)
 	move_and_slide()
+	if rope != null:
+		_stay_on_rope()
 	sensors.physics_update(is_on_wall(), is_on_floor())
 	tick(delta)
 	_update_visual(delta)
@@ -150,11 +158,15 @@ func _update_visual(delta: float) -> void:
 		_land_timer = LAND_SQUASH_SECONDS
 	_was_on_floor = on_floor
 	_land_timer = maxf(0.0, _land_timer - delta)
+	_update_rope_line()
 	Art.set_frame(_sprite, pick_frame(predation.active(), on_floor, _land_timer), BODY_BOTTOM)
 	_sprite.flip_h = facing < 0
 
 func do_jump() -> void:
 	if health.is_dead() or predation.active():
+		return
+	if rope != null:
+		release_rope()
 		return
 	var boost := sqrt(stats.get_stat("jump_height") / 100.0)
 	if is_on_floor():
@@ -185,6 +197,7 @@ func begin_predate() -> void:
 	if target == null:
 		return
 	target.set_held(true)
+	drop_rope()
 	predation.start(target, stats.get_stat("predation_time"))
 
 func process_predate(delta: float) -> void:
@@ -237,6 +250,46 @@ func use_active(i: int) -> void:
 	_emit.call(Events.SKILL_USED, {"id": id})
 	for _point in cost:
 		_emit.call(Events.MANA_SPENT, {})
+
+## Called by a thread that stuck to terrain. Attaching again re-aims the rope.
+func attach_rope(anchor: Vector2, max_length: float, reel_speed: float, boost: float) -> void:
+	if health.is_dead():
+		return
+	rope = Rope.new(anchor, global_position, max_length, reel_speed, boost)
+	_dash = 0.0
+	_update_rope_line()
+
+## Jump off the rope, keeping the swing's momentum times the thread's boost.
+func release_rope() -> void:
+	if rope == null:
+		return
+	velocity = rope.release_velocity(velocity)
+	drop_rope()
+
+func drop_rope() -> void:
+	rope = null
+	_update_rope_line()
+
+## Pump with left/right, reel with up/down, and never move outward past the rope.
+func _swing(dir: float, delta: float) -> void:
+	velocity = rope.pump(global_position, velocity, dir, delta)
+	var reel_axis := raw_aim().y
+	if absf(reel_axis) >= AIM_DEADZONE:
+		rope.reel(signf(reel_axis), delta)
+	velocity = velocity.limit_length(MAX_SWING_SPEED)
+	velocity = rope.constrain_velocity(global_position, velocity)
+
+## After moving, slide back onto the rope (colliding, so the pull never goes through walls).
+func _stay_on_rope() -> void:
+	var fix := rope.correction(global_position)
+	if fix != Vector2.ZERO:
+		move_and_collide(fix)
+	velocity = rope.constrain_velocity(global_position, velocity)
+
+func _update_rope_line() -> void:
+	rope_line.visible = rope != null
+	if rope != null:
+		rope_line.points = PackedVector2Array([global_position, rope.anchor])
 
 func award_xp(amount: int) -> void:
 	if not health.is_dead():
@@ -409,11 +462,13 @@ func _on_run_started() -> void:
 	progression = Progression.new()  # levels are per run
 	progression.leveled_up.connect(_on_leveled_up)
 	skillset.reset()
+	drop_rope()
 	stats.reset_run()
 	_sync_max_hp()
 
 func _on_health_died() -> void:
 	cancel_predate()
+	drop_rope()
 	died.emit()
 
 func _build_body() -> void:
@@ -432,3 +487,8 @@ func _build_body() -> void:
 	eat_prompt.add_theme_color_override("font_outline_color", Color(0.02, 0.05, 0.15))
 	eat_prompt.add_theme_constant_override("outline_size", 4)
 	add_child(eat_prompt)
+	rope_line.top_level = true  # drawn in world space, from the slime to the anchor
+	rope_line.width = 1.0
+	rope_line.default_color = ThreadAbility.THREAD_COLOR
+	rope_line.visible = false
+	add_child(rope_line)

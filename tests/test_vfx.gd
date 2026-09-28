@@ -68,9 +68,9 @@ func test_sticky_thread_draws_a_thread() -> void:
 	assert_eq(_vfx().filter(func(n): return n is Line2D).size(), 1)
 
 func test_movement_skills_leave_an_afterimage() -> void:
-	for id in ["hydraulic_propulsion", "jet_dash", "swing_thread"]:
+	for id in ["hydraulic_propulsion", "jet_dash"]:
 		_cast(id)
-	assert_eq(_vfx().size(), 3)
+	assert_eq(_vfx().size(), 2)
 
 func test_effects_fade_and_free_themselves() -> void:
 	_cast("poison_breath")

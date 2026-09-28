@@ -56,3 +56,16 @@ func test_reset_clears_everything() -> void:
 	s.reset()
 	assert_eq(s.slots, ["", "", "", ""])
 	assert_eq(s.owned, [])
+
+func test_replace_takes_over_the_old_skills_slot() -> void:
+	for id in ["a", "b", "c"]:
+		s.add(id)
+	s.replace("b", "z")
+	assert_eq(s.slots, ["a", "z", "c", ""])
+	assert_eq(s.owned, ["a", "c", "z"])
+	assert_eq(replaced, [])
+
+func test_replace_without_the_old_skill_just_adds() -> void:
+	s.add("a")
+	s.replace("b", "z")
+	assert_eq(s.slots, ["a", "z", "", ""])
