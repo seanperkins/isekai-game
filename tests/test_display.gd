@@ -11,6 +11,16 @@ func test_project_renders_at_640x360_and_scales_to_the_window() -> void:
 	assert_eq(ProjectSettings.get_setting("display/window/stretch/mode"), "canvas_items")
 	assert_eq(ProjectSettings.get_setting("display/window/stretch/aspect"), "keep")
 
+func test_game_starts_fullscreen() -> void:
+	assert_eq(ProjectSettings.get_setting("display/window/size/mode"), DisplayServer.WINDOW_MODE_FULLSCREEN)
+
+func test_f11_toggles_fullscreen_and_windowed() -> void:
+	var keys := InputMap.action_get_events("fullscreen").map(func(e): return e.physical_keycode)
+	assert_eq(keys, [KEY_F11])
+	assert_eq(Controls.toggled_window_mode(DisplayServer.WINDOW_MODE_FULLSCREEN), DisplayServer.WINDOW_MODE_WINDOWED)
+	assert_eq(Controls.toggled_window_mode(DisplayServer.WINDOW_MODE_WINDOWED), DisplayServer.WINDOW_MODE_FULLSCREEN)
+	assert_eq(Controls.toggled_window_mode(DisplayServer.WINDOW_MODE_MAXIMIZED), DisplayServer.WINDOW_MODE_FULLSCREEN)
+
 func test_hud_fits_the_view_and_shows_mp() -> void:
 	var game = load("res://scenes/main.tscn").instantiate()
 	add_child_autofree(game)

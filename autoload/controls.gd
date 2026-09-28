@@ -20,6 +20,7 @@ const BINDINGS := {
 	"menu": [KEY_ESCAPE],
 	"tab_prev": [KEY_Q],
 	"tab_next": [KEY_E],
+	"fullscreen": [KEY_F11],
 }
 
 const PAD_BUTTONS := {
@@ -67,6 +68,8 @@ func _ready() -> void:
 	ensure_actions()
 
 func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("fullscreen"):
+		DisplayServer.window_set_mode(toggled_window_mode(DisplayServer.window_get_mode()))
 	if event is InputEventJoypadMotion:
 		if event.axis == JOY_AXIS_LEFT_X:
 			last_stick.x = event.axis_value
@@ -80,6 +83,12 @@ func _input(event: InputEvent) -> void:
 		using_joypad = true
 	elif (event is InputEventKey and event.pressed) or event is InputEventMouseButton:
 		using_joypad = false
+
+## F11: fullscreen goes back to a window; anything else goes fullscreen.
+static func toggled_window_mode(mode: DisplayServer.WindowMode) -> DisplayServer.WindowMode:
+	if mode == DisplayServer.WINDOW_MODE_FULLSCREEN or mode == DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN:
+		return DisplayServer.WINDOW_MODE_WINDOWED
+	return DisplayServer.WINDOW_MODE_FULLSCREEN
 
 ## Button names for the two active slots, matching the device the player last used.
 func slot_labels() -> Array:
