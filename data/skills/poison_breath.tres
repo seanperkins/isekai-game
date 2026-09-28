@@ -32,3 +32,4 @@ effects = [{
 "scene": "res://scenes/abilities/poison_breath.tscn",
 "values": [2, 3, 4, 5, 6]
 }]
+mp_cost = 4

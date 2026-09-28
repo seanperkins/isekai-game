@@ -12,6 +12,8 @@ const PREDATED := "predated"
 const ABSORBED := "absorbed"
 const INSPECTED := "inspected"
 const SKILL_USED := "skill_used"
+## One per MP point spent (like absorbed per essence unit), so counters can total MP.
+const MANA_SPENT := "mana_spent"
 const SKILL_UNLOCKED := "skill_unlocked"
 const SKILL_LEVELED := "skill_leveled"
 
@@ -19,4 +21,4 @@ const SKILL_LEVELED := "skill_leveled"
 const INTERNAL := [SKILL_UNLOCKED, SKILL_LEVELED]
 
 const ALL := [JUMPED, WALL_TOUCHED, DAMAGED, HP_LOW_ENTERED, HP_LOW_EXITED, STUNNED_ENEMY,
-	PREDATED, ABSORBED, INSPECTED, SKILL_USED, SKILL_UNLOCKED, SKILL_LEVELED]
+	PREDATED, ABSORBED, INSPECTED, SKILL_USED, MANA_SPENT, SKILL_UNLOCKED, SKILL_LEVELED]

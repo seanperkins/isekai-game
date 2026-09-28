@@ -4,11 +4,16 @@ extends CanvasLayer
 
 const PANEL_SECONDS := 4.0
 const TICKER_SECONDS := 3.0
+## HUD is laid out for the 640x360 internal resolution; stretch scales it with the window.
+const VIEW := Vector2(640, 360)
+const FONT_MAIN := 10
+const FONT_SMALL := 8
 
 var _player: Player
 var _rules
 var _queue: AnnouncerQueue
 var _hp := Label.new()
+var _mp := Label.new()
 var _slots := Label.new()
 var _popup := Label.new()
 var _popup_panel := PanelContainer.new()
@@ -22,34 +27,43 @@ func bind(player: Player, rules, _compendium: CompendiumModel, queue: AnnouncerQ
 	_rules = rules
 	_queue = queue
 	player.inspect_report.connect(_on_inspect_report)
+	player.not_enough_mp.connect(func(_id: String) -> void: _ticker_lines.append(["Not enough MP", TICKER_SECONDS]))
 
 func _ready() -> void:
-	_hp.position = Vector2(12, 8)
-	_slots.position = Vector2(12, 28)
-	_popup.position = Vector2(320, 24)
-	_ticker.position = Vector2(12, 300)
-	_panel.position = Vector2(700, 60)
+	_hp.position = Vector2(6, 4)
+	_mp.position = Vector2(6, 16)
+	_slots.position = Vector2(6, 28)
+	_ticker.position = Vector2(6, 318)
+	_panel.position = Vector2(420, 40)
+	for l in [_hp, _mp, _slots, _popup]:
+		l.add_theme_font_size_override("font_size", FONT_MAIN)
+	for l in [_ticker, _panel]:
+		l.add_theme_font_size_override("font_size", FONT_SMALL)
+	_mp.add_theme_color_override("font_color", Color(0.55, 0.8, 1.0))
 	# Great Sage window: translucent blue with a glowing border.
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.04, 0.1, 0.28, 0.85)
 	style.border_color = Color(0.45, 0.8, 1.0)
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(4)
-	style.set_content_margin_all(8)
+	style.set_content_margin_all(5)
 	_popup_panel.add_theme_stylebox_override("panel", style)
-	_popup_panel.position = Vector2(360, 16)
+	_popup_panel.position = Vector2(VIEW.x / 2.0, 6)
 	_popup.position = Vector2.ZERO
 	_popup_panel.add_child(_popup)
-	for l in [_hp, _slots, _popup_panel, _ticker, _panel]:
+	for l in [_hp, _mp, _slots, _popup_panel, _ticker, _panel]:
 		add_child(l)
 
 func _process(delta: float) -> void:
 	if _player == null:
 		return
 	_hp.text = hp_text()
+	_mp.text = mp_text()
 	_slots.text = StatusText.slot_line(_player.skillset.slots, _rules, Controls.slot_labels())
 	_popup.text = popup_text()
 	_popup_panel.visible = _popup.text != ""
+	_popup_panel.reset_size()
+	_popup_panel.position.x = roundf((VIEW.x - _popup_panel.size.x) / 2.0)
 	var entry := _queue.pop_ticker()
 	while not entry.is_empty():
 		_ticker_lines.append([StatusText.ticker_text(entry, _rules), TICKER_SECONDS])
@@ -63,6 +77,9 @@ func _process(delta: float) -> void:
 
 func hp_text() -> String:
 	return "HP %d/%d" % [_player.health.hp, _player.health.max_hp]
+
+func mp_text() -> String:
+	return "MP %d/%d" % [_player.mana.mp, _player.mana.max_mp]
 
 func popup_text() -> String:
 	var current := _queue.current()

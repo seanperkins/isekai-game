@@ -32,3 +32,4 @@ effects = [{
 "scene": "res://scenes/abilities/sticky_thread.tscn",
 "values": [1, 1, 2, 2, 2]
 }]
+mp_cost = 3

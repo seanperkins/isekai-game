@@ -28,7 +28,7 @@ func _ready() -> void:
 	add_child(player)
 	var cam := Camera2D.new()
 	cam.name = "Camera"
-	cam.zoom = Vector2(2, 2)
+	cam.zoom = Vector2(1, 1)  # the 640x360 internal resolution is scaled to the window
 	cam.limit_left = 0
 	cam.limit_top = 0
 	cam.limit_right = int(ROOM_SIZE.x)

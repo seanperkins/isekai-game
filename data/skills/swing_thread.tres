@@ -22,3 +22,4 @@ effects = [{
 "kind": "active",
 "scene": "res://scenes/abilities/swing_thread.tscn"
 }]
+mp_cost = 4

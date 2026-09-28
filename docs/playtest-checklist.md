@@ -18,3 +18,6 @@ Gamepad: left stick / D-pad move · A jump · X tackle · B hold to eat · Y ins
 - [ ] Toads spit poison: an initial hit then ticks that stop at 1 HP.
 - [ ] Dying reloads the room with a fresh run; the Compendium keeps what you discovered.
 - [ ] Pop-ups are readable and don't pause the game.
+- [ ] Casting an active costs MP (blue MP line under HP); with too little MP the ticker says "Not enough MP".
+- [ ] Every active shows an effect: green cloud (Poison Breath), blue streak (Water Blade), thread line, dash afterimages.
+- [ ] Fullscreen: HUD text scales up and stays crisp.

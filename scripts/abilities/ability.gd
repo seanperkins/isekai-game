@@ -22,6 +22,10 @@ func activate() -> bool:
 	_perform()
 	return true
 
+## True when off cooldown, so the player can check before spending MP.
+func ready() -> bool:
+	return _cooldown <= 0.0 and actor != null
+
 func _process(delta: float) -> void:
 	_cooldown = maxf(0.0, _cooldown - delta)
 

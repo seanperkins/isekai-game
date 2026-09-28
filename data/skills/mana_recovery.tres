@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_tu1db"]
+
+[resource]
+script = ExtResource("1_tu1db")
+id = "mana_recovery"
+display_name = "Mana Recovery"
+description = "Regain MP faster."
+hint = "Magic flows back faster the more you spend it."
+announce = "Proficiency reached. Acquired [Mana Recovery]."
+unlock = [{
+"event": "mana_spent",
+"kind": "counter",
+"n": 60,
+"tags": {}
+}]
+levels_on = {
+"event": "mana_spent",
+"tags": {}
+}
+level_curve = 60
+max_level = 3
+effects = [{
+"kind": "modifier",
+"op": "add",
+"stat": "mp_regen",
+"values": [50, 100, 150]
+}]

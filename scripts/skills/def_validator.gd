@@ -73,6 +73,8 @@ static func _check_skill(d: SkillDef, by_id: Dictionary, errors: PackedStringArr
 				errors.append("%s: unknown condition kind '%s'" % [w, kind])
 	for e in d.effects:
 		_check_effect(w, d, e, errors)
+	if d.source != "enemy_only" and SkillEffects.active_scene(d) != "" and d.mp_cost <= 0:
+		errors.append("%s: player active skill needs a positive mp_cost" % w)
 
 static func _check_event_ref(w: String, field: String, event: String, tags: Dictionary, errors: PackedStringArray) -> void:
 	if not Events.ALL.has(event):

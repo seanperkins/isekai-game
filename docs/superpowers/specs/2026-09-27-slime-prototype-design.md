@@ -357,6 +357,35 @@ anime-style status screen showing:
 - the essence totals for this run;
 - the Appraisal hints from Lv2 up (see Compendium and Appraisal).
 
+## Mana (added after playtest)
+
+- The slime has an MP pool: **20 max MP**, regenerating **1 MP/s**, scaled by the `mp_regen` stat (a percent of base 100).
+- Every player active has an **MP cost**:
+
+  | Skill | MP cost |
+  |---|---|
+  | Poison Breath | 4 |
+  | Hydraulic Propulsion | 3 |
+  | Water Blade | 5 |
+  | Sticky Thread | 3 |
+  | Swing Thread | 4 |
+  | Jet Dash | 5 |
+
+  A cast with too little MP does nothing, and the ticker says "Not enough MP". A cast blocked by the cooldown costs nothing.
+- **Eating:** each creature eaten restores **4 MP**. Every 3rd creature eaten adds **+2 max MP** (an eat bonus, capped at +10 per run).
+- **Events:** every MP point spent emits one `mana_spent` event, like `absorbed` per essence unit.
+- **Mana Recovery** is a hidden proficiency skill:
+  - Unlocks on `counter(mana_spent) >= 60`.
+  - Levels on `mana_spent` every 60 MP after unlock, max 3.
+  - Effect: `mp_regen` +50/100/150%.
+- **StatKeys** gain `max_mp` (integer) and `mp_regen` (percent).
+
+## Display (added after playtest)
+
+- **Internal resolution:** a fixed 640×360, scaled to the window (`canvas_items` stretch, keep aspect).
+- **Why:** text and pixel art scale together in fullscreen.
+- **Camera:** zoom is 1.
+
 ## Content
 
 These are starting values for tuning. The pacing column is a hypothesis, to be

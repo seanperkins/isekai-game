@@ -32,3 +32,4 @@ effects = [{
 "scene": "res://scenes/abilities/hydraulic_propulsion.tscn",
 "values": [100, 120, 140, 160, 180]
 }]
+mp_cost = 3

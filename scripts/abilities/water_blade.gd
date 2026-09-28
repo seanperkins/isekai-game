@@ -1,7 +1,12 @@
 extends Ability
-## Instant water blade: hits the nearest other-team actor ahead.
+## Instant water blade: hits the nearest other-team actor ahead, drawn as a blue streak.
+
+const RANGE := 160.0
 
 func _perform() -> void:
-	var targets := targets_in_front(160.0, 20.0)
+	var targets := targets_in_front(RANGE, 20.0)
+	var end := actor.global_position + Vector2(actor.facing * RANGE, 0.0)
 	if not targets.is_empty():
 		targets[0].receive_hit(value(), "physical")
+		end = targets[0].global_position
+	Vfx.line(actor, actor.global_position, end, Color(0.45, 0.85, 1.0), 3.0, 0.2)

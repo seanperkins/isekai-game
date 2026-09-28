@@ -95,7 +95,7 @@ func test_game_is_lit_framed_and_fully_sprited() -> void:
 	var lit: Array = RoomLayout.TEST_ROOM["decor"].filter(func(d): return d.has("light"))
 	assert_gte(game.find_children("*", "PointLight2D", true, false).size(), lit.size() + 1)
 	var cam: Camera2D = game.player.get_node("Camera")
-	assert_eq(cam.zoom, Vector2(2, 2))
+	assert_eq(cam.zoom, Vector2(1, 1))  # 640x360 internal resolution
 	assert_eq([cam.limit_left, cam.limit_top, cam.limit_right, cam.limit_bottom], [0, 0, 1600, 360])
 	for n in get_tree().get_nodes_in_group("predatable"):
 		assert_not_null(_sprite(n).texture, str(n))

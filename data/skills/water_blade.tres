@@ -19,3 +19,4 @@ effects = [{
 "scene": "res://scenes/abilities/water_blade.tscn",
 "values": [3]
 }]
+mp_cost = 5

@@ -22,3 +22,4 @@ effects = [{
 "kind": "active",
 "scene": "res://scenes/abilities/jet_dash.tscn"
 }]
+mp_cost = 5

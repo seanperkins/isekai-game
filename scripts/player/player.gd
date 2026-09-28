@@ -4,6 +4,7 @@ extends CharacterBody2D
 
 signal died
 signal inspect_report(lines: PackedStringArray)
+signal not_enough_mp(skill_id: String)
 
 const SPEED := 140.0
 const JUMP_VELOCITY := -330.0
@@ -21,7 +22,9 @@ const INSPECT_RANGE := 96.0
 const INVULN_SECONDS := 1.0
 const KNOCKBACK := Vector2(160.0, -140.0)
 const EAT_HEAL := 5
-const BASE_STATS := {"max_hp": 30, "atk": 1, "def": 0, "spd": 100}
+const BASE_STATS := {"max_hp": 30, "atk": 1, "def": 0, "spd": 100, "max_mp": 20, "mp_regen": 100}
+const EAT_MP := 4
+const MAX_MP_PER_THREE_EATS := 2
 const LAND_SQUASH_SECONDS := 0.12
 const BODY_BOTTOM := 6.0  # collision box bottom, where sprites stand
 
@@ -29,6 +32,7 @@ var team := "player"
 var facing := 1
 var stats: Stats
 var health: Health
+var mana: Mana
 var skillset: PlayerSkillSet
 var sensors := PlayerSensors.new()
 var predation := PredationHold.new()
@@ -48,6 +52,7 @@ var _sprite: Sprite2D
 var _land_timer := 0.0
 var _was_on_floor := true
 var eat_prompt := Label.new()
+var _creatures_eaten := 0
 
 func setup(rules: SkillRulesEngine, compendium: CompendiumModel, creature_defs: Array, emit: Callable) -> void:
 	_rules = rules
@@ -59,6 +64,7 @@ func setup(rules: SkillRulesEngine, compendium: CompendiumModel, creature_defs: 
 	health = Health.new(BASE_STATS["max_hp"])
 	health.emit_event = emit
 	health.died.connect(_on_health_died)
+	mana = Mana.new(BASE_STATS["max_mp"])
 	sensors.emit_event = emit
 	skillset = PlayerSkillSet.new(rules, stats)
 	rules.skill_unlocked.connect(_on_skill_unlocked)
@@ -208,9 +214,17 @@ func use_active(i: int) -> void:
 	var ability := _ability(id)
 	if ability == null:
 		return
+	if not ability.ready():
+		return  # on cooldown: costs nothing
+	var cost := _rules.get_def(id).mp_cost
+	if not mana.spend(cost):
+		not_enough_mp.emit(id)
+		return
 	ability.level = _rules.level_of(id)
-	if ability.activate():
-		_emit.call(Events.SKILL_USED, {"id": id})
+	ability.activate()
+	_emit.call(Events.SKILL_USED, {"id": id})
+	for _point in cost:
+		_emit.call(Events.MANA_SPENT, {})
 
 ## `from` is the attacker's position for contact hits; the slime is knocked away from it.
 func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF) -> void:
@@ -243,6 +257,7 @@ func tick(delta: float) -> void:
 			_poison_left -= 1.0
 			var m := skillset.incoming("poison", health.hp, health.max_hp)
 			health.take_tick(Damage.tick(_poison_tick, m["percent_off"]))
+	mana.regen(delta, stats.get_stat("mp_regen"))
 	var interval := stats.get_stat("regen_interval")
 	if interval > 0:
 		_regen_acc += delta
@@ -267,6 +282,12 @@ func _complete_predation(t) -> void:
 	stats.apply_eat(c)
 	_sync_max_hp()
 	health.heal(EAT_HEAL + skillset.heal_on(Events.PREDATED, {"source": c.id, "kind": kind}))
+	if kind == "creature":
+		mana.restore(EAT_MP)
+		_creatures_eaten += 1
+		if _creatures_eaten % 3 == 0:
+			stats.add_eat_bonus(StatKeys.MAX_MP, MAX_MP_PER_THREE_EATS)
+			_sync_max_hp()
 
 func _ability(id: String) -> Ability:
 	if _abilities.has(id):
@@ -314,6 +335,7 @@ func _nearest_in_group(group: String, range_px: float, accept: Callable):
 
 func _sync_max_hp() -> void:
 	health.set_max_hp(stats.get_stat("max_hp"))
+	mana.set_max_mp(stats.get_stat("max_mp"))
 
 func _on_skill_unlocked(id: String) -> void:
 	skillset.on_skill_unlocked(id)
@@ -342,8 +364,8 @@ func _build_body() -> void:
 	add_child(_sprite)
 	add_child(Art.light(Color(0.4, 0.75, 1.0), 0.8, 1.2))  # the slime's soft inner glow
 	eat_prompt.visible = false
-	eat_prompt.scale = Vector2(0.5, 0.5)  # the camera zooms 2x
-	eat_prompt.position = Vector2(-26, -26)
+	eat_prompt.add_theme_font_size_override("font_size", 8)
+	eat_prompt.position = Vector2(-24, -22)
 	eat_prompt.add_theme_color_override("font_color", Color(0.75, 0.95, 1.0))
 	eat_prompt.add_theme_color_override("font_outline_color", Color(0.02, 0.05, 0.15))
 	eat_prompt.add_theme_constant_override("outline_size", 4)

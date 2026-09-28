@@ -20,6 +20,8 @@ extends Resource
 @export var max_level: int = 1
 @export var effects: Array = []
 @export var trigger: Dictionary = {}
+## MP spent per cast of this skill's active effect (player skills only).
+@export var mp_cost: int = 0
 
 ## Event names whose arrival can change this skill's unlock or level.
 func listens_to() -> Array:
