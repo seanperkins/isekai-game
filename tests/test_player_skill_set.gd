@@ -67,3 +67,13 @@ func test_slot_replaced_is_forwarded() -> void:
 	set.slots.add("b")
 	set.slots.add("c")
 	assert_eq(seen, [["c", "a"]])
+
+func test_skill_set_is_freed_when_dropped() -> void:
+	# A lambda capturing self in the slot_replaced forward made a RefCounted cycle that
+	# leaked one skill set (and its slots and stats) per run.
+	var s := PlayerSkillSet.new(rules, Stats.new())
+	var ref: WeakRef = weakref(s)
+	var slots_ref: WeakRef = weakref(s.slots)
+	s = null
+	assert_null(ref.get_ref())
+	assert_null(slots_ref.get_ref())

@@ -13,7 +13,9 @@ var capabilities := {}
 func _init(p_rules: SkillRulesEngine, p_stats: Stats) -> void:
 	rules = p_rules
 	stats = p_stats
-	slots.slot_replaced.connect(func(n: String, o: String) -> void: slot_replaced.emit(n, o))
+	# A method callable, not a lambda: a lambda would capture self and form a RefCounted
+	# cycle with slots, leaking one skill set per run.
+	slots.slot_replaced.connect(_forward_slot_replaced)
 
 func on_skill_unlocked(id: String) -> void:
 	var d := rules.get_def(id)
@@ -56,3 +58,6 @@ func heal_on(event_name: String, tags: Dictionary) -> int:
 		if Ledger._matches(tags, t.get("tags", {})):
 			total += int(t.get("amount", 0))
 	return total
+
+func _forward_slot_replaced(new_id: String, old_id: String) -> void:
+	slot_replaced.emit(new_id, old_id)
