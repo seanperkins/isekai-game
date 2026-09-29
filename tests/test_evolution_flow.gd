@@ -141,3 +141,13 @@ func test_the_weaver_lineage_eats_using_its_own_cover_frames() -> void:
 	assert_not_null(player._cover)
 	assert_same(player._cover.cover.texture, player.body_sheet().frame_texture("cover_1"))
 	player.cancel_predate()
+
+func test_the_evolving_slime_does_not_show_its_hurt_face() -> void:
+	await wait_physics_frames(14)
+	_to_cap()
+	player.advance_form("weaver")
+	await wait_physics_frames(6)
+	assert_true(player.evolving())
+	assert_ne(player._animator.state(), "hurt", "the shield reuses the invulnerability timer, which the hurt pose reads")
+	await wait_seconds(Player.EVOLVE_SECONDS + 0.3)
+	assert_ne(player._animator.state(), "hurt")

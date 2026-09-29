@@ -208,7 +208,7 @@ func _update_visual(delta: float) -> void:
 	if _sheet == null:
 		_draw_fallback_sprite()
 		return
-	var state := SlimeState.pick(predation.active(), _invuln > INVULN_SECONDS - HURT_FLASH, rope != null,
+	var state := SlimeState.pick(predation.active(), _invuln > INVULN_SECONDS - HURT_FLASH and not evolving(), rope != null,
 		_clinging(), _tackle_time > 0.0, spreading, on_floor, velocity.y, _land_timer, velocity.x)
 	_animator.play(state)
 	_animator.advance(delta)
