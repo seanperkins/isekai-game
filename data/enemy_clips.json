@@ -34,5 +34,31 @@
     "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
     "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
     "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
+  },
+  "spore_moth": {
+    "fly": {"frames": ["fly_1", "fly_2", "fly_3", "fly_4"], "fps": 10.0, "loop": true},
+    "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
+    "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
+    "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
+  },
+  "mushroom_crab": {
+    "idle": {"frames": ["idle_1"], "fps": 1.0, "loop": true},
+    "walk": {"frames": ["walk_1", "walk_2", "walk_3", "walk_2"], "fps": 8.0, "loop": true},
+    "windup": {"frames": ["windup_1"], "fps": 1.0, "loop": false},
+    "charge": {"frames": ["charge_1", "charge_2"], "fps": 12.0, "loop": true},
+    "rest": {"frames": ["rest_1"], "fps": 1.0, "loop": true},
+    "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
+    "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
+    "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
+  },
+  "vine_snake": {
+    "hide": {"frames": ["hide_1"], "fps": 1.0, "loop": true},
+    "coil": {"frames": ["coil_1"], "fps": 1.0, "loop": false},
+    "lunge": {"frames": ["lunge_1", "lunge_2"], "fps": 10.0, "loop": false},
+    "rest": {"frames": ["slither_1", "slither_2", "slither_1", "slither_3"], "fps": 8.0, "loop": true},
+    "slither": {"frames": ["slither_1", "slither_2", "slither_1", "slither_3"], "fps": 8.0, "loop": true},
+    "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
+    "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
+    "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
   }
 }

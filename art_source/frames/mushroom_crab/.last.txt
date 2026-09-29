@@ -1,1 +1,1 @@
-/Users/sean/sites/isekai-game/.worktrees/grotto/art_source/frames/mushroom_crab/windup_1.png
+/Users/sean/sites/isekai-game/.worktrees/grotto/art_source/frames/mushroom_crab/downed.png

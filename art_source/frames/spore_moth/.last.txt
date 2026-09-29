@@ -1,1 +1,1 @@
-/Users/sean/sites/isekai-game/.worktrees/grotto/art_source/frames/spore_moth/stunned.png
+/Users/sean/sites/isekai-game/.worktrees/grotto/art_source/frames/spore_moth/downed.png

@@ -16,6 +16,8 @@ const TAB_W_SIX := 84.0
 ## Sprite frame used as each creature's Bestiary portrait.
 const PORTRAIT := {"bat": "bat_1", "toad": "toad_idle", "lizard": "lizard_1", "spider": "spider_crawl",
 	"serpent": "serpent"}
+## Creatures that only have a sheet (no single sprite) use this frame of it as their portrait.
+const PORTRAIT_FRAME := {"spore_moth": "fly_1", "mushroom_crab": "idle_1", "vine_snake": "hide_1", "pale_moth": "fly_1"}
 const ROW_H := 22.0
 const HEADER_H := 16.0
 const LIST_X := 158.0
@@ -508,9 +510,19 @@ func _build_creature_card(id: String) -> void:
 		var l := _label(_detail, line, Vector2(DETAIL_X, y), Vector2(190, 28), FONT_SMALL, Color.WHITE, true)
 		y += maxf(14.0, l.get_line_count() * 11.0 + 3.0)
 
+## A creature's portrait: its single sprite, else a frame of its sheet, else the locked icon.
+static func portrait_texture(id: String) -> Texture2D:
+	if PORTRAIT.has(id):
+		return Art.texture(PORTRAIT[id])
+	if PORTRAIT_FRAME.has(id) and SpriteSheet.available(id):
+		var sheet := SpriteSheet.load_set(id)
+		if sheet != null and sheet.has_frame(PORTRAIT_FRAME[id]):
+			return sheet.frame_texture(PORTRAIT_FRAME[id])
+	return Art.texture("icon_locked")
+
 func _portrait(parent: Node, id: String, seen: bool, pos: Vector2, px: float) -> void:
 	var t := TextureRect.new()
-	t.texture = Art.texture(PORTRAIT.get(id, "icon_locked"))
+	t.texture = portrait_texture(id)
 	t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	t.position = pos

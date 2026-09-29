@@ -1,0 +1,60 @@
+{
+ "pieces": {
+  "mushroom_cap_pillar": {
+   "size": [
+    72,
+    102
+   ],
+   "anchor": "bottom"
+  },
+  "hanging_spore_moss": {
+   "size": [
+    60,
+    84
+   ],
+   "anchor": "top"
+  },
+  "glowing_mushroom_cluster": {
+   "size": [
+    88,
+    116
+   ],
+   "anchor": "bottom"
+  },
+  "mushroom_bridge": {
+   "size": [
+    150,
+    86
+   ],
+   "anchor": "center"
+  },
+  "vine_curtain": {
+   "size": [
+    96,
+    85
+   ],
+   "anchor": "top"
+  },
+  "spore_pod": {
+   "size": [
+    44,
+    69
+   ],
+   "anchor": "bottom"
+  },
+  "mossy_stalactite": {
+   "size": [
+    84,
+    95
+   ],
+   "anchor": "top"
+  },
+  "dripping_fungus_shelf": {
+   "size": [
+    130,
+    76
+   ],
+   "anchor": "center"
+  }
+ }
+}
