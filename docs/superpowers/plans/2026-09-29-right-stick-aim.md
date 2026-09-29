@@ -14,10 +14,11 @@
 
 - Run tests with `tools/run_tests.sh [substr]` from the worktree (`/Users/sean/sites/isekai-game/.worktrees/right-stick`); a SCRIPT ERROR fails the run. After adding a `class_name` script run `gtimeout -k 5 300 env HOME="$PWD/.tmp/gdhome" godot --headless --import >/dev/null 2>&1` first.
 - `raw_aim()` is not changed: spread (`wants_spread`) and rope reeling stay on the left stick and keys.
-- Constants from the spec, verbatim: `RIGHT_STICK_DEADZONE` 0.45, right-stick ownership threshold `STICK_DEADZONE` 0.25, `MOUSE_MOVE_MIN` 4 px, `MOUSE_DEADZONE` 12 world px, axis snap 10 degrees (`sin(10 degrees)` 0.17364817766693), reticle marks at 28, 40 and 52 px, mouse aliases left button to `active_1` and right button to `active_2`, slot labels `LMB/RMB/H/L` with `mouse_aim`.
+- Constants from the spec, verbatim: `RIGHT_STICK_DEADZONE` 0.45, right-stick ownership threshold `STICK_DEADZONE` 0.25, `MOUSE_MOVE_MIN` 4 game px (accumulated), `MOUSE_DEADZONE` 12 world px, axis snap 10 degrees (`sin(10 degrees)` 0.17364817766693), reticle marks at 28, 40 and 52 px, mouse aliases left button to `active_1` and right button to `active_2`, left-hand aliases `Shift` tackle, `F` eat, `R` inspect, `Q` slot 3, `E` slot 4, slot labels `LMB/RMB/Q/E` with `mouse_aim`.
 - The reticle is not a `ColorRect` (`test_art_visuals.gd` forbids one under the Player) and not in group `"vfx"` (tests free that group).
 - No attribution lines in commit messages.
-- Tests that send pad or key events use `PadInput` (Task 1) and call `PadInput.reset()` in `after_each`. Vector comparisons use `is_equal_approx`, except the snapped axes, which are exact. A test that pauses the tree unpauses it in `after_each`.
+- Tests that send pad, key or mouse events use `PadInput` (Task 1) and call `PadInput.reset()` in `after_each`. `PadInput` goes through `Input.parse_input_event` + flush only: the engine delivers the event to `Controls._input` itself (measured), so a manual `Controls._input(ev)` would deliver it twice.
+- After adding any `.gd` file run the headless import before committing, and stage directories (`git add autoload scripts tests docs tools`) so the `.gd.uid` files the import wrote are included and no pathspec is missing. Vector comparisons use `is_equal_approx`, except the snapped axes, which are exact. A test that pauses the tree unpauses it in `after_each`.
 
 ## Review Focus
 
@@ -51,31 +52,36 @@
 ```gdscript
 class_name PadInput
 extends RefCounted
-## Pad and key input for tests. Stick events go through the engine's Input (so get_joy_axis and the actions see them) and to
-## Controls._input, the way tests/test_aim_fixes.gd does; reset() puts all of it back.
+## Pad, key and mouse input for tests. Every event goes through the engine's Input and nothing else: the engine delivers it
+## to Controls._input itself (and updates get_joy_axis and the action state), so calling _input by hand too would deliver
+## it twice. reset() puts all of it back.
+
+static func _send(ev: InputEvent) -> void:
+	Input.parse_input_event(ev)
+	Input.flush_buffered_events()
 
 static func axis(axis_index: int, value: float, device := 0) -> void:
 	var ev := InputEventJoypadMotion.new()
 	ev.device = device
 	ev.axis = axis_index as JoyAxis
 	ev.axis_value = value
-	Input.parse_input_event(ev)
-	Input.flush_buffered_events()
-	Controls._input(ev)
+	_send(ev)
 
 static func key(keycode: int) -> void:
-	var k := InputEventKey.new()
-	k.pressed = true
-	k.keycode = keycode as Key
-	k.physical_keycode = keycode as Key  # the InputMap's bindings are physical keys, so is_action_pressed matches
-	Controls._input(k)
+	for pressed in [true, false]:
+		var k := InputEventKey.new()
+		k.pressed = pressed
+		k.keycode = keycode as Key
+		k.physical_keycode = keycode as Key  # the InputMap's bindings are physical keys, so is_action_pressed matches
+		_send(k)
 
 static func button(index: int, device := 0) -> void:
-	var b := InputEventJoypadButton.new()
-	b.device = device
-	b.button_index = index as JoyButton
-	b.pressed = true
-	Controls._input(b)
+	for pressed in [true, false]:
+		var b := InputEventJoypadButton.new()
+		b.device = device
+		b.button_index = index as JoyButton
+		b.pressed = pressed
+		_send(b)
 
 static func reset() -> void:
 	for dev in [0, 1]:
@@ -217,24 +223,25 @@ func _on_joy_connection_changed(device: int, connected: bool) -> void:
 Run: `tools/run_tests.sh test_right_stick`, then `tools/run_tests.sh test_controls` and `tools/run_tests.sh test_aim_fixes` and `tools/run_tests.sh test_skill_screen`.
 Expected: all PASS.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 5: Import and commit**
 
 ```bash
-git add autoload/controls.gd tests/support/pad_input.gd tests/support/pad_input.gd.uid tests/test_right_stick.gd tests/test_right_stick.gd.uid
+gtimeout -k 5 300 env HOME="$PWD/.tmp/gdhome" godot --headless --import >/dev/null 2>&1
+git add autoload scripts tests docs tools
 git commit -m "feat: Controls polls the right stick per device and keeps processing while paused"
 ```
 
 ---
 
-### Task 2: The mouse and the skill aliases
+### Task 2: The mouse, the left-hand layout and the scheme signal
 
 **Files:**
-- Modify: `autoload/controls.gd`, `tests/support/pad_input.gd`
+- Modify: `autoload/controls.gd`, `tests/support/pad_input.gd`, `scripts/player/player.gd` (the eat and inspect prompts only), `scripts/ui/skill_screen.gd` (connect the signal), `tests/test_accessors.gd`, `tests/test_controls_joypad.gd`, `tests/test_skill_screen.gd`
 - Create: `tests/test_mouse_input.gd`
 
 **Interfaces:**
 - Consumes: `PadInput`, `Controls.using_joypad`, `Controls.aim_device` (Task 1).
-- Produces: `Controls.mouse_aim: bool`, `Controls.MOUSE_MOVE_MIN := 4.0`, `Controls.MOUSE_BUTTONS`, `Controls.MOUSE_SLOT_LABELS := ["LMB", "RMB", "H", "L"]`, the left and right mouse buttons bound to `active_1` and `active_2`, `Controls.slot_labels()` returning the pad labels with `using_joypad`, `MOUSE_SLOT_LABELS` with `mouse_aim`, else the key labels; `PadInput.mouse_move(relative: Vector2)`, `PadInput.mouse_button(index: int)`, and `PadInput.reset()` also clearing `mouse_aim`.
+- Produces: `Controls.mouse_aim: bool`, `Controls.MOUSE_MOVE_MIN := 4.0`, `Controls.MOUSE_BUTTONS`, `Controls.MOUSE_SLOT_LABELS := ["LMB", "RMB", "Q", "E"]`, `Controls.scheme_changed` (signal), `Controls.slot_labels()` (pad labels with `using_joypad`, `MOUSE_SLOT_LABELS` with `mouse_aim`, else `U/O/H/L`), `Controls.eat_label()` and `Controls.inspect_label()` (`B`/`Y` pad, `F`/`R` with `mouse_aim`, else `K`/`I`); the left and right mouse buttons bound (any device) to `active_1` and `active_2`; the left-hand key aliases `tackle` Shift, `predate` F, `inspect` R, `active_3` Q, `active_4` E; `PadInput.mouse_move(relative: Vector2)`, `PadInput.mouse_button(index: int, pressed := true)`, and `PadInput.reset()` also releasing both mouse buttons and clearing `mouse_aim` and `_mouse_travel`.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -244,43 +251,61 @@ Extend `tests/support/pad_input.gd`:
 static func mouse_move(relative: Vector2) -> void:
 	var m := InputEventMouseMotion.new()
 	m.relative = relative
-	Controls._input(m)
+	_send(m)
 
-static func mouse_button(index: int) -> void:
+static func mouse_button(index: int, pressed := true) -> void:
 	var b := InputEventMouseButton.new()
 	b.button_index = index as MouseButton
-	b.pressed = true
-	Controls._input(b)
+	b.pressed = pressed
+	_send(b)
 ```
 
-and add `Controls.mouse_aim = false` to `reset()`. `tests/test_mouse_input.gd`:
+and, in `reset()`, `mouse_button(MOUSE_BUTTON_LEFT, false)`, `mouse_button(MOUSE_BUTTON_RIGHT, false)`, `Controls.mouse_aim = false`, `Controls._mouse_travel = 0.0`. `tests/test_mouse_input.gd`:
 
 ```gdscript
 extends GutTest
-## The mouse is the second pointing device of the keyboard scheme: a deliberate move or a click makes it the aimer, a pad or a
-## vertical aim key hands the aim back, and the buttons are skill aliases.
+## The mouse is the second pointing device of the keyboard scheme: enough travel or a click makes it the aimer, a pad or a
+## vertical aim key hands the aim back, the buttons and the left-hand keys are skill and action aliases.
 
 func after_each() -> void:
 	PadInput.reset()
 
-func test_a_deliberate_mouse_move_sets_mouse_aim_and_clears_the_pad() -> void:
+func test_small_moves_add_up_to_mouse_aim_and_clear_the_pad() -> void:
 	Controls.using_joypad = true
-	PadInput.mouse_move(Vector2(4, 0))
+	PadInput.mouse_move(Vector2(2, 0))
+	assert_false(Controls.mouse_aim)
+	PadInput.mouse_move(Vector2(0, 2))
 	assert_true(Controls.mouse_aim)
 	assert_false(Controls.using_joypad)
 
-func test_a_small_jostle_changes_nothing() -> void:
-	PadInput.mouse_move(Vector2(3, 0))
-	assert_false(Controls.mouse_aim)
+func test_a_jostle_under_the_threshold_does_nothing() -> void:
 	Controls.using_joypad = true
 	PadInput.mouse_move(Vector2(3, 0))
+	assert_false(Controls.mouse_aim)
 	assert_true(Controls.using_joypad)
 
-func test_a_mouse_button_sets_mouse_aim_and_clears_the_pad() -> void:
+func test_a_pad_input_between_two_moves_resets_the_total() -> void:
+	PadInput.mouse_move(Vector2(2, 0))
+	PadInput.axis(JOY_AXIS_LEFT_X, 0.8)
+	PadInput.mouse_move(Vector2(2, 0))
+	assert_false(Controls.mouse_aim)
+	assert_true(Controls.using_joypad)
+
+func test_a_button_press_sets_it_and_a_release_changes_nothing() -> void:
 	Controls.using_joypad = true
 	PadInput.mouse_button(MOUSE_BUTTON_LEFT)
 	assert_true(Controls.mouse_aim)
 	assert_false(Controls.using_joypad)
+	PadInput.button(JOY_BUTTON_A)  # the pad takes over while the mouse button is still down
+	PadInput.mouse_button(MOUSE_BUTTON_LEFT, false)
+	assert_true(Controls.using_joypad, "a release is not a use of the mouse")
+	assert_false(Controls.mouse_aim)
+
+func test_the_wheel_is_not_aiming() -> void:
+	Controls.using_joypad = true
+	PadInput.mouse_button(MOUSE_BUTTON_WHEEL_UP)
+	assert_false(Controls.mouse_aim)
+	assert_true(Controls.using_joypad)
 
 func test_a_pad_button_or_push_hands_the_aim_back() -> void:
 	PadInput.mouse_move(Vector2(10, 0))
@@ -298,10 +323,11 @@ func test_a_vertical_aim_key_hands_it_back_but_a_movement_key_does_not() -> void
 	PadInput.key(KEY_W)  # aim_up
 	assert_false(Controls.mouse_aim)
 	PadInput.mouse_move(Vector2(10, 0))
+	assert_true(Controls.mouse_aim, "and a move after it aims again")
 	PadInput.key(KEY_S)  # aim_down
 	assert_false(Controls.mouse_aim)
 
-func test_the_first_two_slots_have_mouse_button_aliases() -> void:
+func test_the_mouse_buttons_and_the_left_hand_keys_are_bound() -> void:
 	var left := InputEventMouseButton.new()
 	left.button_index = MOUSE_BUTTON_LEFT
 	left.pressed = true
@@ -311,78 +337,135 @@ func test_the_first_two_slots_have_mouse_button_aliases() -> void:
 	assert_true(InputMap.event_is_action(left, "active_1"))
 	assert_true(InputMap.event_is_action(right, "active_2"))
 	assert_false(InputMap.event_is_action(left, "active_2"))
+	for pair in [["tackle", KEY_SHIFT], ["predate", KEY_F], ["inspect", KEY_R], ["active_3", KEY_Q], ["active_4", KEY_E]]:
+		var keys := InputMap.action_get_events(pair[0]).filter(func(e): return e is InputEventKey).map(func(e): return e.physical_keycode)
+		assert_true(keys.has(pair[1]), pair[0])
 
-func test_slot_labels_follow_the_scheme() -> void:
+func test_a_click_reaches_the_action_state() -> void:
+	PadInput.mouse_button(MOUSE_BUTTON_LEFT)
+	assert_true(Input.is_action_pressed("active_1"))
+	PadInput.mouse_button(MOUSE_BUTTON_LEFT, false)
+	assert_false(Input.is_action_pressed("active_1"))
+
+func test_labels_follow_the_scheme() -> void:
 	assert_eq(Controls.slot_labels(), ["U", "O", "H", "L"])
+	assert_eq([Controls.eat_label(), Controls.inspect_label()], ["K", "I"])
 	PadInput.mouse_move(Vector2(10, 0))
-	assert_eq(Controls.slot_labels(), ["LMB", "RMB", "H", "L"])
+	assert_eq(Controls.slot_labels(), ["LMB", "RMB", "Q", "E"])
+	assert_eq([Controls.eat_label(), Controls.inspect_label()], ["F", "R"])
 	PadInput.button(JOY_BUTTON_A)
 	assert_eq(Controls.slot_labels(), ["LB", "RB", "LT", "RT"])
+	assert_eq([Controls.eat_label(), Controls.inspect_label()], ["B", "Y"])
+
+func test_scheme_changed_fires_once_per_change() -> void:
+	var count := [0]
+	var cb := func() -> void: count[0] += 1
+	Controls.scheme_changed.connect(cb)
+	PadInput.mouse_move(Vector2(10, 0))
+	assert_eq(count[0], 1)
+	PadInput.mouse_move(Vector2(10, 0))
+	assert_eq(count[0], 1, "the labels did not change")
+	PadInput.button(JOY_BUTTON_A)
+	assert_eq(count[0], 2)
+	Controls.scheme_changed.disconnect(cb)
 ```
+
+In `tests/test_skill_screen.gd`, using that file's fixture (open the screen; `after_each` also calls `PadInput.reset()`): open the screen, `PadInput.mouse_move(Vector2(10, 0))`, then assert some `Label` under the screen (`screen.find_children("*", "Label", true, false)`) has text containing `LMB`. In `tests/test_accessors.gd:32` change the `tackle` event count from 2 to 3 (J, Shift and the pad button) with a comment; in `tests/test_controls_joypad.gd`'s `test_keyboard_skill_keys_are_u_o_h_l` expect slot 3 keys `[KEY_H, KEY_Q]` and slot 4 `[KEY_L, KEY_E]` (slots 1 and 2 stay `[KEY_U]`, `[KEY_O]`), rename it to say the left-hand aliases, with a comment.
 
 - [ ] **Step 2: Run to verify it fails**
 
 Run: `tools/run_tests.sh test_mouse_input`
-Expected: FAIL (Parse Error: `mouse_aim`, `mouse_move`, `mouse_button` not found).
+Expected: FAIL (Parse Error: `Controls.mouse_aim`, `scheme_changed`, `eat_label`, `inspect_label` not found; `PadInput.reset()` also fails to compile against the missing `mouse_aim`, which turns `test_right_stick` red until Step 3; that is expected).
 
 - [ ] **Step 3: Implement** in `autoload/controls.gd`
 
+Extend `BINDINGS`: `"tackle": [KEY_J, KEY_SHIFT]`, `"predate": [KEY_K, KEY_F]`, `"inspect": [KEY_I, KEY_R]`, `"active_3": [KEY_H, KEY_Q]`, `"active_4": [KEY_L, KEY_E]` (`Q`/`E` are also `tab_prev`/`tab_next` in the skill screen, which pauses the tree). Then:
+
 ```gdscript
-## Mouse buttons are skill aliases: left is slot 1, right is slot 2 (tackle, eat and inspect stay on J, K and I).
+## Mouse buttons are skill aliases: left is slot 1, right is slot 2.
 const MOUSE_BUTTONS := {"active_1": [MOUSE_BUTTON_LEFT], "active_2": [MOUSE_BUTTON_RIGHT]}
-## A mouse move this long (px) is deliberate; a jostle is not.
+## Mouse travel (game px, summed since the last pad input or vertical aim key) that makes the mouse the aimer.
 const MOUSE_MOVE_MIN := 4.0
-const MOUSE_SLOT_LABELS := ["LMB", "RMB", "H", "L"]
+const MOUSE_SLOT_LABELS := ["LMB", "RMB", "Q", "E"]
+signal scheme_changed
 ...
-## True after the mouse was the last aimer: a deliberate move or a click, until a pad input or a vertical aim key.
+## True after the mouse was the last aimer: enough travel or a click, until a pad input or a vertical aim key.
 var mouse_aim := false
+var _mouse_travel := 0.0
 ```
 
-In `ensure_actions`, after the pad-button loop: `for button in MOUSE_BUTTONS.get(action, []): var m := InputEventMouseButton.new(); m.button_index = button; _add(action, m)`.
-
-Replace the `using_joypad` chain at the end of `_input` (`if event is InputEventJoypadButton and event.pressed: ...` through the key/mouse-button branch) with:
+In `ensure_actions`, after the pad-button loop:
 
 ```gdscript
+		for button in MOUSE_BUTTONS.get(action, []):
+			var m := InputEventMouseButton.new()
+			m.button_index = button
+			m.device = -1  # any device, like the pad bindings
+			_add(action, m)
+```
+
+Replace the `using_joypad` chain at the end of `_input` with:
+
+```gdscript
+	var before := slot_labels()
 	if event is InputEventJoypadButton and event.pressed:
 		_use_pad()
 	elif event is InputEventJoypadMotion and absf(event.axis_value) > STICK_DEADZONE:
 		_use_pad()
-	elif (event is InputEventKey and event.pressed) or event is InputEventMouseButton:
+	elif event is InputEventKey and event.pressed:
 		using_joypad = false
-		if event is InputEventMouseButton and event.pressed:
+		if event.is_action_pressed("aim_up") or event.is_action_pressed("aim_down"):
+			mouse_aim = false  # the keyboard is aiming now (is_action_pressed ignores key repeats)
+			_mouse_travel = 0.0
+	elif event is InputEventMouseButton:
+		if event.pressed and not _is_wheel(event.button_index):
+			using_joypad = false
 			mouse_aim = true
-	elif event is InputEventMouseMotion and event.relative.length() >= MOUSE_MOVE_MIN:
-		using_joypad = false
-		mouse_aim = true
-	if event.is_action_pressed("aim_up") or event.is_action_pressed("aim_down"):
-		mouse_aim = false  # the keyboard (or the D-pad) is aiming now
+	elif event is InputEventMouseMotion:
+		_mouse_travel += event.relative.length()
+		if _mouse_travel >= MOUSE_MOVE_MIN:
+			using_joypad = false
+			mouse_aim = true
+	if slot_labels() != before:
+		scheme_changed.emit()
 
 func _use_pad() -> void:
 	using_joypad = true
 	mouse_aim = false
+	_mouse_travel = 0.0
+
+static func _is_wheel(button: int) -> bool:
+	return button in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN, MOUSE_BUTTON_WHEEL_LEFT, MOUSE_BUTTON_WHEEL_RIGHT]
 ```
 
-and `slot_labels()`:
+(this changes one existing behaviour on purpose: a mouse-button release no longer clears `using_joypad`; only a press does.) And:
 
 ```gdscript
 func slot_labels() -> Array:
 	if using_joypad:
 		return PAD_SLOT_LABELS
 	return MOUSE_SLOT_LABELS if mouse_aim else KEY_SLOT_LABELS
+
+func eat_label() -> String:
+	return "B" if using_joypad else ("F" if mouse_aim else "K")
+
+func inspect_label() -> String:
+	return "Y" if using_joypad else ("R" if mouse_aim else "I")
 ```
 
-Doc lines for `mouse_aim`, `using_joypad` (also enables the right stick), `slot_labels`, per the spec's consistency sweep.
+In `scripts/player/player.gd` use `Controls.inspect_label()` and `Controls.eat_label()` in the two prompts (`"%s: %s" % [Controls.inspect_label(), thing.prompt()]`, `"Hold %s to eat" % Controls.eat_label()`). In `scripts/ui/skill_screen.gd`, connect `Controls.scheme_changed` once (in `_ready`) to a handler that calls `_refresh()` when the screen is visible. Doc lines per the spec's consistency sweep.
 
 - [ ] **Step 4: Run to verify it passes**
 
-Run: `tools/run_tests.sh test_mouse_input`, then `tools/run_tests.sh test_controls`, `tools/run_tests.sh test_right_stick`, `tools/run_tests.sh test_aim_fixes`, `tools/run_tests.sh test_hud`, `tools/run_tests.sh test_skill_screen`.
+Run: `tools/run_tests.sh test_mouse_input`, then `tools/run_tests.sh test_controls`, `tools/run_tests.sh test_accessors`, `tools/run_tests.sh test_right_stick`, `tools/run_tests.sh test_aim_fixes`, `tools/run_tests.sh test_hud`, `tools/run_tests.sh test_skill_screen`, `tools/run_tests.sh test_player`.
 Expected: all PASS.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 5: Import and commit**
 
 ```bash
-git add autoload/controls.gd tests/support/pad_input.gd tests/test_mouse_input.gd tests/test_mouse_input.gd.uid
-git commit -m "feat: the mouse is the keyboard scheme's aimer, and its buttons alias the first two skills"
+gtimeout -k 5 300 env HOME="$PWD/.tmp/gdhome" godot --headless --import >/dev/null 2>&1
+git add autoload scripts tests docs tools
+git commit -m "feat: the mouse aims and casts, a left-hand layout for the keyboard scheme, and the labels follow the scheme"
 ```
 
 ---
@@ -395,7 +478,7 @@ git commit -m "feat: the mouse is the keyboard scheme's aimer, and its buttons a
 
 **Interfaces:**
 - Consumes: `Controls.right_stick()`, `PadInput` (Task 1), `Controls.mouse_aim` and `PadInput.mouse_move` (Task 2).
-- Produces: `Player.AXIS_SNAP := 0.17364817766693`, `Player.MOUSE_DEADZONE := 12.0`, `Player.pointer_override: Vector2` (INF for none; tests set a world point instead of the OS cursor), `Player.pointer_world() -> Vector2`, `Player.mouse_direction() -> Vector2` (ZERO unless `mouse_aim` and not `using_joypad` and the cursor is at least the deadzone from the body), `Player.free_aim() -> Vector2` (ZERO when neither pointer is engaged; the normalised right stick or cursor direction, but exactly `(sign(x), 0)` when `abs(y) <= AXIS_SNAP` and exactly `(0, sign(y))` when `abs(x) <= AXIS_SNAP`), `Player.cast_aim() -> Vector2` (`free_aim()` when not ZERO, else `aim_vector() if aim_held() else ZERO`), `Player.can_cast() -> bool` (not dead, not eating, no live channel, not evolving). `use_active` opens with `if not can_cast(): return` and sets `ability.aim = cast_aim()`.
+- Produces: `Player.AXIS_SNAP := 0.17364817766693`, `Player.MOUSE_DEADZONE := 12.0`, `Player.pointer_override: Vector2` (INF for none; tests set a world point instead of the OS cursor), `Player.mouse_direction() -> Vector2` (ZERO unless `mouse_aim` and the cursor is at least the deadzone from the origin), `Player.free_aim() -> Vector2` (ZERO when neither pointer is engaged; the normalised right stick or cursor direction, but exactly `(sign(x), 0)` when `abs(y) <= AXIS_SNAP` and exactly `(0, sign(y))` when `abs(x) <= AXIS_SNAP`), `Player.cast_aim() -> Vector2` (`free_aim()` when not ZERO, else `aim_vector() if aim_held() else ZERO`), `Player.can_cast() -> bool` (not dead, not eating, no live channel, not evolving). `use_active` opens with `if not can_cast(): return` and sets `ability.aim = cast_aim()`.
 
 - [ ] **Step 1: Write the failing tests** (`tests/test_pointer_aim.gd`)
 
@@ -443,11 +526,13 @@ func test_the_right_stick_beats_the_left_stick_and_the_keys_for_the_cast() -> vo
 	Input.action_press("aim_down")
 	assert_eq(player.cast_aim(), Vector2(1, 0), "and beats the keys")
 
-func test_a_key_press_gives_the_cast_back_to_the_keys() -> void:
+func test_a_key_press_gives_the_cast_back_to_the_left_stick_or_the_keys() -> void:
 	_right(1.0, 0.0, 1)  # a second pad's right stick
 	PadInput.key(KEY_W)   # the keyboard is the last input: the gate closes
 	Input.action_press("aim_up")
-	assert_eq(player.cast_aim(), Vector2(0, -1))
+	assert_eq(player.cast_aim(), Vector2(0, -1), "the keys")
+	Controls.last_stick = Vector2(-1, 0)  # a left stick held from before the key press (a new event would re-arm the pad)
+	assert_eq(player.cast_aim(), Vector2(-1, 0), "a held left stick comes first, as raw_aim() reads today")
 
 func test_the_right_stick_never_reaches_spread_or_the_rope_reel() -> void:
 	_right(0.0, 1.0)  # straight down, the puddle gesture, on the wrong stick
@@ -480,6 +565,7 @@ func test_hydraulic_keeps_its_lift_when_the_right_stick_is_a_few_degrees_off_hor
 
   and Jet Dash mid-jump (both also with the cursor 3 degrees off horizontal): replace the ability in slot 0 as `tests/test_channel.gd:204-210` does (`load("res://scenes/abilities/jet_dash.tscn")`, `setup(player, [100], 1)`, `player._abilities["hydraulic_propulsion"] = dash`), `player.velocity = Vector2(0, -330)`, right stick `Vector2.from_angle(deg_to_rad(3.0))`, `player.use_active(0)`, `assert_eq(player.velocity.y, -330.0)`.
 - **the latch**: cast Hydraulic Propulsion held (`Input.action_press("active_1")`, wait 3 physics frames as `tests/test_channel.gd:71-77` does) with the right stick right, then move the right stick to the opposite side and wait 3 more frames: `(player._abilities["hydraulic_propulsion"])._dir` is unchanged, `Input.action_release("active_1")`.
+- **a click drives a channel**: Hydraulic Propulsion in slot 0 (`slot 1`), `PadInput.mouse_button(MOUSE_BUTTON_LEFT)`, wait 3 physics frames: `player._channel != null`; `PadInput.mouse_button(MOUSE_BUTTON_LEFT, false)`, wait 2: `player._channel == null`.
 - **end-to-end**: Water Blade in slot 0 the way `tests/test_channel.gd:204-210` swaps it in, right stick at 30 degrees up (and again with the cursor), `use_active(0)`; `player.last_cast["aim"]` is approximately `Vector2.from_angle(deg_to_rad(-30))` and the slash sprite in group `vfx` (texture `VfxArt.water_slash()`) has `rotation` approximately `deg_to_rad(-30)`.
 
 The mouse (same file; `_mouse_at(point)` sets `player.pointer_override = point` and calls `PadInput.mouse_move(Vector2(10, 0))` so `mouse_aim` is live; the player sits at the origin):
@@ -534,7 +620,7 @@ Expected: FAIL (Parse Error: `free_aim`, `cast_aim`, `can_cast`, `pointer_overri
 ## sin(10 degrees): an aim this close to an axis reads as exactly that axis, so the two "flat aim" checks
 ## (Hydraulic's lift, apply_impulse's flat push) keep working, and a thumb's or a hand's wobble does not tilt a dash.
 const AXIS_SNAP := 0.17364817766693
-## A cursor closer than this (world px) to the body does not aim: it would jitter at every step.
+## A cursor closer than this (world px) to the origin does not aim: it would jitter at every step.
 const MOUSE_DEADZONE := 12.0
 ## Tests set a world point here instead of moving the OS cursor.
 var pointer_override := Vector2.INF
@@ -543,16 +629,14 @@ var pointer_override := Vector2.INF
 near `raw_aim()`:
 
 ```gdscript
-## The cursor in world coordinates (the camera and zoom applied), or the test override.
-func pointer_world() -> Vector2:
-	return get_global_mouse_position() if pointer_override == Vector2.INF else pointer_override
-
-## Where the cursor points from the body: ZERO unless the mouse was the last aimer (the pad not used since) and the cursor is
-## clear of the body.
+## Where the cursor points from the origin (the point skills fire from): ZERO unless the mouse was the last aimer, and the
+## cursor is at least MOUSE_DEADZONE away. get_global_mouse_position() applies the camera and zoom. Controls._input owns the
+## exclusion with the right stick (a pad input clears mouse_aim), so it is not re-checked here.
 func mouse_direction() -> Vector2:
-	if not Controls.mouse_aim or Controls.using_joypad:
+	if not Controls.mouse_aim:
 		return Vector2.ZERO
-	var d := pointer_world() - global_position
+	var cursor := get_global_mouse_position() if pointer_override == Vector2.INF else pointer_override
+	var d := cursor - global_position
 	return d if d.length() >= MOUSE_DEADZONE else Vector2.ZERO
 
 ## The pointer's direction (the right stick, else the mouse): free (any angle) but for the axis snap, ZERO when neither is
@@ -599,10 +683,11 @@ Update the comment on `AIM_DEADZONE` (it covers the left stick and keys; the rig
 Run: `tools/run_tests.sh test_pointer_aim`, then `tools/run_tests.sh test_aim`, `tools/run_tests.sh test_player`, `tools/run_tests.sh test_channel`, `tools/run_tests.sh test_mana`.
 Expected: all PASS. (The `evolving()` guard in `use_active` is the one behaviour an existing test could notice: a failure there is a finding, not a test to weaken.)
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 5: Import and commit**
 
 ```bash
-git add scripts/player/player.gd scripts/abilities/hydraulic_propulsion.gd tests/test_pointer_aim.gd tests/test_pointer_aim.gd.uid tests/test_aiming.gd
+gtimeout -k 5 300 env HOME="$PWD/.tmp/gdhome" godot --headless --import >/dev/null 2>&1
+git add autoload scripts tests docs tools
 git commit -m "feat: the right stick and the mouse aim casts freely, snapped to an exact axis near horizontal and vertical"
 ```
 
@@ -612,7 +697,7 @@ git commit -m "feat: the right stick and the mouse aim casts freely, snapped to 
 
 **Files:**
 - Create: `scripts/player/aim_reticle.gd`, `tests/test_aim_reticle.gd`
-- Modify: `scripts/player/player.gd` (`_build_body`, `form_size`), `scripts/ui/hud.gd`, `tests/test_input_debug.gd`, `docs/playtest-checklist.md`
+- Modify: `scripts/player/player.gd` (`_build_body`, `form_size`), `scripts/ui/hud.gd`, `tests/test_input_debug.gd`, `docs/playtest-checklist.md`, `tools/vfx_shots.gd`
 
 **Interfaces:**
 - Consumes: `Player.free_aim()`, `Player.can_cast()`, `Player.pointer_override` (Task 3), `Controls.aim_device`, `Controls.raw_right_stick()` (Task 1), `Controls.mouse_aim` (Task 2).
@@ -675,7 +760,7 @@ func test_it_is_not_a_colorrect_and_not_a_vfx_node() -> void:
 	assert_false(_reticle().is_in_group("vfx"))
 ```
 
-In `tests/test_input_debug.gd`: add `after_each` `PadInput.reset()` beside its existing reset, fix the header ("F1 / Back" is stale: the key is F3), and add tests on a live `game`: with the left stick up and the right stick right, `game.hud.input_debug_text()` contains `aim (1, 0)`; with nothing held it contains `aim default`; with the right stick at (0.3, 0.1) (under the deadzone) it contains `rstick dev 0 (0.3, 0.1)` (format from Step 3) and still `aim default`; after `PadInput.mouse_move(Vector2(10, 0))` it contains `mouse on`.
+In `tests/test_input_debug.gd`: add `after_each` `PadInput.reset()` beside its existing reset, fix the header ("F1 / Back" is stale: the key is F3), and add tests on a live `game`: with the left stick up and the right stick right, `game.hud.input_debug_text()` contains `aim (1, 0)`; with nothing held it contains `aim default`; with the right stick at (0.3, 0.1) (under the deadzone) it contains `rstick dev 0 (0.30, 0.10)` (format from Step 3; the overlay prints two decimals) and still `aim default`; after `PadInput.mouse_move(Vector2(10, 0))` it contains `mouse on`.
 
 - [ ] **Step 2: Run to verify it fails**
 
@@ -689,7 +774,7 @@ Expected: FAIL (no node named `AimReticle`; `AimReticle` unknown).
 ```gdscript
 class_name AimReticle
 extends Node2D
-## Where the right stick aims: a chevron and two dots along +X, turned to the aim each frame and drawn over the body. Shown
+## Where the pointer (right stick or mouse) aims: a chevron and two dots along +X, turned to the aim each frame and drawn over the body. Shown
 ## only while a cast could fire; it says where the aim points, not whether a skill is ready. Fixed geometry, so nothing is
 ## redrawn per frame.
 
@@ -741,7 +826,7 @@ static func _aim_text(v: Vector2) -> String:
 	return "default" if v == Vector2.ZERO else _vec(v)
 ```
 
-Sweep: `docs/playtest-checklist.md` lines 5, 6, 24 and 28 (the mouse or the right stick aims skills freely, snapped near horizontal and vertical, with a small reticle; LMB/RMB are skills 1 and 2; the left stick and keys are unchanged and 8-way), line 39 means the left stick and should start working with the paused-`Controls` fix, and new lines "unplug the pad while holding the right stick: the reticle goes away" and "a bumped mouse aims; W/S hands the aim back".
+Sweep: `docs/playtest-checklist.md` lines 5, 6, 24 and 28 (the mouse or the right stick aims skills freely, snapped near horizontal and vertical, with a small reticle; LMB/RMB are skills 1 and 2; the left stick and keys are unchanged and 8-way), line 39 means the left stick and should start working with the paused-`Controls` fix, and new lines "unplug the pad while holding the right stick: the reticle goes away", "a bumped mouse aims; W/S hands the aim back", "crouch or reel with S while the mouse is live: the reticle hides and the chips show U/O/H/L until the mouse moves or clicks; a click still fires at the cursor", and "click a windowed game to focus it: note whether it casts"; line 25 ("assigns it to U (again: O)") gains "(LMB/RMB with the mouse)".
 
 - [ ] **Step 4: Run to verify it passes**
 
@@ -750,11 +835,11 @@ Expected: all PASS.
 
 - [ ] **Step 5: Screenshot and commit**
 
-Real-renderer check (windowed, unsandboxed, as `tools/vfx_shots.gd` does): send a right-stick event, shoot the reticle at two angles on the base slime and once on an enlarged form, read the images, fix anything that does not read. Then:
+Real-renderer check (windowed, unsandboxed, as `tools/vfx_shots.gd` does; pin `Controls.mouse_aim = false` at the start of that script): send a right-stick event, shoot the reticle at two angles on the base slime and once on an enlarged form; then warp the real cursor (`Input.warp_mouse`) to a point in a room where the camera is away from the origin and shoot the reticle following it; and shoot the HUD with the `LMB/RMB/Q/E` chips (three characters in a 20 px chip). Read the images, fix anything that does not read. Then:
 
 ```bash
-git add scripts/player/aim_reticle.gd scripts/player/aim_reticle.gd.uid scripts/player/player.gd scripts/ui/hud.gd tests/test_aim_reticle.gd tests/test_aim_reticle.gd.uid tests/test_input_debug.gd docs/playtest-checklist.md
-git commit -m "feat: an aim reticle for the right stick, the debug overlay reports the cast aim, docs swept"
+git add autoload scripts tests docs tools
+git commit -m "feat: an aim reticle for the right stick and the mouse, the debug overlay reports the cast aim, docs swept"
 ```
 
 ---
