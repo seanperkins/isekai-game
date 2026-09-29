@@ -1,0 +1,38 @@
+{
+  "bat": {
+    "fly": {"frames": ["fly_1", "fly_2", "fly_3", "fly_4"], "fps": 10.0, "loop": true},
+    "hover": {"frames": ["hover_1", "hover_2"], "fps": 6.0, "loop": true},
+    "warn": {"frames": ["hover_2"], "fps": 1.0, "loop": false},
+    "dive": {"frames": ["dive"], "fps": 1.0, "loop": false},
+    "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
+    "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
+    "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
+  },
+  "toad": {
+    "idle": {"frames": ["idle_1", "idle_2"], "fps": 2.0, "loop": true},
+    "walk": {"frames": ["walk_1", "walk_2", "walk_3", "walk_2"], "fps": 8.0, "loop": true},
+    "puff": {"frames": ["puff_1", "puff_2"], "fps": 5.0, "loop": false},
+    "spit": {"frames": ["spit"], "fps": 1.0, "loop": false},
+    "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
+    "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
+    "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
+  },
+  "lizard": {
+    "idle": {"frames": ["idle_1", "idle_2"], "fps": 2.0, "loop": true},
+    "walk": {"frames": ["walk_1", "walk_2", "walk_3", "walk_4"], "fps": 8.0, "loop": true},
+    "windup": {"frames": ["windup_1", "windup_2"], "fps": 4.0, "loop": false},
+    "charge": {"frames": ["charge_1", "charge_2", "charge_3"], "fps": 12.0, "loop": true},
+    "rest": {"frames": ["rest_1", "rest_2"], "fps": 3.0, "loop": true},
+    "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
+    "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
+    "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
+  },
+  "spider": {
+    "hang": {"frames": ["hang_1", "hang_2"], "fps": 2.0, "loop": true},
+    "drop": {"frames": ["drop"], "fps": 1.0, "loop": false},
+    "crawl": {"frames": ["crawl_1", "crawl_2", "crawl_3", "crawl_4"], "fps": 8.0, "loop": true},
+    "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
+    "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
+    "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
+  }
+}

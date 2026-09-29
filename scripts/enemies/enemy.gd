@@ -53,6 +53,9 @@ const ANIM_SECONDS := 0.25
 const SPIT_POSE_SECONDS := 0.4
 const BODY_BOTTOM := 6.0
 const STUNNED_TINT := Color(0.6, 0.6, 0.85)
+## How long a non-lethal hit flinches (the hurt frame).
+const HURT_SECONDS := 0.25
+const CLIPS := "res://data/enemy_clips.json"
 
 var def: CreatureDef
 var stats: Stats
@@ -67,6 +70,12 @@ var _spit_damage := 0
 var _spit_cd := 0.0
 var _slow := 0.0
 var _sprite: Sprite2D
+## Set false before adding to the tree to draw the old single sprites instead of the creature's own frames.
+var use_sheet := true
+var _sheet: SpriteSheet
+var _animator: SlimeAnimator
+var _shapes: SlimeShapes
+var _hurt_t := 0.0
 var _anim_t := 0.0
 var _alert := 0.0
 var _spit_windup := 0.0
@@ -119,6 +128,8 @@ func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, cau
 	_cause = cause if cause != "" else cause_for(damage_type)
 	_killed_from = from
 	health.take_hit(Damage.direct_hit(raw, 0, stats.get_stat("def")), damage_type)
+	if status.state != EnemyStatus.DYING:
+		_hurt_t = HURT_SECONDS
 
 ## Returns true when the tackle stunned or downed this enemy (the player emits stunned_enemy).
 func receive_tackle(atk: int, from_behind: bool, from: Vector2 = Vector2.INF) -> bool:
@@ -198,7 +209,8 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	if active and player != null and is_touching(player):
 		player.receive_hit(stats.get_stat("atk"), "physical", global_position)
-	_update_visual()
+	_hurt_t = maxf(0.0, _hurt_t - delta)
+	_update_visual(delta)
 
 ## True when this enemy's box touches the player's. The bodies block each other, so they can only
 ## touch, never overlap: the margin bridges that. A player with no body box (a test stub) falls back
@@ -250,18 +262,33 @@ func frame_name() -> String:
 			return "spider_hang" if _on_ceiling else "spider_crawl"
 	return def.id
 
-func _update_visual() -> void:
+func _update_visual(delta: float = 0.0) -> void:
 	if _sprite == null or status.state == EnemyStatus.DYING:
 		return  # the death effect owns the sprite
-	Art.set_frame(_sprite, frame_name(), BODY_BOTTOM)
-	_sprite.flip_h = facing < 0
-	_sprite.flip_v = status.state == EnemyStatus.DOWNED
+	if _sheet != null:
+		_draw_sheet_frame(delta)
+	else:
+		Art.set_frame(_sprite, frame_name(), BODY_BOTTOM)
+		_sprite.flip_h = facing < 0
+		_sprite.flip_v = status.state == EnemyStatus.DOWNED
 	if status.state == EnemyStatus.STUNNED:
 		_sprite.modulate = STUNNED_TINT
 	elif _telegraphing() and int(_anim_t / 0.08) % 2 == 0:
 		_sprite.modulate = TELEGRAPH_TINT
 	else:
 		_sprite.modulate = Color.WHITE
+
+func _draw_sheet_frame(delta: float) -> void:
+	var state := EnemyState.pick(def.id, status.state, _charge, _swoop, _spit_windup > 0.0,
+		_spit_cd > SPIT_COOLDOWN - SPIT_POSE_SECONDS, _on_ceiling, is_on_floor(), absf(velocity.x) > 1.0, _hurt_t > 0.0)
+	_animator.play(state)
+	_animator.advance(delta)
+	var frame := _animator.frame()
+	_sprite.texture = _sheet.frame_texture(frame)
+	_sprite.position.y = BODY_BOTTOM - _sheet.frame_size(frame).y / 2.0
+	_sprite.flip_h = facing < 0
+	_sprite.flip_v = false
+	_shapes.refresh(_sheet, frame, facing < 0)
 
 func _telegraphing() -> bool:
 	return _charge == "windup" or _swoop == "warn" or _spit_windup > 0.0
@@ -409,4 +436,21 @@ func _build_body() -> void:
 	if def != null:
 		_sprite = Art.sprite(frame_name(), BODY_BOTTOM)
 		add_child(_sprite)
+		_load_sheet()
 		_update_visual()
+
+## The creature's own frames, when its sheet and clips exist; otherwise the old single sprites stay.
+func _load_sheet() -> void:
+	if not use_sheet or not SpriteSheet.available(def.id):
+		return
+	var clips := SlimeAnimator.load_clips(CLIPS)
+	if not clips.has(def.id):
+		return
+	_sheet = SpriteSheet.load_set(def.id)
+	if _sheet == null:
+		return
+	_animator = SlimeAnimator.new(clips[def.id])
+	_animator.play("idle" if _animator.clips.has("idle") else "fly")
+	_shapes = SlimeShapes.new()
+	_shapes.position = Vector2(0.0, BODY_BOTTOM)
+	add_child(_shapes)
