@@ -45,6 +45,8 @@ const BODY_BOTTOM := BodyConfig.BOTTOM  # collision box bottom, where the body s
 const SPREAD_STICK_Y := 0.6
 const SPREAD_SPEED := 0.5
 const HURT_FLASH := 0.25
+const EVOLVE_SECONDS := 1.2
+const EVOLVE_SWELL := 0.35
 
 var team := "player"
 var facing := 1
@@ -72,7 +74,14 @@ var _sprite: Sprite2D
 var spreading := false
 ## Set false before setup() to draw the old scaled sprite instead of the slime's own frames.
 var use_sheet := true
-var _sheet: SpriteSheet
+var _sheet: SpriteSheet         # the sheet being drawn: the form's own, or the base sheet
+var _base_sheet: SpriteSheet    # the plain slime's sheet, also worn (tinted, scaled) by forms without art
+var _form_sheet: SpriteSheet    # the current form's own sheet, or null
+## The evolved body: stage and form (Form.advance is the only way they change) and the form definitions.
+var form := Form.new()
+var forms := {}
+## Seconds left of the evolution moment: a short lock and shield while the body changes.
+var _evolve_time := 0.0
 var _animator: SlimeAnimator
 var _shapes: SlimeShapes
 var _shape: CollisionShape2D
@@ -107,6 +116,7 @@ func setup(rules: SkillRulesEngine, compendium: CompendiumModel, creature_defs: 
 	rules.skill_unlocked.connect(_on_skill_unlocked)
 	rules.skill_leveled.connect(_on_skill_leveled)
 	rules.run_started.connect(_on_run_started)
+	forms = FormLoader.load_all()
 	add_to_group("player")
 	add_to_group("actors")
 	if get_child_count() == 0:
@@ -114,6 +124,9 @@ func setup(rules: SkillRulesEngine, compendium: CompendiumModel, creature_defs: 
 
 func _physics_process(delta: float) -> void:
 	if health == null or health.is_dead():
+		return
+	if _evolve_time > 0.0:
+		_evolve_step(delta)
 		return
 	var dir := Input.get_axis("move_left", "move_right")
 	if predation.active():
@@ -195,15 +208,18 @@ func _update_visual(delta: float) -> void:
 	if _sheet == null:
 		_draw_fallback_sprite()
 		return
-	var state := SlimeState.pick(predation.active(), _invuln > INVULN_SECONDS - HURT_FLASH, rope != null,
+	var state := SlimeState.pick(predation.active(), _invuln > INVULN_SECONDS - HURT_FLASH and not evolving(), rope != null,
 		_clinging(), _tackle_time > 0.0, spreading, on_floor, velocity.y, _land_timer, velocity.x)
 	_animator.play(state)
 	_animator.advance(delta)
 	var frame := _animator.frame()
 	var left := _faces_left(state, get_wall_normal() if is_on_wall() else Vector2.ZERO)
+	var glow := evolve_glow()
+	var body_scale := body_scale() * (1.0 + EVOLVE_SWELL * glow)
 	_sprite.texture = _sheet.frame_texture(frame)
-	_sprite.position.y = BODY_BOTTOM - _sheet.frame_size(frame).y / 2.0
-	_sprite.scale = Vector2.ONE
+	_sprite.position.y = BODY_BOTTOM - _sheet.frame_size(frame).y * body_scale / 2.0
+	_sprite.scale = Vector2.ONE * body_scale
+	_sprite.modulate = body_tint().lerp(Color(2.2, 2.2, 2.2), glow * 0.8)
 	_sprite.flip_h = left
 	_shapes.refresh(_sheet, frame, left)
 
@@ -265,7 +281,7 @@ func body_rect() -> Rect2:
 ## when the sheet is missing.
 func hurt_polygon() -> PackedVector2Array:
 	if _shapes != null and _shapes.hurt_poly.polygon.size() >= 3:
-		return ShapeHit.moved(_shapes.hurt_poly.polygon, _shapes.global_position)
+		return ShapeHit.moved(_shapes.hurt_poly.polygon, _shapes.global_position, body_scale())
 	return ShapeHit.rect_points(body_rect())
 
 func do_jump() -> void:
@@ -341,6 +357,7 @@ func _start_cover(target: Node2D) -> void:
 	_cover = EatCover.new()
 	get_parent().add_child(_cover)
 	_cover.begin(target, _sheet, target.global_position.x < global_position.x)
+	_cover.set_look(body_tint(), body_scale())
 	_sprite.visible = false
 
 func _end_cover() -> void:
@@ -376,7 +393,7 @@ func use_active(i: int) -> void:
 		return
 	if not ability.ready():
 		return  # on cooldown: costs nothing
-	var cost := _rules.get_def(id).mp_cost
+	var cost := FormEffects.mp_cost(skillset.capabilities, id, _rules.get_def(id).mp_cost)
 	if not mana.spend(cost):
 		not_enough_mp.emit(id)
 		return
@@ -447,8 +464,9 @@ func award_xp(amount: int) -> void:
 		progression.add_xp(amount)
 
 ## Connected to every enemy's `downed` signal.
-func on_enemy_downed(def: CreatureDef) -> void:
-	award_xp(def.xp)
+func on_enemy_downed(def: CreatureDef, spawn_key := "") -> void:
+	if not health.is_dead():
+		progression.award(spawn_key, "down", def.xp)
 
 ## Spends EP to unlock a ready evolution. False when not ready or not enough EP.
 func try_evolve(id: String) -> bool:
@@ -460,6 +478,98 @@ func try_evolve(id: String) -> bool:
 	progression.spend_ep(cost)
 	EventBus.world_event.emit("evolved", {"id": id})
 	return true
+
+## The forms on offer right now (FormDefs): empty until the level cap is reached, and at the last stage.
+func form_offers() -> Array:
+	var out: Array = []
+	if not progression.can_evolve():
+		return out
+	for id in FormOffers.offers(forms, form, FormOffers.absorbed_units(_rules), FormOffers.default_supply(forms)):
+		out.append(forms[id])
+	return out
+
+## The form's definition, or null for the base slime.
+func form_def() -> FormDef:
+	return forms.get(form.form_id)
+
+## The sheet the body is drawn from: the form's own art, or the base slime's.
+func body_sheet() -> SpriteSheet:
+	return _form_sheet if _form_sheet != null else _base_sheet
+
+## A form without art of its own wears the base sheet tinted and scaled; one with art is drawn as it is.
+func body_tint() -> Color:
+	var d := form_def()
+	return d.tint if d != null and _form_sheet == null else Color.WHITE
+
+func body_scale() -> float:
+	var d := form_def()
+	return d.size if d != null and _form_sheet == null else 1.0
+
+## Evolves the body into `id`: a legal next form, and (unless `force`, for tests and debugging) the level
+## cap reached. Resets the level (keeping EP and the level bonuses), raises the skill cap and re-checks
+## every skill, applies the form's stats and traits, grants its skills, and changes the look. The
+## collision box never changes.
+func advance_form(id: String, force := false) -> bool:
+	if health.is_dead() or (not force and not progression.can_evolve()):
+		return false
+	if not form.advance(id, forms):
+		return false
+	progression.evolve_stage()
+	_rules.set_stage_cap(form.cap())
+	var def: FormDef = forms[id]
+	skillset.form_mods = FormEffects.modifiers(def)
+	skillset.form_flags = FormEffects.flags(def)
+	for g in def.grants:
+		_rules.grant(g)
+	_rules.recheck_levels()
+	_use_form_sheet(def)
+	skillset.refresh()
+	_sync_max_hp()
+	_begin_evolve_moment(def)
+	EventBus.world_event.emit("evolved_body", {"id": id, "stage": form.stage})
+	return true
+
+func evolving() -> bool:
+	return _evolve_time > 0.0
+
+## 1 at the start of the evolution moment, easing to 0: drives the glow and the swell.
+func evolve_glow() -> float:
+	var k := clampf(_evolve_time / EVOLVE_SECONDS, 0.0, 1.0)
+	return k * k
+
+## The lock and shield while the body changes: no walking or acting, no damage, no eat or rope in progress.
+func _begin_evolve_moment(def: FormDef) -> void:
+	_evolve_time = EVOLVE_SECONDS
+	_invuln = maxf(_invuln, EVOLVE_SECONDS)
+	cancel_predate()
+	drop_rope()
+	var fx := EvolutionFx.new()
+	fx.tint = def.tint
+	add_child(fx)
+
+func _evolve_step(delta: float) -> void:
+	_evolve_time = maxf(0.0, _evolve_time - delta)
+	velocity.x = 0.0
+	if not is_on_floor():
+		velocity.y += GRAVITY * delta
+	move_and_slide()
+	tick(delta)
+	_update_visual(delta)
+
+## Grants XP directly (tests, and the --evolve launch shortcut).
+func debug_grant_xp(amount: int) -> void:
+	progression.add_xp(amount)
+
+func _use_form_sheet(def: FormDef) -> void:
+	if _animator == null:
+		return  # no sheet drawing at all (use_sheet false): there is nothing to swap
+	if def.sprite_set != "" and SpriteSheet.available(def.sprite_set):
+		_form_sheet = SpriteSheet.load_set(def.sprite_set)
+		_sheet = _form_sheet
+	else:
+		_form_sheet = null
+		if _base_sheet != null:
+			_sheet = _base_sheet
 
 func _on_leveled_up(level: int) -> void:
 	EventBus.world_event.emit("leveled_up", {"level": level})
@@ -547,9 +657,10 @@ func _complete_predation(t) -> void:
 			_emit.call(Events.ABSORBED, {"essence": ess, "source": c.id})
 	stats.apply_eat(c)
 	_sync_max_hp()
-	health.heal(EAT_HEAL + skillset.heal_on(Events.PREDATED, {"source": c.id, "kind": kind}))
+	health.heal(EAT_HEAL + FormEffects.eat_heal(skillset.capabilities) + skillset.heal_on(Events.PREDATED, {"source": c.id, "kind": kind}))
 	if kind == "creature":
-		award_xp(c.xp)
+		if not health.is_dead():
+			progression.award(t.spawn_key if "spawn_key" in t else "", "eat", c.xp)
 		mana.restore(EAT_MP)
 		_creatures_eaten += 1
 		if _creatures_eaten % 3 == 0:
@@ -650,6 +761,10 @@ func _on_skill_leveled(_id: String, _level: int) -> void:
 func _on_run_started() -> void:
 	progression = Progression.new()  # levels are per run
 	progression.leveled_up.connect(_on_leveled_up)
+	form.reset()
+	_form_sheet = null
+	if _base_sheet != null:
+		_sheet = _base_sheet
 	skillset.reset()
 	drop_rope()
 	stats.reset_run()
@@ -672,6 +787,7 @@ func _build_body() -> void:
 	add_child(_sprite)
 	if use_sheet and SpriteSheet.available("slime"):
 		_sheet = SpriteSheet.load_set("slime")
+		_base_sheet = _sheet
 		_animator = SlimeAnimator.new(SlimeAnimator.load_clips())
 		_animator.play("idle")
 		var first := _animator.frame()

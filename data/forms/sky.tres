@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_x5ny4"]
+
+[resource]
+script = ExtResource("1_x5ny4")
+id = "sky"
+display_name = "Sky"
+stage = 3
+lineage = "echo"
+parents = ["echo"]
+stats = {
+"atk": 1,
+"jump_height": 25,
+"max_hp": 12,
+"max_mp": 6,
+"spd": 8
+}
+traits = ["sonar"]
+grants = ["echolocation", "leap"]
+tint = Color(0.95, 0.65, 1, 1)
+size = 1.25
+blurb = "Light enough to ride the air."

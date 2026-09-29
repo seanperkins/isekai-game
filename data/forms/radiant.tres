@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_02bid"]
+
+[resource]
+script = ExtResource("1_02bid")
+id = "radiant"
+display_name = "Radiant Slime"
+stage = 3
+lineage = "greater"
+parents = ["greater_slime"]
+stats = {
+"atk": 1,
+"max_hp": 12,
+"max_mp": 12,
+"predation_time": -15
+}
+traits = ["adaptable"]
+grants = ["regeneration", "mana_recovery"]
+tint = Color(1, 0.92, 0.7, 1)
+size = 1.25
+blurb = "A steady inner light."

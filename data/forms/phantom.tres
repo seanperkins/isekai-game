@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_qf17k"]
+
+[resource]
+script = ExtResource("1_qf17k")
+id = "phantom"
+display_name = "Phantom"
+stage = 3
+lineage = "echo"
+parents = ["echo"]
+stats = {
+"atk": 1,
+"jump_height": 15,
+"max_hp": 12,
+"max_mp": 6,
+"spd": 12
+}
+traits = ["sonar"]
+grants = ["echolocation", "leap"]
+tint = Color(0.95, 0.65, 1, 1)
+size = 1.25
+blurb = "Half a sound, half a body."

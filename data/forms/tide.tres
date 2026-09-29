@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_16li8"]
+
+[resource]
+script = ExtResource("1_16li8")
+id = "tide"
+display_name = "Tide"
+lineage = "tide"
+parents = ["slime"]
+essences = ["water"]
+stats = {
+"max_hp": 5,
+"max_mp": 3,
+"mp_regen": 25
+}
+traits = ["water_thrift"]
+grants = ["hydraulic_propulsion"]
+tint = Color(0.55, 0.8, 1, 1)
+size = 1.12
+blurb = "Water sloshes eagerly inside you. Water skills cost less."

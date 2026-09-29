@@ -20,7 +20,7 @@ levels_on = {
 "tags": {}
 }
 level_curve = 2
-max_level = 3
+max_level = 6
 effects = [{
 "condition": {
 "hp_below_percent": 30
@@ -28,5 +28,5 @@ effects = [{
 "kind": "conditional_modifier",
 "op": "flat_off",
 "stat": "damage_taken",
-"values": [1, 2, 3]
+"values": [1, 2, 3, 4, 5, 6]
 }]

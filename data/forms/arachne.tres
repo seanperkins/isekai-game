@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_qirpn"]
+
+[resource]
+script = ExtResource("1_qirpn")
+id = "arachne"
+display_name = "Arachne"
+stage = 3
+lineage = "weaver"
+parents = ["weaver"]
+stats = {
+"atk": 1,
+"max_hp": 12,
+"max_mp": 6,
+"spd": 10
+}
+traits = ["spinner"]
+grants = ["sticky_thread", "wall_cling"]
+tint = Color(0.78, 0.7, 1, 1)
+size = 1.25
+sprite_set = "form_arachne"
+blurb = "Silk legs let you scale any wall."

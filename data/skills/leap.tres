@@ -19,11 +19,11 @@ levels_on = {
 "event": "jumped",
 "tags": {}
 }
-level_curve = 40
-max_level = 5
+level_curve = 20
+max_level = 10
 effects = [{
 "kind": "modifier",
 "op": "add",
 "stat": "jump_height",
-"values": [10, 15, 20, 25, 30]
+"values": [10, 15, 20, 25, 30, 35, 40, 45, 50, 55]
 }]

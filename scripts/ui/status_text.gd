@@ -79,6 +79,8 @@ static func ticker_text(entry: Dictionary, rules) -> String:
 			return "%s Lv%d" % [_name(entry["id"], rules), entry["level"]]
 		"slot_replaced":
 			return "%s replaced %s" % [_name(entry["new_id"], rules), _name(entry["old_id"], rules)]
+		"note":
+			return str(entry.get("text", ""))
 	return ""
 
 static func _name(id: String, rules) -> String:

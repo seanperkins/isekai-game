@@ -26,10 +26,10 @@ levels_on = {
 }
 }
 level_curve = 8
-max_level = 5
+max_level = 15
 effects = [{
 "kind": "active",
 "scene": "res://scenes/abilities/sticky_thread.tscn",
-"values": [1, 1, 2, 2, 2]
+"values": [1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
 }]
 mp_cost = 3

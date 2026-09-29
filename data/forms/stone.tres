@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_dn8xq"]
+
+[resource]
+script = ExtResource("1_dn8xq")
+id = "stone"
+display_name = "Stone Sovereign"
+stage = 4
+lineage = "bulwark"
+parents = ["golem", "crystal"]
+stats = {
+"atk": 2,
+"def": 4,
+"max_hp": 22,
+"max_mp": 10,
+"spd": -6
+}
+traits = ["hard_shell"]
+grants = ["body_armor", "toughness"]
+tint = Color(0.95, 0.85, 0.65, 1)
+size = 1.4
+blurb = "A mountain that decided to move."

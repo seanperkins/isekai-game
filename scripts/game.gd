@@ -1,3 +1,4 @@
+class_name Game
 extends Node2D
 ## The game: the World (rooms), the player, the HUD, the skill screen and the Run.
 ## Death shows the Run's card, then resets the run and reloads the scene.
@@ -57,6 +58,8 @@ func _ready() -> void:
 	run.bind(player, world)
 	run.restart_requested.connect(_restart)
 	SkillRules.start_run()
+	if Game.wants_evolve(OS.get_cmdline_user_args()):
+		player.debug_grant_xp(Progression.stage_total(1))  # reach the first evolution without a grind
 
 ## A fresh creature (or water pool) for a room, wired to XP and the Bestiary.
 func _spawn(id: String, pos: Vector2) -> Node2D:
@@ -71,7 +74,7 @@ func _spawn(id: String, pos: Vector2) -> Node2D:
 	else:
 		node = Enemy.new()
 		node.setup(def, _skills_by_id)
-		node.downed.connect(player.on_enemy_downed)
+		node.downed.connect(func(d: CreatureDef) -> void: player.on_enemy_downed(d, node.spawn_key))
 		node.downed.connect(func(d: CreatureDef) -> void: Compendium.model.on_creature_defeated(d.id))
 	node.position = pos
 	return node
@@ -88,3 +91,7 @@ func _prepare_restart() -> void:
 	get_tree().paused = false
 	SkillRules.reset_run()
 	Announcer.queue.clear()
+
+## `-- --evolve` on the command line starts the run at the first body evolution.
+static func wants_evolve(args: Array) -> bool:
+	return args.has("--evolve")

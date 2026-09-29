@@ -27,6 +27,12 @@ class GenerateFramesTest(unittest.TestCase):
         self.assertEqual(g.todo(["a", "b", "c"], {"a", "b"}, False), ["c"])
         self.assertEqual(g.todo(["a", "b"], {"a", "b"}, True), ["a", "b"])
 
+    def test_a_reference_with_a_slash_points_into_another_set(self):
+        refs = g.refs_for({"name": "run_1", "refs": ["form_weaver/idle_1", "slime/run_1"]}, "/out", "/repo", "art_source/frames/slime/idle_1.png")
+        self.assertEqual(refs, ["/repo/art_source/frames/slime/idle_1.png",
+                                "/repo/art_source/frames/form_weaver/idle_1.png",
+                                "/repo/art_source/frames/slime/run_1.png"])
+
     def test_the_command_passes_one_reference_flag_each_and_reads_stdin(self):
         cmd = g.command("/out", ["/a.png", "/b.png"])
         self.assertEqual(cmd[:2], ["codex", "exec"])

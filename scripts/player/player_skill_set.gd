@@ -9,6 +9,9 @@ var rules: SkillRulesEngine
 var stats: Stats
 var slots := ActiveSlots.new()
 var capabilities := {}
+## What the body adds on top of the skills: stat modifiers (source "form") and trait flags.
+var form_mods: Array = []
+var form_flags := {}
 
 func _init(p_rules: SkillRulesEngine, p_stats: Stats) -> void:
 	rules = p_rules
@@ -34,9 +37,16 @@ func refresh() -> void:
 		var lv := rules.level_of(id)
 		stats.set_modifiers(id, SkillEffects.stat_modifiers(d, lv))
 		capabilities.merge(SkillEffects.capabilities(d, lv), true)
+	if not form_mods.is_empty():
+		stats.set_modifiers(FormEffects.SOURCE, form_mods)
+	capabilities.merge(form_flags, true)
+	if capabilities.has("trait_sonar") and capabilities.has("reveals_hidden"):
+		capabilities["reveals_hidden"] = int(capabilities["reveals_hidden"]) + 1  # sonar: Echolocation reads one level stronger
 
 func reset() -> void:
 	slots.reset()
+	form_mods = []
+	form_flags = {}
 	refresh()
 
 func has(flag: String) -> bool:
@@ -49,7 +59,12 @@ func incoming(damage_type: String, hp: int, max_hp: int) -> Dictionary:
 	var pairs: Array = []
 	for id in rules.owned():
 		pairs.append([rules.get_def(id), rules.level_of(id)])
-	return SkillEffects.damage_reduction(pairs, damage_type, hp, max_hp)
+	var out := SkillEffects.damage_reduction(pairs, damage_type, hp, max_hp)
+	if damage_type == "poison" and has("trait_venom_blood"):
+		out["percent_off"] = mini(100, int(out["percent_off"]) + FormEffects.VENOM_PERCENT)
+	if has("trait_hard_shell"):
+		out["flat_off"] = int(out["flat_off"]) + FormEffects.SHELL_FLAT
+	return out
 
 ## Extra healing from owned triggers matching this event (e.g. Glutton on creature eats).
 func heal_on(event_name: String, tags: Dictionary) -> int:

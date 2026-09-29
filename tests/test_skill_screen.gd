@@ -34,7 +34,7 @@ func _screen() -> SkillScreen:
 
 func test_level_progress_counts_toward_the_next_level() -> void:
 	_emit("jumped", {}, 40 + 10)
-	assert_eq(rules.level_progress("leap"), {"current": 10, "target": 40})
+	assert_eq(rules.level_progress("leap"), {"current": 10, "target": 20})
 	assert_eq(rules.level_progress("nope"), {"current": 0, "target": 0})
 
 func test_skill_rows_group_owned_skills_and_tease_locked_ones() -> void:
@@ -78,7 +78,7 @@ func test_detail_card_for_an_active() -> void:
 		by_id[d.id] = d
 	var card := SkillScreenModel.detail(rules, by_id["poison_breath"], player.skillset.slots)
 	assert_eq(card["name"], "Poison Breath")
-	assert_eq([card["level"], card["max_level"]], [1, 5])
+	assert_eq([card["level"], card["max_level"]], [1, 15])
 	assert_eq(card["mp_cost"], 4)
 	assert_eq(card["lines"], ["Damage 2"])
 	assert_almost_eq(card["progress"], 0.5, 0.001)

@@ -24,7 +24,7 @@ static func skill_rows(rules, all_defs: Array) -> Array:
 				continue
 			if rules.level_of(d.id) > 0:
 				rows.append({"kind": "skill", "id": d.id, "name": d.display_name,
-					"level": rules.level_of(d.id), "max_level": d.max_level})
+					"level": rules.level_of(d.id), "max_level": d.max_level, "capped": rules.is_capped(d.id)})
 			elif not d.secret and not rules.is_evolution_ready(d.id):
 				locked = true
 		if g[1] == "evolution":
@@ -109,7 +109,12 @@ static func detail(rules, d: SkillDef, slots: ActiveSlots) -> Dictionary:
 	var slot := slots.slots.find(d.id)  # -1 when not slotted
 	return {"id": d.id, "name": d.display_name, "level": level, "max_level": d.max_level,
 		"description": d.description, "mp_cost": d.mp_cost, "lines": effect_lines(d, maxi(level, 1)),
-		"progress": float(p["current"]) / p["target"] if p["target"] > 0 else -1.0, "slot": slot}
+		"progress": float(p["current"]) / p["target"] if p["target"] > 0 else -1.0, "slot": slot,
+		"capped": rules.is_capped(d.id)}
+
+## What a skill sitting at the body's stage cap says.
+static func capped_text() -> String:
+	return "Capped until you evolve"
 
 static func effect_lines(d: SkillDef, level: int) -> Array:
 	var lines: Array = []
