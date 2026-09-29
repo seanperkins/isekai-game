@@ -71,6 +71,7 @@ var _sheet: SpriteSheet
 var _animator: SlimeAnimator
 var _shapes: SlimeShapes
 var _shape: CollisionShape2D
+var _cover: EatCover
 var _rect: RectangleShape2D
 var _tackle_time := 0.0
 var _land_timer := 0.0
@@ -292,6 +293,7 @@ func begin_predate() -> void:
 	target.set_held(true)
 	drop_rope()
 	predation.start(target, stats.get_stat("predation_time"))
+	_start_cover(target)
 
 func process_predate(delta: float) -> void:
 	var t = predation.target
@@ -299,6 +301,8 @@ func process_predate(delta: float) -> void:
 			or global_position.distance_to(t.global_position) > PREDATE_BREAK_RANGE:
 		cancel_predate()
 		return
+	if _cover != null:
+		_cover.tick(delta, predation.progress())
 	if predation.update(delta):
 		_complete_predation(t)
 
@@ -307,6 +311,21 @@ func cancel_predate() -> void:
 	if is_instance_valid(t):
 		t.set_held(false)
 	predation.cancel()
+	_end_cover()
+
+func _start_cover(target: Node2D) -> void:
+	if _sheet == null:
+		return
+	_cover = EatCover.new()
+	get_parent().add_child(_cover)
+	_cover.begin(target, _sheet, target.global_position.x < global_position.x)
+	_sprite.visible = false
+
+func _end_cover() -> void:
+	if _cover != null and is_instance_valid(_cover):
+		_cover.finish()
+	_cover = null
+	_sprite.visible = true
 
 func do_inspect() -> void:
 	if health.is_dead():
@@ -494,6 +513,7 @@ func apply_impulse(v: Vector2) -> void:
 	_dash = 0.25
 
 func _complete_predation(t) -> void:
+	_end_cover()
 	predation.cancel()
 	var c: CreatureDef = t.consume()
 	var kind := "terrain" if c.id == Sources.WATER_POOL else "creature"
