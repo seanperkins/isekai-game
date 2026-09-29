@@ -162,3 +162,56 @@ func test_starting_a_second_eat_ends_the_first_cover() -> void:
 
 func after_each() -> void:
 	Input.action_release("predate")
+
+
+# --- a cut corpse (killed by a blade) is eaten as two pieces, never as a whole creature ---
+
+func _cut_prey() -> Node2D:
+	var prey := _prey()
+	prey.get_node("Sprite").visible = false  # the whole sprite stays hidden on a cut corpse
+	var corpse := Node2D.new()
+	corpse.name = "CutCorpse"
+	for x in [-6.0, 6.0]:
+		var half := Sprite2D.new()
+		half.texture = prey.get_node("Sprite").texture
+		half.position = Vector2(x, -3.0)
+		corpse.add_child(half)
+	prey.add_child(corpse)
+	prey.set_script(_cut_script())
+	return prey
+
+func _cut_script() -> GDScript:
+	var s := GDScript.new()
+	s.source_code = "extends Node2D\nfunc cut_corpse():\n\treturn get_node_or_null('CutCorpse')\n"
+	s.reload()
+	return s
+
+func test_eating_a_cut_corpse_shrinks_two_halves_not_a_whole_creature() -> void:
+	var prey := _cut_prey()
+	var cover := _cover(prey)
+	assert_false(prey.get_node("CutCorpse").visible, "the real halves are hidden under the cover")
+	assert_false(cover.prey_copy.visible, "no whole-creature copy")
+	assert_not_null(cover.prey_halves)
+	assert_eq(cover.prey_halves.get_child_count(), 2)
+	cover.tick(0.016, 1.0)
+	assert_almost_eq(cover.prey_halves.scale.x, EatCover.PREY_MIN_SCALE, 0.001)
+
+func test_cancelling_the_eat_of_a_cut_corpse_shows_the_halves_again_not_the_whole() -> void:
+	var prey := _cut_prey()
+	var cover := EatCover.new()
+	add_child(cover)
+	cover.begin(prey, sheet)
+	cover.finish()
+	assert_true(prey.get_node("CutCorpse").visible, "the pieces are back")
+	assert_false(prey.get_node("Sprite").visible, "the whole sprite is not")
+	await wait_process_frames(2)
+
+func test_finishing_restores_whatever_visibility_the_prey_sprite_had() -> void:
+	var prey := _prey()
+	prey.get_node("Sprite").visible = false
+	var cover := EatCover.new()
+	add_child(cover)
+	cover.begin(prey, sheet)
+	cover.finish()
+	assert_false(prey.get_node("Sprite").visible, "it was hidden before, so it stays hidden")
+	await wait_process_frames(2)

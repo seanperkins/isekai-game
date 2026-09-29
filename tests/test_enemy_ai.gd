@@ -6,7 +6,7 @@ class StubPlayer extends Node2D:
 	var facing := 1
 	var hits: Array = []
 	var poisons: Array = []
-	func receive_hit(raw: int, damage_type: String, _from: Vector2 = Vector2.INF) -> void:
+	func receive_hit(raw: int, damage_type: String, _from: Vector2 = Vector2.INF, _cause: String = "") -> void:
 		hits.append([raw, damage_type])
 	func receive_poison(application: int, tick_amount: int, seconds: float) -> void:
 		poisons.append([application, tick_amount, seconds])

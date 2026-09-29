@@ -12,9 +12,13 @@ const RELEASE_FROM := 0.92
 
 var cover := Sprite2D.new()
 var prey_copy := Sprite2D.new()
+## The two halves of a cut corpse (killed by a blade), shrunk instead of a whole-creature copy.
+var prey_halves: Node2D
 var _sheet: SpriteSheet
 var _target: Node2D
 var _prey_sprite: Sprite2D
+var _prey_was_visible := true
+var _cut: Node2D
 var _bottom := 0.0
 var _tex_height := 0.0
 var _time := 0.0
@@ -33,6 +37,8 @@ func begin(target: Node2D, sheet: SpriteSheet, left: bool = false) -> void:
 	_sheet = sheet
 	top_level = true
 	_prey_sprite = target.get_node_or_null("Sprite")
+	if _prey_sprite != null:
+		_prey_was_visible = _prey_sprite.visible
 	if _prey_sprite != null and _prey_sprite.texture != null:
 		_tex_height = float(_prey_sprite.texture.get_height())
 		_bottom = _prey_sprite.position.y + _tex_height / 2.0
@@ -45,6 +51,16 @@ func begin(target: Node2D, sheet: SpriteSheet, left: bool = false) -> void:
 	prey_copy.z_index = 0
 	prey_copy.position = Vector2(0.0, -_tex_height / 2.0)
 	add_child(prey_copy)
+	_cut = target.cut_corpse() if target.has_method("cut_corpse") else null
+	if _cut != null:
+		_cut.visible = false
+		prey_copy.visible = false
+		prey_halves = _cut.duplicate() as Node2D
+		prey_halves.visible = true
+		prey_halves.position = Vector2.ZERO  # the holder sits at the feet, so the halves shrink toward the floor
+		for h in prey_halves.get_children():
+			(h as Node2D).position.y -= _bottom
+		add_child(prey_halves)
 	cover.z_index = 1
 	cover.modulate.a = BODY_ALPHA
 	cover.flip_h = left
@@ -58,11 +74,15 @@ func tick(delta: float, progress: float) -> void:
 	var s := lerpf(1.0, PREY_MIN_SCALE, clampf(progress, 0.0, 1.0))
 	prey_copy.scale = Vector2(s, s)
 	prey_copy.position.y = -_tex_height * s / 2.0
+	if prey_halves != null:
+		prey_halves.scale = Vector2(s, s)
 	_show(cover_frame(progress, _time))
 
 func finish() -> void:
+	if is_instance_valid(_cut):
+		_cut.visible = true
 	if is_instance_valid(_prey_sprite):
-		_prey_sprite.visible = true
+		_prey_sprite.visible = _prey_was_visible
 	queue_free()
 
 func _show(frame: String) -> void:

@@ -46,7 +46,7 @@ static func build(room: Node2D, size: Vector2, biome := "cave") -> CPUParticles2
 	var mat := CanvasItemMaterial.new()
 	mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
 	p.material = mat
-	p.z_index = 8  # over the terrain and actors, under the foreground frame
+	p.z_index = 8  # over the terrain and actors
 	room.add_child(p)
 	return p
 

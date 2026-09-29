@@ -8,7 +8,7 @@ class FakeActor extends Node2D:
 	var threads: Array = []
 	func apply_impulse(v: Vector2) -> void:
 		impulses.append(v)
-	func receive_hit(raw: int, damage_type: String) -> void:
+	func receive_hit(raw: int, damage_type: String, _from: Vector2 = Vector2.INF, _cause: String = "") -> void:
 		hits.append([raw, damage_type])
 	func receive_thread(tier: int) -> void:
 		threads.append(tier)
@@ -76,3 +76,37 @@ func test_movement_abilities_push_the_actor_in_facing_direction() -> void:
 	assert_eq(player.impulses[0], Vector2(-456.0, -140.0))
 	for v in player.impulses:
 		assert_lt(v.x, 0.0)
+
+func test_a_corpse_does_not_shadow_a_living_target_for_ranged_skills() -> void:
+	var skills_by_id := {}
+	for d in DefLoader.load_dir("res://data/skills"):
+		skills_by_id[d.id] = d
+	var creatures := {}
+	for c in DefLoader.load_dir("res://data/creatures"):
+		creatures[c.id] = c
+	var caster := Node2D.new()
+	caster.set_script(_caster_script())
+	add_child_autofree(caster)
+	var corpse := Enemy.new()
+	corpse.setup(creatures["toad"], skills_by_id)
+	corpse.position = Vector2(30, 0)
+	add_child_autofree(corpse)
+	corpse.set_physics_process(false)
+	corpse.receive_hit(9999, "physical", Vector2(-1000, 0), "other")
+	corpse.finish_dying()
+	var live := Enemy.new()
+	live.setup(creatures["toad"], skills_by_id)
+	live.position = Vector2(60, 0)
+	add_child_autofree(live)
+	live.set_physics_process(false)
+	var ab := Ability.new()
+	add_child_autofree(ab)
+	ab.setup(caster, [5], 1)
+	var found := ab.targets_in_front(120.0, 20.0)
+	assert_eq(found, [live], "only the creature that can still be hit")
+
+func _caster_script() -> GDScript:
+	var s := GDScript.new()
+	s.source_code = "extends Node2D\nvar team := 'player'\nvar facing := 1\n"
+	s.reload()
+	return s

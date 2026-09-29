@@ -28,11 +28,11 @@ func _ready() -> void:
 		crack.position = Vector2(-1, -18)
 		add_child(crack)
 
-func receive_tackle(_atk: int, _from_behind: bool) -> bool:
+func receive_tackle(_atk: int, _from_behind: bool, _from: Vector2 = Vector2.INF) -> bool:
 	open()
 	return false
 
-func receive_hit(_raw: int, _damage_type: String, _from: Vector2 = Vector2.INF) -> void:
+func receive_hit(_raw: int, _damage_type: String, _from: Vector2 = Vector2.INF, _cause: String = "") -> void:
 	open()
 
 func open() -> void:

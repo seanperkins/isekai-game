@@ -9,7 +9,7 @@ class RopeActor extends Node2D:
 	var threads: Array = []
 	func apply_impulse(_v: Vector2) -> void:
 		pass
-	func receive_hit(_raw: int, _type: String) -> void:
+	func receive_hit(_raw: int, _type: String, _from: Vector2 = Vector2.INF, _cause: String = "") -> void:
 		pass
 	func receive_thread(tier: int) -> void:
 		threads.append(tier)

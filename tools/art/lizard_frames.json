@@ -1,0 +1,138 @@
+{
+ "canonical": "assets/sprites/lizard_1.png",
+ "style": "Modern pixel art with soft lighting (Style D): an armored cave lizard with dark scales, a bony head plate and a long tail, a clean dark outline, chunky readable pixels, gentle highlights and shading. Match the character, colours and proportions of the reference image exactly. Side view, the creature facing right. Draw only the creature: no ground, no thread, no rope, no shadow, no effects.",
+ "frames": [
+  {
+   "name": "idle_1",
+   "width": 56,
+   "refs": [],
+   "prompt": "The same lizard standing at rest, head level, tail low, alert."
+  },
+  {
+   "name": "idle_2",
+   "width": 56,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same lizard breathing: chest slightly raised, head a touch lower."
+  },
+  {
+   "name": "walk_1",
+   "width": 58,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same lizard mid-stride, clearly different from standing: the near front leg and the far back leg reaching far forward and lifted, the other two legs pushing back, body tilted slightly, tail swung to one side."
+  },
+  {
+   "name": "walk_2",
+   "width": 56,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same lizard mid-walk with all four legs gathered close under its belly, body raised a little higher than standing, tail lifted slightly."
+  },
+  {
+   "name": "walk_3",
+   "width": 58,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same lizard mid-stride on the opposite step: the far front leg and near back leg reaching far forward and lifted, the other two pushing back, tail swung to the other side."
+  },
+  {
+   "name": "walk_4",
+   "width": 56,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same lizard mid-walk, legs gathered under the belly, body lowered slightly below standing height, head dipped."
+  },
+  {
+   "name": "windup_1",
+   "width": 54,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same lizard stopping and crouching: front lowered, head drawn back, tail flicking up."
+  },
+  {
+   "name": "windup_2",
+   "width": 54,
+   "refs": [
+    "windup_1"
+   ],
+   "prompt": "The same lizard fully coiled to charge: chest to the ground, head cocked back, tail lashed high, eyes narrowed."
+  },
+  {
+   "name": "charge_1",
+   "width": 64,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same lizard bursting into a charge: body stretched forward, head thrust ahead, legs kicking back.",
+   "attack_from": 0.6
+  },
+  {
+   "name": "charge_2",
+   "width": 66,
+   "refs": [
+    "idle_1",
+    "charge_1"
+   ],
+   "prompt": "The same lizard at full sprint: fully stretched and low, head plate forward like a ram.",
+   "attack_from": 0.6
+  },
+  {
+   "name": "charge_3",
+   "width": 64,
+   "refs": [
+    "idle_1",
+    "charge_2"
+   ],
+   "prompt": "The same lizard in the last stride of the charge, legs gathered, head still forward.",
+   "attack_from": 0.6
+  },
+  {
+   "name": "rest_1",
+   "width": 54,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same lizard just after a charge: skidding to a stop with front legs braced straight, head lowered near the ground, mouth wide open, tail dragging behind."
+  },
+  {
+   "name": "rest_2",
+   "width": 54,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same lizard exhausted: belly sagging close to the ground, head hanging low with the mouth open, sides swollen from panting, tail limp on the ground."
+  },
+  {
+   "name": "stunned",
+   "width": 54,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same lizard knocked dizzy: head hanging down low, eyes drawn as little X marks, tongue lolling out, front legs splayed sideways and wobbling, body sagging."
+  },
+  {
+   "name": "hurt",
+   "width": 54,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same lizard flinching from a hit: back arched high in a hump, head thrown up, mouth wide open in a hiss, eyes squeezed shut, tail whipped up."
+  },
+  {
+   "name": "downed",
+   "width": 56,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same lizard lying on its back, pale belly up, legs curled and limp, tail flopped to the side."
+  }
+ ],
+ "anchor": "idle_1"
+}

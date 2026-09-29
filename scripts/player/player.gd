@@ -13,6 +13,10 @@ const GRAVITY := 900.0
 const WALL_SLIDE_SPEED := 90.0
 const TACKLE_RANGE := 36.0
 const TACKLE_REACH_Y := 28.0
+## A tackle reaches a creature whose drawn body is within this gap of the slime's (the dash covers about
+## 39 px). Measured on the traced shapes, since contact is: from body centres it fell short of a creature
+## that was already biting.
+const TACKLE_GAP := 16.0
 const TACKLE_SPEED := 260.0
 const TACKLE_SECONDS := 0.15
 const PREDATE_RANGE := 32.0
@@ -257,6 +261,13 @@ func _clinging() -> bool:
 func body_rect() -> Rect2:
 	return Rect2(global_position + _shape.position - _rect.size / 2.0, _rect.size)
 
+## Where the slime can be hit: the current frame's traced shape (global points), or the body box
+## when the sheet is missing.
+func hurt_polygon() -> PackedVector2Array:
+	if _shapes != null and _shapes.hurt_poly.polygon.size() >= 3:
+		return ShapeHit.moved(_shapes.hurt_poly.polygon, _shapes.global_position)
+	return ShapeHit.rect_points(body_rect())
+
 func do_jump() -> void:
 	if health.is_dead() or predation.active():
 		return
@@ -286,11 +297,11 @@ func do_tackle() -> void:
 	_dash = TACKLE_SECONDS
 	_tackle_time = TACKLE_SECONDS
 	EventBus.world_event.emit("tackled", {})
-	var target = _nearest_in_front(TACKLE_RANGE)
+	var target = _tackle_target()
 	if target == null or not target.has_method("receive_tackle"):
 		return
 	var from_behind: bool = target.facing == facing
-	if target.receive_tackle(stats.get_stat("atk"), from_behind):
+	if target.receive_tackle(stats.get_stat("atk"), from_behind, global_position):
 		_emit.call(Events.STUNNED_ENEMY, {"source": target.def.id})
 
 func begin_predate() -> void:
@@ -479,7 +490,7 @@ func aim_vector() -> Vector2:
 	return resolve_aim(raw_aim(), facing)
 
 ## `from` is the attacker's position for contact hits; the slime is knocked away from it.
-func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF) -> void:
+func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, _cause: String = "") -> void:
 	if _invuln > 0.0 or health.is_dead():
 		return
 	var m := skillset.incoming(damage_type, health.hp, health.max_hp)
@@ -562,6 +573,41 @@ func _ability(id: String) -> Ability:
 	add_child(node)
 	_abilities[id] = node
 	return node
+
+## The nearest other-team actor in front whose drawn body is within TACKLE_GAP of the slime's (a target
+## with no shape, like a shortcut switch, is measured centre to centre against TACKLE_RANGE).
+func _tackle_target():
+	var mine := hurt_polygon()
+	var best = null
+	var best_dx := INF
+	for n in get_tree().get_nodes_in_group("actors"):
+		if n == self or n.get("team") == team:
+			continue
+		var dx: float = (n.global_position.x - global_position.x) * facing
+		if dx < -4.0 or absf(n.global_position.y - global_position.y) > TACKLE_REACH_Y:
+			continue
+		if n.has_method("can_be_hit") and not n.can_be_hit():
+			continue  # a corpse must not swallow the tackle meant for the creature beyond it
+		if n.has_method("hurt_polygon"):
+			if _gap_in_front(mine, n.hurt_polygon()) > TACKLE_GAP:
+				continue
+		elif dx > TACKLE_RANGE:
+			continue
+		if dx < best_dx:
+			best = n
+			best_dx = dx
+	return best
+
+## Horizontal gap, in the facing direction, between the front of `mine` and the near edge of `theirs`
+## (negative when they overlap).
+func _gap_in_front(mine: PackedVector2Array, theirs: PackedVector2Array) -> float:
+	var my_front := -INF
+	var their_near := INF
+	for p in mine:
+		my_front = maxf(my_front, p.x * facing)
+	for p in theirs:
+		their_near = minf(their_near, p.x * facing)
+	return their_near - my_front
 
 func _nearest_in_front(range_px: float):
 	var best = null

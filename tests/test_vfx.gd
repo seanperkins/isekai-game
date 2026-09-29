@@ -7,7 +7,7 @@ class FakeActor extends Node2D:
 	var hits: Array = []
 	func apply_impulse(_v: Vector2) -> void:
 		pass
-	func receive_hit(raw: int, damage_type: String, _from: Vector2 = Vector2.INF) -> void:
+	func receive_hit(raw: int, damage_type: String, _from: Vector2 = Vector2.INF, _cause: String = "") -> void:
 		hits.append([raw, damage_type])
 	func receive_thread(_tier: int) -> void:
 		pass

@@ -41,6 +41,7 @@ func _eat_downed(id: String) -> void:
 	e.global_position = Vector2(20, 0)
 	e.set_physics_process(false)
 	e.receive_hit(99, "physical")
+	e.finish_dying()
 	player.begin_predate()
 	player.process_predate(1.0)
 

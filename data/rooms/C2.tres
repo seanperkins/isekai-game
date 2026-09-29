@@ -53,6 +53,57 @@ decor = [{
 "light": Color(0.3, 1, 0.9, 1),
 "pos": Vector2(1076, 320)
 }]
+dressing = [{
+"factor": 0.2,
+"piece": "stone_arch",
+"pos": Vector2(300, 330)
+}, {
+"factor": 0.22,
+"flip": true,
+"piece": "stone_arch",
+"pos": Vector2(980, 330)
+}, {
+"factor": 0.3,
+"piece": "rock_pillar",
+"pos": Vector2(650, 330)
+}, {
+"factor": 0.25,
+"piece": "mossy_ledge",
+"pos": Vector2(450, 140)
+}, {
+"factor": 0.28,
+"piece": "waterfall_ribbon",
+"pos": Vector2(1050, 20)
+}, {
+"factor": 0.45,
+"piece": "mushroom_grove",
+"pos": Vector2(150, 330)
+}, {
+"factor": 0.5,
+"piece": "crystal_cluster",
+"pos": Vector2(1150, 330)
+}, {
+"factor": 0.4,
+"piece": "stalactite_cluster",
+"pos": Vector2(500, 20)
+}, {
+"factor": 0.4,
+"flip": true,
+"piece": "stalactite_cluster",
+"pos": Vector2(900, 20)
+}, {
+"factor": 0.7,
+"piece": "hanging_roots",
+"pos": Vector2(100, 20)
+}, {
+"factor": 0.65,
+"piece": "hanging_roots",
+"pos": Vector2(700, 20)
+}, {
+"factor": 0.7,
+"piece": "hanging_roots",
+"pos": Vector2(1220, 20)
+}]
 spawns = [{
 "id": "spider",
 "pos": Vector2(700, 32)

@@ -72,6 +72,7 @@ func test_predation_completes_after_hold_and_absorbs_essences() -> void:
 func test_downed_enemy_is_eaten_without_a_stun() -> void:
 	var bat := _enemy("bat", 20)
 	bat.receive_hit(9, "physical")
+	bat.finish_dying()
 	player.begin_predate()
 	player.process_predate(1.0)
 	assert_true(_names().has("predated"))
@@ -136,6 +137,7 @@ func test_glutton_heal_can_exit_the_low_band_during_eats() -> void:
 	for x in [20, 22]:
 		var bat := _enemy("bat", x)
 		bat.receive_hit(9, "physical")
+		bat.finish_dying()
 		player.begin_predate()
 		player.process_predate(1.0)
 	assert_eq(player.health.hp, 24)  # 8 + (5+3) + (5+3)

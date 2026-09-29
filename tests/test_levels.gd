@@ -43,6 +43,7 @@ func _downed(id: String) -> Enemy:
 	e.set_physics_process(false)
 	e.downed.connect(player.on_enemy_downed)
 	e.receive_hit(99, "physical")
+	e.finish_dying()
 	return e
 
 func test_progression_curve_and_ep() -> void:
@@ -147,6 +148,7 @@ func test_hud_shows_level_xp_and_ep_and_enemies_award_xp_in_game() -> void:
 	assert_eq(game.hud.level_text(), "Lv 1  XP 0/10  EP 0")
 	var bat: Enemy = get_tree().get_nodes_in_group("actors").filter(func(n): return n is Enemy and n.def.id == "bat")[0]
 	bat.receive_hit(99, "physical")
+	bat.finish_dying()
 	assert_eq(game.player.progression.xp, 2)
 
 func test_locked_teaser_ignores_evolutions_that_are_ready() -> void:

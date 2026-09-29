@@ -97,7 +97,8 @@ func test_painted_rooms_have_a_full_depth_stack() -> void:
 	# The sprites draw at the layer's z: top-level nodes ignore the parent's.
 	for l in LAYERS:
 		assert_eq(node.get_node(l).get_child(0).z_index, node.get_node(l).z_index, l)
-	assert_gt(node.get_node("foreground").z_index, 5, "the foreground draws over the player (z 5)")
+	assert_lt(node.get_node("foreground").z_index, 0, "the foreground frame is behind terrain, decor and actors (z 0 and up)")
+	assert_gt(node.get_node("foreground").z_index, node.get_node("BackWall").z_index, "but in front of the back wall and the far layers")
 
 func test_a_layer_always_covers_the_view_and_slides_at_its_factor() -> void:
 	var width := 640.0

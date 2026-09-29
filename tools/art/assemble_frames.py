@@ -12,6 +12,7 @@ line is y = 0). Run from the project root (the whole command, no cd or pipes):
   uv run --python 3.12 --with Pillow python tools/art/assemble_frames.py slime
 """
 import json
+import math
 import os
 import re
 import sys
@@ -37,6 +38,27 @@ def fit_frame(im, width):
     im = im.crop(box)
     height = max(1, round(im.height * width / im.width))
     return crisp_alpha(im.resize((width, height), Image.BOX))
+
+
+def cropped(im):
+    """Key out magenta and crop to the drawn pixels."""
+    im = keyed(im.convert("RGBA"))
+    box = im.split()[3].getbbox()
+    if box is None:
+        raise ValueError("frame is empty after keying")
+    return im.crop(box)
+
+
+def anchor_scale(im, width):
+    """The scale that draws the anchor frame `width` px wide; every frame of the set shares it."""
+    return width / cropped(im).width
+
+
+def fit_scaled(im, scale):
+    """Key, crop, and scale by a shared factor (BOX), then crisp the alpha."""
+    c = cropped(im)
+    size = (max(1, round(c.width * scale)), max(1, round(c.height * scale)))
+    return crisp_alpha(c.resize(size, Image.BOX))
 
 
 def boundary_corners(im):
@@ -80,20 +102,72 @@ def convex_hull(points):
     return lower[:-1] + upper[:-1]
 
 
+def _simplify(chain, eps):
+    """Douglas-Peucker on an open chain of (x, y) points."""
+    if len(chain) < 3:
+        return list(chain)
+    (x1, y1), (x2, y2) = chain[0], chain[-1]
+    dx, dy = x2 - x1, y2 - y1
+    norm = (dx * dx + dy * dy) ** 0.5
+    worst, at = 0.0, 0
+    for i in range(1, len(chain) - 1):
+        px, py = chain[i]
+        d = abs(dy * (px - x1) - dx * (py - y1)) / norm if norm else ((px - x1) ** 2 + (py - y1) ** 2) ** 0.5
+        if d > worst:
+            worst, at = d, i
+    if worst <= eps:
+        return [chain[0], chain[-1]]
+    return _simplify(chain[:at + 1], eps)[:-1] + _simplify(chain[at:], eps)
+
+
+def outline(im, x_from=0, eps=0.35):
+    """A polygon that follows the drawn pixels: each column's top and bottom edge, simplified. Unlike the
+    convex hull it does not fill the empty space under a raised tail or between wings. `x_from` keeps only
+    the columns at or right of it. Points are (x, y) pixel-corner coordinates."""
+    w, h = im.size
+    px = im.load()
+    top, bottom = [], []
+    for x in range(int(x_from), w):
+        ys = [y for y in range(h) if px[x, y][3] >= 128]
+        if not ys:
+            continue
+        top += [(x, min(ys)), (x + 1, min(ys))]
+        bottom += [(x, max(ys) + 1), (x + 1, max(ys) + 1)]
+    if not top:
+        return []
+    # drop repeated points, then simplify the two edges separately so the corners survive
+    def dedupe(chain):
+        out = []
+        for p in chain:
+            if not out or out[-1] != p:
+                out.append(p)
+        return out
+    upper = _simplify(dedupe(top), eps)
+    lower = _simplify(dedupe(list(reversed(bottom))), eps)
+    poly = upper + lower
+    result = []
+    for p in poly:
+        if not result or result[-1] != p:
+            result.append(p)
+    if len(result) > 1 and result[0] == result[-1]:
+        result.pop()
+    return result
+
+
 def to_local(points, w, h):
     return [[x - w / 2.0, y - float(h)] for x, y in points]
 
 
 def trace(im, attack_from):
-    """(hurt, attack) shapes, frame-local. `attack` is empty unless `attack_from` is given."""
+    """(hurt, attack) shapes, frame-local. `attack` is empty unless `attack_from` is given. Both follow the
+    drawn outline (see `outline`), not the convex hull."""
     w, h = im.size
-    pts = boundary_corners(im)
-    hurt = to_local(convex_hull(pts), w, h)
+    hurt = to_local(outline(im), w, h)
     attack = []
     if attack_from is not None:
-        front = {p for p in pts if p[0] >= attack_from * w}
+        front = outline(im, x_from=math.ceil(attack_from * w))
         if len(front) >= 3:
-            attack = to_local(convex_hull(front), w, h)
+            attack = to_local(front, w, h)
     return hurt, attack
 
 
@@ -121,11 +195,15 @@ def main():
     rig_set = sys.argv[1]
     data = json.load(open("tools/art/%s_frames.json" % rig_set))
     fitted, shapes = {}, {}
+    scale = None
+    if "anchor" in data:  # one shared scale, so a stretched or wing-raised frame is not blown up to a fixed width
+        by_name = {f["name"]: f for f in data["frames"]}
+        scale = anchor_scale(Image.open(os.path.join(SRC, rig_set, data["anchor"] + ".png")), by_name[data["anchor"]]["width"])
     for f in data["frames"]:
         src = os.path.join(SRC, rig_set, f["name"] + ".png")
         if not os.path.exists(src):
             raise SystemExit("missing %s (generate it first)" % src)
-        fitted[f["name"]] = fit_frame(Image.open(src), f["width"])
+        fitted[f["name"]] = fit_scaled(Image.open(src), scale) if scale else fit_frame(Image.open(src), f["width"])
         shapes[f["name"]] = trace(fitted[f["name"]], f.get("attack_from"))
     sheet, rects = pack(fitted)
     os.makedirs(OUT, exist_ok=True)
