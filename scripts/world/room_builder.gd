@@ -113,7 +113,7 @@ static func build_room(def: RoomDef, ctx: Dictionary) -> Node2D:
 	# room keeps the flat backdrop and stretched tiles.
 	var painted := TerrainArt.has_biome(def.area)
 	if painted:
-		TerrainLayers.build(node, def.area)
+		TerrainLayers.build(node, def.area, size)
 		TerrainLayers.back_wall(node, def.area, size)
 		TerrainMotes.build(node, size, def.area)
 	else:
