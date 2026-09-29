@@ -42,7 +42,7 @@ recording, these public seams are added (still green on unchanged code):
 - `telegraphing() -> bool`: the public name for `_telegraphing()`; `test_grotto_creatures` calls it at three places (`:78`, `:184`, `:187`), moved onto it in step 1.
 - `anim_state() -> String`: the animation state `_draw_sheet_frame` last computed (the `EnemyState.pick` result, cached in a field it writes; `""` for a creature with no sheet, such as the serpent, whose `_animator` is null). Reading the animator instead would crash on the serpent and would hide a wrong `pick` argument, because `SlimeAnimator.play` silently ignores a name that is not a clip. The referee runs with sheets ON so the argument wiring is observed.
 
-The three test WRITES that set up state (`test_grotto_creatures.gd:161` `_charge`, `:183` `_puff_windup`, `test_death_fx.gd:196` `_charge`) are edited in the fold commit itself to `_state` (`charge`, `flash`, `windup`) and `_state_t`; the codebase's convention is tests writing private fields, and `test_art_visuals.gd:50` (`_on_ceiling`) and `:46` (`_spit_cd`) stay as they are because those fields stay.
+The three test WRITES that set up state (`test_grotto_creatures.gd:161` `_charge`, `:183` `_puff_windup`, `test_death_fx.gd:196` `_charge`) are edited in the fold commit itself: `s._charge = "charge"` becomes `s._state = "charge"`, `m._puff_windup = 0.3` becomes `m._state = "flash"` with `m._state_t = 0.3`, and `lizard._charge = "windup"` becomes `lizard._state = "windup"`; the codebase's convention is tests writing private fields, and `test_art_visuals.gd:50` (`_on_ceiling`) and `:46` (`_spit_cd`) stay as they are because those fields stay.
 
 ## The per-tick order (`_physics_process`), written down so the fold cannot reorder it
 
@@ -74,7 +74,7 @@ An ACTIVE enemy with no player takes the inactive branch (step 6) and still gets
 
 ## Scenario notes: today's behaviour by kind (the tests are the truth; this is not maintained documentation)
 
-| Kind | States (public string) | Transitions and one-tick lags to preserve | Telegraphs |
+| Kind | States (descriptive words; the `_state` tokens are pinned in Decisions) | Transitions and one-tick lags to preserve | Telegraphs |
 |---|---|---|---|
 | Walker (`_walk`) | patrol, chase | alert and \|dy\| < 48: chase along the CURRENT facing (turns only when \|dx\| > 32; holds at ledges and walls); else patrol home ±48 at half speed, reversing at a wall or ledge. `_blocked_ahead` is false while airborne | none |
 | Charger | `""`, windup, charge, rest | walk → windup when alert, \|dy\| < 24, 32 < ahead ≤ 120 (0.5 s, velocity 0 that tick); windup → charge (0.6 s, 3×; movement starts the NEXT tick) → rest when the time is up or blocked (1.0 s) → walk; the rest→walk tick returns true and it can wind up again on the very next tick; in walk it returns false and `_walk` moves it | windup |
