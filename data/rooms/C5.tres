@@ -35,6 +35,69 @@ decor = [{
 "light": Color(0.35, 0.95, 0.7, 1),
 "pos": Vector2(400, 52)
 }]
+dressing = [{
+"factor": 0.4,
+"piece": "stalactite_cluster",
+"pos": Vector2(420, 20)
+}, {
+"factor": 0.7,
+"piece": "hanging_roots",
+"pos": Vector2(90, 20)
+}, {
+"factor": 0.25,
+"piece": "waterfall_ribbon",
+"pos": Vector2(540, 20)
+}, {
+"factor": 0.25,
+"piece": "mossy_ledge",
+"pos": Vector2(480, 300)
+}, {
+"factor": 0.25,
+"piece": "hanging_roots",
+"pos": Vector2(480, 345)
+}, {
+"factor": 0.3,
+"flip": true,
+"piece": "mossy_ledge",
+"pos": Vector2(150, 470)
+}, {
+"factor": 0.3,
+"piece": "hanging_roots",
+"pos": Vector2(150, 515)
+}, {
+"factor": 0.22,
+"flip": true,
+"piece": "mossy_ledge",
+"pos": Vector2(500, 640)
+}, {
+"factor": 0.28,
+"piece": "mossy_ledge",
+"pos": Vector2(170, 820)
+}, {
+"factor": 0.28,
+"piece": "stalactite_cluster",
+"pos": Vector2(170, 865)
+}, {
+"factor": 0.25,
+"piece": "mossy_ledge",
+"pos": Vector2(480, 930)
+}, {
+"factor": 0.2,
+"piece": "stone_arch",
+"pos": Vector2(320, 1050)
+}, {
+"factor": 0.3,
+"piece": "rock_pillar",
+"pos": Vector2(80, 1050)
+}, {
+"factor": 0.45,
+"piece": "mushroom_grove",
+"pos": Vector2(300, 1050)
+}, {
+"factor": 0.5,
+"piece": "crystal_cluster",
+"pos": Vector2(560, 1050)
+}]
 spawns = [{
 "id": "bat",
 "pos": Vector2(450, 500)

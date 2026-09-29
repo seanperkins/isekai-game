@@ -23,9 +23,24 @@ const VIEW := Vector2(640, 360)
 
 var _biome := ""
 
-## Where a prop authored at `pos` is drawn for a camera centred on `camera`.
-static func prop_position(pos: Vector2, camera: Vector2, factor: float) -> Vector2:
-	return camera + factor * (pos - camera)
+## Where a prop authored at `pos` is drawn for a camera centred on `camera`. `ref` is the camera centre
+## at which the prop appears exactly at `pos` (by default: the camera is right on it). It drifts by
+## (1 - factor) of the camera's move away from `ref`: factor 1 moves with the world, 0 stays glued.
+static func prop_position(pos: Vector2, camera: Vector2, factor: float, ref := Vector2.INF) -> Vector2:
+	if ref == Vector2.INF:
+		ref = pos
+	return pos + (1.0 - factor) * (camera - ref)
+
+## The camera centre a prop authored at `pos` (local room px) is seen at exactly `pos` from: the camera
+## as close to it as the room lets it get. A one-screen room's camera cannot move up or down, so its
+## props never drift vertically; a tall room's ceiling props sit at the ceiling when you are there.
+## `room_size` zero means "no limit" (the camera can be right on the prop).
+static func ref_camera(pos: Vector2, room_size: Vector2) -> Vector2:
+	if room_size == Vector2.ZERO:
+		return pos
+	var lo := VIEW / 2.0
+	var hi := room_size - VIEW / 2.0
+	return Vector2(clampf(pos.x, lo.x, maxf(lo.x, hi.x)), clampf(pos.y, lo.y, maxf(lo.y, hi.y)))
 
 static func z_for(factor: float) -> int:
 	var t := inverse_lerp(FACTOR_MIN, FACTOR_MAX, clampf(factor, FACTOR_MIN, FACTOR_MAX))
@@ -41,7 +56,7 @@ static func tint(factor: float, haze: Color) -> Color:
 
 ## Builds a `Dressing` node under `room` from the room's entries, or returns null when the biome has no
 ## piece library. Entries with an unknown piece or no valid factor are skipped; no more than MAX_PROPS.
-static func build(room: Node2D, biome: String, dressing: Array) -> SetDressing:
+static func build(room: Node2D, biome: String, dressing: Array, room_size := Vector2.ZERO) -> SetDressing:
 	if not DressingLib.has_biome(biome):
 		return null
 	var node := SetDressing.new()
@@ -72,6 +87,7 @@ static func build(room: Node2D, biome: String, dressing: Array) -> SetDressing:
 			"bottom":
 				s.offset = Vector2(0.0, -h / 2.0)
 		s.set_meta("pos", e["pos"] as Vector2)
+		s.set_meta("ref", ref_camera(e["pos"] as Vector2, room_size))
 		s.set_meta("factor", f)
 		node.add_child(s)
 		built += 1
@@ -89,6 +105,7 @@ func follow(camera: Vector2) -> void:
 	var view := Rect2(camera - VIEW / 2.0, VIEW).grow(CULL_MARGIN)
 	for s in get_children():
 		var sprite := s as Sprite2D
-		var at := prop_position(origin + (sprite.get_meta("pos") as Vector2), camera, float(sprite.get_meta("factor")))
+		var at := prop_position(origin + (sprite.get_meta("pos") as Vector2), camera, float(sprite.get_meta("factor")),
+			origin + (sprite.get_meta("ref") as Vector2))
 		sprite.global_position = at
 		sprite.visible = view.has_point(at)

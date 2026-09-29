@@ -207,3 +207,42 @@ func test_the_validator_rejects_too_many_props_and_dressing_with_no_library() ->
 	d.area = "nowhere"
 	assert_gt(WorldValidator.validate({"T1": d}).size(), 0, "no piece library for that biome")
 	assert_eq(WorldValidator.validate({"T1": _def([])}).size(), 0, "no dressing is fine")
+
+# --- the reference camera: as close as the room lets the camera get ---
+
+func test_the_reference_is_the_prop_clamped_to_where_the_camera_can_go() -> void:
+	# a one-screen room: the camera is stuck at its centre, so every prop's reference is that centre in y
+	var origin := Vector2(1000, 500)
+	var size := Vector2(640, 360)
+	assert_eq(SetDressing.ref_camera(Vector2(100, 40), size), Vector2(320, 180))
+	assert_eq(SetDressing.ref_camera(Vector2(400, 300), size), Vector2(320, 180))
+	# a 2x3 screen room: the camera roams 320..960 across and 180..900 down
+	var big := Vector2(1280, 1080)
+	assert_eq(SetDressing.ref_camera(Vector2(600, 100), big), Vector2(600, 180), "near the ceiling: as close as the top allows")
+	assert_eq(SetDressing.ref_camera(Vector2(50, 500), big), Vector2(320, 500), "near the left wall")
+	assert_eq(SetDressing.ref_camera(Vector2(700, 540), big), Vector2(700, 540), "in the middle it can be right on it")
+	assert_eq(origin, origin)
+
+func test_in_a_one_screen_room_props_never_drift_vertically() -> void:
+	var room := _room(Vector2(0, 0))
+	var node := SetDressing.build(room, "test", [
+		{"piece": "orb", "pos": Vector2(320, 300), "factor": 0.2},
+		{"piece": "orb", "pos": Vector2(320, 300), "factor": 0.8}], Vector2(640, 360))
+	node.follow(Vector2(320, 180))
+	for s in node.get_children():
+		assert_almost_eq((s as Sprite2D).global_position.y, 300.0, 0.001, "the camera cannot move up or down, so nor do they")
+
+func test_a_ceiling_prop_sits_at_the_ceiling_when_the_camera_is_at_the_top_of_a_tall_room() -> void:
+	var room := _room(Vector2(0, 0))
+	var node := SetDressing.build(room, "test", [{"piece": "pole", "pos": Vector2(300, 60), "factor": 0.25}], Vector2(640, 1080))
+	node.follow(Vector2(320, 180))  # the camera at the top of the room
+	assert_almost_eq((node.get_child(0) as Sprite2D).global_position.y, 60.0, 0.001)
+	# ...and as the camera goes down it moves up the screen at a quarter of the world's speed
+	node.follow(Vector2(320, 480))
+	assert_almost_eq((node.get_child(0) as Sprite2D).global_position.y, 60.0 + 0.75 * (480.0 - 180.0), 0.001)
+
+func test_a_mid_room_prop_appears_at_its_position_as_the_camera_passes() -> void:
+	var room := _room(Vector2(0, 0))
+	var node := SetDressing.build(room, "test", [{"piece": "orb", "pos": Vector2(320, 540), "factor": 0.4}], Vector2(640, 1080))
+	node.follow(Vector2(320, 540))
+	assert_almost_eq((node.get_child(0) as Sprite2D).global_position.y, 540.0, 0.001)

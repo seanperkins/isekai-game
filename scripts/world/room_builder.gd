@@ -116,7 +116,7 @@ static func build_room(def: RoomDef, ctx: Dictionary) -> Node2D:
 		TerrainLayers.build(node, def.area, size)
 		TerrainLayers.back_wall(node, def.area, size)
 		TerrainMotes.build(node, size, def.area)
-		SetDressing.build(node, def.area, def.dressing)
+		SetDressing.build(node, def.area, def.dressing, size)
 	else:
 		_backdrop(node, size)
 	var solids: Array = []
