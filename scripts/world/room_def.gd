@@ -18,6 +18,8 @@ const NO_START := Vector2(-1, -1)
 ## Interior solids (Rect2, local px). Boundary walls and the floor are generated.
 @export var solids: Array = []
 @export var decor: Array = []
+## Scenery behind the play plane: [{"piece", "pos", "factor", optional "flip"}] (see SetDressing).
+@export var dressing: Array = []
 ## [{"id": creature id, "pos": Vector2}]
 @export var spawns: Array = []
 ## [{"edge", "from", "to", "room", optional "gate", optional "shortcut"}]
