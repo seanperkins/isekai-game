@@ -4,6 +4,13 @@ extends GutTest
 
 var rooms := {}
 
+## The full parallax stack is off in the shipped game for now (RoomBuilder.simple_layers); these tests keep it working.
+func before_each() -> void:
+	RoomBuilder.simple_layers = false
+
+func after_each() -> void:
+	RoomBuilder.simple_layers = true
+
 func before_all() -> void:
 	rooms = World.load_rooms("res://data/rooms")
 

@@ -120,7 +120,19 @@ func test_game_is_lit_framed_and_fully_sprited() -> void:
 		assert_not_null(_sprite(n).texture, str(n))
 	assert_false(game.find_children("*", "ColorRect", true, false).any(func(r): return r.get_parent() is Enemy or r.get_parent() is Player))
 
-func test_cave_backdrop_is_a_depth_stack_behind_the_room() -> void:
+func test_cave_backdrop_is_a_background_behind_the_room() -> void:
+	var game = load("res://scenes/main.tscn").instantiate()
+	add_child_autofree(game)
+	await wait_physics_frames(1)
+	var room: Node2D = game.world.room
+	var wall: Sprite2D = room.get_node("BackWall")
+	assert_lt(wall.z_index, 0)
+	assert_eq(wall.texture, TerrainArt.tile("cave", "backwall"))
+	assert_not_null(room.get_node_or_null("BackdropBase"))
+	assert_gt(game.AMBIENT.v, 0.5)
+
+func test_cave_backdrop_is_a_depth_stack_behind_the_room_when_the_full_stack_is_on() -> void:
+	RoomBuilder.simple_layers = false
 	var game = load("res://scenes/main.tscn").instantiate()
 	add_child_autofree(game)
 	await wait_physics_frames(1)
@@ -131,3 +143,4 @@ func test_cave_backdrop_is_a_depth_stack_behind_the_room() -> void:
 	for layer in ["far_haze", "far_rock", "mid_rock", "foreground"]:
 		assert_not_null(room.get_node_or_null(layer), layer)
 	assert_gt(game.AMBIENT.v, 0.5)
+	RoomBuilder.simple_layers = true

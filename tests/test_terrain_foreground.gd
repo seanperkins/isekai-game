@@ -2,6 +2,13 @@ extends GutTest
 ## The foreground frame is scenery over the top of the view, not over the play band: ferns, crystals
 ## and glowing mushrooms down the sides used to draw (see-through) over creatures and ledges.
 
+## The full parallax stack is off in the shipped game for now (RoomBuilder.simple_layers); these tests keep it working.
+func before_each() -> void:
+	RoomBuilder.simple_layers = false
+
+func after_each() -> void:
+	RoomBuilder.simple_layers = true
+
 const BIOMES := ["cave", "grotto", "deep", "flooded"]
 
 func test_the_play_band_of_every_biomes_frame_is_fully_transparent() -> void:

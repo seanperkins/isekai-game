@@ -1,6 +1,13 @@
 extends GutTest
 ## Terrain art, the painter and the parallax stack.
 
+## The full parallax stack is off in the shipped game for now (RoomBuilder.simple_layers); these tests keep it working.
+func before_each() -> void:
+	RoomBuilder.simple_layers = false
+
+func after_each() -> void:
+	RoomBuilder.simple_layers = true
+
 const BIOMES := ["cave", "grotto", "flooded"]
 const LAYERS := ["far_haze", "far_rock", "mid_rock", "foreground"]
 const PIECES := ["fill_a", "backwall", "cap_top", "cap_bottom", "edge_left", "ledge_l", "ledge_m", "ledge_r"]

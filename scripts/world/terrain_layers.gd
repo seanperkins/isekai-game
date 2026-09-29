@@ -148,6 +148,20 @@ static func build(room: Node2D, biome: String, size: Vector2 = Vector2(640, 360)
 		layer.setup(tex, STACK[piece][0], STACK[piece][1], UNLIT_MASK, tint, size.y)
 		room.add_child(layer)
 
+## The simple look's back wall: the biome's tile over a flat dark base, so the room has one quiet background and
+## the terrain is the only other layer.
+const SIMPLE_WALL_TINT := Color(0.7, 0.66, 0.85, 0.55)
+
+static func simple_background(room: Node2D, biome: String, size: Vector2) -> void:
+	var base := ColorRect.new()
+	base.name = "BackdropBase"
+	base.color = TerrainArt.background_color(biome)
+	base.size = size
+	base.z_index = -21
+	room.add_child(base)
+	if back_wall(room, biome, size):
+		(room.get_node("BackWall") as Sprite2D).modulate = SIMPLE_WALL_TINT
+
 ## The back wall is dimmed and mostly transparent: the parallax layers behind it show through, and
 ## the platforms in front of it stay easy to read.
 const BACK_WALL_TINT := Color(0.62, 0.56, 0.78, 0.25)

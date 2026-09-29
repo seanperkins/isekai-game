@@ -4,6 +4,13 @@ extends GutTest
 ## the ceiling fringe at the room's top and the floor formations at its bottom, and no camera
 ## position ever exposes a gap.
 
+## The full parallax stack is off in the shipped game for now (RoomBuilder.simple_layers); these tests keep it working.
+func before_each() -> void:
+	RoomBuilder.simple_layers = false
+
+func after_each() -> void:
+	RoomBuilder.simple_layers = true
+
 const VIEW := Vector2(640, 360)
 
 func _src(biome: String = "cave", piece: String = "far_rock") -> Texture2D:

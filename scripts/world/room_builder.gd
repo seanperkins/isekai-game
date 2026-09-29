@@ -106,6 +106,10 @@ static func _piece(band: Rect2, along_x: bool, a: float, b: float) -> Rect2:
 		return Rect2(a, band.position.y, b - a, band.size.y)
 	return Rect2(band.position.x, a, band.size.x, b - a)
 
+## A painted room has two layers for now: the background and the foreground terrain. Off, it also builds the
+## parallax stack, the foreground frame, the motes and the room's set dressing (all still in code, and tested).
+static var simple_layers := true
+
 const PAINTED_LIGHT := 0.55
 const BACKDROP := Color(0.06, 0.06, 0.12)
 const BACKDROP_TINT := Color(0.22, 0.21, 0.34)  # far cave wall, pushed back
@@ -118,14 +122,17 @@ static func build_room(def: RoomDef, ctx: Dictionary) -> Node2D:
 	node.name = def.id
 	node.position = def.world_rect().position
 	var size := def.pixel_size()
-	# A biome with terrain art gets the parallax stack, a back wall and painted solids; any other
-	# room keeps the flat backdrop and stretched tiles.
+	# A biome with terrain art gets a background and painted solids (and, with simple_layers off, the parallax
+	# stack, motes and dressing too); any other room keeps the flat backdrop and stretched tiles.
 	var painted := TerrainArt.has_biome(def.area)
 	if painted:
-		TerrainLayers.build(node, def.area, size)
-		TerrainLayers.back_wall(node, def.area, size)
-		TerrainMotes.build(node, size, def.area)
-		SetDressing.build(node, def.area, def.dressing, size)
+		if simple_layers:
+			TerrainLayers.simple_background(node, def.area, size)
+		else:
+			TerrainLayers.build(node, def.area, size)
+			TerrainLayers.back_wall(node, def.area, size)
+			TerrainMotes.build(node, size, def.area)
+			SetDressing.build(node, def.area, def.dressing, size)
 	else:
 		_backdrop(node, size)
 	var solids: Array = []

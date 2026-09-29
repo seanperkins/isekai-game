@@ -39,6 +39,18 @@ const BACKDROP_DIM := {
 	"flooded": 0.68,
 }
 
+## The flat colour behind a biome's back-wall tile in the simple two-layer look: dark, so the platforms read,
+## and tinted toward the biome so each one feels different.
+const BACKGROUND := {
+	"cave": Color(0.10, 0.08, 0.19),
+	"deep": Color(0.06, 0.06, 0.12),
+	"grotto": Color(0.06, 0.13, 0.12),
+	"flooded": Color(0.04, 0.10, 0.17),
+}
+
+static func background_color(biome: String) -> Color:
+	return BACKGROUND.get(biome, Color(0.06, 0.06, 0.12))
+
 static func backdrop_dim(biome: String) -> float:
 	return BACKDROP_DIM.get(biome, 1.0)
 
