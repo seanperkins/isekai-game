@@ -46,3 +46,6 @@ Gamepad: left stick / D-pad move (stick also aims) · A jump · X tackle · B ho
 - [ ] The slime is about twice its old size and drawn frame by frame: idle breathes, run is a four-frame squelch, jump/fall/land squash and stretch, the tackle stretches forward.
 - [ ] Hold down (S / ↓ / stick down) on the floor: the slime flattens into a puddle at half speed, and un-squashes when you let go. It can't stand or jump under a low ceiling.
 - [ ] Hold K/B next to a stunned enemy: the slime drapes over it and the enemy shrinks inside until it's eaten; letting go reveals the enemy again.
+- [ ] Every creature is drawn frame by frame: bats flap and hover before a dive, toads hop, puff up, then spit, lizards wind up, charge and pant, spiders hang, drop and crawl. A stunned creature has its own dazed pose.
+- [ ] Killing a creature plays a death that matches the blow: a tackle knocks it back and it tumbles onto its back, Poison Breath melts it green, Water Blade cuts it in two. It can't be eaten until it has finished falling, then the 5 s eat window starts.
+- [ ] Contact hurts where the slime's drawn skin meets the creature's drawn body (the slime is wider than its old box); a spit glob that lands on a flat, spread slime still hits it, one passing well above misses.

@@ -22,8 +22,8 @@ const HOP_SPEED := 110.0
 const GRAVITY := 900.0
 const POISON_TINT := Color(0.45, 1.0, 0.3)
 const POISON_FLATTEN := 0.15
-const BLADE_SLIDE := 14.0
-const BLADE_FALL := 40.0
+const BLADE_SLIDE := 10.0
+const BLADE_GRAVITY := 500.0
 const CUT_SHADER := preload("res://scripts/enemies/blade_cut.gdshader")
 
 var cause := "other"
@@ -35,6 +35,10 @@ var _base_y := 0.0
 var _spin_dir := 1.0
 var _halves: Array[Sprite2D] = []
 var _normal := Vector2.UP
+var _slide_x := 1.0  # +1 or -1: which way the upper half slides off
+var _fall: Array[float] = [0.0, 0.0]
+var _fall_v: Array[float] = [0.0, 0.0]
+var _fall_max: Array[float] = [0.0, 0.0]
 
 static func duration(for_cause: String) -> float:
 	match for_cause:
@@ -132,6 +136,10 @@ func _begin_blade(from: Vector2) -> void:
 	if _normal.y > 0.0:
 		_normal = -_normal  # "side +1" is the upper half
 	_sprite.visible = false
+	var sep := _normal.x if absf(_normal.x) > 0.3 else dir.x
+	_slide_x = 1.0 if sep >= 0.0 else -1.0
+	# The half on the normal's side (the upper one) drops onto the floor; the other is already on it.
+	_fall_max = [_sprite.texture.get_height() / 2.0 * absf(_normal.y), 0.0]
 	for side in [1.0, -1.0]:
 		var half := Sprite2D.new()
 		half.texture = _sprite.texture
@@ -149,9 +157,10 @@ func _step_blade(delta: float, k: float) -> void:
 	for i in _halves.size():
 		var side := 1.0 if i == 0 else -1.0
 		var h := _halves[i]
-		h.position += _normal * side * BLADE_SLIDE * delta / BLADE_SECONDS
-		h.position.y += BLADE_FALL * k * delta / BLADE_SECONDS * 2.0
-		h.rotation = side * 0.35 * k
+		_fall_v[i] += BLADE_GRAVITY * delta
+		_fall[i] = minf(_fall_max[i], _fall[i] + _fall_v[i] * delta)
+		h.position = Vector2(_sprite.position.x + side * _slide_x * BLADE_SLIDE * minf(1.0, k * 2.0), _base_y + _fall[i])
+		h.rotation = side * 0.2 * minf(1.0, k * 2.0)
 
 # --- ending ---
 

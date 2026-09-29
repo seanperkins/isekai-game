@@ -128,6 +128,23 @@ func test_a_blade_kill_shows_two_halves_that_slide_apart_and_leave_nothing() -> 
 	assert_true(_sprite(e).visible)
 	assert_null(_fx(e))
 
+func test_the_blade_halves_come_to_rest_on_the_floor_not_through_it() -> void:
+	var e := _enemy()
+	await wait_physics_frames(2)
+	var base_y := _sprite(e).position.y
+	var tex_h := float(_sprite(e).texture.get_height())
+	e.receive_hit(9999, "physical", Vector2(-40, 0), "blade")
+	var halves: Array = []
+	for c in _fx(e).get_children():
+		if c is Sprite2D:
+			halves.append(c)
+	await wait_seconds(DeathFx.BLADE_SECONDS * 0.9)
+	for h in halves:
+		assert_lte(h.position.y, base_y + tex_h / 2.0 + 0.5, "no half sinks below where the body's bottom was")
+	var grounded: Sprite2D = halves[0] if halves[0].position.y < halves[1].position.y else halves[1]
+	assert_lte(grounded.position.y, base_y + 0.5, "the lower half never moves: it is already on the floor")
+	await _run_out(e)
+
 func test_a_poison_kill_melts_toward_the_floor_and_turns_green() -> void:
 	var e := _enemy()
 	await wait_physics_frames(2)
