@@ -93,21 +93,22 @@ var _shapes: SlimeShapes
 var _hurt_t := 0.0
 var _anim_t := 0.0
 var _alert := 0.0
-var _spit_windup := 0.0
-var _charge := ""  # "", "windup", "charge", "rest"
-var _charge_t := 0.0
-var _swoop := "idle"  # idle, hover, warn, dive, climb
-var _swoop_t := 0.0
+## Which behaviour this creature has, resolved once in setup() from what its def and skills say (the precedence the
+## old _act chain used): the vine snake by id, then a ceiling walker, a drifter, a flier, an armored charger, a spitter.
+enum Kind { WALKER, CHARGER, SPITTER, SWOOPER, DROPPER, DRIFTER, SNAKE }
+var kind := Kind.WALKER
+## The one live behaviour state, its timer and its aim. Tokens per kind: swooper idle/hover/warn/dive/climb; charger and
+## snake ""/windup/charge/rest; spitter ""/puff; drifter ""/flash; walker and dropper never write it.
+var _state := ""
+var _state_t := 0.0
+var _aim := Vector2.ZERO
 ## Why the last blow landed ("tackle", "poison", "blade", "other") and where it came from.
 var _cause := ""
 var _killed_from := Vector2.INF
-var _dive_dir := Vector2.ZERO
 var _rng := RandomNumberGenerator.new()
 var _home_y := 0.0
 var _anchor := Vector2.ZERO
 var _puff_t := PUFF_INTERVAL
-var _puff_windup := 0.0
-var _lunge_dir := Vector2.ZERO
 ## The animation state _draw_sheet_frame last chose (EnemyState.pick), "" for a creature with no sheet.
 var _anim_state := ""
 
@@ -126,6 +127,8 @@ func setup(p_def: CreatureDef, skill_defs_by_id: Dictionary) -> void:
 	health = Health.new(stats.get_stat("max_hp"))  # no emit_event: actor boundary
 	health.died.connect(_on_died)
 	_on_ceiling = capabilities.has("ceiling_walk")
+	kind = _resolve_kind()
+	_state = "idle" if kind == Kind.SWOOPER else ""
 	add_to_group("actors")
 	add_to_group("predatable")
 	add_to_group("inspectable")
@@ -137,6 +140,21 @@ func seed_rng(n: int) -> void:
 ## The animation state the enemy is playing (the EnemyState.pick result), "" for a creature with no sheet.
 func anim_state() -> String:
 	return _anim_state
+
+func _resolve_kind() -> Kind:
+	if def.id == Sources.VINE_SNAKE:
+		return Kind.SNAKE
+	if _on_ceiling:
+		return Kind.DROPPER
+	if def.drifter:
+		return Kind.DRIFTER
+	if capabilities.has("flight"):
+		return Kind.SWOOPER
+	if def.armored_charger:
+		return Kind.CHARGER
+	if _spit_damage > 0:
+		return Kind.SPITTER
+	return Kind.WALKER
 
 func _ready() -> void:
 	_home_x = global_position.x
@@ -211,10 +229,9 @@ func _on_died() -> void:
 	if def.predatable:
 		status.die()  # the death effect ends in down() and starts the eat window
 		_become_clippable()
-		_charge = ""
-		_swoop = "idle"
-		_spit_windup = 0.0
-		_puff_windup = 0.0
+		_clear_inactive()
+		if kind == Kind.SWOOPER:
+			_state = "idle"  # a bat killed in warn must not flash its warning while it lies downed
 		_start_death_fx()
 	else:
 		status.consume()  # Plan 3 turns the serpent's death into victory
@@ -249,9 +266,7 @@ func _physics_process(delta: float) -> void:
 		_act(player, delta)
 	elif status.state != EnemyStatus.DYING:  # a death effect owns the body while it plays
 		velocity.x = 0.0
-		_charge = ""
-		_spit_windup = 0.0
-		_puff_windup = 0.0
+		_clear_inactive()
 	var stunned := status.state == EnemyStatus.STUNNED
 	var flying := capabilities.has("flight") and active
 	var hovering := def.drifter and (active or stunned)
@@ -267,6 +282,12 @@ func _physics_process(delta: float) -> void:
 		player.receive_hit(stats.get_stat("atk"), "physical", global_position)
 	_hurt_t = maxf(0.0, _hurt_t - delta)
 	_update_visual(delta)
+
+## A stun, a down or a missing player drops whatever was pending, except a bat's swoop (it resumes with its remaining
+## time and its RNG stream). Never touches the timer or the aim.
+func _clear_inactive() -> void:
+	if kind != Kind.SWOOPER:
+		_state = ""
 
 ## True when this enemy's box touches the player's. The bodies block each other, so they can only
 ## touch, never overlap: the margin bridges that. A player with no body box (a test stub) falls back
@@ -298,11 +319,13 @@ func cut_corpse() -> Node2D:
 func is_alert() -> bool:
 	return _alert > 0.0
 
+## "", windup, charge or rest for a charger or a snake; "" for every other kind.
 func charge_state() -> String:
-	return _charge
+	return _state if kind == Kind.CHARGER or kind == Kind.SNAKE else ""
 
+## idle, hover, warn, dive or climb for a bat; "idle" for every other kind.
 func swoop_state() -> String:
-	return _swoop
+	return _state if kind == Kind.SWOOPER else "idle"
 
 ## True when no rock lies between this enemy and `target`.
 func can_see(target: Node2D) -> bool:
@@ -329,7 +352,7 @@ func frame_name() -> String:
 		"bat":
 			return "bat_2" if alternate else "bat_1"
 		"toad":
-			return "toad_spit" if _spit_windup > 0.0 or _spit_cd > SPIT_COOLDOWN - SPIT_POSE_SECONDS else "toad_idle"
+			return "toad_spit" if _state == "puff" or _spit_cd > SPIT_COOLDOWN - SPIT_POSE_SECONDS else "toad_idle"
 		"lizard":
 			return "lizard_2" if alternate and absf(velocity.x) > 1.0 else "lizard_1"
 		"spider":
@@ -353,7 +376,7 @@ func _update_visual(delta: float = 0.0) -> void:
 		_sprite.modulate = Color.WHITE
 
 func _draw_sheet_frame(delta: float) -> void:
-	var state := EnemyState.pick(def.id, status.state, _charge, _swoop, _spit_windup > 0.0,
+	var state := EnemyState.pick(def.id, status.state, charge_state(), swoop_state(), _state == "puff",
 		_spit_cd > SPIT_COOLDOWN - SPIT_POSE_SECONDS, _on_ceiling, is_on_floor(), absf(velocity.x) > 1.0, _hurt_t > 0.0)
 	_anim_state = state
 	_animator.play(state)
@@ -366,32 +389,44 @@ func _draw_sheet_frame(delta: float) -> void:
 	_shapes.refresh(_sheet, frame, facing < 0)
 
 func telegraphing() -> bool:
-	return _charge == "windup" or _swoop == "warn" or _spit_windup > 0.0 or _puff_windup > 0.0
+	match kind:
+		Kind.CHARGER, Kind.SNAKE:
+			return _state == "windup"
+		Kind.SWOOPER:
+			return _state == "warn"
+		Kind.SPITTER:
+			return _state == "puff"
+		Kind.DRIFTER:
+			return _state == "flash"
+	return false
 
 func _speed() -> float:
 	return BASE_SPEED * stats.get_stat("spd") / 100.0 * (0.5 if _slow > 0.0 else 1.0)
 
 func _act(player: Node2D, delta: float) -> void:
 	var to_player: Vector2 = player.global_position - global_position
-	if def.id == Sources.VINE_SNAKE:
-		_snake_act(player, to_player, delta)
-		return
-	if _on_ceiling:
-		velocity = Vector2.ZERO
-		if is_alert() and absf(to_player.x) < 40.0 and to_player.y > 0.0:
-			_on_ceiling = false  # drop on prey
-		return
-	if def.drifter:
-		_drift_act(player, to_player, delta)
-		return
-	if capabilities.has("flight"):
-		_swoop_act(player, delta)
-		return
-	if def.armored_charger and _charger_act(to_player, delta):
-		return
-	if _spit_damage > 0 and _spitter_act(player, to_player, delta):
-		return
-	_walk(to_player)
+	match kind:
+		Kind.SNAKE:
+			_snake_act(player, to_player, delta)
+		Kind.DROPPER:
+			if _on_ceiling:
+				velocity = Vector2.ZERO
+				if is_alert() and absf(to_player.x) < 40.0 and to_player.y > 0.0:
+					_on_ceiling = false  # drop on prey: it walks from the next tick
+			else:
+				_walk(to_player)
+		Kind.DRIFTER:
+			_drift_act(player, to_player, delta)
+		Kind.SWOOPER:
+			_swoop_act(player, delta)
+		Kind.CHARGER:
+			if not _charger_act(to_player, delta):
+				_walk(to_player)
+		Kind.SPITTER:
+			if not _spitter_act(player, to_player, delta):
+				_walk(to_player)
+		_:
+			_walk(to_player)
 
 ## Chase while alert (holding at a ledge or wall rather than walking off it), else patrol home.
 func _walk(to_player: Vector2) -> void:
@@ -422,33 +457,33 @@ func _blocked_ahead() -> bool:
 
 ## Wind-up, charge, rest. Returns true while the charge sequence owns movement.
 func _charger_act(to_player: Vector2, delta: float) -> bool:
-	match _charge:
+	match _state:
 		"windup":
 			velocity.x = 0.0
-			_charge_t -= delta
-			if _charge_t <= 0.0:
-				_charge = "charge"
-				_charge_t = CHARGE_SECONDS
+			_state_t -= delta
+			if _state_t <= 0.0:
+				_state = "charge"
+				_state_t = CHARGE_SECONDS
 			return true
 		"charge":
-			_charge_t -= delta
-			if _charge_t <= 0.0 or _blocked_ahead():
-				_charge = "rest"
-				_charge_t = CHARGE_REST
+			_state_t -= delta
+			if _state_t <= 0.0 or _blocked_ahead():
+				_state = "rest"
+				_state_t = CHARGE_REST
 				velocity.x = 0.0
 			else:
 				velocity.x = facing * _speed() * CHARGE_MULT
 			return true
 		"rest":
 			velocity.x = 0.0
-			_charge_t -= delta
-			if _charge_t <= 0.0:
-				_charge = ""
+			_state_t -= delta
+			if _state_t <= 0.0:
+				_state = ""
 			return true
 	var ahead := to_player.x * facing
 	if is_alert() and absf(to_player.y) < CHARGE_LEVEL and ahead > TURN_LOCK_RANGE and ahead <= CHARGE_RANGE:
-		_charge = "windup"
-		_charge_t = CHARGE_WINDUP
+		_state = "windup"
+		_state_t = CHARGE_WINDUP
 		velocity.x = 0.0
 		return true
 	return false
@@ -466,67 +501,71 @@ func _drift_act(player: Node2D, to_player: Vector2, delta: float) -> void:
 	velocity.y = clampf((target_y - global_position.y) * 2.0, -60.0, 60.0)
 	if to_player.length() > PUFF_RANGE or not can_see(player):  # no puffs through rock
 		_puff_t = PUFF_INTERVAL
-		_puff_windup = 0.0
+		_state = ""
 		return
-	if _puff_windup > 0.0:
-		_puff_windup -= delta
-		if _puff_windup <= 0.0:
+	if _state == "flash":
+		_state_t -= delta
+		if _state_t <= 0.0:
 			var puff := SporePuff.new()
 			get_parent().add_child(puff)
 			puff.launch(global_position + Vector2(0.0, 12.0))  # under itself
 			EventBus.world_event.emit("spore_puff", {"pos": global_position})
 			_puff_t = PUFF_INTERVAL
+			_state = ""
 		return
 	_puff_t -= delta
 	if _puff_t <= PUFF_WINDUP:
-		_puff_windup = PUFF_WINDUP
+		_state = "flash"
+		_state_t = PUFF_WINDUP
 
 ## Tethered to its anchor: coil when prey passes under, lunge along the line to where it was, retreat, hide.
 func _snake_act(player: Node2D, to_player: Vector2, delta: float) -> void:
-	_charge_t -= delta
-	match _charge:
+	_state_t -= delta
+	match _state:
 		"windup":
 			velocity = Vector2.ZERO
-			if _charge_t <= 0.0:
-				_lunge_dir = (player.global_position - global_position).normalized()
-				_charge = "charge"
-				_charge_t = LUNGE_SECONDS
+			if _state_t <= 0.0:
+				_aim = (player.global_position - global_position).normalized()
+				_state = "charge"
+				_state_t = LUNGE_SECONDS
 		"charge":
-			velocity = _lunge_dir * LUNGE_SPEED
-			if _charge_t <= 0.0 or global_position.distance_to(_anchor) >= LUNGE_REACH:
-				_charge = "rest"
+			velocity = _aim * LUNGE_SPEED
+			if _state_t <= 0.0 or global_position.distance_to(_anchor) >= LUNGE_REACH:
+				_state = "rest"
 		"rest":
 			var back := _anchor - global_position
 			if back.length() <= 3.0:
 				global_position = _anchor
 				velocity = Vector2.ZERO
-				_charge = ""
+				_state = ""
 			else:
 				velocity = back.normalized() * RETREAT_SPEED
 		_:
 			velocity = Vector2.ZERO
 			if global_position.distance_to(_anchor) > 3.0:
-				_charge = "rest"  # a stun (which clears the charge) left it off its anchor: go back before anything else
+				_state = "rest"  # a stun (which clears the charge) left it off its anchor: go back before anything else
 			elif is_alert() and absf(to_player.x) < LUNGE_TRIGGER_X and to_player.y > 0.0 and to_player.y <= LUNGE_TRIGGER_Y:
-				_charge = "windup"
-				_charge_t = COIL_SECONDS
+				_state = "windup"
+				_state_t = COIL_SECONDS
 	if absf(velocity.x) > 1.0:
 		facing = 1 if velocity.x > 0.0 else -1
 
 ## Puff up, then lob a glob at where the player stands. Returns true while winding up.
 func _spitter_act(player: Node2D, to_player: Vector2, delta: float) -> bool:
-	if _spit_windup > 0.0:
+	if _state == "puff":
 		velocity.x = 0.0
-		_spit_windup -= delta
-		if _spit_windup <= 0.0:
+		_state_t -= delta
+		if _state_t <= 0.0:
 			var blob := SpitBlob.new()
 			get_parent().add_child(blob)
 			blob.launch(global_position + Vector2(facing * 8.0, -6.0), player.global_position, _spit_damage, SPIT_TICK, SPIT_SECONDS)
 			_spit_cd = SPIT_COOLDOWN
+			_state = ""
 		return true
 	if is_alert() and _spit_cd <= 0.0 and to_player.length() < SPIT_RANGE:
 		facing = 1 if to_player.x > 0.0 else -1
-		_spit_windup = SPIT_WINDUP
+		_state = "puff"
+		_state_t = SPIT_WINDUP
 		velocity.x = 0.0
 		return true
 	return false
@@ -534,37 +573,37 @@ func _spitter_act(player: Node2D, to_player: Vector2, delta: float) -> bool:
 ## Hover above you, flash, dive in a straight line at where you were, climb back up.
 func _swoop_act(player: Node2D, delta: float) -> void:
 	var speed := _speed()
-	_swoop_t -= delta
-	match _swoop:
+	_state_t -= delta
+	match _state:
 		"idle":
 			velocity = Vector2(0.0, sin(_anim_t * 3.3) * 20.0)
 			if is_alert():
-				_swoop = "hover"
-				_swoop_t = HOVER_SECONDS + _rng.randf() * HOVER_JITTER
+				_state = "hover"
+				_state_t = HOVER_SECONDS + _rng.randf() * HOVER_JITTER
 		"hover":
 			var spot := player.global_position + Vector2(0.0, -HOVER_HEIGHT)
 			velocity = (spot - global_position).limit_length(speed)
 			if not is_alert():
-				_swoop = "idle"
-			elif _swoop_t <= 0.0:
-				_swoop = "warn"
-				_swoop_t = WARN_SECONDS
+				_state = "idle"
+			elif _state_t <= 0.0:
+				_state = "warn"
+				_state_t = WARN_SECONDS
 		"warn":
 			velocity = Vector2.ZERO
-			if _swoop_t <= 0.0:
-				_swoop = "dive"
-				_swoop_t = DIVE_SECONDS
-				_dive_dir = (player.global_position - global_position).normalized()
+			if _state_t <= 0.0:
+				_state = "dive"
+				_state_t = DIVE_SECONDS
+				_aim = (player.global_position - global_position).normalized()
 		"dive":
-			velocity = _dive_dir * speed * DIVE_MULT
-			if _swoop_t <= 0.0 or is_on_floor() or is_on_wall():
-				_swoop = "climb"
-				_swoop_t = CLIMB_SECONDS
+			velocity = _aim * speed * DIVE_MULT
+			if _state_t <= 0.0 or is_on_floor() or is_on_wall():
+				_state = "climb"
+				_state_t = CLIMB_SECONDS
 		"climb":
-			velocity = Vector2(-_dive_dir.x * speed * 0.5, -speed * 0.8)
-			if _swoop_t <= 0.0:
-				_swoop = "hover" if is_alert() else "idle"
-				_swoop_t = HOVER_SECONDS + _rng.randf() * HOVER_JITTER
+			velocity = Vector2(-_aim.x * speed * 0.5, -speed * 0.8)
+			if _state_t <= 0.0:
+				_state = "hover" if is_alert() else "idle"
+				_state_t = HOVER_SECONDS + _rng.randf() * HOVER_JITTER
 	if absf(velocity.x) > 1.0:
 		facing = 1 if velocity.x > 0.0 else -1
 

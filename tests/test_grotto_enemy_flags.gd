@@ -57,7 +57,7 @@ func test_seed_rng_makes_a_bats_rhythm_repeatable() -> void:
 func test_telegraphing_is_public_and_true_during_a_windup() -> void:
 	var lizard := _enemy("lizard")
 	assert_false(lizard.telegraphing())
-	lizard._charge = "windup"
+	lizard._state = "windup"
 	assert_true(lizard.telegraphing())
 
 func test_anim_state_is_the_clip_pick_chose_and_empty_without_a_sheet() -> void:

@@ -158,7 +158,7 @@ func test_a_snake_stunned_away_from_its_anchor_returns_when_the_stun_ends() -> v
 	var anchor := s.global_position
 	await wait_physics_frames(3)
 	s.global_position = anchor + Vector2(30, 40)  # where a lunge or a retreat left it
-	s._charge = "charge"
+	s._state = "charge"
 	s.status.stun(1.0)
 	fake_player.global_position = Vector2(2000, 0)
 	await wait_physics_frames(int(60.0 * 1.0) + 5)
@@ -180,7 +180,8 @@ func test_a_puff_sinks_onto_a_player_standing_below_the_moth() -> void:
 
 func test_a_moth_killed_mid_windup_stops_flashing_its_warning() -> void:
 	var m := _enemy("spore_moth", Vector2(0, -100))
-	m._puff_windup = 0.3
+	m._state = "flash"
+	m._state_t = 0.3
 	assert_true(m.telegraphing())
 	m.receive_hit(99, "physical", Vector2.INF, "tackle")
 	await wait_physics_frames(3)

@@ -84,9 +84,10 @@ func _enemy(id: String) -> Enemy:
 func test_the_legacy_frame_names_read_the_behaviour_state() -> void:
 	var toad := _enemy("toad")
 	assert_eq(toad.frame_name(), "toad_idle")
-	toad._spit_windup = 0.3
+	toad._state = "puff"
+	toad._state_t = 0.3
 	assert_eq(toad.frame_name(), "toad_spit", "a toad puffing up")
-	toad._spit_windup = 0.0
+	toad._state = ""
 	toad._spit_cd = Enemy.SPIT_COOLDOWN
 	assert_eq(toad.frame_name(), "toad_spit", "and for a moment after the spit")
 	var spider := _enemy("spider")

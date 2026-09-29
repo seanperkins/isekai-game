@@ -193,7 +193,7 @@ func test_a_dying_creature_cannot_be_hit_again_or_start_a_second_effect() -> voi
 func test_a_dying_creature_runs_no_ai() -> void:
 	var lizard := _enemy("lizard", 0.0)
 	await wait_physics_frames(2)
-	lizard._charge = "windup"
+	lizard._state = "windup"
 	lizard.receive_hit(9999, "physical", Vector2(-30, 0), "other")
 	assert_eq(lizard.charge_state(), "", "a lethal blow cancels a telegraph")
 
