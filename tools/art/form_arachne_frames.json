@@ -1,0 +1,193 @@
+{
+ "canonical": "art_source/frames/slime/idle_1.png",
+ "style": "Modern pixel art with soft lighting (Style D). The first reference image is the plain blue jelly slime; keep its clean dark-blue outline, chunky readable pixels, soft inner glow and two small glossy dark eyes at the upper front right. Any further reference shows this same evolved creature or the pose to use. Side view, facing right. Draw only the creature: no ground, no shadow, no text.",
+ "frames": [
+  {
+   "name": "idle_1",
+   "width": 55,
+   "refs": [],
+   "prompt": "A spider-slime called an Arachne: an elongated violet-blue jelly body with six thin curved legs made of hardened silk along its lower sides, four tiny glowing eyes in a row above its two glossy dark eyes, and silvery web filigree inside the body. Pose and shape for this frame: The creature resting: a rounded dome slightly wider than tall, two eyes near the upper front (right), relaxed."
+  },
+  {
+   "name": "idle_2",
+   "width": 55,
+   "refs": [
+    "form_arachne/idle_1",
+    "slime/idle_2"
+   ],
+   "prompt": "A spider-slime called an Arachne: an elongated violet-blue jelly body with six thin curved legs made of hardened silk along its lower sides, four tiny glowing eyes in a row above its two glossy dark eyes, and silvery web filigree inside the body. Pose and shape for this frame: The same creature breathing out: very slightly flatter and wider (about 5 percent squash), same eyes and colours."
+  },
+  {
+   "name": "run_1",
+   "width": 58,
+   "refs": [
+    "form_arachne/idle_1",
+    "slime/run_1"
+   ],
+   "prompt": "A spider-slime called an Arachne: an elongated violet-blue jelly body with six thin curved legs made of hardened silk along its lower sides, four tiny glowing eyes in a row above its two glossy dark eyes, and silvery web filigree inside the body. Pose and shape for this frame: The same creature mid-run: leaning forward to the right and stretched slightly horizontally, the back trailing, eyes looking right."
+  },
+  {
+   "name": "run_2",
+   "width": 52,
+   "refs": [
+    "form_arachne/idle_1",
+    "slime/run_2"
+   ],
+   "prompt": "A spider-slime called an Arachne: an elongated violet-blue jelly body with six thin curved legs made of hardened silk along its lower sides, four tiny glowing eyes in a row above its two glossy dark eyes, and silvery web filigree inside the body. Pose and shape for this frame: The same creature in the run's recovery: compressed and a little taller, hunched, bouncing up."
+  },
+  {
+   "name": "run_3",
+   "width": 58,
+   "refs": [
+    "form_arachne/idle_1",
+    "slime/run_3"
+   ],
+   "prompt": "A spider-slime called an Arachne: an elongated violet-blue jelly body with six thin curved legs made of hardened silk along its lower sides, four tiny glowing eyes in a row above its two glossy dark eyes, and silvery web filigree inside the body. Pose and shape for this frame: The same creature stretched forward again like the first run frame, with the trailing back edge pulled in a little."
+  },
+  {
+   "name": "run_4",
+   "width": 52,
+   "refs": [
+    "form_arachne/idle_1",
+    "slime/run_4"
+   ],
+   "prompt": "A spider-slime called an Arachne: an elongated violet-blue jelly body with six thin curved legs made of hardened silk along its lower sides, four tiny glowing eyes in a row above its two glossy dark eyes, and silvery web filigree inside the body. Pose and shape for this frame: The same creature compressed and popping up slightly higher than the resting pose."
+  },
+  {
+   "name": "rise",
+   "width": 48,
+   "refs": [
+    "form_arachne/idle_1",
+    "slime/rise"
+   ],
+   "prompt": "A spider-slime called an Arachne: an elongated violet-blue jelly body with six thin curved legs made of hardened silk along its lower sides, four tiny glowing eyes in a row above its two glossy dark eyes, and silvery web filigree inside the body. Pose and shape for this frame: The same creature jumping upward: only moderately stretched, about 25 percent taller than the resting dome and a little narrower, with a soft rounded top like a tall egg. No point, no cone, no spike on top. Eyes wide."
+  },
+  {
+   "name": "fall",
+   "width": 52,
+   "refs": [
+    "form_arachne/idle_1",
+    "slime/fall"
+   ],
+   "prompt": "A spider-slime called an Arachne: an elongated violet-blue jelly body with six thin curved legs made of hardened silk along its lower sides, four tiny glowing eyes in a row above its two glossy dark eyes, and silvery web filigree inside the body. Pose and shape for this frame: The same creature falling: about 15 percent taller than the resting dome, a smooth rounded dome with a slightly wider bottom. No horns, no ears, no points anywhere on the outline. Eyes wide."
+  },
+  {
+   "name": "land",
+   "width": 65,
+   "refs": [
+    "form_arachne/idle_1",
+    "slime/land"
+   ],
+   "prompt": "A spider-slime called an Arachne: an elongated violet-blue jelly body with six thin curved legs made of hardened silk along its lower sides, four tiny glowing eyes in a row above its two glossy dark eyes, and silvery web filigree inside the body. Pose and shape for this frame: The same creature landing: squashed very flat and wide, eyes squinting."
+  },
+  {
+   "name": "hurt",
+   "width": 62,
+   "refs": [
+    "form_arachne/idle_1",
+    "slime/hurt"
+   ],
+   "prompt": "A spider-slime called an Arachne: an elongated violet-blue jelly body with six thin curved legs made of hardened silk along its lower sides, four tiny glowing eyes in a row above its two glossy dark eyes, and silvery web filigree inside the body. Pose and shape for this frame: The same creature hit and recoiling: squashed sideways with a slight tilt, eyes squeezed shut in pain."
+  },
+  {
+   "name": "rope",
+   "width": 42,
+   "refs": [
+    "form_arachne/idle_1",
+    "slime/rope"
+   ],
+   "prompt": "A spider-slime called an Arachne: an elongated violet-blue jelly body with six thin curved legs made of hardened silk along its lower sides, four tiny glowing eyes in a row above its two glossy dark eyes, and silvery web filigree inside the body. Pose and shape for this frame: The same creature hanging from a thread: stretched tall and thin with a pointed top like a drop being pulled upward. Do not draw any thread, rope or line: the pointed tip is the top of the sprite."
+  },
+  {
+   "name": "wall_1",
+   "width": 55,
+   "refs": [
+    "form_arachne/idle_1",
+    "slime/wall_1"
+   ],
+   "prompt": "A spider-slime called an Arachne: an elongated violet-blue jelly body with six thin curved legs made of hardened silk along its lower sides, four tiny glowing eyes in a row above its two glossy dark eyes, and silvery web filigree inside the body. Pose and shape for this frame: The same creature clinging to a wall on its RIGHT side: its front edge pressed flat against the wall, two small jelly arms gripping upward on the right, eyes looking up."
+  },
+  {
+   "name": "wall_2",
+   "width": 55,
+   "refs": [
+    "form_arachne/idle_1",
+    "slime/wall_2"
+   ],
+   "prompt": "A spider-slime called an Arachne: an elongated violet-blue jelly body with six thin curved legs made of hardened silk along its lower sides, four tiny glowing eyes in a row above its two glossy dark eyes, and silvery web filigree inside the body. Pose and shape for this frame: The same clinging pose with the grip shifted: the arms a little lower, the body slightly stretched downward."
+  },
+  {
+   "name": "tackle",
+   "width": 68,
+   "refs": [
+    "form_arachne/idle_1",
+    "slime/tackle"
+   ],
+   "prompt": "A spider-slime called an Arachne: an elongated violet-blue jelly body with six thin curved legs made of hardened silk along its lower sides, four tiny glowing eyes in a row above its two glossy dark eyes, and silvery web filigree inside the body. Pose and shape for this frame: The same creature in a charging tackle: stretched long horizontally with a leading edge pointing forward to the right, streamlined, eyes narrowed and determined.",
+   "attack_from": 0.62
+  },
+  {
+   "name": "spread_1",
+   "width": 70,
+   "refs": [
+    "form_arachne/idle_1",
+    "slime/spread_1"
+   ],
+   "prompt": "A spider-slime called an Arachne: an elongated violet-blue jelly body with six thin curved legs made of hardened silk along its lower sides, four tiny glowing eyes in a row above its two glossy dark eyes, and silvery web filigree inside the body. Pose and shape for this frame: The same creature half flattened, squashing down into a puddle: wider and lower than resting, eyes near the top."
+  },
+  {
+   "name": "spread_2",
+   "width": 85,
+   "refs": [
+    "form_arachne/idle_1",
+    "slime/spread_2"
+   ],
+   "prompt": "A spider-slime called an Arachne: an elongated violet-blue jelly body with six thin curved legs made of hardened silk along its lower sides, four tiny glowing eyes in a row above its two glossy dark eyes, and silvery web filigree inside the body. Pose and shape for this frame: The same creature fully spread into a flat puddle: very wide, low and thin like a pancake, the eyes as two tiny ovals on the top edge."
+  },
+  {
+   "name": "cover_1",
+   "width": 55,
+   "refs": [
+    "form_arachne/idle_1",
+    "slime/cover_1"
+   ],
+   "prompt": "A spider-slime called an Arachne: an elongated violet-blue jelly body with six thin curved legs made of hardened silk along its lower sides, four tiny glowing eyes in a row above its two glossy dark eyes, and silvery web filigree inside the body. Pose and shape for this frame: The same creature lunging: its body arching up and forward to the right like a leap over something, eyes looking down and to the right."
+  },
+  {
+   "name": "cover_2",
+   "width": 75,
+   "refs": [
+    "form_arachne/idle_1",
+    "slime/cover_2"
+   ],
+   "prompt": "A spider-slime called an Arachne: an elongated violet-blue jelly body with six thin curved legs made of hardened silk along its lower sides, four tiny glowing eyes in a row above its two glossy dark eyes, and silvery web filigree inside the body. Pose and shape for this frame: The same creature draping down like a blanket over something below it: a wide low mound with its edges spreading out to the sides, pale glowing blue."
+  },
+  {
+   "name": "cover_3",
+   "width": 82,
+   "refs": [
+    "form_arachne/idle_1",
+    "slime/cover_3"
+   ],
+   "prompt": "A spider-slime called an Arachne: an elongated violet-blue jelly body with six thin curved legs made of hardened silk along its lower sides, four tiny glowing eyes in a row above its two glossy dark eyes, and silvery web filigree inside the body. Pose and shape for this frame: The same creature engulfing something: a wide flat mound with its edges hugging the ground on both sides, glowing, a hollow dark shape suggested inside."
+  },
+  {
+   "name": "cover_4",
+   "width": 85,
+   "refs": [
+    "form_arachne/idle_1",
+    "slime/cover_4"
+   ],
+   "prompt": "A spider-slime called an Arachne: an elongated violet-blue jelly body with six thin curved legs made of hardened silk along its lower sides, four tiny glowing eyes in a row above its two glossy dark eyes, and silvery web filigree inside the body. Pose and shape for this frame: The same engulfing pose pulsing slightly bigger, its edges spread a little more."
+  },
+  {
+   "name": "cover_5",
+   "width": 58,
+   "refs": [
+    "form_arachne/idle_1",
+    "slime/cover_5"
+   ],
+   "prompt": "A spider-slime called an Arachne: an elongated violet-blue jelly body with six thin curved legs made of hardened silk along its lower sides, four tiny glowing eyes in a row above its two glossy dark eyes, and silvery web filigree inside the body. Pose and shape for this frame: The same creature popping back into a round dome after eating, happy eyes, nothing else in the frame (no sparkles, no droplets)."
+  }
+ ]
+}

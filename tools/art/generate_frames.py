@@ -30,7 +30,10 @@ def build_prompt(style, frame):
 def refs_for(frame, out_dir, root=ROOT, canonical=CANONICAL):
     refs = [os.path.join(root, canonical)]
     for r in frame.get("refs", []):
-        refs.append(os.path.join(out_dir, r + ".png"))
+        if "/" in r:  # another set's frame, e.g. "slime/run_1"
+            refs.append(os.path.join(root, "art_source/frames", r + ".png"))
+        else:
+            refs.append(os.path.join(out_dir, r + ".png"))
     return refs
 
 
