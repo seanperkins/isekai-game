@@ -34,6 +34,7 @@ func prompt() -> String:
 	return "read"
 
 func interact(player: Node) -> void:
+	EventBus.world_event.emit("tablet_read", {"pos": global_position})
 	player.inspect_report.emit(PackedStringArray([title, text]))
 	if hint != "" and _compendium != null:
 		_compendium.raise(hint, CompendiumModel.State.HINTED)

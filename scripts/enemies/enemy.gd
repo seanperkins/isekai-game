@@ -7,7 +7,8 @@ extends CharacterBody2D
 ##   charger (lizard): stop and flick, charge, then rest (hit it from behind)
 ##   spitter (toad):   puff up, then lob a poison glob in an arc
 ##   dropper (spider): hang until you pass under, then drop and walk
-## Enemies never emit gameplay events (Health has no emitter).
+## Enemies never emit gameplay events (Health has no emitter). They do emit audio-only world
+## events (EventBus.world_event), which nothing counts.
 
 ## Reaches 0 HP. The game awards the player XP for it (a direct signal, not an EventBus event).
 signal downed(def: CreatureDef)
@@ -105,6 +106,7 @@ func _ready() -> void:
 func receive_hit(raw: int, damage_type: String) -> void:
 	if status.state == EnemyStatus.DOWNED or status.state == EnemyStatus.GONE:
 		return
+	EventBus.world_event.emit("enemy_hit", {"pos": global_position})
 	health.take_hit(Damage.direct_hit(raw, 0, stats.get_stat("def")), damage_type)
 
 ## Returns true when the tackle stunned or downed this enemy (the player emits stunned_enemy).
@@ -139,6 +141,7 @@ func consume() -> CreatureDef:
 	return def
 
 func _on_died() -> void:
+	EventBus.world_event.emit("enemy_died", {"id": def.id, "pos": global_position})
 	if def.predatable:
 		status.down()
 	else:

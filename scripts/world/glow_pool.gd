@@ -24,5 +24,6 @@ func prompt() -> String:
 func interact(player: Node) -> void:
 	player.health.heal(player.health.max_hp)
 	player.mana.restore(player.mana.max_mp)
+	EventBus.world_event.emit("pool_rested", {"pos": global_position})
 	if _announce.is_valid():
 		_announce.call(id, "Your body settles.")

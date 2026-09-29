@@ -36,6 +36,7 @@ func receive_hit(_raw: int, _damage_type: String, _from: Vector2 = Vector2.INF) 
 	open()
 
 func open() -> void:
+	EventBus.world_event.emit("switch_opened", {"pos": global_position})
 	if _progress != null:
 		_progress.open_shortcut(shortcut)
 	queue_free()
