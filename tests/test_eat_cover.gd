@@ -133,3 +133,32 @@ func test_dying_while_eating_uncovers_the_prey() -> void:
 	player.health.take_hit(999, "physical")
 	assert_true(enemy.get_node("Sprite").visible)
 	assert_null(player._cover)
+
+func test_a_prey_freed_mid_eat_leaves_nothing_hidden_or_behind() -> void:
+	var pair := _player_with_toad()
+	var player: Player = pair[0]
+	var enemy: Enemy = pair[1]
+	Input.action_press("predate")
+	await wait_physics_frames(3)
+	assert_not_null(player._cover, "the hold started")
+	var cover: EatCover = player._cover
+	enemy.free()  # a room change frees the prey mid-eat
+	await wait_physics_frames(3)
+	Input.action_release("predate")
+	await wait_physics_frames(3)
+	assert_true(player.get_node("Sprite").visible, "the slime is drawn again")
+	assert_null(player._cover)
+	assert_false(is_instance_valid(cover) and not cover.is_queued_for_deletion(), "the cover is gone")
+
+func test_starting_a_second_eat_ends_the_first_cover() -> void:
+	var pair := _player_with_toad()
+	var player: Player = pair[0]
+	var enemy: Enemy = pair[1]
+	player.begin_predate()
+	var first: EatCover = player._cover
+	player._start_cover(enemy)
+	assert_true(first.is_queued_for_deletion(), "the old cover is finished, not orphaned")
+	player.cancel_predate()
+
+func after_each() -> void:
+	Input.action_release("predate")

@@ -134,6 +134,10 @@ func _physics_process(delta: float) -> void:
 		do_jump()
 	if Input.is_action_just_pressed("tackle"):
 		do_tackle()
+	# A freed prey (its room was left mid-eat) makes predation.active() false on its own, so end the
+	# cover here or the slime stays hidden and the cover node is orphaned.
+	if _cover != null and not predation.active():
+		cancel_predate()
 	if Input.is_action_pressed("predate"):
 		if predation.active():
 			process_predate(delta)
@@ -316,6 +320,7 @@ func cancel_predate() -> void:
 func _start_cover(target: Node2D) -> void:
 	if _sheet == null:
 		return
+	_end_cover()
 	_cover = EatCover.new()
 	get_parent().add_child(_cover)
 	_cover.begin(target, _sheet, target.global_position.x < global_position.x)
