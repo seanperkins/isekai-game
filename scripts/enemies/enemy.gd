@@ -204,6 +204,7 @@ func _on_died() -> void:
 		_charge = ""
 		_swoop = "idle"
 		_spit_windup = 0.0
+		_puff_windup = 0.0
 		_start_death_fx()
 	else:
 		status.consume()  # Plan 3 turns the serpent's death into victory
@@ -240,6 +241,7 @@ func _physics_process(delta: float) -> void:
 		velocity.x = 0.0
 		_charge = ""
 		_spit_windup = 0.0
+		_puff_windup = 0.0
 	var stunned := status.state == EnemyStatus.STUNNED
 	var flying := capabilities.has("flight") and active
 	var hovering := def.drifter and (active or stunned)
@@ -369,7 +371,7 @@ func _act(player: Node2D, delta: float) -> void:
 			_on_ceiling = false  # drop on prey
 		return
 	if def.drifter:
-		_drift_act(to_player, delta)
+		_drift_act(player, to_player, delta)
 		return
 	if capabilities.has("flight"):
 		_swoop_act(player, delta)
@@ -441,7 +443,9 @@ func _charger_act(to_player: Vector2, delta: float) -> bool:
 	return false
 
 ## A slow side-to-side loop about its home; drops a spore puff every PUFF_INTERVAL while the player is near.
-func _drift_act(to_player: Vector2, delta: float) -> void:
+func _drift_act(player: Node2D, to_player: Vector2, delta: float) -> void:
+	if is_on_wall():
+		facing = -facing if is_on_wall() and get_wall_normal().x * facing < 0.0 else facing
 	if global_position.x > _home_x + PATROL_RANGE * 2.0:
 		facing = -1
 	elif global_position.x < _home_x - PATROL_RANGE * 2.0:
@@ -449,7 +453,7 @@ func _drift_act(to_player: Vector2, delta: float) -> void:
 	velocity.x = facing * _speed() * 0.6
 	var target_y := _home_y + sin(_anim_t * 1.6) * 14.0
 	velocity.y = clampf((target_y - global_position.y) * 2.0, -60.0, 60.0)
-	if to_player.length() > PUFF_RANGE:
+	if to_player.length() > PUFF_RANGE or not can_see(player):  # no puffs through rock
 		_puff_t = PUFF_INTERVAL
 		_puff_windup = 0.0
 		return

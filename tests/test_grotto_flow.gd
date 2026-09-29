@@ -25,7 +25,7 @@ func test_dropping_through_g2s_floor_enters_g3() -> void:
 	assert_eq(game.world.current_id, "G3")
 	_cleanup()
 
-func test_walking_from_g1_into_g2_and_from_g3_into_g4() -> void:
+func test_crossing_g1s_east_edge_enters_g2() -> void:
 	var game = await _game()
 	game.world.enter_at("G1", Vector2(1272, 296))
 	await wait_physics_frames(60)

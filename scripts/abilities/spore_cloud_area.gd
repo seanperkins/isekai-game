@@ -16,18 +16,17 @@ func launch(at: Vector2, p_radius: float, seconds: float, actor: Node2D) -> void
 	_left = seconds
 	_actor = actor
 	add_to_group("player_clouds")
-
-func _ready() -> void:
-	if get_child_count() == 0:
-		var haze := ColorRect.new()
-		haze.color = Color(0.7, 0.95, 0.4, 0.3)
-		haze.size = Vector2(radius * 2.0, radius * 2.0)
-		haze.position = -haze.size / 2.0
-		add_child(haze)
+	for c in get_children():
+		c.queue_free()
+	var haze := ColorRect.new()  # drawn at the real radius, so a higher level shows a bigger cloud
+	haze.color = Color(0.7, 0.95, 0.4, 0.3)
+	haze.size = Vector2(radius * 2.0, radius * 2.0)
+	haze.position = -haze.size / 2.0
+	add_child(haze)
 
 func _physics_process(delta: float) -> void:
 	_left -= delta
-	if _left <= 0.0:
+	if _left <= 0.0 or not is_instance_valid(_actor):
 		queue_free()
 		return
 	_tick += delta

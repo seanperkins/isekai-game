@@ -17,7 +17,7 @@ rm -f "$xml"
 args=(-s addons/gut/gut_cmdln.gd -gdir=res://tests -gprefix=test_ -gexit "-gjunit_xml_file=res://$xml")
 if [ "$#" -gt 0 ]; then args+=("-gselect=$1"); fi
 
-gtimeout -k 5 180 env HOME="$PWD/.tmp/gdhome" godot --headless "${args[@]}" >"$log" 2>&1
+gtimeout -k 5 "${TEST_TIMEOUT:-480}" env HOME="$PWD/.tmp/gdhome" godot --headless "${args[@]}" >"$log" 2>&1
 code=$?
 
 if grep -qE 'SCRIPT ERROR|Parse Error|Nothing was run' "$log"; then

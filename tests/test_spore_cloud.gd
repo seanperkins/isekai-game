@@ -74,3 +74,27 @@ func test_duration_grows_with_level_and_the_ability_drops_a_cloud() -> void:
 	var clouds := get_tree().get_nodes_in_group("player_clouds")
 	assert_eq(clouds.size(), 1)
 	assert_eq((clouds[0] as SporeCloudArea).radius, 32.0, "radius is the level's value")
+
+func test_the_haze_is_as_big_as_the_clouds_radius() -> void:
+	var cloud := SporeCloudArea.new()
+	add_child_autofree(cloud)
+	cloud.launch(Vector2.ZERO, 52.0, 1.0, actor)
+	var haze := cloud.get_child(0) as ColorRect
+	assert_eq(haze.size, Vector2(104, 104), "the drawn cloud grows with the level, not just the hit radius")
+
+func test_a_freed_caster_does_not_crash_the_cloud() -> void:
+	var caster := StubActor.new()
+	add_child(caster)
+	var cloud := SporeCloudArea.new()
+	add_child_autofree(cloud)
+	cloud.launch(Vector2.ZERO, 24.0, 2.0, caster)
+	caster.free()
+	await wait_physics_frames(72)
+	assert_true(true, "no script error")
+
+func test_the_skill_screen_labels_the_clouds_power_as_a_radius() -> void:
+	var d: SkillDef = null
+	for s in DefLoader.load_dir("res://data/skills"):
+		if s.id == "spore_cloud":
+			d = s
+	assert_true(SkillScreenModel.effect_lines(d, 3).has("Radius 32"), str(SkillScreenModel.effect_lines(d, 3)))

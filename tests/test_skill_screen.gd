@@ -179,4 +179,6 @@ func test_sheet_only_creatures_have_a_bestiary_portrait() -> void:
 		var t := SkillScreen.portrait_texture(id)
 		assert_not_null(t, id)
 		assert_gt(t.get_size().x, 8.0, id)
+		if id != "nobody":
+			assert_ne(t, Art.texture("icon_locked"), "%s has a real portrait, not the locked icon" % id)
 	assert_not_null(SkillScreen.portrait_texture("nobody"), "an unknown id shows the locked icon")

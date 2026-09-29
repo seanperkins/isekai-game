@@ -177,3 +177,27 @@ func test_a_puff_sinks_onto_a_player_standing_below_the_moth() -> void:
 	EventBus.world_event.disconnect(follow)
 	assert_gte(fake_player.poisons.size(), 1, "the puff drifted down onto it")
 	assert_true(is_instance_valid(m))
+
+func test_a_moth_killed_mid_windup_stops_flashing_its_warning() -> void:
+	var m := _enemy("spore_moth", Vector2(0, -100))
+	m._puff_windup = 0.3
+	assert_true(m._telegraphing())
+	m.receive_hit(99, "physical", Vector2.INF, "tackle")
+	await wait_physics_frames(3)
+	assert_false(m._telegraphing(), "a corpse does not telegraph")
+
+func test_a_moth_turns_back_at_a_wall() -> void:
+	_solid(Rect2(60, -200, 20, 300))  # a wall just east of it
+	var m := _enemy("spore_moth", Vector2(0, -100))
+	m.facing = 1
+	fake_player.global_position = Vector2(-2000, 0)
+	await wait_physics_frames(120)
+	assert_eq(m.facing, -1, "it turned round instead of rubbing the wall")
+	assert_lt(m.global_position.x, 60.0)
+
+func test_a_moth_behind_rock_does_not_puff() -> void:
+	_solid(Rect2(40, -300, 20, 600))  # rock between the moth and the player
+	_enemy("spore_moth", Vector2(0, -100))
+	fake_player.global_position = Vector2(150, -100)
+	await wait_physics_frames(int(Enemy.PUFF_INTERVAL * 60.0) * 2)
+	assert_eq(puff_events, 0, "no line of sight, no puff")
