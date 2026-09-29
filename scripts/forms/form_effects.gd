@@ -13,7 +13,7 @@ const TRAITS := {
 	"sonar": "Echolocation reads one level stronger.",
 	"adaptable": "Eat and recover faster.",
 }
-const THREAD_SKILLS := ["sticky_thread", "swing_thread"]
+const THREAD_SKILLS := ["sticky_thread", "swing_thread", "binding_web"]
 const WATER_SKILLS := ["hydraulic_propulsion", "water_blade", "jet_dash"]
 const ADAPTABLE_HEAL := 2  # extra HP from every creature eaten
 const VENOM_PERCENT := 30

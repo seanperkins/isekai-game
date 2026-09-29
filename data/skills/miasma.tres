@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "miasma"
+display_name = "Miasma"
+description = "Breathe poison and leave a lingering cloud where it ends."
+announce = "Skill evolved. Acquired [Miasma]."
+source = "evolution"
+unlock = [{
+"id": "poison_breath",
+"kind": "skill_level",
+"n": 4
+}]
+effects = [{
+"kind": "active",
+"scene": "res://scenes/abilities/miasma.tscn",
+"values": [9]
+}]
+mp_cost = 5
+replaces = "poison_breath"

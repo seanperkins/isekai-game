@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_50cmx"]
+
+[resource]
+script = ExtResource("1_50cmx")
+id = "venom_bolt"
+display_name = "Venom Bolt"
+description = "A piercing bolt of poison along your aim."
+announce = "Skill evolved. Acquired [Venom Bolt]."
+source = "evolution"
+unlock = [{
+"id": "poison_breath",
+"kind": "skill_level",
+"n": 4
+}]
+effects = [{
+"kind": "active",
+"scene": "res://scenes/abilities/venom_bolt.tscn",
+"values": [9]
+}]
+mp_cost = 5
+replaces = "poison_breath"

@@ -1,14 +1,16 @@
 class_name ThreadAbility
 extends Ability
-## Sticky Thread and Swing Thread. The thread flies along the aim and the first thing it
-## touches decides the effect: an enemy is slowed (tier 1) or held (tier 2); terrain becomes
-## an anchor the actor swings from.
+## Sticky Thread, Swing Thread and Binding Web. The thread flies along the aim and the first thing it touches decides the
+## effect: an enemy is slowed (tier 1) or held (tier 2); terrain becomes an anchor the actor swings from (unless `ropes` is
+## false, as for Binding Web). `_land` is told where the thread ended.
 
 const THREAD_COLOR := Color(0.95, 0.95, 1.0, 0.9)
 
 var rope_range := 120.0
 var reel_speed := 60.0
 var release_boost := 1.0
+## False for a thread that never ropes (Binding Web): terrain is just where it ends.
+var ropes := true
 
 func _perform() -> void:
 	var dir := aim_dir()
@@ -22,7 +24,14 @@ func _perform() -> void:
 	if target != null and (anchor == null or from.distance_to(target.global_position) <= from.distance_to(anchor)):
 		target.receive_thread(value())
 		Vfx.line(actor, from, target.global_position, THREAD_COLOR, 1.0, 0.35)
-	elif anchor != null and actor.has_method("attach_rope"):
+		_land(target.global_position)
+	elif ropes and anchor != null and actor.has_method("attach_rope"):
 		actor.attach_rope(anchor, rope_range, reel_speed, release_boost)  # the actor draws the rope
 	else:
-		Vfx.line(actor, from, from + dir * rope_range, THREAD_COLOR, 1.0, 0.35)
+		var end: Vector2 = anchor if (anchor != null and not ropes) else from + dir * rope_range
+		Vfx.line(actor, from, end, THREAD_COLOR, 1.0, 0.35)
+		_land(end)
+
+## Called with where the thread ended: the enemy it held, the rock it met, or full range. The base does nothing.
+func _land(_end: Vector2) -> void:
+	pass

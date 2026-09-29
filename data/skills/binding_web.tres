@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_j7yi0"]
+
+[resource]
+script = ExtResource("1_j7yi0")
+id = "binding_web"
+display_name = "Binding Web"
+description = "Hold an enemy with thread and leave a web that slows anything inside."
+announce = "Skill evolved. Acquired [Binding Web]."
+source = "evolution"
+unlock = [{
+"id": "sticky_thread",
+"kind": "skill_level",
+"n": 3
+}]
+effects = [{
+"kind": "active",
+"scene": "res://scenes/abilities/binding_web.tscn",
+"values": [2]
+}]
+mp_cost = 4
+replaces = "sticky_thread"

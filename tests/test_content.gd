@@ -20,7 +20,7 @@ func _creature(id: String) -> CreatureDef:
 	return null
 
 func test_all_content_validates() -> void:
-	assert_eq(skills.size(), 24)
+	assert_eq(skills.size(), 29)
 	assert_eq(creatures.size(), 10)
 	assert_eq(Array(DefValidator.validate(skills, creatures)), [])
 

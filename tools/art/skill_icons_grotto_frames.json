@@ -13,6 +13,36 @@
    "width": 128,
    "refs": [],
    "prompt": "A skill icon of a domed, spotted mushroom-cap shield in red and cream with a sturdy rim, glowing faintly."
+  },
+  {
+   "name": "icon_binding_web",
+   "width": 128,
+   "refs": [],
+   "prompt": "A skill icon of a round silver spider web patch with a glowing bound thread pinning a small dark shape at its centre."
+  },
+  {
+   "name": "icon_miasma",
+   "width": 128,
+   "refs": [],
+   "prompt": "A skill icon of a swirling green poison cloud spreading outward in a cone, with a few toxic bubbles."
+  },
+  {
+   "name": "icon_venom_bolt",
+   "width": 128,
+   "refs": [],
+   "prompt": "A skill icon of a single glowing green venom bolt streaking diagonally, with a droplet-shaped tip and a fading trail."
+  },
+  {
+   "name": "icon_healing_spores",
+   "width": 128,
+   "refs": [],
+   "prompt": "A skill icon of a soft pink and green cloud of spores with a small glowing plus sign floating in it."
+  },
+  {
+   "name": "icon_puffball",
+   "width": 128,
+   "refs": [],
+   "prompt": "A skill icon of a round spotted puffball pod bursting open into a wide cloud of yellow-green spores."
   }
  ]
 }

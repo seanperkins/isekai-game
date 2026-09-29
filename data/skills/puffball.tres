@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_f31dl"]
+
+[resource]
+script = ExtResource("1_f31dl")
+id = "puffball"
+display_name = "Puffball"
+description = "Lob a spore pod that bursts into a wide cloud."
+announce = "Skill evolved. Acquired [Puffball]."
+source = "evolution"
+unlock = [{
+"id": "spore_cloud",
+"kind": "skill_level",
+"n": 4
+}]
+effects = [{
+"kind": "active",
+"scene": "res://scenes/abilities/puffball.tscn",
+"values": [64]
+}]
+mp_cost = 5
+replaces = "spore_cloud"
