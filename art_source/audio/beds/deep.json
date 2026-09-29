@@ -1,5 +1,18 @@
 {
   "prompt": "Reserved deep cavern: sparse and dark but not hopeless. Low drones, very slow sub pulses, occasional single distant bell, wide silence. Instrumental, no drums, no vocals.",
-  "music": {"provider": "synth", "dur": 24.0, "notes": [98.0, 146.83, 196.0], "lfo": 0.05},
-  "ambience": {"provider": "synth", "dur": 20.0, "lp": 400, "lfo": 0.04}
+  "music": {
+    "provider": "synth",
+    "dur": 24.0,
+    "notes": [
+      98.0,
+      146.83,
+      196.0
+    ],
+    "lfo": 0.05
+  },
+  "ambience": {
+    "provider": "elevenlabs",
+    "seconds": 20,
+    "prompt": "Deep cavern ambience: a near-silent low air drone, very sparse distant drips, wide empty space. No music, no melody, no voices, steady and seamless."
+  }
 }

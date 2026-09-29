@@ -2,6 +2,7 @@ import http.server
 import json
 import math
 import os
+import random
 import sys
 import tempfile
 import threading
@@ -205,6 +206,15 @@ class GenBedTest(unittest.TestCase):
         finally:
             gen_bed.urllib.request.urlopen = real
         self.assertEqual(data, b"a" * 10 + b"b" * 5)
+
+    def test_a_bed_too_peaky_to_reach_its_loudness_is_refused_not_written_quiet(self):
+        rng = random.Random(3)
+        raw = [rng.uniform(-0.01, 0.01) for _ in range(8 * a.RATE)]
+        raw[4 * a.RATE] = 0.9  # one loud pop over a very quiet floor: the peak cap stops it getting louder
+        with self.assertRaises(a.AudioToolError) as ctx:
+            gen_bed.process(raw, "ambience")
+        self.assertIn("peak", str(ctx.exception))
+        self.assertIn("steadier", str(ctx.exception))
 
 
 if __name__ == "__main__":

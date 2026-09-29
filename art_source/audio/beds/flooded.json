@@ -1,5 +1,19 @@
 {
   "prompt": "Luminous flooded tunnels. Rippling harp-like arpeggios, deep watery pads, distant dripping and soft echo, calm and expansive, cool blues. Instrumental, no drums, no vocals, no dread.",
-  "music": {"provider": "synth", "dur": 24.0, "notes": [123.47, 185.0, 246.94, 311.13], "lfo": 0.06},
-  "ambience": {"provider": "synth", "dur": 20.0, "lp": 700, "lfo": 0.15}
+  "music": {
+    "provider": "synth",
+    "dur": 24.0,
+    "notes": [
+      123.47,
+      185.0,
+      246.94,
+      311.13
+    ],
+    "lfo": 0.06
+  },
+  "ambience": {
+    "provider": "elevenlabs",
+    "seconds": 20,
+    "prompt": "Luminous flooded tunnels ambience: gentle lapping water, slow deep echoing drips, calm watery room tone with a soft resonant hum. No music, no melody, no voices, steady and seamless."
+  }
 }

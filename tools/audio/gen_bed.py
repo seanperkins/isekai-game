@@ -117,8 +117,14 @@ def process(raw, kind):
     # bring it to a working level first: measure the signal that will really be encoded.
     top = audiolib.lin_to_db(max(audiolib.peak(left), audiolib.peak(right)))
     left, right = audiolib.gain(left, WORK_PEAK_DB - top), audiolib.gain(right, WORK_PEAK_DB - top)
-    wanted = audiolib.TARGET_LUFS[kind] - _measure((left, right))
-    wanted = min(wanted, HEADROOM_DB - WORK_PEAK_DB)  # loud enough, but never past the ceiling
+    target = audiolib.TARGET_LUFS[kind]
+    measured = _measure((left, right))
+    cap = HEADROOM_DB - WORK_PEAK_DB  # the most it may be raised before its peak passes the ceiling
+    if target - measured > cap + audiolib.LUFS_TOLERANCE:
+        raise audiolib.AudioToolError(
+            "too peaky to reach %.1f LUFS under the %.1f dBFS peak cap (it would land at %.1f LUFS): "
+            "use a steadier source, without sudden loud sounds" % (target, HEADROOM_DB, measured + cap))
+    wanted = min(target - measured, cap)  # loud enough, but never past the ceiling
     return (dsp.fade_ends(audiolib.gain(left, wanted), EDGE_FADE),
             dsp.fade_ends(audiolib.gain(right, wanted), EDGE_FADE))
 
