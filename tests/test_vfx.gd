@@ -76,3 +76,27 @@ func test_effects_fade_and_free_themselves() -> void:
 	_cast("poison_breath")
 	await wait_seconds(0.6)
 	assert_eq(_vfx().size(), 0)
+
+func test_sag_points_are_five_ending_at_both_ends_and_sagging() -> void:
+	var pts := Vfx.sag_points(Vector2.ZERO, Vector2(100, 0))
+	assert_eq(pts.size(), 5)
+	assert_eq(pts[0], Vector2.ZERO)
+	assert_eq(pts[4], Vector2(100, 0))
+	assert_gt(pts[2].y, 0.0, "sags below the chord")
+
+func test_style_strand_sets_the_silk_look() -> void:
+	var l := Line2D.new()
+	add_child_autofree(l)
+	Vfx.style_strand(l)
+	assert_eq(l.texture, VfxArt.silk())
+	assert_eq(l.texture_mode, Line2D.LINE_TEXTURE_TILE)
+	assert_eq(l.texture_repeat, CanvasItem.TEXTURE_REPEAT_ENABLED)
+	assert_eq(l.width, 4.0)
+
+func test_the_thread_flash_is_a_silk_strand_that_ends_at_the_target() -> void:
+	var e := _enemy(50)
+	_cast("sticky_thread")
+	var line: Line2D = _vfx().filter(func(n): return n is Line2D)[0]
+	assert_eq(line.points.size(), 5)
+	assert_eq(line.points[4], e.global_position)
+	assert_eq(line.texture, VfxArt.silk())

@@ -20,7 +20,9 @@ func test_attaching_draws_the_thread_and_hanging_stays_on_the_rope() -> void:
 	await wait_physics_frames(30)
 	assert_lte(player.global_position.distance_to(Vector2(0, -80)), player.rope.length + 1.0)
 	assert_true(player.rope_line.visible)
-	assert_eq(player.rope_line.points[1], Vector2(0, -80))
+	assert_eq(player.rope_line.points[player.rope_line.points.size() - 1], Vector2(0, -80), "the last point is the anchor")
+	assert_eq(player.rope_line.points[0], player.global_position)
+	assert_eq(player.rope_line.texture, VfxArt.silk())
 
 func test_jump_lets_go_with_boosted_momentum() -> void:
 	player.attach_rope(player.global_position + Vector2(0, -80), 200.0, 120.0, 1.4)

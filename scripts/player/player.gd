@@ -509,7 +509,7 @@ func _stay_on_rope() -> void:
 func _update_rope_line() -> void:
 	rope_line.visible = rope != null
 	if rope != null:
-		rope_line.points = PackedVector2Array([global_position, rope.anchor])
+		rope_line.points = Vfx.sag_points(global_position, rope.anchor)
 
 func award_xp(amount: int) -> void:
 	if not health.is_dead():
@@ -879,7 +879,6 @@ func _build_body() -> void:
 	eat_prompt.add_theme_constant_override("outline_size", 4)
 	add_child(eat_prompt)
 	rope_line.top_level = true  # drawn in world space, from the slime to the anchor
-	rope_line.width = 1.0
-	rope_line.default_color = ThreadAbility.THREAD_COLOR
+	Vfx.style_strand(rope_line)  # silk, tiled along the rope
 	rope_line.visible = false
 	add_child(rope_line)
