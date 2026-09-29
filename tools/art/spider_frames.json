@@ -1,0 +1,86 @@
+{
+ "canonical": "assets/sprites/spider_crawl.png",
+ "style": "Modern pixel art with soft lighting (Style D): a cave spider with a dark body, red markings and eight thin legs, a clean dark outline, chunky readable pixels, gentle highlights and shading. Match the character, colours and proportions of the reference image exactly. Side view, the creature facing right. Draw only the creature: no ground, no thread, no rope, no shadow, no effects.",
+ "frames": [
+  {
+   "name": "hang_1",
+   "width": 24,
+   "refs": [],
+   "prompt": "The same spider hanging from above, legs drawn in close to a compact body, waiting. Do not draw the thread."
+  },
+  {
+   "name": "hang_2",
+   "width": 24,
+   "refs": [
+    "hang_1"
+   ],
+   "prompt": "The same spider hanging, legs twitching slightly wider, ready to drop. Do not draw the thread."
+  },
+  {
+   "name": "drop",
+   "width": 26,
+   "refs": [
+    "hang_1"
+   ],
+   "prompt": "The same spider dropping: legs flung wide and up, body falling, fangs out."
+  },
+  {
+   "name": "crawl_1",
+   "width": 36,
+   "refs": [
+    "hang_1"
+   ],
+   "prompt": "The same spider crawling right: front legs reaching forward, body low."
+  },
+  {
+   "name": "crawl_2",
+   "width": 34,
+   "refs": [
+    "crawl_1"
+   ],
+   "prompt": "The same spider crawling: legs gathered under the body."
+  },
+  {
+   "name": "crawl_3",
+   "width": 36,
+   "refs": [
+    "crawl_1",
+    "crawl_2"
+   ],
+   "prompt": "The same spider crawling: rear legs pushing, front legs reaching again."
+  },
+  {
+   "name": "crawl_4",
+   "width": 34,
+   "refs": [
+    "crawl_1",
+    "crawl_3"
+   ],
+   "prompt": "The same spider crawling: legs gathered under the body, slightly raised."
+  },
+  {
+   "name": "stunned",
+   "width": 32,
+   "refs": [
+    "crawl_1"
+   ],
+   "prompt": "The same spider dazed: legs splayed and drooping, body sagging, eyes dim."
+  },
+  {
+   "name": "hurt",
+   "width": 32,
+   "refs": [
+    "crawl_1"
+   ],
+   "prompt": "The same spider flinching from a hit: legs jerked up and out, body squashed."
+  },
+  {
+   "name": "downed",
+   "width": 32,
+   "refs": [
+    "crawl_1"
+   ],
+   "prompt": "The same spider on its back, all eight legs curled up over its body, still."
+  }
+ ]
+}

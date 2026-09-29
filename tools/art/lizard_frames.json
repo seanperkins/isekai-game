@@ -1,0 +1,140 @@
+{
+ "canonical": "assets/sprites/lizard_1.png",
+ "style": "Modern pixel art with soft lighting (Style D): an armored cave lizard with dark scales, a bony head plate and a long tail, a clean dark outline, chunky readable pixels, gentle highlights and shading. Match the character, colours and proportions of the reference image exactly. Side view, the creature facing right. Draw only the creature: no ground, no thread, no rope, no shadow, no effects.",
+ "frames": [
+  {
+   "name": "idle_1",
+   "width": 56,
+   "refs": [],
+   "prompt": "The same lizard standing at rest, head level, tail low, alert."
+  },
+  {
+   "name": "idle_2",
+   "width": 56,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same lizard breathing: chest slightly raised, head a touch lower."
+  },
+  {
+   "name": "walk_1",
+   "width": 58,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same lizard walking: front-right and back-left legs forward, body swaying."
+  },
+  {
+   "name": "walk_2",
+   "width": 56,
+   "refs": [
+    "idle_1",
+    "walk_1"
+   ],
+   "prompt": "The same lizard walking: legs passing under the body, body level."
+  },
+  {
+   "name": "walk_3",
+   "width": 58,
+   "refs": [
+    "idle_1",
+    "walk_2"
+   ],
+   "prompt": "The same lizard walking: front-left and back-right legs forward."
+  },
+  {
+   "name": "walk_4",
+   "width": 56,
+   "refs": [
+    "idle_1",
+    "walk_3"
+   ],
+   "prompt": "The same lizard walking: legs passing under the body again."
+  },
+  {
+   "name": "windup_1",
+   "width": 54,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same lizard stopping and crouching: front lowered, head drawn back, tail flicking up."
+  },
+  {
+   "name": "windup_2",
+   "width": 54,
+   "refs": [
+    "windup_1"
+   ],
+   "prompt": "The same lizard fully coiled to charge: chest to the ground, head cocked back, tail lashed high, eyes narrowed."
+  },
+  {
+   "name": "charge_1",
+   "width": 64,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same lizard bursting into a charge: body stretched forward, head thrust ahead, legs kicking back.",
+   "attack_from": 0.6
+  },
+  {
+   "name": "charge_2",
+   "width": 66,
+   "refs": [
+    "idle_1",
+    "charge_1"
+   ],
+   "prompt": "The same lizard at full sprint: fully stretched and low, head plate forward like a ram.",
+   "attack_from": 0.6
+  },
+  {
+   "name": "charge_3",
+   "width": 64,
+   "refs": [
+    "idle_1",
+    "charge_2"
+   ],
+   "prompt": "The same lizard in the last stride of the charge, legs gathered, head still forward.",
+   "attack_from": 0.6
+  },
+  {
+   "name": "rest_1",
+   "width": 54,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same lizard after the charge: skidding to a stop, head low and panting, mouth open."
+  },
+  {
+   "name": "rest_2",
+   "width": 54,
+   "refs": [
+    "rest_1"
+   ],
+   "prompt": "The same lizard exhausted and panting, sides heaving, head hanging low, tail limp."
+  },
+  {
+   "name": "stunned",
+   "width": 54,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same lizard dazed: head drooping, eyes half shut, legs splayed, swaying."
+  },
+  {
+   "name": "hurt",
+   "width": 54,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same lizard flinching from a hit: body arched, mouth open in a hiss, eyes shut tight."
+  },
+  {
+   "name": "downed",
+   "width": 56,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same lizard lying on its back, pale belly up, legs curled and limp, tail flopped to the side."
+  }
+ ]
+}
