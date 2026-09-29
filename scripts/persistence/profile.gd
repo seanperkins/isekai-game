@@ -56,6 +56,17 @@ func list_section(name: String) -> Array:
 		return []
 	return v.duplicate()
 
+## A Dictionary section. Anything else is malformed: warn, drop it and return {}.
+func dict_section(name: String) -> Dictionary:
+	var v = _sections.get(name)
+	if v == null:
+		return {}
+	if typeof(v) != TYPE_DICTIONARY:
+		warn.call("Profile: dropped malformed '%s' section" % name)
+		_sections.erase(name)
+		return {}
+	return v.duplicate(true)
+
 func save() -> bool:
 	var body := {"version": VERSION}
 	body.merge(_sections)
