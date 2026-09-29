@@ -21,6 +21,6 @@
     {"name": "cover_2", "width": 60, "refs": ["idle_1", "cover_1"], "prompt": "The same slime draping down like a blanket over something below it: a wide low mound with its edges spreading out to the sides, pale glowing blue."},
     {"name": "cover_3", "width": 66, "refs": ["idle_1", "cover_2"], "prompt": "The same slime engulfing something: a wide flat mound with its edges hugging the ground on both sides, glowing, a hollow dark shape suggested inside."},
     {"name": "cover_4", "width": 68, "refs": ["cover_3"], "prompt": "The same engulfing pose pulsing slightly bigger, its edges spread a little more."},
-    {"name": "cover_5", "width": 46, "refs": ["idle_1"], "prompt": "The same slime popping back into a round dome after eating, a few tiny sparkle drops around it, happy eyes."}
+    {"name": "cover_5", "width": 46, "refs": ["idle_1"], "prompt": "The same slime popping back into a round dome after eating, happy eyes, nothing else in the frame (no sparkles, no droplets)."}
   ]
 }
