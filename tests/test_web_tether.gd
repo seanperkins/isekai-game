@@ -199,3 +199,13 @@ func test_the_cooldown_still_runs_after_a_channel_and_recasting_works() -> void:
 	await wait_physics_frames(3)
 	assert_not_null(player._channel, "after 0.8 s the Sticky Thread cooldown has expired (its _process calls super)")
 	Input.action_release("active_1")
+
+func test_a_tier_two_hold_stuns_a_real_enemy_and_keeps_it_stunned() -> void:
+	var toad := _real_enemy(60)
+	var a := await _thread("sticky_thread", Vector2(1, 0), [2])
+	a.begin_channel()
+	assert_eq(toad.status.state, EnemyStatus.STUNNED, "tier 2 holds at once")
+	for i in 30:
+		assert_true(a.channel_tick(0.05))
+	assert_eq(toad.status.state, EnemyStatus.STUNNED)
+	assert_true(toad._web_hold, "and is cocooned while it is")

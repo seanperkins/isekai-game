@@ -1,5 +1,5 @@
 extends Ability
-## Instant water blade along the aim: hits the nearest other-team actor, drawn as a crescent that slides out to the hit.
+## Instant water blade along the aim: hits the nearest other-team actor, drawn as a slash of water that slides out to the hit.
 
 const RANGE := 160.0
 
@@ -14,14 +14,16 @@ func _perform() -> void:
 	crescent.add_to_group("vfx")
 	crescent.top_level = true
 	crescent.z_index = 6  # over the slime (z 5), so it shows even when the target is at its feet
-	crescent.texture = VfxArt.crescent()
-	crescent.modulate = Color(0.7, 0.93, 1.0, 0.95)  # paler than the slime, so it reads over it
+	crescent.texture = VfxArt.water_slash()
 	crescent.rotation = dir.angle()
-	crescent.scale = Vector2(0.6, 0.6)
+	crescent.scale = Vector2(0.7, 0.7)
 	Vfx.host(actor).add_child(crescent)
 	crescent.global_position = actor.global_position + dir * 24.0
 	var tw := crescent.create_tween().set_parallel(true)
-	tw.tween_property(crescent, "scale", Vector2(1.3, 1.3), 0.22)
-	tw.tween_property(crescent, "global_position", end - dir * 24.0, 0.22)  # arrives a little short of the hit, so it reads as reaching it
+	tw.tween_property(crescent, "scale", Vector2(1.15, 1.15), 0.22)
+	# arrives a little short of the hit so it reads as reaching it, but never short of where it started: a hit at point-blank
+	# would otherwise pull it back into the slime
+	var reach := maxf(24.0, (end - actor.global_position).dot(dir) - 24.0)
+	tw.tween_property(crescent, "global_position", actor.global_position + dir * reach, 0.22)
 	tw.tween_property(crescent, "modulate:a", 0.0, 0.14).set_delay(0.08)  # holds full for the first third, then fades
 	tw.chain().tween_callback(crescent.queue_free)

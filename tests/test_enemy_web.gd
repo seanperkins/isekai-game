@@ -103,3 +103,20 @@ func test_a_held_enemy_that_slips_into_dying_sheds_the_web() -> void:
 	e.receive_hit(99, "physical")
 	_step(e)
 	assert_false(_cover(e).visible)
+
+func test_the_web_hides_with_the_sprite_while_the_enemy_is_being_eaten() -> void:
+	var e := _enemy("toad")
+	e.receive_thread(2)
+	_step(e)
+	assert_true(_cover(e).visible)
+	var eat := EatCover.new()
+	add_child_autofree(eat)
+	eat.begin(e, SpriteSheet.load_set("slime"))
+	e.set_held(true)  # a predate hold pauses the stun, so it is still held by the thread
+	_step(e)
+	assert_false(e._sprite.visible)
+	assert_false(_cover(e).visible, "the eat draws its own shrinking copy: a full-size cocoon left over it would not shrink")
+	eat.finish()
+	e.set_held(false)
+	_step(e)
+	assert_true(_cover(e).visible, "and comes back if the eat is cancelled")

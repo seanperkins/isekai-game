@@ -51,7 +51,7 @@ func test_poison_breath_shows_a_green_cloud_in_front() -> void:
 		assert_gt(p.global_position.x, player.global_position.x)
 
 func _crescents() -> Array:
-	return _vfx().filter(func(n): return n is Sprite2D and n.texture == VfxArt.crescent())
+	return _vfx().filter(func(n): return n is Sprite2D and n.texture == VfxArt.water_slash())
 
 func test_water_blade_is_a_crescent_that_starts_at_the_caster_and_slides_to_its_target() -> void:
 	var e := _enemy(60)
@@ -62,6 +62,13 @@ func test_water_blade_is_a_crescent_that_starts_at_the_caster_and_slides_to_its_
 	assert_almost_eq(c.rotation, 0.0, 0.01)
 	await wait_seconds(0.3)
 	assert_eq(_crescents().size(), 0, "it fades and frees itself")
+
+func test_water_blade_at_point_blank_never_slides_back_into_the_caster() -> void:
+	_enemy(20)
+	_cast("water_blade", [3])
+	var c: Sprite2D = _crescents()[0]
+	await wait_seconds(0.12)
+	assert_gte(c.global_position.x, 24.0 - 0.5, "the target is nearer than the crescent's start: it stays put, it does not retreat")
 
 func test_water_blade_without_a_target_slides_toward_full_range() -> void:
 	_cast("water_blade", [3])

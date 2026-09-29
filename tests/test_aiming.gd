@@ -70,7 +70,7 @@ func test_poison_breath_aimed_up_hits_above_not_ahead() -> void:
 
 func test_water_blade_is_a_crescent_turned_to_the_aim() -> void:
 	_cast("water_blade", Vector2(1, 1).normalized(), [3])
-	var c: Sprite2D = get_tree().get_nodes_in_group("vfx").filter(func(n): return n is Sprite2D and n.texture == VfxArt.crescent())[0]
+	var c: Sprite2D = get_tree().get_nodes_in_group("vfx").filter(func(n): return n is Sprite2D and n.texture == VfxArt.water_slash())[0]
 	assert_almost_eq(c.rotation, PI / 4.0, 0.01)
 	assert_true(_approx(c.global_position, Vector2(1, 1).normalized() * 24.0))
 

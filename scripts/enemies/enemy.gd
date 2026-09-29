@@ -400,7 +400,7 @@ func _update_web() -> void:
 	var stunned := status.state == EnemyStatus.STUNNED
 	if not stunned:
 		_web_hold = false  # the hold ended (or a later stun is not this thread's)
-	var alive := status.state == EnemyStatus.ACTIVE or stunned
+	var alive := (status.state == EnemyStatus.ACTIVE or stunned) and _sprite.visible  # an eat hides the sprite and draws its own copy
 	if alive and _web_hold:
 		_web.show_over(_sprite, true)
 	elif alive and _web_slow > 0.0:

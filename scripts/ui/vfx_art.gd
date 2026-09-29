@@ -5,7 +5,6 @@ extends RefCounted
 ## Art.light_texture() itself.
 
 static var _silk: Texture2D
-static var _crescent: Texture2D
 static var _web := {}
 static var _cover := {}
 
@@ -43,73 +42,28 @@ static func web(px: int) -> Texture2D:
 		_web[px] = ImageTexture.create_from_image(img)
 	return _web[px]
 
-## A 96x48 crescent from two circles with a soft alpha edge and a bright rim, open to the right.
-static func crescent() -> Texture2D:
-	if _crescent == null:
-		var img := Image.create(96, 48, false, Image.FORMAT_RGBA8)
-		for y in 48:
-			for x in 96:
-				var outer := Vector2(x - 36.0, y - 24.0).length()  # the big circle: its bulge leads, toward +x
-				var inner := Vector2(x - 20.0, y - 24.0).length()  # bites the crescent out of its back; the horns trail behind
-				var a := clampf((24.0 - outer) / 6.0, 0.0, 1.0) * clampf((inner - 20.0) / 6.0, 0.0, 1.0)
-				if a > 0.0:
-					var rim := clampf(1.0 - (24.0 - outer) / 10.0, 0.0, 1.0)
-					img.set_pixel(x, y, Color(1, 1, 1, a * (0.55 + 0.45 * rim)))
-		_crescent = ImageTexture.create_from_image(img)
-	return _crescent
+## The Water Blade's slash: generated pixel art of a crescent of water (tools/art/vfx_frames.json, make_vfx.py), bulge to
+## +x, so a sprite turned to the aim travels bulge first.
+static func water_slash() -> Texture2D:
+	return Art.texture("vfx_water_slash")
 
-## The webs on a webbed creature, drawn over a frame of exactly `size` so one texel is one pixel of the creature. Not held:
-## a few strands across it and a small fan in one corner. Held: a pale wrap over the whole body with dense strands and an
-## outline over it. Seeded by the size, so a given frame always gets the same webs.
+## How far past the frame a cover reaches: strands a little, a cocoon enough to wrap the whole body.
+const STRANDS_FIT := Vector2(1.1, 1.1)
+const COCOON_FIT := Vector2(1.25, 1.4)
+
+## The webs on a webbed creature, fitted to a frame of `size` (a creature's frames differ in size, and the cover is fitted
+## to whichever one is on screen). Not held: the generated strands sprite (two corner cobwebs, thick strands and silk
+## clumps). Held: the generated cocoon, turned to lie down over a frame wider than it is tall. Built from the same art at
+## every size, so the layout stays put from one animation frame to the next.
 static func web_cover(size: Vector2i, held: bool) -> Texture2D:
 	var key := "%dx%d%s" % [size.x, size.y, "h" if held else "s"]
 	if not _cover.has(key):
-		var img := Image.create(size.x, size.y, false, Image.FORMAT_RGBA8)
-		var rng := RandomNumberGenerator.new()
-		rng.seed = size.x * 1000 + size.y + (7 if held else 0)
-		if held:
-			_wrap(img, size, rng)
-		else:
-			_strands(img, size, rng)
+		var img := Art.texture("vfx_web_cocoon" if held else "vfx_web_strands").get_image()
+		img.convert(Image.FORMAT_RGBA8)
+		var fit := COCOON_FIT if held else STRANDS_FIT
+		var target := Vector2i(maxi(4, ceili(size.x * fit.x)), maxi(4, ceili(size.y * fit.y)))
+		if held and size.x >= size.y:
+			img.rotate_90(COUNTERCLOCKWISE)
+		img.resize(target.x, target.y, Image.INTERPOLATE_LANCZOS)
 		_cover[key] = ImageTexture.create_from_image(img)
 	return _cover[key]
-
-const SILK := Color(0.95, 0.98, 1.0)
-
-static func _strands(img: Image, size: Vector2i, rng: RandomNumberGenerator) -> void:
-	var w := float(size.x - 1)
-	var h := float(size.y - 1)
-	_line(img, Vector2(rng.randf_range(0.15, 0.45) * w, 0), Vector2(rng.randf_range(0.5, 0.85) * w, h), 0.9)
-	_line(img, Vector2(rng.randf_range(0.5, 0.85) * w, 0), Vector2(rng.randf_range(0.15, 0.5) * w, h), 0.9)
-	_line(img, Vector2(0, rng.randf_range(0.2, 0.5) * h), Vector2(w, rng.randf_range(0.5, 0.8) * h), 0.9)
-	# a small corner web: three spokes and a bridge across each gap
-	var reach := minf(w, h) * 0.45
-	var spokes := []
-	for deg in [8.0, 45.0, 82.0]:
-		var dir := Vector2.from_angle(deg_to_rad(deg))
-		spokes.append(dir)
-		_line(img, Vector2.ZERO, dir * reach, 0.9)
-	for i in 2:
-		_line(img, spokes[i] * reach * 0.5, spokes[i + 1] * reach * 0.5, 0.9)
-		_line(img, spokes[i] * reach, spokes[i + 1] * reach, 0.9)
-
-static func _wrap(img: Image, size: Vector2i, rng: RandomNumberGenerator) -> void:
-	var c := Vector2(size.x - 1, size.y - 1) / 2.0
-	for y in size.y:
-		for x in size.x:
-			var d := Vector2((x - c.x) / (size.x / 2.0), (y - c.y) / (size.y / 2.0)).length()
-			if d <= 1.0:
-				img.set_pixel(x, y, Color(SILK, 0.95 if d > 0.85 else 0.45))  # the wrap, with a firmer edge
-	for i in 16:  # dense strands: chords between random points of the outline
-		var a := Vector2.from_angle(rng.randf() * TAU)
-		var b := Vector2.from_angle(rng.randf() * TAU)
-		_line(img, c + a * c, c + b * c, 1.0)
-
-static func _line(img: Image, from: Vector2, to: Vector2, alpha: float) -> void:
-	var steps := int(maxf(absf(to.x - from.x), absf(to.y - from.y))) + 1
-	for i in steps + 1:
-		var p := from.lerp(to, float(i) / float(steps))
-		var x := roundi(p.x)
-		var y := roundi(p.y)
-		if x >= 0 and y >= 0 and x < img.get_width() and y < img.get_height():
-			img.set_pixel(x, y, Color(SILK, alpha))

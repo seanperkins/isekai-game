@@ -1,0 +1,24 @@
+{
+  "canonical": "assets/sprites/slime_idle.png",
+  "style": "Modern pixel art with soft lighting (Style D), matching the reference slime: chunky readable pixels, limited palette, gentle highlights, a clean shape that still reads when shrunk to about 40 pixels wide. One effect sprite only, centred, filling most of the frame.",
+  "frames": [
+    {
+      "name": "water_slash",
+      "width": 128,
+      "refs": [],
+      "prompt": "A single crescent-shaped slash of flowing water travelling to the right: the bulging outer edge leads on the right and two thin tapered horns trail off to the left. It is clearly liquid water, not wind or air: layers of deep blue, bright cyan and pale aqua with rippling wave lines and a glossy highlight streak inside, a bright white foam edge along the leading curve, and a few round water droplets flying off it."
+    },
+    {
+      "name": "web_strands",
+      "width": 128,
+      "refs": [],
+      "prompt": "Loose spider silk draped over a creature, drawn with bold chunky lines about 3 pixels thick so it still reads when shrunk to a tiny size: a fan-shaped cobweb in the top-left corner and another in the bottom-right corner (a few radiating spokes joined by curved bridge threads), two thick white strands crossing between them, and two small clumps of fluffy white web. White-silver silk with light blue-grey shading. Plenty of empty space between the pieces so whatever is behind shows through."
+    },
+    {
+      "name": "web_cocoon",
+      "width": 128,
+      "refs": [],
+      "prompt": "A spider-silk cocoon: a plump upright egg-shaped bundle completely wrapped in many thick overlapping layers of white-silver silk threads criss-crossing around it, pale blue-grey shading in the folds, a few loose sticky strands trailing from the top and the bottom. It fills most of the square and hides whatever is wrapped inside; nothing of the creature is visible."
+    }
+  ]
+}
