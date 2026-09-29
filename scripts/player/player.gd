@@ -253,6 +253,13 @@ func _clinging() -> bool:
 func body_rect() -> Rect2:
 	return Rect2(global_position + _shape.position - _rect.size / 2.0, _rect.size)
 
+## Where the slime can be hit: the current frame's traced shape (global points), or the body box
+## when the sheet is missing.
+func hurt_polygon() -> PackedVector2Array:
+	if _shapes != null and _shapes.hurt_poly.polygon.size() >= 3:
+		return ShapeHit.moved(_shapes.hurt_poly.polygon, _shapes.global_position)
+	return ShapeHit.rect_points(body_rect())
+
 func do_jump() -> void:
 	if health.is_dead() or predation.active():
 		return

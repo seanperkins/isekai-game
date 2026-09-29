@@ -216,10 +216,19 @@ func _physics_process(delta: float) -> void:
 ## touch, never overlap: the margin bridges that. A player with no body box (a test stub) falls back
 ## to the old centre distance.
 func is_touching(player: Node2D) -> bool:
+	if player.has_method("hurt_polygon"):
+		return ShapeHit.overlap(hurt_polygon(), player.hurt_polygon(), CONTACT_MARGIN)
 	if player.has_method("body_rect"):
 		var mine := Rect2(global_position - BODY_SIZE / 2.0, BODY_SIZE).grow(CONTACT_MARGIN)
 		return mine.intersects(player.body_rect())
 	return global_position.distance_to(player.global_position) <= CONTACT_RANGE
+
+## Where this creature can be hit and where it hurts on contact: the current frame's traced shape
+## (global points), or its box when it has no sheet.
+func hurt_polygon() -> PackedVector2Array:
+	if _shapes != null and _shapes.hurt_poly.polygon.size() >= 3:
+		return ShapeHit.moved(_shapes.hurt_poly.polygon, _shapes.global_position)
+	return ShapeHit.rect_points(Rect2(global_position - BODY_SIZE / 2.0, BODY_SIZE))
 
 func is_alert() -> bool:
 	return _alert > 0.0
