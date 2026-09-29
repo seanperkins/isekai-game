@@ -171,10 +171,10 @@ func test_the_headroom_term_sees_a_hop_under_the_ceiling_band() -> void:
 	# a ledge east of the hole, under the ceiling band, cannot hop up into the hole's top ledge: the body bonks at 23 px
 	var g1: RoomDef = rooms["G1"]
 	var rock := _rock(g1, Vector2(220, 380))
-	var under := Rect2(400, 62, 90, 12)
-	var top := Rect2(300, 10, 80, 12)
+	var under := Rect2(400, 66, 90, 12)
+	var top := Rect2(300, 14, 80, 12)
 	assert_false(_hop(rock, under, top), "bonks the ceiling band")
-	assert_true(_hop(rock, Rect2(290, 62, 90, 12), Rect2(220, 10, 90, 12)), "the real chain's second hop is fine")
+	assert_true(_hop(rock, Rect2(290, 66, 90, 12), Rect2(220, 14, 90, 12)), "the real chain's second hop is fine")
 
 func test_g2s_west_piece_reaches_the_g1_sill_and_its_east_piece_reaches_out_too() -> void:
 	var g2: RoomDef = rooms["G2"]

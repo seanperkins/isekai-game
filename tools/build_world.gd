@@ -219,7 +219,7 @@ static func g1() -> RoomDef:
 			_dress("mushroom_bridge", Vector2(360, 120), 0.3)],
 		"spawns": [_s("spore_moth", Vector2(520, 200)), _s("spore_moth", Vector2(760, 170)), _s("spore_moth", Vector2(1000, 210)),
 			_s("mushroom_crab", Vector2(620, 308)), _s("mushroom_crab", Vector2(1040, 308))]}
-	Prefabs.ledge_chain(f, 220.0, 90.0, 70.0, 10.0, 52.0, 320.0)  # the climb back up to C5's floor
+	Prefabs.ledge_chain(f, 220.0, 90.0, 70.0, 14.0, 52.0, 320.0)  # the climb back up to C5's floor (top at y 14: standing centre is 2 px inside G1)
 	return _room(f)
 
 ## G2 Spore Hall (3×2, cell (7,5)): the hub. Two levels: the lower floor (with the hole down to G3) and an upper
@@ -266,7 +266,7 @@ static func g3() -> RoomDef:
 		"spawns": [_s("vine_snake", Vector2(470, 626)), _s("vine_snake", Vector2(610, 626)), _s("vine_snake", Vector2(790, 626)),
 			_s("vine_snake", Vector2(860, 626)), _s("mushroom_crab", Vector2(380, 668)), _s("mushroom_crab", Vector2(520, 668)),
 			_s("mushroom_crab", Vector2(660, 668)), _s("mushroom_crab", Vector2(850, 668))]}
-	Prefabs.ledge_chain(f, 160.0, 90.0, 70.0, 10.0, 52.0, 680.0)  # the climb back up to G2's floor
+	Prefabs.ledge_chain(f, 160.0, 90.0, 70.0, 14.0, 52.0, 680.0)  # the climb back up to G2's floor (top at y 14, see G1)
 	var solids: Array = f["solids"]
 	for k in range(1, 8):  # the climb to G4's sill: 45 px hops from the floor to y 365, then the last ledge at 320
 		solids.append(Rect2(960.0 if k % 2 == 1 else 1100.0, 680.0 - 45.0 * k, 110, 12))

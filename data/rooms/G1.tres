@@ -8,7 +8,7 @@ id = "G1"
 area = "grotto"
 cell = Vector2i(5, 5)
 size = Vector2i(2, 1)
-solids = [Rect2(220, 10, 90, 12), Rect2(290, 62, 90, 12), Rect2(220, 114, 90, 12), Rect2(290, 166, 90, 12), Rect2(220, 218, 90, 12), Rect2(290, 270, 90, 12)]
+solids = [Rect2(220, 14, 90, 12), Rect2(290, 66, 90, 12), Rect2(220, 118, 90, 12), Rect2(290, 170, 90, 12), Rect2(220, 222, 90, 12), Rect2(290, 274, 90, 12)]
 decor = [{
 "id": "grotto_glow_fungus",
 "light": Color(0.5, 1, 0.6, 1),

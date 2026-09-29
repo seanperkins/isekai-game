@@ -458,7 +458,7 @@ func _drift_act(to_player: Vector2, delta: float) -> void:
 		if _puff_windup <= 0.0:
 			var puff := SporePuff.new()
 			get_parent().add_child(puff)
-			puff.launch(global_position)
+			puff.launch(global_position + Vector2(0.0, 12.0))  # under itself
 			EventBus.world_event.emit("spore_puff", {"pos": global_position})
 			_puff_t = PUFF_INTERVAL
 		return
