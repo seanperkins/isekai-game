@@ -16,7 +16,7 @@ four sites one `match kind`, so a new creature is a data flag and one branch per
 
 Non-goals: no change to how any creature plays (numbers, timings, tick order, RNG draws, precedence, telegraphs, which
 state survives a stun); no new creature; no change to `EnemyStatus`, `DeathFx`, `EatCover`, contact damage or the
-sheets; no change to `EnemyState.pick`'s signature or to `frame_name()`; no behaviour classes (see "Later").
+sheets; no change to `EnemyState.pick`'s signature or to `frame_name()`'s output; no behaviour classes (see "Later").
 
 ## Decisions
 
@@ -24,7 +24,8 @@ sheets; no change to `EnemyState.pick`'s signature or to `frame_name()`; no beha
 |---|---|
 | Scope | In place, in `enemy.gd`. `_state: String`, `_state_t: float`, `_aim: Vector2` (folding `_dive_dir` and `_lunge_dir`) stay on `Enemy` for good. `_spit_cd`, `_slow`, `_anim_t`, `_home_x`, `_home_y`, `_anchor`, `_rng`, `_hurt_t`, `facing` and `_on_ceiling` (the Dropper flag) stay separate fields as today. The Walker stays `_walk`; the Dropper stays the flag; the Spitter stays a short interrupt |
 | Public state strings | Unchanged, so `EnemyState.pick` and every test are untouched. `charge_state()` returns `_state` for the charger, lizard, crab and snake kinds (`""`, `windup`, `charge`, `rest`) and `""` for every other kind; `swoop_state()` returns `_state` for the swooper (`idle`, `hover`, `warn`, `dive`, `climb`) and `"idle"` for every other kind (today it never changes for them). The snake keeps `windup` (coil), `charge` (lunge), `rest` (retreat), `""` (hide) |
-| Selection | `kind` is resolved once in `setup()` (before `_ready` builds the body) from `_act`'s precedence: snake (by id), ceiling walker (`ceiling_walk`), drifter, flight, armored charger, spitter (spit damage), else walker. The old chain is deleted with the fold, so the selection test carries a literal map of def id to kind. Only one pair in the old chain has two machines live at once (an armored charger with spit falls through from `_charger_act` to `_spitter_act`), which one `_state` cannot hold: the test asserts, for every shipped def, that no pair of `ceiling_walk`, `armored_charger` and spit damage co-occurs |
+| Selection | `kind` is resolved once in `setup()` (before `_ready` builds the body) from `_act`'s precedence: snake (by id), ceiling walker (`ceiling_walk`), drifter, flight, armored charger, spitter (spit damage), else walker. The old chain is deleted with the fold, so the selection test carries a literal map of def id to kind. The old chain lets several machines fall through (the dropper into everything after it; an armored charger into the spitter), which one `kind` and one `_state` cannot express: the selection test asserts, for every shipped def, that a non-snake def with `ceiling_walk` has none of `flight`, `drifter`, `armored_charger` or spit damage, and that none has both `armored_charger` and spit damage |
+| `_state` tokens | Swooper: `idle` / `hover` / `warn` / `dive` / `climb`. Charger, lizard, crab and snake: `""` / `windup` / `charge` / `rest`. Spitter: `""` / `puff`. Drifter: `""` / `flash`. Walker and dropper: never written, always `""` (`_walk` never touches `_state`, or a charger falling through to it would report `chase` from `charge_state()` and `pick` would return a non-clip). The scenario table below lists descriptive words, not tokens |
 | Initial value | Set in `setup()`: `"idle"` for the swooper, `""` for every other kind |
 | Gravity | Stays one five-line `match kind` beside today's block; the table below is scenario design, not a data structure |
 | The referee | A physics-tick recorder and a compact characterization test written FIRST against the current code (below) |
@@ -33,18 +34,15 @@ sheets; no change to `EnemyState.pick`'s signature or to `frame_name()`; no beha
 
 ## Seams added to the OLD code first (Phase A step 1: no behaviour change, suite green)
 
-The current code exposes no way to observe several states, or to set them up, without private fields. Before any
-recording, these public seams are added and the tests that poke privates are moved onto them (still green on unchanged code):
+The current code exposes no way to observe several states without private fields. Before any
+recording, these public seams are added (still green on unchanged code):
 
 - `seed_rng(n: int)`: reseeds the enemy's RNG (`_ready` seeds it from `get_instance_id()`); called right after `add_child`,
   before any draw. It matters only to the bat (draws on idle→hover and on every climb end, including climb→idle).
-- `telegraphing() -> bool`: the public name for `_telegraphing()`; `test_grotto_creatures` calls it at three places.
-- `anim_state() -> String`: the clip the enemy is playing (the `EnemyState.pick` result `_draw_sheet_frame` already computes,
-  read from the animator); the referee runs with sheets ON so the argument wiring is observed.
-- `force_state(name: String, seconds := 0.0)`: sets up a state for tests and scripted scenes (today it writes `_charge`/`_charge_t`,
-  or `_puff_windup` for a moth). It replaces the three test writes `test_grotto_creatures.gd:161` (`_charge`), `:183`
-  (`_puff_windup`) and `test_death_fx.gd:196` (`_charge`), which a getter cannot do and which would otherwise stop parsing when
-  the fields are folded. `test_art_visuals.gd:50` writes `_on_ceiling`, which stays a field, and `:46` writes `_spit_cd`, which stays.
+- `telegraphing() -> bool`: the public name for `_telegraphing()`; `test_grotto_creatures` calls it at three places (`:78`, `:184`, `:187`), moved onto it in step 1.
+- `anim_state() -> String`: the animation state `_draw_sheet_frame` last computed (the `EnemyState.pick` result, cached in a field it writes; `""` for a creature with no sheet, such as the serpent, whose `_animator` is null). Reading the animator instead would crash on the serpent and would hide a wrong `pick` argument, because `SlimeAnimator.play` silently ignores a name that is not a clip. The referee runs with sheets ON so the argument wiring is observed.
+
+The three test WRITES that set up state (`test_grotto_creatures.gd:161` `_charge`, `:183` `_puff_windup`, `test_death_fx.gd:196` `_charge`) are edited in the fold commit itself to `_state` (`charge`, `flash`, `windup`) and `_state_t`; the codebase's convention is tests writing private fields, and `test_art_visuals.gd:50` (`_on_ceiling`) and `:46` (`_spit_cd`) stay as they are because those fields stay.
 
 ## The per-tick order (`_physics_process`), written down so the fold cannot reorder it
 
@@ -93,11 +91,11 @@ An ACTIVE enemy with no player takes the inactive branch (step 6) and still gets
   to sample). Scripted mid-scenario moves (player position, stun, slow, lethal hit) fire on tick numbers from the same recorder,
   never on wall-clock waits. Each sample records `global_position`, `velocity`, `facing`, `charge_state()`, `swoop_state()`,
   `anim_state()` (sheets ON), `telegraphing()`, and events stamped with the TICK: hazards spawned (`SpitBlob`, `SporePuff`, with
-  position), the `spore_puff` world event, player hits and poisons from the stub. Hazards are freed between scenarios.
-- **The differential (one-off, not committed).** The driver runs every scenario and writes the full per-tick trace (0.01 px) to
-  `.tmp/` on the OLD commit; after each Phase A commit the same driver is diffed against it. The driver is committed; the file is not.
+  position), the `spore_puff` world event, player hits and poisons from the stub. Hazards are freed between scenarios. The recorder is a single helper Node in the test file (added with `add_child_autofree`, disconnected in `_exit_tree`, its state in a Node or Array because lambdas capture locals by value), not a new addon class. Hazards are recorded by scanning the `hazards` group at each sample (`launch()` sets position after `add_child`). Sample k shows the state after tick k−1 and scripted moves act before tick k (HYPOTHESIS from the scene tree order); both sides of the differential use the same driver, and the tick numbers in the transition lists are read accordingly.
+- **The differential (one-off, not committed).** The committed driver (a script without the `test_` prefix, so the suite never runs it) runs every scenario and writes the full per-tick trace (0.01 px) to
+  `.tmp/` on the OLD commit; after each Phase A commit the same driver is diffed against it (it compares only when a baseline file is present and never overwrites one by default). The driver is committed; the file is not.
 - **The committed characterization** (`tests/test_enemy_traces.gd`) asserts compactly what a reader can check: per scenario the
-  run-length transition list `(first tick, state, anim_state, telegraphing)`, the events with their ticks, and the end position. One
+  run-length transition list `(first tick, state, anim_state, telegraphing)` and the events with their ticks, and the end position only where the scenario is about position (patrol bounds, the snake's reach). One
   plain approach/hold/retreat pass per kind (walker, charger, spitter, swooper, dropper, drifter, snake; the crab and lizard, and
   the two moths, differ only by data), and every interruption case for every kind that has a state: stun mid-windup, mid-charge,
   mid-rest, mid-warn, mid-dive, mid-flash and mid-coil; a slowed creature; alert lost mid-hover; a lethal hit mid-telegraph
@@ -115,7 +113,7 @@ An ACTIVE enemy with no player takes the inactive branch (step 6) and still gets
   `test_tackle_reach`, `test_hit_fairness`, `test_enemy_sheets`, `test_death_cause`, `test_death_fx`, `test_art_visuals`.
   `Enemy` keeps its public constants as aliases (`SPIT_*`, `WARN_SECONDS`, `DIVE_SECONDS`, `CLIMB_SECONDS`, `CHARGE_*`, `ALERT_MEMORY`,
   `BASE_SPEED`, `CONTACT_MARGIN`, `LEDGE_DEPTH`, `BODY_SIZE`, `BODY_BOTTOM`, `SLOW_SECONDS`, `PUFF_*`, `CLIPS`) and `_speed()` keeps its name.
-- Selection test: the literal id → kind map for every shipped def, and the no-pair assertion above.
+- Selection test: the literal id → kind map for every shipped def (`water_pool` and the serpent included: both are walkers; the serpent has no sheet), and the pairwise assertions above.
 
 ## Follow-ups (not part of this work; issue text)
 
@@ -127,10 +125,7 @@ An ACTIVE enemy with no player takes the inactive branch (step 6) and still gets
 
 ## Build order
 
-1. Seams on the OLD code, the three test writes and three `_telegraphing()` calls moved onto them, suite green.
-2. The recorder, the driver, the differential recorded on the old commit, the committed characterization, the legacy-path test, the
-   sampled mutation proof.
-3. The fold, one commit each with the suite and the differential green: `_state` / `_state_t` / `_aim` and `kind` (with the getters'
-   mapping and the initial values); `_clear_inactive()` and `_on_died` per kind; the gravity `match`; `_telegraphing()` and `_act` as
-   `match kind`; delete the dead fields.
+1. Seams on the OLD code (`seed_rng`, `telegraphing()`, `anim_state()`) and the three `_telegraphing()` calls moved onto the public name, suite green.
+2. The recorder, the driver, the differential recorded on the old commit, the committed characterization, the legacy-path test, the sampled mutation proof.
+3. The fold, in commits that are each green with the differential: **the first commit ports every reader and writer at once** (`_state`/`_state_t`/`_aim` and `kind`, the getters' mapping and initial values, both clears with the kind gate (`_clear_inactive()` and the body of the existing `_on_died` died-handler), `frame_name()` (its OUTPUT unchanged, its body reads `_state`), `_draw_sheet_frame`, `_telegraphing()`, the five behaviour functions, and the three test writes), because a partial fold leaves stale writers and readers; the later commits are pure restructurings (`_act` and the gravity block as `match kind`, deleting the dead fields).
 4. Real playtest of each creature (telegraph, attack, stun, death), review, merge.
