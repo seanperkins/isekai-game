@@ -57,6 +57,18 @@ const STUNNED_TINT := Color(0.6, 0.6, 0.85)
 ## How long a non-lethal hit flinches (the hurt frame).
 const HURT_SECONDS := 0.25
 const CLIPS := "res://data/enemy_clips.json"
+## The spore moth drops a puff every PUFF_INTERVAL while the player is within PUFF_RANGE, flashing PUFF_WINDUP first.
+const PUFF_INTERVAL := 3.0
+const PUFF_WINDUP := 0.4
+const PUFF_RANGE := 320.0
+## The vine snake coils when prey passes under it, lunges along a line, and retreats to its anchor.
+const LUNGE_TRIGGER_X := 40.0
+const LUNGE_TRIGGER_Y := 110.0
+const COIL_SECONDS := 0.5
+const LUNGE_SECONDS := 0.3
+const LUNGE_SPEED := 300.0
+const LUNGE_REACH := 80.0
+const RETREAT_SPEED := 100.0
 
 var def: CreatureDef
 var stats: Stats
@@ -91,6 +103,11 @@ var _cause := ""
 var _killed_from := Vector2.INF
 var _dive_dir := Vector2.ZERO
 var _rng := RandomNumberGenerator.new()
+var _home_y := 0.0
+var _anchor := Vector2.ZERO
+var _puff_t := PUFF_INTERVAL
+var _puff_windup := 0.0
+var _lunge_dir := Vector2.ZERO
 
 func setup(p_def: CreatureDef, skill_defs_by_id: Dictionary) -> void:
 	def = p_def
@@ -113,6 +130,8 @@ func setup(p_def: CreatureDef, skill_defs_by_id: Dictionary) -> void:
 
 func _ready() -> void:
 	_home_x = global_position.x
+	_home_y = global_position.y
+	_anchor = global_position
 	_rng.seed = get_instance_id()  # each bat keeps its own rhythm
 	if get_child_count() == 0:
 		_build_body()
@@ -221,8 +240,15 @@ func _physics_process(delta: float) -> void:
 		velocity.x = 0.0
 		_charge = ""
 		_spit_windup = 0.0
+	var stunned := status.state == EnemyStatus.STUNNED
 	var flying := capabilities.has("flight") and active
-	if not flying and not (_on_ceiling and active):
+	var hovering := def.drifter and (active or stunned)
+	var tethered := def.id == Sources.VINE_SNAKE and _on_ceiling and (active or stunned)
+	if hovering and not active:
+		velocity.y = 0.0  # a stunned moth holds its height
+	if tethered and not active:
+		velocity = Vector2.ZERO  # a stunned snake stays on its tether
+	if not flying and not hovering and not tethered and not (_on_ceiling and active):
 		velocity.y += GRAVITY * delta
 	move_and_slide()
 	if active and player != null and is_touching(player):
@@ -327,17 +353,23 @@ func _draw_sheet_frame(delta: float) -> void:
 	_shapes.refresh(_sheet, frame, facing < 0)
 
 func _telegraphing() -> bool:
-	return _charge == "windup" or _swoop == "warn" or _spit_windup > 0.0
+	return _charge == "windup" or _swoop == "warn" or _spit_windup > 0.0 or _puff_windup > 0.0
 
 func _speed() -> float:
 	return BASE_SPEED * stats.get_stat("spd") / 100.0 * (0.5 if _slow > 0.0 else 1.0)
 
 func _act(player: Node2D, delta: float) -> void:
 	var to_player: Vector2 = player.global_position - global_position
+	if def.id == Sources.VINE_SNAKE:
+		_snake_act(player, to_player, delta)
+		return
 	if _on_ceiling:
 		velocity = Vector2.ZERO
 		if is_alert() and absf(to_player.x) < 40.0 and to_player.y > 0.0:
 			_on_ceiling = false  # drop on prey
+		return
+	if def.drifter:
+		_drift_act(to_player, delta)
 		return
 	if capabilities.has("flight"):
 		_swoop_act(player, delta)
@@ -407,6 +439,62 @@ func _charger_act(to_player: Vector2, delta: float) -> bool:
 		velocity.x = 0.0
 		return true
 	return false
+
+## A slow side-to-side loop about its home; drops a spore puff every PUFF_INTERVAL while the player is near.
+func _drift_act(to_player: Vector2, delta: float) -> void:
+	if global_position.x > _home_x + PATROL_RANGE * 2.0:
+		facing = -1
+	elif global_position.x < _home_x - PATROL_RANGE * 2.0:
+		facing = 1
+	velocity.x = facing * _speed() * 0.6
+	var target_y := _home_y + sin(_anim_t * 1.6) * 14.0
+	velocity.y = clampf((target_y - global_position.y) * 2.0, -60.0, 60.0)
+	if to_player.length() > PUFF_RANGE:
+		_puff_t = PUFF_INTERVAL
+		_puff_windup = 0.0
+		return
+	if _puff_windup > 0.0:
+		_puff_windup -= delta
+		if _puff_windup <= 0.0:
+			var puff := SporePuff.new()
+			get_parent().add_child(puff)
+			puff.launch(global_position)
+			EventBus.world_event.emit("spore_puff", {"pos": global_position})
+			_puff_t = PUFF_INTERVAL
+		return
+	_puff_t -= delta
+	if _puff_t <= PUFF_WINDUP:
+		_puff_windup = PUFF_WINDUP
+
+## Tethered to its anchor: coil when prey passes under, lunge along the line to where it was, retreat, hide.
+func _snake_act(player: Node2D, to_player: Vector2, delta: float) -> void:
+	_charge_t -= delta
+	match _charge:
+		"windup":
+			velocity = Vector2.ZERO
+			if _charge_t <= 0.0:
+				_lunge_dir = (player.global_position - global_position).normalized()
+				_charge = "charge"
+				_charge_t = LUNGE_SECONDS
+		"charge":
+			velocity = _lunge_dir * LUNGE_SPEED
+			if _charge_t <= 0.0 or global_position.distance_to(_anchor) >= LUNGE_REACH:
+				_charge = "rest"
+		"rest":
+			var back := _anchor - global_position
+			if back.length() <= 3.0:
+				global_position = _anchor
+				velocity = Vector2.ZERO
+				_charge = ""
+			else:
+				velocity = back.normalized() * RETREAT_SPEED
+		_:
+			velocity = Vector2.ZERO
+			if is_alert() and absf(to_player.x) < LUNGE_TRIGGER_X and to_player.y > 0.0 and to_player.y <= LUNGE_TRIGGER_Y:
+				_charge = "windup"
+				_charge_t = COIL_SECONDS
+	if absf(velocity.x) > 1.0:
+		facing = 1 if velocity.x > 0.0 else -1
 
 ## Puff up, then lob a glob at where the player stands. Returns true while winding up.
 func _spitter_act(player: Node2D, to_player: Vector2, delta: float) -> bool:
