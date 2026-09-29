@@ -82,6 +82,10 @@ var _on_ceiling := false
 var _spit_damage := 0
 var _spit_cd := 0.0
 var _slow := 0.0
+## Set only by a thread, never by a zone or a tackle, so the webs on the sprite mean what happened to it.
+var _web_slow := 0.0
+var _web_hold := false
+var _web: WebCover
 var _sprite: Sprite2D
 ## "<room id>:<index>" of the room spawn that made this creature (empty for one made by hand); first-time XP is per spawn.
 var spawn_key := ""
@@ -201,8 +205,10 @@ func receive_thread(tier: int) -> void:
 		return
 	if tier >= 2 and def.predatable:
 		status.stun()
+		_web_hold = true
 	else:
 		slow_for(SLOW_SECONDS)
+		_web_slow = SLOW_SECONDS
 
 ## The one writer for the slow: a thread (Sticky Thread, Swing Thread) and every player zone (Spore Cloud, Binding Web's
 ## patch, Healing Spores, Puffball) call it.
@@ -260,6 +266,7 @@ func _physics_process(delta: float) -> void:
 		return
 	_spit_cd = maxf(0.0, _spit_cd - delta)
 	_slow = maxf(0.0, _slow - delta)
+	_web_slow = maxf(0.0, _web_slow - delta)
 	var player: Node2D = get_tree().get_first_node_in_group("player")
 	var active := status.state == EnemyStatus.ACTIVE
 	if active and player != null:
@@ -368,8 +375,13 @@ func frame_name() -> String:
 	return def.id
 
 func _update_visual(delta: float = 0.0) -> void:
-	if _sprite == null or status.state == EnemyStatus.DYING:
-		return  # the death effect owns the sprite
+	if _sprite == null:
+		return
+	if status.state != EnemyStatus.DYING:  # the death effect owns the sprite
+		_draw_creature(delta)
+	_update_web()  # after the draw, so it fits this frame
+
+func _draw_creature(delta: float) -> void:
 	if _sheet != null:
 		_draw_sheet_frame(delta)
 	else:
@@ -382,6 +394,19 @@ func _update_visual(delta: float = 0.0) -> void:
 		_sprite.modulate = TELEGRAPH_TINT
 	else:
 		_sprite.modulate = Color.WHITE
+
+## Strands while a thread slows it, the cocoon while a thread holds it, nothing once either ends or it is down.
+func _update_web() -> void:
+	var stunned := status.state == EnemyStatus.STUNNED
+	if not stunned:
+		_web_hold = false  # the hold ended (or a later stun is not this thread's)
+	var alive := status.state == EnemyStatus.ACTIVE or stunned
+	if alive and _web_hold:
+		_web.show_over(_sprite, true)
+	elif alive and _web_slow > 0.0:
+		_web.show_over(_sprite, false)
+	else:
+		_web.visible = false
 
 func _draw_sheet_frame(delta: float) -> void:
 	var state := EnemyState.pick(def.id, status.state, charge_state(), swoop_state(), _state == "puff",
@@ -624,6 +649,8 @@ func _build_body() -> void:
 	if def != null:
 		_sprite = Art.sprite(frame_name(), BODY_BOTTOM)
 		add_child(_sprite)
+		_web = WebCover.new()
+		add_child(_web)  # after the sprite, so it draws over it
 		_load_sheet()
 		_update_visual()
 

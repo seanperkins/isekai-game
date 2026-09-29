@@ -1,7 +1,8 @@
 extends SceneTree
 ## Real-renderer shots of the channel and effect looks. Run from the project root (windowed, unsandboxed):
 ##   env HOME="$PWD/.tmp/gdhome" godot --path . -s res://tools/vfx_shots.gd
-## Writes .tmp/vfx/*.png: the web tether on an enemy, the rope on rock, the water stream, Water Blade and Binding Web.
+## Writes .tmp/vfx/*.png: the web tether on an enemy, the rope on rock, the water stream, Water Blade, Binding Web, and an
+## enemy with a few strands and in a cocoon.
 
 const OUT := "res://.tmp/vfx/"
 var game
@@ -46,6 +47,8 @@ func _process(_delta: float) -> bool:
 			dummy.set_physics_process(false)
 		40:
 			Input.action_press("active_1")  # hold the web on the toad
+		60:
+			dummy._update_visual()  # its physics is off, so draw the webs by hand
 		70:
 			_shot("web_tether")
 			Input.action_release("active_1")
@@ -58,6 +61,20 @@ func _process(_delta: float) -> bool:
 			p.drop_rope()
 			p.global_position = game.world.current_rect().position + Vector2(300, 300)
 			p.velocity = Vector2.ZERO
+		100:
+			dummy.global_position = p.global_position + Vector2(70, 0)
+			dummy.receive_thread(1)
+			dummy._update_visual()  # its physics is off, so draw the webs by hand
+		104:
+			_shot("enemy_webbed")
+			dummy.receive_thread(2)
+			dummy._update_visual()
+		108:
+			_shot("enemy_cocoon")
+			dummy._web_hold = false  # back to a plain enemy for the shots that follow
+			dummy._web_slow = 0.0
+			dummy.status.state = EnemyStatus.ACTIVE
+			dummy._update_visual()
 		120:
 			Input.action_press("active_2")  # hold the water stream to the right
 		135:

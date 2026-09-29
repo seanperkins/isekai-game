@@ -39,3 +39,28 @@ func test_textures_are_cached() -> void:
 	assert_same(VfxArt.crescent(), VfxArt.crescent())
 	assert_same(VfxArt.web(80), VfxArt.web(80))
 	assert_ne(VfxArt.web(80), VfxArt.web(40))
+
+func _coverage(t: Texture2D, min_alpha: float) -> float:
+	var img := t.get_image()
+	var n := 0
+	for y in img.get_height():
+		for x in img.get_width():
+			if img.get_pixel(x, y).a >= min_alpha:
+				n += 1
+	return float(n) / float(img.get_width() * img.get_height())
+
+func test_web_cover_matches_the_frame_pixel_for_pixel_and_is_cached() -> void:
+	assert_eq(VfxArt.web_cover(Vector2i(40, 32), false).get_size(), Vector2(40, 32))
+	assert_eq(VfxArt.web_cover(Vector2i(40, 32), true).get_size(), Vector2(40, 32))
+	assert_same(VfxArt.web_cover(Vector2i(40, 32), true), VfxArt.web_cover(Vector2i(40, 32), true))
+	assert_ne(VfxArt.web_cover(Vector2i(40, 32), true), VfxArt.web_cover(Vector2i(40, 32), false))
+
+func test_a_few_strands_leave_the_creature_showing() -> void:
+	var c := _coverage(VfxArt.web_cover(Vector2i(40, 32), false), 0.5)
+	assert_gt(c, 0.02, "there are strands")
+	assert_lt(c, 0.25, "but only a few")
+
+func test_the_cocoon_covers_it_completely() -> void:
+	var t := VfxArt.web_cover(Vector2i(40, 32), true)
+	assert_gt(_coverage(t, 0.4), 0.6, "most of the frame is wrapped")
+	assert_gt(_coverage(t, 0.9), 0.15, "with bright strands over the wrap")

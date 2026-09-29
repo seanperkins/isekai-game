@@ -29,6 +29,7 @@ Gamepad: left stick / D-pad move (stick also aims) · A jump · X tackle · B ho
 - [ ] The cave scrolls in both directions: stair towers at x ~1400 and the far east lead up to the middle and upper tiers, and stairs above the upper tier reach the top gallery.
 - [ ] Sticky Thread aimed at rock (up, diagonal, or at a wall) sticks and draws a rope; you swing on it. Left/right pump, up/down reel, Jump lets go with your momentum.
 - [ ] Sticky Thread aimed at an enemy still slows/holds it. Aimed at nothing in range, it just flashes.
+- [ ] A thread-slowed enemy wears a few silk strands (and a small web in one corner) until the slow ends; a thread-held enemy is wrapped completely in a cocoon until it is free. A Spore Cloud or Binding Web patch slow, and a tackle stun, leave no webs on it.
 - [ ] Hold Sticky Thread on an enemy: a silk strand stays taut to it, it stays stunned, MP ticks down one point every half second, and it lets go at 3 s or when you release. Hold Hydraulic Propulsion: a spray trails the slime and the burst carries on for up to 0.6 s. Holding a skill blocks other casts until you release.
 - [ ] Upper tier swing gap: the three rocks with vines are anchors; chaining swings crosses the gap.
 - [ ] Evolving Swing Thread puts it in Sticky Thread's slot; its rope is longer and launches harder.
