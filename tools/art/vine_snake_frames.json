@@ -51,7 +51,8 @@
    "refs": [
     "slither_1"
    ],
-   "prompt": "The same snake gliding, the wave shifted so the body forms a shallow S."
+   "prompt": "The same snake gliding, the wave shifted so the body forms a shallow S.",
+   "outline_eps": 0.9
   },
   {
    "name": "slither_3",

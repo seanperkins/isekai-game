@@ -182,11 +182,11 @@ def to_local(points, w, h):
     return [[x - w / 2.0, y - float(h)] for x, y in points]
 
 
-def trace(im, attack_from):
+def trace(im, attack_from, eps=0.35):
     """(hurt, attack) shapes, frame-local. `attack` is empty unless `attack_from` is given. Both follow the
     drawn outline (see `outline`), not the convex hull."""
     w, h = im.size
-    hurt = to_local(outline(im), w, h)
+    hurt = to_local(outline(im, eps=eps), w, h)
     attack = []
     if attack_from is not None:
         front = outline(im, x_from=math.ceil(attack_from * w))
@@ -231,7 +231,7 @@ def main():
         if not os.path.exists(src):
             raise SystemExit("missing %s (generate it first)" % src)
         fitted[f["name"]] = fit_scaled(Image.open(src), scale, look) if scale else fit_frame(Image.open(src), f["width"])
-        shapes[f["name"]] = trace(fitted[f["name"]], f.get("attack_from"))
+        shapes[f["name"]] = trace(fitted[f["name"]], f.get("attack_from"), f.get("outline_eps", 0.35))
     sheet, rects = pack(fitted)
     os.makedirs(OUT, exist_ok=True)
     sheet.save(os.path.join(OUT, rig_set + ".png"))

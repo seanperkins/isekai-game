@@ -73,3 +73,16 @@ func test_every_clip_uses_frames_that_exist_and_every_state_has_a_clip() -> void
 			assert_gt(float(clip["fps"]), 0.0)
 			for fr in clip["frames"]:
 				assert_true(sheet.has_frame(fr), "%s/%s uses a frame that is not on the sheet: %s" % [set_name, state, fr])
+
+func test_every_frame_makes_a_valid_hit_shape_facing_either_way() -> void:
+	# the engine decomposes a collision polygon into convex parts; a degenerate one logs an error every time the frame shows
+	# (the vine snake's slither_2, mirrored, did) and leaves the body with no physics shape
+	for set_name in SETS:
+		var sheet := SpriteSheet.load_set(set_name)
+		for left in [false, true]:
+			for n in sheet.frame_names():
+				var shapes := SlimeShapes.new()
+				add_child_autofree(shapes)
+				shapes.refresh(sheet, n, left)
+				assert_false(Geometry2D.decompose_polygon_in_convex(shapes.hurt_poly.polygon).is_empty(),
+					"%s/%s hurt shape (left=%s) decomposes" % [set_name, n, left])
