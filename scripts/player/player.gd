@@ -65,7 +65,13 @@ var _regen_acc := 0.0
 var _abilities := {}
 var _sprite: Sprite2D
 var spreading := false
+## Set false before setup() to draw the old scaled sprite instead of the slime's own frames.
+var use_sheet := true
+var _sheet: SpriteSheet
+var _animator: SlimeAnimator
+var _shapes: SlimeShapes
 var _shape: CollisionShape2D
+var _cover: EatCover
 var _rect: RectangleShape2D
 var _tackle_time := 0.0
 var _land_timer := 0.0
@@ -128,6 +134,10 @@ func _physics_process(delta: float) -> void:
 		do_jump()
 	if Input.is_action_just_pressed("tackle"):
 		do_tackle()
+	# A freed prey (its room was left mid-eat) makes predation.active() false on its own, so end the
+	# cover here or the slime stays hidden and the cover node is orphaned.
+	if _cover != null and not predation.active():
+		cancel_predate()
 	if Input.is_action_pressed("predate"):
 		if predation.active():
 			process_predate(delta)
@@ -168,16 +178,6 @@ func _update_prompt() -> void:
 	if target != null:
 		eat_prompt.text = "Hold %s to eat" % ("B" if Controls.using_joypad else "K")
 
-## Which slime pose to draw: eating, airborne, briefly squashed after landing, or idle.
-static func pick_frame(predating: bool, on_floor: bool, land_timer: float) -> String:
-	if predating:
-		return "slime_eat"
-	if not on_floor:
-		return "slime_jump"
-	if land_timer > 0.0:
-		return "slime_land"
-	return "slime_idle"
-
 func _update_visual(delta: float) -> void:
 	var on_floor := is_on_floor()
 	if on_floor and not _was_on_floor:
@@ -185,9 +185,27 @@ func _update_visual(delta: float) -> void:
 	_was_on_floor = on_floor
 	_land_timer = maxf(0.0, _land_timer - delta)
 	_update_rope_line()
-	Art.set_frame(_sprite, pick_frame(predation.active(), on_floor, _land_timer), BODY_BOTTOM)
+	if _sheet == null:
+		_draw_fallback_sprite()
+		return
+	var state := SlimeState.pick(predation.active(), _invuln > INVULN_SECONDS - HURT_FLASH, rope != null,
+		_clinging(), _tackle_time > 0.0, spreading, on_floor, velocity.y, _land_timer, velocity.x)
+	_animator.play(state)
+	_animator.advance(delta)
+	var frame := _animator.frame()
+	var left := _faces_left(state, get_wall_normal() if is_on_wall() else Vector2.ZERO)
+	_sprite.texture = _sheet.frame_texture(frame)
+	_sprite.position.y = BODY_BOTTOM - _sheet.frame_size(frame).y / 2.0
+	_sprite.scale = Vector2.ONE
+	_sprite.flip_h = left
+	_shapes.refresh(_sheet, frame, left)
+
+## The old frames at the body's scale, for when the sheet is missing.
+func _draw_fallback_sprite() -> void:
+	var name := "slime_eat" if predation.active() else ("slime_jump" if not is_on_floor() \
+		else ("slime_land" if _land_timer > 0.0 else "slime_idle"))
+	Art.set_frame(_sprite, name, BODY_BOTTOM)
 	_sprite.flip_h = facing < 0
-	# Until the 2x frames are drawn, the old frames are shown at the body's scale.
 	_sprite.scale = Vector2(BodyConfig.SCALE, BodyConfig.SCALE)
 	if _sprite.texture != null:
 		_sprite.position.y = BODY_BOTTOM - _sprite.texture.get_height() * BodyConfig.SCALE / 2.0
@@ -279,6 +297,7 @@ func begin_predate() -> void:
 	target.set_held(true)
 	drop_rope()
 	predation.start(target, stats.get_stat("predation_time"))
+	_start_cover(target)
 
 func process_predate(delta: float) -> void:
 	var t = predation.target
@@ -286,6 +305,8 @@ func process_predate(delta: float) -> void:
 			or global_position.distance_to(t.global_position) > PREDATE_BREAK_RANGE:
 		cancel_predate()
 		return
+	if _cover != null:
+		_cover.tick(delta, predation.progress())
 	if predation.update(delta):
 		_complete_predation(t)
 
@@ -294,6 +315,22 @@ func cancel_predate() -> void:
 	if is_instance_valid(t):
 		t.set_held(false)
 	predation.cancel()
+	_end_cover()
+
+func _start_cover(target: Node2D) -> void:
+	if _sheet == null:
+		return
+	_end_cover()
+	_cover = EatCover.new()
+	get_parent().add_child(_cover)
+	_cover.begin(target, _sheet, target.global_position.x < global_position.x)
+	_sprite.visible = false
+
+func _end_cover() -> void:
+	if _cover != null and is_instance_valid(_cover):
+		_cover.finish()
+	_cover = null
+	_sprite.visible = true
 
 func do_inspect() -> void:
 	if health.is_dead():
@@ -481,6 +518,7 @@ func apply_impulse(v: Vector2) -> void:
 	_dash = 0.25
 
 func _complete_predation(t) -> void:
+	_end_cover()
 	predation.cancel()
 	var c: CreatureDef = t.consume()
 	var kind := "terrain" if c.id == Sources.WATER_POOL else "creature"
@@ -576,6 +614,17 @@ func _build_body() -> void:
 	add_child(_shape)
 	_sprite = Art.sprite("slime_idle", BODY_BOTTOM)
 	add_child(_sprite)
+	if use_sheet and SpriteSheet.available("slime"):
+		_sheet = SpriteSheet.load_set("slime")
+		_animator = SlimeAnimator.new(SlimeAnimator.load_clips())
+		_animator.play("idle")
+		var first := _animator.frame()
+		_sprite.texture = _sheet.frame_texture(first)
+		_sprite.position.y = BODY_BOTTOM - _sheet.frame_size(first).y / 2.0
+		_shapes = SlimeShapes.new()
+		_shapes.position = Vector2(0.0, BODY_BOTTOM)
+		add_child(_shapes)
+		_shapes.refresh(_sheet, first, false)
 	add_child(Art.light(Color(0.4, 0.75, 1.0), 0.8, 1.2))  # the slime's soft inner glow
 	eat_prompt.visible = false
 	eat_prompt.add_theme_font_size_override("font_size", 8)

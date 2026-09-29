@@ -24,19 +24,13 @@ func _enemy(id: String) -> Enemy:
 func _sprite(n: Node) -> Sprite2D:
 	return n.get_node("Sprite")
 
-func test_player_frame_rules() -> void:
-	assert_eq(Player.pick_frame(true, true, 0.0), "slime_eat")
-	assert_eq(Player.pick_frame(false, false, 0.0), "slime_jump")
-	assert_eq(Player.pick_frame(false, true, 0.1), "slime_land")
-	assert_eq(Player.pick_frame(false, true, 0.0), "slime_idle")
-
 func test_player_draws_the_slime_and_flips_with_facing() -> void:
 	var rules: SkillRulesEngine = autofree(SkillRulesEngine.new())
 	rules.setup(DefLoader.load_dir("res://data/skills"))
 	var p := Player.new()
 	p.setup(rules, CompendiumModel.new([], []), [], func(_n: String, _t: Dictionary) -> void: pass)
 	add_child_autofree(p)
-	assert_eq(_sprite(p).texture, Art.texture("slime_idle"))
+	assert_eq(_sprite(p).texture, p._sheet.frame_texture("idle_1"))
 	p.facing = -1
 	p._update_visual(0.016)
 	assert_true(_sprite(p).flip_h)

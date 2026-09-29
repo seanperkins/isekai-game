@@ -1,0 +1,26 @@
+{
+  "style": "Modern pixel art with soft lighting (Style D): a small translucent glowing blue jelly slime, soft inner glow, gentle highlights, a clean dark-blue outline, chunky readable pixels, two small glossy dark eyes. Match the character, colours and proportions of the reference images exactly. Side view, the slime facing right.",
+  "frames": [
+    {"name": "idle_1", "width": 44, "refs": [], "prompt": "The slime resting: a rounded dome slightly wider than tall, two eyes near the upper front (right), relaxed."},
+    {"name": "idle_2", "width": 44, "refs": ["idle_1"], "prompt": "The same slime breathing out: very slightly flatter and wider (about 5 percent squash), same eyes and colours."},
+    {"name": "run_1", "width": 46, "refs": ["idle_1"], "prompt": "The same slime mid-run: leaning forward to the right and stretched slightly horizontally, the back trailing, eyes looking right."},
+    {"name": "run_2", "width": 42, "refs": ["idle_1", "run_1"], "prompt": "The same slime in the run's recovery: compressed and a little taller, hunched, bouncing up."},
+    {"name": "run_3", "width": 46, "refs": ["idle_1", "run_2"], "prompt": "The same slime stretched forward again like the first run frame, with the trailing back edge pulled in a little."},
+    {"name": "run_4", "width": 42, "refs": ["idle_1", "run_3"], "prompt": "The same slime compressed and popping up slightly higher than the resting pose."},
+    {"name": "rise", "width": 38, "refs": ["idle_1"], "prompt": "The same slime jumping upward: a tall stretched teardrop, narrower than resting, eyes wide."},
+    {"name": "fall", "width": 42, "refs": ["idle_1"], "prompt": "The same slime falling: taller than resting with a wider bottom, its edges trailing upward, eyes wide."},
+    {"name": "land", "width": 52, "refs": ["idle_1"], "prompt": "The same slime landing: squashed very flat and wide, eyes squinting."},
+    {"name": "hurt", "width": 50, "refs": ["idle_1"], "prompt": "The same slime hit and recoiling: squashed sideways with a slight tilt, eyes squeezed shut in pain."},
+    {"name": "rope", "width": 34, "refs": ["idle_1"], "prompt": "The same slime hanging from a thread: stretched tall and thin with a pointed top like a drop being pulled upward. Do not draw any thread, rope or line: the pointed tip is the top of the sprite."},
+    {"name": "wall_1", "width": 44, "refs": ["idle_1"], "prompt": "The same slime clinging to a wall on its RIGHT side: its front edge pressed flat against the wall, two small jelly arms gripping upward on the right, eyes looking up."},
+    {"name": "wall_2", "width": 44, "refs": ["idle_1", "wall_1"], "prompt": "The same clinging pose with the grip shifted: the arms a little lower, the body slightly stretched downward."},
+    {"name": "tackle", "width": 54, "attack_from": 0.62, "refs": ["idle_1"], "prompt": "The same slime in a charging tackle: stretched long horizontally with a leading edge pointing forward to the right, streamlined, eyes narrowed and determined."},
+    {"name": "spread_1", "width": 56, "refs": ["idle_1", "land"], "prompt": "The same slime half flattened, squashing down into a puddle: wider and lower than resting, eyes near the top."},
+    {"name": "spread_2", "width": 68, "refs": ["idle_1", "spread_1"], "prompt": "The same slime fully spread into a flat puddle: very wide, low and thin like a pancake, the eyes as two tiny ovals on the top edge."},
+    {"name": "cover_1", "width": 44, "refs": ["idle_1"], "prompt": "The same slime lunging: its body arching up and forward to the right like a leap over something, eyes looking down and to the right."},
+    {"name": "cover_2", "width": 60, "refs": ["idle_1", "cover_1"], "prompt": "The same slime draping down like a blanket over something below it: a wide low mound with its edges spreading out to the sides, pale glowing blue."},
+    {"name": "cover_3", "width": 66, "refs": ["idle_1", "cover_2"], "prompt": "The same slime engulfing something: a wide flat mound with its edges hugging the ground on both sides, glowing, a hollow dark shape suggested inside."},
+    {"name": "cover_4", "width": 68, "refs": ["cover_3"], "prompt": "The same engulfing pose pulsing slightly bigger, its edges spread a little more."},
+    {"name": "cover_5", "width": 46, "refs": ["idle_1"], "prompt": "The same slime popping back into a round dome after eating, happy eyes, nothing else in the frame (no sparkles, no droplets)."}
+  ]
+}

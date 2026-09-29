@@ -1,0 +1,86 @@
+import os
+import sys
+import unittest
+
+from PIL import Image
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import assemble_frames as a  # noqa: E402
+
+MAGENTA = (255, 0, 255, 255)
+BLUE = (40, 120, 255, 255)
+
+
+def frame(w, h, box, color=BLUE):
+    """A magenta canvas with a solid rectangle `box` = (x0, y0, x1, y1)."""
+    im = Image.new("RGBA", (w, h), MAGENTA)
+    for y in range(box[1], box[3]):
+        for x in range(box[0], box[2]):
+            im.putpixel((x, y), color)
+    return im
+
+
+class AssembleFramesTest(unittest.TestCase):
+    def test_fit_scales_to_the_width_and_keeps_the_aspect(self):
+        out = a.fit_frame(frame(100, 50, (20, 10, 80, 40)), 30)  # the subject is 60x30
+        self.assertEqual(out.size, (30, 15))
+
+    def test_fit_keys_the_magenta_out_and_keeps_alpha_crisp(self):
+        out = a.fit_frame(frame(100, 50, (20, 10, 80, 40)), 30)
+        self.assertEqual(out.getpixel((0, 0))[3] in (0, 255), True)
+        alphas = {p[3] for p in out.getdata()}
+        self.assertTrue(alphas <= {0, 255})
+        self.assertEqual(out.getpixel((15, 7))[3], 255)
+
+    def test_fit_rejects_an_empty_frame(self):
+        with self.assertRaises(ValueError):
+            a.fit_frame(Image.new("RGBA", (10, 10), MAGENTA), 5)
+
+    def test_the_hull_of_a_solid_block_is_its_four_corners(self):
+        im = Image.new("RGBA", (10, 6), BLUE)
+        hull = a.convex_hull(a.boundary_corners(im))
+        self.assertEqual(set(hull), {(0, 0), (10, 0), (10, 6), (0, 6)})
+
+    def test_shapes_are_local_to_the_bottom_centre(self):
+        im = Image.new("RGBA", (10, 6), BLUE)
+        hurt, attack = a.trace(im, None)
+        self.assertEqual(set(map(tuple, hurt)), {(-5.0, -6.0), (5.0, -6.0), (5.0, 0.0), (-5.0, 0.0)})
+        self.assertEqual(attack, [])
+
+    def test_the_attack_shape_is_the_front_slice(self):
+        im = Image.new("RGBA", (10, 6), BLUE)
+        _, attack = a.trace(im, 0.5)
+        xs = [p[0] for p in attack]
+        self.assertEqual((min(xs), max(xs)), (0.0, 5.0))
+
+    def test_the_hull_contains_every_opaque_pixel_of_a_blob(self):
+        im = Image.new("RGBA", (20, 20), (0, 0, 0, 0))
+        for y in range(20):
+            for x in range(20):
+                if (x - 10) ** 2 + (y - 10) ** 2 <= 64:
+                    im.putpixel((x, y), BLUE)
+        hull = a.convex_hull(a.boundary_corners(im))
+        for y in range(20):
+            for x in range(20):
+                if im.getpixel((x, y))[3] == 255:
+                    c = (x + 0.5, y + 0.5)
+                    for i in range(len(hull)):
+                        p, q = hull[i], hull[(i + 1) % len(hull)]
+                        cross = (q[0] - p[0]) * (c[1] - p[1]) - (q[1] - p[1]) * (c[0] - p[0])
+                        self.assertGreaterEqual(cross, -1e-9, "pixel %s outside the hull" % (c,))
+
+    def test_pack_places_every_frame_without_overlap_inside_the_sheet(self):
+        frames = {"a": Image.new("RGBA", (200, 30)), "b": Image.new("RGBA", (200, 20)),
+                  "c": Image.new("RGBA", (200, 40)), "d": Image.new("RGBA", (10, 10))}
+        sheet, rects = a.pack(frames)
+        self.assertLessEqual(sheet.width, a.SHEET_WIDTH)
+        boxes = list(rects.values())
+        for i, (x, y, w, h) in enumerate(boxes):
+            self.assertTrue(x >= 0 and y >= 0 and x + w <= sheet.width and y + h <= sheet.height)
+            for (x2, y2, w2, h2) in boxes[i + 1:]:
+                self.assertTrue(x + w <= x2 or x2 + w2 <= x or y + h <= y2 or y2 + h2 <= y)
+        self.assertEqual(set(rects), set(frames))
+
+
+if __name__ == "__main__":
+    unittest.main()
