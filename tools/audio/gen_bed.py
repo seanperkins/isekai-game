@@ -26,6 +26,7 @@ KINDS = ("music", "ambience")
 XFADE = 2.0
 HEADROOM_DB = -1.5  # a bed's peak may never rise above this while it is being made loud enough
 WORK_PEAK_DB = -6.0  # level a bed is brought to before its loudness is measured
+EDGE_FADE = 0.01  # Vorbis zero-pads a stream's end: both ends go to silence so the wrap stays continuous
 
 
 def raw_samples(spec, biome, kind):
@@ -59,7 +60,8 @@ def process(raw, kind):
     left, right = audiolib.gain(left, WORK_PEAK_DB - top), audiolib.gain(right, WORK_PEAK_DB - top)
     wanted = audiolib.TARGET_LUFS[kind] - _measure((left, right))
     wanted = min(wanted, HEADROOM_DB - WORK_PEAK_DB)  # loud enough, but never past the ceiling
-    return audiolib.gain(left, wanted), audiolib.gain(right, wanted)
+    return (dsp.fade_ends(audiolib.gain(left, wanted), EDGE_FADE),
+            dsp.fade_ends(audiolib.gain(right, wanted), EDGE_FADE))
 
 
 def build(biome, kind, spec, out_root=OUT):

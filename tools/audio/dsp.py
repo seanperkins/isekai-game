@@ -78,7 +78,7 @@ def tremolo(x, rate_hz, depth, rate=RATE):
             for i, s in enumerate(x)]
 
 
-def _fade_edges(x, seconds=EDGE_FADE, rate=RATE):
+def fade_ends(x, seconds=EDGE_FADE, rate=RATE):
     n = min(int(seconds * rate), len(x) // 2)
     for i in range(n):
         f = i / n
@@ -113,7 +113,7 @@ def render(recipe, seconds, seed, fade_edges=True, rate=RATE):
         amp = layer.get("amp", 1.0)
         for i in range(length):
             mix[start + i] += sig[i] * env[i] * amp
-    return _fade_edges(mix, rate=rate) if fade_edges else mix
+    return fade_ends(mix, rate=rate) if fade_edges else mix
 
 
 def make_loop(samples, seconds, rate=RATE):

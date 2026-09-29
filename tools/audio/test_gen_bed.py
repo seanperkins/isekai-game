@@ -32,6 +32,16 @@ class GenBedTest(unittest.TestCase):
         self.assertLess(a.seam_ratio(right), 3.0)
         self.assertLessEqual(a.lin_to_db(a.peak(left)), a.PEAK_CEILING_DB - 0.5)
 
+    def test_an_encoded_bed_still_loops_without_a_click(self):
+        # Vorbis zero-pads the end of a stream; a bed that ends mid-wave would decode with a
+        # jump from its tail back to its head, so the encoded file is what must wrap cleanly.
+        spec = {"provider": "synth", "dur": 24.0, "notes": [130.81, 196.0, 261.63, 329.63], "lfo": 0.08}  # the cave bed
+        with tempfile.TemporaryDirectory() as d:
+            gen_bed.build("cave", "music", spec, d)
+            left, right = a.decode_pcm(os.path.join(d, "music", "cave.ogg"))
+        self.assertLess(a.seam_ratio(left), 3.0)
+        self.assertLess(a.seam_ratio(right), 3.0)
+
     def test_the_synth_provider_is_reproducible(self):
         one = gen_bed.raw_samples(MUSIC, "t", "music")
         self.assertEqual(one, gen_bed.raw_samples(MUSIC, "t", "music"))

@@ -1,0 +1,594 @@
+{
+  "cues": {
+    "amb_bubble": {
+      "bus": "Ambience",
+      "volume_db": -14,
+      "pitch_jitter": 0.2,
+      "positional": true,
+      "files": [
+        "sfx/amb_bubble_1.ogg",
+        "sfx/amb_bubble_2.ogg",
+        "sfx/amb_bubble_3.ogg",
+        "sfx/amb_bubble_4.ogg"
+      ]
+    },
+    "amb_crystal_ping": {
+      "bus": "Ambience",
+      "volume_db": -16,
+      "pitch_jitter": 0.1,
+      "positional": true,
+      "files": [
+        "sfx/amb_crystal_ping_1.ogg",
+        "sfx/amb_crystal_ping_2.ogg",
+        "sfx/amb_crystal_ping_3.ogg"
+      ]
+    },
+    "amb_drip": {
+      "bus": "Ambience",
+      "volume_db": -14,
+      "pitch_jitter": 0.15,
+      "positional": true,
+      "files": [
+        "sfx/amb_drip_1.ogg",
+        "sfx/amb_drip_2.ogg",
+        "sfx/amb_drip_3.ogg",
+        "sfx/amb_drip_4.ogg"
+      ]
+    },
+    "amb_hum": {
+      "bus": "Ambience",
+      "volume_db": -18,
+      "positional": true,
+      "files": [
+        "sfx/amb_hum_1.ogg",
+        "sfx/amb_hum_2.ogg"
+      ]
+    },
+    "amb_spore": {
+      "bus": "Ambience",
+      "volume_db": -16,
+      "pitch_jitter": 0.1,
+      "positional": true,
+      "files": [
+        "sfx/amb_spore_1.ogg",
+        "sfx/amb_spore_2.ogg",
+        "sfx/amb_spore_3.ogg"
+      ]
+    },
+    "eat_absorb": {
+      "bus": "SFX_Player",
+      "volume_db": -10,
+      "cooldown": 0.06,
+      "combo": {
+        "step": 1.0,
+        "window": 0.8,
+        "max_steps": 7
+      },
+      "files": [
+        "sfx/eat_absorb_1.ogg",
+        "sfx/eat_absorb_2.ogg"
+      ]
+    },
+    "eat_cover": {
+      "bus": "SFX_Player",
+      "volume_db": -8,
+      "cooldown": 0.3,
+      "files": [
+        "sfx/eat_cover_1.ogg"
+      ]
+    },
+    "eat_predated": {
+      "bus": "SFX_Player",
+      "volume_db": -6,
+      "files": [
+        "sfx/eat_predated_1.ogg"
+      ]
+    },
+    "enemy_death_beast": {
+      "bus": "SFX_Enemy",
+      "volume_db": -4,
+      "positional": true,
+      "files": [
+        "sfx/enemy_death_beast_1.ogg"
+      ]
+    },
+    "enemy_death_boss": {
+      "bus": "SFX_Enemy",
+      "volume_db": -2,
+      "files": [
+        "sfx/enemy_death_boss_1.ogg"
+      ]
+    },
+    "enemy_death_crawler": {
+      "bus": "SFX_Enemy",
+      "volume_db": -5,
+      "positional": true,
+      "files": [
+        "sfx/enemy_death_crawler_1.ogg"
+      ]
+    },
+    "enemy_death_flyer": {
+      "bus": "SFX_Enemy",
+      "volume_db": -5,
+      "positional": true,
+      "files": [
+        "sfx/enemy_death_flyer_1.ogg"
+      ]
+    },
+    "enemy_impact": {
+      "bus": "SFX_Enemy",
+      "volume_db": -6,
+      "pitch_jitter": 0.08,
+      "cooldown": 0.04,
+      "positional": true,
+      "files": [
+        "sfx/enemy_impact_1.ogg",
+        "sfx/enemy_impact_2.ogg",
+        "sfx/enemy_impact_3.ogg"
+      ]
+    },
+    "enemy_stun": {
+      "bus": "SFX_Enemy",
+      "volume_db": -7,
+      "cooldown": 0.2,
+      "files": [
+        "sfx/enemy_stun_1.ogg"
+      ]
+    },
+    "pool_rest": {
+      "bus": "SFX_World",
+      "volume_db": -8,
+      "positional": true,
+      "files": [
+        "sfx/pool_rest_1.ogg"
+      ]
+    },
+    "skill_constrict": {
+      "bus": "SFX_Player",
+      "volume_db": -9,
+      "cooldown": 0.1,
+      "files": [
+        "sfx/skill_constrict_1.ogg"
+      ]
+    },
+    "skill_generic": {
+      "bus": "SFX_Player",
+      "volume_db": -8,
+      "cooldown": 0.05,
+      "files": [
+        "sfx/skill_generic_1.ogg"
+      ]
+    },
+    "skill_hydraulic": {
+      "bus": "SFX_Player",
+      "volume_db": -8,
+      "cooldown": 0.1,
+      "files": [
+        "sfx/skill_hydraulic_1.ogg"
+      ]
+    },
+    "skill_jet_dash": {
+      "bus": "SFX_Player",
+      "volume_db": -7,
+      "cooldown": 0.1,
+      "files": [
+        "sfx/skill_jet_dash_1.ogg"
+      ]
+    },
+    "skill_poison_breath": {
+      "bus": "SFX_Player",
+      "volume_db": -8,
+      "cooldown": 0.1,
+      "files": [
+        "sfx/skill_poison_breath_1.ogg"
+      ]
+    },
+    "skill_poison_spit": {
+      "bus": "SFX_Player",
+      "volume_db": -8,
+      "cooldown": 0.05,
+      "files": [
+        "sfx/skill_poison_spit_1.ogg"
+      ]
+    },
+    "skill_rank_up": {
+      "bus": "UI",
+      "volume_db": -8,
+      "files": [
+        "sfx/skill_rank_up_1.ogg"
+      ]
+    },
+    "skill_sticky_thread": {
+      "bus": "SFX_Player",
+      "volume_db": -8,
+      "cooldown": 0.05,
+      "files": [
+        "sfx/skill_sticky_thread_1.ogg"
+      ]
+    },
+    "skill_swing_thread": {
+      "bus": "SFX_Player",
+      "volume_db": -8,
+      "cooldown": 0.05,
+      "files": [
+        "sfx/skill_swing_thread_1.ogg"
+      ]
+    },
+    "skill_tail_swipe": {
+      "bus": "SFX_Player",
+      "volume_db": -8,
+      "cooldown": 0.05,
+      "files": [
+        "sfx/skill_tail_swipe_1.ogg"
+      ]
+    },
+    "skill_unlock": {
+      "bus": "UI",
+      "volume_db": -6,
+      "duck": true,
+      "files": [
+        "sfx/skill_unlock_1.ogg"
+      ]
+    },
+    "skill_water_blade": {
+      "bus": "SFX_Player",
+      "volume_db": -8,
+      "cooldown": 0.05,
+      "files": [
+        "sfx/skill_water_blade_1.ogg"
+      ]
+    },
+    "slime_death": {
+      "bus": "SFX_Player",
+      "volume_db": -3,
+      "files": [
+        "sfx/slime_death_1.ogg"
+      ]
+    },
+    "slime_evolve": {
+      "bus": "SFX_Player",
+      "volume_db": -4,
+      "duck": true,
+      "files": [
+        "sfx/slime_evolve_1.ogg"
+      ]
+    },
+    "slime_heartbeat": {
+      "bus": "SFX_Player",
+      "volume_db": -12,
+      "files": [
+        "sfx/slime_heartbeat_1.ogg"
+      ],
+      "loop": true
+    },
+    "slime_hurt": {
+      "bus": "SFX_Player",
+      "volume_db": -4,
+      "pitch_jitter": 0.05,
+      "cooldown": 0.2,
+      "files": [
+        "sfx/slime_hurt_1.ogg",
+        "sfx/slime_hurt_2.ogg"
+      ]
+    },
+    "slime_land_hard": {
+      "bus": "SFX_Player",
+      "volume_db": -3,
+      "pitch_jitter": 0.05,
+      "cooldown": 0.1,
+      "files": [
+        "sfx/slime_land_hard_1.ogg",
+        "sfx/slime_land_hard_2.ogg"
+      ]
+    },
+    "slime_land_soft": {
+      "bus": "SFX_Player",
+      "volume_db": -8,
+      "pitch_jitter": 0.08,
+      "cooldown": 0.08,
+      "files": [
+        "sfx/slime_land_soft_1.ogg",
+        "sfx/slime_land_soft_2.ogg",
+        "sfx/slime_land_soft_3.ogg"
+      ]
+    },
+    "slime_launch": {
+      "bus": "SFX_Player",
+      "volume_db": -6,
+      "pitch_jitter": 0.06,
+      "cooldown": 0.05,
+      "files": [
+        "sfx/slime_launch_1.ogg",
+        "sfx/slime_launch_2.ogg",
+        "sfx/slime_launch_3.ogg"
+      ]
+    },
+    "slime_levelup": {
+      "bus": "SFX_Player",
+      "volume_db": -6,
+      "duck": true,
+      "files": [
+        "sfx/slime_levelup_1.ogg"
+      ]
+    },
+    "slime_run": {
+      "bus": "SFX_Player",
+      "volume_db": -16,
+      "files": [
+        "sfx/slime_run_1.ogg"
+      ],
+      "loop": true
+    },
+    "slime_spread": {
+      "bus": "SFX_Player",
+      "volume_db": -8,
+      "cooldown": 0.1,
+      "files": [
+        "sfx/slime_spread_1.ogg"
+      ]
+    },
+    "slime_tackle": {
+      "bus": "SFX_Player",
+      "volume_db": -7,
+      "pitch_jitter": 0.06,
+      "cooldown": 0.1,
+      "files": [
+        "sfx/slime_tackle_1.ogg",
+        "sfx/slime_tackle_2.ogg"
+      ]
+    },
+    "slime_unspread": {
+      "bus": "SFX_Player",
+      "volume_db": -8,
+      "cooldown": 0.1,
+      "files": [
+        "sfx/slime_unspread_1.ogg"
+      ]
+    },
+    "slime_wall_cling": {
+      "bus": "SFX_Player",
+      "volume_db": -10,
+      "pitch_jitter": 0.06,
+      "cooldown": 0.15,
+      "files": [
+        "sfx/slime_wall_cling_1.ogg",
+        "sfx/slime_wall_cling_2.ogg"
+      ]
+    },
+    "slime_wall_slide": {
+      "bus": "SFX_Player",
+      "volume_db": -18,
+      "files": [
+        "sfx/slime_wall_slide_1.ogg"
+      ],
+      "loop": true
+    },
+    "switch_open": {
+      "bus": "SFX_World",
+      "volume_db": -4,
+      "positional": true,
+      "files": [
+        "sfx/switch_open_1.ogg"
+      ]
+    },
+    "tablet_chime": {
+      "bus": "SFX_World",
+      "volume_db": -8,
+      "positional": true,
+      "files": [
+        "sfx/tablet_chime_1.ogg"
+      ]
+    },
+    "ui_close": {
+      "bus": "UI",
+      "volume_db": -10,
+      "files": [
+        "sfx/ui_close_1.ogg"
+      ]
+    },
+    "ui_confirm": {
+      "bus": "UI",
+      "volume_db": -10,
+      "files": [
+        "sfx/ui_confirm_1.ogg"
+      ]
+    },
+    "ui_denied": {
+      "bus": "UI",
+      "volume_db": -10,
+      "cooldown": 0.15,
+      "files": [
+        "sfx/ui_denied_1.ogg"
+      ]
+    },
+    "ui_move": {
+      "bus": "UI",
+      "volume_db": -14,
+      "cooldown": 0.03,
+      "files": [
+        "sfx/ui_move_1.ogg"
+      ]
+    },
+    "ui_open": {
+      "bus": "UI",
+      "volume_db": -10,
+      "files": [
+        "sfx/ui_open_1.ogg"
+      ]
+    },
+    "ui_popup": {
+      "bus": "UI",
+      "volume_db": -10,
+      "files": [
+        "sfx/ui_popup_1.ogg"
+      ]
+    },
+    "water_in": {
+      "bus": "SFX_World",
+      "volume_db": -8,
+      "pitch_jitter": 0.08,
+      "positional": true,
+      "files": [
+        "sfx/water_in_1.ogg",
+        "sfx/water_in_2.ogg"
+      ]
+    },
+    "water_out": {
+      "bus": "SFX_World",
+      "volume_db": -9,
+      "pitch_jitter": 0.08,
+      "positional": true,
+      "files": [
+        "sfx/water_out_1.ogg",
+        "sfx/water_out_2.ogg"
+      ]
+    }
+  },
+  "events": {
+    "jumped": "slime_launch",
+    "wall_touched": "slime_wall_cling",
+    "damaged": "slime_hurt",
+    "hp_low_entered": "slime_heartbeat",
+    "hp_low_exited": {
+      "stop": "slime_heartbeat"
+    },
+    "stunned_enemy": "enemy_stun",
+    "predated": "eat_predated",
+    "absorbed": "eat_absorb",
+    "inspected": null,
+    "_why:inspected": "the result has its own sound (tablet_read, pool_rested); a click here would double it",
+    "skill_used": {
+      "by": "id",
+      "sticky_thread": "skill_sticky_thread",
+      "swing_thread": "skill_swing_thread",
+      "poison_spit": "skill_poison_spit",
+      "poison_breath": "skill_poison_breath",
+      "water_blade": "skill_water_blade",
+      "jet_dash": "skill_jet_dash",
+      "hydraulic_propulsion": "skill_hydraulic",
+      "tail_swipe": "skill_tail_swipe",
+      "constrict": "skill_constrict",
+      "default": "skill_generic"
+    },
+    "mana_spent": null,
+    "_why:mana_spent": "one event per MP point spent; it would machine-gun and skill_used already has the sound",
+    "skill_unlocked": "skill_unlock",
+    "skill_leveled": "skill_rank_up",
+    "evolution_ready": null,
+    "_why:evolution_ready": "the ready state shows in the menu; the sound plays when the evolution happens (evolved)",
+    "landed": {
+      "by": "hard",
+      "true": "slime_land_hard",
+      "false": "slime_land_soft"
+    },
+    "run_started": "slime_run",
+    "run_stopped": {
+      "stop": "slime_run"
+    },
+    "wall_slide_started": "slime_wall_slide",
+    "wall_slide_stopped": {
+      "stop": "slime_wall_slide"
+    },
+    "spread": {
+      "by": "on",
+      "true": "slime_spread",
+      "false": "slime_unspread"
+    },
+    "tackled": "slime_tackle",
+    "player_died": "slime_death",
+    "leveled_up": "slime_levelup",
+    "evolved": "slime_evolve",
+    "eat_started": "eat_cover",
+    "enemy_hit": "enemy_impact",
+    "enemy_died": {
+      "by": "id",
+      "bat": "enemy_death_flyer",
+      "spider": "enemy_death_crawler",
+      "toad": "enemy_death_beast",
+      "lizard": "enemy_death_beast",
+      "serpent": "enemy_death_boss",
+      "default": "enemy_death_beast"
+    },
+    "tablet_read": "tablet_chime",
+    "switch_opened": "switch_open",
+    "pool_rested": "pool_rest",
+    "water_entered": "water_in",
+    "water_exited": "water_out",
+    "menu_opened": "ui_open",
+    "menu_closed": "ui_close",
+    "menu_move": "ui_move",
+    "menu_confirm": "ui_confirm",
+    "denied": "ui_denied",
+    "ticker_shown": {
+      "by": "kind",
+      "slot_replaced": "ui_popup"
+    },
+    "_why:ticker_shown": "unlock and level-up already have their own stingers; only the slot-replaced line gets ui_popup"
+  },
+  "biomes": {
+    "cave": {
+      "music": "music/cave.ogg",
+      "ambience": "ambience/cave.ogg",
+      "reverb_wet": 0.15,
+      "oneshots": {
+        "cues": [
+          "amb_drip",
+          "amb_crystal_ping"
+        ],
+        "interval": [
+          4.0,
+          12.0
+        ],
+        "radius": 220
+      }
+    },
+    "grotto": {
+      "music": "music/grotto.ogg",
+      "ambience": "ambience/grotto.ogg",
+      "reverb_wet": 0.3,
+      "oneshots": {
+        "cues": [
+          "amb_spore",
+          "amb_crystal_ping"
+        ],
+        "interval": [
+          4.0,
+          12.0
+        ],
+        "radius": 220
+      }
+    },
+    "flooded": {
+      "music": "music/flooded.ogg",
+      "ambience": "ambience/flooded.ogg",
+      "reverb_wet": 0.45,
+      "oneshots": {
+        "cues": [
+          "amb_bubble",
+          "amb_drip"
+        ],
+        "interval": [
+          4.0,
+          12.0
+        ],
+        "radius": 220
+      }
+    },
+    "deep": {
+      "music": "music/deep.ogg",
+      "ambience": "ambience/deep.ogg",
+      "reverb_wet": 0.2,
+      "oneshots": {
+        "cues": [
+          "amb_hum",
+          "amb_drip"
+        ],
+        "interval": [
+          8.0,
+          20.0
+        ],
+        "radius": 260
+      }
+    }
+  }
+}
