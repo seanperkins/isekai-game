@@ -29,3 +29,4 @@ eat_bonus = {
 "stat": "def"
 }
 xp = 5
+armored_charger = true

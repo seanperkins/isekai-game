@@ -16,3 +16,7 @@ extends Resource
 @export var appraisal_target: bool = true
 ## XP for downing this creature (and again for eating it).
 @export var xp: int = 0
+## Walks and charges with an armored front: a front tackle hurts but does not stun it (the lizard, the crab).
+@export var armored_charger: bool = false
+## Hovers in a slow loop; no gravity while active or stunned (the moths).
+@export var drifter: bool = false

@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_4ykg1"]
+
+[resource]
+script = ExtResource("1_4ykg1")
+id = "spore_cloud"
+display_name = "Spore Cloud"
+description = "Release a lingering cloud of spores that slows and poisons."
+hint = "Something spongy stirs within."
+announce = "Analysis complete. Acquired [Spore Cloud]."
+source = "essence"
+hidden = false
+unlock = [{
+"event": "absorbed",
+"kind": "counter",
+"n": 4,
+"tags": {
+"essence": "spore"
+}
+}]
+levels_on = {
+"event": "skill_used",
+"tags": {
+"id": "spore_cloud"
+}
+}
+level_curve = 8
+max_level = 8
+effects = [{
+"kind": "active",
+"scene": "res://scenes/abilities/spore_cloud.tscn",
+"values": [24, 28, 32, 36, 40, 44, 48, 52]
+}]
+mp_cost = 4

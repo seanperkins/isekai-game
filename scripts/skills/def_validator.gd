@@ -98,7 +98,7 @@ static func _check_effect(w: String, d: SkillDef, e: Dictionary, errors: PackedS
 		errors.append("%s: effect values has %d entries but max_level is %d" % [w, e["values"].size(), d.max_level])
 	if kind == "modifier" or kind == "conditional_modifier":
 		var stat: String = e.get("stat", "")
-		if stat != DAMAGE_TAKEN and not StatKeys.ALL.has(stat):
+		if stat != DAMAGE_TAKEN and stat != SkillEffects.KNOCKBACK_TAKEN and not StatKeys.ALL.has(stat):
 			errors.append("%s: modifier target '%s' is not in StatKeys" % [w, stat])
 	if kind == "active":
 		var scene: String = e.get("scene", "")

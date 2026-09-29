@@ -9,5 +9,7 @@ const WATER := "water"
 const ARMOR := "armor"
 const EARTH := "earth"
 const THREAD := "thread"
+const SPORE := "spore"
+const SHELL := "shell"
 
-const ALL := [SOUND, FLIGHT, POISON, WATER, ARMOR, EARTH, THREAD]
+const ALL := [SOUND, FLIGHT, POISON, WATER, ARMOR, EARTH, THREAD, SPORE, SHELL]

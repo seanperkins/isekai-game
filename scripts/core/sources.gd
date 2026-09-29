@@ -8,5 +8,8 @@ const LIZARD := "lizard"
 const SPIDER := "spider"
 const WATER_POOL := "water_pool"
 const SERPENT := "serpent"
+const SPORE_MOTH := "spore_moth"
+const MUSHROOM_CRAB := "mushroom_crab"
+const VINE_SNAKE := "vine_snake"
 
-const ALL := [BAT, TOAD, LIZARD, SPIDER, WATER_POOL, SERPENT]
+const ALL := [BAT, TOAD, LIZARD, SPIDER, WATER_POOL, SERPENT, SPORE_MOTH, MUSHROOM_CRAB, VINE_SNAKE]

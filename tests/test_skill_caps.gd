@@ -126,7 +126,7 @@ const TABLE := {
 	"leap": [10, 20], "wall_cling": [8, 12], "poison_resistance": [12, 6], "pain_resistance": [6, 2],
 	"toughness": [12, 20], "appraisal": [5, 2], "glutton": [8, 5], "mana_recovery": [8, 60],
 	"echolocation": [8, 3], "poison_breath": [15, 8], "body_armor": [8, 10], "sticky_thread": [15, 8],
-	"hydraulic_propulsion": [15, 6], "regeneration": [6, 8]}
+	"hydraulic_propulsion": [15, 6], "regeneration": [6, 8], "spore_cloud": [8, 8], "hardened_shell": [8, 10]}
 
 func test_every_levelling_skill_has_its_planned_maximum_and_curve() -> void:
 	var defs := _defs()
@@ -147,7 +147,7 @@ func test_effect_values_match_each_skills_max_and_never_decrease_in_strength() -
 			if e.has("values"):
 				var v: Array = e["values"]
 				assert_eq(v.size(), d.max_level, "%s: values match the max" % id)
-				var descending: bool = e.get("op", "") == "set" or (e.get("stat", "") == "slide_speed") or (e.get("stat", "") == "predation_time")
+				var descending: bool = e.get("op", "") == "set" or (e.get("stat", "") == "slide_speed") or (e.get("stat", "") == "predation_time") or (e.get("stat", "") == "knockback_taken")
 				for i in range(1, v.size()):
 					if descending:
 						assert_lte(v[i], v[i - 1], "%s values only get stronger" % id)

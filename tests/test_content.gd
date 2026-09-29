@@ -20,8 +20,8 @@ func _creature(id: String) -> CreatureDef:
 	return null
 
 func test_all_content_validates() -> void:
-	assert_eq(skills.size(), 22)
-	assert_eq(creatures.size(), 6)
+	assert_eq(skills.size(), 24)
+	assert_eq(creatures.size(), 9)
 	assert_eq(Array(DefValidator.validate(skills, creatures)), [])
 
 func test_spec_numbers_are_verbatim() -> void:
@@ -53,7 +53,8 @@ func test_creature_numbers_are_verbatim() -> void:
 
 func test_essence_minimums_satisfy_every_essence_skill() -> void:
 	# Placement minimums from the spec: 3 bats, 4 toads, 3 lizards, 3 spiders, 2 pools.
-	var minimums := {"bat": 3, "toad": 4, "lizard": 3, "spider": 3, "water_pool": 2}
+	# The Grotto's creatures add spore and shell: 4 of each is 4 moths and 2 crabs.
+	var minimums := {"bat": 3, "toad": 4, "lizard": 3, "spider": 3, "water_pool": 2, "spore_moth": 4, "mushroom_crab": 2}
 	var totals := {}
 	for sid in minimums:
 		var c := _creature(sid)

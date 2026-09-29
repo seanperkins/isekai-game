@@ -463,6 +463,7 @@
       "swing_thread": "skill_swing_thread",
       "poison_spit": "skill_poison_spit",
       "poison_breath": "skill_poison_breath",
+      "spore_cloud": "skill_poison_breath",
       "water_blade": "skill_water_blade",
       "jet_dash": "skill_jet_dash",
       "hydraulic_propulsion": "skill_hydraulic",

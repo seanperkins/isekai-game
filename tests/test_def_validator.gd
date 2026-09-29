@@ -126,7 +126,7 @@ func test_creature_problems_fail() -> void:
 
 func test_missing_and_duplicate_creature_defs_fail() -> void:
 	var creatures := TestDefs.all_creatures()
-	creatures.pop_back()  # drop serpent
+	creatures = creatures.filter(func(c: CreatureDef) -> bool: return c.id != "serpent")  # drop serpent
 	creatures.append(TestDefs.creature("bat"))
 	var errors := _errors_with(_valid_skills(), creatures)
 	assert_string_contains(errors, "missing CreatureDef for source 'serpent'")

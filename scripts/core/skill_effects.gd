@@ -3,6 +3,7 @@ extends RefCounted
 ## Effect math shared by the player's and enemies' skill sets. Pure functions over SkillDefs.
 
 const DAMAGE_TAKEN := "damage_taken"
+const KNOCKBACK_TAKEN := "knockback_taken"
 
 static func value_at(effect: Dictionary, level: int):
 	var values: Array = effect.get("values", [])
@@ -63,3 +64,13 @@ static func active_values(def: SkillDef) -> Array:
 		if e.get("kind", "") == "active":
 			return e.get("values", [])
 	return []
+
+## Scales the knockback a hit gives the player: 1.0 with no skill, down to 0.36. pairs = [[SkillDef, level], ...].
+static func knockback_factor(pairs: Array) -> float:
+	var sum := 0
+	for pair in pairs:
+		var d: SkillDef = pair[0]
+		for e in d.effects:
+			if e.get("stat", "") == KNOCKBACK_TAKEN and e.get("kind", "") == "modifier":
+				sum += int(value_at(e, pair[1]))
+	return maxf(0.36, 1.0 + float(sum) / 100.0)

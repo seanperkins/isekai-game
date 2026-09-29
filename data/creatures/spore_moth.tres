@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="CreatureDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/creature_def.gd" id="1_6ng14"]
+
+[resource]
+script = ExtResource("1_6ng14")
+id = "spore_moth"
+display_name = "Spore Moth"
+stats = {
+"atk": 1,
+"def": 0,
+"max_hp": 3,
+"spd": 90
+}
+essences = {
+"flight": 1,
+"spore": 1
+}
+eat_bonus = {
+"amount": 1,
+"per": 2,
+"stat": "max_mp"
+}
+xp = 2
+drifter = true

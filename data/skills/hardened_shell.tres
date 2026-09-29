@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_c71r6"]
+
+[resource]
+script = ExtResource("1_c71r6")
+id = "hardened_shell"
+display_name = "Hardened Shell"
+description = "Take less knockback."
+hint = "Your skin wants to harden, and your footing with it."
+announce = "Analysis complete. Acquired [Hardened Shell]."
+source = "essence"
+hidden = false
+unlock = [{
+"event": "absorbed",
+"kind": "counter",
+"n": 4,
+"tags": {
+"essence": "shell"
+}
+}]
+levels_on = {
+"event": "damaged",
+"tags": {
+"damage_type": "physical"
+}
+}
+level_curve = 10
+max_level = 8
+effects = [{
+"kind": "modifier",
+"op": "add",
+"stat": "knockback_taken",
+"values": [-8, -16, -24, -32, -40, -48, -56, -64]
+}]

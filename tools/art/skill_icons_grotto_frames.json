@@ -1,0 +1,18 @@
+{
+ "canonical": "art_source/skill_icons_d.png",
+ "style": "Modern pixel art with soft lighting (Style D), exactly matching the skill icons in the reference sheet: a single square skill icon, a dark navy rounded-square badge with a thin bright outline, and one glowing item centred inside it, chunky readable pixels, gentle highlights. Draw exactly one icon, centred, filling most of the frame.",
+ "frames": [
+  {
+   "name": "icon_spore_cloud",
+   "width": 128,
+   "refs": [],
+   "prompt": "A skill icon of a soft puffball cloud of yellow-green spores drifting out of a small mushroom cap, with a few glowing motes."
+  },
+  {
+   "name": "icon_hardened_shell",
+   "width": 128,
+   "refs": [],
+   "prompt": "A skill icon of a domed, spotted mushroom-cap shield in red and cream with a sturdy rim, glowing faintly."
+  }
+ ]
+}
