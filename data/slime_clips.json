@@ -1,0 +1,13 @@
+{
+  "idle": {"frames": ["idle_1", "idle_2"], "fps": 1.5, "loop": true},
+  "run": {"frames": ["run_1", "run_2", "run_3", "run_4"], "fps": 10.0, "loop": true},
+  "rise": {"frames": ["rise"], "fps": 1.0, "loop": false},
+  "fall": {"frames": ["fall"], "fps": 1.0, "loop": false},
+  "land": {"frames": ["land"], "fps": 1.0, "loop": false},
+  "wall": {"frames": ["wall_1", "wall_2"], "fps": 4.0, "loop": true},
+  "tackle": {"frames": ["tackle"], "fps": 1.0, "loop": false},
+  "spread": {"frames": ["spread_1", "spread_2"], "fps": 20.0, "loop": false, "exit": ["spread_2", "spread_1"]},
+  "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
+  "rope": {"frames": ["rope"], "fps": 1.0, "loop": false},
+  "cover": {"frames": ["cover_3", "cover_4"], "fps": 8.0, "loop": true}
+}
