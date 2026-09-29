@@ -28,15 +28,24 @@ static func build_decor(parent: Node, layout: Dictionary, light_energy := 1.0) -
 			holder.add_child(l)
 		parent.add_child(holder)
 
+## A thin, wide rect is a ledge: you can jump up through it and land on top. Everything else is
+## solid. Same test as TerrainPainter's THIN, so a ledge that is drawn thin also behaves thin.
+## `hard` is the room's list of thin platforms the author made solid from below on purpose.
+static func is_one_way(r: Rect2, hard: Array = []) -> bool:
+	return r.size.y <= 24.0 and r.size.x > 24.0 and not hard.has(r)
+
 ## A static solid drawn with the given tile ("ground", "wall" or "column"). `visual` false leaves
-## the drawing to TerrainPainter.
-static func add_solid(parent: Node, r: Rect2, kind: String, visual := true) -> StaticBody2D:
+## the drawing to TerrainPainter. `one_way` makes it passable from below and the sides.
+static func add_solid(parent: Node, r: Rect2, kind: String, visual := true, one_way := false) -> StaticBody2D:
 	var body := StaticBody2D.new()
 	body.position = r.position + r.size / 2.0
 	var shape := CollisionShape2D.new()
 	var rect := RectangleShape2D.new()
 	rect.size = r.size
 	shape.shape = rect
+	if one_way:
+		shape.one_way_collision = true
+		shape.one_way_collision_margin = 6.0
 	body.add_child(shape)
 	if visual:
 		var tile := TextureRect.new()
@@ -132,8 +141,8 @@ static func build_room(def: RoomDef, ctx: Dictionary) -> Node2D:
 			gate.add_to_group("gate_" + str(e["shortcut"]))
 			gates.append({"body": gate, "rect": g})
 	for r in def.solids:
-		add_solid(node, r, visual_kind(r, size.x), not painted)
-		solids.append({"rect": r, "kind": visual_kind(r, size.x)})
+		add_solid(node, r, visual_kind(r, size.x), not painted, is_one_way(r, def.hard_ledges))
+		solids.append({"rect": r, "kind": visual_kind(r, size.x), "hard": def.hard_ledges.has(r)})
 	if painted:
 		var bounds := Rect2(Vector2.ZERO, size)
 		TerrainPainter.paint(node, solids, bounds, def.area)

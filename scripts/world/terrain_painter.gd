@@ -14,17 +14,23 @@ const MIN_FACE := 24.0    # narrower rects (pillars) skip side faces
 const TALL_FACE := 64.0   # side faces at least this tall get the ragged stone strip; shorter ones a clean line
 const OUTLINE := Color(44.0 / 255.0, 22.0 / 255.0, 68.0 / 255.0)  # same plum terrain_build.py bakes into the edges
 
-## `solids` is [{"rect": Rect2, "kind": String}] in room-local pixels; `bounds` is the room rect.
+## `solids` is [{"rect": Rect2, "kind": String, optional "hard": bool}] in room-local pixels; `bounds` is the room rect.
+## A "hard" ledge is thin but solid from below: it is drawn with a rock underside.
 ## `only` limits which rects are drawn (a gate paints itself); `solids` still decide what is open air.
 static func paint(parent: Node, solids: Array, bounds: Rect2, biome: String, only: Array = []) -> Node2D:
 	var root := Node2D.new()
 	root.name = "Terrain"
 	var rects: Array = []
+	var hard: Array = []
 	for s in solids:
 		rects.append(s["rect"])
+		if s.get("hard", false):
+			hard.append(s["rect"])
 	for r: Rect2 in (only if not only.is_empty() else rects):
 		if r.size.y <= THIN and r.size.x > THIN and _inside(r, bounds):
 			_ledge(root, r, biome)
+			if hard.has(r):
+				_underside(root, r, biome)
 		else:
 			_mass(root, r, rects, bounds, biome)
 	parent.add_child(root)
@@ -91,6 +97,14 @@ static func _ledge(root: Node2D, r: Rect2, biome: String) -> void:
 		root.add_child(_region(mid, Vector2(r.position.x + cap, y), Vector2(inner, mid.get_height()), Vector2.ZERO))
 	root.add_child(_region(left, Vector2(r.position.x, y), Vector2(cap, left.get_height()), Vector2.ZERO))
 	root.add_child(_region(right, Vector2(r.end.x - cap, y), Vector2(cap, right.get_height()), Vector2.ZERO))
+
+## Rock hanging under a hard ledge: the same jagged underside a mass has, so it reads as solid from below.
+static func _underside(root: Node2D, r: Rect2, biome: String) -> void:
+	var under := TerrainArt.tile(biome, "cap_bottom")
+	if under == null:
+		return
+	var surface: int = TerrainArt.meta(biome, "cap_bottom").get("surface", 0)
+	root.add_child(_region(under, Vector2(r.position.x, r.end.y - surface), Vector2(r.size.x, under.get_height()), Vector2(r.position.x, 0)))
 
 ## A Sprite2D that shows `size` px of `tex` starting at `from` in the texture, repeating as needed.
 static func _region(tex: Texture2D, pos: Vector2, size: Vector2, from: Vector2) -> Sprite2D:

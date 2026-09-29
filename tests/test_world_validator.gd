@@ -94,3 +94,23 @@ func test_the_shipped_world_has_only_known_creatures_and_feature_kinds() -> void
 	var ids: Array = DefLoader.load_dir("res://data/creatures").map(func(c: CreatureDef) -> String: return c.id)
 	var rooms := World.load_rooms("res://data/rooms")
 	assert_eq(WorldValidator.validate(rooms, ids).size(), 0, str(WorldValidator.validate(rooms, ids)))
+
+# --- hard ledges are a deliberate list: each names a real thin platform of the room ---
+
+func test_a_hard_ledge_must_be_one_of_the_rooms_solids() -> void:
+	var rooms := _pair()
+	rooms["A"].solids = [Rect2(100, 200, 100, 12)]
+	rooms["A"].hard_ledges = [Rect2(100, 100, 100, 12)]
+	assert_string_contains(_errors(rooms), "A: hard ledge %s is not one of the room's solids" % Rect2(100, 100, 100, 12))
+
+func test_a_hard_ledge_must_be_thin() -> void:
+	var rooms := _pair()
+	rooms["A"].solids = [Rect2(100, 200, 100, 32)]
+	rooms["A"].hard_ledges = [Rect2(100, 200, 100, 32)]
+	assert_string_contains(_errors(rooms), "A: hard ledge %s is already solid" % Rect2(100, 200, 100, 32))
+
+func test_a_listed_thin_solid_is_valid() -> void:
+	var rooms := _pair()
+	rooms["A"].solids = [Rect2(100, 200, 100, 12)]
+	rooms["A"].hard_ledges = [Rect2(100, 200, 100, 12)]
+	assert_eq(_errors(rooms), "")

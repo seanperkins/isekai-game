@@ -4,6 +4,8 @@ extends SceneTree
 ##   env HOME="$PWD/.tmp/gdhome" godot --headless -s tools/build_world.gd
 ## Positions are local to each room. Floors, ceilings and side walls are generated from each
 ## room's size and exits (RoomBuilder.edge_walls): floor top = height - 40, walls 20 thick.
+## Platforms: a thin solid (<= 24 px tall, wider than 24) is a one-way ledge, you jump up through it. A thicker solid is
+## rock. To make a thin one rock from below on purpose, add its rect to the room's "hard_ledges" as well as "solids".
 
 const TEAL := Color(0.3, 1.0, 0.9)
 const PURPLE := Color(0.8, 0.4, 1.0)

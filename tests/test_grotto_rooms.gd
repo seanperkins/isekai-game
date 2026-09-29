@@ -103,8 +103,8 @@ func _over(span: Vector2, floor_y: float, pos: Vector2, extent: Vector2) -> bool
 
 # --- the climb back (directed, with headroom) ---
 
-## The lower room's rock in its own coordinates: its bands and ledges, and the upper room's floor bands seen from
-## below (rock from y -40 to 0 outside the hole).
+## The lower room's rock in its own coordinates: its bands and masses, and the upper room's floor bands seen from
+## below (rock from y -40 to 0 outside the hole). Ledges are one-way, so a body rises through them: they are no headroom.
 func _rock(lower: RoomDef, hole: Vector2) -> Array:
 	var out: Array = []
 	for w in RoomBuilder.edge_walls(lower.pixel_size(), lower.exits):
@@ -112,8 +112,17 @@ func _rock(lower: RoomDef, hole: Vector2) -> Array:
 	out.append(Rect2(-2000, -RoomDef.FLOOR, 2000 + hole.x, RoomDef.FLOOR))
 	out.append(Rect2(hole.y, -RoomDef.FLOOR, lower.pixel_size().x + 2000 - hole.y, RoomDef.FLOOR))
 	for s in lower.solids:
-		out.append(s)
+		if not RoomBuilder.is_one_way(s):
+			out.append(s)
 	return out
+
+func test_ledges_are_not_headroom_rock() -> void:
+	for id in ["G1", "G3"]:
+		var lower: RoomDef = rooms[id]
+		assert_true(lower.solids.any(func(s: Rect2) -> bool: return RoomBuilder.is_one_way(s)), "%s has ledges" % id)
+		var rock := _rock(lower, Vector2(220, 380))
+		for s: Rect2 in lower.solids:
+			assert_eq(rock.has(s), not RoomBuilder.is_one_way(s), "%s: %s is rock only if it is not a ledge" % [id, s])
 
 ## The rising body's column over the hop must not touch any rock (other than the surface it stands on).
 func _sweep_clear(rock: Array, x: float, from_top: float, to_top: float, skip: Array) -> bool:
@@ -184,7 +193,8 @@ func test_g2s_west_piece_reaches_the_g1_sill_and_its_east_piece_reaches_out_too(
 	for w in RoomBuilder.edge_walls(g2.pixel_size(), g2.exits):
 		rock.append(w["rect"])
 	for s in g2.solids:
-		rock.append(s)
+		if not RoomBuilder.is_one_way(s):
+			rock.append(s)
 	var surfaces: Array = g2.solids.filter(func(s: Rect2) -> bool: return s.size.y <= 24.0 and s.size.x > 20.0)
 	var west_floor := Rect2(20, 680, 780, 1)
 	var east_floor := Rect2(960, 680, 940, 1)
@@ -261,6 +271,8 @@ func test_no_base_jump_path_reaches_the_g5_sill() -> void:
 	for w in RoomBuilder.edge_walls(g3.pixel_size(), g3.exits):
 		rock.append(w["rect"])
 	for s in g3.solids:
+		if RoomBuilder.is_one_way(s, g3.hard_ledges):
+			continue  # a ledge is one-way: a body rises through it, so it is no headroom rock
 		rock.append(s)
 	var surfaces: Array = g3.solids.filter(func(s: Rect2) -> bool: return s.size.y <= 24.0 and s.size.x > 20.0)
 	surfaces.append(sill)

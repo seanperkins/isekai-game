@@ -17,6 +17,9 @@ const NO_START := Vector2(-1, -1)
 @export var start := NO_START
 ## Interior solids (Rect2, local px). Boundary walls and the floor are generated.
 @export var solids: Array = []
+## Thin solids (Rect2, each also in `solids`) that stay rock from every side, on purpose. Every other thin
+## platform is one-way: you jump up through it and stand on it. See RoomBuilder.is_one_way.
+@export var hard_ledges: Array = []
 @export var decor: Array = []
 ## Scenery behind the play plane: [{"piece", "pos", "factor", optional "flip"}] (see SetDressing).
 @export var dressing: Array = []

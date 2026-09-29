@@ -27,6 +27,7 @@ static func validate(rooms: Dictionary, creature_ids: Array = []) -> PackedStrin
 		for e in a.exits:
 			errors.append_array(_check_exit(a, e, rooms))
 		errors.append_array(_check_dressing(a))
+		errors.append_array(_check_hard_ledges(a))
 		errors.append_array(_check_content(a, creature_ids))
 	errors.append_array(_check_rebirth_pools(rooms))
 	return errors
@@ -77,6 +78,17 @@ static func _check_content(r: RoomDef, creature_ids: Array) -> PackedStringArray
 	for f in r.features:
 		if not FEATURE_KINDS.has(f.get("kind", "")):
 			out.append("%s: unknown feature kind '%s'" % [r.id, f.get("kind", "")])
+	return out
+
+## Hard ledges are a deliberate list: each is one of the room's solids and thin enough to be one-way otherwise
+## (a thick rect is solid already, so listing it would be noise that hides a real choice).
+static func _check_hard_ledges(r: RoomDef) -> PackedStringArray:
+	var out := PackedStringArray()
+	for h: Rect2 in r.hard_ledges:
+		if not r.solids.has(h):
+			out.append("%s: hard ledge %s is not one of the room's solids" % [r.id, h])
+		elif not RoomBuilder.is_one_way(h):
+			out.append("%s: hard ledge %s is already solid" % [r.id, h])
 	return out
 
 ## Set dressing: a known piece, a depth factor in range, a position in or near the room, and no more
