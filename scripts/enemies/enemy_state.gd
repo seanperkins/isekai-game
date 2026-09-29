@@ -37,4 +37,19 @@ static func pick(creature: String, status: int, charge: String, swoop: String, s
 			if not on_floor:
 				return "drop"
 			return "crawl"
+		"spore_moth", "pale_moth":
+			return "fly"
+		"mushroom_crab":
+			if charge != "":
+				return charge
+			return "walk" if moving else "idle"
+		"vine_snake":
+			match charge:
+				"windup":
+					return "coil"
+				"charge":
+					return "lunge"
+				"rest":
+					return "rest"
+			return "hide"
 	return "idle"

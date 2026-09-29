@@ -7,7 +7,11 @@ extends RefCounted
 
 const OPPOSITE := {"left": "right", "right": "left", "top": "bottom", "bottom": "top"}
 
-static func validate(rooms: Dictionary) -> PackedStringArray:
+const FEATURE_KINDS := ["glow_pool", "rebirth_pool", "tablet", "switch"]
+
+## `creature_ids`, when given, is every creature id the game defines: spawns naming another are errors (a typo
+## must not silently drop a creature and its XP).
+static func validate(rooms: Dictionary, creature_ids: Array = []) -> PackedStringArray:
 	var errors := PackedStringArray()
 	var starts := rooms.values().filter(func(r: RoomDef) -> bool: return r.is_start()).size()
 	if starts != 1:
@@ -23,6 +27,7 @@ static func validate(rooms: Dictionary) -> PackedStringArray:
 		for e in a.exits:
 			errors.append_array(_check_exit(a, e, rooms))
 		errors.append_array(_check_dressing(a))
+		errors.append_array(_check_content(a, creature_ids))
 	errors.append_array(_check_rebirth_pools(rooms))
 	return errors
 
@@ -60,6 +65,18 @@ static func _check_rebirth_pools(rooms: Dictionary) -> PackedStringArray:
 				out.append("%s: rebirth pool '%s': %s" % [room_id, pid, e])
 	if not seen.is_empty() and not seen.has(WorldProgress.DEFAULT_POOL):
 		out.append("world: the default rebirth pool '%s' is missing" % WorldProgress.DEFAULT_POOL)
+	return out
+
+## Spawns name known creatures (when the ids are given) and features are kinds the builder makes.
+static func _check_content(r: RoomDef, creature_ids: Array) -> PackedStringArray:
+	var out := PackedStringArray()
+	if not creature_ids.is_empty():
+		for s in r.spawns:
+			if not creature_ids.has(s.get("id", "")):
+				out.append("%s: spawn names unknown creature '%s'" % [r.id, s.get("id", "")])
+	for f in r.features:
+		if not FEATURE_KINDS.has(f.get("kind", "")):
+			out.append("%s: unknown feature kind '%s'" % [r.id, f.get("kind", "")])
 	return out
 
 ## Set dressing: a known piece, a depth factor in range, a position in or near the room, and no more

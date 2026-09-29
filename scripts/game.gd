@@ -37,7 +37,7 @@ func _ready() -> void:
 	world = World.new()
 	add_child(world)
 	var rooms := World.load_rooms(ROOMS_DIR)
-	for e in WorldValidator.validate(rooms):
+	for e in WorldValidator.validate(rooms, _creatures.keys()):
 		push_error(e)
 	world.setup(rooms, player, {"spawn": _spawn, "progress": Compendium.progress,
 		"compendium": Compendium.model, "announce": Announcer.queue.push_unlock})

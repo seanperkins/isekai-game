@@ -76,3 +76,21 @@ func test_edge_walls_leave_gaps_at_exits() -> void:
 func test_a_gate_covers_its_exit_span() -> void:
 	assert_eq(RoomBuilder.gate_rect(Vector2(640, 360), {"edge": "bottom", "from": 200.0, "to": 260.0}), Rect2(200, 320, 60, 40))
 	assert_eq(RoomBuilder.gate_rect(Vector2(640, 360), {"edge": "left", "from": 200.0, "to": 320.0}), Rect2(0, 200, 20, 120))
+
+func test_a_spawn_with_an_unknown_creature_is_an_error_when_ids_are_given() -> void:
+	var rooms := _pair()
+	rooms["A"].spawns = [{"id": "spore_mothh", "pos": Vector2(10, 10)}]
+	assert_eq(_errors(rooms), "", "no ids given: spawns are not checked")
+	var errs := "\n".join(WorldValidator.validate(rooms, ["spore_moth"]))
+	assert_string_contains(errs, "spore_mothh")
+	assert_eq("\n".join(WorldValidator.validate(rooms, ["spore_mothh"])), "")
+
+func test_an_unknown_feature_kind_is_an_error() -> void:
+	var rooms := _pair()
+	rooms["A"].features = [{"kind": "glow_poool", "id": "x", "pos": Vector2(1, 1)}]
+	assert_string_contains(_errors(rooms), "glow_poool")
+
+func test_the_shipped_world_has_only_known_creatures_and_feature_kinds() -> void:
+	var ids: Array = DefLoader.load_dir("res://data/creatures").map(func(c: CreatureDef) -> String: return c.id)
+	var rooms := World.load_rooms("res://data/rooms")
+	assert_eq(WorldValidator.validate(rooms, ids).size(), 0, str(WorldValidator.validate(rooms, ids)))

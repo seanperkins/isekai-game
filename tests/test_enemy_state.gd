@@ -48,3 +48,18 @@ func test_spider_states() -> void:
 func test_an_unknown_creature_falls_back_to_idle() -> void:
 	assert_eq(_pick("serpent"), "idle")
 	assert_eq(_pick("serpent", {"status": EnemyStatus.DOWNED}), "downed")
+
+func test_the_grotto_creatures_have_arms_and_do_not_fall_back_to_idle() -> void:
+	assert_eq(_pick("spore_moth"), "fly")
+	assert_eq(_pick("spore_moth", {"moving": true, "on_floor": false}), "fly")
+	assert_eq(_pick("mushroom_crab", {"charge": "windup"}), "windup")
+	assert_eq(_pick("mushroom_crab", {"charge": "charge", "moving": true}), "charge")
+	assert_eq(_pick("mushroom_crab", {"charge": "rest"}), "rest")
+	assert_eq(_pick("mushroom_crab", {"moving": true}), "walk")
+	assert_eq(_pick("mushroom_crab"), "idle")
+	assert_eq(_pick("vine_snake", {"charge": "windup", "on_ceiling": true}), "coil")
+	assert_eq(_pick("vine_snake", {"charge": "charge", "on_ceiling": true, "moving": true}), "lunge")
+	assert_eq(_pick("vine_snake", {"charge": "rest", "on_ceiling": true, "moving": true}), "rest")
+	assert_eq(_pick("vine_snake", {"on_ceiling": true}), "hide")
+	assert_eq(_pick("vine_snake", {"status": EnemyStatus.STUNNED, "charge": "charge"}), "stunned")
+	assert_eq(_pick("pale_moth"), "fly")

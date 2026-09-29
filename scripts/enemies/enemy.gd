@@ -144,7 +144,7 @@ func receive_tackle(atk: int, from_behind: bool, from: Vector2 = Vector2.INF) ->
 		return true
 	if not def.predatable:
 		return false  # the serpent can't be stunned
-	if def.id == Sources.LIZARD and not from_behind:
+	if def.armored_charger and not from_behind:
 		return false  # armored front
 	status.stun()
 	return true
@@ -155,7 +155,11 @@ func receive_thread(tier: int) -> void:
 	if tier >= 2 and def.predatable:
 		status.stun()
 	else:
-		_slow = SLOW_SECONDS
+		slow_for(SLOW_SECONDS)
+
+## The one writer for the slow: a thread and Spore Cloud both call it.
+func slow_for(seconds: float) -> void:
+	_slow = maxf(_slow, seconds)
 
 func can_be_predated() -> bool:
 	return def.predatable and status.predatable()
@@ -338,7 +342,7 @@ func _act(player: Node2D, delta: float) -> void:
 	if capabilities.has("flight"):
 		_swoop_act(player, delta)
 		return
-	if def.id == Sources.LIZARD and _charger_act(to_player, delta):
+	if def.armored_charger and _charger_act(to_player, delta):
 		return
 	if _spit_damage > 0 and _spitter_act(player, to_player, delta):
 		return
