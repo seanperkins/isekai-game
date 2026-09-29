@@ -22,34 +22,31 @@
    "refs": [
     "idle_1"
    ],
-   "prompt": "The same lizard walking: front-right and back-left legs forward, body swaying."
+   "prompt": "The same lizard mid-stride, clearly different from standing: the near front leg and the far back leg reaching far forward and lifted, the other two legs pushing back, body tilted slightly, tail swung to one side."
   },
   {
    "name": "walk_2",
    "width": 56,
    "refs": [
-    "idle_1",
-    "walk_1"
+    "idle_1"
    ],
-   "prompt": "The same lizard walking: legs passing under the body, body level."
+   "prompt": "The same lizard mid-walk with all four legs gathered close under its belly, body raised a little higher than standing, tail lifted slightly."
   },
   {
    "name": "walk_3",
    "width": 58,
    "refs": [
-    "idle_1",
-    "walk_2"
+    "idle_1"
    ],
-   "prompt": "The same lizard walking: front-left and back-right legs forward."
+   "prompt": "The same lizard mid-stride on the opposite step: the far front leg and near back leg reaching far forward and lifted, the other two pushing back, tail swung to the other side."
   },
   {
    "name": "walk_4",
    "width": 56,
    "refs": [
-    "idle_1",
-    "walk_3"
+    "idle_1"
    ],
-   "prompt": "The same lizard walking: legs passing under the body again."
+   "prompt": "The same lizard mid-walk, legs gathered under the belly, body lowered slightly below standing height, head dipped."
   },
   {
    "name": "windup_1",
@@ -102,15 +99,15 @@
    "refs": [
     "idle_1"
    ],
-   "prompt": "The same lizard after the charge: skidding to a stop, head low and panting, mouth open."
+   "prompt": "The same lizard just after a charge: skidding to a stop with front legs braced straight, head lowered near the ground, mouth wide open, tail dragging behind."
   },
   {
    "name": "rest_2",
    "width": 54,
    "refs": [
-    "rest_1"
+    "idle_1"
    ],
-   "prompt": "The same lizard exhausted and panting, sides heaving, head hanging low, tail limp."
+   "prompt": "The same lizard exhausted: belly sagging close to the ground, head hanging low with the mouth open, sides swollen from panting, tail limp on the ground."
   },
   {
    "name": "stunned",
@@ -118,7 +115,7 @@
    "refs": [
     "idle_1"
    ],
-   "prompt": "The same lizard dazed: head drooping, eyes half shut, legs splayed, swaying."
+   "prompt": "The same lizard knocked dizzy: head hanging down low, eyes drawn as little X marks, tongue lolling out, front legs splayed sideways and wobbling, body sagging."
   },
   {
    "name": "hurt",
@@ -126,7 +123,7 @@
    "refs": [
     "idle_1"
    ],
-   "prompt": "The same lizard flinching from a hit: body arched, mouth open in a hiss, eyes shut tight."
+   "prompt": "The same lizard flinching from a hit: back arched high in a hump, head thrown up, mouth wide open in a hiss, eyes squeezed shut, tail whipped up."
   },
   {
    "name": "downed",
@@ -136,5 +133,6 @@
    ],
    "prompt": "The same lizard lying on its back, pale belly up, legs curled and limp, tail flopped to the side."
   }
- ]
+ ],
+ "anchor": "idle_1"
 }

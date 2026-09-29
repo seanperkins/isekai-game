@@ -10,7 +10,7 @@
   },
   {
    "name": "fly_2",
-   "width": 32,
+   "width": 40,
    "refs": [
     "fly_1"
    ],
@@ -83,5 +83,6 @@
    ],
    "prompt": "The same bat lying on its back, wings splayed out flat, feet curled up, eyes closed, completely out."
   }
- ]
+ ],
+ "anchor": "fly_2"
 }

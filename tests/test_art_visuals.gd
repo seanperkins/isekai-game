@@ -61,7 +61,16 @@ func test_enemy_sprite_shows_state() -> void:
 	bat.receive_hit(9, "physical")
 	bat.finish_dying()
 	bat._update_visual()
-	assert_true(_sprite(bat).flip_v)
+	assert_false(_sprite(bat).flip_v, "the drawn downed pose is not the sprite flipped over")
+	assert_eq(_sprite(bat).texture, bat._sheet.frame_texture("downed"))
+	var old := Enemy.new()  # without its sheet a downed creature is the old sprite flipped
+	old.use_sheet = false
+	old.setup(bat.def, {})
+	add_child_autofree(old)
+	old.set_physics_process(false)
+	old.status.down()
+	old._update_visual()
+	assert_true(_sprite(old).flip_v)
 
 func test_room_visual_kinds() -> void:
 	assert_eq(RoomBuilder.visual_kind(Rect2(0, 320, 1600, 40)), "ground")

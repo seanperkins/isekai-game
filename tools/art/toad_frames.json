@@ -64,7 +64,7 @@
    "refs": [
     "puff_2"
    ],
-   "prompt": "The same toad spitting: head thrown up and forward, mouth wide open, a gob of green poison leaving its mouth."
+   "prompt": "The same toad spitting: head thrown up and forward, mouth wide open with a green tongue and glowing green throat. Draw no projectile, no glob and nothing leaving the mouth."
   },
   {
    "name": "stunned",
@@ -90,5 +90,6 @@
    ],
    "prompt": "The same toad lying on its back, pale belly up, legs curled and limp, eyes closed."
   }
- ]
+ ],
+ "anchor": "idle_1"
 }

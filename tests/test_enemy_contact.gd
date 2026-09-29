@@ -44,8 +44,10 @@ func test_a_walking_enemy_pressed_against_the_slime_hurts_it() -> void:
 
 func test_touching_shapes_count_as_contact() -> void:
 	await wait_physics_frames(14)  # the landing squash is over: the slime is its idle frame
-	var e := _enemy("lizard", 0.0)
-	e.use_sheet = false
+	var e := Enemy.new()
+	e.use_sheet = false  # its box, so the test measures the slime's drawn edge
+	e.setup(creatures["lizard"], skills)
+	add_child_autofree(e)
 	var right := -INF
 	for p in player.hurt_polygon():
 		right = maxf(right, p.x)

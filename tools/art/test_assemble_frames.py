@@ -32,6 +32,14 @@ class AssembleFramesTest(unittest.TestCase):
         self.assertTrue(alphas <= {0, 255})
         self.assertEqual(out.getpixel((15, 7))[3], 255)
 
+    def test_a_shared_scale_keeps_relative_sizes(self):
+        wide = frame(100, 50, (10, 10, 90, 40))   # subject 80x30
+        narrow = frame(100, 50, (30, 5, 70, 45))  # subject 40x40
+        scale = a.anchor_scale(wide, 40)          # the anchor is drawn 40 px wide: 0.5x
+        self.assertAlmostEqual(scale, 0.5)
+        self.assertEqual(a.fit_scaled(wide, scale).size, (40, 15))
+        self.assertEqual(a.fit_scaled(narrow, scale).size, (20, 20), "a narrower drawing stays narrower")
+
     def test_fit_rejects_an_empty_frame(self):
         with self.assertRaises(ValueError):
             a.fit_frame(Image.new("RGBA", (10, 10), MAGENTA), 5)

@@ -39,6 +39,27 @@ def fit_frame(im, width):
     return crisp_alpha(im.resize((width, height), Image.BOX))
 
 
+def cropped(im):
+    """Key out magenta and crop to the drawn pixels."""
+    im = keyed(im.convert("RGBA"))
+    box = im.split()[3].getbbox()
+    if box is None:
+        raise ValueError("frame is empty after keying")
+    return im.crop(box)
+
+
+def anchor_scale(im, width):
+    """The scale that draws the anchor frame `width` px wide; every frame of the set shares it."""
+    return width / cropped(im).width
+
+
+def fit_scaled(im, scale):
+    """Key, crop, and scale by a shared factor (BOX), then crisp the alpha."""
+    c = cropped(im)
+    size = (max(1, round(c.width * scale)), max(1, round(c.height * scale)))
+    return crisp_alpha(c.resize(size, Image.BOX))
+
+
 def boundary_corners(im):
     """Corners of every opaque pixel that touches transparency or the frame edge."""
     w, h = im.size
@@ -121,11 +142,15 @@ def main():
     rig_set = sys.argv[1]
     data = json.load(open("tools/art/%s_frames.json" % rig_set))
     fitted, shapes = {}, {}
+    scale = None
+    if "anchor" in data:  # one shared scale, so a stretched or wing-raised frame is not blown up to a fixed width
+        by_name = {f["name"]: f for f in data["frames"]}
+        scale = anchor_scale(Image.open(os.path.join(SRC, rig_set, data["anchor"] + ".png")), by_name[data["anchor"]]["width"])
     for f in data["frames"]:
         src = os.path.join(SRC, rig_set, f["name"] + ".png")
         if not os.path.exists(src):
             raise SystemExit("missing %s (generate it first)" % src)
-        fitted[f["name"]] = fit_frame(Image.open(src), f["width"])
+        fitted[f["name"]] = fit_scaled(Image.open(src), scale) if scale else fit_frame(Image.open(src), f["width"])
         shapes[f["name"]] = trace(fitted[f["name"]], f.get("attack_from"))
     sheet, rects = pack(fitted)
     os.makedirs(OUT, exist_ok=True)
