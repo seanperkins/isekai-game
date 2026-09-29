@@ -66,6 +66,7 @@ static func rooms() -> Array:
 static func c1() -> RoomDef:
 	var f := {"id": "C1", "area": "cave", "cell": Vector2i(0, 2), "size": Vector2i(2, 1),
 		"start": Vector2(60, 308),  # body centre is 12 px above the floor top (320)
+		"features": [{"kind": "rebirth_pool", "id": "C1", "area": "cave", "kit": {}, "pos": Vector2(140, 320)}],
 		"exits": [_exit("right", 200, 320, "C2"), _exit("top", 840, 900, "C6", {"shortcut": "c6_drop"})],
 		"solids": [Rect2(260, 266, 120, 12), Rect2(420, 214, 100, 12), Rect2(760, 140, 16, 180),
 			Rect2(900, 266, 140, 12), Rect2(1060, 214, 100, 12)],

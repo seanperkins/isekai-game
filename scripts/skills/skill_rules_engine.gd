@@ -13,6 +13,8 @@ signal inspect_processed(tags: Dictionary, appraisal_level: int)
 signal evolution_ready(id: String)
 ## recheck_levels() finished; `levels_gained` counts the levels it added across all skills.
 signal rechecked(levels_gained: int)
+## A skill that was granted (a rebirth kit) has now met its unlock conditions: the player understands it.
+signal skill_discovered(id: String)
 
 const MAX_ITERATIONS := 64
 const APPRAISAL_ID := "appraisal"
@@ -37,6 +39,7 @@ var _queue: Array = []
 var _draining := false
 var _run_start := 0.0
 var _ready_evolutions := {}
+var _granted := {}     # id -> true: granted without its unlock, until its conditions are met
 
 func setup(defs: Array) -> void:
 	_defs.clear()
@@ -68,6 +71,7 @@ func reset_run() -> void:
 	_unlock_log.clear()
 	_queue.clear()
 	_ready_evolutions.clear()
+	_granted.clear()
 
 func handle_event(event_name: String, tags: Dictionary = {}) -> void:
 	if not run_active:
@@ -122,16 +126,23 @@ func level_progress(id: String) -> Dictionary:
 	var gained: int = _ledger.counter(d.levels_on["event"], d.levels_on.get("tags", {})) - int(_owned[id]["base"])
 	return {"current": clampi(gained - (level - 1) * d.level_curve, 0, d.level_curve), "target": d.level_curve}
 
-## Gives an owned skill without its unlock (a body grants its skills on arrival). Announced; a no-op if
-## the skill is unknown, enemy-only, or already owned.
-func grant(id: String) -> bool:
+## Gives an owned skill without its unlock: a body grants its skills on arrival (announced), a rebirth
+## kit grants its skills quietly (`announce` false: no skill_unlocked, so the caller reveals and slots
+## them, and the skill is discovered later, when its unlock conditions are met). A no-op if the skill is
+## unknown, enemy-only, or already owned.
+func grant(id: String, announce := true) -> bool:
 	if not run_active or not _defs.has(id) or _owned.has(id):
 		return false
 	_ready_evolutions.erase(id)
-	_grant(_defs[id], true)
+	_grant(_defs[id], announce)
+	if not announce:
+		_granted[id] = true
 	if not _draining:
 		_drain()
 	return true
+
+func is_granted(id: String) -> bool:
+	return _granted.has(id)
 
 func set_stage_cap(n: int) -> void:
 	stage_cap = maxi(1, n)
@@ -211,6 +222,9 @@ func _evaluate(d: SkillDef) -> void:
 			else:
 				_grant(d, true)
 		return
+	if _granted.has(d.id) and not d.unlock.is_empty() and _conditions_met(d):
+		_granted.erase(d.id)
+		skill_discovered.emit(d.id)
 	_check_level(d)
 
 ## Level = 1 + (levels_on events since unlock) / level_curve, capped at max_level.

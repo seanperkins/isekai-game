@@ -21,6 +21,8 @@ var ep := 0
 var stage := 1
 ## "<spawn key>:down" / "<spawn key>:eat" for every first-time reward already paid this run.
 var claimed := {}
+## Essence units a rebirth kit seeded: they count toward the first evolution's affinity and nothing else.
+var seeded := {}
 
 ## XP needed to go from `from_level` to the next level in `p_stage`: 10, 15, 20, ... times the stage's multiplier.
 static func xp_to_next(from_level: int, p_stage: int = 1) -> int:
@@ -53,6 +55,16 @@ func add_xp(amount: int) -> void:
 		if at_cap():
 			xp = 0
 			break
+
+## A rebirth kit's starting level: the level bonuses (one leveled_up per level) but no EP, no XP, stage 1.
+func start_at(target: int) -> void:
+	target = clampi(target, 1, LEVEL_CAP)
+	var kept_ep := ep
+	while level < target:
+		level += 1
+		leveled_up.emit(level)
+	ep = kept_ep
+	xp = 0
 
 ## Starts the next stage: level 1 again, EP and the (stat) level bonuses are kept.
 func evolve_stage() -> void:

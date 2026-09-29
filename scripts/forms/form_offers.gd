@@ -58,10 +58,12 @@ static func affinity(absorbed: Dictionary, p_supply: Dictionary, forms: Dictiona
 	return out
 
 ## essence -> units absorbed this run, from the skill engine's ledger.
-static func absorbed_units(rules: SkillRulesEngine) -> Dictionary:
+static func absorbed_units(rules: SkillRulesEngine, seeded := {}) -> Dictionary:
 	var out := {}
 	for e in Essences.ALL:
 		out[e] = rules.count(Events.ABSORBED, {"essence": e})
+	for e in seeded:  # a rebirth kit's seeded units count here, and only here
+		out[e] = int(out.get(e, 0)) + int(seeded[e])
 	return out
 
 ## The form ids on offer for `form` (a Form), given what was absorbed and the supply.

@@ -9,6 +9,10 @@ static func make(f: Dictionary, ctx: Dictionary) -> Node2D:
 			var pool := GlowPool.new()
 			pool.setup(f, ctx)
 			return pool
+		"rebirth_pool":
+			var rebirth := RebirthPool.new()
+			rebirth.setup(f, ctx)
+			return rebirth
 		"tablet":
 			var tablet := Tablet.new()
 			tablet.setup(f, ctx)

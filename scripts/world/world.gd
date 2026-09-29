@@ -61,6 +61,13 @@ func enter_start() -> void:
 			_follow()
 			return
 
+## Starts the life in `room_id` at local position `pos` (a rebirth pool's room and spot). enter_start() stays
+## the default, and the validator keeps requiring exactly one start room.
+func enter_at(room_id: String, pos: Vector2) -> void:
+	enter(room_id)
+	player.global_position = (rooms[room_id] as RoomDef).world_rect().position + pos
+	_follow()
+
 func enter(id: String) -> void:
 	if room != null:
 		room.queue_free()
