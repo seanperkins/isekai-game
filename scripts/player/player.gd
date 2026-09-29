@@ -569,6 +569,8 @@ func debug_grant_xp(amount: int) -> void:
 	progression.add_xp(amount)
 
 func _use_form_sheet(def: FormDef) -> void:
+	if _animator == null:
+		return  # no sheet drawing at all (use_sheet false): there is nothing to swap
 	if def.sprite_set != "" and SpriteSheet.available(def.sprite_set):
 		_form_sheet = SpriteSheet.load_set(def.sprite_set)
 		_sheet = _form_sheet
@@ -664,7 +666,7 @@ func _complete_predation(t) -> void:
 			_emit.call(Events.ABSORBED, {"essence": ess, "source": c.id})
 	stats.apply_eat(c)
 	_sync_max_hp()
-	health.heal(EAT_HEAL + skillset.heal_on(Events.PREDATED, {"source": c.id, "kind": kind}))
+	health.heal(EAT_HEAL + FormEffects.eat_heal(skillset.capabilities) + skillset.heal_on(Events.PREDATED, {"source": c.id, "kind": kind}))
 	if kind == "creature":
 		if not health.is_dead():
 			progression.award(t.spawn_key if "spawn_key" in t else "", "eat", c.xp)
