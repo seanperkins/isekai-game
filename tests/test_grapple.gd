@@ -102,3 +102,13 @@ func test_an_anchored_thread_is_drawn_to_the_anchor_by_the_player_not_as_a_flash
 	_solid(Rect2(-50, -110, 100, 10))
 	await _cast("sticky_thread", Vector2(0, -1))
 	assert_eq(get_tree().get_nodes_in_group("vfx").size(), 0)
+
+func test_terrain_hit_belongs_to_every_ability() -> void:
+	_solid(Rect2(40, -10, 10, 20))
+	var a: Ability = load("res://scenes/abilities/water_blade.tscn").instantiate()
+	add_child_autofree(a)
+	a.setup(actor, [3], 1)
+	await wait_physics_frames(2)
+	var hit = a.terrain_hit(Vector2.ZERO, Vector2(100, 0))
+	assert_not_null(hit)
+	assert_almost_eq(hit.x, 40.0, 0.5)

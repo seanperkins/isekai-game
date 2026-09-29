@@ -26,14 +26,3 @@ func _perform() -> void:
 		actor.attach_rope(anchor, rope_range, reel_speed, release_boost)  # the actor draws the rope
 	else:
 		Vfx.line(actor, from, from + dir * rope_range, THREAD_COLOR, 1.0, 0.35)
-
-## The first terrain point on the segment, or null. Actors never block the thread.
-func terrain_hit(from: Vector2, to: Vector2):
-	var query := PhysicsRayQueryParameters2D.create(from, to)
-	var skip: Array[RID] = []
-	for n in actor.get_tree().get_nodes_in_group("actors"):
-		if n is CollisionObject2D:
-			skip.append(n.get_rid())
-	query.exclude = skip
-	var hit := actor.get_world_2d().direct_space_state.intersect_ray(query)
-	return null if hit.is_empty() else hit["position"]

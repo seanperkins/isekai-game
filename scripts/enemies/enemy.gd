@@ -204,7 +204,8 @@ func receive_thread(tier: int) -> void:
 	else:
 		slow_for(SLOW_SECONDS)
 
-## The one writer for the slow: a thread and Spore Cloud both call it.
+## The one writer for the slow: a thread (Sticky Thread, Swing Thread) and every player zone (Spore Cloud, Binding Web's
+## patch, Healing Spores, Puffball) call it.
 func slow_for(seconds: float) -> void:
 	_slow = maxf(_slow, seconds)
 

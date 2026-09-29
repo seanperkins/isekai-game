@@ -56,5 +56,16 @@ func targets_in_front(range_px: float, half_width: float) -> Array:
 	out.sort_custom(func(a, b): return (a.global_position - actor.global_position).dot(dir) < (b.global_position - actor.global_position).dot(dir))
 	return out
 
+## The first terrain point on the segment, or null. Actors never block the thread.
+func terrain_hit(from: Vector2, to: Vector2):
+	var query := PhysicsRayQueryParameters2D.create(from, to)
+	var skip: Array[RID] = []
+	for n in actor.get_tree().get_nodes_in_group("actors"):
+		if n is CollisionObject2D:
+			skip.append(n.get_rid())
+	query.exclude = skip
+	var hit := actor.get_world_2d().direct_space_state.intersect_ray(query)
+	return null if hit.is_empty() else hit["position"]
+
 func _perform() -> void:
 	pass
