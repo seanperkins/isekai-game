@@ -46,3 +46,12 @@ Gamepad: left stick / D-pad move (stick also aims) · A jump · X tackle · B ho
 - [ ] The slime is about twice its old size and drawn frame by frame: idle breathes, run is a four-frame squelch, jump/fall/land squash and stretch, the tackle stretches forward.
 - [ ] Hold down (S / ↓ / stick down) on the floor: the slime flattens into a puddle at half speed, and un-squashes when you let go. It can't stand or jump under a low ceiling.
 - [ ] Hold K/B next to a stunned enemy: the slime drapes over it and the enemy shrinks inside until it's eaten; letting go reveals the enemy again.
+
+## Sound (by ear; headless tests cannot judge how it sounds)
+
+- [ ] Open `tools/audio/preview.tscn` and play every cue. Note any that clip, click, sound harsh, or are far louder or quieter than their neighbours. Tune `volume_db` in `art_source/audio/recipes/*.json`, then rebuild with `tools/audio/synth_sfx.py` and `tools/audio/build_cues.py`.
+- [ ] Play each biome bed for at least a minute. The loop point should be inaudible.
+- [ ] In a run: jump, land from a small and a big drop, run, wall-slide, crouch-spread, tackle, eat, take a hit, drop below 30% HP (heartbeat), die. Each has a sound and none keeps looping after death or restart.
+- [ ] Absorb a stack of essence: one pleasant rising chime, not a machine gun.
+- [ ] Open the menu: the music dips and returns. The Sound tab's sliders change loudness; 0 is silent. Quit and relaunch: the values persist.
+- [ ] Walk between rooms in the same biome: the music never restarts.

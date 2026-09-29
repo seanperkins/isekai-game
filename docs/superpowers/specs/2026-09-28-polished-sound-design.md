@@ -121,8 +121,8 @@ Looped or continuous sounds (squish-run, wall-slide, heartbeat) use paired event
 | Slime | jump, land soft, land hard (fall speed), squish-run (looped by step), crouch-spread, wall-cling, wall-slide, hurt, low-HP heartbeat, death, level-up, evolve |
 | Eating | cover, absorb (pitch rises with essence total), predated |
 | Skills | one cue per ability: sticky thread, swing thread, poison spit, poison breath, water blade, jet dash, hydraulic propulsion, tail swipe, constrict, leap, and the skill unlock and level-up stingers |
-| Enemies | hit, stun, death (one per creature family, not per creature) |
-| World | tablet inspect, shortcut switch, glow-pool rest, water enter, water exit, crystal chime |
+| Enemies | hit, stun, death (four death cues: flyer, crawler, beast, boss, chosen by creature id in the catalog) |
+| World | tablet read, shortcut switch, glow-pool rest, water enter and exit (catalogued; emitted once a swim mechanic exists), ambience one-shots (drip, crystal ping, hum, bubble, spore) |
 | UI | pop-up ticker, skill screen open and close, not-enough-MP denial, menu move and confirm |
 
 Every name in `Events.ALL`, every `world_event` name and the three `SkillRules` signals has an
@@ -161,8 +161,17 @@ art_source/audio/beds/<biome>.json ─gen_bed.py─▶  art_source/audio/raw/   
   above zero, no clipping), and only then renames it into `assets/audio/`. A failed run never
   leaves a partial file. `build_cues.py` refuses to add a cue for an invalid file and exits
   non-zero.
-- **Loudness targets:** SFX about −16 LUFS, music about −20, ambience about −24. True peak
-  under −1 dBTP.
+- **Loudness targets:** SFX are peak-normalised to −2 dBFS and balanced by each cue's `volume_db`
+  (LUFS is not meaningful for clips under half a second, and transient sounds cannot reach −16 LUFS
+  under the peak ceiling). Music is about −20 LUFS and ambience about −24 LUFS. Nothing peaks
+  above −1 dBTP, measured as sample peak after encoding.
+- **Encoding:** Ogg Vorbis, stereo, through ffmpeg's native `vorbis` encoder (`-strict -2`), which
+  accepts two channels only. Mono sources are duplicated to stereo.
+- **Loop edges:** every bed fades to silence over its first and last 10 ms. Vorbis zero-pads the
+  end of a stream, so a bed that ended mid-wave decoded with a jump from its tail back to its head.
+- **Placeholder beds:** until a provider is chosen, `gen_bed.py` renders each bed itself with a
+  built-in synth provider. A `local` provider decodes a file dropped in `art_source/audio/raw/`,
+  and the ElevenLabs provider replaces the placeholders when Sean supplies a key.
 - **Gitignore:** add `art_source/audio/raw/` with a comment like the terrain entry. Built
   `.ogg` files and recipes are committed.
 
@@ -192,10 +201,11 @@ Headless tests in `tests/` (run with `tools/run_tests.sh`):
 3. **Voice pool:** the cap holds, a cooldown drops the second play, and a full pool steals the
    quietest voice.
 4. **Variants:** the same variant never plays twice in a row when a cue has two or more.
-5. **Loop seams:** the difference between the last and first sample window of each loop is
-   under a set multiple of the file's normal sample-to-sample difference (the same approach as
-   the parallax seam test).
-6. **Loudness:** measured loudness of each built file is within ±2 LU of its bus target.
+5. **Loop seams** (Python, `tools/audio/test_assets.py`): the jump from a file's last sample to its
+   first is under 3× the loudest normal sample-to-sample step, for every bed and every looping cue.
+6. **Loudness** (Python, same file): music and ambience are within ±2 LU of their targets, and no
+   file peaks above −1 dBFS. These are Python because they need PCM samples, which headless Godot
+   cannot provide; run them with `python3 -m unittest discover -s tools/audio -p "test_*.py"`.
 7. **Settings:** slider values round-trip through `Profile`, and a malformed section resets.
 8. **Biome switch:** `set_biome` for an unknown area warns and keeps the current bed.
 9. **Pause:** with the tree paused, a `menu_opened` event still ducks the Music bus.
@@ -209,7 +219,8 @@ biome with a play button so Sean can audition them, and a checklist item in
 ## Ownership
 
 New paths: `autoload/audio.gd`, `scripts/audio/`, `data/audio/`, `assets/audio/`,
-`art_source/audio/`, `tools/audio/`, `default_bus_layout.tres`, `tests/test_audio_*.gd`.
+`art_source/audio/` (recipes, beds and gitignored raw output), `tools/audio/` (tools and their
+Python tests, `test_*.py`), `default_bus_layout.tres`, `tests/test_audio_*.gd`.
 
 Edits to existing files:
 - `project.godot`: the autoload and the bus layout.

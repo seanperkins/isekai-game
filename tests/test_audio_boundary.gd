@@ -58,3 +58,9 @@ func test_every_event_entry_that_plays_is_reachable_or_reserved() -> void:
 		if str(n).begins_with("_") or Events.ALL.has(n) or ["skill_unlocked", "skill_leveled", "evolution_ready"].has(n):
 			continue
 		assert_true(names.has(n) or reserved.has(n), "%s is in the catalog but nothing emits it" % n)
+
+func test_the_preview_scene_builds_a_button_per_cue_and_biome() -> void:
+	var preview = load("res://tools/audio/preview.tscn").instantiate()
+	add_child_autofree(preview)
+	var buttons: Array = preview.find_children("*", "Button", true, false)
+	assert_eq(buttons.size(), catalog.cues.size() + CueCatalog.BIOMES.size())
