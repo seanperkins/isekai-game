@@ -1,102 +1,145 @@
 # Enemy Behaviour State Machines — Design
 
-Status: draft for review (2026-09-29). Answers Sean's question "We will use a state machine for enemies as well?"
-(the slime already has `SlimeState`). A behaviour-preserving refactor of `scripts/enemies/enemy.gd`.
+Status: revised after debate round 1 (2026-09-29). Answers Sean's question "We will use a state machine for
+enemies as well?" (the slime already has `SlimeState`). A behaviour-preserving refactor of
+`scripts/enemies/enemy.gd`, in three phases: **A** consolidate in place behind a characterization referee,
+**B** extract the four real machines, **C** (separate commits) two small snake fixes.
 
 ## Goal
 
-`Enemy` (586 lines) mixes five jobs: identity and damage (defs, stats, tackles, threads, slow), the shared senses
-(line of sight, alert memory), status handling (stun, down, die), the visual (sheet frames, shapes, tints) and
-seven behaviours. The behaviours are held in ten loose fields (`_charge`, `_charge_t`, `_swoop`, `_swoop_t`,
-`_spit_windup`, `_spit_cd`, `_puff_t`, `_puff_windup`, `_on_ceiling`, `_lunge_dir`, `_dive_dir`, `_anchor`) and a
-precedence chain in `_act`, `_physics_process` and `_telegraphing`. Each new creature (the Grotto's three) added
-another branch in four places. This makes each behaviour an explicit state machine in its own small class, so a
-new creature is one class plus a table row, and the states are named and testable.
+`Enemy` (586 lines) mixes identity and damage, the shared senses, status handling, the visual, and seven
+behaviours. The behaviours live in twelve loose fields (`_charge`, `_charge_t`, `_swoop`, `_swoop_t`, `_dive_dir`,
+`_spit_windup`, `_spit_cd`, `_puff_t`, `_puff_windup`, `_lunge_dir`, `_on_ceiling`, plus the shared `_home_x`,
+`_home_y`, `_anchor`, `_rng`) and a precedence chain repeated in four places (`_act`, the gravity block, `_telegraphing`,
+and two copies of the reset). Each new creature added a branch in all four. At most one of the timer fields is
+live for any creature (the snake already reuses `_charge`/`_charge_t`); this makes that explicit: one named state,
+one timer, one aim vector per enemy, chosen by a `kind` resolved once, so a new creature is one data flag and one
+branch (or class) rather than four edits.
 
-Non-goals: no change to how any creature plays (numbers, timings, precedence, telegraphs); no new creature; no
-change to `EnemyStatus`, the death effects, `EatCover`, contact damage or the sheets; no generic behaviour-tree
-framework.
+Non-goals: no change to how any creature plays (numbers, timings, tick order, RNG draws, precedence, telegraphs,
+which fields survive a stun); no new creature; no change to `EnemyStatus`, `DeathFx`, `EatCover`, contact damage or
+the sheets; no generic behaviour-tree framework; no change to `EnemyState.pick`'s signature or `frame_name()`.
 
 ## Decisions
 
 | Topic | Decision |
 |---|---|
-| Shape | `EnemyBehaviour` (a `RefCounted`) owns one creature kind's movement and attack states. The `Enemy` node owns everything shared and asks its behaviour to act each physics tick. A state is a string plus a timer, changed only through `set_state(name, seconds)` |
-| Behaviours | `WalkerBehaviour` (patrol and chase: the toad without spit, and the fallback for every walker), `ChargerBehaviour` (lizard, crab: walk, windup, charge, rest), `SpitterBehaviour` (toad: walk, puff, recover), `SwooperBehaviour` (bat: idle, hover, warn, dive, climb), `DropperBehaviour` (spider: hang, then it drops and crawls as a walker), `DrifterBehaviour` (moths: drift, flash), `SnakeBehaviour` (vine snake: hide, coil, lunge, retreat) |
-| Selection | A static `EnemyBehaviour.for_creature(def, capabilities, spit_damage)` picks by the same precedence as today's `_act`: snake by id, then ceiling walkers, then `drifter`, then `flight`, then `armored_charger`, then spit damage, else walker. The Charger and Spitter fall through to walking exactly as `_charger_act` and `_spitter_act` returning false do today |
-| What stays on `Enemy` | Setup from a `CreatureDef`, stats, health, `receive_hit` / `receive_tackle` / `receive_thread` / `slow_for`, the senses (`can_see`, `_sense`, `is_alert`), status and the death hooks, gravity as decided by `behaviour.gravity_mode()`, contact damage, hurt and telegraph tints, sheet loading and frame drawing, and every public name the rest of the game and the tests use (`charge_state()`, `swoop_state()`, `is_alert()`, `frame_name()`, `hurt_polygon()`, `slow_for()`, `def`, `status`, `health`, `facing`, `spawn_key`) |
-| Animation | `EnemyState.pick` stays the one pure mapping and keeps its signature and tests. `Enemy._draw_sheet_frame` builds its inputs from `behaviour.pose()` (a Dictionary of `charge`, `swoop`, `spit_windup`, `spit_recent`, `on_ceiling`) instead of reading loose fields |
-| Protection | A **characterization test** is written and committed FIRST: for each creature it runs a scripted scenario on a fixed floor with a fixed RNG seed and records the (state names, position) trace at fixed frames into a data file; after each migration step the same test must pass unchanged. That trace, not the refactor's author, is the referee |
-| Tests that poke private fields | About 23 references in five test files read `_charge`, `_swoop`, `_puff_windup`, `_on_ceiling`, `_lunge_dir`. They move to the behaviour's public state (`enemy.behaviour.state`, `charge_state()`, `swoop_state()`); their assertions stay the same |
-| Order | One behaviour per step, simplest first, the suite green after every step (Walker, Charger, Spitter, Swooper, Dropper, Drifter, Snake), then delete the dead fields |
+| Phases | **A** (in place): add public seams, record the characterization, fold the fields into `_state` / `_state_t` / `_aim`, resolve a `kind` once, express gravity as a per-kind/per-status table, one `on_inactive_tick()` and one `on_died()`. **B**: extract Charger, Swooper, Drifter and Snake into typed `RefCounted` classes (four, not seven: the Walker stays `Enemy._walk`, the Dropper stays the `_on_ceiling` flag, the Spitter stays a small interrupt on `Enemy`). **C**: the snake's two fixes, each its own commit, test first |
+| State names | The public strings stay exactly today's: `charge_state()` returns `""`, `"windup"`, `"charge"`, `"rest"`; `swoop_state()` returns `idle`, `hover`, `warn`, `dive`, `climb`; the snake keeps `windup` (coil), `charge` (lunge), `rest` (retreat), `""` (hide) so `EnemyState.pick`, `charge_state()` and every test are untouched. Table names below give the design word and the public string |
+| Selection | `kind` is resolved once in `setup()` (so it exists before `_ready` builds the body) from `_act`'s precedence: snake (by id), ceiling walker (`ceiling_walk` capability), drifter, flight, armored charger, spitter (spit damage), else walker. After a Dropper drops it acts as a walker, which is what today's chain does because no shipped def combines `ceiling_walk` with the later flags; a selection test asserts that for every shipped def |
+| Boundary | Extracted behaviours hold a typed `enemy: Enemy`. They may call the enemy's movement and sense methods (`_speed()`, `_blocked_ahead()`, `can_see()`, `is_alert()`) and write `enemy.velocity` and `enemy.facing` (never a copy: the player's rear-tackle check and `DeathFx` read `facing`). They read `_home_x`, `_home_y` and `_anchor` from the enemy lazily (those are captured in `_ready`, after tests place the body) |
+| Referee | A characterization test is written FIRST against the current code, samples EVERY frame, compares positions to 0.01 px and records events, and each constant it claims to pin is mutated once to prove it fails the test |
+| Timers | Each behaviour keeps today's exact arithmetic: decrement then compare `<= 0.0` at the same point in the tick, in the same order. There is no shared `state_t` auto-decrement. Timers that are not state timers (the moth's interval, the spit cooldown, the slow) are separate |
 
-## The base class
+## What changes for the referee to work: public seams first (Phase A step 1)
 
-```gdscript
-class_name EnemyBehaviour
-extends RefCounted
-## One creature kind's movement and attack states. The Enemy calls update() each physics tick while it is ACTIVE
-## and the player exists; everything else about the body (gravity, contact, stun, death) stays on the Enemy.
+The current code exposes no state names for the toad, spider, moth or walker. Before recording anything, Phase A
+step 1 adds seams to the OLD code (no behaviour change) and the trace uses only public observables:
 
-var enemy                        # the owning Enemy (untyped: a cycle)
-var state := ""                  # the current state name
-var state_t := 0.0               # seconds left in it (0 when the state has no timer)
+- `behaviour_state() -> String`: derived from today's fields (`patrol`/`chase`, `windup`/`charge`/`rest`, `puff`,
+  `hang`/`crawl`, `drift`/`flash`, swoop names, snake names), written once now and kept through the refactor.
+- `seed_rng(n: int)`: reseeds the enemy's RNG (today `_ready` seeds it from `get_instance_id()`); the trace calls it
+  right after `add_child`, before any behaviour draws.
+- `telegraphing() -> bool`: the public name for `_telegraphing()` (tests call it at `test_grotto_creatures.gd`).
+- Trace record per frame: `behaviour_state()`, `charge_state()`, `swoop_state()`, `frame_name()`, `telegraphing()`,
+  `facing`, `velocity`, `global_position`, and events: hazards spawned (`SpitBlob`/`SporePuff`, with position), the
+  `spore_puff` world event, and player hits and poisons from the stub. Hazards are freed between scenarios.
 
-## Returns true when the behaviour owns this tick's movement (a fallthrough chain: Charger -> Spitter -> Walker).
-func update(player: Node2D, to_player: Vector2, delta: float) -> bool: return false
-func set_state(name: String, seconds := 0.0) -> void: state = name; state_t = seconds
-func pose() -> Dictionary: return {}            # inputs for EnemyState.pick
-func telegraphing() -> bool: return false       # drives the flash tint
-func gravity_mode() -> String: return "normal"  # "normal" | "hover" | "tether" | "ceiling" (Enemy applies it)
-func reset() -> void: pass                      # stun, death, downed: drop any pending windup
-```
+## The per-tick order (`_physics_process`), written down so the refactor cannot reorder it
 
-`Enemy._physics_process` keeps its shape: status update, sense, `behaviour.update(...)` while active, otherwise
-`behaviour.reset()` and zero the horizontal velocity, gravity per `behaviour.gravity_mode()` and the enemy's status
-(hover and tether hold while ACTIVE or STUNNED; a dying or downed body always falls), `move_and_slide`, contact.
+1. `status.update(delta)`; 2. `_anim_t += delta` (the bat's idle bob and the moth's height read it); 3. GONE: free and return;
+4. `_spit_cd` and `_slow` decrement (every status except GONE); 5. ACTIVE with a player: `_sense`, then the behaviour's
+`update`; 6. otherwise, unless DYING (a death effect owns the body): `velocity.x = 0` and `on_inactive_tick()`;
+7. gravity per the table below; 8. `move_and_slide`; 9. contact damage; 10. `_hurt_t`; 11. `_update_visual`.
+
+Two resets, exactly as today, not one:
+
+- **`on_inactive_tick()`** (stun, downed, no player; every tick): clears the charge state (lizard, crab AND the snake,
+  mid-charge or mid-rest included), the spit windup and the moth's flash. It does NOT touch `_swoop`, `_swoop_t`,
+  `_dive_dir`, `_spit_cd` (which keeps ticking), `_puff_t` (which freezes) or `_lunge_dir`. So a bat stunned in
+  `warn` resumes `warn` with its remaining time; a moth re-flashes on its first active tick in range.
+- **`on_died()`** (synchronous in the died handler; `test_death_fx` asserts `charge_state() == ""` with no await):
+  everything above AND `_swoop = "idle"`, so a bat killed in `warn` does not flash while it lies downed.
+
+## Gravity and the stun hold, per kind and status (today's rules; a test per row)
+
+| Kind | ACTIVE | STUNNED | DYING / DOWNED |
+|---|---|---|---|
+| walker, charger, spitter | falls | falls | falls |
+| swooper (flight) | no gravity | **falls** | falls |
+| dropper on its ceiling | no gravity, velocity 0 | **falls** (`_on_ceiling` stays true; after the stun it sits where it landed in `hang` with no gravity until prey passes: today's behaviour, pinned) | falls |
+| drifter | no gravity | holds, `velocity.y = 0` | falls |
+| snake on its tether | no gravity | holds, `velocity = 0` | falls |
+
+An ACTIVE enemy with no player takes the inactive branch (step 6) and still gets its ACTIVE gravity treatment.
 
 ## The state tables (today's behaviour, named)
 
-Every number is the existing constant; the refactor moves them onto the behaviour and leaves `Enemy`'s public
-constants (`CHARGE_*`, `DIVE_*`, `PUFF_*`, `LUNGE_*`, `SLOW_SECONDS`, `BODY_SIZE`, `BODY_BOTTOM`, `CLIPS`, ...) in place
-as aliases where a test or another script reads them.
+Every number is the existing constant; `Enemy` keeps its public constants as aliases where anything else reads them
+(`SPIT_*`, `WARN_SECONDS`, `DIVE_SECONDS`, `CLIMB_SECONDS`, `CHARGE_*`, `ALERT_MEMORY`, `BASE_SPEED`, `CONTACT_MARGIN`,
+`LEDGE_DEPTH`, `BODY_SIZE`, `BODY_BOTTOM`, `SLOW_SECONDS`, `PUFF_*`, `CLIPS`); `_speed()` keeps its name and place.
 
-| Behaviour | States | Transitions (timers as today) |
-|---|---|---|
-| Walker | `patrol`, `chase` | alert and within 48 px vertically: chase (stop at ledges and walls, turn lock 32 px); else patrol home ±48 px at half speed |
-| Charger | `walk`, `windup`, `charge`, `rest` | walk → windup when alert, level within 24 px, 32 < ahead ≤ 120 px (0.5 s); windup → charge (0.6 s, 3× speed) → rest when the time is up or blocked (1.0 s) → walk. Returns false in `walk` so the Walker moves it |
-| Spitter | `walk`, `puff`, `recover` | walk → puff when alert, cooldown over and within 90 px (0.4 s, faces the player); puff → lob a blob (5 s cooldown) → recover (a 0.4 s spit pose) → walk |
-| Swooper | `idle`, `hover`, `warn`, `dive`, `climb` | idle bobs; alert → hover above the player (0.8 s + jitter from the enemy's own RNG); → warn (0.3 s) → dive at where you were (0.6 s, 2.2× speed, ends on contact with floor or wall) → climb (0.8 s) → hover or idle |
-| Dropper | `hang`, `drop`, then the Walker | hangs on the ceiling; alert and within 40 px in x and below it: drops (the ceiling flag clears) and walks for good |
-| Drifter | `drift`, `flash` | drifts about home ±96 px at 60 % speed holding home height ±14; turns at walls; while the player is within 320 px and in sight: flash (0.4 s) then drops a puff under itself every 3 s |
-| Snake | `hide`, `coil`, `lunge`, `retreat` | tethered to its anchor; alert and the player within 40 px in x and 0 < dy ≤ 110: coil (0.5 s) → lunge along the line to where it was (0.3 s or 80 px reach, 300 px/s) → retreat to the anchor (100 px/s, ends by distance, with a timeout) → hide. Off the anchor with nothing pending: retreat |
+| Kind | States (design word → public string) | Transitions and one-tick lags to preserve | Telegraphs |
+|---|---|---|---|
+| Walker (`Enemy._walk`) | patrol, chase | alert and \|dy\| < 48: chase along the CURRENT facing (turns only when \|dx\| > 32; holds at ledges and walls); else patrol home ±48 at half speed, reversing at a wall or ledge. `_blocked_ahead` is false while airborne | none |
+| Charger | walk → `""`, windup, charge, rest | walk → windup when alert, \|dy\| < 24, 32 < ahead ≤ 120 (0.5 s, velocity 0 that tick); windup → charge (0.6 s, 3× speed; movement starts the NEXT tick) → rest when the time is up or blocked (1.0 s) → walk; the rest→walk tick returns true and it can wind up again on the very next tick. In `walk` it returns false and the Walker moves it | windup |
+| Spitter (on `Enemy`) | walk, puff | alert, cooldown over, within 90: puff (0.4 s, faces the player, velocity 0) → on the launch tick lob the blob (5 s cooldown) and return true; the NEXT tick it returns false and the toad walks or chases. There is no `recover` state: the spit pose is only the predicate `_spit_cd > SPIT_COOLDOWN − SPIT_POSE_SECONDS` used by `pick` and `frame_name()` | puff |
+| Swooper | idle, hover, warn, dive, climb | idle bobs (`sin(_anim_t)`); alert → hover above the player (speed-capped, 0.8 s + jitter); alertness lapsing → idle; → warn (0.3 s) → dive at where the player is WHEN WARN ENDS (0.6 s, 2.2×, velocity 0 on the transition tick, ends on floor or wall) → climb (0.8 s, velocity (−dive.x·speed·0.5, −speed·0.8)) → hover or idle. The timer `_swoop_t` decrements unconditionally before the match; the RNG draws once on idle→hover AND on every climb end, including climb→idle | warn |
+| Dropper (flag on `Enemy`) | hang → falls | on the ceiling: velocity 0; alert and \|dx\| < 40 and the player below it: clear the flag on that tick and return (gravity acts this tick, the walker moves from the NEXT tick) | none |
+| Drifter | drift, flash | drift about home ±96 at 60 % speed, holding home height ±14 (turning at walls, movement set before the puff logic so the flash does not stop it); in range (≤ 320) and in sight: interval 3.0 s counts down, at ≤ 0.4 s flash (0.4 s) then drop a puff 12 px under itself and reset the interval; leaving range or sight for one tick resets the interval to the full 3 s and cancels the flash | flash |
+| Snake | hide `""`, coil `windup`, lunge `charge`, retreat `rest` | `_charge_t` decrements first every tick; hide: velocity 0, alert and \|dx\| < 40 and 0 < dy ≤ 110 → coil (0.5 s); coil → lunge along the line to where the player is at the end of the coil (0.3 s or reach ≥ 80 from the anchor, 300 px/s; velocity starts the tick AFTER the coil ends and the lunge moves once more on the tick it decides to retreat, ending about 85 px out) → retreat to the anchor at 100 px/s (ends by distance ≤ 3) → hide; off the anchor with nothing pending (a stun cleared the charge): retreat | coil |
 
-The two known gaps the Grotto review left (the snake's lunge ignoring the slow; the retreat ending only by distance)
-are fixed here on purpose and pinned by new tests: the lunge and retreat speeds are multiplied by the slow factor,
-and retreat gives up after `RETREAT_TIMEOUT` seconds and snaps to the anchor.
+## Ownership of the shared state (Phase A/B)
+
+- On `Enemy` throughout: `_rng` (seed via `seed_rng`), `_anim_t`, `_home_x`, `_home_y`, `_anchor`, `_spit_cd`, `_slow`, `_hurt_t`,
+  `facing`, `_on_ceiling`, `_spit_damage`. The Drifter's `_puff_t` and the Swooper's `_dive_dir` move to their behaviours
+  in Phase B; nothing else does.
+- `receive_tackle`'s stun reaches the behaviour only through step 6 (`on_inactive_tick`), as today.
+- The legacy sprite path (`frame_name()` when a creature has no sheet) reads `_spit_windup`, `_spit_cd` and `_on_ceiling`; it
+  keeps reading them (through the getters) so it is unchanged.
 
 ## Testing approach
 
-- **Characterization first.** `tests/test_enemy_traces.gd` builds each creature on a flat floor with a stub player,
-  seeds `_rng` explicitly, walks a scenario (approach, hold, retreat, pass under, stand at a distance) and asserts a
-  recorded trace (`tests/data/enemy_traces.json`: every 10th frame's state names, and x/y within 0.5 px). It is
-  recorded against the CURRENT code and must stay green, byte for byte, through every step. A mutation that changes
-  any timer or precedence must fail it.
-- The existing enemy suites (`test_enemy`, `test_enemy_ai`, `test_enemy_behaviour`, `test_enemy_contact`,
-  `test_enemy_state`, `test_grotto_creatures`, `test_grotto_enemy_flags`, `test_death_fx`, `test_art_visuals`) stay
-  green; the private-field pokes move to the public state as above.
-- New unit tests per behaviour drive its state table directly (a stub `enemy`), so a transition is tested without
-  physics.
-- The selection table: for every shipped creature, `for_creature` returns the class the old `_act` chain would have
-  chosen (asserted from the creature defs).
-- The suite and a real playtest (each creature's telegraph and death) before merge.
+- **Characterization first** (`tests/test_enemy_traces.gd`, recorded against current code, unchanged through every step,
+  transition lists and per-frame arrays inline, no JSON file): for each of bat, toad, lizard, crab, spider, spore moth,
+  pale moth, vine snake a scenario of approach, hold, retreat, pass under, stand at a distance, with scenario positions
+  kept off exact thresholds (the snake's 80 px reach and the charger's 120 px range are knife-edges in float32);
+  plus the interruption cases the referee must not miss: stun mid-windup, mid-charge, mid-rest, mid-warn, mid-dive,
+  mid-flash and mid-coil; a slowed creature; alert lost mid-hover; a lethal hit mid-telegraph; a toad stunned right after
+  spitting (its cooldown elapses during the stun); a toad walking during the spit pose; a stunned hanging spider; a
+  charger re-winding after rest; a bat's climb returning to hover or idle; patrol home bounds. It runs on
+  `wait_physics_frames` (not wall-clock), samples every frame and compares positions to 0.01 px.
+- **The referee is proved:** each timer and precedence constant is mutated once and the trace must fail; a constant
+  that fails nothing gets its own assertion (the spit pose window, the puff interval, `SPIT_TICK`/`SPIT_SECONDS` are
+  covered by event assertions, not positions).
+- Every existing enemy suite stays green; only the tests that poke behaviour privates change to public names
+  (`_charge` → `charge_state()`/`behaviour_state()`, `_on_ceiling` → a public getter, `_puff_windup` and `_telegraphing()` →
+  `telegraphing()`, `_spit_cd` stays a field on `Enemy`): `test_art_visuals.gd:46,50`, `test_grotto_creatures.gd:128,161,183`
+  (plus its `_telegraphing()` calls at 78, 184, 187), `test_death_fx.gd:196`. All 30 private `Enemy` references in eight
+  test files are listed in the plan; `_speed()` keeps its name.
+- Suites that read `Enemy` constants or drive enemies and must be run every step: `test_enemy*`, `test_grotto_*`,
+  `test_pale_moth`, `test_tuning` (pins `SPIT_COOLDOWN`, `SPIT_TICK`, `SPIT_RANGE`, `WARN_SECONDS`, `DIVE_SECONDS`,
+  `CLIMB_SECONDS`), `test_spore_cloud`, `test_tackle_reach`, `test_hit_fairness`, `test_enemy_sheets`,
+  `test_death_cause`, `test_death_fx`, `test_art_visuals`.
+- Selection test: for every shipped def the resolved `kind` equals what the old `_act` chain would have chosen, and no
+  def combines `ceiling_walk`, `armored_charger` and spit damage.
+- Each Phase B class gets direct tests against a real `Enemy` (physics-driven), not a stub, so a state is asserted by name.
+
+## Phase C: the snake's two fixes (after A and B, each its own commit, test first, trace re-recorded for the snake only)
+
+1. Slow: lunge and retreat speeds are multiplied by 0.5 while the snake is slowed (they use `LUNGE_SPEED` and
+   `RETREAT_SPEED` today, not `_speed()`, so a thread or Spore Cloud does nothing to them). A slowed lunge then covers
+   150 × 0.3 = 45 px: the timer, not the 80 px reach, bounds it (an accepted design change: a slowed snake strikes shorter).
+2. `RETREAT_TIMEOUT` = 2.0 s (the slowest legitimate retreat is 85 px at 50 px/s = 1.7 s): on expiry it steps toward the
+   anchor no further than rock allows (it does not teleport through rock); an anchor inside rock therefore cannot hang it in `rest`.
 
 ## Build order
 
-1. Characterization: the trace test and its recorded data, against today's code.
-2. The base class, the selection function and `Enemy` delegating to a `WalkerBehaviour`; walkers (toad without spit, fallback) migrated.
-3. Charger, Spitter (each with its unit tests).
-4. Swooper, Dropper.
-5. Drifter, Snake (with the two fixes above, each with a failing test first).
-6. Delete the dead fields and `_act`'s chain; `pose()` feeds the animation; final trace and suite.
-7. Review, gate, merge.
+1. Phase A: the seams and the referee (recorded on old code, mutation-proved); then, one commit each with the suite and the
+   trace green: fold `_charge`/`_swoop`/`_spit_windup`/`_puff_windup` into `_state`/`_state_t`/`_aim` and add `kind`;
+   gravity table; `on_inactive_tick()`/`on_died()`; public getters; update the nine private pokes.
+2. Phase B: Charger, then Swooper, then Drifter, then Snake, each extracted with the trace and suite green after it and a
+   per-step reader checklist (which of `charge_state`, `swoop_state`, `telegraphing`, `_draw_sheet_frame`, `on_died`,
+   `frame_name` now read the behaviour).
+3. Phase C: the snake fixes.
+4. Real playtest of each creature (telegraph, attack, stun, death), review, merge.
