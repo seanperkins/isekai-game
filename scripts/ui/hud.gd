@@ -201,16 +201,20 @@ func toggle_input_debug() -> void:
 func input_debug_visible() -> bool:
 	return _input_debug.visible
 
-## Raw stick, the aim the player would cast with right now, and the last cast's direction.
+## Raw left stick, the aiming pad's raw right stick (ungated, so drift and a ghost axis show), whether the mouse is aiming, the
+## aim a cast would use right now ("default" when nothing is held: each ability applies its own), and the last cast's direction.
 func input_debug_text() -> String:
 	var held := Input.get_vector("move_left", "move_right", "aim_up", "aim_down")
 	var cast: Dictionary = _player.last_cast
 	var cast_text := "—" if cast.is_empty() else "%s %s" % [cast["id"], _vec(cast["aim"])]
-	return "stick %s  pad: %s  dev %d\npads %s  raw up %s down %s\nheld %s  aim %s\nlast cast: %s" % [
-		_vec(Controls.last_stick), Controls.last_pad_name if Controls.last_pad_name != "" else "none",
-		Controls.last_device, Input.get_connected_joypads(),
+	return "stick %s  rstick dev %d %s  mouse %s\npad: %s  dev %d\npads %s  raw up %s down %s\nheld %s  aim %s\nlast cast: %s" % [
+		_vec(Controls.last_stick), Controls.aim_device, _vec(Controls.raw_right_stick()), "on" if Controls.mouse_aim else "off",
+		Controls.last_pad_name if Controls.last_pad_name != "" else "none", Controls.last_device, Input.get_connected_joypads(),
 		_num(Input.get_action_raw_strength("aim_up")), _num(Input.get_action_raw_strength("aim_down")),
-		_vec(held), _vec(_player.aim_vector()), cast_text]
+		_vec(held), _aim_text(_player.cast_aim()), cast_text]
+
+static func _aim_text(v: Vector2) -> String:
+	return "default" if v == Vector2.ZERO else _vec(v)
 
 static func _vec(v: Vector2) -> String:
 	return "(%s, %s)" % [_num(v.x), _num(v.y)]

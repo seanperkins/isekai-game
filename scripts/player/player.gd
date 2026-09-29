@@ -80,6 +80,7 @@ var _abilities := {}
 const CHANNEL_BEAT := 0.5  # seconds per MP point while a channel is held
 const CHANNEL_EPS := 0.0001
 const CHANNEL_RELEASE := 0.3  # raw strength: a trigger dipping under its 0.5 press deadzone mid-hold keeps the channel
+var _reticle: AimReticle
 var _channel: Ability = null
 var _channel_slot := 0
 var _channel_time := 0.0
@@ -557,6 +558,12 @@ func body_tint() -> Color:
 	var d := form_def()
 	return d.tint if d != null and _form_sheet == null else Color.WHITE
 
+## The current form's nominal size (1.0 with none). body_scale() is 1.0 for the forms drawn from their own art, which are
+## drawn larger natively; this is what the aim reticle scales by.
+func form_size() -> float:
+	var d := form_def()
+	return d.size if d != null else 1.0
+
 func body_scale() -> float:
 	var d := form_def()
 	return d.size if d != null and _form_sheet == null else 1.0
@@ -929,3 +936,6 @@ func _build_body() -> void:
 	Vfx.style_strand(rope_line)  # silk, tiled along the rope
 	rope_line.visible = false
 	add_child(rope_line)
+	_reticle = AimReticle.new()
+	_reticle.bind(self)
+	add_child(_reticle)

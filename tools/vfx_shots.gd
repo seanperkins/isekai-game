@@ -26,6 +26,7 @@ func _ability(id: String, values: Array) -> Ability:
 func _process(_delta: float) -> bool:
 	var p = game.player
 	var rules = root.get_node("SkillRules")
+	Controls.mouse_aim = false  # a real mouse motion over the window would redirect the scripted casts and show the reticle
 	frame += 1
 	match frame:
 		20:

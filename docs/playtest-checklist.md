@@ -3,7 +3,8 @@
 Run: open the project in Godot 4.7 and press F5 (or `godot` in the project folder).
 
 Controls: A/D move · W/S or ↑/↓ aim · Space jump · J tackle · K hold to eat · I inspect · U/O/H/L skills · Esc skill screen · F3 input debug · F11 fullscreen/window
-Gamepad: left stick / D-pad move (stick also aims) · A jump · X tackle · B hold to eat · Y inspect · LB/RB/LT/RT skills · D-pad aims too · Start skill screen · Back input debug
+Keyboard + mouse: the mouse cursor aims (any angle, with a small reticle) · LMB/RMB skills 1 and 2 (hold to channel) · left hand: Shift tackle · F hold to eat · R inspect · Q/E skills 3 and 4 (W/S hands the aim back to the keys until the mouse moves)
+Gamepad: left stick / D-pad move (stick also aims, 8-way) · right stick aims (any angle, with a small reticle) · A jump · X tackle · B hold to eat · Y inspect · LB/RB/LT/RT skills · D-pad aims too · Start skill screen · Back input debug
 
 - [ ] Jump feels responsive; after ~40 jumps a Great Sage pop-up announces Leap and jumps get higher.
 - [ ] Touching the tall column mid-air ~15 times unlocks Wall Cling; sliding down it is slower; Space jumps off it.
@@ -21,11 +22,16 @@ Gamepad: left stick / D-pad move (stick also aims) · A jump · X tackle · B ho
 - [ ] Casting an active costs MP (blue MP line under HP); with too little MP the ticker says "Not enough MP".
 - [ ] Every active shows an effect: green cloud (Poison Breath), a blue crescent that slides to the target (Water Blade), a silk thread with a slight sag, dash afterimages.
 - [ ] Fullscreen: HUD text scales up and stays crisp.
-- [ ] Holding a direction while casting aims the skill (8-way); with nothing held it fires forward. Up + Hydraulic Propulsion = vertical boost (a tap; holding stretches it a little and never flies).
-- [ ] Esc / Start opens the Skills screen (game pauses): stats, grouped skills with icons and level pips, detail card with MP cost and next-level bar. Q/E or LB/RB switch to Compendium. Enter / A on an active assigns it to U (again: O). Esc / B closes.
+- [ ] Holding a direction (left stick, D-pad or W/S) while casting aims the skill (8-way); the right stick or the mouse cursor aims it at any angle (a few degrees off flat or straight up counts as exactly flat or up); with nothing held it fires forward. Up + Hydraulic Propulsion = vertical boost (a tap; holding stretches it a little and never flies).
+- [ ] Esc / Start opens the Skills screen (game pauses): stats, grouped skills with icons and level pips, detail card with MP cost and next-level bar. Q/E or LB/RB switch to Compendium. Enter / A on an active assigns it to U (again: O; LMB/RMB with the mouse). Esc / B closes.
 - [ ] Downing and eating creatures earns XP (gold line under the slots); each level gives 1 EP, +2 max HP, +1 max MP.
 - [ ] A base skill that can evolve (Sticky Thread and Hydraulic Propulsion at level 3, Poison Breath and Spore Cloud at level 4) offers BOTH of its evolutions at once; the Great Sage announces them. In the Skills tab the card says what it replaces and what it closes; the first Enter arms it ("Press again to choose"), the second evolves. The other branch and the old skill disappear, and the new skill sits in the old one's slot. Moving the selection or closing the screen disarms it. Dying and being reborn reopens every branch.
-- [ ] Controller aiming: press Back to show the input overlay; tilt the stick and cast — "last cast" should show the aimed direction.
+- [ ] Controller aiming: press Back to show the input overlay; tilt the stick and cast — "last cast" should show the aimed direction. Push the right stick: the reticle appears in that direction, casts go that way, and the overlay's `rstick` shows the raw reading and `aim` the cast aim.
+- [ ] Mouse aiming: move the mouse (4 px or more) or click: the reticle follows the cursor, the HUD chips read LMB/RMB/Q/E, and the eat and inspect prompts say F / R. A pad button or stick hands everything back to the pad.
+- [ ] Mouse live: crouch or reel with S: the reticle hides and the chips show U/O/H/L until the mouse moves or clicks; a click still fires at the cursor.
+- [ ] Mouse live: Shift tackles, hold F eats, R inspects, Q/E cast skills 3 and 4 in play and still switch tabs in the Skills screen.
+- [ ] Unplug the pad while holding the right stick: the reticle goes away.
+- [ ] Click a windowed game to focus it (F11 to window): note whether the click casts skill 1.
 - [ ] The cave scrolls in both directions: stair towers at x ~1400 and the far east lead up to the middle and upper tiers, and stairs above the upper tier reach the top gallery.
 - [ ] Sticky Thread aimed at rock (up, diagonal, or at a wall) sticks and draws a rope; you swing on it. Left/right pump, up/down reel, Jump lets go with your momentum.
 - [ ] Sticky Thread aimed at an enemy still slows/holds it. Aimed at nothing in range, it just flashes.
@@ -36,7 +42,7 @@ Gamepad: left stick / D-pad move (stick also aims) · A jump · X tackle · B ho
 - [ ] Binding Web (Sticky Thread's other branch) never ropes: it holds an enemy at once and leaves a pale web patch where the thread ends (at the enemy, at the rock, or at full range) that slows anything inside for 4 s.
 - [ ] Miasma: the poison cone plus a green cloud that lingers where it ends and poisons; Venom Bolt: an instant green line that hurts every enemy on it; Healing Spores: a cloud around you that heals 1 HP a second while you stand in it; Puffball: the cloud lands where a lob would land (floor, wall, or the end of the arc) and is wide.
 - [ ] HUD skill slots form one block top-right shaped like the pad: LT/RT on top, LB/RB under them; each shows the button, icon and name, and dims when you can't afford it.
-- [ ] Skill screen: the stick moves one row per push (hold to scroll slowly); A accepts; B closes.
+- [ ] Skill screen: the left stick moves one row per push (hold to scroll slowly); A accepts; B closes. (Controls now keeps seeing input while the screen pauses the game, which is expected to make this work reliably.)
 - [ ] Bestiary tab (third tab): creatures appear once seen on screen; appraising reveals stats/skills; eating shows essences and eat bonus; counts eaten and defeated; persists after death.
 - [ ] The Cave is six rooms. Walking off a room's edge slides the camera into the next room, and you keep your speed. Enemies are back when you return.
 - [ ] C2's chimney (Wall Cling) leads up to C3, and C3 leads left to the C6 nook. Tackle the cracked stone in C6: the floor opens and drops you into C1. On a new run the hole is still open.
