@@ -605,7 +605,7 @@ git commit -m "feat: audio tool library and DSP kit (Ogg encode, loudness, seam 
 
 **Interfaces:**
 - Consumes: `audiolib.write_ogg`, `audiolib.normalize_peak`, `dsp.render`, `dsp.make_loop`.
-- Produces: `synth_sfx.load_recipes(directory=RECIPES) -> dict`, `synth_sfx.variant_files(name, recipe) -> list[str]` (paths relative to `assets/audio`, like `sfx/slime_jump_1.ogg`), `synth_sfx.render_variant(name, recipe, k) -> list[float]`, `synth_sfx.build_cue(name, recipe, out_root="assets/audio", write=audiolib.write_ogg)`, `synth_sfx.main(argv) -> int`. A recipe also carries `"variants"` (default 1), optional `"loop": true` and a `"cue"` object of playback rules (`bus`, `volume_db`, `pitch_jitter`, `cooldown`, `positional`, `duck`, `combo`).
+- Produces: `synth_sfx.load_recipes(directory=RECIPES) -> dict`, `synth_sfx.variant_files(name, recipe) -> list[str]` (paths relative to `assets/audio`, like `sfx/slime_launch_1.ogg`), `synth_sfx.render_variant(name, recipe, k) -> list[float]`, `synth_sfx.build_cue(name, recipe, out_root="assets/audio", write=audiolib.write_ogg)`, `synth_sfx.main(argv) -> int`. A recipe also carries `"variants"` (default 1), optional `"loop": true` and a `"cue"` object of playback rules (`bus`, `volume_db`, `pitch_jitter`, `cooldown`, `positional`, `duck`, `combo`).
 
 - [ ] **Step 1: Write the failing synth tests**
 
@@ -760,7 +760,7 @@ Create the seven recipe files. Every value below is a starting point Sean tunes 
 
 ```json
 {
-  "slime_jump": {"dur": 0.30, "variants": 3,
+  "slime_launch": {"dur": 0.30, "variants": 3,
     "layers": [{"osc": "sine", "f0": 180, "f1": 480, "amp": 0.8, "env": [0.004, 0.2]},
                {"noise": "pink", "lp": 1600, "amp": 0.25, "env": [0.002, 0.09]}],
     "cue": {"bus": "SFX_Player", "volume_db": -6, "pitch_jitter": 0.06, "cooldown": 0.05}},
@@ -892,7 +892,7 @@ Create the seven recipe files. Every value below is a starting point Sean tunes 
                {"osc": "sine", "f0": 880, "amp": 0.5, "delay": 0.12, "env": [0.005, 0.7]},
                {"osc": "sine", "f0": 1318.5, "amp": 0.5, "delay": 0.24, "env": [0.005, 0.8]}],
     "cue": {"bus": "UI", "volume_db": -6, "duck": true}},
-  "skill_level": {"dur": 0.8,
+  "skill_rank_up": {"dur": 0.8,
     "layers": [{"osc": "sine", "f0": 784, "amp": 0.5, "env": [0.005, 0.4]},
                {"osc": "sine", "f0": 1175, "amp": 0.5, "delay": 0.1, "env": [0.005, 0.4]}],
     "cue": {"bus": "UI", "volume_db": -8}}
@@ -1049,7 +1049,7 @@ Expected: prints `art_source/audio/raw/x.mp3`.
 - [ ] **Step 8: Build every SFX**
 
 Run: `mkdir -p .tmp/audio-work && TMPDIR="$PWD/.tmp/audio-work" python3 tools/audio/synth_sfx.py`
-Expected: one `built <cue>` line per recipe (51), exit 0. Then `ls assets/audio/sfx | wc -l` prints a count above 90, and `ls assets/audio/sfx/*.tmp.ogg` finds nothing.
+Expected: one `built <cue>` line per recipe (51), exit 0. Then `ls assets/audio/sfx/*.ogg | wc -l` prints 75 (the recipes' variants add up to 75), and `ls assets/audio/sfx/*.tmp.ogg` finds nothing.
 
 - [ ] **Step 9: Commit**
 
@@ -1465,7 +1465,7 @@ Create `data/audio/cues.json` (the `cues` section stays empty until step 6 fills
 {
   "cues": {},
   "events": {
-    "jumped": "slime_jump",
+    "jumped": "slime_launch",
     "wall_touched": "slime_wall_cling",
     "damaged": "slime_hurt",
     "hp_low_entered": "slime_heartbeat",
@@ -1484,7 +1484,7 @@ Create `data/audio/cues.json` (the `cues` section stays empty until step 6 fills
     "mana_spent": null,
     "_why:mana_spent": "one event per MP point spent; it would machine-gun and skill_used already has the sound",
     "skill_unlocked": "skill_unlock",
-    "skill_leveled": "skill_level",
+    "skill_leveled": "skill_rank_up",
     "evolution_ready": null,
     "_why:evolution_ready": "the ready state shows in the menu; the sound plays when the evolution happens (evolved)",
 
@@ -1513,7 +1513,8 @@ Create `data/audio/cues.json` (the `cues` section stays empty until step 6 fills
     "menu_move": "ui_move",
     "menu_confirm": "ui_confirm",
     "denied": "ui_denied",
-    "ticker_shown": "ui_popup"
+    "ticker_shown": {"by": "kind", "slot_replaced": "ui_popup"},
+    "_why:ticker_shown": "unlock and level-up already have their own stingers; only the slot-replaced line gets ui_popup"
   },
   "biomes": {
     "cave": {"music": "music/cave.ogg", "ambience": "ambience/cave.ogg", "reverb_wet": 0.15,
@@ -1564,7 +1565,9 @@ class BuiltAssetsTest(unittest.TestCase):
         cls.pcm = {p: a.decode_pcm(p) for kind in ("sfx", "music", "ambience") for p in oggs(kind)}
 
     def test_every_file_is_stereo_vorbis(self):
-        self.assertGreater(len(self.pcm), 90)
+        expected = 2 * len(("cave", "grotto", "flooded", "deep")) + sum(
+            int(r.get("variants", 1)) for r in synth_sfx.load_recipes().values())
+        self.assertEqual(len(self.pcm), expected)  # every SFX variant plus the eight beds
         for path in self.pcm:
             info = a.validate_ogg(path)
             self.assertEqual(info["channels"], 2, path)
@@ -1912,7 +1915,7 @@ Expected: the runner prints `PASS: <n> tests` with n at least 13 for this file. 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add scripts/audio tests/test_audio_catalog.gd tests/test_audio_catalog.gd.uid
+git add scripts/audio tests/test_audio_catalog.gd tests/test_audio_catalog.gd.uid assets/audio
 git commit -m "feat: cue catalog routes events to cues, picks variants and validates the data"
 ```
 
@@ -2231,7 +2234,7 @@ func after_each() -> void:
 	for p in [PATH, PATH + ".tmp"]:
 		if FileAccess.file_exists(p):
 			DirAccess.remove_absolute(ProjectSettings.globalize_path(p))
-	Audio.settings.apply()  # put the real buses back after a test changed them
+	AudioSettings.new().apply()  # default volumes on the buses again after a test changed them
 
 func test_defaults_are_eighty_percent() -> void:
 	var s := AudioSettings.new()
@@ -2423,17 +2426,10 @@ func _init() -> void:
 Run: `mkdir -p .tmp/gdhome && gtimeout -k 5 120 env HOME="$PWD/.tmp/gdhome" godot --headless -s tools/audio/build_bus_layout.gd > .tmp/test-logs/bus.log 2>&1; grep -c "bus/" default_bus_layout.tres; grep -E "SCRIPT ERROR|Parse Error" .tmp/test-logs/bus.log`
 Expected: a count above 30 (each bus writes several lines), no error lines. Open `default_bus_layout.tres` and confirm it names `Music`, `Ambience`, `SFX_Player`, `SFX_Enemy`, `SFX_World` and `UI`.
 
-- [ ] **Step 6: Temporarily check the settings tests that do not need `Audio`**
-
-`after_each` calls `Audio.settings.apply()`, and `Audio` arrives in Task 8. Until then, guard it: change that line in `tests/test_audio_settings.gd` to
-
-```gdscript
-	if Engine.has_singleton("Audio") or get_tree().root.has_node("Audio"):
-		Audio.settings.apply()  # put the real buses back after a test changed them
-```
+- [ ] **Step 6: Import and run the settings tests**
 
 Run: `gtimeout -k 5 180 env HOME="$PWD/.tmp/gdhome" godot --headless --import > .tmp/test-logs/import.log 2>&1; tools/run_tests.sh audio_settings`
-Expected: a `PASS: <n> tests` line with no failures. (Task 8 removes the guard once `Audio` exists.)
+Expected: a `PASS: <n> tests` line with no failures.
 
 - [ ] **Step 7: Commit**
 
@@ -2448,7 +2444,7 @@ git commit -m "feat: audio settings, Profile dict section and the bus layout wit
 
 **Files:**
 - Create: `scripts/audio/music_director.gd`, `autoload/audio.gd`
-- Modify: `autoload/event_bus.gd`, `project.godot` (autoload list), `tests/test_autoloads.gd`, `tests/test_audio_settings.gd` (remove the Task 7 guard)
+- Modify: `autoload/event_bus.gd`, `project.godot` (autoload list), `tests/test_autoloads.gd`
 - Test: `tests/test_audio_runtime.gd`
 
 **Interfaces:**
@@ -2488,7 +2484,7 @@ func test_a_world_event_plays_its_cue() -> void:
 
 func test_a_game_event_plays_its_cue_and_skill_used_picks_by_id() -> void:
 	EventBus.game_event.emit(Events.JUMPED, {"from": "ground"})
-	assert_eq(Audio.last_cue, "slime_jump")
+	assert_eq(Audio.last_cue, "slime_launch")
 	Audio.last_cue = ""
 	EventBus.game_event.emit(Events.SKILL_USED, {"id": "water_blade"})
 	assert_eq(Audio.last_cue, "skill_water_blade")
@@ -2502,7 +2498,7 @@ func test_skill_rules_signals_play_their_stingers() -> void:
 	SkillRules.skill_unlocked.emit("leap")
 	assert_eq(Audio.last_cue, "skill_unlock")
 	SkillRules.skill_leveled.emit("leap", 2)
-	assert_eq(Audio.last_cue, "skill_level")
+	assert_eq(Audio.last_cue, "skill_rank_up")
 
 func test_a_loop_starts_once_and_a_stop_event_ends_it() -> void:
 	EventBus.world_event.emit("run_started", {})
@@ -2519,6 +2515,23 @@ func test_reset_stops_every_loop() -> void:
 	Audio.reset()
 	assert_false(Audio.is_looping("slime_run"))
 	assert_false(Audio.is_looping("slime_heartbeat"))
+
+func test_dying_ends_the_heartbeat_before_the_death_cue_plays() -> void:
+	EventBus.game_event.emit(Events.HP_LOW_ENTERED, {})
+	EventBus.world_event.emit("run_started", {})
+	EventBus.world_event.emit("player_died", {})
+	assert_false(Audio.is_looping("slime_heartbeat"))
+	assert_false(Audio.is_looping("slime_run"))
+	assert_eq(Audio.last_cue, "slime_death")
+
+func test_reset_frees_every_voice_and_forgets_cooldowns() -> void:
+	EventBus.game_event.emit(Events.ABSORBED, {"essence": "poison", "source": "toad"})
+	SkillRules.skill_unlocked.emit("leap")
+	Audio.reset()
+	assert_eq(Audio._pool.busy_count(), 0)
+	Audio.last_cue = ""
+	EventBus.game_event.emit(Events.ABSORBED, {"essence": "poison", "source": "toad"})
+	assert_eq(Audio.last_cue, "eat_absorb", "the cooldown from before the reset is gone")
 
 func test_a_new_run_stops_loops_left_from_the_last_one() -> void:
 	EventBus.game_event.emit(Events.HP_LOW_ENTERED, {})
@@ -2752,6 +2765,7 @@ var catalog: CueCatalog
 var settings := AudioSettings.new()
 var director: MusicDirector
 var last_cue := ""  # the last cue that started; tests and the preview tool read it
+var _clock: Callable
 var _pool: VoicePool
 var _combo: ComboPitch
 var _rng := RandomNumberGenerator.new()
@@ -2767,9 +2781,9 @@ func _ready() -> void:
 	catalog = CueCatalog.load_file(CATALOG_PATH)
 	for e in catalog.validate(func(p: String) -> bool: return ResourceLoader.exists(p)):
 		push_error("audio: " + e)
-	var clock := func() -> float: return Time.get_ticks_msec() / 1000.0
-	_pool = VoicePool.new(VOICES, clock)
-	_combo = ComboPitch.new(clock)
+	_clock = func() -> float: return Time.get_ticks_msec() / 1000.0
+	_pool = VoicePool.new(VOICES, _clock)
+	_combo = ComboPitch.new(_clock)
 	for i in VOICES:
 		var flat := AudioStreamPlayer.new()
 		var spatial := AudioStreamPlayer2D.new()
@@ -2807,10 +2821,16 @@ func adjust_setting(key: String, direction: int) -> void:
 	settings.adjust(key, direction)
 	settings.apply()
 
-## Stops every loop and any duck. A new run and a scene reload start from silence.
+## Silences everything and forgets cooldowns and combos: every voice stops, every loop ends and
+## the duck lets go. A new run, a death and a scene reload all start from here.
 func reset() -> void:
 	for cue_id in _loops.keys():
 		stop_loop(cue_id)
+	for pair in _voices:
+		for voice in pair:
+			voice.stop()
+	_pool = VoicePool.new(VOICES, _clock)
+	_combo = ComboPitch.new(_clock)
 	_duck_holds = 0
 	_fade_duck(0.0, DUCK_RELEASE)
 
@@ -2863,6 +2883,8 @@ func play_cue(cue_id: String, pos: Vector2 = Vector2.INF) -> void:
 		_duck_for(stream.get_length())
 
 func _on_event(event_name: String, tags: Dictionary) -> void:
+	if event_name == "player_died":
+		reset()  # the heartbeat and the run loop end before the death cue plays
 	if event_name == "menu_opened":
 		_hold_duck()
 	elif event_name == "menu_closed":
@@ -2929,7 +2951,7 @@ func _fade_reverb(wet: float) -> void:
 	create_tween().tween_property(AudioServer.get_bus_effect(i, 0), "wet", wet, REVERB_SECONDS)
 ```
 
-- [ ] **Step 6: Register the autoload and drop the Task 7 guard**
+- [ ] **Step 6: Register the autoload**
 
 In `project.godot`, add after the `Announcer=` line in `[autoload]`:
 
@@ -2937,25 +2959,19 @@ In `project.godot`, add after the `Announcer=` line in `[autoload]`:
 Audio="*res://autoload/audio.gd"
 ```
 
-In `tests/test_audio_settings.gd`, replace the two guard lines in `after_each` with:
-
-```gdscript
-	Audio.settings.apply()  # put the real buses back after a test changed them
-```
-
 - [ ] **Step 7: Import and run the audio tests**
 
 Run: `gtimeout -k 5 180 env HOME="$PWD/.tmp/gdhome" godot --headless --import > .tmp/test-logs/import.log 2>&1; tools/run_tests.sh audio_runtime`
 Expected: a `PASS: <n> tests` line with no failures. Then run `tools/run_tests.sh audio_settings` and `tools/run_tests.sh autoloads`; both PASS.
 
-While planning, a headless probe printed `ERROR: Condition "ret != noErr" is true` once (a macOS CoreAudio message from the audio driver, not from GDScript). GUT fails a test on an unhandled engine error that lands during it, and the runner only greps for `SCRIPT ERROR` and `Parse Error`. If a test fails with that text, read `.tmp/test-logs/gut.log` to see whether it fires at startup (harmless, outside any test) or inside a test; if inside, add `--audio-driver Dummy` to the `godot --headless` line in `tools/run_tests.sh` and say so in the commit. Do not swallow the error in the tests.
+While planning, a headless probe printed `ERROR: Condition "ret != noErr" is true` once. It is a macOS CoreAudio message from the audio driver, not from GDScript; `--headless` already selects the Dummy audio driver and the existing suite passes with the message present. If a test fails with that text, read `.tmp/test-logs/gut.log` to see where it fires and report it. Do not change tests to swallow it.
 
 If `test_the_duck_still_runs_while_the_tree_is_paused` stalls the runner (the 180 s ceiling reports FAIL), the cause is GUT's own processing under pause. Diagnose from `.tmp/test-logs/gut.log` before changing anything; the intended fix is to keep the paused assertion but read the duck value through a `SceneTreeTimer` created with `process_always = true` as written, not to delete the pause.
 
 - [ ] **Step 8: Commit**
 
 ```bash
-git add autoload/event_bus.gd autoload/audio.gd autoload/audio.gd.uid scripts/audio project.godot tests/test_audio_runtime.gd tests/test_audio_runtime.gd.uid tests/test_audio_settings.gd tests/test_autoloads.gd
+git add autoload/event_bus.gd autoload/audio.gd autoload/audio.gd.uid scripts/audio project.godot tests/test_audio_runtime.gd tests/test_audio_runtime.gd.uid tests/test_autoloads.gd
 git commit -m "feat: Audio autoload turns game and world events into sound, with duck, reverb and biome beds"
 ```
 
@@ -3148,13 +3164,19 @@ func _set_running(now: bool) -> void:
 	if now == _running:
 		return
 	_running = now
-	_emit("run_started" if now else "run_stopped", {})
+	if now:
+		_emit("run_started", {})
+	else:
+		_emit("run_stopped", {})
 
 func _set_sliding(now: bool) -> void:
 	if now == _sliding:
 		return
 	_sliding = now
-	_emit("wall_slide_started" if now else "wall_slide_stopped", {})
+	if now:
+		_emit("wall_slide_started", {})
+	else:
+		_emit("wall_slide_stopped", {})
 
 func _emit(event_name: String, tags: Dictionary) -> void:
 	if emit_event.is_valid():
@@ -3481,7 +3503,9 @@ func test_the_five_tabs_fit_the_screen_and_their_labels_fit_the_tabs() -> void:
 	for p in panels:
 		assert_eq(p.size.x, SkillScreen.TAB_W)
 		var label: Label = p.get_child(0)
-		assert_lte(label.get_minimum_size().x, SkillScreen.TAB_W, label.text)
+		var text_width := label.get_theme_default_font().get_string_size(
+			label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, SkillScreen.FONT_MAIN).x
+		assert_lte(text_width, SkillScreen.TAB_W, label.text)
 	var last: Panel = panels[4]
 	assert_lt(last.position.x + last.size.x, 612.0)
 	for i in range(1, 5):
@@ -3699,14 +3723,14 @@ In `scripts/ui/hud.gd`:
 
 ```gdscript
 	if _popup.text != "" and _popup.text != _last_popup:
-		EventBus.world_event.emit("ticker_shown", {})
+		EventBus.world_event.emit("ticker_shown", {"kind": "unlock"})
 	_last_popup = _popup.text
 ```
 
 and inside the `while not entry.is_empty():` loop, after the `_ticker_lines.append(...)` line:
 
 ```gdscript
-		EventBus.world_event.emit("ticker_shown", {})
+		EventBus.world_event.emit("ticker_shown", {"kind": entry["kind"]})
 ```
 
 - [ ] **Step 6: Run to verify**
@@ -3841,8 +3865,10 @@ func test_dying_ends_the_loops() -> void:
 	assert_true(Audio.is_looping("slime_run"))
 	game.player.receive_hit(9999, "physical")
 	assert_false(Audio.is_looping("slime_run"), "the player's death ends the run loop")
+	assert_false(Audio.is_looping("slime_heartbeat"), "the heartbeat stops on the death card")
+	EventBus.game_event.emit(Events.HP_LOW_ENTERED, {})
 	SkillRules.run_started.emit()
-	assert_false(Audio.is_looping("slime_heartbeat"), "a new run ends the heartbeat")
+	assert_false(Audio.is_looping("slime_heartbeat"), "a new run ends a heartbeat left over")
 ```
 
 - [ ] **Step 2: Run to verify it fails**
