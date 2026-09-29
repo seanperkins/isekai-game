@@ -172,6 +172,7 @@ func finish_dying() -> void:
 func _on_died() -> void:
 	if def.predatable:
 		status.die()  # the death effect ends in down() and starts the eat window
+		_become_clippable()
 		_charge = ""
 		_swoop = "idle"
 		_spit_windup = 0.0
@@ -179,6 +180,14 @@ func _on_died() -> void:
 	else:
 		status.consume()  # Plan 3 turns the serpent's death into victory
 	downed.emit(def)
+
+## A corpse does not block anyone: nothing collides with it any more, and it ignores the bodies that
+## are here so it does not get shoved by them. It still rests on the floor.
+func _become_clippable() -> void:
+	collision_layer = 0
+	for n in get_tree().get_nodes_in_group("actors"):
+		if n != self and n is CollisionObject2D:
+			add_collision_exception_with(n)
 
 func _start_death_fx() -> void:
 	var fx := DeathFx.new()
