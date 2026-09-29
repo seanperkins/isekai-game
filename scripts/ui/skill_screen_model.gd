@@ -195,3 +195,10 @@ static func map_view(rooms: Dictionary, progress, current_id: String) -> Diction
 			stubs.append({"room": id, "edge": e["edge"], "point": point})
 	return {"rooms": shown, "stubs": stubs, "bounds": bounds,
 		"found": "Rooms found %d/%d" % [shown.size(), rooms.size()]}
+
+## The Sound tab's rows: one slider per setting, in AudioSettings.KEYS order.
+static func sound_rows(settings) -> Array:
+	var out: Array = []
+	for k in AudioSettings.KEYS:
+		out.append({"kind": "slider", "id": k, "name": AudioSettings.LABELS[k], "value": float(settings.values[k])})
+	return out

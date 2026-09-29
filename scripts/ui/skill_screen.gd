@@ -1,10 +1,14 @@
 class_name SkillScreen
 extends CanvasLayer
-## Great Sage skill window (Style D): Skills, Compendium and Bestiary tabs, stats, grouped list and a
+## Great Sage skill window (Style D): Skills, Compendium, Bestiary, Map and Sound tabs, stats, grouped list and a
 ## detail card. Esc / Start opens it and pauses the game; Q/E or LB/RB switch tabs;
 ## Enter / A assigns an active to the U/O slots; Esc / B closes. Laid out for 640x360.
 
-const TABS := ["skills", "compendium", "bestiary", "map"]
+const TABS := ["skills", "compendium", "bestiary", "map", "sound"]
+## Five tabs share the top row: they end at x = 532 on the 640 px canvas.
+const TAB_X := 28.0
+const TAB_STRIDE := 102.0
+const TAB_W := 96.0
 ## Sprite frame used as each creature's Bestiary portrait.
 const PORTRAIT := {"bat": "bat_1", "toad": "toad_idle", "lizard": "lizard_1", "spider": "spider_crawl",
 	"serpent": "serpent"}
@@ -78,10 +82,12 @@ func open() -> void:
 	_refresh()
 	visible = true
 	get_tree().paused = true
+	EventBus.world_event.emit("menu_opened", {})
 
 func close() -> void:
 	visible = false
 	get_tree().paused = false
+	EventBus.world_event.emit("menu_closed", {})
 
 func toggle() -> void:
 	if visible:
@@ -97,12 +103,16 @@ func switch_tab(i: int) -> void:
 	_sel = 0
 	_scroll = 0
 	_refresh()
+	EventBus.world_event.emit("menu_move", {})
 
 func move(delta: int) -> void:
 	if _selectable.is_empty():
 		return
+	var before := _sel
 	_sel = clampi(_sel + delta, 0, _selectable.size() - 1)
 	_refresh()
+	if _sel != before:
+		EventBus.world_event.emit("menu_move", {})
 
 func selected_id() -> String:
 	if _selectable.is_empty():
@@ -114,13 +124,23 @@ func selected_id() -> String:
 func accept() -> void:
 	var id := selected_id()
 	if id != "" and _rows[_selectable[_sel]]["kind"] == "ready":
-		_player.try_evolve(id)
+		if _player.try_evolve(id):
+			EventBus.world_event.emit("menu_confirm", {})
 		_refresh()
 		return
 	if tab() != "skills" or id == "" or SkillEffects.active_scene(_defs[id]) == "":
 		return
 	var slots := _player.skillset.slots
 	slots.assign(slots.next_slot_for(id), id)
+	EventBus.world_event.emit("menu_confirm", {})
+	_refresh()
+
+## Sound tab: changes the selected slider by one step (direction is -1 or +1).
+func adjust(direction: int) -> void:
+	if tab() != "sound" or _selectable.is_empty():
+		return
+	Audio.adjust_setting(str(_rows[_selectable[_sel]]["id"]), direction)
+	EventBus.world_event.emit("menu_move", {})
 	_refresh()
 
 func row_texts() -> Array:
@@ -194,6 +214,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		switch_tab(_tab - 1)
 	elif event.is_action_pressed("tab_next"):
 		switch_tab(_tab + 1)
+	elif event.is_action_pressed("move_left") or event.is_action_pressed("ui_left"):
+		adjust(-1)
+	elif event.is_action_pressed("move_right") or event.is_action_pressed("ui_right"):
+		adjust(1)
 	elif event.is_action_pressed("menu_accept") or event.is_action_pressed("ui_accept"):
 		accept()
 	elif event.is_action_pressed("menu_back") or event.is_action_pressed("ui_cancel"):
@@ -214,8 +238,8 @@ func _build_frame() -> void:
 	_panel(_frame, Vector2(28, 40), Vector2(124, 280), Color(0.02, 0.05, 0.14, 0.9), 1)
 	_panel(_frame, Vector2(410, 40), Vector2(202, 280), Color(0.02, 0.05, 0.14, 0.9), 1)
 	for i in TABS.size():
-		var tab_panel := _panel(_frame, Vector2(28 + i * 128, 10), Vector2(120, 20), COL_ROW, 1)
-		var l := _label(tab_panel, TABS[i].to_upper(), Vector2(0, 3), Vector2(120, 14), FONT_MAIN, Color.WHITE)
+		var tab_panel := _panel(_frame, Vector2(TAB_X + i * TAB_STRIDE, 10), Vector2(TAB_W, 20), COL_ROW, 1)
+		var l := _label(tab_panel, TABS[i].to_upper(), Vector2(0, 3), Vector2(TAB_W, 14), FONT_MAIN, Color.WHITE)
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_tab_labels.append(tab_panel)
 	for c in [_stats, _list, _detail]:
@@ -242,6 +266,18 @@ func _refresh() -> void:
 		_clear(_list)
 		_clear(_detail)
 		_build_map()
+		return
+	if tab() == "sound":
+		_rows = SkillScreenModel.sound_rows(Audio.settings)
+		_selectable = []
+		for i in _rows.size():
+			_selectable.append(i)
+		_sel = clampi(_sel, 0, _rows.size() - 1)
+		_hint.text = "LB/RB Tabs    Left/Right Adjust    B Back" if Controls.using_joypad else "Q/E Tabs    A/D Adjust    Esc Back"
+		_build_stats()
+		_clear(_list)
+		_clear(_detail)
+		_build_sound()
 		return
 	match tab():
 		"skills":
@@ -480,6 +516,18 @@ func _build_map() -> void:
 		_list.add_child(stub)
 	_map_found = m["found"]
 	_label(_list, _map_found, Vector2(LIST_X + 4, MAP_BOX.end.y + 6), Vector2(220, 12), FONT_SMALL, COL_DIM)
+
+func _build_sound() -> void:
+	_label(_list, "SOUND", Vector2(LIST_X, LIST_TOP), Vector2(200, 14), FONT_BIG, COL_TITLE)
+	var y := LIST_TOP + 30.0
+	for i in _rows.size():
+		var r: Dictionary = _rows[i]
+		if i == _sel:
+			_panel(_list, Vector2(LIST_X - 4.0, y - 5.0), Vector2(454.0, 24.0), COL_SELECTED, 1)
+		_label(_list, r["name"], Vector2(LIST_X, y), Vector2(110, 14), FONT_MAIN, Color.WHITE)
+		_bar(_list, Vector2(LIST_X + 120.0, y + 3.0), Vector2(240, 8), r["value"], COL_PIP_ON)
+		_label(_list, "%d%%" % int(round(r["value"] * 100.0)), Vector2(LIST_X + 372.0, y), Vector2(60, 14), FONT_MAIN, COL_DIM)
+		y += 34.0
 
 # --- helpers --------------------------------------------------------------
 

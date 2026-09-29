@@ -32,13 +32,16 @@ var _ticker := Label.new()
 var _panel := Label.new()
 var _panel_left := 0.0
 var _ticker_lines: Array = []  # [[text, seconds_left]]
+var _last_popup := ""
 
 func bind(player: Player, rules, _compendium: CompendiumModel, queue: AnnouncerQueue) -> void:
 	_player = player
 	_rules = rules
 	_queue = queue
 	player.inspect_report.connect(_on_inspect_report)
-	player.not_enough_mp.connect(func(_id: String) -> void: _ticker_lines.append(["Not enough MP", TICKER_SECONDS]))
+	player.not_enough_mp.connect(func(_id: String) -> void:
+		_ticker_lines.append(["Not enough MP", TICKER_SECONDS])
+		EventBus.world_event.emit("denied", {}))
 
 func _ready() -> void:
 	_hp.position = Vector2(6, 4)
@@ -91,12 +94,16 @@ func _process(delta: float) -> void:
 		_input_debug.text = input_debug_text()
 	_update_slots()
 	_popup.text = popup_text()
+	if _popup.text != "" and _popup.text != _last_popup:
+		EventBus.world_event.emit("ticker_shown", {"kind": "unlock"})
+	_last_popup = _popup.text
 	_popup_panel.visible = _popup.text != ""
 	_popup_panel.reset_size()
 	_popup_panel.position.x = roundf((VIEW.x - _popup_panel.size.x) / 2.0)
 	var entry := _queue.pop_ticker()
 	while not entry.is_empty():
 		_ticker_lines.append([StatusText.ticker_text(entry, _rules), TICKER_SECONDS])
+		EventBus.world_event.emit("ticker_shown", {"kind": entry["kind"]})
 		entry = _queue.pop_ticker()
 	for line in _ticker_lines:
 		line[1] -= delta
