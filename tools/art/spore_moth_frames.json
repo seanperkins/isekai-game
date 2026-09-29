@@ -1,0 +1,63 @@
+{
+ "canonical": "assets/sprites/bat_1.png",
+ "style": "Modern pixel art with soft lighting (Style D): a small round fuzzy pale-green cave moth with dusty cream wings edged in soft yellow, big dark round eyes, feathery antennae and a faint glow of yellow spores dusting off its wings, a clean dark outline, chunky readable pixels, gentle highlights and shading. Match the palette, outline weight and rendering of the reference image (a cave bat) but draw this moth. Side view, the creature facing right. Draw only the creature: no ground, no shadow, no effects.",
+ "anchor": "fly_1",
+ "frames": [
+  {
+   "name": "fly_1",
+   "width": 30,
+   "refs": [],
+   "prompt": "The moth in flight, wings raised high above its body, antennae forward."
+  },
+  {
+   "name": "fly_2",
+   "width": 36,
+   "refs": [
+    "fly_1"
+   ],
+   "prompt": "The same moth in flight, wings level and half open, body slightly lower."
+  },
+  {
+   "name": "fly_3",
+   "width": 30,
+   "refs": [
+    "fly_1",
+    "fly_2"
+   ],
+   "prompt": "The same moth in flight, wings swept down below its body."
+  },
+  {
+   "name": "fly_4",
+   "width": 28,
+   "refs": [
+    "fly_1",
+    "fly_3"
+   ],
+   "prompt": "The same moth in flight, wings level and half open again, rising."
+  },
+  {
+   "name": "stunned",
+   "width": 28,
+   "refs": [
+    "fly_1"
+   ],
+   "prompt": "The same moth dazed: wings drooping, eyes swirling, a few spore motes around its head."
+  },
+  {
+   "name": "hurt",
+   "width": 30,
+   "refs": [
+    "fly_1"
+   ],
+   "prompt": "The same moth flinching in pain, eyes squeezed shut, wings snapped back."
+  },
+  {
+   "name": "downed",
+   "width": 32,
+   "refs": [
+    "fly_1"
+   ],
+   "prompt": "The same moth knocked out, lying on its back with wings limp and legs curled."
+  }
+ ]
+}

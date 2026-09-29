@@ -1,0 +1,62 @@
+{
+ "canonical": "assets/backgrounds/grotto/mid_rock.png",
+ "style": "Modern pixel art with soft lighting, matching the reference image's palette: deep green-black rock, luminous teal and lime moss, pale cream and violet mushrooms with softly glowing caps. Painterly, soft, slightly muted and low contrast so it reads as scenery behind a game, with a soft dark outline and no harsh highlights. One single isolated object, centred, entirely inside the frame. Draw no ground, no floor, no characters, no text, no shadow.",
+ "frames": [
+  {
+   "name": "mushroom_cap_pillar",
+   "width": 72,
+   "refs": [],
+   "prompt": "A tall stack of giant mushroom caps forming a pillar rising from the ground, wide caps at the top and a thick pale stalk, gills showing, small glowing mushrooms at its foot.",
+   "anchor": "bottom"
+  },
+  {
+   "name": "hanging_spore_moss",
+   "width": 60,
+   "refs": [],
+   "prompt": "A dense curtain of hanging spore-moss and pale threads dangling straight down from a small lump of ceiling rock, thicker at the top, dusted with drifting yellow spores.",
+   "anchor": "top"
+  },
+  {
+   "name": "glowing_mushroom_cluster",
+   "width": 88,
+   "refs": [],
+   "prompt": "A cluster of five or six glowing mushrooms of different heights growing from a small mossy mound, caps in teal and violet.",
+   "anchor": "bottom"
+  },
+  {
+   "name": "mushroom_bridge",
+   "width": 150,
+   "refs": [],
+   "prompt": "A row of three flat shelf mushrooms growing out of each other like a rising bridge, seen from the side, each with a pale glowing underside.",
+   "anchor": "center"
+  },
+  {
+   "name": "vine_curtain",
+   "width": 96,
+   "refs": [],
+   "prompt": "A wide curtain of long green vines and leaves hanging straight down from the ceiling, thick at the top and loosely tapering, with a few small pale flowers.",
+   "anchor": "top"
+  },
+  {
+   "name": "spore_pod",
+   "width": 44,
+   "refs": [],
+   "prompt": "A single fat spore pod on a short stalk, swollen and split at the top with soft yellow spores puffing out.",
+   "anchor": "bottom"
+  },
+  {
+   "name": "mossy_stalactite",
+   "width": 84,
+   "refs": [],
+   "prompt": "Two or three stalactites of different lengths hanging from a lump of ceiling rock, thickly covered in green moss, one tip dripping.",
+   "anchor": "top"
+  },
+  {
+   "name": "dripping_fungus_shelf",
+   "width": 130,
+   "refs": [],
+   "prompt": "A broad wavy shelf of bracket fungus jutting out sideways, with pale glowing drips hanging from its underside.",
+   "anchor": "center"
+  }
+ ]
+}

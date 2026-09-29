@@ -1,0 +1,96 @@
+{
+ "canonical": "assets/sprites/lizard_1.png",
+ "style": "Modern pixel art with soft lighting (Style D): a small stocky crab carrying a big domed red-and-cream mushroom-cap shell on its back with pale spots and gills underneath, stubby legs, two small claws and black bead eyes on short stalks, a clean dark outline, chunky readable pixels, gentle highlights and shading. Match the palette, outline weight and rendering of the reference image (an armored lizard) but draw this crab. Side view, the creature facing right. Draw only the creature: no ground, no shadow, no effects.",
+ "anchor": "idle_1",
+ "frames": [
+  {
+   "name": "idle_1",
+   "width": 44,
+   "refs": [],
+   "prompt": "The crab standing still on all legs, claws held low, shell high."
+  },
+  {
+   "name": "walk_1",
+   "width": 44,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same crab mid-scuttle, legs on the near side reaching forward."
+  },
+  {
+   "name": "walk_2",
+   "width": 44,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same crab mid-scuttle, legs gathered under the body."
+  },
+  {
+   "name": "walk_3",
+   "width": 44,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same crab mid-scuttle, legs on the far side reaching forward."
+  },
+  {
+   "name": "windup_1",
+   "width": 44,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same crab rearing up and back, claws raised, shell tipped forward, eyes narrowed, about to charge."
+  },
+  {
+   "name": "charge_1",
+   "width": 50,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same crab charging hard: body low and stretched forward, claws out in front, shell tilted like a battering ram.",
+   "attack_from": 0.55
+  },
+  {
+   "name": "charge_2",
+   "width": 50,
+   "refs": [
+    "idle_1",
+    "charge_1"
+   ],
+   "prompt": "The same crab charging hard, a stride later, legs blurred, claws snapping.",
+   "attack_from": 0.55
+  },
+  {
+   "name": "rest_1",
+   "width": 44,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same crab panting after a charge: body sagging low, claws drooping, shell dipped."
+  },
+  {
+   "name": "stunned",
+   "width": 44,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same crab dazed: eyestalks drooping and crossed, claws limp, a few stars above the shell."
+  },
+  {
+   "name": "hurt",
+   "width": 44,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same crab flinching in pain, eyestalks flattened, claws clamped shut."
+  },
+  {
+   "name": "downed",
+   "width": 46,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same crab knocked onto its back, legs curled in the air, shell to the ground."
+  }
+ ]
+}

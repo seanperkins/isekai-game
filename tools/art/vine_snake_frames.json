@@ -1,0 +1,89 @@
+{
+ "canonical": "assets/sprites/spider_crawl.png",
+ "style": "Modern pixel art with soft lighting (Style D): a slender green vine snake with a pale cream belly, yellow slit eyes, a forked red tongue and tiny leaves along its back so it looks like a piece of hanging jungle vine, a clean dark outline, chunky readable pixels, gentle highlights and shading. Match the palette, outline weight and rendering of the reference image (a black spider) but draw this snake. Side view, the creature facing right. Draw only the creature: no ground, no branch, no shadow, no effects.",
+ "anchor": "slither_1",
+ "frames": [
+  {
+   "name": "hide_1",
+   "width": 26,
+   "refs": [
+    "slither_1"
+   ],
+   "prompt": "The same snake hanging straight down from above, tail end up, its body looped and still like a dangling vine, head tucked close and eyes shut."
+  },
+  {
+   "name": "coil_1",
+   "width": 36,
+   "refs": [
+    "slither_1"
+   ],
+   "prompt": "The same snake drawn back into a tight S-coil, head raised and pointed forward-down, eyes open and glaring, tongue flicking."
+  },
+  {
+   "name": "lunge_1",
+   "width": 56,
+   "refs": [
+    "slither_1",
+    "coil_1"
+   ],
+   "prompt": "The same snake lunging: body stretched long and straight, head thrust forward-down with mouth wide open and fangs bared.",
+   "attack_from": 0.4
+  },
+  {
+   "name": "lunge_2",
+   "width": 62,
+   "refs": [
+    "slither_1",
+    "lunge_1"
+   ],
+   "prompt": "The same snake at full stretch of its strike, body almost straight, jaws snapping, leaves streaming back.",
+   "attack_from": 0.4
+  },
+  {
+   "name": "slither_1",
+   "width": 46,
+   "refs": [],
+   "prompt": "The snake gliding forward in a gentle wave, head level and raised a little, tongue out."
+  },
+  {
+   "name": "slither_2",
+   "width": 48,
+   "refs": [
+    "slither_1"
+   ],
+   "prompt": "The same snake gliding, the wave shifted so the body forms a shallow S."
+  },
+  {
+   "name": "slither_3",
+   "width": 46,
+   "refs": [
+    "slither_1"
+   ],
+   "prompt": "The same snake gliding, the wave shifted again so the body arcs the other way."
+  },
+  {
+   "name": "stunned",
+   "width": 40,
+   "refs": [
+    "slither_1"
+   ],
+   "prompt": "The same snake dazed: head drooping, eyes crossed, tongue hanging out, body slack."
+  },
+  {
+   "name": "hurt",
+   "width": 42,
+   "refs": [
+    "slither_1"
+   ],
+   "prompt": "The same snake flinching in pain, head snapped back, eyes shut, body jerked into a kink."
+  },
+  {
+   "name": "downed",
+   "width": 50,
+   "refs": [
+    "slither_1"
+   ],
+   "prompt": "The same snake limp on its side, belly up, tongue out, body loosely curled."
+  }
+ ]
+}
