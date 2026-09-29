@@ -164,13 +164,26 @@ func _step_blade(delta: float, k: float) -> void:
 
 # --- ending ---
 
+## A blade kill keeps its two halves where they came to rest as the corpse, under the enemy as
+## "CutCorpse". Returns true when it did.
+func _leave_the_halves() -> bool:
+	if cause != "blade" or _halves.size() != 2 or not is_instance_valid(_enemy):
+		return false
+	var corpse := Node2D.new()
+	corpse.name = "CutCorpse"
+	_enemy.add_child(corpse)
+	for h in _halves:
+		h.reparent(corpse)
+	return true
+
 func _finish() -> void:
 	_done = true
+	var cut := _leave_the_halves()
 	if _sprite != null and is_instance_valid(_sprite):
 		_sprite.rotation = 0.0
 		_sprite.scale = Vector2.ONE
 		_sprite.modulate = Color.WHITE
-		_sprite.visible = true
+		_sprite.visible = not cut  # a cut creature stays in two pieces: the whole sprite never comes back
 		_sprite.position.y = _base_y
 	if is_instance_valid(_enemy):
 		_enemy.velocity.x = 0.0
