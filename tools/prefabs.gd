@@ -53,8 +53,9 @@ static func library() -> Dictionary:
 		"mound": {"width": 160, "walkable": true, "solids": [Rect2(0, -32, 160, 32), Rect2(24, -64, 112, 32), Rect2(56, -96, 48, 32)],
 			"decor": [{"id": "glow_fungus", "pos": Vector2(20, -32), "light": GLOW},
 				{"id": "rubble", "pos": Vector2(140, -32)}]},
-		# Two legs and a lintel: walk under, the top is a vista rather than a route.
-		"arch": {"width": 160, "solids": [Rect2(0, -96, 32, 96), Rect2(128, -96, 32, 96), Rect2(0, -128, 160, 32)],
+		# A lintel hung 96 px above the floor: walk under it, the top is a vista rather than a route. (It used to stand on two
+		# solid legs, which walled off the floor: nothing could walk under an arch whose legs stood in the way.)
+		"arch": {"width": 160, "solids": [Rect2(0, -128, 160, 32)],
 			"decor": [{"id": "root_hang", "pos": Vector2(80, -96), "anchor": "top"},
 				{"id": "glow_fungus", "pos": Vector2(80, 0), "light": GLOW}]},
 		# Two uneven stone pillars with a glowing crystal between them.
