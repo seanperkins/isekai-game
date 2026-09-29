@@ -42,7 +42,13 @@ func _ready() -> void:
 	world.setup(rooms, player, {"spawn": _spawn, "progress": Compendium.progress,
 		"compendium": Compendium.model, "announce": Announcer.queue.push_unlock})
 	world.room_entered.connect(_on_room_entered)
-	world.enter_start()
+	var pools := RebirthChoice.pools(rooms)
+	Compendium.progress.sanitize(pools.map(func(p: Dictionary) -> String: return p["id"]))
+	var start := Game.resolve_start(pools, Compendium.progress.take_pending(), Compendium.progress.is_attuned)
+	if start["default"]:
+		world.enter_start()
+	else:
+		world.enter_at(start["room"], start["pos"])
 	_on_room_entered(world.current_id)
 	player.skillset.slot_replaced.connect(Announcer.queue.push_slot_replaced)
 	hud = Hud.new()
@@ -55,9 +61,11 @@ func _ready() -> void:
 	skill_screen.visibility_changed.connect(func() -> void: hud.visible = not skill_screen.visible)
 	run = Run.new()
 	add_child(run)
-	run.bind(player, world)
+	run.bind(player, world, Compendium.progress, pools)
 	run.restart_requested.connect(_restart)
 	SkillRules.start_run()
+	if not start["kit"].is_empty():  # after start_run(), which clears everything a kit would set
+		RebirthKit.apply(player, SkillRules, Compendium.model, start["kit"])
 	if Game.wants_evolve(OS.get_cmdline_user_args()):
 		player.debug_grant_xp(Progression.stage_total(1))  # reach the first evolution without a grind
 
@@ -95,3 +103,16 @@ func _prepare_restart() -> void:
 ## `-- --evolve` on the command line starts the run at the first body evolution.
 static func wants_evolve(args: Array) -> bool:
 	return args.has("--evolve")
+
+## Where the next life starts: the default (the start room, no kit) unless `pending` names an attuned pool
+## the room data still holds, in which case its room, its spot (standing on it) and its kit.
+static func resolve_start(pools: Array, pending: Dictionary, attuned: Callable) -> Dictionary:
+	var default := {"default": true, "kit": {}}
+	var id = pending.get("pool", "")
+	if typeof(id) != TYPE_STRING or id == "" or id == WorldProgress.DEFAULT_POOL:
+		return default
+	for p in pools:
+		if p["id"] == id and attuned.call(id):
+			return {"default": false, "room": p["room"], "pos": p["pos"] + Vector2(0.0, -BodyConfig.BOTTOM),
+				"kit": p["kit"], "pool": id}
+	return default
