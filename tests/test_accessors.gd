@@ -29,4 +29,4 @@ func test_controls_register_every_action() -> void:
 		assert_true(InputMap.has_action(action), action)
 		assert_gt(InputMap.action_get_events(action).size(), 0, action)
 	Controls.ensure_actions()  # idempotent
-	assert_eq(InputMap.action_get_events("tackle").size(), 2)  # J + gamepad X
+	assert_eq(InputMap.action_get_events("tackle").size(), 3)  # J, Shift (the left-hand alias for the mouse scheme) and gamepad X

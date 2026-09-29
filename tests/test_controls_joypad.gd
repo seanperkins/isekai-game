@@ -71,8 +71,9 @@ func test_triggers_fire_skill_three_and_four() -> void:
 		_axis(pair[1], 0.0)
 		assert_false(Input.is_action_pressed(pair[0]), pair[0])
 
-func test_keyboard_skill_keys_are_u_o_h_l() -> void:
-	for pair in [["active_1", KEY_U], ["active_2", KEY_O], ["active_3", KEY_H], ["active_4", KEY_L]]:
+func test_keyboard_skill_keys_are_u_o_h_l_with_q_and_e_as_left_hand_aliases() -> void:
+	# slots 3 and 4 also carry Q and E, so the keyboard-and-mouse scheme can cast them without leaving WASD
+	for pair in [["active_1", [KEY_U]], ["active_2", [KEY_O]], ["active_3", [KEY_H, KEY_Q]], ["active_4", [KEY_L, KEY_E]]]:
 		var keys := InputMap.action_get_events(pair[0]).filter(func(e): return e is InputEventKey).map(func(e): return e.physical_keycode)
-		assert_eq(keys, [pair[1]], pair[0])
+		assert_eq(keys, pair[1], pair[0])
 	assert_false(InputMap.has_action("cycle"))

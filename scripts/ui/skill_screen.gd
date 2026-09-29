@@ -83,6 +83,13 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	visible = false
 	_build_frame()
+	Controls.scheme_changed.connect(_on_scheme_changed)
+
+## Controls keeps seeing input while this screen pauses the tree, so the scheme (and the slot labels this screen caches)
+## can change while it is open.
+func _on_scheme_changed() -> void:
+	if visible:
+		_refresh()
 
 func is_open() -> bool:
 	return visible

@@ -201,12 +201,12 @@ func _update_prompt() -> void:
 	var thing = _nearest_in_group("interactable", INTERACT_RANGE, func(_n): return true)
 	if thing != null:
 		eat_prompt.visible = true
-		eat_prompt.text = "%s: %s" % ["Y" if Controls.using_joypad else "I", thing.prompt()]
+		eat_prompt.text = "%s: %s" % [Controls.inspect_label(), thing.prompt()]
 		return
 	var target = _nearest_in_group("predatable", PREDATE_RANGE, func(n): return n.can_be_predated())
 	eat_prompt.visible = target != null
 	if target != null:
-		eat_prompt.text = "Hold %s to eat" % ("B" if Controls.using_joypad else "K")
+		eat_prompt.text = "Hold %s to eat" % Controls.eat_label()
 
 func _update_visual(delta: float) -> void:
 	var on_floor := is_on_floor()

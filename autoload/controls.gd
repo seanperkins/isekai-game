@@ -10,13 +10,15 @@ const BINDINGS := {
 	"jump": [KEY_SPACE],
 	"aim_up": [KEY_W, KEY_UP],
 	"aim_down": [KEY_S, KEY_DOWN],
-	"tackle": [KEY_J],
-	"predate": [KEY_K],
-	"inspect": [KEY_I],
+	# The second key on tackle/predate/inspect/active_3/active_4 is the left-hand alias for the keyboard-and-mouse scheme
+	# (the right hand is on the mouse). Q and E are also the skill screen's tab keys; that screen pauses the tree.
+	"tackle": [KEY_J, KEY_SHIFT],
+	"predate": [KEY_K, KEY_F],
+	"inspect": [KEY_I, KEY_R],
 	"active_1": [KEY_U],
 	"active_2": [KEY_O],
-	"active_3": [KEY_H],
-	"active_4": [KEY_L],
+	"active_3": [KEY_H, KEY_Q],
+	"active_4": [KEY_L, KEY_E],
 	"debug_input": [KEY_F3],
 	"menu": [KEY_ESCAPE],
 	"tab_prev": [KEY_Q],
@@ -45,6 +47,9 @@ const PAD_BUTTONS := {
 	"menu_back": [JOY_BUTTON_B],
 }
 
+## Mouse buttons are skill aliases: left is slot 1, right is slot 2.
+const MOUSE_BUTTONS := {"active_1": [MOUSE_BUTTON_LEFT], "active_2": [MOUSE_BUTTON_RIGHT]}
+
 ## Left stick direction per action: [axis, sign].
 const PAD_AXES := {
 	"move_left": [JOY_AXIS_LEFT_X, -1.0],
@@ -63,12 +68,18 @@ const TRIGGER_ACTIONS := ["active_3", "active_4"]
 const STICK_DEADZONE := 0.25
 ## The right stick aims only past this length: a resting stick at (0.25, 0.25), the action deadzone on each axis, is 0.354.
 const RIGHT_STICK_DEADZONE := 0.45
+## Mouse travel (game px, summed since the last pad input or vertical aim key) that makes the mouse the aimer.
+const MOUSE_MOVE_MIN := 4.0
 const KEY_SLOT_LABELS := ["U", "O", "H", "L"]
+const MOUSE_SLOT_LABELS := ["LMB", "RMB", "Q", "E"]
 const PAD_SLOT_LABELS := ["LB", "RB", "LT", "RT"]
 
 ## True while the last input was the pad. It picks the HUD labels and hints, and it enables the right stick (right_stick()):
 ## a key press or a mouse click clears it, a pad button or a stick past STICK_DEADZONE sets it.
 var using_joypad := false
+## True after the mouse was the last aimer: enough travel or a click, until a pad input or a vertical aim key.
+var mouse_aim := false
+var _mouse_travel := 0.0
 ## The pad whose right stick aims: the last to push it past STICK_DEADZONE (a quiet reading from another pad never
 ## takes it). -1 for none. The stick itself is polled in raw_right_stick(), never cached.
 var aim_device := -1
@@ -77,6 +88,9 @@ var aim_device := -1
 var last_stick := Vector2.ZERO
 var last_pad_name := ""
 var last_device := -1
+
+## Emitted when the slot labels change (the scheme changed): the skill screen caches them and refreshes on this.
+signal scheme_changed
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS  # the skill screen pauses the tree; a paused Controls would miss every stick and key event
@@ -95,12 +109,35 @@ func _input(event: InputEvent) -> void:
 			aim_device = event.device
 		last_device = event.device
 		last_pad_name = Input.get_joy_name(event.device)
+	var before := slot_labels()
 	if event is InputEventJoypadButton and event.pressed:
-		using_joypad = true
+		_use_pad()
 	elif event is InputEventJoypadMotion and absf(event.axis_value) > STICK_DEADZONE:
-		using_joypad = true
-	elif (event is InputEventKey and event.pressed) or event is InputEventMouseButton:
+		_use_pad()
+	elif event is InputEventKey and event.pressed:
 		using_joypad = false
+		if not get_tree().paused and (event.is_action_pressed("aim_up") or event.is_action_pressed("aim_down")):
+			mouse_aim = false  # the keyboard is aiming now (is_action_pressed ignores key repeats); paused, W/S navigate a menu
+			_mouse_travel = 0.0
+	elif event is InputEventMouseButton:
+		if event.pressed and not _is_wheel(event.button_index):
+			using_joypad = false
+			mouse_aim = true
+	elif event is InputEventMouseMotion:
+		_mouse_travel += event.relative.length()
+		if _mouse_travel >= MOUSE_MOVE_MIN:
+			using_joypad = false
+			mouse_aim = true
+	if slot_labels() != before:
+		scheme_changed.emit()
+
+func _use_pad() -> void:
+	using_joypad = true
+	mouse_aim = false
+	_mouse_travel = 0.0
+
+static func _is_wheel(button: int) -> bool:
+	return button in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN, MOUSE_BUTTON_WHEEL_LEFT, MOUSE_BUTTON_WHEEL_RIGHT]
 
 ## The right stick of the pad that owns it, raw and ungated (the debug overlay shows it). ZERO with no owner.
 func raw_right_stick() -> Vector2:
@@ -126,9 +163,19 @@ static func toggled_window_mode(mode: DisplayServer.WindowMode) -> DisplayServer
 		return DisplayServer.WINDOW_MODE_WINDOWED
 	return DisplayServer.WINDOW_MODE_FULLSCREEN
 
-## Button names for the two active slots, matching the device the player last used.
+## Button names for the four active slots, matching the scheme in use: the pad, the mouse (left and right button, then Q and
+## E), or the keys.
 func slot_labels() -> Array:
-	return PAD_SLOT_LABELS if using_joypad else KEY_SLOT_LABELS
+	if using_joypad:
+		return PAD_SLOT_LABELS
+	return MOUSE_SLOT_LABELS if mouse_aim else KEY_SLOT_LABELS
+
+## The eat and inspect prompts' button names, per scheme.
+func eat_label() -> String:
+	return "B" if using_joypad else ("F" if mouse_aim else "K")
+
+func inspect_label() -> String:
+	return "Y" if using_joypad else ("R" if mouse_aim else "I")
 
 func ensure_actions() -> void:
 	for action in BINDINGS:
@@ -143,6 +190,11 @@ func ensure_actions() -> void:
 			pad.button_index = button
 			pad.device = -1  # any controller
 			_add(action, pad)
+		for button in MOUSE_BUTTONS.get(action, []):
+			var m := InputEventMouseButton.new()
+			m.button_index = button
+			m.device = -1  # any device, like the pad bindings
+			_add(action, m)
 		if PAD_AXES.has(action):
 			var motion := InputEventJoypadMotion.new()
 			motion.axis = PAD_AXES[action][0]

@@ -20,6 +20,7 @@ func before_each() -> void:
 	rules.start_run()
 
 func after_each() -> void:
+	PadInput.reset()
 	get_tree().paused = false
 
 func _emit(ev: String, tags: Dictionary, times: int) -> void:
@@ -194,3 +195,24 @@ func test_the_channel_skills_say_how_much_holding_costs() -> void:
 	for id in ["swing_thread", "poison_breath", "water_blade"]:
 		var card := SkillScreenModel.detail(rules, by_id[id], player.skillset.slots)
 		assert_false(card["lines"].any(func(l): return String(l).begins_with("Hold: +")), id)
+
+func _select_hydraulic() -> void:
+	_emit("absorbed", {"essence": "water"}, 4)  # auto-slots into slot 1
+	_screen()
+	screen.open()
+	var guard := 0
+	while screen.selected_id() != "hydraulic_propulsion" and guard < 20:
+		screen.move(1)
+		guard += 1
+
+func test_the_open_screen_refreshes_its_slot_badge_when_the_scheme_changes() -> void:
+	_select_hydraulic()
+	assert_string_contains("\n".join(screen.detail_texts()), "[U]")
+	PadInput.mouse_move(Vector2(10, 0))
+	assert_string_contains("\n".join(screen.detail_texts()), "[LMB]")
+
+func test_s_pressed_on_the_paused_screen_does_not_hand_the_mouse_aim_back() -> void:
+	_select_hydraulic()
+	PadInput.mouse_move(Vector2(10, 0))
+	PadInput.key(KEY_S)  # navigates the screen; aims nothing
+	assert_true(Controls.mouse_aim)
