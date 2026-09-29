@@ -622,7 +622,7 @@ func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, _ca
 	_invuln = INVULN_SECONDS
 	if from != Vector2.INF and not health.is_dead():
 		var away := 1.0 if global_position.x >= from.x else -1.0
-		velocity = Vector2(away * KNOCKBACK.x, KNOCKBACK.y)
+		velocity = Vector2(away * KNOCKBACK.x, KNOCKBACK.y) * skillset.knockback_factor()
 		_dash = 0.2
 
 func receive_poison(application: int, tick_amount: int, seconds: float) -> void:

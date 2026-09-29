@@ -133,6 +133,8 @@ static func effect_lines(d: SkillDef, level: int) -> Array:
 						lines.append("%s −%d%%" % [what, v])
 					else:
 						lines.append("%s −%d at low HP" % [what, v])
+				elif stat == SkillEffects.KNOCKBACK_TAKEN:
+					lines.append("Knockback taken −%d%%" % -v)
 				elif stat == StatKeys.REGEN_INTERVAL:
 					lines.append("Regen 1 HP every %d s" % v)
 				else:

@@ -66,6 +66,13 @@ func incoming(damage_type: String, hp: int, max_hp: int) -> Dictionary:
 		out["flat_off"] = int(out["flat_off"]) + FormEffects.SHELL_FLAT
 	return out
 
+## The multiplier on the knockback a hit gives the player (1.0 with no Hardened Shell).
+func knockback_factor() -> float:
+	var pairs: Array = []
+	for id in rules.owned():
+		pairs.append([rules.get_def(id), rules.level_of(id)])
+	return SkillEffects.knockback_factor(pairs)
+
 ## Extra healing from owned triggers matching this event (e.g. Glutton on creature eats).
 func heal_on(event_name: String, tags: Dictionary) -> int:
 	var total := 0
