@@ -40,14 +40,20 @@ var _draining := false
 var _run_start := 0.0
 var _ready_evolutions := {}
 var _granted := {}     # id -> true: granted without its unlock, until its conditions are met
+var _children := {}    # parent id -> the evolution ids whose `replaces` is it
 
 func setup(defs: Array) -> void:
 	_defs.clear()
 	_listeners.clear()
+	_children.clear()
 	for d in defs:
 		if d.source == "enemy_only":
 			continue
 		_defs[d.id] = d
+		if d.source == "evolution" and d.replaces != "":
+			if not _children.has(d.replaces):
+				_children[d.replaces] = []
+			_children[d.replaces].append(d.id)
 		for ev in d.listens_to():
 			if not _listeners.has(ev):
 				_listeners[ev] = []
@@ -81,8 +87,29 @@ func handle_event(event_name: String, tags: Dictionary = {}) -> void:
 		return
 	_drain()
 
+## Skills held now. A parent that evolved is retired: still in the ledger (so its unlock and level can never fire again)
+## but not held. `level_of` answers the level a skill REACHED, including a retired one.
 func owned() -> Array:
-	return _owned.keys()
+	return _owned.keys().filter(func(id: String) -> bool: return not is_retired(id))
+
+## True when an evolution that replaces `id` is owned.
+func is_retired(id: String) -> bool:
+	for c in _children.get(id, []):
+		if _owned.has(c):
+			return true
+	return false
+
+## An evolution that can no longer be taken this life: not owned, and a sibling took the branch.
+func is_closed(id: String) -> bool:
+	var d: SkillDef = _defs.get(id)
+	return d != null and d.source == "evolution" and d.replaces != "" and not _owned.has(id) and is_retired(d.replaces)
+
+## The other evolutions that share this one's parent.
+func siblings_of(id: String) -> Array:
+	var d: SkillDef = _defs.get(id)
+	if d == null or d.replaces == "":
+		return []
+	return _children.get(d.replaces, []).filter(func(c: String) -> bool: return c != id)
 
 func level_of(id: String) -> int:
 	return int(_owned[id]["level"]) if _owned.has(id) else 0
@@ -99,16 +126,19 @@ func is_evolution_ready(id: String) -> bool:
 func ready_evolutions() -> Array:
 	return _ready_evolutions.keys()
 
-## EP cost to evolve: one per parent skill (Water Blade 1, Swing Thread and Jet Dash 2).
+## EP cost to evolve: one per parent skill, which is always one (an evolution's unlock is its parent alone).
 func evolution_cost(id: String) -> int:
 	var d: SkillDef = _defs.get(id)
 	return maxi(1, d.parent_ids().size()) if d != null else 0
 
-## Unlocks a ready evolution. The caller has already paid its EP.
+## Unlocks a ready evolution and closes its siblings. The caller has already paid its EP. The parent retires as the
+## evolution enters `_owned`, so the siblings' ready flags are erased here and _evaluate keeps them from coming back.
 func evolve(id: String) -> bool:
 	if not run_active or not _ready_evolutions.has(id) or _owned.has(id):
 		return false
 	_ready_evolutions.erase(id)
+	for sib in siblings_of(id):
+		_ready_evolutions.erase(sib)
 	_grant(_defs[id], true)
 	if not _draining:
 		_drain()
@@ -129,11 +159,10 @@ func level_progress(id: String) -> Dictionary:
 ## Gives an owned skill without its unlock: a body grants its skills on arrival (announced), a rebirth
 ## kit grants its skills quietly (`announce` false: no skill_unlocked, so the caller reveals and slots
 ## them, and the skill is discovered later, when its unlock conditions are met). A no-op if the skill is
-## unknown, enemy-only, or already owned.
+## unknown, enemy-only, already owned, or an evolution (only evolve() takes one).
 func grant(id: String, announce := true) -> bool:
-	if not run_active or not _defs.has(id) or _owned.has(id):
+	if not run_active or not _defs.has(id) or _owned.has(id) or _defs[id].source == "evolution":
 		return false
-	_ready_evolutions.erase(id)
 	_grant(_defs[id], announce)
 	if not announce:
 		_granted[id] = true
@@ -147,17 +176,17 @@ func is_granted(id: String) -> bool:
 func set_stage_cap(n: int) -> void:
 	stage_cap = maxi(1, n)
 
-## An owned, levelling skill sitting at the stage cap with room left below its own max.
+## A held, levelling skill sitting at the stage cap with room left below its own max.
 func is_capped(id: String) -> bool:
 	var d: SkillDef = _defs.get(id)
 	return d != null and _owned.has(id) and not d.levels_on.is_empty() and level_of(id) >= stage_cap and level_of(id) < d.max_level
 
-## After the cap rises: level every owned skill straight to what its counters earned, one skill at a time,
-## each with its own drain, so a burst of level-ups can never pass the 64-item queue limit.
+## After the cap rises: level every HELD skill (not a retired parent) straight to what its counters earned, one skill at a
+## time, each with its own drain, so a burst of level-ups can never pass the 64-item queue limit.
 func recheck_levels() -> void:
 	rechecking = true
 	var gained := 0
-	for id in _owned.keys():
+	for id in owned():
 		var d: SkillDef = _defs.get(id)
 		if d == null or d.levels_on.is_empty():
 			continue
@@ -213,6 +242,9 @@ func _drain() -> void:
 		inspect_processed.emit(t, level_of(APPRAISAL_ID))
 
 func _evaluate(d: SkillDef) -> void:
+	# A retired parent never levels, is discovered or is granted again; a closed evolution never becomes ready.
+	if is_retired(d.id) or is_closed(d.id):
+		return
 	if not _owned.has(d.id):
 		if not d.starting and _conditions_met(d):
 			if d.source == "evolution":
