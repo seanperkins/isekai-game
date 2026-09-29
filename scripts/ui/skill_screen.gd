@@ -543,10 +543,10 @@ func _build_map() -> void:
 		var pos := MAP_BOX.position + (rect.position - bounds.position) * scale
 		_panel(_list, pos, rect.size * scale, COL_SELECTED if r["current"] else COL_ROW, 2 if r["current"] else 1)
 		var mark := pos + Vector2(3, 3)
-		for key in ["pool", "tablet"]:
+		for key in ["pool", "tablet", "rebirth"]:
 			if r[key]:
 				var dot := ColorRect.new()
-				dot.color = COL_MAP_POOL if key == "pool" else Color(1.0, 0.85, 0.45)
+				dot.color = COL_MAP_POOL if key == "pool" else (Color(1.0, 0.85, 0.45) if key == "tablet" else (Color(0.9, 0.85, 1.0) if r.get("attuned", false) else Color(0.55, 0.5, 0.7)))
 				dot.position = mark
 				dot.size = Vector2(3, 3)
 				_list.add_child(dot)

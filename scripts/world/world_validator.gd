@@ -23,6 +23,7 @@ static func validate(rooms: Dictionary) -> PackedStringArray:
 		for e in a.exits:
 			errors.append_array(_check_exit(a, e, rooms))
 		errors.append_array(_check_dressing(a))
+	errors.append_array(_check_rebirth_pools(rooms))
 	return errors
 
 ## An exit's span in world pixels: x = from, y = to.
@@ -33,6 +34,30 @@ static func world_span(r: RoomDef, e: Dictionary) -> Vector2:
 
 static func _vertical_edge(edge: String) -> bool:
 	return edge == "left" or edge == "right"
+
+## Rebirth pools: each has an id, area and kit; ids are unique; kits are valid; and a world that has any
+## must hold the default pool (the Cave mouth's), so there is always somewhere to start.
+static func _check_rebirth_pools(rooms: Dictionary) -> PackedStringArray:
+	var out := PackedStringArray()
+	var seen := {}
+	var ids := rooms.keys()
+	ids.sort()
+	for room_id in ids:
+		for f in (rooms[room_id] as RoomDef).features:
+			if f.get("kind", "") != "rebirth_pool":
+				continue
+			var pid: String = str(f.get("id", ""))
+			if pid == "" or not f.has("area") or not f.has("kit") or not f.has("pos"):
+				out.append("%s: a rebirth pool needs an id, area, kit and pos" % room_id)
+				continue
+			if seen.has(pid):
+				out.append("%s: duplicate rebirth pool '%s'" % [room_id, pid])
+			seen[pid] = room_id
+			for e in RebirthKit.validate(f["kit"]):
+				out.append("%s: rebirth pool '%s': %s" % [room_id, pid, e])
+	if not seen.is_empty() and not seen.has(WorldProgress.DEFAULT_POOL):
+		out.append("world: the default rebirth pool '%s' is missing" % WorldProgress.DEFAULT_POOL)
+	return out
 
 ## Set dressing: a known piece, a depth factor in range, a position in or near the room, and no more
 ## than SetDressing.MAX_PROPS entries.

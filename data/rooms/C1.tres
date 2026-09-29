@@ -167,3 +167,10 @@ exits = [{
 "shortcut": "c6_drop",
 "to": 900.0
 }]
+features = [{
+"area": "cave",
+"id": "C1",
+"kind": "rebirth_pool",
+"kit": {},
+"pos": Vector2(140, 320)
+}]

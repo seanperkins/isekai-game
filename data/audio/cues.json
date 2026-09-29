@@ -513,6 +513,7 @@
     "tablet_read": "tablet_chime",
     "switch_opened": "switch_open",
     "pool_rested": "pool_rest",
+    "pool_attuned": "pool_rest",
     "water_entered": "water_in",
     "water_exited": "water_out",
     "menu_opened": "ui_open",
