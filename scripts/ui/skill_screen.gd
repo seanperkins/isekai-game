@@ -682,11 +682,13 @@ func _build_form() -> void:
 	for t in sel.traits:
 		_label(_detail, FormEffects.TRAITS.get(t, str(t)), Vector2(DETAIL_X, dy), Vector2(190, 22), FONT_SMALL, COL_TITLE, true)
 		dy += 22.0
-	if not sel.grants.is_empty():
-		var names: Array = []
-		for g in sel.grants:
-			var sd = _defs.get(g)
-			names.append(sd.display_name if sd != null else g)
+	var names: Array = []
+	for g in sel.grants:
+		if _rules.is_retired(g):
+			continue  # the player evolved it: the form can no longer give it
+		var sd = _defs.get(g)
+		names.append(sd.display_name if sd != null else g)
+	if not names.is_empty():
 		_label(_detail, "Grants: " + ", ".join(names), Vector2(DETAIL_X, dy), Vector2(190, 24), FONT_SMALL, Color.WHITE, true)
 
 func _row_height(r: Dictionary) -> float:

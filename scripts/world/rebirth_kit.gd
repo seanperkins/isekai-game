@@ -28,6 +28,8 @@ static func validate(kit: Dictionary, defs: Array = []) -> PackedStringArray:
 			errs.append("kit names unknown skill '%s'" % str(s))
 		elif (by_id[s] as SkillDef).source == "enemy_only":
 			errs.append("kit names enemy-only skill '%s'" % s)
+		elif (by_id[s] as SkillDef).source == "evolution":
+			errs.append("kit names evolution '%s' (only evolve() takes one)" % s)
 	if kit.has("level"):
 		var lv := int(kit["level"])
 		if lv < 1 or lv > Progression.LEVEL_CAP:

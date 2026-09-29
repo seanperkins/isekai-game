@@ -123,3 +123,11 @@ func test_a_later_stage_is_stronger_than_an_earlier_one_in_the_same_lineage() ->
 			var v := int((forms[id] as FormDef).stats.get("max_hp", 0))
 			assert_gt(v, hp, "%s has more max HP than the form before it" % id)
 			hp = v
+
+func test_no_form_grants_an_evolution() -> void:
+	var by_id := {}
+	for d in DefLoader.load_dir("res://data/skills"):
+		by_id[d.id] = d
+	for id in forms:
+		for g in (forms[id] as FormDef).grants:
+			assert_ne((by_id[g] as SkillDef).source, "evolution", "%s grants %s" % [id, g])

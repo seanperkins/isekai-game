@@ -216,3 +216,31 @@ func test_choosing_an_offer_closes_the_menu_so_the_evolution_plays_in_the_world(
 	assert_false(screen.is_open(), "the menu closes so the glow and the swell are seen")
 	assert_false(get_tree().paused, "and the game runs, so the moment actually plays")
 	assert_true(player.evolving())
+
+# --- the form card lists only grants the player can still receive ---
+
+func _select_form(id: String) -> void:
+	var guard := 0
+	while screen.selected_id() != id and guard < 30:
+		screen.move(1)
+		guard += 1
+	assert_eq(screen.selected_id(), id)
+
+func test_the_form_card_lists_a_receivable_grant() -> void:
+	_eat_everything()
+	_to_cap()
+	screen.open()
+	screen.switch_tab(5)
+	_select_form("tide")
+	assert_string_contains("\n".join(screen.detail_texts()), "Grants: Hydraulic Propulsion")
+
+func test_the_form_card_omits_grants_the_player_has_retired() -> void:
+	_eat_everything()
+	for i in 12:
+		rules.handle_event("skill_used", {"id": "hydraulic_propulsion"})
+	assert_true(rules.evolve("water_blade"))
+	_to_cap()
+	screen.open()
+	screen.switch_tab(5)
+	_select_form("tide")
+	assert_false("\n".join(screen.detail_texts()).contains("Grants:"), "the only grant is a retired parent")

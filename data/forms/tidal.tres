@@ -17,7 +17,7 @@ stats = {
 "mp_regen": 60
 }
 traits = ["water_thrift"]
-grants = ["hydraulic_propulsion", "water_blade", "jet_dash"]
+grants = ["hydraulic_propulsion"]
 tint = Color(0.6, 0.85, 1, 1)
 size = 1.4
 blurb = "The tide itself, wearing a body."

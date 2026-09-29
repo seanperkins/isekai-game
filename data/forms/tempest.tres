@@ -16,7 +16,7 @@ stats = {
 "mp_regen": 40
 }
 traits = ["water_thrift"]
-grants = ["hydraulic_propulsion", "water_blade"]
+grants = ["hydraulic_propulsion"]
 tint = Color(0.55, 0.8, 1, 1)
 size = 1.25
-blurb = "A storm held in a body: it cuts."
+blurb = "A storm held in a body."

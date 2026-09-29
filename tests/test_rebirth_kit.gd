@@ -215,3 +215,7 @@ func test_a_starting_level_starts_at_full_health_and_mana() -> void:
 	assert_gt(player.stats.get_stat("max_hp"), 30, "the level raised the maximum")
 	assert_eq(player.health.hp, player.health.max_hp, "a new life is not wounded")
 	assert_eq(player.mana.mp, player.mana.max_mp)
+
+func test_a_kit_may_not_name_an_evolution() -> void:
+	assert_string_contains("\n".join(RebirthKit.validate({"skills": ["water_blade"]})), "kit names evolution 'water_blade'")
+	assert_eq(RebirthKit.validate({"skills": ["hydraulic_propulsion"]}), PackedStringArray())
