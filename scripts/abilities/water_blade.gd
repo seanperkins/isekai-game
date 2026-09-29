@@ -1,5 +1,5 @@
 extends Ability
-## Instant water blade along the aim: hits the nearest other-team actor, drawn as a streak.
+## Instant water blade along the aim: hits the nearest other-team actor, drawn as a crescent that slides out to the hit.
 
 const RANGE := 160.0
 
@@ -9,4 +9,18 @@ func _perform() -> void:
 	if not targets.is_empty():
 		targets[0].receive_hit(value(), "physical", actor.global_position, "blade")
 		end = targets[0].global_position
-	Vfx.line(actor, actor.global_position, end, Color(0.45, 0.85, 1.0), 3.0, 0.2)
+	var dir := aim_dir()
+	var crescent := Sprite2D.new()
+	crescent.add_to_group("vfx")
+	crescent.top_level = true
+	crescent.texture = VfxArt.crescent()
+	crescent.modulate = Color(0.45, 0.85, 1.0, 0.9)
+	crescent.rotation = dir.angle()
+	crescent.scale = Vector2(0.6, 0.6)
+	Vfx.host(actor).add_child(crescent)
+	crescent.global_position = actor.global_position + dir * 24.0
+	var tw := crescent.create_tween().set_parallel(true)
+	tw.tween_property(crescent, "scale", Vector2(1.3, 1.3), 0.22)
+	tw.tween_property(crescent, "global_position", end - dir * 24.0, 0.22)  # arrives a little short of the hit, so it reads as reaching it
+	tw.tween_property(crescent, "modulate:a", 0.0, 0.22)
+	tw.chain().tween_callback(crescent.queue_free)

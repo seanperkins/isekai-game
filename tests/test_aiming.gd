@@ -68,10 +68,11 @@ func test_poison_breath_aimed_up_hits_above_not_ahead() -> void:
 	assert_eq(above.hits.size(), 1)
 	assert_eq(ahead.hits, [])
 
-func test_water_blade_streaks_along_the_aim() -> void:
+func test_water_blade_is_a_crescent_turned_to_the_aim() -> void:
 	_cast("water_blade", Vector2(1, 1).normalized(), [3])
-	var line: Line2D = get_tree().get_nodes_in_group("vfx").filter(func(n): return n is Line2D)[0]
-	assert_true(_approx(line.points[1], Vector2(1, 1).normalized() * 160.0))
+	var c: Sprite2D = get_tree().get_nodes_in_group("vfx").filter(func(n): return n is Sprite2D and n.texture == VfxArt.crescent())[0]
+	assert_almost_eq(c.rotation, PI / 4.0, 0.01)
+	assert_true(_approx(c.global_position, Vector2(1, 1).normalized() * 24.0))
 
 func test_sticky_thread_aimed_down_hits_below() -> void:
 	var below := _enemy(Vector2(0, 50))

@@ -18,7 +18,8 @@ var _elapsed := 0.0
 var _ticks := 0
 var _actor: Node2D
 
-## `opts` may hold `damage` (default 1), `slow` (default true), `heals` (default 0) and `color`.
+## `opts` may hold `damage` (default 1), `slow` (default true), `heals` (default 0), `color` (the tint) and `look` ("web"
+## draws Binding Web's web sprite where the flat square would be; any other value keeps the square).
 func launch(at: Vector2, p_radius: float, seconds: float, actor: Node2D, opts := {}) -> void:
 	global_position = at
 	radius = p_radius
@@ -30,6 +31,12 @@ func launch(at: Vector2, p_radius: float, seconds: float, actor: Node2D, opts :=
 	add_to_group("player_clouds")
 	for c in get_children():
 		c.queue_free()
+	if opts.get("look", "") == "web":
+		var web := Sprite2D.new()
+		web.texture = VfxArt.web(int(radius * 2.0))
+		web.modulate = opts.get("color", Color(1, 1, 1, 0.9))
+		add_child(web)
+		return
 	var haze := ColorRect.new()  # drawn at the real radius, so a higher level shows a bigger cloud
 	haze.color = opts.get("color", Color(0.7, 0.95, 0.4, 0.3))
 	haze.size = Vector2(radius * 2.0, radius * 2.0)

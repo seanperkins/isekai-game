@@ -50,17 +50,26 @@ func test_poison_breath_shows_a_green_cloud_in_front() -> void:
 		assert_eq(p.texture, Art.texture("spit_glob"))
 		assert_gt(p.global_position.x, player.global_position.x)
 
-func test_water_blade_draws_a_streak_to_its_target() -> void:
+func _crescents() -> Array:
+	return _vfx().filter(func(n): return n is Sprite2D and n.texture == VfxArt.crescent())
+
+func test_water_blade_is_a_crescent_that_starts_at_the_caster_and_slides_to_its_target() -> void:
 	var e := _enemy(60)
 	_cast("water_blade", [3])
-	var lines := _vfx().filter(func(n): return n is Line2D)
-	assert_eq(lines.size(), 1)
-	assert_eq(lines[0].points[1], e.global_position)
+	var c: Sprite2D = _crescents()[0]
+	assert_eq(_crescents().size(), 1)
+	assert_almost_eq(c.global_position.x, 24.0, 0.5)
+	assert_almost_eq(c.rotation, 0.0, 0.01)
+	await wait_seconds(0.3)
+	assert_eq(_crescents().size(), 0, "it fades and frees itself")
 
-func test_water_blade_without_a_target_streaks_to_full_range() -> void:
+func test_water_blade_without_a_target_slides_toward_full_range() -> void:
 	_cast("water_blade", [3])
-	var lines := _vfx().filter(func(n): return n is Line2D)
-	assert_eq(lines[0].points[1], player.global_position + Vector2(160, 0))
+	var c: Sprite2D = _crescents()[0]
+	var tw_target := Vector2(160 - 24, 0)
+	await wait_seconds(0.11)  # about halfway through its 0.22 s slide
+	assert_gt(c.global_position.x, 24.0)
+	assert_lt(c.global_position.x, tw_target.x)
 
 func test_sticky_thread_draws_a_thread() -> void:
 	_enemy(50)

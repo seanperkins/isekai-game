@@ -4,7 +4,7 @@ extends RefCounted
 ## live beside the actor, fade out, and free themselves. Group "vfx". (A channel's persistent spray and tether strand are
 ## children of the ability instead, and not in the group.)
 
-static func _host(actor: Node2D) -> Node:
+static func host(actor: Node2D) -> Node:
 	return actor.get_parent() if actor.get_parent() != null else actor
 
 static func line(actor: Node2D, from: Vector2, to: Vector2, color: Color, width: float, seconds: float) -> Line2D:
@@ -14,7 +14,7 @@ static func line(actor: Node2D, from: Vector2, to: Vector2, color: Color, width:
 	l.width = width
 	l.default_color = color
 	l.points = PackedVector2Array([from, to])
-	_host(actor).add_child(l)
+	host(actor).add_child(l)
 	_fade(l, seconds)
 	return l
 
@@ -42,7 +42,7 @@ static func strand(actor: Node2D, from: Vector2, to: Vector2, seconds: float) ->
 	l.top_level = true
 	style_strand(l)
 	l.points = sag_points(from, to)
-	_host(actor).add_child(l)
+	host(actor).add_child(l)
 	_fade(l, seconds)
 	return l
 
@@ -56,7 +56,7 @@ static func puffs(actor: Node2D, texture: Texture2D, positions: Array, color: Co
 		s.position = p
 		s.modulate = color
 		root.add_child(s)
-	_host(actor).add_child(root)
+	host(actor).add_child(root)
 	_fade(root, seconds)
 	return root
 
