@@ -14,11 +14,13 @@ var ambient: CanvasModulate
 var _skills_by_id := {}
 var _creatures := {}
 
-## Each biome sets its own ambient light: the bright Cave, a darker deep, and so on.
+## Each biome sets its own ambient light and sound: the bright Cave, a darker deep, and so on.
 func _on_room_entered(id: String) -> void:
-	var target: Color = TerrainArt.ambient(world.rooms[id].area, AMBIENT)
+	var area: String = world.rooms[id].area
+	var target: Color = TerrainArt.ambient(area, AMBIENT)
 	var tw := create_tween()
 	tw.tween_property(ambient, "color", target, 0.6)
+	Audio.set_biome(area)
 
 func _ready() -> void:
 	Controls.ensure_actions()
