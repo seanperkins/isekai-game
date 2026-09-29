@@ -4,6 +4,12 @@
  "anchor": "slither_1",
  "frames": [
   {
+   "name": "slither_1",
+   "width": 46,
+   "refs": [],
+   "prompt": "The snake gliding forward in a gentle wave, head level and raised a little, tongue out."
+  },
+  {
    "name": "hide_1",
    "width": 26,
    "refs": [
@@ -38,12 +44,6 @@
    ],
    "prompt": "The same snake at full stretch of its strike, body almost straight, jaws snapping, leaves streaming back.",
    "attack_from": 0.4
-  },
-  {
-   "name": "slither_1",
-   "width": 46,
-   "refs": [],
-   "prompt": "The snake gliding forward in a gentle wave, head level and raised a little, tongue out."
   },
   {
    "name": "slither_2",
