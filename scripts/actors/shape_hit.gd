@@ -30,8 +30,8 @@ static func rect_points(r: Rect2) -> PackedVector2Array:
 	return PackedVector2Array([r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)])
 
 ## `local` shifted to a global origin.
-static func moved(local: PackedVector2Array, origin: Vector2) -> PackedVector2Array:
+static func moved(local: PackedVector2Array, origin: Vector2, scale := 1.0) -> PackedVector2Array:
 	var out := PackedVector2Array()
 	for p in local:
-		out.append(p + origin)
+		out.append(p * scale + origin)
 	return out

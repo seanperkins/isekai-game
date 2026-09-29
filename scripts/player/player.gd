@@ -72,7 +72,12 @@ var _sprite: Sprite2D
 var spreading := false
 ## Set false before setup() to draw the old scaled sprite instead of the slime's own frames.
 var use_sheet := true
-var _sheet: SpriteSheet
+var _sheet: SpriteSheet         # the sheet being drawn: the form's own, or the base sheet
+var _base_sheet: SpriteSheet    # the plain slime's sheet, also worn (tinted, scaled) by forms without art
+var _form_sheet: SpriteSheet    # the current form's own sheet, or null
+## The evolved body: stage and form (Form.advance is the only way they change) and the form definitions.
+var form := Form.new()
+var forms := {}
 var _animator: SlimeAnimator
 var _shapes: SlimeShapes
 var _shape: CollisionShape2D
@@ -107,6 +112,7 @@ func setup(rules: SkillRulesEngine, compendium: CompendiumModel, creature_defs: 
 	rules.skill_unlocked.connect(_on_skill_unlocked)
 	rules.skill_leveled.connect(_on_skill_leveled)
 	rules.run_started.connect(_on_run_started)
+	forms = FormLoader.load_all()
 	add_to_group("player")
 	add_to_group("actors")
 	if get_child_count() == 0:
@@ -201,9 +207,11 @@ func _update_visual(delta: float) -> void:
 	_animator.advance(delta)
 	var frame := _animator.frame()
 	var left := _faces_left(state, get_wall_normal() if is_on_wall() else Vector2.ZERO)
+	var body_scale := body_scale()
 	_sprite.texture = _sheet.frame_texture(frame)
-	_sprite.position.y = BODY_BOTTOM - _sheet.frame_size(frame).y / 2.0
-	_sprite.scale = Vector2.ONE
+	_sprite.position.y = BODY_BOTTOM - _sheet.frame_size(frame).y * body_scale / 2.0
+	_sprite.scale = Vector2.ONE * body_scale
+	_sprite.modulate = body_tint()
 	_sprite.flip_h = left
 	_shapes.refresh(_sheet, frame, left)
 
@@ -265,7 +273,7 @@ func body_rect() -> Rect2:
 ## when the sheet is missing.
 func hurt_polygon() -> PackedVector2Array:
 	if _shapes != null and _shapes.hurt_poly.polygon.size() >= 3:
-		return ShapeHit.moved(_shapes.hurt_poly.polygon, _shapes.global_position)
+		return ShapeHit.moved(_shapes.hurt_poly.polygon, _shapes.global_position, body_scale())
 	return ShapeHit.rect_points(body_rect())
 
 func do_jump() -> void:
@@ -341,6 +349,7 @@ func _start_cover(target: Node2D) -> void:
 	_cover = EatCover.new()
 	get_parent().add_child(_cover)
 	_cover.begin(target, _sheet, target.global_position.x < global_position.x)
+	_cover.set_look(body_tint(), body_scale())
 	_sprite.visible = false
 
 func _end_cover() -> void:
@@ -376,7 +385,7 @@ func use_active(i: int) -> void:
 		return
 	if not ability.ready():
 		return  # on cooldown: costs nothing
-	var cost := _rules.get_def(id).mp_cost
+	var cost := FormEffects.mp_cost(skillset.capabilities, id, _rules.get_def(id).mp_cost)
 	if not mana.spend(cost):
 		not_enough_mp.emit(id)
 		return
@@ -461,6 +470,55 @@ func try_evolve(id: String) -> bool:
 	progression.spend_ep(cost)
 	EventBus.world_event.emit("evolved", {"id": id})
 	return true
+
+## The form's definition, or null for the base slime.
+func form_def() -> FormDef:
+	return forms.get(form.form_id)
+
+## The sheet the body is drawn from: the form's own art, or the base slime's.
+func body_sheet() -> SpriteSheet:
+	return _form_sheet if _form_sheet != null else _base_sheet
+
+## A form without art of its own wears the base sheet tinted and scaled; one with art is drawn as it is.
+func body_tint() -> Color:
+	var d := form_def()
+	return d.tint if d != null and _form_sheet == null else Color.WHITE
+
+func body_scale() -> float:
+	var d := form_def()
+	return d.size if d != null and _form_sheet == null else 1.0
+
+## Evolves the body into `id`: a legal next form, and (unless `force`, for tests and debugging) the level
+## cap reached. Resets the level (keeping EP and the level bonuses), raises the skill cap and re-checks
+## every skill, applies the form's stats and traits, grants its skills, and changes the look. The
+## collision box never changes.
+func advance_form(id: String, force := false) -> bool:
+	if health.is_dead() or (not force and not progression.can_evolve()):
+		return false
+	if not form.advance(id, forms):
+		return false
+	progression.evolve_stage()
+	_rules.set_stage_cap(form.cap())
+	var def: FormDef = forms[id]
+	skillset.form_mods = FormEffects.modifiers(def)
+	skillset.form_flags = FormEffects.flags(def)
+	for g in def.grants:
+		_rules.grant(g)
+	_rules.recheck_levels()
+	_use_form_sheet(def)
+	skillset.refresh()
+	_sync_max_hp()
+	EventBus.world_event.emit("evolved_body", {"id": id, "stage": form.stage})
+	return true
+
+func _use_form_sheet(def: FormDef) -> void:
+	if def.sprite_set != "" and SpriteSheet.available(def.sprite_set):
+		_form_sheet = SpriteSheet.load_set(def.sprite_set)
+		_sheet = _form_sheet
+	else:
+		_form_sheet = null
+		if _base_sheet != null:
+			_sheet = _base_sheet
 
 func _on_leveled_up(level: int) -> void:
 	EventBus.world_event.emit("leveled_up", {"level": level})
@@ -652,6 +710,10 @@ func _on_skill_leveled(_id: String, _level: int) -> void:
 func _on_run_started() -> void:
 	progression = Progression.new()  # levels are per run
 	progression.leveled_up.connect(_on_leveled_up)
+	form.reset()
+	_form_sheet = null
+	if _base_sheet != null:
+		_sheet = _base_sheet
 	skillset.reset()
 	drop_rope()
 	stats.reset_run()
@@ -674,6 +736,7 @@ func _build_body() -> void:
 	add_child(_sprite)
 	if use_sheet and SpriteSheet.available("slime"):
 		_sheet = SpriteSheet.load_set("slime")
+		_base_sheet = _sheet
 		_animator = SlimeAnimator.new(SlimeAnimator.load_clips())
 		_animator.play("idle")
 		var first := _animator.frame()

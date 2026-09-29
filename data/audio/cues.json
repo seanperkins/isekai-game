@@ -498,6 +498,7 @@
     "player_died": "slime_death",
     "leveled_up": "slime_levelup",
     "evolved": "slime_evolve",
+    "evolved_body": "slime_evolve",
     "eat_started": "eat_cover",
     "enemy_hit": "enemy_impact",
     "enemy_died": {

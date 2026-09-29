@@ -122,6 +122,17 @@ func level_progress(id: String) -> Dictionary:
 	var gained: int = _ledger.counter(d.levels_on["event"], d.levels_on.get("tags", {})) - int(_owned[id]["base"])
 	return {"current": clampi(gained - (level - 1) * d.level_curve, 0, d.level_curve), "target": d.level_curve}
 
+## Gives an owned skill without its unlock (a body grants its skills on arrival). Announced; a no-op if
+## the skill is unknown, enemy-only, or already owned.
+func grant(id: String) -> bool:
+	if not run_active or not _defs.has(id) or _owned.has(id):
+		return false
+	_ready_evolutions.erase(id)
+	_grant(_defs[id], true)
+	if not _draining:
+		_drain()
+	return true
+
 func set_stage_cap(n: int) -> void:
 	stage_cap = maxi(1, n)
 

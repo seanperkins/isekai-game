@@ -18,6 +18,8 @@ var _sheet: SpriteSheet
 var _target: Node2D
 var _prey_sprite: Sprite2D
 var _prey_was_visible := true
+var _look_tint := Color.WHITE
+var _look_scale := 1.0
 var _cut: Node2D
 var _bottom := 0.0
 var _tex_height := 0.0
@@ -85,6 +87,13 @@ func finish() -> void:
 		_prey_sprite.visible = _prey_was_visible
 	queue_free()
 
+## The slime's body look while it eats: a tinted, scaled base sheet when the form has no art of its own.
+func set_look(tint: Color, body_scale: float) -> void:
+	_look_tint = tint
+	_look_scale = body_scale
+	cover.scale = Vector2.ONE * body_scale
+	cover.modulate = Color(tint.r, tint.g, tint.b, BODY_ALPHA)
+
 func _show(frame: String) -> void:
 	cover.texture = _sheet.frame_texture(frame)
-	cover.position.y = -_sheet.frame_size(frame).y / 2.0
+	cover.position.y = -_sheet.frame_size(frame).y * _look_scale / 2.0
