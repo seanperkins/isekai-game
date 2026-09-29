@@ -1,5 +1,6 @@
 extends Ability
-## Water-powered burst along the aim; values are percent of base distance. A horizontal burst also lifts a little so it
+## Water-powered burst along the aim; values are percent of base distance. A horizontal burst (exactly flat: the 8-way aim, or a
+## pointer within 10 degrees of it) also lifts a little so it
 ## clears small gaps. Held, it keeps going: an extended burst (a thrust along the latched aim while below the burst's own
 ## speed, 0.6 s at most) with a spray behind the slime. It stretches the burst; it does not fly.
 

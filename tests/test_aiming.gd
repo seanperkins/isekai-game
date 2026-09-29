@@ -1,5 +1,6 @@
 extends GutTest
-## Aimed skills: cast toward the held direction (8-way), or forward when nothing is held.
+## Aimed skills: cast toward the held direction (8-way for the left stick and keys; the right stick and the mouse are free, see
+## test_pointer_aim.gd), or forward when nothing is held.
 
 class FakeActor extends Node2D:
 	var team := "player"

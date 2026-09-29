@@ -31,8 +31,14 @@ const EAT_HEAL := 5
 const BASE_STATS := {"max_hp": 30, "atk": 1, "def": 0, "spd": 100, "max_mp": 20, "mp_regen": 100}
 const EAT_MP := 4
 const LEVEL_UP_BONUS := {"max_hp": 2, "max_mp": 1}
-## Stick/keys below this length cast forward instead of aiming.
+## The left stick or keys below this length cast forward instead of aiming (the right stick and the mouse have their own
+## deadzones: Controls.RIGHT_STICK_DEADZONE and MOUSE_DEADZONE).
 const AIM_DEADZONE := 0.35
+## sin(10 degrees): a pointer aim this close to an axis reads as exactly that axis, so the two "flat aim" checks
+## (Hydraulic's lift, apply_impulse's flat push) keep working, and a thumb's or a hand's wobble does not tilt a dash.
+const AXIS_SNAP := 0.17364817766693
+## A cursor closer than this (world px) to the origin does not aim: it would jitter at every step.
+const MOUSE_DEADZONE := 12.0
 const MAX_MP_PER_THREE_EATS := 2
 const LAND_SQUASH_SECONDS := 0.12
 const MAX_SWING_SPEED := 520.0
@@ -394,10 +400,8 @@ func do_inspect() -> void:
 	inspect_report.emit(StatusText.creature_lines(_compendium.creature_report(c.id, _rules.level_of("appraisal"))))
 
 func use_active(i: int) -> void:
-	if health.is_dead() or predation.active():
+	if not can_cast():
 		return
-	if _channel != null:
-		return  # a channel is live: release it first
 	var id := skillset.slots.use(i)
 	if id == "":
 		return
@@ -408,8 +412,8 @@ func use_active(i: int) -> void:
 		return  # on cooldown: costs nothing
 	var cost := FormEffects.mp_cost(skillset.capabilities, id, _rules.get_def(id).mp_cost)
 	ability.level = _rules.level_of(id)
-	# Nothing held: zero, so each ability uses its own default (forward, or up-forward for Swing).
-	ability.aim = aim_vector() if aim_held() else Vector2.ZERO
+	# Nothing held: zero, so each ability uses its own default (forward, or up-forward for Swing). Held includes the pointer.
+	ability.aim = cast_aim()
 	var channels := ability.can_channel()  # asked before anything is paid
 	if not mana.spend(cost):
 		not_enough_mp.emit(id)
@@ -651,7 +655,8 @@ static func resolve_aim(raw: Vector2, p_facing: int) -> Vector2:
 	var dir := Vector2.from_angle(snapped)
 	return Vector2(snappedf(dir.x, 0.0001), snappedf(dir.y, 0.0001)).normalized()
 
-## The held direction before snapping. The stick is read raw from the pad that last moved:
+## The left-stick-or-keys aim before snapping (the pointers, the right stick and the mouse, are deliberately excluded: see
+## cast_aim(); spread and the rope reel read this). The stick is read raw from the pad that last moved:
 ## Input.get_vector() applies the action deadzone first (so a light tilt read as "no aim"),
 ## and it merges every device (so a stale second pad could cancel the stick out).
 func raw_aim() -> Vector2:
@@ -664,6 +669,48 @@ func aim_held() -> bool:
 
 func aim_vector() -> Vector2:
 	return resolve_aim(raw_aim(), facing)
+
+## Tests set a world point here instead of moving the OS cursor.
+var pointer_override := Vector2.INF
+
+## Where the cursor points from the origin (the point skills fire from): ZERO unless the mouse was the last aimer, and the
+## cursor is at least MOUSE_DEADZONE away. get_global_mouse_position() applies the camera and zoom. Controls._input owns the
+## exclusion with the right stick (a pad input clears mouse_aim), so it is not re-checked here.
+func mouse_direction() -> Vector2:
+	if not Controls.mouse_aim:
+		return Vector2.ZERO
+	var cursor := get_global_mouse_position() if pointer_override == Vector2.INF else pointer_override
+	var d := cursor - global_position
+	return d if d.length() >= MOUSE_DEADZONE else Vector2.ZERO
+
+## The pointer's direction (the right stick, else the mouse): free (any angle) but for the axis snap, ZERO when neither is
+## engaged. The reticle and the cast both read this and nothing else.
+func free_aim() -> Vector2:
+	var s := Controls.right_stick()
+	if s == Vector2.ZERO:
+		s = mouse_direction()
+	if s == Vector2.ZERO:
+		return Vector2.ZERO
+	var d := s.normalized()
+	if absf(d.y) <= AXIS_SNAP:
+		return Vector2(signf(d.x), 0.0)
+	if absf(d.x) <= AXIS_SNAP:
+		return Vector2(0.0, signf(d.y))
+	return d
+
+## What a skill is fired along: the pointer if one is engaged, else the left stick or keys (8-way), else ZERO ("nothing
+## held": each ability uses its own default). raw_aim() is deliberately not touched, so a pointer never drives the puddle
+## spread or the rope reel.
+func cast_aim() -> Vector2:
+	var free := free_aim()
+	if free != Vector2.ZERO:
+		return free
+	return aim_vector() if aim_held() else Vector2.ZERO
+
+## A press on an active slot would do something now: today's guards, plus the evolve moment (unreachable in play, since
+## _physics_process returns before any cast while evolving).
+func can_cast() -> bool:
+	return not (health.is_dead() or predation.active() or _channel != null or evolving())
 
 ## `from` is the attacker's position for contact hits; the slime is knocked away from it.
 func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, _cause: String = "") -> void:
