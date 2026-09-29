@@ -24,13 +24,15 @@ Gamepad: left stick / D-pad move (stick also aims) · A jump · X tackle · B ho
 - [ ] Holding a direction while casting aims the skill (8-way); with nothing held it fires forward. Up + Hydraulic Propulsion = vertical boost.
 - [ ] Esc / Start opens the Skills screen (game pauses): stats, grouped skills with icons and level pips, detail card with MP cost and next-level bar. Q/E or LB/RB switch to Compendium. Enter / A on an active assigns it to U (again: O). Esc / B closes.
 - [ ] Downing and eating creatures earns XP (gold line under the slots); each level gives 1 EP, +2 max HP, +1 max MP.
-- [ ] When an evolution is ready the Great Sage announces it; spend EP on it in the skill screen to evolve.
+- [ ] A base skill that can evolve (Sticky Thread and Hydraulic Propulsion at level 3, Poison Breath and Spore Cloud at level 4) offers BOTH of its evolutions at once; the Great Sage announces them. In the Skills tab the card says what it replaces and what it closes; the first Enter arms it ("Press again to choose"), the second evolves. The other branch and the old skill disappear, and the new skill sits in the old one's slot. Moving the selection or closing the screen disarms it. Dying and being reborn reopens every branch.
 - [ ] Controller aiming: press Back to show the input overlay; tilt the stick and cast — "last cast" should show the aimed direction.
 - [ ] The cave scrolls in both directions: stair towers at x ~1400 and the far east lead up to the middle and upper tiers, and stairs above the upper tier reach the top gallery.
 - [ ] Sticky Thread aimed at rock (up, diagonal, or at a wall) sticks and draws a rope; you swing on it. Left/right pump, up/down reel, Jump lets go with your momentum.
 - [ ] Sticky Thread aimed at an enemy still slows/holds it. Aimed at nothing in range, it just flashes.
 - [ ] Upper tier swing gap: the three rocks with vines are anchors; chaining swings crosses the gap.
 - [ ] Evolving Swing Thread puts it in Sticky Thread's slot; its rope is longer and launches harder.
+- [ ] Binding Web (Sticky Thread's other branch) never ropes: it holds an enemy at once and leaves a pale web patch where the thread ends (at the enemy, at the rock, or at full range) that slows anything inside for 4 s.
+- [ ] Miasma: the poison cone plus a green cloud that lingers where it ends and poisons; Venom Bolt: an instant green line that hurts every enemy on it; Healing Spores: a cloud around you that heals 1 HP a second while you stand in it; Puffball: the cloud lands where a lob would land (floor, wall, or the end of the arc) and is wide.
 - [ ] HUD skill slots form one block top-right shaped like the pad: LT/RT on top, LB/RB under them; each shows the button, icon and name, and dims when you can't afford it.
 - [ ] Skill screen: the stick moves one row per push (hold to scroll slowly); A accepts; B closes.
 - [ ] Bestiary tab (third tab): creatures appear once seen on screen; appraising reveals stats/skills; eating shows essences and eat bonus; counts eaten and defeated; persists after death.
