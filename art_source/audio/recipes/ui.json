@@ -1,0 +1,22 @@
+{
+  "ui_open": {"dur": 0.18,
+    "layers": [{"osc": "sine", "f0": 400, "f1": 800, "amp": 0.5, "env": [0.005, 0.12]}],
+    "cue": {"bus": "UI", "volume_db": -10}},
+  "ui_close": {"dur": 0.18,
+    "layers": [{"osc": "sine", "f0": 800, "f1": 400, "amp": 0.5, "env": [0.005, 0.12]}],
+    "cue": {"bus": "UI", "volume_db": -10}},
+  "ui_move": {"dur": 0.08,
+    "layers": [{"osc": "sine", "f0": 1000, "amp": 0.4, "env": [0.002, 0.04]}],
+    "cue": {"bus": "UI", "volume_db": -14, "cooldown": 0.03}},
+  "ui_confirm": {"dur": 0.20,
+    "layers": [{"osc": "sine", "f0": 800, "amp": 0.5, "env": [0.002, 0.09]},
+               {"osc": "sine", "f0": 1200, "amp": 0.5, "delay": 0.04, "env": [0.002, 0.09]}],
+    "cue": {"bus": "UI", "volume_db": -10}},
+  "ui_denied": {"dur": 0.25,
+    "layers": [{"osc": "saw", "f0": 180, "f1": 140, "amp": 0.5, "lp": 900, "env": [0.003, 0.14]}],
+    "cue": {"bus": "UI", "volume_db": -10, "cooldown": 0.15}},
+  "ui_popup": {"dur": 0.50,
+    "layers": [{"osc": "sine", "f0": 880, "amp": 0.5, "env": [0.003, 0.25]},
+               {"osc": "sine", "f0": 1320, "amp": 0.5, "delay": 0.06, "env": [0.003, 0.25]}],
+    "cue": {"bus": "UI", "volume_db": -10}}
+}

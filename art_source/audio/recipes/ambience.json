@@ -1,0 +1,21 @@
+{
+  "amb_drip": {"dur": 0.5, "variants": 4,
+    "layers": [{"osc": "sine", "f0": 1800, "f1": 900, "amp": 0.6, "env": [0.001, 0.08]},
+               {"osc": "sine", "f0": 3600, "f1": 1800, "amp": 0.15, "env": [0.001, 0.05]}],
+    "cue": {"bus": "Ambience", "volume_db": -14, "pitch_jitter": 0.15, "positional": true}},
+  "amb_crystal_ping": {"dur": 1.6, "variants": 3,
+    "layers": [{"osc": "sine", "f0": 2093, "amp": 0.5, "env": [0.002, 1.2]},
+               {"osc": "sine", "f0": 3136, "amp": 0.25, "delay": 0.01, "env": [0.002, 0.9]}],
+    "cue": {"bus": "Ambience", "volume_db": -16, "pitch_jitter": 0.10, "positional": true}},
+  "amb_hum": {"dur": 3.0, "variants": 2,
+    "layers": [{"osc": "sine", "f0": 110, "amp": 0.5, "trem": [0.4, 0.5], "env": [0.8, 2.0]},
+               {"osc": "sine", "f0": 165, "amp": 0.25, "env": [0.8, 2.0]}],
+    "cue": {"bus": "Ambience", "volume_db": -18, "positional": true}},
+  "amb_bubble": {"dur": 0.4, "variants": 4,
+    "layers": [{"osc": "sine", "f0": 300, "f1": 900, "amp": 0.6, "env": [0.002, 0.15]}],
+    "cue": {"bus": "Ambience", "volume_db": -14, "pitch_jitter": 0.20, "positional": true}},
+  "amb_spore": {"dur": 1.0, "variants": 3,
+    "layers": [{"noise": "pink", "hp": 2000, "lp": 6000, "amp": 0.3, "env": [0.2, 0.5]},
+               {"osc": "sine", "f0": 1200, "f1": 1500, "amp": 0.15, "env": [0.2, 0.5]}],
+    "cue": {"bus": "Ambience", "volume_db": -16, "pitch_jitter": 0.10, "positional": true}}
+}

@@ -1,0 +1,15 @@
+{
+  "eat_cover": {"dur": 0.55,
+    "layers": [{"noise": "pink", "lp": 700, "amp": 0.7, "trem": [14, 0.6], "env": [0.02, 0.4]},
+               {"osc": "sine", "f0": 160, "f1": 90, "amp": 0.5, "env": [0.01, 0.4]}],
+    "cue": {"bus": "SFX_Player", "volume_db": -8, "cooldown": 0.30}},
+  "eat_absorb": {"dur": 0.35, "variants": 2,
+    "layers": [{"osc": "sine", "f0": 700, "f1": 900, "amp": 0.6, "env": [0.003, 0.22]},
+               {"osc": "sine", "f0": 1400, "f1": 1800, "amp": 0.25, "env": [0.003, 0.15]}],
+    "cue": {"bus": "SFX_Player", "volume_db": -10, "cooldown": 0.06,
+            "combo": {"step": 1.0, "window": 0.8, "max_steps": 7}}},
+  "eat_predated": {"dur": 0.6,
+    "layers": [{"osc": "sine", "f0": 300, "f1": 600, "amp": 0.5, "env": [0.01, 0.3]},
+               {"osc": "sine", "f0": 450, "f1": 900, "amp": 0.5, "delay": 0.1, "env": [0.01, 0.3]}],
+    "cue": {"bus": "SFX_Player", "volume_db": -6}}
+}
