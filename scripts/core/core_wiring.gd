@@ -10,6 +10,9 @@ static func connect_core(rules: SkillRulesEngine, compendium: CompendiumModel, a
 	rules.skill_leveled.connect(func(id: String, level: int) -> void:
 		if not rules.rechecking:  # an evolution re-check says one line instead (below)
 			announcer.push_level(id, level))
+	rules.skill_discovered.connect(func(id: String) -> void:
+		compendium.raise(id, CompendiumModel.State.OWNED_ONCE)
+		announcer.push_note("You understand %s." % compendium.skill_name(id)))
 	rules.rechecked.connect(func(levels_gained: int) -> void:
 		if levels_gained > 0:
 			announcer.push_note("Your skills grew."))

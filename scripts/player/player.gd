@@ -82,6 +82,7 @@ var form := Form.new()
 var forms := {}
 ## Seconds left of the evolution moment: a short lock and shield while the body changes.
 var _evolve_time := 0.0
+var _kit_starting := false
 var _animator: SlimeAnimator
 var _shapes: SlimeShapes
 var _shape: CollisionShape2D
@@ -484,7 +485,7 @@ func form_offers() -> Array:
 	var out: Array = []
 	if not progression.can_evolve():
 		return out
-	for id in FormOffers.offers(forms, form, FormOffers.absorbed_units(_rules), FormOffers.default_supply(forms)):
+	for id in FormOffers.offers(forms, form, FormOffers.absorbed_units(_rules, progression.seeded), FormOffers.default_supply(forms)):
 		out.append(forms[id])
 	return out
 
@@ -556,6 +557,13 @@ func _evolve_step(delta: float) -> void:
 	tick(delta)
 	_update_visual(delta)
 
+## Sets the character level a rebirth kit starts at (bonuses, no EP, no fanfare).
+func start_at_level(level: int) -> void:
+	_kit_starting = true
+	progression.start_at(level)
+	_kit_starting = false
+	_sync_max_hp()
+
 ## Grants XP directly (tests, and the --evolve launch shortcut).
 func debug_grant_xp(amount: int) -> void:
 	progression.add_xp(amount)
@@ -570,7 +578,8 @@ func _use_form_sheet(def: FormDef) -> void:
 			_sheet = _base_sheet
 
 func _on_leveled_up(level: int) -> void:
-	EventBus.world_event.emit("leveled_up", {"level": level})
+	if not _kit_starting:  # a rebirth kit's starting level makes no fanfare
+		EventBus.world_event.emit("leveled_up", {"level": level})
 	for stat in LEVEL_UP_BONUS:
 		stats.add_level_bonus(stat, LEVEL_UP_BONUS[stat])
 	_sync_max_hp()
@@ -743,6 +752,10 @@ func _nearest_in_group(group: String, range_px: float, accept: Callable):
 			best = n
 			best_d = d
 	return best
+
+## Re-reads max HP and MP from the stats (after a kit or a form changed them).
+func refresh_stats() -> void:
+	_sync_max_hp()
 
 func _sync_max_hp() -> void:
 	health.set_max_hp(stats.get_stat("max_hp"))

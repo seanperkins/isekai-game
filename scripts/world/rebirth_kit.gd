@@ -34,3 +34,26 @@ static func validate(kit: Dictionary, defs: Array = []) -> PackedStringArray:
 		elif int(kit["affinity"][e]) < 0:
 			errs.append("kit affinity for '%s' has negative units" % e)
 	return errs
+
+## Gives the kit to a player at the start of a life, AFTER SkillRules.start_run() (which clears everything
+## first). Skills are granted quietly, so the skill set is refreshed, actives are slotted and the Compendium
+## raised to NAMED here; a starting level gives its bonuses but no EP; seeded affinity counts for the first
+## evolution only.
+static func apply(player: Player, rules: SkillRulesEngine, compendium: CompendiumModel, kit: Dictionary) -> void:
+	var granted: Array = []
+	for id in kit.get("skills", []):
+		if rules.grant(id, false):
+			granted.append(id)
+			if compendium != null:
+				compendium.raise(id, CompendiumModel.State.NAMED)
+	player.skillset.refresh()
+	for id in granted:
+		var d: SkillDef = rules.get_def(id)
+		if d != null and SkillEffects.active_scene(d) != "":
+			player.skillset.slots.add(id)
+	if kit.has("level"):
+		player.start_at_level(int(kit["level"]))
+	var seeds: Dictionary = kit.get("affinity", {})
+	for e in seeds:
+		player.progression.seeded[e] = int(player.progression.seeded.get(e, 0)) + int(seeds[e])
+	player.refresh_stats()
