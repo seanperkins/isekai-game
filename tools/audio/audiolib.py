@@ -15,7 +15,7 @@ import tempfile
 import wave
 
 RATE = 44100
-TARGET_LUFS = {"music": -20.0, "ambience": -24.0}
+TARGET_LUFS = {"music": -23.0, "ambience": -27.0}  # 3 dB under the first pass: Sean found the beds a little loud
 LUFS_TOLERANCE = 2.0
 SFX_PEAK_DB = -2.0       # SFX are peak-normalised; the catalog's volume_db balances them
 PEAK_CEILING_DB = -1.0   # nothing built may peak above this once encoded

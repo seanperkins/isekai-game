@@ -163,7 +163,7 @@ art_source/audio/beds/<biome>.json ─gen_bed.py─▶  art_source/audio/raw/   
   non-zero.
 - **Loudness targets:** SFX are peak-normalised to −2 dBFS and balanced by each cue's `volume_db`
   (LUFS is not meaningful for clips under half a second, and transient sounds cannot reach −16 LUFS
-  under the peak ceiling). Music is about −20 LUFS and ambience about −24 LUFS. Nothing peaks
+  under the peak ceiling). Music is about −23 LUFS and ambience about −27 LUFS (3 dB under the first targets of −20 and −24; Sean found the beds a little loud). Nothing peaks
   above −1 dBTP, measured as sample peak after encoding.
 - **Encoding:** Ogg Vorbis, stereo, through ffmpeg's native `vorbis` encoder (`-strict -2`), which
   accepts two channels only. Mono sources are duplicated to stereo.
