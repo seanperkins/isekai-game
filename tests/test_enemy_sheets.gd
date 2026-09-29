@@ -2,7 +2,7 @@ extends GutTest
 ## The four creature sheets: every listed frame is there at the listed scale, standing on the floor
 ## line, with shapes inside the frame, and every clip uses frames that exist.
 
-const SETS := ["bat", "toad", "lizard", "spider", "spore_moth", "mushroom_crab", "vine_snake"]
+const SETS := ["bat", "toad", "lizard", "spider", "spore_moth", "mushroom_crab", "vine_snake", "pale_moth"]
 
 func _listed(set_name: String) -> Dictionary:
 	var json := JSON.new()
@@ -62,6 +62,7 @@ func test_every_clip_uses_frames_that_exist_and_every_state_has_a_clip() -> void
 		"lizard": ["idle", "walk", "windup", "charge", "rest", "stunned", "hurt", "downed"],
 		"spider": ["hang", "drop", "crawl", "stunned", "hurt", "downed"],
 		"spore_moth": ["fly", "stunned", "hurt", "downed"],
+		"pale_moth": ["fly", "stunned", "hurt", "downed"],
 		"mushroom_crab": ["idle", "walk", "windup", "charge", "rest", "stunned", "hurt", "downed"],
 		"vine_snake": ["hide", "coil", "lunge", "rest", "slither", "stunned", "hurt", "downed"]}
 	for set_name in SETS:

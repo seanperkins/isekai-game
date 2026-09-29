@@ -54,9 +54,33 @@ def anchor_scale(im, width):
     return width / cropped(im).width
 
 
-def fit_scaled(im, scale):
-    """Key, crop, and scale by a shared factor (BOX), then crisp the alpha."""
-    c = cropped(im)
+def apply_look(im, look):
+    """Blend the RGB of the opaque pixels toward white (`lighten`, 0..1) and then toward a colour (`tint` [r,g,b]
+    by `tint_amount`). Runs on the KEYED, cropped image so the magenta key is already gone and never drifts."""
+    if not look:
+        return im
+    im = im.copy()
+    px = im.load()
+    lighten = float(look.get("lighten", 0.0))
+    tint = look.get("tint")
+    amount = float(look.get("tint_amount", 0.0))
+    for y in range(im.height):
+        for x in range(im.width):
+            r, g, b, al = px[x, y]
+            if al == 0:
+                continue
+            rgb = [r, g, b]
+            if lighten:
+                rgb = [v + (255 - v) * lighten for v in rgb]
+            if tint and amount:
+                rgb = [v + (t - v) * amount for v, t in zip(rgb, tint)]
+            px[x, y] = tuple(int(round(v)) for v in rgb) + (al,)
+    return im
+
+
+def fit_scaled(im, scale, look=None):
+    """Key, crop, apply a `look` (see apply_look), and scale by a shared factor (BOX), then crisp the alpha."""
+    c = apply_look(cropped(im), look)
     size = (max(1, round(c.width * scale)), max(1, round(c.height * scale)))
     return crisp_alpha(c.resize(size, Image.BOX))
 
@@ -196,14 +220,17 @@ def main():
     data = json.load(open("tools/art/%s_frames.json" % rig_set))
     fitted, shapes = {}, {}
     scale = None
+    # a derived set (e.g. the Pale Moth) reads another set's source frames and lightens/tints the keyed crop
+    src_set = data.get("derive_from", rig_set)
+    look = {k: data[k] for k in ("lighten", "tint", "tint_amount") if k in data}
     if "anchor" in data:  # one shared scale, so a stretched or wing-raised frame is not blown up to a fixed width
         by_name = {f["name"]: f for f in data["frames"]}
-        scale = anchor_scale(Image.open(os.path.join(SRC, rig_set, data["anchor"] + ".png")), by_name[data["anchor"]]["width"])
+        scale = anchor_scale(Image.open(os.path.join(SRC, src_set, data["anchor"] + ".png")), by_name[data["anchor"]]["width"])
     for f in data["frames"]:
-        src = os.path.join(SRC, rig_set, f["name"] + ".png")
+        src = os.path.join(SRC, src_set, f["name"] + ".png")
         if not os.path.exists(src):
             raise SystemExit("missing %s (generate it first)" % src)
-        fitted[f["name"]] = fit_scaled(Image.open(src), scale) if scale else fit_frame(Image.open(src), f["width"])
+        fitted[f["name"]] = fit_scaled(Image.open(src), scale, look) if scale else fit_frame(Image.open(src), f["width"])
         shapes[f["name"]] = trace(fitted[f["name"]], f.get("attack_from"))
     sheet, rects = pack(fitted)
     os.makedirs(OUT, exist_ok=True)

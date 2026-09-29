@@ -136,5 +136,34 @@ class AssembleFramesTest(unittest.TestCase):
         self.assertEqual(set(rects), set(frames))
 
 
+class DeriveTests(unittest.TestCase):
+    def test_lightening_runs_on_the_keyed_crop_so_the_key_is_still_removed(self):
+        im = frame(20, 20, (5, 5, 15, 15))
+        out = a.fit_scaled(im, 1.0, {"lighten": 0.5})
+        self.assertEqual(out.size, (10, 10))
+        # every pixel is opaque: the magenta background was keyed and cropped away BEFORE any blending
+        self.assertTrue(all(p[3] == 255 for p in out.getdata()))
+
+    def test_lightening_blends_rgb_toward_white_and_keeps_alpha(self):
+        im = frame(20, 20, (5, 5, 15, 15))
+        plain = a.fit_scaled(im, 1.0)
+        lighter = a.fit_scaled(im, 1.0, {"lighten": 0.5})
+        p, q = plain.getpixel((2, 2)), lighter.getpixel((2, 2))
+        for c in (0, 1):  # BLUE's blue channel is already 255
+            self.assertGreater(q[c], p[c])
+        self.assertEqual(q[3], p[3])
+        self.assertEqual(q[:3], tuple(round(v + (255 - v) * 0.5) for v in p[:3]))
+
+    def test_a_tint_blends_toward_its_colour_by_its_amount(self):
+        im = frame(20, 20, (5, 5, 15, 15))
+        out = a.fit_scaled(im, 1.0, {"tint": [200, 190, 255], "tint_amount": 0.5})
+        px = out.getpixel((2, 2))
+        self.assertEqual(px[:3], tuple(round(v + (t - v) * 0.5) for v, t in zip(BLUE[:3], (200, 190, 255))))
+
+    def test_no_look_changes_nothing(self):
+        im = frame(20, 20, (5, 5, 15, 15))
+        self.assertEqual(list(a.fit_scaled(im, 1.0).getdata()), list(a.fit_scaled(im, 1.0, None).getdata()))
+
+
 if __name__ == "__main__":
     unittest.main()

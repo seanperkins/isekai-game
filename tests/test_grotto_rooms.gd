@@ -198,3 +198,79 @@ func test_g2s_west_piece_reaches_the_g1_sill_and_its_east_piece_reaches_out_too(
 					reached.append(q)
 					frontier.append(q)
 		assert_true(reached.has(sill), "from %s the G1 sill is reachable" % [start])
+
+# --- the optional slice: G5 and its wall-cling gate ---
+
+func test_g5_holds_one_pale_moth_and_is_gated_off_the_ungated_route() -> void:
+	var g5: RoomDef = rooms["G5"]
+	assert_eq(g5.cell, Vector2i(7, 7))
+	assert_eq(g5.area, "grotto")
+	assert_eq(g5.spawns.map(func(s): return s["id"]), ["pale_moth"])
+	assert_true((rooms["G3"] as RoomDef).exits.any(func(e): return e["room"] == "G5" and e.get("gate", "") == "wall_cling"))
+	assert_false(_reach_ungated().has("G5"))
+	assert_eq(_first_time(["G5"]), 16, "the pale moth is worth 16 first time and never counts toward the pacing")
+
+## The highest jump apex a body can reach from a stage-1 or stage-2 form: Leap at the stage's cap plus the best
+## jump_height bonus among that stage's forms, from Player's own jump constants.
+func _max_apex_stages_1_and_2() -> float:
+	var leap: SkillDef = null
+	for d in DefLoader.load_dir("res://data/skills"):
+		if d.id == "leap":
+			leap = d
+	var forms := FormLoader.load_all()
+	var best := 0.0
+	for stage in [1, 2]:
+		var cap: int = Form.STAGE_CAPS[stage - 1]
+		var jump_height := 100 + int(SkillEffects.value_at(leap.effects[0], cap))
+		var form_bonus := 0
+		for f in forms.values():
+			if (f as FormDef).stage == stage:
+				form_bonus = maxi(form_bonus, int((f as FormDef).stats.get("jump_height", 0)))
+		var boost := sqrt(float(jump_height + form_bonus) / 100.0)
+		var v: float = -Player.JUMP_VELOCITY * boost
+		best = maxf(best, v * v / (2.0 * Player.GRAVITY))
+	return best
+
+func test_the_chimney_screens_the_g5_opening_below_every_early_jump() -> void:
+	var g3: RoomDef = rooms["G3"]
+	var opening: Dictionary = {}
+	for e in g3.exits:
+		if e["room"] == "G5":
+			opening = e
+	assert_false(opening.is_empty())
+	var lip: float = opening["to"]  # the opening's lower lip (its sill), in G3's local y
+	var t := _max_apex_stages_1_and_2() + 3.0
+	assert_almost_eq(t, 96.775, 0.01, "Leap 8 plus Echo's +10 gives 93.775, plus the 3 px margin")
+	# the hanging wall: thin (<= 20 wide), from the ceiling band down to at least T below the lip
+	var wall := Rect2()
+	for s: Rect2 in g3.solids:
+		if s.size.x <= 20.0 and s.size.y > 24.0 and s.position.y <= RoomDef.WALL + 1.0 and s.position.x < 200.0:
+			wall = s
+	assert_gt(wall.size.x, 0.0, "the chimney's hanging wall exists")
+	assert_gte(wall.end.y, lip + t, "it hangs at least T below the lip (%.1f)" % (lip + t))
+	# nothing between the hanging wall and the west wall above its bottom (no ledge inside the chimney)
+	for s: Rect2 in g3.solids:
+		if s == wall:
+			continue
+		assert_false(Rect2(RoomDef.WALL, 0, wall.position.x - RoomDef.WALL, wall.end.y).intersects(s), "a solid inside the chimney: %s" % s)
+
+func test_no_base_jump_path_reaches_the_g5_sill() -> void:
+	var g3: RoomDef = rooms["G3"]
+	var sill := Rect2(-20, 320, 40, 1)
+	var rock: Array = []
+	for w in RoomBuilder.edge_walls(g3.pixel_size(), g3.exits):
+		rock.append(w["rect"])
+	for s in g3.solids:
+		rock.append(s)
+	var surfaces: Array = g3.solids.filter(func(s: Rect2) -> bool: return s.size.y <= 24.0 and s.size.x > 20.0)
+	surfaces.append(sill)
+	var reached: Array = []
+	var frontier: Array = [Rect2(RoomDef.WALL, 680, g3.pixel_size().x - 2.0 * RoomDef.WALL, 1)]
+	while not frontier.is_empty():
+		var p: Rect2 = frontier.pop_back()
+		for q: Rect2 in surfaces:
+			if not reached.has(q) and _hop(rock, p, q):
+				reached.append(q)
+				frontier.append(q)
+	assert_false(reached.has(sill), "the opening is beyond every base jump")
+

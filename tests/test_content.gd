@@ -21,7 +21,7 @@ func _creature(id: String) -> CreatureDef:
 
 func test_all_content_validates() -> void:
 	assert_eq(skills.size(), 24)
-	assert_eq(creatures.size(), 9)
+	assert_eq(creatures.size(), 10)
 	assert_eq(Array(DefValidator.validate(skills, creatures)), [])
 
 func test_spec_numbers_are_verbatim() -> void:

@@ -60,5 +60,11 @@
     "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
     "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
     "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
+  },
+  "pale_moth": {
+    "fly": {"frames": ["fly_1", "fly_2", "fly_3", "fly_4"], "fps": 10.0, "loop": true},
+    "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
+    "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
+    "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
   }
 }

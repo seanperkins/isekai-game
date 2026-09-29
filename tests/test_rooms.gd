@@ -11,7 +11,7 @@ func before_all() -> void:
 func test_the_world_has_the_cave_and_the_grotto_and_validates() -> void:
 	var ids := rooms.keys()
 	ids.sort()
-	assert_eq(ids, ["C1", "C2", "C3", "C4", "C5", "C6", "G1", "G2", "G3", "G4"])
+	assert_eq(ids, ["C1", "C2", "C3", "C4", "C5", "C6", "G1", "G2", "G3", "G4", "G5"])
 	assert_eq("\n".join(WorldValidator.validate(rooms)), "")
 	assert_true(rooms["C1"].is_start())
 

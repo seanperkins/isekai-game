@@ -60,7 +60,7 @@ static func _dress(piece: String, pos: Vector2, factor: float, flip := false) ->
 	return d
 
 static func rooms() -> Array:
-	return [c1(), c2(), c3(), c4(), c5(), c6(), g1(), g2(), g3(), g4()]
+	return [c1(), c2(), c3(), c4(), c5(), c6(), g1(), g2(), g3(), g4(), g5()]
 
 ## C1 Start (2×1): the original lower hall. Floor top 320.
 static func c1() -> RoomDef:
@@ -251,8 +251,10 @@ static func g2() -> RoomDef:
 ## and a climb to the upper level and the exit to G4.
 static func g3() -> RoomDef:
 	var f := {"id": "G3", "area": "grotto", "cell": Vector2i(8, 7), "size": Vector2i(2, 2),
-		"exits": [_exit("top", 160, 320, "G2"), _exit("right", 200, 320, "G4")],
-		"solids": [Rect2(400, 560, 300, 32), Rect2(720, 560, 200, 32)],  # overhangs the snakes hang from (mass, not ledges)
+		"exits": [_exit("top", 160, 320, "G2"), _exit("right", 200, 320, "G4"), _exit("left", 200, 320, "G5", {"gate": "wall_cling"})],
+		# overhangs the snakes hang from (mass, not ledges); and the chimney's hanging wall: it drops from the ceiling to
+		# y 420, 100 px below the G5 opening's sill (y 320), so the shaft between it and the west wall can only be climbed
+		"solids": [Rect2(400, 560, 300, 32), Rect2(720, 560, 200, 32), Rect2(108, 20, 16, 400)],
 		"decor": [_gl("glow_fungus", Vector2(360, 680)), _gl("glow_fungus", Vector2(880, 680)), _lit("grotto_flowers", Vector2(560, 680), GOLD),
 			_lit("grotto_crystal_rose", Vector2(1000, 680), ROSE), _hang("grotto_lichen_hang", Vector2(480, 20)), _hang("grotto_lichen_hang", Vector2(880, 20)),
 			_hang("grotto_root_hang", Vector2(560, 592)), _hang("grotto_root_hang", Vector2(800, 592))],
@@ -287,3 +289,16 @@ static func g4() -> RoomDef:
 		"spawns": [_s("spore_moth", Vector2(180, 190)), _s("spore_moth", Vector2(340, 170)), _s("spore_moth", Vector2(500, 200)),
 			_s("mushroom_crab", Vector2(150, 308)), _s("mushroom_crab", Vector2(260, 308)), _s("mushroom_crab", Vector2(560, 308))]}
 	return _room(f)
+
+## G5 Pale Moth (1×1, cell (7,7)): the rare room, reached only by wall cling up the chimney in G3. The Pale Moth drifts here.
+static func g5() -> RoomDef:
+	var f := {"id": "G5", "area": "grotto", "cell": Vector2i(7, 7), "size": Vector2i(1, 1),
+		"exits": [_exit("right", 200, 320, "G3", {"gate": "wall_cling"})],
+		"solids": [Rect2(100, 266, 110, 12), Rect2(250, 214, 110, 12)],
+		"decor": [_gl("glow_fungus", Vector2(150, 266)), _lit("grotto_crystal_prism", Vector2(300, 214), PRISM), _lit("grotto_flowers", Vector2(450, 320), GOLD),
+			_hang("grotto_lichen_hang", Vector2(250, 20)), _hang("grotto_root_hang", Vector2(520, 20))],
+		"dressing": [_dress("glowing_mushroom_cluster", Vector2(300, 330), 0.5), _dress("mushroom_cap_pillar", Vector2(120, 330), 0.3),
+			_dress("hanging_spore_moss", Vector2(200, 20), 0.7), _dress("vine_curtain", Vector2(460, 20), 0.6), _dress("spore_pod", Vector2(540, 330), 0.5)],
+		"spawns": [_s("pale_moth", Vector2(320, 190))]}
+	return _room(f)
+

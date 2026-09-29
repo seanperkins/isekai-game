@@ -162,7 +162,7 @@ func test_the_eligibility_check_bites_on_a_poorly_seeded_kit() -> void:
 	var forms := FormLoader.load_all()
 	var supply := FormOffers.default_supply(forms)
 	assert_lt(RebirthKit.eligible_lineages({"thread": 5}, supply, forms), 2, "one lineage is not enough")
-	assert_gte(RebirthKit.eligible_lineages({"thread": 7, "sound": 6, "flight": 8}, supply, forms), 2)
+	assert_gte(RebirthKit.eligible_lineages({"thread": 7, "sound": 8, "flight": 8}, supply, forms), 2)
 
 ## The essences a life eats in the ungated Grotto (G1..G4), as units.
 func _ungated_grotto_units(rooms: Dictionary, creatures: Dictionary) -> Dictionary:

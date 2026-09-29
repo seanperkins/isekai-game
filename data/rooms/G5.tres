@@ -1,0 +1,63 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_c1ih6"]
+
+[resource]
+script = ExtResource("1_c1ih6")
+id = "G5"
+area = "grotto"
+cell = Vector2i(7, 7)
+solids = [Rect2(100, 266, 110, 12), Rect2(250, 214, 110, 12)]
+decor = [{
+"id": "grotto_glow_fungus",
+"light": Color(0.5, 1, 0.6, 1),
+"pos": Vector2(150, 266)
+}, {
+"id": "grotto_crystal_prism",
+"light": Color(0.95, 0.85, 1, 1),
+"pos": Vector2(300, 214)
+}, {
+"id": "grotto_flowers",
+"light": Color(1, 0.85, 0.4, 1),
+"pos": Vector2(450, 320)
+}, {
+"anchor": "top",
+"id": "grotto_lichen_hang",
+"pos": Vector2(250, 20)
+}, {
+"anchor": "top",
+"id": "grotto_root_hang",
+"pos": Vector2(520, 20)
+}]
+dressing = [{
+"factor": 0.5,
+"piece": "glowing_mushroom_cluster",
+"pos": Vector2(300, 330)
+}, {
+"factor": 0.3,
+"piece": "mushroom_cap_pillar",
+"pos": Vector2(120, 330)
+}, {
+"factor": 0.7,
+"piece": "hanging_spore_moss",
+"pos": Vector2(200, 20)
+}, {
+"factor": 0.6,
+"piece": "vine_curtain",
+"pos": Vector2(460, 20)
+}, {
+"factor": 0.5,
+"piece": "spore_pod",
+"pos": Vector2(540, 330)
+}]
+spawns = [{
+"id": "pale_moth",
+"pos": Vector2(320, 190)
+}]
+exits = [{
+"edge": "right",
+"from": 200.0,
+"gate": "wall_cling",
+"room": "G3",
+"to": 320.0
+}]

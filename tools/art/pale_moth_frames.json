@@ -1,0 +1,48 @@
+{
+ "derive_from": "spore_moth",
+ "lighten": 0.3,
+ "tint": [
+  205,
+  195,
+  255
+ ],
+ "tint_amount": 0.45,
+ "anchor": "fly_1",
+ "frames": [
+  {
+   "name": "fly_1",
+   "width": 42,
+   "refs": []
+  },
+  {
+   "name": "fly_2",
+   "width": 50,
+   "refs": []
+  },
+  {
+   "name": "fly_3",
+   "width": 42,
+   "refs": []
+  },
+  {
+   "name": "fly_4",
+   "width": 39,
+   "refs": []
+  },
+  {
+   "name": "stunned",
+   "width": 39,
+   "refs": []
+  },
+  {
+   "name": "hurt",
+   "width": 42,
+   "refs": []
+  },
+  {
+   "name": "downed",
+   "width": 45,
+   "refs": []
+  }
+ ]
+}

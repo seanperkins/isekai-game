@@ -30,7 +30,7 @@ func test_only_the_lizard_and_crab_are_armored_chargers_and_only_moths_drift() -
 	for id in creatures:
 		var c: CreatureDef = creatures[id]
 		assert_eq(c.armored_charger, id == "lizard" or id == "mushroom_crab", id)
-		assert_eq(c.drifter, id == "spore_moth", id)
+		assert_eq(c.drifter, id == "spore_moth" or id == "pale_moth", id)
 
 func test_the_two_skills_match_the_spec() -> void:
 	var sc: SkillDef = skills["spore_cloud"]
