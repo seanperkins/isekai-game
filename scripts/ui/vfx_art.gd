@@ -48,8 +48,8 @@ static func crescent() -> Texture2D:
 		var img := Image.create(96, 48, false, Image.FORMAT_RGBA8)
 		for y in 48:
 			for x in 96:
-				var outer := Vector2(x - 24.0, y - 24.0).length()  # the big circle
-				var inner := Vector2(x - 40.0, y - 24.0).length()  # bites the crescent out of it
+				var outer := Vector2(x - 36.0, y - 24.0).length()  # the big circle: its bulge leads, toward +x
+				var inner := Vector2(x - 20.0, y - 24.0).length()  # bites the crescent out of its back; the horns trail behind
 				var a := clampf((24.0 - outer) / 6.0, 0.0, 1.0) * clampf((inner - 20.0) / 6.0, 0.0, 1.0)
 				if a > 0.0:
 					var rim := clampf(1.0 - (24.0 - outer) / 10.0, 0.0, 1.0)
