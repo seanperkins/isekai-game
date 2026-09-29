@@ -24,6 +24,7 @@ static func validate(skills: Array, creatures: Array) -> PackedStringArray:
 		by_id[d.id] = d
 	for d in by_id.values():
 		_check_skill(d, by_id, errors)
+	_check_siblings(by_id, errors)
 	_check_cycles(by_id, errors)
 	_check_creatures(creatures, by_id, errors)
 	return errors
@@ -77,6 +78,40 @@ static func _check_skill(d: SkillDef, by_id: Dictionary, errors: PackedStringArr
 		errors.append("%s: player active skill needs a positive mp_cost" % w)
 	if d.replaces != "" and not d.parent_ids().has(d.replaces):
 		errors.append("%s: replaces '%s', which is not a parent" % [w, d.replaces])
+	if d.source == "evolution":
+		_check_evolution(w, d, by_id, errors)
+
+## An evolution turns its parent into it: one skill_level unlock on the parent, single-level, an active, never starting.
+static func _check_evolution(w: String, d: SkillDef, by_id: Dictionary, errors: PackedStringArray) -> void:
+	if d.replaces == "":
+		errors.append("%s: an evolution needs replaces (the parent it turns into)" % w)
+	elif by_id.has(d.replaces):
+		var parent: SkillDef = by_id[d.replaces]
+		if parent.source == "evolution":
+			errors.append("%s: replaces '%s', which is itself an evolution" % [w, d.replaces])
+		elif SkillEffects.active_scene(parent) == "":
+			errors.append("%s: replaces '%s', which has no active scene" % [w, d.replaces])
+	if SkillEffects.active_scene(d) == "":
+		errors.append("%s: an evolution needs an active scene" % w)
+	if d.starting:
+		errors.append("%s: an evolution must not be starting (only evolve() takes it)" % w)
+	if d.unlock.size() != 1 or d.unlock[0].get("kind", "") != "skill_level" or d.unlock[0].get("id", "") != d.replaces:
+		errors.append("%s: an evolution's unlock is exactly one skill_level condition on its replaces" % w)
+	if d.max_level != 1 or not d.levels_on.is_empty():
+		errors.append("%s: an evolution is single-level (max_level 1, no levels_on)" % w)
+
+## Evolutions that share a parent unlock at the same parent level, so they are offered together.
+static func _check_siblings(by_id: Dictionary, errors: PackedStringArray) -> void:
+	var first := {}  # parent id -> [evolution id, n]
+	for d in by_id.values():
+		if d.source != "evolution" or d.replaces == "" or d.unlock.size() != 1:
+			continue
+		var n := int(d.unlock[0].get("n", 0))
+		if not first.has(d.replaces):
+			first[d.replaces] = [d.id, n]
+		elif first[d.replaces][1] != n:
+			errors.append("%s: evolutions of '%s' must unlock at the same level (%s needs %d, %s needs %d)" % [
+				_where(d), d.replaces, first[d.replaces][0], first[d.replaces][1], d.id, n])
 
 static func _check_event_ref(w: String, field: String, event: String, tags: Dictionary, errors: PackedStringArray) -> void:
 	if not Events.ALL.has(event):

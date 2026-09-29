@@ -50,7 +50,7 @@ func test_a_full_run_then_death_then_second_run() -> void:
 	_emit("damaged", {"damage_type": "poison"}, 6)       # Poison Resistance; also resets Glutton streak
 	for i in 2:
 		_eat("water_pool", {"water": 2}, "terrain")      # Hydraulic Propulsion (4 water)
-	_emit("skill_used", {"id": "hydraulic_propulsion"}, 6)  # Lv2 -> Water Blade is ready
+	_emit("skill_used", {"id": "hydraulic_propulsion"}, 12)  # Lv3 -> Water Blade and Jet Dash are ready
 	assert_true(rules.is_evolution_ready("water_blade"))
 	assert_true(rules.evolve("water_blade"))  # the player would spend 1 EP
 

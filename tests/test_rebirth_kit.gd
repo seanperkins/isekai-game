@@ -143,7 +143,7 @@ func test_applying_a_kit_after_a_second_run_start_does_not_stack() -> void:
 func test_a_granted_skills_dependants_stay_locked_until_earned() -> void:
 	RebirthKit.apply(player, rules, compendium, {"skills": ["wall_cling", "sticky_thread"]})
 	assert_false(rules.owned().has("swing_thread"))
-	assert_false(rules.is_evolution_ready("swing_thread"), "Swing Thread needs Wall Cling 2 and Sticky Thread 3")
+	assert_false(rules.is_evolution_ready("swing_thread"), "Swing Thread needs Sticky Thread 3")
 	assert_eq(rules.level_of("wall_cling"), 1)
 
 func test_an_empty_kit_changes_nothing() -> void:

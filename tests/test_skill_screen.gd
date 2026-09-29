@@ -68,7 +68,7 @@ func test_condition_text_is_readable() -> void:
 	assert_eq(SkillScreenModel.condition_text(by_id["leap"], by_id), "Jump ×40")
 	assert_eq(SkillScreenModel.condition_text(by_id["echolocation"], by_id), "Absorb sound essence ×3")
 	assert_eq(SkillScreenModel.condition_text(by_id["glutton"], by_id), "Eat creatures in a row without taking damage ×5")
-	assert_eq(SkillScreenModel.condition_text(by_id["jet_dash"], by_id), "Hydraulic Propulsion Lv3 and Leap Lv2")
+	assert_eq(SkillScreenModel.condition_text(by_id["jet_dash"], by_id), "Hydraulic Propulsion Lv3")
 
 func test_detail_card_for_an_active() -> void:
 	_emit("absorbed", {"essence": "poison"}, 4)

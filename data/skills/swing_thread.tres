@@ -13,10 +13,6 @@ unlock = [{
 "id": "sticky_thread",
 "kind": "skill_level",
 "n": 3
-}, {
-"id": "wall_cling",
-"kind": "skill_level",
-"n": 2
 }]
 effects = [{
 "kind": "active",

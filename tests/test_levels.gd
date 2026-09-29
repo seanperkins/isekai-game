@@ -94,22 +94,23 @@ func test_evolution_waits_until_ep_is_spent() -> void:
 	var ready: Array = []
 	rules.evolution_ready.connect(func(id: String) -> void: ready.append(id))
 	_emit("absorbed", {"essence": "water"}, 4)
-	_emit("skill_used", {"id": "hydraulic_propulsion"}, 6)  # Lv2: Water Blade's condition
+	_emit("skill_used", {"id": "hydraulic_propulsion"}, 12)  # Lv3: both branches open together
 	assert_eq(rules.level_of("water_blade"), 0)
-	assert_true(rules.is_evolution_ready("water_blade"))
-	assert_eq(ready, ["water_blade"])
+	assert_true(rules.is_evolution_ready("water_blade") and rules.is_evolution_ready("jet_dash"))
+	assert_eq(ready.size(), 2)
 	_emit("skill_used", {"id": "hydraulic_propulsion"}, 6)
-	assert_eq(ready, ["water_blade"])  # announced once
+	assert_eq(ready.size(), 2)  # announced once each
 	assert_eq(rules.evolution_cost("water_blade"), 1)
-	assert_eq(rules.evolution_cost("jet_dash"), 2)
+	assert_eq(rules.evolution_cost("jet_dash"), 1)
 	assert_true(rules.evolve("water_blade"))
 	assert_eq(rules.level_of("water_blade"), 1)
 	assert_false(rules.evolve("water_blade"))
-	assert_false(rules.evolve("jet_dash"))  # not ready
+	assert_false(rules.evolve("jet_dash"))  # closed: its sibling was taken
+	assert_true(rules.is_closed("jet_dash"))
 
 func test_player_evolves_only_with_enough_ep() -> void:
 	_emit("absorbed", {"essence": "water"}, 4)
-	_emit("skill_used", {"id": "hydraulic_propulsion"}, 6)
+	_emit("skill_used", {"id": "hydraulic_propulsion"}, 12)
 	assert_false(player.try_evolve("water_blade"))
 	player.award_xp(10)
 	assert_true(player.try_evolve("water_blade"))
@@ -119,22 +120,25 @@ func test_player_evolves_only_with_enough_ep() -> void:
 
 func test_ready_evolution_is_announced_and_named_in_the_compendium() -> void:
 	_emit("absorbed", {"essence": "water"}, 4)
-	_emit("skill_used", {"id": "hydraulic_propulsion"}, 6)
+	_emit("skill_used", {"id": "hydraulic_propulsion"}, 12)
 	var texts: Array = announcer.pending().map(func(p): return p.get("text", ""))
 	assert_true(texts.any(func(t): return t.contains("Evolution available") and t.contains("Water Blade")))
 	assert_eq(compendium.state("water_blade"), CompendiumModel.State.NAMED)
 
 func test_skill_screen_lists_ready_evolutions_and_evolves_on_accept() -> void:
 	_emit("absorbed", {"essence": "water"}, 4)
-	_emit("skill_used", {"id": "hydraulic_propulsion"}, 6)
+	_emit("skill_used", {"id": "hydraulic_propulsion"}, 12)
 	player.award_xp(10)
 	var screen := SkillScreen.new()
 	add_child_autofree(screen)
 	screen.bind(player, rules, compendium, skills_by_id.values())
 	screen.open()
 	assert_true(screen.row_texts().has("Water Blade  EVOLVE 1 EP"))
-	while screen.selected_id() != "water_blade":
+	var guard := 0
+	while screen.selected_id() != "water_blade" and guard < 60:
 		screen.move(1)
+		guard += 1
+	assert_eq(screen.selected_id(), "water_blade")
 	assert_string_contains("\n".join(screen.detail_texts()), "Ready to evolve")
 	assert_string_contains(screen.hint_text(), "Evolve")
 	screen.accept()
@@ -153,9 +157,7 @@ func test_hud_shows_level_xp_and_ep_and_enemies_award_xp_in_game() -> void:
 
 func test_locked_teaser_ignores_evolutions_that_are_ready() -> void:
 	_emit("absorbed", {"essence": "water"}, 4)
-	_emit("skill_used", {"id": "hydraulic_propulsion"}, 6)
-	_emit("skill_used", {"id": "hydraulic_propulsion"}, 6)  # Lv3
-	_emit("jumped", {}, 80)  # Leap Lv2: Jet Dash ready too
+	_emit("skill_used", {"id": "hydraulic_propulsion"}, 12)  # Lv3: Water Blade and Jet Dash are ready together
 	var rows := SkillScreenModel.skill_rows(rules, skills_by_id.values())
 	var evo_start := rows.find(rows.filter(func(r): return r.get("text") == "EVOLUTION")[0])
 	var evo_rows := rows.slice(evo_start + 1)

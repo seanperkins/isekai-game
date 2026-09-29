@@ -145,5 +145,61 @@ func test_replaces_must_name_a_parent() -> void:
 	var s := _valid_skills()
 	s.append(TestDefs.skill("evo", {"source": "evolution", "unlock": [TestDefs.level("leap", 1)], "replaces": "appraisal"}))
 	assert_string_contains(_errors_with(s), "replaces 'appraisal', which is not a parent")
-	s[-1].replaces = "leap"
+
+# --- evolutions replace their parent, alone, single-level, never starting ---
+
+func _with_parent() -> Array:
+	var s := _valid_skills()
+	s.append(TestDefs.skill("parent", {"source": "essence", "unlock": [TestDefs.counter("jumped", 1)],
+		"effects": [{"kind": "active", "scene": "res://scenes/abilities/water_blade.tscn"}], "mp_cost": 3}))
+	return s
+
+func _evo(id: String, extra := {}) -> SkillDef:
+	var f := {"source": "evolution", "replaces": "parent", "unlock": [TestDefs.level("parent", 3)],
+		"effects": [{"kind": "active", "scene": "res://scenes/abilities/water_blade.tscn"}], "mp_cost": 4}
+	f.merge(extra, true)
+	return TestDefs.skill(id, f)
+
+func test_a_well_formed_pair_of_evolutions_is_valid() -> void:
+	var s := _with_parent()
+	s.append(_evo("a"))
+	s.append(_evo("b"))
 	assert_eq(_errors_with(s), "")
+
+func test_an_evolution_needs_replaces() -> void:
+	var s := _with_parent()
+	s.append(_evo("a", {"replaces": ""}))
+	assert_string_contains(_errors_with(s), "an evolution needs replaces")
+
+func test_an_evolution_needs_an_active_scene() -> void:
+	var s := _with_parent()
+	s.append(_evo("a", {"effects": [{"kind": "capability", "flag": "a"}], "mp_cost": 0}))
+	assert_string_contains(_errors_with(s), "an evolution needs an active scene")
+
+func test_an_evolution_must_not_be_starting() -> void:
+	var s := _with_parent()
+	s.append(_evo("a", {"starting": true}))
+	assert_string_contains(_errors_with(s), "must not be starting")
+
+func test_an_evolution_unlock_is_exactly_one_skill_level_on_its_parent() -> void:
+	var s := _with_parent()
+	s.append(_evo("a", {"unlock": [TestDefs.level("parent", 3), TestDefs.level("leap", 2)]}))
+	assert_string_contains(_errors_with(s), "exactly one skill_level condition on its replaces")
+
+func test_an_evolution_is_single_level() -> void:
+	var s := _with_parent()
+	s.append(_evo("a", {"max_level": 2, "levels_on": {"event": "jumped", "tags": {}}, "level_curve": 5,
+		"effects": [{"kind": "active", "scene": "res://scenes/abilities/water_blade.tscn", "values": [1, 2]}]}))
+	assert_string_contains(_errors_with(s), "an evolution is single-level")
+
+func test_siblings_share_the_unlock_level() -> void:
+	var s := _with_parent()
+	s.append(_evo("a"))
+	s.append(_evo("b", {"unlock": [TestDefs.level("parent", 4)]}))
+	assert_string_contains(_errors_with(s), "must unlock at the same level")
+
+func test_an_evolution_of_an_evolution_is_rejected() -> void:
+	var s := _with_parent()
+	s.append(_evo("a"))
+	s.append(_evo("b", {"replaces": "a", "unlock": [TestDefs.level("a", 1)]}))
+	assert_string_contains(_errors_with(s), "which is itself an evolution")

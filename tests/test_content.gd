@@ -39,7 +39,7 @@ func test_spec_numbers_are_verbatim() -> void:
 	assert_eq(_skill("regeneration").unlock[0], {"kind": "counter", "event": "predated",
 		"tags": {"kind": "creature"}, "n": 10})
 	assert_eq(_skill("body_armor").max_level, 8)
-	assert_eq(_skill("jet_dash").parent_ids(), ["hydraulic_propulsion", "leap"])
+	assert_eq(_skill("jet_dash").parent_ids(), ["hydraulic_propulsion"])
 	assert_true(_skill("appraisal").starting)
 
 func test_creature_numbers_are_verbatim() -> void:

@@ -72,19 +72,17 @@ func test_evolution_unlocks_from_parent_level_and_parent_is_announced_first() ->
 	engine.evolve("water_blade")
 	assert_eq(log.back(), "unlock:water_blade")
 
-func test_two_parent_evolution_needs_both() -> void:
-	var leap := _leap()
+func test_an_evolution_waits_for_its_parents_level() -> void:
 	var hydro := TestDefs.skill("hydraulic_propulsion", {"source": "essence",
 		"unlock": [TestDefs.counter("absorbed", 1, {"essence": "water"})],
 		"levels_on": {"event": "skill_used", "tags": {"id": "hydraulic_propulsion"}}, "level_curve": 1, "max_level": 5})
-	var dash := TestDefs.skill("jet_dash", {"source": "evolution",
-		"unlock": [TestDefs.level("hydraulic_propulsion", 3), TestDefs.level("leap", 2)]})
-	_make([leap, hydro, dash])
+	var dash := TestDefs.skill("jet_dash", {"source": "evolution", "replaces": "hydraulic_propulsion",
+		"unlock": [TestDefs.level("hydraulic_propulsion", 3)]})
+	_make([hydro, dash])
 	engine.handle_event("absorbed", {"essence": "water"})
 	engine.handle_event("skill_used", {"id": "hydraulic_propulsion"})
+	assert_false(engine.is_evolution_ready("jet_dash"))
 	engine.handle_event("skill_used", {"id": "hydraulic_propulsion"})
-	assert_eq(engine.level_of("jet_dash"), 0)
-	_jump(80)
 	assert_true(engine.is_evolution_ready("jet_dash"))
 	assert_true(engine.evolve("jet_dash"))
 	assert_eq(engine.level_of("jet_dash"), 1)
