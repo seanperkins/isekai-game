@@ -1,0 +1,5 @@
+{
+  "prompt": "Lush bioluminescent fungal grotto. Soft breathy pads, plucked marimba-like notes, faint rustling spores, gently mysterious and alive, warm greens. Instrumental, no drums, no vocals, no dread.",
+  "music": {"provider": "synth", "dur": 24.0, "notes": [146.83, 220.0, 293.66, 369.99], "lfo": 0.07},
+  "ambience": {"provider": "synth", "dur": 20.0, "lp": 1300, "lfo": 0.06}
+}
