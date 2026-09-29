@@ -92,6 +92,8 @@ func test_a_full_first_pass_of_the_cave_stays_under_the_stage_one_cap() -> void:
 	var paid := 0
 	for id in rooms:
 		var r: RoomDef = rooms[id]
+		if r.area != "cave":
+			continue  # the Cave alone: the Grotto's pacing is in test_grotto_rooms
 		for i in r.spawns.size():
 			var c: CreatureDef = creatures[r.spawns[i]["id"]]
 			var key := "%s:%d" % [id, i]

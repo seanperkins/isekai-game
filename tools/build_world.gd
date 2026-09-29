@@ -60,7 +60,7 @@ static func _dress(piece: String, pos: Vector2, factor: float, flip := false) ->
 	return d
 
 static func rooms() -> Array:
-	return [c1(), c2(), c3(), c4(), c5(), c6()]
+	return [c1(), c2(), c3(), c4(), c5(), c6(), g1(), g2(), g3(), g4()]
 
 ## C1 Start (2×1): the original lower hall. Floor top 320.
 static func c1() -> RoomDef:
@@ -150,13 +150,14 @@ static func c4() -> RoomDef:
 	Prefabs.stamp(f, "scatter", Vector2(100, 320))
 	return _room(f)
 
-## C5 Drop Shaft (1×3): a zigzag of ledges down to the floor. Plan 2 opens its floor to G1.
+## C5 Drop Shaft (1×3): a zigzag of ledges down to the floor, which opens into the Grotto (G1) at x 220-380.
 static func c5() -> RoomDef:
-	var solids: Array = [Rect2(20, 320, 70, 12)]  # entry ledge by the left exit; it stops short of the k=13 platform (x 100+) so the taller slime has full headroom there
+	# The floor opens into the Grotto at x 220-380, which splits it in two; the east piece gets a ledge back to the zigzag.
+	var solids: Array = [Rect2(20, 320, 70, 12), Rect2(400, 988, 100, 12)]  # entry ledge by the left exit; it stops short of the k=13 platform (x 100+) so the taller slime has full headroom there
 	for k in range(1, 14):
 		solids.append(Rect2(100.0 if k % 2 == 1 else 240.0, 1040.0 - 52.0 * k, 100, 12))
 	var f := {"id": "C5", "area": "cave", "cell": Vector2i(5, 2), "size": Vector2i(1, 3),
-		"exits": [_exit("left", 200, 320, "C4")],
+		"exits": [_exit("left", 200, 320, "C4"), _exit("bottom", 220, 380, "G1")],
 		"solids": solids,
 		"decor": [_lit("glow_fungus", Vector2(150, 364), GLOW), _lit("glow_fungus", Vector2(290, 520), GLOW),
 			_lit("crystal_prism", Vector2(500, 1040), PRISM), _lit("crystal_teal", Vector2(150, 1040), TEAL),
@@ -166,10 +167,10 @@ static func c5() -> RoomDef:
 			_dress("hanging_roots", Vector2(480, 345), 0.25), _dress("mossy_ledge", Vector2(150, 470), 0.3, true),
 			_dress("hanging_roots", Vector2(150, 515), 0.3), _dress("mossy_ledge", Vector2(500, 640), 0.22, true),
 			_dress("mossy_ledge", Vector2(170, 820), 0.28), _dress("stalactite_cluster", Vector2(170, 865), 0.28),
-			_dress("mossy_ledge", Vector2(480, 930), 0.25), _dress("stone_arch", Vector2(320, 1050), 0.2),
-			_dress("rock_pillar", Vector2(80, 1050), 0.3), _dress("mushroom_grove", Vector2(300, 1050), 0.45),
+			_dress("mossy_ledge", Vector2(480, 930), 0.25), _dress("stone_arch", Vector2(520, 1050), 0.2),
+			_dress("rock_pillar", Vector2(80, 1050), 0.3), _dress("mushroom_grove", Vector2(455, 1050), 0.45),
 			_dress("crystal_cluster", Vector2(560, 1050), 0.5)],
-		"spawns": [_s("bat", Vector2(450, 500)), _s("bat", Vector2(420, 800)), _s("lizard", Vector2(400, 1020)),
+		"spawns": [_s("bat", Vector2(450, 500)), _s("bat", Vector2(420, 800)), _s("lizard", Vector2(470, 1020)),
 			_s("spider", Vector2(500, 32)), _s("water_pool", Vector2(560, 1036))]}
 	Prefabs.stamp(f, "stalactites", Vector2(300, 20))
 	return _room(f)
@@ -192,4 +193,95 @@ static func c6() -> RoomDef:
 			_dress("stalactite_cluster", Vector2(120, 20), 0.4), _dress("stalactite_cluster", Vector2(500, 20), 0.35, true),
 			_dress("hanging_roots", Vector2(320, 20), 0.7)]}
 	Prefabs.stamp(f, "stalactites", Vector2(120, 20))
+	return _room(f)
+
+const G_GLOW := Color(0.5, 1.0, 0.6)  # the Grotto's glowing fungus and spores
+
+## The Grotto's light: mushrooms and moss (the grotto_* decor sprites).
+static func _gl(id: String, pos: Vector2, color := G_GLOW) -> Dictionary:
+	return _lit("grotto_" + id, pos, color)
+
+## G1 Grotto Mouth (2×1, cell (5,5)): the landing under C5's floor. A ledge chain under the hole climbs back
+## up to C5; the rebirth pool arrives with the kit task.
+static func g1() -> RoomDef:
+	var f := {"id": "G1", "area": "grotto", "cell": Vector2i(5, 5), "size": Vector2i(2, 1),
+		"exits": [_exit("top", 220, 380, "C5"), _exit("right", 200, 320, "G2")],
+		"solids": [],
+		"decor": [_gl("glow_fungus", Vector2(180, 320)), _gl("glow_fungus", Vector2(700, 320)), _gl("glow_fungus", Vector2(980, 320)),
+			_lit("grotto_flowers", Vector2(560, 320), GOLD), _hang("grotto_lichen_hang", Vector2(500, 20)), _hang("grotto_lichen_hang", Vector2(900, 20)),
+			_hang("grotto_root_hang", Vector2(1120, 20))],
+		"dressing": [_dress("mushroom_cap_pillar", Vector2(120, 330), 0.3), _dress("glowing_mushroom_cluster", Vector2(470, 330), 0.5),
+			_dress("hanging_spore_moss", Vector2(560, 20), 0.7), _dress("mossy_stalactite", Vector2(760, 20), 0.4),
+			_dress("mushroom_cap_pillar", Vector2(880, 330), 0.25, true), _dress("vine_curtain", Vector2(1020, 20), 0.6),
+			_dress("spore_pod", Vector2(660, 330), 0.5), _dress("dripping_fungus_shelf", Vector2(1120, 150), 0.25),
+			_dress("mushroom_bridge", Vector2(360, 120), 0.3)],
+		"spawns": [_s("spore_moth", Vector2(520, 200)), _s("spore_moth", Vector2(760, 170)), _s("spore_moth", Vector2(1000, 210)),
+			_s("mushroom_crab", Vector2(620, 308)), _s("mushroom_crab", Vector2(1040, 308))]}
+	Prefabs.ledge_chain(f, 220.0, 90.0, 70.0, 10.0, 52.0, 320.0)  # the climb back up to C5's floor
+	return _room(f)
+
+## G2 Spore Hall (3×2, cell (7,5)): the hub. Two levels: the lower floor (with the hole down to G3) and an upper
+## walkway that meets G1. Two shafts of ledges climb between them.
+static func g2() -> RoomDef:
+	var f := {"id": "G2", "area": "grotto", "cell": Vector2i(7, 5), "size": Vector2i(3, 2),
+		"exits": [_exit("left", 200, 320, "G1"), _exit("bottom", 800, 960, "G3")],
+		"solids": [Rect2(20, 320, 420, 12), Rect2(700, 320, 300, 12),  # the upper walkway, in two pieces around the west shaft
+			Rect2(200, 272, 120, 12), Rect2(360, 224, 120, 12), Rect2(760, 272, 120, 12),  # mushroom caps above the walkway
+			Rect2(180, 560, 240, 32), Rect2(1280, 560, 240, 32)],  # overhangs the snakes hang from (mass, not ledges)
+		"decor": [_gl("glow_fungus", Vector2(120, 320)), _gl("glow_fungus", Vector2(860, 320)), _gl("glow_fungus", Vector2(1400, 680)),
+			_gl("glow_fungus", Vector2(1700, 680)), _lit("grotto_flowers", Vector2(600, 680), GOLD), _lit("grotto_crystal_rose", Vector2(1100, 680), ROSE),
+			_hang("grotto_lichen_hang", Vector2(400, 20)), _hang("grotto_lichen_hang", Vector2(1200, 20)), _hang("grotto_root_hang", Vector2(1650, 20)),
+			_hang("grotto_root_hang", Vector2(300, 592))],
+		"dressing": [_dress("mushroom_cap_pillar", Vector2(160, 690), 0.3), _dress("glowing_mushroom_cluster", Vector2(520, 690), 0.5),
+			_dress("hanging_spore_moss", Vector2(620, 20), 0.7), _dress("mossy_stalactite", Vector2(900, 20), 0.4),
+			_dress("vine_curtain", Vector2(1150, 20), 0.6), _dress("mushroom_cap_pillar", Vector2(1450, 690), 0.25, true),
+			_dress("spore_pod", Vector2(1620, 690), 0.5), _dress("mushroom_bridge", Vector2(700, 200), 0.3),
+			_dress("dripping_fungus_shelf", Vector2(1500, 260), 0.25), _dress("hanging_spore_moss", Vector2(1750, 20), 0.65),
+			_dress("glowing_mushroom_cluster", Vector2(1800, 690), 0.5)],
+		"spawns": [_s("spore_moth", Vector2(260, 220)), _s("spore_moth", Vector2(560, 180)), _s("spore_moth", Vector2(900, 240)),
+			_s("spore_moth", Vector2(1400, 300)), _s("mushroom_crab", Vector2(300, 668)), _s("mushroom_crab", Vector2(650, 668)),
+			_s("mushroom_crab", Vector2(1600, 668)), _s("vine_snake", Vector2(300, 626)), _s("vine_snake", Vector2(1400, 626))]}
+	Prefabs.shaft_climb(f, 450.0, 690.0, 100.0, 320.0, 45.0, 680.0)  # the west shaft, up to the walkway's west piece
+	Prefabs.shaft_climb(f, 1010.0, 1250.0, 100.0, 320.0, 45.0, 680.0)  # the east chain, up to the walkway's east piece
+	return _room(f)
+
+## G3 Vine Maze (2×2, cell (8,7)): snakes under overhangs, crabs below. A chain under the hole up to G2's floor,
+## and a climb to the upper level and the exit to G4.
+static func g3() -> RoomDef:
+	var f := {"id": "G3", "area": "grotto", "cell": Vector2i(8, 7), "size": Vector2i(2, 2),
+		"exits": [_exit("top", 160, 320, "G2"), _exit("right", 200, 320, "G4")],
+		"solids": [Rect2(400, 560, 300, 32), Rect2(720, 560, 200, 32)],  # overhangs the snakes hang from (mass, not ledges)
+		"decor": [_gl("glow_fungus", Vector2(360, 680)), _gl("glow_fungus", Vector2(880, 680)), _lit("grotto_flowers", Vector2(560, 680), GOLD),
+			_lit("grotto_crystal_rose", Vector2(1000, 680), ROSE), _hang("grotto_lichen_hang", Vector2(480, 20)), _hang("grotto_lichen_hang", Vector2(880, 20)),
+			_hang("grotto_root_hang", Vector2(560, 592)), _hang("grotto_root_hang", Vector2(800, 592))],
+		"dressing": [_dress("vine_curtain", Vector2(420, 20), 0.6), _dress("vine_curtain", Vector2(760, 20), 0.55, true),
+			_dress("mushroom_cap_pillar", Vector2(560, 690), 0.3), _dress("hanging_spore_moss", Vector2(1020, 20), 0.7),
+			_dress("glowing_mushroom_cluster", Vector2(840, 690), 0.5), _dress("mossy_stalactite", Vector2(640, 20), 0.4),
+			_dress("spore_pod", Vector2(1080, 690), 0.5), _dress("dripping_fungus_shelf", Vector2(760, 250), 0.25),
+			_dress("mushroom_bridge", Vector2(1000, 180), 0.3)],
+		"spawns": [_s("vine_snake", Vector2(470, 626)), _s("vine_snake", Vector2(610, 626)), _s("vine_snake", Vector2(790, 626)),
+			_s("vine_snake", Vector2(860, 626)), _s("mushroom_crab", Vector2(380, 668)), _s("mushroom_crab", Vector2(520, 668)),
+			_s("mushroom_crab", Vector2(660, 668)), _s("mushroom_crab", Vector2(850, 668))]}
+	Prefabs.ledge_chain(f, 160.0, 90.0, 70.0, 10.0, 52.0, 680.0)  # the climb back up to G2's floor
+	var solids: Array = f["solids"]
+	for k in range(1, 8):  # the climb to G4's sill: 45 px hops from the floor to y 365, then the last ledge at 320
+		solids.append(Rect2(960.0 if k % 2 == 1 else 1100.0, 680.0 - 45.0 * k, 110, 12))
+	solids.append(Rect2(1100, 320, 150, 12))
+	return _room(f)
+
+## G4 Glow Pool (1×1, cell (10,7)): the last room, a rest before the area's end, with a tablet.
+static func g4() -> RoomDef:
+	var f := {"id": "G4", "area": "grotto", "cell": Vector2i(10, 7), "size": Vector2i(1, 1),
+		"exits": [_exit("left", 200, 320, "G3")],
+		"solids": [Rect2(140, 266, 100, 12), Rect2(440, 266, 100, 12)],
+		"features": [{"kind": "glow_pool", "id": "g4_pool", "pos": Vector2(320, 320)},
+			{"kind": "tablet", "id": "g4_tablet", "pos": Vector2(500, 320), "title": "Mossy tablet",
+				"text": "Spores and shells shape those who eat them.", "hint": "spore shell"}],
+		"decor": [_gl("glow_fungus", Vector2(190, 266)), _gl("glow_fungus", Vector2(490, 266)), _lit("grotto_crystal_prism", Vector2(250, 320), PRISM),
+			_lit("grotto_flowers", Vector2(400, 320), GOLD), _hang("grotto_lichen_hang", Vector2(300, 20))],
+		"dressing": [_dress("mushroom_cap_pillar", Vector2(100, 330), 0.3), _dress("glowing_mushroom_cluster", Vector2(560, 330), 0.5),
+			_dress("hanging_spore_moss", Vector2(200, 20), 0.7), _dress("mossy_stalactite", Vector2(450, 20), 0.4),
+			_dress("vine_curtain", Vector2(580, 20), 0.6), _dress("spore_pod", Vector2(360, 330), 0.5)],
+		"spawns": [_s("spore_moth", Vector2(180, 190)), _s("spore_moth", Vector2(340, 170)), _s("spore_moth", Vector2(500, 200)),
+			_s("mushroom_crab", Vector2(150, 308)), _s("mushroom_crab", Vector2(260, 308)), _s("mushroom_crab", Vector2(560, 308))]}
 	return _room(f)

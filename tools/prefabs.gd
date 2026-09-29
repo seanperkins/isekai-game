@@ -105,3 +105,25 @@ static func stamp(room: Dictionary, id: String, origin: Vector2, flip := false, 
 static func _place(r: Rect2, origin: Vector2, width: float, flip: bool) -> Rect2:
 	var x := width - r.end.x if flip else r.position.x
 	return Rect2(origin + Vector2(x, r.position.y), r.size)
+
+## A climb of alternating ledges under a floor hole: `width` wide, alternately at `west_x` and `west_x + offset`,
+## `step` apart from `top_y` down to just above `floor_y`. The top ledge sits flush with the hole's west edge.
+## Plain solids, so the game never sees a prefab (this is not in library(): it is a placement helper).
+static func ledge_chain(room: Dictionary, west_x: float, width: float, offset: float, top_y: float, step: float, floor_y: float) -> void:
+	var solids: Array = room.get("solids", [])
+	var i := 0
+	while top_y + step * i < floor_y - 8.0:
+		solids.append(Rect2(west_x if i % 2 == 0 else west_x + offset, top_y + step * i, width, 12))
+		i += 1
+	room["solids"] = solids
+
+## A climb UP from `floor_y` to `walk_y` in a shaft `x0`..`x1` wide: ledges `step` apart, alternating between the
+## shaft's two sides (`width` wide each). The top ledge sits `step` below `walk_y`.
+static func shaft_climb(room: Dictionary, x0: float, x1: float, width: float, walk_y: float, step: float, floor_y: float) -> void:
+	var solids: Array = room.get("solids", [])
+	var k := 1
+	while walk_y + step * k < floor_y - 8.0:
+		solids.append(Rect2(x0 if k % 2 == 1 else x1 - width, walk_y + step * k, width, 12))
+		k += 1
+	room["solids"] = solids
+

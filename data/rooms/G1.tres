@@ -1,0 +1,105 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_muhsy"]
+
+[resource]
+script = ExtResource("1_muhsy")
+id = "G1"
+area = "grotto"
+cell = Vector2i(5, 5)
+size = Vector2i(2, 1)
+solids = [Rect2(220, 10, 90, 12), Rect2(290, 62, 90, 12), Rect2(220, 114, 90, 12), Rect2(290, 166, 90, 12), Rect2(220, 218, 90, 12), Rect2(290, 270, 90, 12)]
+decor = [{
+"id": "grotto_glow_fungus",
+"light": Color(0.5, 1, 0.6, 1),
+"pos": Vector2(180, 320)
+}, {
+"id": "grotto_glow_fungus",
+"light": Color(0.5, 1, 0.6, 1),
+"pos": Vector2(700, 320)
+}, {
+"id": "grotto_glow_fungus",
+"light": Color(0.5, 1, 0.6, 1),
+"pos": Vector2(980, 320)
+}, {
+"id": "grotto_flowers",
+"light": Color(1, 0.85, 0.4, 1),
+"pos": Vector2(560, 320)
+}, {
+"anchor": "top",
+"id": "grotto_lichen_hang",
+"pos": Vector2(500, 20)
+}, {
+"anchor": "top",
+"id": "grotto_lichen_hang",
+"pos": Vector2(900, 20)
+}, {
+"anchor": "top",
+"id": "grotto_root_hang",
+"pos": Vector2(1120, 20)
+}]
+dressing = [{
+"factor": 0.3,
+"piece": "mushroom_cap_pillar",
+"pos": Vector2(120, 330)
+}, {
+"factor": 0.5,
+"piece": "glowing_mushroom_cluster",
+"pos": Vector2(470, 330)
+}, {
+"factor": 0.7,
+"piece": "hanging_spore_moss",
+"pos": Vector2(560, 20)
+}, {
+"factor": 0.4,
+"piece": "mossy_stalactite",
+"pos": Vector2(760, 20)
+}, {
+"factor": 0.25,
+"flip": true,
+"piece": "mushroom_cap_pillar",
+"pos": Vector2(880, 330)
+}, {
+"factor": 0.6,
+"piece": "vine_curtain",
+"pos": Vector2(1020, 20)
+}, {
+"factor": 0.5,
+"piece": "spore_pod",
+"pos": Vector2(660, 330)
+}, {
+"factor": 0.25,
+"piece": "dripping_fungus_shelf",
+"pos": Vector2(1120, 150)
+}, {
+"factor": 0.3,
+"piece": "mushroom_bridge",
+"pos": Vector2(360, 120)
+}]
+spawns = [{
+"id": "spore_moth",
+"pos": Vector2(520, 200)
+}, {
+"id": "spore_moth",
+"pos": Vector2(760, 170)
+}, {
+"id": "spore_moth",
+"pos": Vector2(1000, 210)
+}, {
+"id": "mushroom_crab",
+"pos": Vector2(620, 308)
+}, {
+"id": "mushroom_crab",
+"pos": Vector2(1040, 308)
+}]
+exits = [{
+"edge": "top",
+"from": 220.0,
+"room": "C5",
+"to": 380.0
+}, {
+"edge": "right",
+"from": 200.0,
+"room": "G2",
+"to": 320.0
+}]

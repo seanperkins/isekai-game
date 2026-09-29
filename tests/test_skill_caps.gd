@@ -180,6 +180,8 @@ func test_the_top_levels_are_reachable_against_what_their_sources_supply() -> vo
 	var inspectable := 0
 	var seen := {}
 	for id in rooms:
+		if (rooms[id] as RoomDef).area != "cave":
+			continue  # this is the Cave's supply; the Grotto adds creature types
 		for s in (rooms[id] as RoomDef).spawns:
 			var c: CreatureDef = creatures[s["id"]]
 			sound += int(c.essences.get("sound", 0))

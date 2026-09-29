@@ -8,7 +8,11 @@ var supply := {}
 
 func before_all() -> void:
 	forms = FormLoader.load_all()
-	rooms = World.load_rooms("res://data/rooms")
+	# These examples are the Cave's numbers (5 thread, and so on); the Grotto adds its own supply, tested below.
+	for id in World.load_rooms("res://data/rooms"):
+		var r: RoomDef = World.load_rooms("res://data/rooms")[id]
+		if r.area == "cave":
+			rooms[id] = r
 	for c in DefLoader.load_dir("res://data/creatures"):
 		creatures[c.id] = c
 	supply = FormOffers.supply(rooms, creatures, forms)
@@ -123,3 +127,11 @@ func test_absorbed_units_read_the_runs_ledger() -> void:
 	assert_eq(u["sound"], 3)
 	assert_eq(u["thread"], 1)
 	assert_eq(u.get("water", 0), 0)
+
+func test_the_whole_worlds_supply_includes_the_grotto() -> void:
+	var all_rooms := World.load_rooms("res://data/rooms")
+	var whole := FormOffers.supply(all_rooms, creatures, forms)
+	assert_gt(whole["toxic"], supply["toxic"], "spore feeds Toxic")
+	assert_gt(whole["bulwark"], supply["bulwark"], "shell feeds Bulwark")
+	assert_gt(whole["weaver"], supply["weaver"], "the snake's thread feeds Weaver")
+

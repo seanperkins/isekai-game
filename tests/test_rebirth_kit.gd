@@ -122,13 +122,13 @@ func test_a_starting_level_plays_no_level_up_events() -> void:
 	assert_false(seen.has("leveled_up"), "no fanfare at the start of a life")
 
 func test_seeded_affinity_counts_toward_the_first_evolution_and_nothing_else() -> void:
-	RebirthKit.apply(player, rules, compendium, {"affinity": {"thread": 5}})
-	assert_eq(player.progression.seeded["thread"], 5)
+	RebirthKit.apply(player, rules, compendium, {"affinity": {"thread": 7}})
+	assert_eq(player.progression.seeded["thread"], 7)
 	assert_eq(rules.count("absorbed", {"essence": "thread"}), 0, "the ledger is untouched: no skill unlocks from seeds")
 	assert_false(rules.owned().has("sticky_thread"))
 	player.progression.add_xp(Progression.stage_total(1))
 	var offers := player.form_offers()
-	assert_eq((offers[0] as FormDef).id, "weaver", "5 thread is all of Weaver's supply")
+	assert_eq((offers[0] as FormDef).id, "weaver", "7 of Weaver's 11 thread is enough")
 
 func test_applying_a_kit_after_a_second_run_start_does_not_stack() -> void:
 	RebirthKit.apply(player, rules, compendium, {"skills": ["leap"], "level": 3, "affinity": {"thread": 2}})
@@ -162,7 +162,7 @@ func test_the_eligibility_check_bites_on_a_poorly_seeded_kit() -> void:
 	var forms := FormLoader.load_all()
 	var supply := FormOffers.default_supply(forms)
 	assert_lt(RebirthKit.eligible_lineages({"thread": 5}, supply, forms), 2, "one lineage is not enough")
-	assert_gte(RebirthKit.eligible_lineages({"thread": 5, "sound": 6, "flight": 6}, supply, forms), 2)
+	assert_gte(RebirthKit.eligible_lineages({"thread": 7, "sound": 6, "flight": 8}, supply, forms), 2)
 
 func test_every_shipped_non_default_pool_leaves_two_lineages_eligible() -> void:
 	# a seeded start must not lock you out of lineages: every pool except the default meets it
