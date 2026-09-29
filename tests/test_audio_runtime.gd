@@ -98,6 +98,15 @@ func test_the_menu_ducks_the_music_and_releases_it() -> void:
 	await get_tree().create_timer(0.9, true).timeout
 	assert_almost_eq(_duck_effect.volume_db, 0.0, 0.5)
 
+func test_a_stinger_timer_from_before_a_reset_does_not_release_a_newer_duck() -> void:
+	var stale_epoch: int = Audio._duck_epoch
+	Audio.reset()  # a new run, a death: everything before it is forgotten, timers included
+	EventBus.world_event.emit("menu_opened", {})
+	Audio._release_stinger_duck(stale_epoch)  # the old stinger's timer fires now
+	assert_eq(Audio._duck_holds, 1, "the menu's duck is still held")
+	Audio._release_stinger_duck(Audio._duck_epoch)  # a current stinger's timer does release
+	assert_eq(Audio._duck_holds, 0)
+
 func test_the_duck_still_runs_while_the_tree_is_paused() -> void:
 	assert_eq(Audio.process_mode, Node.PROCESS_MODE_ALWAYS)
 	get_tree().paused = true

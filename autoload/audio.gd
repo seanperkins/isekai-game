@@ -23,6 +23,7 @@ var _voices: Array = []   # per slot: [AudioStreamPlayer, AudioStreamPlayer2D]
 var _loops := {}          # looping cue id -> slot
 var _streams := {}        # "path|loop" -> AudioStream, or null for a file that would not load
 var _duck_holds := 0
+var _duck_epoch := 0  # bumped by reset(); a stinger's timer from an older epoch must not release a newer duck
 var _duck_tween: Tween
 
 func _ready() -> void:
@@ -82,6 +83,7 @@ func reset() -> void:
 	_pool = VoicePool.new(VOICES, _clock)
 	_combo = ComboPitch.new(_clock)
 	_duck_holds = 0
+	_duck_epoch += 1
 	_fade_duck(0.0, DUCK_RELEASE)
 
 func is_looping(cue_id: String) -> bool:
@@ -183,7 +185,11 @@ func _release_duck() -> void:
 
 func _duck_for(seconds: float) -> void:
 	_hold_duck()
-	get_tree().create_timer(seconds, true).timeout.connect(_release_duck)
+	get_tree().create_timer(seconds, true).timeout.connect(_release_stinger_duck.bind(_duck_epoch))
+
+func _release_stinger_duck(epoch: int) -> void:
+	if epoch == _duck_epoch:
+		_release_duck()
 
 func _fade_duck(target_db: float, seconds: float) -> void:
 	var i := AudioServer.get_bus_index("Music")
