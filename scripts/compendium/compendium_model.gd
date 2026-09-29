@@ -113,7 +113,7 @@ func on_inspect_processed(tags: Dictionary, appraisal_level: int, rules) -> void
 		creature_report(target, appraisal_level, true)
 
 ## Status-screen hints. Lv2: locked, non-secret proficiency/essence skills at >= half,
-## as bands. Lv3: plus hints. Lv4: evolutions whose parents are all owned.
+## as bands. Lv3: plus hints. Lv4: evolutions whose parents are all owned and whose branch is still open.
 func self_report(level: int, rules, apply: bool = false) -> Dictionary:
 	var hints: Array = []
 	var evolutions: Array = []
@@ -133,7 +133,7 @@ func self_report(level: int, rules, apply: bool = false) -> Dictionary:
 				hints.append(entry)
 				if apply:
 					raise(id, State.HINTED if level >= 3 else State.NAMED)
-		if level >= 4 and d.source == "evolution":
+		if level >= 4 and d.source == "evolution" and not rules.is_closed(id):
 			var parents: Array = d.parent_ids()
 			var all_owned := not parents.is_empty()
 			for pid in parents:

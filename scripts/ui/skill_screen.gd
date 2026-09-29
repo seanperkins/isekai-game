@@ -54,6 +54,7 @@ var _tab := 0
 var _rows: Array = []
 var _selectable: Array = []  # indices into _rows
 var _sel := 0
+var _armed := ""  # the evolution row the first press armed; the second press evolves
 var _scroll := 0
 var _frame := Control.new()
 var _list := Control.new()
@@ -93,6 +94,7 @@ func open() -> void:
 	EventBus.world_event.emit("menu_opened", {})
 
 func close() -> void:
+	_armed = ""
 	visible = false
 	get_tree().paused = false
 	EventBus.world_event.emit("menu_closed", {})
@@ -142,8 +144,8 @@ func selected_id() -> String:
 		return ""
 	return _rows[_selectable[_sel]].get("id", "")
 
-## Evolves a ready evolution (spending EP), or moves the selected active to the next slot
-## (U → O → H → L → U).
+## A ready evolution is permanent for the life, so it takes two presses: the first arms it, the second evolves (spending
+## EP). Otherwise moves the selected active to the next slot (U → O → H → L → U).
 func accept() -> void:
 	var id := selected_id()
 	if tab() == FORM_TAB:
@@ -155,7 +157,11 @@ func accept() -> void:
 		_refresh()
 		return
 	if id != "" and _rows[_selectable[_sel]]["kind"] == "ready":
-		if _player.try_evolve(id):
+		if _armed != id:
+			if _player.progression.ep >= _rules.evolution_cost(id):
+				_armed = id
+		elif _player.try_evolve(id):
+			_armed = ""
 			EventBus.world_event.emit("menu_confirm", {})
 		_refresh()
 		return
@@ -337,6 +343,10 @@ func _refresh() -> void:
 		if ["skill", "slot", "ready", "creature"].has(_rows[i]["kind"]):
 			_selectable.append(i)
 	_sel = clampi(_sel, 0, maxi(0, _selectable.size() - 1))
+	# An armed evolution stays armed only while it is the selected row. A tab switch resets _sel to 0, which is what
+	# disarms it across tabs.
+	if _armed != selected_id():
+		_armed = ""
 	var verb := "Evolve" if not _selectable.is_empty() and _rows[_selectable[_sel]]["kind"] == "ready" else "Assign"
 	if tab() == "skills" or verb == "Evolve":
 		_hint.text = ("LB/RB Tabs    A %s    B Back" if Controls.using_joypad else "Q/E Tabs    Enter %s    Esc Back") % verb
@@ -449,10 +459,16 @@ func _build_detail() -> void:
 		_label(_detail, d.display_name, Vector2(DETAIL_X + 46, 50), Vector2(146, 16), FONT_BIG, Color.WHITE)
 		_label(_detail, "Ready to evolve", Vector2(DETAIL_X + 46, 68), Vector2(146, 12), FONT_MAIN, Color(1.0, 0.85, 0.45))
 		_label(_detail, d.description, Vector2(DETAIL_X, 100), Vector2(190, 30), FONT_SMALL, Color.WHITE, true)
-		_label(_detail, "Costs %d EP  (you have %d)" % [cost, _player.progression.ep], Vector2(DETAIL_X, 134), Vector2(190, 12), FONT_MAIN, COL_TITLE)
+		_label(_detail, "Replaces %s" % _skill_name(d.replaces), Vector2(DETAIL_X, 131), Vector2(190, 11), FONT_SMALL, COL_DIM)
+		var closes: Array = _rules.siblings_of(id).map(func(sid: String) -> String: return _skill_name(sid))
+		if not closes.is_empty():
+			_label(_detail, "Closes: " + ", ".join(closes), Vector2(DETAIL_X, 142), Vector2(190, 22), FONT_SMALL, COL_DIM, true)
+		_label(_detail, "Costs %d EP  (you have %d)" % [cost, _player.progression.ep], Vector2(DETAIL_X, 166), Vector2(190, 12), FONT_MAIN, COL_TITLE)
 		var can := _player.progression.ep >= cost
-		_label(_detail, ("[%s] Evolve" % ("A" if Controls.using_joypad else "Enter")) if can else "Level up to earn EP",
-			Vector2(DETAIL_X, 152), Vector2(190, 12), FONT_MAIN, Color.WHITE if can else COL_DIM)
+		var action := "Level up to earn EP"
+		if can:
+			action = "Press again to choose" if _armed == id else "[%s] Evolve" % ("A" if Controls.using_joypad else "Enter")
+		_label(_detail, action, Vector2(DETAIL_X, 182), Vector2(190, 12), FONT_MAIN, Color.WHITE if can else COL_DIM)
 		return
 	var card := SkillScreenModel.detail(_rules, d, _player.skillset.slots)
 	_icon(_detail, "icon_" + id, Vector2(DETAIL_X, 50), 40)
@@ -467,6 +483,8 @@ func _build_detail() -> void:
 	for line in card["lines"]:
 		_label(_detail, line, Vector2(DETAIL_X, y), Vector2(190, 12), FONT_MAIN, Color.WHITE)
 		y += 14.0
+	if d.source == "evolution" and d.replaces != "":
+		_label(_detail, "Evolved from %s" % _skill_name(d.replaces), Vector2(DETAIL_X, y), Vector2(190, 12), FONT_SMALL, COL_DIM)
 	if card.get("capped", false):
 		_label(_detail, SkillScreenModel.capped_text(), Vector2(DETAIL_X, 262), Vector2(190, 12), FONT_SMALL, COL_CAPPED)
 	if card["progress"] >= 0.0:
@@ -690,6 +708,10 @@ func _build_form() -> void:
 		names.append(sd.display_name if sd != null else g)
 	if not names.is_empty():
 		_label(_detail, "Grants: " + ", ".join(names), Vector2(DETAIL_X, dy), Vector2(190, 24), FONT_SMALL, Color.WHITE, true)
+
+func _skill_name(id: String) -> String:
+	var sd = _defs.get(id)
+	return sd.display_name if sd != null else id
 
 func _row_height(r: Dictionary) -> float:
 	return HEADER_H if r["kind"] == "header" else ROW_H

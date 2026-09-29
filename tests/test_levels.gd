@@ -141,6 +141,8 @@ func test_skill_screen_lists_ready_evolutions_and_evolves_on_accept() -> void:
 	assert_eq(screen.selected_id(), "water_blade")
 	assert_string_contains("\n".join(screen.detail_texts()), "Ready to evolve")
 	assert_string_contains(screen.hint_text(), "Evolve")
+	screen.accept()  # the first press arms: the choice is permanent for the life
+	assert_eq(rules.level_of("water_blade"), 0)
 	screen.accept()
 	assert_eq(rules.level_of("water_blade"), 1)
 	screen.close()

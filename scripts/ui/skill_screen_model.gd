@@ -13,19 +13,25 @@ const EVENT_TEXT := {"jumped": "Jump", "wall_touched": "Touch a wall mid-air",
 	"hp_low_exited": "Recover from low HP", "predated": "Eat creatures", "mana_spent": "Spend MP",
 	"inspected": "Appraise", "skill_used": "Use the skill", "stunned_enemy": "Stun enemies"}
 
-## Skills tab: owned skills per group, plus one "???" row where unowned, non-secret skills remain.
+## True when a skill should keep the "???" row showing: never reached, non-secret, not ready and not closed. A retired
+## parent has reached a level, and a closed evolution can no longer be taken, so neither counts.
+static func counts_as_locked(rules, d: SkillDef) -> bool:
+	return rules.level_of(d.id) == 0 and not d.secret and not rules.is_evolution_ready(d.id) and not rules.is_closed(d.id)
+
+## Skills tab: the skills held now per group (not a parent that evolved), plus one "???" row while a locked one remains.
 static func skill_rows(rules, all_defs: Array) -> Array:
 	var rows: Array = []
+	var held: Array = rules.owned()
 	for g in GROUPS:
 		rows.append({"kind": "header", "text": g[0]})
 		var locked := false
 		for d in _sorted(all_defs):
 			if d.source != g[1]:
 				continue
-			if rules.level_of(d.id) > 0:
+			if held.has(d.id):
 				rows.append({"kind": "skill", "id": d.id, "name": d.display_name,
 					"level": rules.level_of(d.id), "max_level": d.max_level, "capped": rules.is_capped(d.id)})
-			elif not d.secret and not rules.is_evolution_ready(d.id):
+			elif counts_as_locked(rules, d):
 				locked = true
 		if g[1] == "evolution":
 			for id in rules.ready_evolutions():
