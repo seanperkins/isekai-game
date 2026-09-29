@@ -22,12 +22,15 @@ static func all() -> Array:
 		_s("toad_spit", "toad", Vector2(0, 0), [[0, Vector2(70, 0)]], 300),
 		_s("toad_stunned_right_after_spitting", "toad", Vector2(0, 0), [[0, Vector2(70, 0)]], 420,
 			[["stun_when", "anim_state", "spit", 2, 1.5]]),
+		_s("toad_stunned_mid_puff", "toad", Vector2(0, 0), [[0, Vector2(70, 0)]], 300, [["stun_when", "telegraphing", true, 5, 0.5]]),
+		_s("toad_killed_mid_puff", "toad", Vector2(0, 0), [[0, Vector2(70, 0)]], 200, [["kill_when", "telegraphing", true, 5]]),
 		# armored chargers
 		_s("lizard_plain", "lizard", Vector2(0, 0), [[0, Vector2(90, 0)]], 300),
 		_s("lizard_stunned_mid_windup", "lizard", Vector2(0, 0), [[0, Vector2(90, 0)]], 240, [["stun_when", "charge_state", "windup", 10, 0.5]]),
 		_s("lizard_stunned_mid_charge", "lizard", Vector2(0, 0), [[0, Vector2(90, 0)]], 240, [["stun_when", "charge_state", "charge", 10, 0.5]]),
 		_s("lizard_stunned_mid_rest", "lizard", Vector2(0, 0), [[0, Vector2(90, 0)]], 240, [["stun_when", "charge_state", "rest", 10, 0.5]]),
 		_s("lizard_killed_in_windup", "lizard", Vector2(0, 0), [[0, Vector2(90, 0)]], 200, [["kill_when", "charge_state", "windup", 10]]),
+		_s("lizard_slowed", "lizard", Vector2(0, 0), [[0, Vector2(90, 0)]], 300, [["slow", 20, 2.0]]),
 		_s("crab_plain", "mushroom_crab", Vector2(0, 0), [[0, Vector2(90, 0)]], 300),
 		# swooper
 		_s("bat_plain", "bat", Vector2(0, -100), [[0, Vector2(30, 0)]], 500),
@@ -42,10 +45,12 @@ static func all() -> Array:
 		# drifter
 		_s("moth_plain", "spore_moth", Vector2(0, -100), [[0, Vector2(100, -100)]], 520),
 		_s("moth_leaves_and_returns", "spore_moth", Vector2(0, -100), [[0, Vector2(100, -100)], [100, Vector2(3000, -100)], [130, Vector2(100, -100)]], 420),
+		_s("moth_killed_in_flash", "spore_moth", Vector2(0, -100), [[0, Vector2(100, -100)]], 300, [["kill_when", "telegraphing", true, 5]]),
 		_s("moth_stunned_in_flash", "spore_moth", Vector2(0, -100), [[0, Vector2(100, -100)]], 420, [["stun_when", "telegraphing", true, 5, 1.0]]),
 		_s("moth_player_leaves_mid_flash", "spore_moth", Vector2(0, -100), [[0, Vector2(100, -100)]], 400, [["player_when", "telegraphing", true, 5, Vector2(3000, -100)]]),
 		# snake
 		_s("snake_plain", "vine_snake", Vector2(0, -100), [[0, Vector2(12, 0)]], 400),
+		_s("snake_killed_in_lunge", "vine_snake", Vector2(0, -100), [[0, Vector2(12, 0)]], 250, [["kill_when", "charge_state", "charge", 3]]),
 		_s("snake_stunned_in_coil", "vine_snake", Vector2(0, -100), [[0, Vector2(12, 0)]], 400, [["stun_when", "charge_state", "windup", 3, 0.5]]),
 		_s("snake_stunned_in_lunge", "vine_snake", Vector2(0, -100), [[0, Vector2(12, 0)]], 400, [["stun_when", "charge_state", "charge", 3, 0.5]]),
 		_s("snake_stunned_in_retreat", "vine_snake", Vector2(0, -100), [[0, Vector2(12, 0)]], 400, [["stun_when", "charge_state", "rest", 3, 0.5]]),

@@ -43,11 +43,11 @@ func test_walkers() -> void:
 		await _check(n)
 
 func test_the_toad() -> void:
-	for n in ["toad_spit", "toad_stunned_right_after_spitting"]:
+	for n in ["toad_spit", "toad_stunned_right_after_spitting", "toad_stunned_mid_puff", "toad_killed_mid_puff"]:
 		await _check(n)
 
 func test_the_armored_chargers() -> void:
-	for n in ["lizard_plain", "lizard_stunned_mid_windup", "lizard_stunned_mid_charge", "lizard_stunned_mid_rest", "lizard_killed_in_windup", "crab_plain"]:
+	for n in ["lizard_plain", "lizard_stunned_mid_windup", "lizard_stunned_mid_charge", "lizard_stunned_mid_rest", "lizard_killed_in_windup", "lizard_slowed", "crab_plain"]:
 		await _check(n)
 
 func test_the_bat() -> void:
@@ -59,11 +59,11 @@ func test_the_spider() -> void:
 		await _check(n)
 
 func test_the_moth() -> void:
-	for n in ["moth_plain", "moth_leaves_and_returns", "moth_stunned_in_flash", "moth_player_leaves_mid_flash"]:
+	for n in ["moth_plain", "moth_leaves_and_returns", "moth_stunned_in_flash", "moth_killed_in_flash", "moth_player_leaves_mid_flash"]:
 		await _check(n)
 
 func test_the_snake() -> void:
-	for n in ["snake_plain", "snake_stunned_in_coil", "snake_stunned_in_lunge", "snake_stunned_in_retreat"]:
+	for n in ["snake_plain", "snake_stunned_in_coil", "snake_stunned_in_lunge", "snake_killed_in_lunge", "snake_stunned_in_retreat"]:
 		await _check(n)
 
 # --- the legacy single-sprite path (no sheet), which reads the same behaviour state ---

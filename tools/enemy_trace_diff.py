@@ -6,6 +6,10 @@ import sys
 a = json.load(open(".tmp/enemy-trace/%s.json" % sys.argv[1]))
 b = json.load(open(".tmp/enemy-trace/%s.json" % sys.argv[2]))
 bad = 0
+for name in b:
+    if name not in a:
+        print("EXTRA", name)
+        bad += 1
 for name in a:
     if name not in b:
         print("MISSING", name)
