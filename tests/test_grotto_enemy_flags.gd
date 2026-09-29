@@ -44,3 +44,28 @@ func test_slow_for_halves_speed_for_its_seconds_and_thread_uses_it() -> void:
 	var f := _enemy("toad")
 	f.receive_thread(1)
 	assert_almost_eq(f._speed(), base * 0.5, 0.001, "receive_thread slows through slow_for")
+
+# --- the public seams the enemy characterization uses ---
+
+func test_seed_rng_makes_a_bats_rhythm_repeatable() -> void:
+	var a := _enemy("bat")
+	var b := _enemy("bat")
+	a.seed_rng(1234)
+	b.seed_rng(1234)
+	assert_eq(a._rng.randf(), b._rng.randf())
+
+func test_telegraphing_is_public_and_true_during_a_windup() -> void:
+	var lizard := _enemy("lizard")
+	assert_false(lizard.telegraphing())
+	lizard._charge = "windup"
+	assert_true(lizard.telegraphing())
+
+func test_anim_state_is_the_clip_pick_chose_and_empty_without_a_sheet() -> void:
+	var serpent := _enemy("serpent")
+	await wait_physics_frames(3)
+	assert_eq(serpent.anim_state(), "", "the serpent has no sheet")
+	var toad := Enemy.new()
+	toad.setup(creatures["toad"], skills_by_id)
+	add_child_autofree(toad)
+	await wait_physics_frames(3)
+	assert_true(["idle", "walk"].has(toad.anim_state()), toad.anim_state())

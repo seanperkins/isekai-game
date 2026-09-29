@@ -75,7 +75,7 @@ func test_a_moth_in_view_flashes_then_drops_a_puff_each_interval() -> void:
 	await wait_physics_frames(int((Enemy.PUFF_INTERVAL - Enemy.PUFF_WINDUP) * 60.0) - 10)
 	assert_eq(puff_events, 0, "not yet")
 	await wait_physics_frames(int(Enemy.PUFF_WINDUP * 30.0))
-	assert_true(m._telegraphing(), "it flashes before it drops")
+	assert_true(m.telegraphing(), "it flashes before it drops")
 	await wait_physics_frames(int(Enemy.PUFF_WINDUP * 60.0) + 20)
 	assert_eq(puff_events, 1, "one puff by the interval")
 	assert_gte(_puffs(), 1)
@@ -181,10 +181,10 @@ func test_a_puff_sinks_onto_a_player_standing_below_the_moth() -> void:
 func test_a_moth_killed_mid_windup_stops_flashing_its_warning() -> void:
 	var m := _enemy("spore_moth", Vector2(0, -100))
 	m._puff_windup = 0.3
-	assert_true(m._telegraphing())
+	assert_true(m.telegraphing())
 	m.receive_hit(99, "physical", Vector2.INF, "tackle")
 	await wait_physics_frames(3)
-	assert_false(m._telegraphing(), "a corpse does not telegraph")
+	assert_false(m.telegraphing(), "a corpse does not telegraph")
 
 func test_a_moth_turns_back_at_a_wall() -> void:
 	_solid(Rect2(60, -200, 20, 300))  # a wall just east of it

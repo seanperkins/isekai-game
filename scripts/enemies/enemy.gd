@@ -108,6 +108,8 @@ var _anchor := Vector2.ZERO
 var _puff_t := PUFF_INTERVAL
 var _puff_windup := 0.0
 var _lunge_dir := Vector2.ZERO
+## The animation state _draw_sheet_frame last chose (EnemyState.pick), "" for a creature with no sheet.
+var _anim_state := ""
 
 func setup(p_def: CreatureDef, skill_defs_by_id: Dictionary) -> void:
 	def = p_def
@@ -127,6 +129,14 @@ func setup(p_def: CreatureDef, skill_defs_by_id: Dictionary) -> void:
 	add_to_group("actors")
 	add_to_group("predatable")
 	add_to_group("inspectable")
+
+## Reseeds the enemy's own RNG (the bat's hover jitter): _ready seeds it from the instance id.
+func seed_rng(n: int) -> void:
+	_rng.seed = n
+
+## The animation state the enemy is playing (the EnemyState.pick result), "" for a creature with no sheet.
+func anim_state() -> String:
+	return _anim_state
 
 func _ready() -> void:
 	_home_x = global_position.x
@@ -337,7 +347,7 @@ func _update_visual(delta: float = 0.0) -> void:
 		_sprite.flip_v = status.state == EnemyStatus.DOWNED
 	if status.state == EnemyStatus.STUNNED:
 		_sprite.modulate = STUNNED_TINT
-	elif _telegraphing() and int(_anim_t / 0.08) % 2 == 0:
+	elif telegraphing() and int(_anim_t / 0.08) % 2 == 0:
 		_sprite.modulate = TELEGRAPH_TINT
 	else:
 		_sprite.modulate = Color.WHITE
@@ -345,6 +355,7 @@ func _update_visual(delta: float = 0.0) -> void:
 func _draw_sheet_frame(delta: float) -> void:
 	var state := EnemyState.pick(def.id, status.state, _charge, _swoop, _spit_windup > 0.0,
 		_spit_cd > SPIT_COOLDOWN - SPIT_POSE_SECONDS, _on_ceiling, is_on_floor(), absf(velocity.x) > 1.0, _hurt_t > 0.0)
+	_anim_state = state
 	_animator.play(state)
 	_animator.advance(delta)
 	var frame := _animator.frame()
@@ -354,7 +365,7 @@ func _draw_sheet_frame(delta: float) -> void:
 	_sprite.flip_v = false
 	_shapes.refresh(_sheet, frame, facing < 0)
 
-func _telegraphing() -> bool:
+func telegraphing() -> bool:
 	return _charge == "windup" or _swoop == "warn" or _spit_windup > 0.0 or _puff_windup > 0.0
 
 func _speed() -> float:
