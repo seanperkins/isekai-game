@@ -1,61 +1,191 @@
-# Right-stick aiming: design
+# Aiming with the right stick or the mouse: design
 
 ## Goal
 
-Aim a skill in any direction with the right stick, and see where it will go. The left stick and the keys keep working
-exactly as they do now.
+Play with keyboard and mouse, or with a controller, and aim a skill in any direction with the second pointing device of
+either: the mouse cursor, or the right stick. See where the skill will go. The left stick and the keys keep working exactly
+as they do now, and a player who never touches the mouse or the right stick notices nothing.
 
 ## Today
 
 - `Player.raw_aim()` reads the left stick (`Controls.last_stick`, raw, so a light tilt counts) or the keys
-  (`move_left/right`, `aim_up/down`). `resolve_aim` snaps it to 8 directions; under `AIM_DEADZONE` (0.35) it is "no aim"
-  and the skill casts forward (`facing`).
-- `use_active` stores `ability.aim = aim_vector() if aim_held() else Vector2.ZERO` at the press. A channel latches
-  `aim_dir()` at the press and never re-reads it.
-- The same `raw_aim()` also drives things that are not casting: the puddle spread (`wants_spread`, aim snapped straight
-  down on the floor) and rope reeling (`raw_aim().y`).
-- `Controls` listens to `JOY_AXIS_LEFT_X/Y` only. The right stick is unbound.
+  (`move_left/right`, `aim_up/down`); a held left stick beats the keys. `resolve_aim` snaps it to 8 directions; under
+  `AIM_DEADZONE` (0.35) it is "no aim".
+- `use_active` stores `ability.aim = aim_vector() if aim_held() else Vector2.ZERO` at the press. `ZERO` means "nothing
+  held": each ability applies its own default (`aim_dir()`: forward, or up-and-forward for Swing Thread).
+- Nothing re-reads the aim after the press. Hydraulic Propulsion latches its own direction (`_dir`); Sticky Thread latches
+  its target.
+- `raw_aim()` also drives things that are not casting: the puddle spread (`wants_spread`) and rope reeling (`raw_aim().y`).
+- `Controls._input` caches the left stick per axis (`last_stick`, last writer wins). For every joypad motion event it also
+  sets `last_device`; an axis past 0.25 or a pad button sets `using_joypad`, and a key press or mouse button clears it.
+  `using_joypad` picks the HUD's slot labels and hints (`slot_labels()`: `LB/RB/LT/RT` or `U/O/H/L`). The right stick has no
+  input action and the mouse has no binding: skills are `U/O/H/L` or `LB/RB/LT/RT`.
+- **Two sites rely on the 8-way snap making a "flat" aim exactly `y == 0`**: Hydraulic Propulsion's horizontal lift
+  (`is_zero_approx(dir.y)`) and `Player.apply_impulse`'s "a flat push keeps the current vertical speed"
+  (`is_zero_approx(v.y)`), which Jet Dash and Hydraulic Propulsion both go through. A free-angle aim would almost never
+  hit exactly zero, so a "forward" dash would cancel a jump or a fall and lose the lift.
+- Measured in a spike on this engine (4.7, headless): `Input.parse_input_event` of a joypad motion updates
+  `Input.get_joy_axis(device, axis)` per device, so the right stick can be polled and two pads never mix. And a tree that
+  is paused does not deliver `_input` to `Controls` (`can_process()` is false): while the skill screen is open no stick
+  or key event reaches it, so `last_stick` (which the skill screen reads for navigation) goes stale, and a right stick
+  first pushed during a pause would never be noticed.
 
 ## Design
 
-1. **`Controls.aim_stick`** (Vector2): the raw right stick, filled from `JOY_AXIS_RIGHT_X/Y` in `_input`, beside
-   `last_stick`. Nothing else in `Controls` changes; the right stick gets no input action, because it is read as a
-   vector, not pressed.
-2. **`Player.cast_aim()`**: the direction a skill is fired in. Right stick at or over `AIM_DEADZONE`: that direction,
-   normalised and **not snapped** (free 360 degrees, which is the point of a second stick). Otherwise the existing
-   `aim_vector()` (left stick or keys, 8-way, or forward). `use_active` calls `cast_aim()` when `cast_aim_held()`
-   (right stick engaged, or `aim_held()`), and `last_cast` records it.
-3. **`raw_aim()` is unchanged.** Spread and rope reeling stay on the left stick and keys, so tilting the right stick down
-   never flattens the slime or reels a rope.
-4. **Right stick beats left stick and keys for the cast only.** Moving with the left stick while aiming with the right
-   is the intended play; the skill goes where the right stick points.
-5. **A latched channel stays latched.** Holding Sticky Thread or Hydraulic Propulsion keeps the direction it had at the
-   press; steering it live is a later change.
-6. **`AimReticle`** (a `Node2D` child of the player): while the right stick is engaged, draws a small chevron and two
-   fading dots 28 px and 40 px from the slime along the stick, in the water/silk white of the effects. Hidden the rest
-   of the time, so keyboard and left-stick play look as they do today.
-7. **Debug overlay**: `hud.gd`'s input line also shows the right stick.
+The two schemes are the two values of `using_joypad`: **pad** (left stick moves, right stick aims) and **keyboard and
+mouse** (keys move, the cursor aims). Whichever device was used last is the scheme.
+
+1. **`Controls` reads the right stick.**
+   - `process_mode = PROCESS_MODE_ALWAYS` in `_ready`, so it keeps seeing input while the skill screen has the tree paused.
+     `Controls` only observes events and never consumes them, so this has no downside; it also fixes `last_stick` under the
+     skill screen and lets F11 work while paused.
+   - `aim_device` (int, -1 for none): the device of the last right-stick event past `STICK_DEADZONE` (0.25), set in
+     `_input`. A reading under 0.25 from another pad (sensor noise from an idle second pad) does not take the stick.
+     A pad button press can set `using_joypad` before any right-stick push, so `aim_device` can be -1 while `using_joypad`
+     is true: `right_stick()` is `ZERO` then.
+   - `raw_right_stick()` is `Vector2(Input.get_joy_axis(aim_device, JOY_AXIS_RIGHT_X), ...RIGHT_Y)` (`ZERO` for device -1),
+     ungated; the debug overlay shows the owning pad's raw reading. `right_stick()` is that reading when `using_joypad` is
+     true, `aim_device >= 0` and its length is at least `RIGHT_STICK_DEADZONE` (0.45), else `ZERO`. Polling fixes a pause
+     and two pads at once. It does not fix a stick released with no final event: the engine's per-device axis is as stale
+     as a cached one would be, so what protects against drift is the deadzone. A resting stick at (0.25, 0.25), the action
+     deadzone on each axis, is 0.354 and must not aim; and any reading of 0.45 or more has an axis of at least 0.318, past
+     0.25, so it has produced an owning event.
+   - `Input.joy_connection_changed`: when the device that left is `aim_device`, reset it to -1.
+   - `using_joypad` also enables the right stick. A key press or mouse click clears it, so a pad that has gone quiet cannot
+     steer a keyboard player; a pad that keeps emitting past 0.25 sets it again on its own (a limit, see Failure modes). A
+     keyboard skill press (U/O/H/L) closes the gate, so with a right stick at rest that cast uses what `raw_aim()` reads
+     today: a held left stick first, then the keys.
+2. **`Controls` reads the mouse.**
+   - `mouse_aim` (bool): true after a deliberate mouse move (an `InputEventMouseMotion` whose `relative` is at least
+     `MOUSE_MOVE_MIN`, 4 px) or a mouse button; either also clears `using_joypad`. False again on any pad input (the same
+     places that set `using_joypad`) and when a vertical aim key (`aim_up` or `aim_down`, pad D-pad included) is pressed:
+     the last of "the mouse moved" and "an aim key was pressed" aims. Horizontal movement keys do not affect it, so
+     running left and right never drops the mouse aim. A player who never moves the mouse has `mouse_aim` false forever.
+   - Mouse buttons are bound as skill aliases: left button to `active_1`, right button to `active_2`
+     (`MOUSE_BUTTONS`, added by `ensure_actions`). Holding one holds the channel. Tackle, eat and inspect stay on `J`, `K`
+     and `I`. The keys `U`/`O` keep working.
+   - `slot_labels()`: the pad labels when `using_joypad`, `LMB/RMB/H/L` when `mouse_aim`, else `U/O/H/L`.
+3. **`Player.free_aim()`**: the pointer's direction, `ZERO` when neither pointer is engaged. The source is
+   `Controls.right_stick()`, else `mouse_direction()`: `ZERO` unless `Controls.mouse_aim` is true and `using_joypad` is
+   false, else `pointer_world() - global_position` when its length is at least `MOUSE_DEADZONE` (12 world px, so a cursor
+   on the body does not jitter). `pointer_world()` is `get_global_mouse_position()` (which applies the camera and zoom),
+   or `pointer_override` when a test sets one. The source is normalised, then free (any angle) except: if
+   `abs(y) <= sin(10 degrees)` it is exactly `(sign(x), 0)`, and if `abs(x) <= sin(10 degrees)` exactly `(0, sign(y))`.
+   That keeps both flat-aim sites above exact (a shallow aim reads as flat) and absorbs a thumb's or a hand's wobble;
+   comparing components has no wrap-around at 180 degrees. The reticle and the cast both read this and nothing else, so
+   the deadzone rules live in one place. The right stick and the mouse never both apply: they belong to different values
+   of `using_joypad`.
+4. **`Player.cast_aim()`**: the direction a skill is fired in. `free_aim()` when it is not `ZERO`, else
+   `aim_vector() if aim_held() else Vector2.ZERO` (left stick or keys, 8-way, or "nothing held"). `use_active` sets
+   `ability.aim = cast_aim()`; `last_cast["aim"]` is still `ability.aim_dir()`. With the mouse live and the cursor clear of
+   the body there is always an aim: skills go where the cursor is.
+5. **`raw_aim()` is unchanged.** Spread and rope reeling stay on the left stick and keys, so neither the right stick nor the
+   mouse ever flattens the slime or reels a rope. The pointer beats the left stick and keys for the cast only.
+6. **`Player.can_cast()`**: `not (health.is_dead() or predation.active() or _channel != null or evolving())`. `use_active`
+   opens with `if not can_cast(): return`: today's guards plus `evolving()`, which is unreachable in play (`_physics_process`
+   returns before any cast while evolving) and harmless. The reticle asks it too.
+7. **`AimReticle`** (a `Node2D` named `AimReticle`, its own file, added in `Player._build_body()` beside `rope_line`): a
+   chevron and two dots drawn once along +X with `_draw()`, at 28, 40 and 52 px from the player's origin (the point skills
+   fire from), on top of the body. Each frame it reads `free_aim()` once, sets `visible = aim != ZERO and can_cast()`, and
+   while visible `rotation = aim.angle()` and `scale = Vector2.ONE * player.form_size()`. `form_size()` (an instance method)
+   is the form definition's `size` (1.0 with none): `body_scale()` is 1.0 for the four forms drawn from their own art,
+   which are drawn larger natively, so it cannot be used. It shows for the mouse as well as the right stick: the cursor is
+   the target, the reticle is the exact (snapped) direction the skill will take. Empty slots, cooldowns and low MP do not
+   hide it: it shows where the aim points, not whether a cast is ready. It does not hide for the skill screen or a room
+   slide: the first covers the world with a dim and a panel, and the second is 0.35 s. It shows the **aim direction**, not a
+   trajectory: Jet Dash flattens the vertical part and Puffball lobs, so those land differently.
+8. **Debug overlay** (`hud.gd`): the `aim` field, documented as the aim the player would cast with right now, becomes
+   `cast_aim()` (printed as `default` when it is `ZERO`); the first line also shows `Controls.aim_device` and
+   `Controls.raw_right_stick()` (the owning pad's ungated reading), and `mouse_aim`.
+9. **Facing** does not follow the right stick or the mouse: it follows movement, as today, so a cast behind the slime leaves
+   it facing forward. Turning to face the aim is a later change.
 
 ## Failure modes
 
-- Stick drift: a right stick resting at 0.2 must not aim; the deadzone is `AIM_DEADZONE`. Released, the reading returns
-  to zero (`_input` receives the 0 event), so a skill cast afterwards goes back to the left stick or forward.
-- Two pads: `aim_stick` follows the last pad that moved the right stick, like `last_stick`.
-- Free angles reach every ability: each one reads `aim_dir()` (a normalised vector; Swing Thread's default is the only
-  special case), so none assumes one of eight directions. One is exercised at 30 degrees in the tests.
-- A skill screen or a room change while the stick is held: the reticle is hidden by the same `_channel`-style stop sites
-  only if it needs them; it reads the stick every frame, so it needs none.
+- Drift and release: a stick under 0.45 does not engage; a disconnect resets the owning device.
+- Two pads: the last pad to push its right stick past 0.25 owns it, wholly. If the engine keeps a departed device's axis
+  values, a pad that reconnects could read a stale axis until it moves; check in the playtest.
+- Ghost or unmapped axes (some generic pads report triggers on the right-stick axes): if such a pad keeps emitting
+  motion it re-arms `using_joypad` after every key press and pins the aim. This is a known limit; the fix is remapping,
+  which is not in this change. Playtest with a real pad.
+- A keyboard-only player who bumps the mouse (4 px or more) gets mouse aim until they press a vertical aim key. Accepted:
+  the reticle shows it at once, and W/S (or the arrows) hands the aim back.
+- The cursor outside the window keeps its last position; the cursor on the body (under 12 world px) falls back to the keys
+  or forward, so a cast never fires at a random angle.
+- Free angles: every ability reads `aim_dir()` (a normalised vector); the only 8-way assumptions were the two flat-aim
+  sites, handled by the snap. Jet Dash's damped vertical and Puffball's lift are existing shaping of the aim.
+- Non-monotonic bands the free aim can reach, accepted: Hydraulic Propulsion at levels 1 to 7 lifts less aimed 10 to
+  about 22 degrees up than aimed flat (the flat lift is a fixed -140, the aimed lift grows with the angle); a mid-jump Jet
+  Dash aimed from 10 degrees up to `asin(rise / 420)` rises less than a flat one (52 degrees at the start of a base jump,
+  more with high jump height; the 8-way diagonal already sits in this band early in a jump), and aimed just under the snap
+  band downward it cancels the rise.
+- The left stick already aims from a resting (0.25, 0.25) (length 0.354 is over `AIM_DEADZONE`); out of scope.
+
+## Consistency sweep (surfaces that change)
+
+- `docs/playtest-checklist.md`: the Controls and Gamepad lines (5, 6: add the mouse, the right stick and the skill
+  aliases), "aims the skill (8-way)" (24), the controller aiming check (28): add the mouse, the right stick and the
+  reticle; line 39 ("the stick moves one row per push") means the left stick and is expected to start working with the
+  paused-`Controls` fix; add "unplug the pad while holding the right stick: the reticle goes away" and "a bumped mouse
+  aims; W/S hands the aim back".
+- `Player`: comment on `AIM_DEADZONE` ("Stick/keys below this length cast forward"), the "Nothing held" comment in
+  `use_active`, the `raw_aim()` doc (left stick or keys; the pointers are deliberately excluded).
+- `Controls`: the header ("the last device used picks the HUD labels"), a doc line on `using_joypad` (it also enables the
+  right stick), on `STICK_DEADZONE` (it also decides right-stick ownership), on `last_stick` (it drives `raw_aim` and
+  skill-screen navigation), on `aim_device` and on `mouse_aim`; `slot_labels()` and its test
+  (`tests/test_controls_joypad.gd`, which keeps passing: `mouse_aim` is false there).
+- `hud.gd`: the doc above `input_debug_text` and its format string (`aim_device`, the raw right stick, `mouse_aim`,
+  `default` for a zero aim). `hydraulic_propulsion.gd`'s header ("A horizontal burst also lifts"): now within 10 degrees.
+- `tests/test_aiming.gd` header ("8-way") and `tests/test_input_debug.gd` header ("F1 / Back"; the key is F3): true only
+  of the left stick and keys.
 
 ## Not in this change
 
-Mouse aiming, aim assist toward nearby enemies, steering a channel with the right stick, remapping.
+Aim assist toward nearby enemies, steering a channel with the pointer, turning to face the aim, remapping, skill-aware
+trajectory previews, hiding the reticle for the skill screen or a room slide, hiding the OS cursor while a pad is used,
+confining the cursor to the window, mouse buttons for tackle, eat and inspect, mouse wheel actions.
 
 ## Tests
 
-- `Controls`: a right-stick motion event fills `aim_stick`; a zero event clears it.
-- `Player.cast_aim`: right stick right-and-slightly-up gives that exact normalised vector (not snapped); under the
-  deadzone falls back to the left stick's snapped aim, then to forward; right stick wins over a held left stick.
-- `use_active` stores the free aim in `ability.aim`, and `last_cast["aim"]` matches.
-- Spread and rope reel ignore the right stick.
-- Reticle: hidden with no right stick, visible and pointing along it with one, gone again on release.
-- An ability fired at 30 degrees (Venom Bolt or the thread) travels along that angle.
+`tests/support/pad_input.gd` (`class_name PadInput`, as `tests/support/test_defs.gd` is) holds the helpers every new test
+uses: `axis(axis, value, device := 0)` (`Input.parse_input_event`, flush, then `Controls._input(ev)`, as
+`tests/test_aim_fixes.gd` does), `key`, `button`, `mouse_move(relative)`, `mouse_button(index)`, and `reset()` (zero all four
+stick axes on devices 0 and 1, reset `aim_device`, `last_device`, `last_stick`, `using_joypad` and `mouse_aim`, release
+`aim_up`/`aim_down`/`move_left`/`move_right`). Every new test file, and `tests/test_input_debug.gd` (which will now push
+both sticks on a live game), calls `PadInput.reset()` in `after_each`, and a test that pauses the tree unpauses it there.
+Vector comparisons use `is_equal_approx`, except the snapped axes, which are exact.
+
+- `Controls`, right stick: paused, `Controls.can_process()` is still true; a push past 0.25 makes its device the owner and
+  the polled reading comes back; a pad button press with no right-stick push (`using_joypad` true, `aim_device` -1) reads
+  `ZERO`; an owning push of (0.3, 0.3) reads `ZERO` (0.424, under 0.45), and so does (0.25, 0.25) after it; a sub-0.25
+  event from a second device does not take the stick (device 0 right = 1.0, then device 1 right-Y = 0.05: still (1, 0)); a
+  real push on the second takes it wholly; a key press makes it `ZERO` and a 0.5 right-stick event after it engages it
+  again (the limit, pinned); the disconnect handler, called directly with the axis still held on the departing device,
+  resets the owner and reads `ZERO`.
+- `Controls`, mouse: a motion of 4 px or more sets `mouse_aim` and clears `using_joypad`; 3 px does neither; a mouse
+  button does both; a pad button or push clears `mouse_aim`; `aim_up` or `aim_down` pressed clears it; `move_left` pressed
+  does not; `active_1` and `active_2` each have a mouse-button event in the `InputMap`; `slot_labels()` is
+  `LMB/RMB/H/L` with `mouse_aim`, the pad labels with `using_joypad`, `U/O/H/L` otherwise.
+- `Player.free_aim`/`cast_aim`, right stick: 30 degrees up from right is that exact normalised vector; the snap holds on all
+  four axes at 5 degrees each side (including 180 +/- 5), does not snap at 10.1 degrees and does at 9.9; a partial tilt of
+  (0.55, 0.13) (13 degrees once normalised) is not snapped, so the comparison is on the normalised vector; under the
+  deadzone falls back to the left stick's snapped aim, then to `ZERO`; the right stick wins over a held left stick and over
+  the keys; a device-1 right stick then a key press (which clears the gate) then a held left stick casts along the left
+  stick, and with the left stick neutral along the keys.
+- `Player.free_aim`/`cast_aim`, mouse (with `pointer_override`): `ZERO` while `mouse_aim` is false; the cursor 30 degrees up
+  from the player is that exact direction; the snap holds at 5 degrees off horizontal; a cursor 5 px away is `ZERO` and
+  falls back to the keys; a pad push after the mouse hands the aim back to the stick; the cast follows the cursor over a held
+  left stick and over the keys.
+- `can_cast()`: once per state (dead through `health.take_hit(health.hp, "physical")` because setting `hp` does not set
+  the dead flag; eating; channel live; evolving; none), and `use_active` does nothing in the first three.
+- One end-to-end cast: with the right stick at 30 degrees, `use_active` on Water Blade sets `ability.aim`,
+  `last_cast["aim"]` matches, and the slash is turned to the angle; the same with the cursor.
+- The two flat-aim sites: Hydraulic Propulsion cast with the aim 3 degrees off horizontal keeps its lift; Jet Dash mid-jump
+  3 degrees off horizontal keeps `velocity.y`.
+- Spread and rope reel ignore both pointers.
+- The pointer moving during a live Hydraulic hold does not change `_dir`.
+- Reticle: hidden with no pointer; visible and rotated to the stick, and to the cursor; scaled by the form's `size` (evolve to
+  weaver, 1.12, which has its own art, then clear the evolve moment; a fresh player is 1.0); hidden when `can_cast()` is
+  false; not a `ColorRect` and not in group `vfx`.
+- Debug overlay: with the left stick up and the right stick right the `aim` field reads right, it reads `default` with
+  nothing held, and the first line shows the owning pad's raw right stick even under the deadzone, and `mouse_aim`.
