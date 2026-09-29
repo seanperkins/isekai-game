@@ -4,11 +4,15 @@ extends CanvasLayer
 ## detail card. Esc / Start opens it and pauses the game; Q/E or LB/RB switch tabs;
 ## Enter / A assigns an active to the U/O slots; Esc / B closes. Laid out for 640x360.
 
+## The five base tabs. A sixth, "form", joins once the body has evolved or can (see tabs()).
 const TABS := ["skills", "compendium", "bestiary", "map", "sound"]
-## Five tabs share the top row: they end at x = 532 on the 640 px canvas.
+const FORM_TAB := "form"
+## Five tabs share the top row: they end at x = 532 on the 640 px canvas; six are narrower.
 const TAB_X := 28.0
 const TAB_STRIDE := 102.0
 const TAB_W := 96.0
+const TAB_STRIDE_SIX := 88.0
+const TAB_W_SIX := 84.0
 ## Sprite frame used as each creature's Bestiary portrait.
 const PORTRAIT := {"bat": "bat_1", "toad": "toad_idle", "lizard": "lizard_1", "spider": "spider_crawl",
 	"serpent": "serpent"}
@@ -28,6 +32,7 @@ const COL_ROW := Color(0.05, 0.11, 0.27, 0.95)
 const COL_SELECTED := Color(0.1, 0.32, 0.6, 1.0)
 const COL_TITLE := Color(0.55, 0.85, 1.0)
 const COL_DIM := Color(0.55, 0.62, 0.75)
+const COL_CAPPED := Color(1.0, 0.8, 0.35)
 const COL_PIP_ON := Color(0.35, 0.85, 1.0)
 const COL_PIP_OFF := Color(0.2, 0.28, 0.42)
 const FONT_BIG := 12
@@ -53,6 +58,7 @@ var _list := Control.new()
 var _detail := Control.new()
 var _stats := Control.new()
 var _tab_labels: Array = []
+var _tab_strip := Control.new()
 var _hint := Label.new()
 var _nav_dir := 0
 var _world: World
@@ -95,11 +101,26 @@ func toggle() -> void:
 	else:
 		open()
 
+## The tabs showing now: the base five, plus Form once the body has evolved or can.
+func tabs() -> Array:
+	var t: Array = TABS.duplicate()
+	if _form_tab_shown():
+		t.append(FORM_TAB)
+	return t
+
+func _form_tab_shown() -> bool:
+	return _player != null and (_player.form.stage > 1 or _player.progression.can_evolve())
+
+## (stride, width) of a tab for a strip of `n` tabs.
+static func tab_layout(n: int) -> Vector2:
+	return Vector2(TAB_STRIDE, TAB_W) if n <= TABS.size() else Vector2(TAB_STRIDE_SIX, TAB_W_SIX)
+
 func tab() -> String:
-	return TABS[_tab]
+	var t := tabs()
+	return t[clampi(_tab, 0, t.size() - 1)]
 
 func switch_tab(i: int) -> void:
-	_tab = posmod(i, TABS.size())
+	_tab = posmod(i, tabs().size())
 	_sel = 0
 	_scroll = 0
 	_refresh()
@@ -123,6 +144,12 @@ func selected_id() -> String:
 ## (U → O → H → L → U).
 func accept() -> void:
 	var id := selected_id()
+	if tab() == FORM_TAB:
+		if id != "" and _player.advance_form(id):
+			EventBus.world_event.emit("menu_confirm", {})
+			_sel = 0
+		_refresh()
+		return
 	if id != "" and _rows[_selectable[_sel]]["kind"] == "ready":
 		if _player.try_evolve(id):
 			EventBus.world_event.emit("menu_confirm", {})
@@ -237,11 +264,8 @@ func _build_frame() -> void:
 	_panel(_frame, Vector2(20, 34), Vector2(600, 292), COL_BG, 2)
 	_panel(_frame, Vector2(28, 40), Vector2(124, 280), Color(0.02, 0.05, 0.14, 0.9), 1)
 	_panel(_frame, Vector2(410, 40), Vector2(202, 280), Color(0.02, 0.05, 0.14, 0.9), 1)
-	for i in TABS.size():
-		var tab_panel := _panel(_frame, Vector2(TAB_X + i * TAB_STRIDE, 10), Vector2(TAB_W, 20), COL_ROW, 1)
-		var l := _label(tab_panel, TABS[i].to_upper(), Vector2(0, 3), Vector2(TAB_W, 14), FONT_MAIN, Color.WHITE)
-		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		_tab_labels.append(tab_panel)
+	_frame.add_child(_tab_strip)
+	_build_tabs()
 	for c in [_stats, _list, _detail]:
 		_frame.add_child(c)
 	_hint.position = Vector2(20, 334)
@@ -252,9 +276,24 @@ func _build_frame() -> void:
 	_hint.add_theme_color_override("font_color", COL_DIM)
 	_frame.add_child(_hint)
 
+## (Re)builds the tab strip for the tabs showing now.
+func _build_tabs() -> void:
+	_clear(_tab_strip)
+	_tab_labels.clear()
+	var names := tabs()
+	var layout := tab_layout(names.size())
+	for i in names.size():
+		var tab_panel := _panel(_tab_strip, Vector2(TAB_X + i * layout.x, 10), Vector2(layout.y, 20), COL_ROW, 1)
+		var l := _label(tab_panel, str(names[i]).to_upper(), Vector2(0, 3), Vector2(layout.y, 14), FONT_MAIN, Color.WHITE)
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_tab_labels.append(tab_panel)
+
 func _refresh() -> void:
 	if _player == null:
 		return
+	if _tab_labels.size() != tabs().size():
+		_build_tabs()
+	_tab = clampi(_tab, 0, tabs().size() - 1)
 	for i in _tab_labels.size():
 		var style: StyleBoxFlat = _tab_labels[i].get_theme_stylebox("panel")
 		style.bg_color = COL_SELECTED if i == _tab else COL_ROW
@@ -266,6 +305,9 @@ func _refresh() -> void:
 		_clear(_list)
 		_clear(_detail)
 		_build_map()
+		return
+	if tab() == FORM_TAB:
+		_refresh_form()
 		return
 	if tab() == "sound":
 		_rows = SkillScreenModel.sound_rows(Audio.settings)
@@ -366,8 +408,8 @@ func _build_row(r: Dictionary, y: float, selected: bool) -> void:
 	var name_text: String = "???" if r["kind"] == "locked" else r["name"]
 	_label(_list, name_text, Vector2(LIST_X + 24, y + 4), Vector2(128, 12), FONT_MAIN, COL_DIM if locked else Color.WHITE)
 	if r["kind"] == "skill":
-		_label(_list, "Lv%d" % r["level"], Vector2(LIST_X + 156, y + 4), Vector2(28, 12), FONT_MAIN, Color.WHITE)
-		_pips(_list, Vector2(LIST_X + 186, y + 8), r["level"], r["max_level"])
+		_label(_list, "Lv%d" % r["level"], Vector2(LIST_X + 156, y + 4), Vector2(28, 12), FONT_MAIN, COL_CAPPED if r.get("capped", false) else Color.WHITE)
+		_bar(_list, Vector2(LIST_X + 186, y + 9), Vector2(50, 4), float(r["level"]) / maxf(1.0, float(r["max_level"])), COL_CAPPED if r.get("capped", false) else COL_PIP_ON)
 	elif r["kind"] == "ready":
 		_label(_list, "EVOLVE %d EP" % r["cost"], Vector2(LIST_X + 170, y + 5), Vector2(70, 10), FONT_SMALL, Color(1.0, 0.85, 0.45))
 	elif r["kind"] == "slot":
@@ -412,7 +454,7 @@ func _build_detail() -> void:
 	_icon(_detail, "icon_" + id, Vector2(DETAIL_X, 50), 40)
 	_label(_detail, card["name"], Vector2(DETAIL_X + 46, 50), Vector2(146, 16), FONT_BIG, Color.WHITE)
 	_label(_detail, "Lv %d / %d" % [card["level"], card["max_level"]], Vector2(DETAIL_X + 46, 68), Vector2(80, 12), FONT_MAIN, COL_TITLE)
-	_pips(_detail, Vector2(DETAIL_X + 48, 84), card["level"], card["max_level"])
+	_bar(_detail, Vector2(DETAIL_X + 48, 85), Vector2(140, 4), float(card["level"]) / maxf(1.0, float(card["max_level"])), COL_CAPPED if card.get("capped", false) else COL_PIP_ON)
 	_label(_detail, card["description"], Vector2(DETAIL_X, 100), Vector2(190, 30), FONT_SMALL, Color.WHITE, true)
 	var y := 134.0
 	if card["mp_cost"] > 0:
@@ -421,9 +463,11 @@ func _build_detail() -> void:
 	for line in card["lines"]:
 		_label(_detail, line, Vector2(DETAIL_X, y), Vector2(190, 12), FONT_MAIN, Color.WHITE)
 		y += 14.0
+	if card.get("capped", false):
+		_label(_detail, SkillScreenModel.capped_text(), Vector2(DETAIL_X, 262), Vector2(190, 12), FONT_SMALL, COL_CAPPED)
 	if card["progress"] >= 0.0:
 		_label(_detail, "Next level", Vector2(DETAIL_X, 272), Vector2(100, 12), FONT_SMALL, COL_DIM)
-		_bar(_detail, Vector2(DETAIL_X, 286), Vector2(150, 6), card["progress"], COL_PIP_ON)
+		_bar(_detail, Vector2(DETAIL_X, 286), Vector2(150, 6), card["progress"], COL_CAPPED if card.get("capped", false) else COL_PIP_ON)
 	else:
 		_label(_detail, "MAX LEVEL", Vector2(DETAIL_X, 280), Vector2(100, 12), FONT_SMALL, COL_TITLE)
 	if card["slot"] >= 0:
@@ -530,6 +574,98 @@ func _build_sound() -> void:
 		y += 34.0
 
 # --- helpers --------------------------------------------------------------
+
+## Form tab: the offers are the selectable rows (empty below the level cap).
+func _refresh_form() -> void:
+	_rows = []
+	for f in _player.form_offers():
+		_rows.append({"kind": "offer", "id": f.id, "name": f.display_name})
+	_selectable = []
+	for i in _rows.size():
+		_selectable.append(i)
+	_sel = clampi(_sel, 0, maxi(0, _selectable.size() - 1))
+	if _selectable.is_empty():
+		_hint.text = "LB/RB Tabs    B Back" if Controls.using_joypad else "Q/E Tabs    Esc Back"
+	else:
+		_hint.text = "LB/RB Tabs    A Evolve    B Back" if Controls.using_joypad else "Q/E Tabs    Enter Evolve    Esc Back"
+	_build_stats()
+	_clear(_list)
+	_clear(_detail)
+	_build_form()
+
+## One paragraph about the body: who you are, and what evolving offers (or that it is the only path).
+func form_note() -> String:
+	var d := _player.form_def()
+	var who := "Slime" if d == null else d.display_name
+	var note := "%s, stage %d of %d. Skills reach Lv%d." % [who, _player.form.stage, Progression.MAX_STAGE, _player.form.cap()]
+	var offers := _player.form_offers()
+	if offers.size() == 1:
+		note += " Your body can evolve. There is only one path: %s." % (offers[0] as FormDef).display_name
+	elif offers.size() > 1:
+		note += " Your body can evolve: choose a form."
+	elif _player.progression.stage < Progression.MAX_STAGE:
+		note += " Reach level %d to evolve." % Progression.LEVEL_CAP
+	else:
+		note += " This is your final form."
+	return note
+
+func _build_form() -> void:
+	_label(_list, form_note(), Vector2(LIST_X, LIST_TOP + 4), Vector2(LIST_W, 44), FONT_MAIN, Color.WHITE, true)
+	var d := _player.form_def()
+	var y := LIST_TOP + 52.0
+	if d != null:
+		for t in d.traits:
+			_label(_list, FormEffects.TRAITS.get(t, str(t)), Vector2(LIST_X, y), Vector2(LIST_W, 12), FONT_SMALL, COL_TITLE)
+			y += 12.0
+		for line in FormEffects.stat_lines(d):
+			_label(_list, line, Vector2(LIST_X, y), Vector2(LIST_W, 12), FONT_SMALL, COL_DIM)
+			y += 11.0
+		y += 8.0
+	if _selectable.is_empty():
+		return
+	for i in _selectable.size():
+		var row: Dictionary = _rows[_selectable[i]]
+		var selected := i == _sel
+		_panel(_list, Vector2(LIST_X, y), Vector2(LIST_W, ROW_H - 2), COL_SELECTED if selected else COL_ROW, 2 if selected else 1)
+		var f: FormDef = _player.forms[row["id"]]
+		var look := FormEffects.look(f, _player.body_sheet() if _player.body_sheet() != null else SpriteSheet.load_set("slime"))
+		var thumb := TextureRect.new()
+		thumb.texture = look["texture"]
+		thumb.modulate = look["tint"]
+		thumb.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		thumb.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		thumb.position = Vector2(LIST_X + 3, y + 2)
+		thumb.size = Vector2(18, 16)
+		_list.add_child(thumb)
+		_label(_list, row["name"], Vector2(LIST_X + 26, y + 4), Vector2(200, 12), FONT_MAIN, Color.WHITE)
+		y += ROW_H
+	# the selected offer's card
+	var sel: FormDef = _player.forms[_rows[_selectable[_sel]]["id"]]
+	var look2 := FormEffects.look(sel, SpriteSheet.load_set("slime"))
+	var big := TextureRect.new()
+	big.texture = look2["texture"]
+	big.modulate = look2["tint"]
+	big.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	big.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	big.position = Vector2(DETAIL_X, 48)
+	big.size = Vector2(190, 70)
+	_detail.add_child(big)
+	_label(_detail, sel.display_name, Vector2(DETAIL_X, 122), Vector2(190, 16), FONT_BIG, Color.WHITE)
+	_label(_detail, "Stage %d" % sel.stage, Vector2(DETAIL_X, 138), Vector2(190, 12), FONT_SMALL, COL_TITLE)
+	_label(_detail, sel.blurb, Vector2(DETAIL_X, 152), Vector2(190, 34), FONT_SMALL, Color.WHITE, true)
+	var dy := 190.0
+	for line in FormEffects.stat_lines(sel):
+		_label(_detail, line, Vector2(DETAIL_X, dy), Vector2(190, 12), FONT_SMALL, COL_DIM)
+		dy += 11.0
+	for t in sel.traits:
+		_label(_detail, FormEffects.TRAITS.get(t, str(t)), Vector2(DETAIL_X, dy), Vector2(190, 22), FONT_SMALL, COL_TITLE, true)
+		dy += 22.0
+	if not sel.grants.is_empty():
+		var names: Array = []
+		for g in sel.grants:
+			var sd = _defs.get(g)
+			names.append(sd.display_name if sd != null else g)
+		_label(_detail, "Grants: " + ", ".join(names), Vector2(DETAIL_X, dy), Vector2(190, 24), FONT_SMALL, Color.WHITE, true)
 
 func _row_height(r: Dictionary) -> float:
 	return HEADER_H if r["kind"] == "header" else ROW_H

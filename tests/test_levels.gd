@@ -145,7 +145,7 @@ func test_hud_shows_level_xp_and_ep_and_enemies_award_xp_in_game() -> void:
 	var game = load("res://scenes/main.tscn").instantiate()
 	add_child_autofree(game)
 	await wait_physics_frames(1)
-	assert_eq(game.hud.level_text(), "Lv 1  XP 0/10  EP 0")
+	assert_eq(game.hud.level_text(), "Lv 1/10  XP 0/10  EP 0")
 	var bat: Enemy = get_tree().get_nodes_in_group("actors").filter(func(n): return n is Enemy and n.def.id == "bat")[0]
 	bat.receive_hit(99, "physical")
 	bat.finish_dying()

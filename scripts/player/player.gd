@@ -471,6 +471,15 @@ func try_evolve(id: String) -> bool:
 	EventBus.world_event.emit("evolved", {"id": id})
 	return true
 
+## The forms on offer right now (FormDefs): empty until the level cap is reached, and at the last stage.
+func form_offers() -> Array:
+	var out: Array = []
+	if not progression.can_evolve():
+		return out
+	for id in FormOffers.offers(forms, form, FormOffers.absorbed_units(_rules), FormOffers.default_supply(forms)):
+		out.append(forms[id])
+	return out
+
 ## The form's definition, or null for the base slime.
 func form_def() -> FormDef:
 	return forms.get(form.form_id)

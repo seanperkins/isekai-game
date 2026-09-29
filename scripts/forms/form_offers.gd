@@ -10,6 +10,17 @@ const MAX_OFFERS := 3
 const LINEAGE_ORDER := ["weaver", "tide", "toxic", "bulwark", "echo"]
 const FALLBACK := "greater_slime"
 
+static var _default_supply := {}
+
+## The supply over the shipped rooms and creatures (res://data), computed once.
+static func default_supply(forms: Dictionary) -> Dictionary:
+	if _default_supply.is_empty():
+		var creatures := {}
+		for c in DefLoader.load_dir("res://data/creatures"):
+			creatures[c.id] = c
+		_default_supply = supply(World.load_rooms("res://data/rooms"), creatures, forms)
+	return _default_supply
+
 ## lineage -> its essences, read from the stage-2 forms.
 static func lineage_essences(forms: Dictionary) -> Dictionary:
 	var out := {}

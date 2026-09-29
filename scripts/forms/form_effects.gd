@@ -27,6 +27,23 @@ static func modifiers(def: FormDef) -> Array:
 		out.append({"stat": stat, "op": "add", "value": int(def.stats[stat])})
 	return out
 
+const STAT_LABEL := {"max_hp": "Max HP", "atk": "ATK", "def": "DEF", "spd": "SPD", "jump_height": "Jump height",
+	"slide_speed": "Slide speed", "predation_time": "Eat time", "max_mp": "Max MP", "mp_regen": "MP regen"}
+
+## Readable lines for a form's stat changes: "+5 Max HP", "-10 Eat time".
+static func stat_lines(def: FormDef) -> Array:
+	var out: Array = []
+	for stat in def.stats:
+		var v := int(def.stats[stat])
+		out.append("%s%d %s" % ["+" if v >= 0 else "", v, STAT_LABEL.get(stat, stat)])
+	return out
+
+## What a form looks like: its own sheet's idle frame, or the base sheet's idle frame with the form's tint.
+static func look(def: FormDef, base_sheet: SpriteSheet) -> Dictionary:
+	if def.sprite_set != "" and SpriteSheet.available(def.sprite_set):
+		return {"texture": SpriteSheet.load_set(def.sprite_set).frame_texture("idle_1"), "tint": Color.WHITE}
+	return {"texture": base_sheet.frame_texture("idle_1"), "tint": def.tint}
+
 ## The trait flags a form turns on.
 static func flags(def: FormDef) -> Dictionary:
 	var out := {}
