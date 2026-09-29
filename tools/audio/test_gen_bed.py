@@ -1,7 +1,9 @@
+import http.server
 import math
 import os
 import sys
 import tempfile
+import threading
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -115,6 +117,27 @@ class GenBedTest(unittest.TestCase):
                 self.assertIn('"loop": true', calls[1][2])
         finally:
             del os.environ["ELEVENLABS_API_KEY"]
+
+    def test_a_refused_request_reports_what_the_server_said(self):
+        class Refuse(http.server.BaseHTTPRequestHandler):
+            def do_POST(self):
+                self.send_response(402)
+                self.end_headers()
+                self.wfile.write(b'{"detail":{"code":"paid_plan_required"}}')
+
+            def log_message(self, *args):
+                pass
+
+        server = http.server.HTTPServer(("127.0.0.1", 0), Refuse)
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        try:
+            with self.assertRaises(a.AudioToolError) as ctx:
+                gen_bed._fetch("http://127.0.0.1:%d/x" % server.server_port, {}, "{}")
+        finally:
+            server.shutdown()
+            server.server_close()
+        self.assertIn("402", str(ctx.exception))
+        self.assertIn("paid_plan_required", str(ctx.exception))
 
 
 if __name__ == "__main__":

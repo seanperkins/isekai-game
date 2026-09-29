@@ -14,6 +14,7 @@ import os
 import random
 import sys
 import tempfile
+import urllib.error
 import urllib.request
 import zlib
 
@@ -40,6 +41,9 @@ def _fetch(url, headers, body):
     try:
         with urllib.request.urlopen(request, timeout=300) as response:
             return response.read()
+    except urllib.error.HTTPError as e:  # keep the body: it says why (a plan limit, a bad field)
+        detail = e.read()[:300].decode(errors="replace")
+        raise audiolib.AudioToolError("request to %s failed: HTTP %s %s" % (url, e.code, detail)) from e
     except OSError as e:
         raise audiolib.AudioToolError("request to %s failed: %s" % (url, e)) from e
 
