@@ -34,6 +34,9 @@ func test_tackle_stuns_and_makes_it_predatable() -> void:
 func test_lethal_damage_downs_instead_of_removing() -> void:
 	var bat := _enemy("bat")
 	bat.receive_hit(9, "physical")
+	assert_eq(bat.status.state, EnemyStatus.DYING)
+	assert_false(bat.can_be_predated(), "not edible while the death effect plays")
+	bat.finish_dying()
 	assert_eq(bat.status.state, EnemyStatus.DOWNED)
 	assert_true(bat.can_be_predated())
 	assert_true(bat.receive_tackle(1, true) == false)  # downed: no further tackle effect
@@ -42,6 +45,8 @@ func test_tackle_that_downs_still_counts() -> void:
 	var bat := _enemy("bat")
 	bat.receive_hit(1, "physical")
 	assert_true(bat.receive_tackle(1, false))
+	assert_eq(bat.status.state, EnemyStatus.DYING)
+	bat.finish_dying()
 	assert_eq(bat.status.state, EnemyStatus.DOWNED)
 
 func test_lizard_is_only_stunned_from_behind() -> void:

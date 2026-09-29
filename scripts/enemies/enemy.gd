@@ -74,6 +74,9 @@ var _charge := ""  # "", "windup", "charge", "rest"
 var _charge_t := 0.0
 var _swoop := "idle"  # idle, hover, warn, dive, climb
 var _swoop_t := 0.0
+## Why the last blow landed ("tackle", "poison", "blade", "other") and where it came from.
+var _cause := ""
+var _killed_from := Vector2.INF
 var _dive_dir := Vector2.ZERO
 var _rng := RandomNumberGenerator.new()
 
@@ -102,17 +105,27 @@ func _ready() -> void:
 	if get_child_count() == 0:
 		_build_body()
 
-func receive_hit(raw: int, damage_type: String) -> void:
-	if status.state == EnemyStatus.DOWNED or status.state == EnemyStatus.GONE:
+static func cause_for(damage_type: String) -> String:
+	return "poison" if damage_type == "poison" else "other"
+
+func _untouchable() -> bool:
+	return status.state == EnemyStatus.DOWNED or status.state == EnemyStatus.GONE or status.state == EnemyStatus.DYING
+
+## `cause` names the blow for the death effect; it is stored before the hit because _on_died() takes
+## no arguments.
+func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, cause: String = "") -> void:
+	if _untouchable():
 		return
+	_cause = cause if cause != "" else cause_for(damage_type)
+	_killed_from = from
 	health.take_hit(Damage.direct_hit(raw, 0, stats.get_stat("def")), damage_type)
 
 ## Returns true when the tackle stunned or downed this enemy (the player emits stunned_enemy).
-func receive_tackle(atk: int, from_behind: bool) -> bool:
-	if status.state == EnemyStatus.DOWNED or status.state == EnemyStatus.GONE:
+func receive_tackle(atk: int, from_behind: bool, from: Vector2 = Vector2.INF) -> bool:
+	if _untouchable():
 		return false
-	receive_hit(atk, "physical")
-	if status.state == EnemyStatus.DOWNED:
+	receive_hit(atk, "physical", from, "tackle")
+	if status.state == EnemyStatus.DYING or status.state == EnemyStatus.DOWNED:
 		return true
 	if not def.predatable:
 		return false  # the serpent can't be stunned
@@ -122,6 +135,8 @@ func receive_tackle(atk: int, from_behind: bool) -> bool:
 	return true
 
 func receive_thread(tier: int) -> void:
+	if _untouchable():
+		return
 	if tier >= 2 and def.predatable:
 		status.stun()
 	else:
@@ -138,9 +153,14 @@ func consume() -> CreatureDef:
 	queue_free()
 	return def
 
+## Ends the death effect: the creature lies downed and its 5 s eat window starts.
+func finish_dying() -> void:
+	if status.state == EnemyStatus.DYING:
+		status.down()
+
 func _on_died() -> void:
 	if def.predatable:
-		status.down()
+		status.die()  # the death effect ends in down() and starts the eat window
 	else:
 		status.consume()  # Plan 3 turns the serpent's death into victory
 	downed.emit(def)

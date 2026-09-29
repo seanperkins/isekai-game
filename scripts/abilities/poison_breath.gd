@@ -5,7 +5,7 @@ const RANGE := 56.0
 
 func _perform() -> void:
 	for t in targets_in_front(RANGE, 24.0):
-		t.receive_hit(value(), "poison")
+		t.receive_hit(value(), "poison", actor.global_position, "poison")
 	var dir := aim_dir()
 	var side := Vector2(-dir.y, dir.x)
 	var puffs: Array = []

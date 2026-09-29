@@ -59,6 +59,7 @@ func test_enemy_sprite_shows_state() -> void:
 	bat._update_visual()
 	assert_ne(_sprite(bat).modulate, Color.WHITE)
 	bat.receive_hit(9, "physical")
+	bat.finish_dying()
 	bat._update_visual()
 	assert_true(_sprite(bat).flip_v)
 

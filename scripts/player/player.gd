@@ -285,7 +285,7 @@ func do_tackle() -> void:
 	if target == null or not target.has_method("receive_tackle"):
 		return
 	var from_behind: bool = target.facing == facing
-	if target.receive_tackle(stats.get_stat("atk"), from_behind):
+	if target.receive_tackle(stats.get_stat("atk"), from_behind, global_position):
 		_emit.call(Events.STUNNED_ENEMY, {"source": target.def.id})
 
 func begin_predate() -> void:
@@ -471,7 +471,7 @@ func aim_vector() -> Vector2:
 	return resolve_aim(raw_aim(), facing)
 
 ## `from` is the attacker's position for contact hits; the slime is knocked away from it.
-func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF) -> void:
+func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, _cause: String = "") -> void:
 	if _invuln > 0.0 or health.is_dead():
 		return
 	var m := skillset.incoming(damage_type, health.hp, health.max_hp)
