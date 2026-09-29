@@ -1,0 +1,610 @@
+{
+  "_doc": "How terrain_build.py turns art_source/terrain/<biome>/<piece>_raw.png into game assets. Tiles and strips are divided by 8 so a 1024 px stone texture becomes a 128 px repeat; decor is fitted inside `max` px.",
+  "biomes": {
+    "cave": {
+      "fill_a": {
+        "kind": "tile",
+        "size": [
+          128,
+          128
+        ]
+      },
+      "backwall": {
+        "kind": "tile",
+        "size": [
+          128,
+          128
+        ]
+      },
+      "cap_top": {
+        "kind": "strip_x",
+        "divide": 8,
+        "side": "top",
+        "depth": 14
+      },
+      "cap_bottom": {
+        "kind": "strip_x",
+        "divide": 8,
+        "side": "bottom",
+        "depth": 12
+      },
+      "edge_left": {
+        "kind": "strip_y",
+        "divide": 8,
+        "depth": 10
+      },
+      "ledge": {
+        "kind": "ledge",
+        "divide": 8,
+        "cap": 20
+      },
+      "far_haze": {
+        "kind": "layer",
+        "size": [
+          640,
+          360
+        ]
+      },
+      "far_rock": {
+        "kind": "layer",
+        "size": [
+          640,
+          360
+        ],
+        "key": true
+      },
+      "mid_rock": {
+        "kind": "layer",
+        "size": [
+          640,
+          360
+        ],
+        "key": true,
+        "mirror": true
+      },
+      "foreground": {
+        "kind": "layer",
+        "size": [
+          640,
+          360
+        ],
+        "key": true,
+        "plain": true
+      },
+      "glow_fungus": {
+        "kind": "decor",
+        "max": [
+          48,
+          36
+        ]
+      },
+      "lichen_hang": {
+        "kind": "decor",
+        "max": [
+          36,
+          64
+        ]
+      },
+      "wall_crystal": {
+        "kind": "decor",
+        "max": [
+          40,
+          40
+        ]
+      },
+      "stalagmite": {
+        "kind": "decor",
+        "max": [
+          44,
+          64
+        ]
+      },
+      "root_hang": {
+        "kind": "decor",
+        "max": [
+          28,
+          76
+        ]
+      },
+      "rubble": {
+        "kind": "decor",
+        "max": [
+          44,
+          30
+        ]
+      },
+      "puddle_glow": {
+        "kind": "decor",
+        "max": [
+          72,
+          20
+        ]
+      },
+      "flowers": {
+        "kind": "decor",
+        "max": [
+          56,
+          24
+        ]
+      },
+      "crystal_rose": {
+        "kind": "decor",
+        "max": [
+          44,
+          50
+        ]
+      },
+      "crystal_gold": {
+        "kind": "decor",
+        "max": [
+          44,
+          50
+        ]
+      },
+      "crystal_prism": {
+        "kind": "decor",
+        "max": [
+          44,
+          50
+        ]
+      }
+    },
+    "deep": {
+      "fill_a": {
+        "kind": "tile",
+        "size": [
+          128,
+          128
+        ]
+      },
+      "backwall": {
+        "kind": "tile",
+        "size": [
+          128,
+          128
+        ]
+      },
+      "cap_top": {
+        "kind": "strip_x",
+        "divide": 8,
+        "side": "top",
+        "depth": 16
+      },
+      "cap_bottom": {
+        "kind": "strip_x",
+        "divide": 8,
+        "side": "bottom",
+        "depth": 12
+      },
+      "edge_left": {
+        "kind": "strip_y",
+        "divide": 8,
+        "depth": 10
+      },
+      "ledge": {
+        "kind": "ledge",
+        "divide": 8,
+        "cap": 20
+      },
+      "far_haze": {
+        "kind": "layer",
+        "size": [
+          640,
+          360
+        ]
+      },
+      "far_rock": {
+        "kind": "layer",
+        "size": [
+          640,
+          360
+        ],
+        "key": true
+      },
+      "mid_rock": {
+        "kind": "layer",
+        "size": [
+          640,
+          360
+        ],
+        "key": true,
+        "mirror": true
+      },
+      "foreground": {
+        "kind": "layer",
+        "size": [
+          640,
+          360
+        ],
+        "key": true,
+        "plain": true
+      },
+      "glow_fungus": {
+        "kind": "decor",
+        "max": [
+          48,
+          36
+        ],
+        "out": "deep_glow_fungus"
+      },
+      "lichen_hang": {
+        "kind": "decor",
+        "max": [
+          36,
+          64
+        ],
+        "out": "deep_lichen_hang"
+      },
+      "wall_crystal": {
+        "kind": "decor",
+        "max": [
+          40,
+          40
+        ],
+        "out": "deep_wall_crystal"
+      },
+      "stalagmite": {
+        "kind": "decor",
+        "max": [
+          44,
+          64
+        ],
+        "out": "deep_stalagmite"
+      },
+      "root_hang": {
+        "kind": "decor",
+        "max": [
+          28,
+          76
+        ],
+        "out": "deep_root_hang"
+      },
+      "rubble": {
+        "kind": "decor",
+        "max": [
+          44,
+          30
+        ],
+        "out": "deep_rubble"
+      },
+      "bones": {
+        "kind": "decor",
+        "max": [
+          56,
+          24
+        ],
+        "out": "deep_bones"
+      },
+      "puddle_glow": {
+        "kind": "decor",
+        "max": [
+          72,
+          20
+        ],
+        "out": "deep_puddle_glow"
+      }
+    },
+    "grotto": {
+      "fill_a": {
+        "kind": "tile",
+        "size": [
+          128,
+          128
+        ]
+      },
+      "backwall": {
+        "kind": "tile",
+        "size": [
+          128,
+          128
+        ]
+      },
+      "cap_top": {
+        "kind": "strip_x",
+        "divide": 8,
+        "side": "top",
+        "depth": 14
+      },
+      "cap_bottom": {
+        "kind": "strip_x",
+        "divide": 8,
+        "side": "bottom",
+        "depth": 12
+      },
+      "edge_left": {
+        "kind": "strip_y",
+        "divide": 8,
+        "depth": 10
+      },
+      "ledge": {
+        "kind": "ledge",
+        "divide": 8,
+        "cap": 20
+      },
+      "far_haze": {
+        "kind": "layer",
+        "size": [
+          640,
+          360
+        ],
+        "mirror": true
+      },
+      "far_rock": {
+        "kind": "layer",
+        "size": [
+          640,
+          360
+        ],
+        "key": true,
+        "mirror": true
+      },
+      "mid_rock": {
+        "kind": "layer",
+        "size": [
+          640,
+          360
+        ],
+        "key": true,
+        "mirror": true
+      },
+      "foreground": {
+        "kind": "layer",
+        "size": [
+          640,
+          360
+        ],
+        "key": true,
+        "plain": true
+      },
+      "glow_fungus": {
+        "kind": "decor",
+        "max": [
+          48,
+          36
+        ],
+        "out": "grotto_glow_fungus"
+      },
+      "lichen_hang": {
+        "kind": "decor",
+        "max": [
+          36,
+          64
+        ],
+        "out": "grotto_lichen_hang"
+      },
+      "wall_crystal": {
+        "kind": "decor",
+        "max": [
+          40,
+          40
+        ],
+        "out": "grotto_wall_crystal"
+      },
+      "stalagmite": {
+        "kind": "decor",
+        "max": [
+          44,
+          64
+        ],
+        "out": "grotto_stalagmite"
+      },
+      "root_hang": {
+        "kind": "decor",
+        "max": [
+          28,
+          76
+        ],
+        "out": "grotto_root_hang"
+      },
+      "rubble": {
+        "kind": "decor",
+        "max": [
+          44,
+          30
+        ],
+        "out": "grotto_rubble"
+      },
+      "puddle_glow": {
+        "kind": "decor",
+        "max": [
+          72,
+          20
+        ],
+        "out": "grotto_puddle_glow"
+      },
+      "flowers": {
+        "kind": "decor",
+        "max": [
+          56,
+          24
+        ],
+        "out": "grotto_flowers"
+      },
+      "crystal_rose": {
+        "kind": "decor",
+        "max": [
+          44,
+          50
+        ],
+        "out": "grotto_crystal_rose"
+      },
+      "crystal_gold": {
+        "kind": "decor",
+        "max": [
+          44,
+          50
+        ],
+        "out": "grotto_crystal_gold"
+      },
+      "crystal_prism": {
+        "kind": "decor",
+        "max": [
+          44,
+          50
+        ],
+        "out": "grotto_crystal_prism"
+      }
+    },
+    "flooded": {
+      "fill_a": {
+        "kind": "tile",
+        "size": [
+          128,
+          128
+        ]
+      },
+      "backwall": {
+        "kind": "tile",
+        "size": [
+          128,
+          128
+        ]
+      },
+      "cap_top": {
+        "kind": "strip_x",
+        "divide": 8,
+        "side": "top",
+        "depth": 14
+      },
+      "cap_bottom": {
+        "kind": "strip_x",
+        "divide": 8,
+        "side": "bottom",
+        "depth": 12
+      },
+      "edge_left": {
+        "kind": "strip_y",
+        "divide": 8,
+        "depth": 10
+      },
+      "ledge": {
+        "kind": "ledge",
+        "divide": 8,
+        "cap": 20
+      },
+      "far_haze": {
+        "kind": "layer",
+        "size": [
+          640,
+          360
+        ],
+        "mirror": true
+      },
+      "far_rock": {
+        "kind": "layer",
+        "size": [
+          640,
+          360
+        ],
+        "key": true,
+        "mirror": true
+      },
+      "mid_rock": {
+        "kind": "layer",
+        "size": [
+          640,
+          360
+        ],
+        "key": true,
+        "mirror": true
+      },
+      "foreground": {
+        "kind": "layer",
+        "size": [
+          640,
+          360
+        ],
+        "key": true,
+        "plain": true
+      },
+      "glow_fungus": {
+        "kind": "decor",
+        "max": [
+          48,
+          36
+        ],
+        "out": "flooded_glow_fungus"
+      },
+      "lichen_hang": {
+        "kind": "decor",
+        "max": [
+          36,
+          64
+        ],
+        "out": "flooded_lichen_hang"
+      },
+      "wall_crystal": {
+        "kind": "decor",
+        "max": [
+          40,
+          40
+        ],
+        "out": "flooded_wall_crystal"
+      },
+      "stalagmite": {
+        "kind": "decor",
+        "max": [
+          44,
+          64
+        ],
+        "out": "flooded_stalagmite"
+      },
+      "root_hang": {
+        "kind": "decor",
+        "max": [
+          28,
+          76
+        ],
+        "out": "flooded_root_hang"
+      },
+      "rubble": {
+        "kind": "decor",
+        "max": [
+          44,
+          30
+        ],
+        "out": "flooded_rubble"
+      },
+      "puddle_glow": {
+        "kind": "decor",
+        "max": [
+          72,
+          20
+        ],
+        "out": "flooded_puddle_glow"
+      },
+      "flowers": {
+        "kind": "decor",
+        "max": [
+          56,
+          24
+        ],
+        "out": "flooded_flowers"
+      },
+      "crystal_rose": {
+        "kind": "decor",
+        "max": [
+          44,
+          50
+        ],
+        "out": "flooded_crystal_rose"
+      },
+      "crystal_gold": {
+        "kind": "decor",
+        "max": [
+          44,
+          50
+        ],
+        "out": "flooded_crystal_gold"
+      },
+      "crystal_prism": {
+        "kind": "decor",
+        "max": [
+          44,
+          50
+        ],
+        "out": "flooded_crystal_prism"
+      }
+    }
+  }
+}

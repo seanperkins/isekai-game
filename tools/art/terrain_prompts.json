@@ -1,0 +1,501 @@
+{
+  "_doc": "One Codex image per piece, never a sheet. `refs` are extra style anchors (paths relative to the project root) after art_source/sprites_tiles_d.png. `bg` is 'opaque' (fills the frame) or 'key' (flat magenta background, keyed to alpha by terrain_build.py).",
+  "style": "Modern pixel art with a dynamic-lighting look for a 2D side-scrolling metroidvania: chunky visible pixels, rich shading with soft highlights, bright saturated lively colours, hand-made feel like the attached reference sheet but lighter and more colourful. Crisp pixel edges, no anti-aliased blur, no text, no watermark, no border or frame.",
+  "rules": "There are no torches, fire, tools or human-made objects anywhere. Light comes only from glowing prismatic crystals, bioluminescent fungus, flowers and lichen. The mood is wonder and life, warm and welcoming, never gloomy, grey or near-black: even the darkest areas keep visible colour.",
+  "key": "The background is flat solid pure magenta (#FF00FF) with no gradient, no shadow and no magenta anywhere on the subject.",
+  "opaque": "The image fills the whole frame edge to edge.",
+  "biomes": {
+    "cave": {
+      "palette": "Palette: warm lavender-grey and cream stone with rose, amber and cyan mineral flecks; lush emerald and lime moss with tiny pink, yellow and white flowers; large prismatic crystals whose facets shift through rose, gold, mint, cyan and violet like opal or a rainbow; soft warm-white and rainbow glow.",
+      "pieces": {
+        "fill_a": {
+          "bg": "opaque",
+          "refs": [],
+          "prompt": "A seamless, tileable texture of cave stone wall made of irregular fitted stones in warm lavender-grey and cream, with small rose, amber and cyan mineral flecks and a few tiny glinting crystal facets. Flat straight-on view, no perspective, no moss on top, brighter and friendlier than a dungeon wall. Left/right and top/bottom edges must continue seamlessly. Square 1024x1024."
+        },
+        "backwall": {
+          "bg": "opaque",
+          "refs": [
+            "art_source/terrain/cave/fill_a_raw.png"
+          ],
+          "prompt": "A seamless tileable texture of a recessed far cave back wall: large soft slabs of lavender and teal stone with cracks and faint glints of coloured crystal, calmer and a little darker than the reference stone so a character in front stands out, but still colourful, not grey or black. Edges continue seamlessly. Square 1024x1024."
+        },
+        "cap_top": {
+          "bg": "key",
+          "refs": [
+            "art_source/terrain/cave/fill_a_raw.png"
+          ],
+          "prompt": "A wide horizontal strip, 1536x384: the TOP EDGE of a cave floor block, side view. The lower 65% is the same stone as the reference stone texture. The top surface is a roughly flat walkable lip covered with vivid emerald and lime moss, tiny pink, yellow and white flowers, and short glowing mint lichen tufts. Above the surface is magenta. The far-left and far-right ends must continue seamlessly so the strip tiles horizontally."
+        },
+        "cap_bottom": {
+          "bg": "key",
+          "refs": [
+            "art_source/terrain/cave/fill_a_raw.png"
+          ],
+          "prompt": "A wide horizontal strip, 1536x384: the UNDERSIDE EDGE of a cave ceiling block, side view. The upper 65% is the same stone as the reference stone texture. The lower surface is a jagged underside with small stalactite points, dripping glowing droplets, short hanging moss and tiny pastel crystal tips in rose and cyan. Below the surface is magenta. The far-left and far-right ends must continue seamlessly so the strip tiles horizontally."
+        },
+        "edge_left": {
+          "bg": "key",
+          "refs": [
+            "art_source/terrain/cave/fill_a_raw.png"
+          ],
+          "prompt": "A tall vertical strip, 512x1536: the LEFT FACE of a solid cave rock wall, side view. The right 70% is the same fitted-stone texture as the reference. The left boundary is a ragged, slightly irregular rocky silhouette of rounded stones sticking out by different amounts, with a lighter rim and patches of green moss and a few tiny pebbles. Only stone and moss: no large crystals. To the left of the silhouette is magenta. The top and bottom ends must continue seamlessly so the strip tiles vertically."
+        },
+        "ledge": {
+          "bg": "key",
+          "refs": [
+            "art_source/terrain/cave/fill_a_raw.png"
+          ],
+          "prompt": "A wide narrow floating stone ledge, 1536x384, side view: a thin flat slab of warm lavender-grey cave rock with a flat walkable top edge covered in vivid green moss, tiny flowers and glowing mint lichen, chunky rounded ends, and small pastel crystals and drips under it. The middle 60% must be a uniform repeatable stretch so it can be lengthened. Magenta everywhere else."
+        },
+        "far_haze": {
+          "bg": "opaque",
+          "refs": [],
+          "prompt": "A distant luminous cave atmosphere layer for parallax, wide 16:9 landscape (1792x1008): a vast glowing cavern in soft lavender, teal and warm pink haze, beams of rainbow-tinted light falling from openings above, far-off glowing pools and crystal formations, misty and dreamy, bright and inviting, low contrast, no foreground objects. The left and right edges must continue seamlessly."
+        },
+        "far_rock": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "A distant parallax layer, wide 16:9 landscape (1792x1008): far-away cave formations in soft lavender and teal: big stalactites with glowing tips hanging from the top edge, crystal spires and rock pillars rising from the bottom edge that glow in rainbow colours, tiny bright glow dots, hazy and low contrast but colourful. The middle of the image is magenta (empty). The left and right edges must continue seamlessly."
+        },
+        "mid_rock": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "A middle-distance parallax layer, wide 16:9 landscape (1792x1008): lush cave formations, large stalactites with hanging vines and flowers from the top edge, mossy stalagmites, giant prismatic crystal clusters glowing in rose, gold, mint, cyan and violet, big glowing mushrooms and ferns rising from the bottom edge, bright and vibrant. The centre of the image is magenta (empty). The left and right edges must continue seamlessly."
+        },
+        "foreground": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "A foreground parallax frame, wide 16:9 landscape (1792x1008): leafy fronds, hanging flowering vines, glowing moss and a few big soft crystal tips in deep emerald, teal and violet (rich saturated colours, not black) only along the left edge, right edge and top edge, slightly out of focus but pixelated. The whole centre of the image is magenta (empty)."
+        },
+        "glow_fungus": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "One cluster of bioluminescent cave mushrooms growing on the ground, side view, caps in pink, cyan and lime glowing softly, small stones and moss at the base. Centred with margin. Square 1024x1024."
+        },
+        "lichen_hang": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "One hanging curtain of glowing vines with small pink, yellow and mint flowers and luminous strands hanging down from a small rocky ceiling nub at the top, side view. Tall, centred with margin. 1024x1024."
+        },
+        "wall_crystal": {
+          "bg": "key",
+          "refs": [
+            "art_source/sprites_tiles_d.png"
+          ],
+          "prompt": "One small cluster of prismatic opal-like crystals growing sideways out of a lump of mossy rock, facets shifting through rose, gold, mint, cyan and violet, glowing, side view, in the same crystal style as the reference. Centred with margin. Square 1024x1024."
+        },
+        "stalagmite": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "One cluster of three stone stalagmites of different heights rising from a mossy rubble base, lavender-grey stone with glowing crystal tips in rose, mint and cyan, side view. Centred with margin. Square 1024x1024."
+        },
+        "root_hang": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "A few thick leafy vines with small flowers dangling down from the top edge, emerald green with tiny glowing buds, side view. Tall, centred with margin. 1024x1024."
+        },
+        "rubble": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "A small low pile of mossy fallen cave rocks and pebbles with tiny flowers growing between them, side view, lavender-grey stone and green moss, wider than tall. Centred with margin. Square 1024x1024."
+        },
+        "puddle_glow": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "A shallow flat glowing spring pool of luminous turquoise water sitting in a small dip of mossy stone, seen from the side at ground level, wider than tall, with a bright rim and a few floating lily-like leaves. Centred with margin. Square 1024x1024."
+        },
+        "flowers": {
+          "prompt": "A patch of small glowing cave flowers with round petals in pink, yellow, white and cyan on short green stems with moss, side view, wider than tall. Centred with margin. Square 1024x1024.",
+          "bg": "key",
+          "refs": []
+        },
+        "crystal_rose": {
+          "prompt": "One cluster of tall glowing rose-pink and gold crystals growing from a mossy rock base, faceted and luminous, side view, same crystal style as the reference. Centred with margin. Square 1024x1024.",
+          "bg": "key",
+          "refs": [
+            "art_source/sprites_tiles_d.png"
+          ]
+        },
+        "crystal_gold": {
+          "prompt": "One cluster of tall glowing amber and gold crystals with mint highlights growing from a mossy rock base, faceted and luminous, side view, same crystal style as the reference. Centred with margin. Square 1024x1024.",
+          "bg": "key",
+          "refs": [
+            "art_source/sprites_tiles_d.png"
+          ]
+        },
+        "crystal_prism": {
+          "prompt": "One large prismatic crystal cluster whose facets show a full rainbow of colours (rose, gold, mint, cyan, violet), like opal, growing from a mossy rock base, glowing brightly, side view, same crystal style as the reference. Centred with margin. Square 1024x1024.",
+          "bg": "key",
+          "refs": [
+            "art_source/sprites_tiles_d.png"
+          ]
+        }
+      }
+    },
+    "deep": {
+      "_doc": "The first, darker Cave pass, kept for a deeper or gloomier section. Raws are in art_source/terrain/deep/. Note: the dark style/rules text differed slightly (dark cool palette); regenerate only if needed.",
+      "palette": "Palette: dark blue-grey and violet stone, cool teal, blue and purple crystal glows, dim teal-green glowing lichen.",
+      "pieces": {
+        "fill_a": {
+          "bg": "opaque",
+          "refs": [],
+          "prompt": "A seamless, tileable texture of dark cave stone wall made of irregular fitted stones. Flat straight-on view, no perspective, no mossy top, nothing glowing. Left/right and top/bottom edges must continue seamlessly. Square 1024x1024."
+        },
+        "backwall": {
+          "bg": "opaque",
+          "refs": [
+            "art_source/terrain/deep/fill_a_raw.png"
+          ],
+          "prompt": "A seamless tileable texture of a far cave back wall, seen as a dim recessed rock face: large soft stone slabs, cracks, low contrast, very dark blue-violet, much darker and calmer than the reference stone so a character in front stands out. No glow. Edges continue seamlessly. Square 1024x1024."
+        },
+        "cap_top": {
+          "bg": "key",
+          "refs": [
+            "art_source/terrain/deep/fill_a_raw.png"
+          ],
+          "prompt": "A wide horizontal strip, 1536x384: the TOP EDGE of a cave floor block, side view. The lower 65% is the same dark stone as the reference stone texture. The top surface is an uneven rocky lip with small pebbles and short tufts of dim glowing teal lichen and moss. Above the surface is magenta. The far-left and far-right ends must continue seamlessly so the strip tiles horizontally."
+        },
+        "cap_bottom": {
+          "bg": "key",
+          "refs": [
+            "art_source/terrain/deep/fill_a_raw.png"
+          ],
+          "prompt": "A wide horizontal strip, 1536x384: the UNDERSIDE EDGE of a cave ceiling block, side view. The upper 65% is the same dark stone as the reference stone texture. The lower surface is a jagged rocky underside with small dripping stalactite points and a few tiny glowing teal dots. Below the surface is magenta. The far-left and far-right ends must continue seamlessly so the strip tiles horizontally."
+        },
+        "edge_left": {
+          "bg": "key",
+          "refs": [
+            "art_source/terrain/deep/fill_a_raw.png"
+          ],
+          "prompt": "A tall vertical strip, 512x1536: the LEFT FACE of a solid cave rock wall, side view. The right 70% is the same dark fitted-stone texture as the reference. The left boundary is a ragged, slightly irregular rocky silhouette of rounded stones with a darker shaded rim. Only dark blue-grey and violet stone. To the left of the silhouette is magenta. The top and bottom ends must continue seamlessly so the strip tiles vertically."
+        },
+        "ledge": {
+          "bg": "key",
+          "refs": [
+            "art_source/terrain/deep/fill_a_raw.png"
+          ],
+          "prompt": "A wide narrow floating stone ledge, 1536x384, side view: a thin flat slab of dark cave rock with a flat walkable top edge carrying a fringe of dim glowing teal lichen, chunky rounded ends, and small roots and drips hanging under it. The middle 60% must be a uniform repeatable stretch so it can be lengthened. Magenta everywhere else."
+        },
+        "far_haze": {
+          "bg": "opaque",
+          "refs": [],
+          "prompt": "A distant deep-cave atmosphere layer for parallax, wide 16:9 landscape (1792x1008): huge soft vaulted cavern shapes in very dark blue-violet, faint pale light shafts falling from above, thick haze, very low contrast, no bright details, no foreground objects. The left and right edges must continue seamlessly."
+        },
+        "far_rock": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "A distant parallax layer, wide 16:9 landscape (1792x1008): far-away cave rock silhouettes in dim blue-violet, big stalactites hanging from the top edge and rock pillars and mounds rising from the bottom edge, a few tiny far-off teal glow dots, low contrast. The middle of the image is magenta (empty). The left and right edges must continue seamlessly."
+        },
+        "mid_rock": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "A middle-distance parallax layer, wide 16:9 landscape (1792x1008): cave rock formations in darker blue-violet, large stalactites hanging from the top edge, stalagmites and broken columns rising from the bottom edge, roots, and a few glowing crystals and glowing fungus in teal and purple as accents. The centre of the image is magenta (empty). The left and right edges must continue seamlessly."
+        },
+        "foreground": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "A foreground parallax layer, wide 16:9 landscape (1792x1008): very dark near-black blue silhouettes only along the left edge, right edge and top edge: hanging roots, a few big stalactite tips and rock outcrops. The whole centre of the image is magenta (empty)."
+        },
+        "glow_fungus": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "One cluster of bioluminescent cave mushrooms growing on the ground, side view, teal-green glowing caps of different sizes with small stones at the base. Centred with margin. Square 1024x1024."
+        },
+        "lichen_hang": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "One hanging curtain of glowing teal lichen strands and thin roots hanging down from a small rocky ceiling nub at the top, side view. Tall, centred with margin. 1024x1024."
+        },
+        "wall_crystal": {
+          "bg": "key",
+          "refs": [
+            "art_source/sprites_tiles_d.png"
+          ],
+          "prompt": "One small cluster of pink-violet glowing crystals growing sideways out of a lump of dark rock, side view, in the same crystal style as the reference. Centred with margin. Square 1024x1024."
+        },
+        "stalagmite": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "One cluster of three dark stone stalagmites of different heights rising from a small rubble base, side view, dark blue-grey with cool highlights and a damp sheen. Centred with margin. Square 1024x1024."
+        },
+        "root_hang": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "A few pale thick roots dangling down from the top edge with tiny root hairs, side view, dim cool colours. Tall, centred with margin. 1024x1024."
+        },
+        "rubble": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "A small low pile of fallen cave rocks and pebbles, side view, dark blue-grey and violet, wider than tall. Centred with margin. Square 1024x1024."
+        },
+        "bones": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "A few old small animal bones and a ribcage half-buried in dust and pebbles, side view, dim bone colours, wider than tall. Centred with margin. Square 1024x1024."
+        },
+        "puddle_glow": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "A shallow flat glowing puddle of pale teal water sitting in a small dip of dark stone, seen from the side at ground level, wider than tall, with a faint bright rim. Centred with margin. Square 1024x1024."
+        }
+      }
+    },
+    "grotto": {
+      "palette": "Palette: warm plum-brown and olive earth, amber-gold moss, glowing mushrooms in orange, magenta, cyan and lime, golden spore light. Mood: warm, cozy and dreamy, like a fairy forest at dusk.",
+      "pieces": {
+        "fill_a": {
+          "bg": "opaque",
+          "refs": [],
+          "prompt": "A seamless, tileable texture of packed dark plum-brown and olive earth woven with thick pale roots and glowing mycelium threads, small pebbles and tiny mushrooms, soft lumpy and organic, no cobblestones and no rounded fitted rocks. Flat straight-on view, no perspective. Left/right and top/bottom edges must continue seamlessly. Square 1024x1024."
+        },
+        "backwall": {
+          "bg": "opaque",
+          "refs": [
+            "art_source/terrain/grotto/fill_a_raw.png"
+          ],
+          "prompt": "A seamless tileable texture of a recessed far cave back wall: a recessed earthen wall with hanging root hairs, mycelium webs and faint golden spore glints, warm plum and olive. Calmer and a little darker than the reference stone so a character in front stands out, but still colourful, never grey or black. Edges continue seamlessly. Square 1024x1024."
+        },
+        "cap_top": {
+          "bg": "key",
+          "refs": [
+            "art_source/terrain/grotto/fill_a_raw.png"
+          ],
+          "prompt": "A wide horizontal strip, 1536x384: the TOP EDGE of a floor block, side view. The lower 65% is the same material as the reference texture. The top surface is a roughly flat walkable lip: a thick spongy amber-gold moss cushion with rows of tiny glowing orange and magenta mushrooms, root tips and floating spore dots. Above the surface is magenta. The far-left and far-right ends must continue seamlessly so the strip tiles horizontally."
+        },
+        "cap_bottom": {
+          "bg": "key",
+          "refs": [
+            "art_source/terrain/grotto/fill_a_raw.png"
+          ],
+          "prompt": "A wide horizontal strip, 1536x384: the UNDERSIDE EDGE of a ceiling block, side view. The upper 65% is the same material as the reference texture. The lower surface is: a dripping, root-tangled underside with glowing spore pods, mycelium strands and tiny mushroom tips in magenta and gold. Below the surface is magenta. The far-left and far-right ends must continue seamlessly so the strip tiles horizontally."
+        },
+        "edge_left": {
+          "bg": "key",
+          "refs": [
+            "art_source/terrain/grotto/fill_a_raw.png"
+          ],
+          "prompt": "A tall vertical strip, 512x1536: the LEFT FACE of a solid wall block, side view. The right 70% is the same material as the reference texture. The left boundary is a soft, lumpy silhouette of packed earth with protruding root ends and mycelium threads, small glowing mushrooms, no rounded rocks. To the left of the silhouette is magenta. The top and bottom ends must continue seamlessly so the strip tiles vertically."
+        },
+        "ledge": {
+          "bg": "key",
+          "refs": [
+            "art_source/terrain/grotto/fill_a_raw.png"
+          ],
+          "prompt": "A wide narrow floating platform, 1536x384, side view: a wide flat bracket (shelf) mushroom growing sideways, cream ringed gills underneath and a glowing amber-orange top with tiny mushrooms on it. It has a flat walkable top edge, chunky ends, and small drips and growths under it. The middle 60% must be a uniform repeatable stretch so it can be lengthened. Magenta everywhere else."
+        },
+        "far_haze": {
+          "bg": "opaque",
+          "refs": [],
+          "prompt": "A distant luminous atmosphere layer for parallax, wide 16:9 landscape (1792x1008): a vast warm-lit mushroom-forest cavern, giant fungal columns, amber and magenta god rays and drifting spore clouds, like a fairy forest at dusk. Misty and dreamy, bright and inviting, low contrast, no foreground objects."
+        },
+        "far_rock": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "A distant parallax layer, wide 16:9 landscape (1792x1008): far-away giant mushroom stalks and caps in soft amber, magenta and teal, and hanging root curtains, hanging from the top edge and rising from the bottom edge, tiny bright glow dots, hazy and low contrast but colourful. The middle of the image is magenta (empty)."
+        },
+        "mid_rock": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "A middle-distance parallax layer, wide 16:9 landscape (1792x1008): huge glowing mushrooms in orange, magenta, cyan and lime with translucent gills, hanging root curtains with glowing pods from the top edge, spongy mounds and ferns rising from the bottom edge. Bright and vibrant. The centre of the image is magenta (empty)."
+        },
+        "foreground": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "A foreground parallax frame, wide 16:9 landscape (1792x1008): big soft mushroom caps, hanging roots with glowing pods and spore-laden ferns in deep magenta, amber and green, only along the left edge, right edge and top edge (rich saturated colours, not black), slightly out of focus but pixelated. The whole centre of the image is magenta (empty)."
+        },
+        "glow_fungus": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "One cluster of large bioluminescent grotto mushrooms growing on the ground, side view, caps in orange, magenta and cyan with translucent glowing gills, moss at the base. Centred with margin. Square 1024x1024."
+        },
+        "lichen_hang": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "One hanging curtain of glowing roots with luminous spore pods in gold and magenta hanging from a small earthy ceiling nub at the top, side view. Tall. Centred with margin. Square 1024x1024."
+        },
+        "wall_crystal": {
+          "bg": "key",
+          "refs": [
+            "art_source/sprites_tiles_d.png"
+          ],
+          "prompt": "One small cluster of prismatic glowing crystals in magenta, gold and teal growing sideways out of a lump of earth and roots, side view, in the same crystal style as the reference. Centred with margin. Square 1024x1024."
+        },
+        "stalagmite": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "One cluster of three tall thin glowing mushroom stalks of different heights rising from a mossy base, side view. Centred with margin. Square 1024x1024."
+        },
+        "root_hang": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "A few thick pale roots with glowing orange buds and tiny mushrooms dangling down from the top edge, side view. Tall. Centred with margin. Square 1024x1024."
+        },
+        "rubble": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "A small low pile of mossy earth clods and rocks with tiny glowing mushrooms growing between them, side view, wider than tall. Centred with margin. Square 1024x1024."
+        },
+        "flowers": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "A patch of small glowing spore flowers with round petals in magenta, orange, cyan and white on short green stems with moss, side view, wider than tall. Centred with margin. Square 1024x1024."
+        },
+        "puddle_glow": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "A shallow flat glowing spring pool of luminous magenta-tinted turquoise water in a small dip of mossy earth, seen from the side at ground level, wider than tall, with a bright rim. Centred with margin. Square 1024x1024."
+        },
+        "crystal_rose": {
+          "bg": "key",
+          "refs": [
+            "art_source/sprites_tiles_d.png"
+          ],
+          "prompt": "One cluster of tall glowing magenta and pink crystals growing from a mossy earth base, faceted and luminous, side view, same crystal style as the reference. Centred with margin. Square 1024x1024."
+        },
+        "crystal_gold": {
+          "bg": "key",
+          "refs": [
+            "art_source/sprites_tiles_d.png"
+          ],
+          "prompt": "One cluster of tall glowing amber and gold crystals with lime highlights growing from a mossy earth base, faceted and luminous, side view, same crystal style as the reference. Centred with margin. Square 1024x1024."
+        },
+        "crystal_prism": {
+          "bg": "key",
+          "refs": [
+            "art_source/sprites_tiles_d.png"
+          ],
+          "prompt": "One large prismatic crystal cluster whose facets show a full rainbow of colours, like opal, growing from a mossy earth base, glowing brightly, side view, same crystal style as the reference. Centred with margin. Square 1024x1024."
+        }
+      }
+    },
+    "flooded": {
+      "palette": "Palette: pale sea-green and blue-grey layered stone, turquoise and aquamarine water with sunlit caustics, coral pink, pearly white and violet sea-glass, bright green algae. Mood: cool, serene and luminous, like a sunlit drowned cavern.",
+      "pieces": {
+        "fill_a": {
+          "bg": "opaque",
+          "refs": [],
+          "prompt": "A seamless, tileable texture of water-polished pale limestone in long flat horizontal strata layers with smooth worn edges and a wet glossy sheen, sea-green and pale blue-grey, natural rock not built, with tiny coral, shells and glinting water droplets; clean straight courses, no rounded cobbles. Flat straight-on view, no perspective. Left/right and top/bottom edges must continue seamlessly. Square 1024x1024."
+        },
+        "backwall": {
+          "bg": "opaque",
+          "refs": [
+            "art_source/terrain/flooded/fill_a_raw.png"
+          ],
+          "prompt": "A seamless tileable texture of a recessed far cave back wall: a recessed wall of smooth layered limestone with faint caustic light ripples, tiny shells and algae, dim aqua and sea-green. Calmer and a little darker than the reference stone so a character in front stands out, but still colourful, never grey or black. Edges continue seamlessly. Square 1024x1024."
+        },
+        "cap_top": {
+          "bg": "key",
+          "refs": [
+            "art_source/terrain/flooded/fill_a_raw.png"
+          ],
+          "prompt": "A wide horizontal strip, 1536x384: the TOP EDGE of a floor block, side view. The lower 65% is the same material as the reference texture. The top surface is a roughly flat walkable lip: a glossy wet lip with a thin shimmering film of water, bright green algae, small coral tufts and pearly shells. Above the surface is magenta. The far-left and far-right ends must continue seamlessly so the strip tiles horizontally."
+        },
+        "cap_bottom": {
+          "bg": "key",
+          "refs": [
+            "art_source/terrain/flooded/fill_a_raw.png"
+          ],
+          "prompt": "A wide horizontal strip, 1536x384: the UNDERSIDE EDGE of a ceiling block, side view. The upper 65% is the same material as the reference texture. The lower surface is: a smooth layered underside with hanging kelp strands, falling water drops, pointed limestone stalactites and tiny glowing sea-glass tips in aqua and pink. Below the surface is magenta. The far-left and far-right ends must continue seamlessly so the strip tiles horizontally."
+        },
+        "edge_left": {
+          "bg": "key",
+          "refs": [
+            "art_source/terrain/flooded/fill_a_raw.png"
+          ],
+          "prompt": "A tall vertical strip, 512x1536: the LEFT FACE of a solid wall block, side view. The right 70% is the same material as the reference texture. The left boundary is a straight-ish layered silhouette with chipped corners, like cut strata, with a crust of green algae and small coral. To the left of the silhouette is magenta. The top and bottom ends must continue seamlessly so the strip tiles vertically."
+        },
+        "ledge": {
+          "bg": "key",
+          "refs": [
+            "art_source/terrain/flooded/fill_a_raw.png"
+          ],
+          "prompt": "A wide narrow floating platform, 1536x384, side view: a flat smooth slab of layered limestone with chipped corners and a waterline sheen, small coral and shells on top, seaweed hanging beneath. It has a flat walkable top edge, chunky ends, and small drips and growths under it. The middle 60% must be a uniform repeatable stretch so it can be lengthened. Magenta everywhere else."
+        },
+        "far_haze": {
+          "bg": "opaque",
+          "refs": [],
+          "prompt": "A distant luminous atmosphere layer for parallax, wide 16:9 landscape (1792x1008): a flooded vaulted cavern of natural rock arches half underwater, shafts of aqua light with caustic ripples, far-off waterfalls and glowing pools, cool, serene and calm. Misty and dreamy, bright and inviting, low contrast, no foreground objects."
+        },
+        "far_rock": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "A distant parallax layer, wide 16:9 landscape (1792x1008): far-away natural rock arches, layered cliffs and waterfalls in soft turquoise and coral, hanging from the top edge and rising from the bottom edge, tiny bright glow dots, hazy and low contrast but colourful. The middle of the image is magenta (empty)."
+        },
+        "mid_rock": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "A middle-distance parallax layer, wide 16:9 landscape (1792x1008): lush half-flooded cave formations: kelp forests, coral clusters, glowing jellyfish-like plants, layered rock arches, waterfalls pouring from the top edge, sea-glass crystal clusters in aqua, coral and violet rising from the bottom edge. Bright and vibrant. The centre of the image is magenta (empty)."
+        },
+        "foreground": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "A foreground parallax frame, wide 16:9 landscape (1792x1008): drooping kelp curtains, reeds and hanging glowing jelly-plants in deep teal, coral and violet, only along the left edge, right edge and top edge (rich saturated colours, not black), slightly out of focus but pixelated. The whole centre of the image is magenta (empty)."
+        },
+        "glow_fungus": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "One cluster of glowing bioluminescent sea-anemone-like plants growing on the ground, side view, in aqua, pink and lime, small stones and algae at the base. Centred with margin. Square 1024x1024."
+        },
+        "lichen_hang": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "One hanging curtain of glowing kelp strands and luminous water plants with small pink and aqua glowing buds, hanging from a small rocky ceiling nub at the top, side view. Tall. Centred with margin. Square 1024x1024."
+        },
+        "wall_crystal": {
+          "bg": "key",
+          "refs": [
+            "art_source/sprites_tiles_d.png"
+          ],
+          "prompt": "One small cluster of prismatic sea-glass crystals in aqua, coral and violet growing sideways out of a lump of wet layered rock, side view, in the same crystal style as the reference. Centred with margin. Square 1024x1024."
+        },
+        "stalagmite": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "One cluster of three wet layered-limestone spires with coral growing on them and glowing tips, of different heights, rising from a small pebbly base, side view. Centred with margin. Square 1024x1024."
+        },
+        "root_hang": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "A few thick strands of green kelp and reeds with tiny glowing buds dangling down from the top edge, side view. Tall. Centred with margin. Square 1024x1024."
+        },
+        "rubble": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "A small low pile of wet rocks with coral, shells and algae, side view, wider than tall. Centred with margin. Square 1024x1024."
+        },
+        "flowers": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "A patch of small pearly shells and pink and aqua sea flowers on short green stems with algae, side view, wider than tall. Centred with margin. Square 1024x1024."
+        },
+        "puddle_glow": {
+          "bg": "key",
+          "refs": [],
+          "prompt": "A shallow flat glowing pool of luminous turquoise water sitting in a small dip of wet rock with ripples and floating lily leaves, seen from the side at ground level, wider than tall, with a bright rim. Centred with margin. Square 1024x1024."
+        },
+        "crystal_rose": {
+          "bg": "key",
+          "refs": [
+            "art_source/sprites_tiles_d.png"
+          ],
+          "prompt": "One cluster of tall glowing coral-pink sea-glass crystals growing from a wet rock base, faceted and luminous, side view, same crystal style as the reference. Centred with margin. Square 1024x1024."
+        },
+        "crystal_gold": {
+          "bg": "key",
+          "refs": [
+            "art_source/sprites_tiles_d.png"
+          ],
+          "prompt": "One cluster of tall glowing aqua and seafoam crystals growing from a wet rock base, faceted and luminous, side view, same crystal style as the reference. Centred with margin. Square 1024x1024."
+        },
+        "crystal_prism": {
+          "bg": "key",
+          "refs": [
+            "art_source/sprites_tiles_d.png"
+          ],
+          "prompt": "One large prismatic crystal cluster whose facets show a full rainbow of colours, like opal, growing from a wet rock base, glowing brightly, side view, same crystal style as the reference. Centred with margin. Square 1024x1024."
+        }
+      }
+    }
+  }
+}
