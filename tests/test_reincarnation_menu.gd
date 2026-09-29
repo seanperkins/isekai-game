@@ -84,3 +84,44 @@ func test_dying_with_two_pools_opens_the_menu_and_confirming_restarts_at_the_cho
 	assert_true(menu.confirm())
 	assert_eq(restarts[0], 1)
 	assert_eq(progress.pending_start["pool"], "G1")
+
+func _pad_button(button: int) -> InputEventJoypadButton:
+	var e := InputEventJoypadButton.new()
+	e.button_index = button
+	e.pressed = true
+	return e
+
+func test_a_gamepad_can_move_and_confirm() -> void:
+	Controls.ensure_actions()
+	var chosen: Array = []
+	var m := _menu()
+	m.choose_callback = func(id: String) -> void: chosen.append(id)
+	m.show_decision(_decision())
+	m._unhandled_input(_pad_button(JOY_BUTTON_DPAD_UP))
+	assert_eq(m.selected(), 0, "the D-pad moves it")
+	m._unhandled_input(_pad_button(JOY_BUTTON_DPAD_DOWN))
+	assert_eq(m.selected(), 1)
+	m._unhandled_input(_pad_button(JOY_BUTTON_A))
+	assert_eq(chosen, ["G1"], "A confirms")
+
+func test_the_keyboard_still_moves_and_confirms() -> void:
+	Controls.ensure_actions()
+	var chosen: Array = []
+	var m := _menu()
+	m.choose_callback = func(id: String) -> void: chosen.append(id)
+	m.show_decision(_decision())
+	var down := InputEventKey.new()
+	down.physical_keycode = KEY_S
+	down.pressed = true
+	m._unhandled_input(down)
+	assert_eq(m.selected(), 2)
+	var up := InputEventKey.new()
+	up.physical_keycode = KEY_UP
+	up.pressed = true
+	m._unhandled_input(up)
+	assert_eq(m.selected(), 1)
+	var enter := InputEventKey.new()
+	enter.physical_keycode = KEY_ENTER
+	enter.pressed = true
+	m._unhandled_input(enter)
+	assert_eq(chosen, ["G1"])

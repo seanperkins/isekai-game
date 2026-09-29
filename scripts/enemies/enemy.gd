@@ -490,7 +490,9 @@ func _snake_act(player: Node2D, to_player: Vector2, delta: float) -> void:
 				velocity = back.normalized() * RETREAT_SPEED
 		_:
 			velocity = Vector2.ZERO
-			if is_alert() and absf(to_player.x) < LUNGE_TRIGGER_X and to_player.y > 0.0 and to_player.y <= LUNGE_TRIGGER_Y:
+			if global_position.distance_to(_anchor) > 3.0:
+				_charge = "rest"  # a stun (which clears the charge) left it off its anchor: go back before anything else
+			elif is_alert() and absf(to_player.x) < LUNGE_TRIGGER_X and to_player.y > 0.0 and to_player.y <= LUNGE_TRIGGER_Y:
 				_charge = "windup"
 				_charge_t = COIL_SECONDS
 	if absf(velocity.x) > 1.0:

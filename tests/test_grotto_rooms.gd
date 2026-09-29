@@ -274,3 +274,13 @@ func test_no_base_jump_path_reaches_the_g5_sill() -> void:
 				frontier.append(q)
 	assert_false(reached.has(sill), "the opening is beyond every base jump")
 
+
+func test_nothing_spawns_near_a_rebirth_pool() -> void:
+	# a new life starts standing on the pool: an enemy within 200 px (a moth's drift, a crab's chase) hurts it at once
+	for id in rooms:
+		var r: RoomDef = rooms[id]
+		for f in r.features:
+			if f.get("kind", "") != "rebirth_pool" or f.get("area", "") != "grotto":
+				continue  # the Cave mouth pool is older than this rule
+			for s in r.spawns:
+				assert_gt((s["pos"] as Vector2).distance_to(f["pos"]), 200.0, "%s: %s spawns %s px from the pool" % [id, s["id"], (s["pos"] as Vector2).distance_to(f["pos"])])

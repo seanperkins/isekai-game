@@ -78,19 +78,19 @@ dressing = [{
 }]
 spawns = [{
 "id": "spore_moth",
-"pos": Vector2(520, 200)
+"pos": Vector2(800, 200)
 }, {
 "id": "spore_moth",
-"pos": Vector2(760, 170)
+"pos": Vector2(960, 170)
 }, {
 "id": "spore_moth",
-"pos": Vector2(1000, 210)
+"pos": Vector2(1120, 210)
 }, {
 "id": "mushroom_crab",
-"pos": Vector2(620, 308)
+"pos": Vector2(860, 308)
 }, {
 "id": "mushroom_crab",
-"pos": Vector2(1040, 308)
+"pos": Vector2(1100, 308)
 }]
 exits = [{
 "edge": "top",

@@ -217,8 +217,8 @@ static func g1() -> RoomDef:
 			_dress("mushroom_cap_pillar", Vector2(880, 330), 0.25, true), _dress("vine_curtain", Vector2(1020, 20), 0.6),
 			_dress("spore_pod", Vector2(660, 330), 0.5), _dress("dripping_fungus_shelf", Vector2(1120, 150), 0.25),
 			_dress("mushroom_bridge", Vector2(360, 120), 0.3)],
-		"spawns": [_s("spore_moth", Vector2(520, 200)), _s("spore_moth", Vector2(760, 170)), _s("spore_moth", Vector2(1000, 210)),
-			_s("mushroom_crab", Vector2(620, 308)), _s("mushroom_crab", Vector2(1040, 308))]}
+		"spawns": [_s("spore_moth", Vector2(800, 200)), _s("spore_moth", Vector2(960, 170)), _s("spore_moth", Vector2(1120, 210)),
+			_s("mushroom_crab", Vector2(860, 308)), _s("mushroom_crab", Vector2(1100, 308))]}
 	Prefabs.ledge_chain(f, 220.0, 90.0, 70.0, 14.0, 52.0, 320.0)  # the climb back up to C5's floor (top at y 14: standing centre is 2 px inside G1)
 	return _room(f)
 

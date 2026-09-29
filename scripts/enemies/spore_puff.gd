@@ -1,6 +1,6 @@
 class_name SporePuff
 extends Node2D
-## A moth's spore puff: a short-lived cloud that poisons the player once. Group `hazards` (which hurts the
+## A moth's spore puff: a short-lived cloud that sinks a little and poisons the player once. Group `hazards` (which hurts the
 ## player only, like the toad's glob); the player's own Spore Cloud is a different group.
 
 const RADIUS := 20.0
@@ -8,6 +8,8 @@ const LIFETIME := 2.0
 const POISON := 1
 const TICK := 1
 const SECONDS := 2.0
+## The puff sinks slowly, so a moth flying above a player still reaches them.
+const SINK_SPEED := 60.0
 
 var _age := 0.0
 var _hit := false
@@ -27,6 +29,7 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	_age += delta
+	global_position.y += SINK_SPEED * delta
 	if _age > LIFETIME:
 		queue_free()
 		return

@@ -1,6 +1,6 @@
 class_name ReincarnationMenu
 extends CanvasLayer
-## Shows RebirthChoice's decision after death: up/down moves, accept confirms an unlocked entry. Layer 40:
+## Shows RebirthChoice's decision after death: up/down (keys, D-pad, stick) moves, accept (Enter, Space, A) confirms an unlocked entry. Layer 40:
 ## above the death card (30) and the skill screen (20). It takes input only while a decision is pending.
 
 var choose_callback := Callable()
@@ -69,11 +69,11 @@ func confirm() -> bool:
 func _unhandled_input(event: InputEvent) -> void:
 	if not _open:
 		return
-	if event.is_action_pressed("ui_up"):
+	if event.is_action_pressed("ui_up") or event.is_action_pressed("aim_up"):
 		move(-1)
-	elif event.is_action_pressed("ui_down"):
+	elif event.is_action_pressed("ui_down") or event.is_action_pressed("aim_down"):
 		move(1)
-	elif event.is_action_pressed("ui_accept"):
+	elif event.is_action_pressed("menu_accept") or event.is_action_pressed("ui_accept"):
 		confirm()
 	else:
 		return

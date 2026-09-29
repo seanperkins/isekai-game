@@ -152,3 +152,28 @@ func test_a_crab_winds_up_then_charges_like_the_lizard() -> void:
 		await wait_physics_frames(1)
 		seen[c.charge_state()] = true
 	assert_true(seen.has("windup") and seen.has("charge"), str(seen.keys()))
+
+func test_a_snake_stunned_away_from_its_anchor_returns_when_the_stun_ends() -> void:
+	var s := _enemy("vine_snake", Vector2(0, -100))
+	var anchor := s.global_position
+	await wait_physics_frames(3)
+	s.global_position = anchor + Vector2(30, 40)  # where a lunge or a retreat left it
+	s._charge = "charge"
+	s.status.stun(1.0)
+	fake_player.global_position = Vector2(2000, 0)
+	await wait_physics_frames(int(60.0 * 1.0) + 5)
+	assert_eq(s.status.state, EnemyStatus.ACTIVE, "the stun is over")
+	await wait_physics_frames(150)
+	assert_lt(s.global_position.distance_to(anchor), 4.0, "and it is back on its anchor")
+
+func test_a_puff_sinks_onto_a_player_standing_below_the_moth() -> void:
+	var m := _enemy("spore_moth", Vector2(0, -100))
+	fake_player.global_position = Vector2(0, 0)  # 100 px below, inside the 320 px view range
+	var follow := func(n: String, t: Dictionary) -> void:
+		if n == "spore_puff":
+			fake_player.global_position.x = t["pos"].x  # the player stands right under wherever the moth is
+	EventBus.world_event.connect(follow)
+	await wait_physics_frames(int(Enemy.PUFF_INTERVAL * 60.0) + 200)
+	EventBus.world_event.disconnect(follow)
+	assert_gte(fake_player.poisons.size(), 1, "the puff drifted down onto it")
+	assert_true(is_instance_valid(m))
