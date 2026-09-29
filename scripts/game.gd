@@ -63,11 +63,16 @@ func _ready() -> void:
 	add_child(run)
 	run.bind(player, world, Compendium.progress, pools)
 	run.restart_requested.connect(_restart)
-	SkillRules.start_run()
-	if not start["kit"].is_empty():  # after start_run(), which clears everything a kit would set
-		RebirthKit.apply(player, SkillRules, Compendium.model, start["kit"])
+	begin_life(start)
 	if Game.wants_evolve(OS.get_cmdline_user_args()):
 		player.debug_grant_xp(Progression.stage_total(1))  # reach the first evolution without a grind
+
+## Starts a life: the run's state is cleared, then the pool's kit is given. The kit comes second because
+## start_run() clears everything a kit would set.
+func begin_life(start: Dictionary) -> void:
+	SkillRules.start_run()
+	if not start["kit"].is_empty():
+		RebirthKit.apply(player, SkillRules, Compendium.model, start["kit"])
 
 ## A fresh creature (or water pool) for a room, wired to XP and the Bestiary.
 func _spawn(id: String, pos: Vector2) -> Node2D:

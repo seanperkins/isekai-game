@@ -46,13 +46,16 @@ static func _check_rebirth_pools(rooms: Dictionary) -> PackedStringArray:
 		for f in (rooms[room_id] as RoomDef).features:
 			if f.get("kind", "") != "rebirth_pool":
 				continue
-			var pid: String = str(f.get("id", ""))
-			if pid == "" or not f.has("area") or not f.has("kit") or not f.has("pos"):
-				out.append("%s: a rebirth pool needs an id, area, kit and pos" % room_id)
+			if typeof(f.get("id")) != TYPE_STRING or typeof(f.get("area")) != TYPE_STRING \
+					or typeof(f.get("kit")) != TYPE_DICTIONARY or typeof(f.get("pos")) != TYPE_VECTOR2 or f.get("id") == "":
+				out.append("%s: a rebirth pool needs a string id and area, a kit dictionary and a Vector2 pos" % room_id)
 				continue
+			var pid: String = f["id"]
 			if seen.has(pid):
 				out.append("%s: duplicate rebirth pool '%s'" % [room_id, pid])
 			seen[pid] = room_id
+			if pid == WorldProgress.DEFAULT_POOL and not (rooms[room_id] as RoomDef).is_start():
+				out.append("%s: the default rebirth pool '%s' must be in the start room" % [room_id, pid])
 			for e in RebirthKit.validate(f["kit"]):
 				out.append("%s: rebirth pool '%s': %s" % [room_id, pid, e])
 	if not seen.is_empty() and not seen.has(WorldProgress.DEFAULT_POOL):

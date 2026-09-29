@@ -564,6 +564,11 @@ func start_at_level(level: int) -> void:
 	_kit_starting = false
 	_sync_max_hp()
 
+## Health and mana to their maximums (a new life is not wounded; raising a maximum never raised the current value).
+func fill_vitals() -> void:
+	health.heal(health.max_hp)
+	mana.restore(mana.max_mp)
+
 ## Grants XP directly (tests, and the --evolve launch shortcut).
 func debug_grant_xp(amount: int) -> void:
 	progression.add_xp(amount)
