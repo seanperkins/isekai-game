@@ -204,3 +204,15 @@ func test_the_prompt_goes_away_after_evolving_and_never_shows_at_the_last_stage(
 
 func test_the_ticker_shows_a_note_line() -> void:
 	assert_eq(StatusText.ticker_text({"kind": "note", "text": "Your skills grew."}, rules), "Your skills grew.")
+
+func test_choosing_an_offer_closes_the_menu_so_the_evolution_plays_in_the_world() -> void:
+	_eat_everything()
+	_to_cap()
+	screen.open()
+	assert_true(get_tree().paused)
+	screen.switch_tab(5)
+	screen.accept()
+	assert_eq(player.form.stage, 2)
+	assert_false(screen.is_open(), "the menu closes so the glow and the swell are seen")
+	assert_false(get_tree().paused, "and the game runs, so the moment actually plays")
+	assert_true(player.evolving())

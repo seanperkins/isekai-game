@@ -40,6 +40,8 @@ func refresh() -> void:
 	if not form_mods.is_empty():
 		stats.set_modifiers(FormEffects.SOURCE, form_mods)
 	capabilities.merge(form_flags, true)
+	if capabilities.has("trait_sonar") and capabilities.has("reveals_hidden"):
+		capabilities["reveals_hidden"] = int(capabilities["reveals_hidden"]) + 1  # sonar: Echolocation reads one level stronger
 
 func reset() -> void:
 	slots.reset()

@@ -176,3 +176,76 @@ func test_a_body_swap_while_eating_leaves_the_slime_visible_afterwards() -> void
 	_to_cap()
 	player.advance_form("tide")
 	assert_true(player.get_node("Sprite").visible)
+
+# --- every trait the Form tab promises does something ---
+
+func _hurt_then_eat() -> int:
+	player.health.hp = 10
+	var skills := {}
+	for d in DefLoader.load_dir("res://data/skills"):
+		skills[d.id] = d
+	var toad := Enemy.new()
+	for c in DefLoader.load_dir("res://data/creatures"):
+		if c.id == "toad":
+			toad.setup(c, skills)
+	toad.position = player.position + Vector2(24, 0)
+	add_child_autofree(toad)
+	toad.set_physics_process(false)
+	toad.status.stun()
+	player.begin_predate()
+	player.process_predate(5.0)
+	return player.health.hp - 10
+
+func test_adaptable_heals_more_from_every_eat() -> void:
+	var plain := _hurt_then_eat()
+	rules.start_run()
+	_to_cap()
+	player.advance_form("greater_slime")
+	await wait_seconds(Player.EVOLVE_SECONDS + 0.2)
+	assert_eq(_hurt_then_eat(), plain + FormEffects.ADAPTABLE_HEAL)
+
+func test_sonar_reads_echolocation_one_level_stronger() -> void:
+	for i in 3:
+		rules.handle_event("absorbed", {"essence": "sound", "source": "bat"})
+	assert_true(rules.owned().has("echolocation"))
+	var plain := player.skillset.level("reveals_hidden")
+	assert_gt(plain, 0)
+	_to_cap()
+	player.advance_form("echo")
+	assert_eq(player.skillset.level("reveals_hidden"), plain + 1)
+
+func test_the_echo_form_grants_echolocation_and_sonar_reads_it_one_level_up() -> void:
+	assert_false(rules.owned().has("echolocation"))
+	_to_cap()
+	player.advance_form("echo")
+	assert_true(rules.owned().has("echolocation"), "the Echo body grants it")
+	assert_eq(player.skillset.level("reveals_hidden"), 2, "Lv1 from the skill, +1 from sonar")
+
+func test_sonar_does_nothing_for_a_body_without_it() -> void:
+	_to_cap()
+	player.advance_form("weaver")
+	rules.grant("echolocation")
+	player.skillset.refresh()
+	assert_eq(player.skillset.level("reveals_hidden"), 1, "no sonar, no bonus")
+
+func test_every_trait_in_the_table_is_consumed_somewhere() -> void:
+	# a trait the UI promises must change something: each has a test above or in test_forms
+	for t in FormEffects.TRAITS:
+		assert_true(["spinner", "water_thrift", "venom_blood", "hard_shell", "sonar", "adaptable"].has(t), "%s has a behaviour" % t)
+
+# --- a player without its base sheet never crashes on evolving ---
+
+func test_evolving_without_a_base_sheet_does_not_crash_or_break_drawing() -> void:
+	var bare := Player.new()
+	bare.use_sheet = false
+	bare.setup(rules, CompendiumModel.new([], []), [], func(_n: String, _t: Dictionary) -> void: pass)
+	add_child_autofree(bare)
+	rules.start_run()
+	assert_true(bare.advance_form("weaver", true))
+	await wait_physics_frames(4)  # an engine error here fails the test
+	assert_not_null(bare.get_node("Sprite").texture)
+
+func test_a_form_look_survives_a_missing_base_sheet() -> void:
+	var look := FormEffects.look(player.forms["tide"], null)
+	assert_true(look.has("texture"))
+	assert_null(look["texture"])

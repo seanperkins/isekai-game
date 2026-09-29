@@ -169,3 +169,29 @@ func test_appraisal_reaches_five_with_eight_first_time_inspections() -> void:
 func test_the_bundled_content_still_validates() -> void:
 	var loaded := DefLoader.load_content("res://data/skills", "res://data/creatures")
 	assert_eq(loaded["errors"].size(), 0, str(loaded["errors"]))
+
+func test_the_top_levels_are_reachable_against_what_their_sources_supply() -> void:
+	var rooms := World.load_rooms("res://data/rooms")
+	var creatures := {}
+	for c in DefLoader.load_dir("res://data/creatures"):
+		creatures[c.id] = c
+	# events one full pass of the Cave offers, by source
+	var sound := 0
+	var inspectable := 0
+	var seen := {}
+	for id in rooms:
+		for s in (rooms[id] as RoomDef).spawns:
+			var c: CreatureDef = creatures[s["id"]]
+			sound += int(c.essences.get("sound", 0))
+			if c.appraisal_target and not seen.has(c.id):
+				seen[c.id] = true
+				inspectable += 1
+	var defs := _defs()
+	# Echolocation levels on absorbed sound: rooms respawn, so laps of the Cave farm it, but not in a handful
+	var echo_needed: int = (defs["echolocation"].max_level - 1) * defs["echolocation"].level_curve
+	assert_lte(echo_needed, sound * 6, "Echolocation's top level (%d sound) is within six laps of the Cave (%d per lap)" % [echo_needed, sound])
+	assert_gt(echo_needed, sound, "and is more than a single lap, so it is not trivial")
+	# Appraisal levels on the first inspection of each creature type: the Cave has few, the Grotto adds the rest
+	var appraisal_needed: int = (defs["appraisal"].max_level - 1) * defs["appraisal"].level_curve
+	assert_gt(appraisal_needed, inspectable, "the Cave alone cannot max Appraisal (%d needed, %d types)" % [appraisal_needed, inspectable])
+	assert_lte(appraisal_needed, inspectable * 3, "and the whole game has enough creature types for it")

@@ -15,6 +15,7 @@ const TRAITS := {
 }
 const THREAD_SKILLS := ["sticky_thread", "swing_thread"]
 const WATER_SKILLS := ["hydraulic_propulsion", "water_blade", "jet_dash"]
+const ADAPTABLE_HEAL := 2  # extra HP from every creature eaten
 const VENOM_PERCENT := 30
 const SHELL_FLAT := 1
 
@@ -39,10 +40,15 @@ static func stat_lines(def: FormDef) -> Array:
 	return out
 
 ## What a form looks like: its own sheet's idle frame, or the base sheet's idle frame with the form's tint.
+## With no base sheet at all the texture is null (callers draw nothing rather than crash).
 static func look(def: FormDef, base_sheet: SpriteSheet) -> Dictionary:
 	if def.sprite_set != "" and SpriteSheet.available(def.sprite_set):
 		return {"texture": SpriteSheet.load_set(def.sprite_set).frame_texture("idle_1"), "tint": Color.WHITE}
-	return {"texture": base_sheet.frame_texture("idle_1"), "tint": def.tint}
+	return {"texture": base_sheet.frame_texture("idle_1") if base_sheet != null else null, "tint": def.tint}
+
+## Extra HP from eating, from traits (adaptable).
+static func eat_heal(capabilities: Dictionary) -> int:
+	return ADAPTABLE_HEAL if capabilities.has("trait_adaptable") else 0
 
 ## The trait flags a form turns on.
 static func flags(def: FormDef) -> Dictionary:

@@ -148,6 +148,8 @@ func accept() -> void:
 		if id != "" and _player.advance_form(id):
 			EventBus.world_event.emit("menu_confirm", {})
 			_sel = 0
+			close()  # the evolution moment plays in the world, not under the menu
+			return
 		_refresh()
 		return
 	if id != "" and _rows[_selectable[_sel]]["kind"] == "ready":
@@ -593,6 +595,14 @@ func _refresh_form() -> void:
 	_clear(_detail)
 	_build_form()
 
+## The plain slime's sheet, for form thumbnails (loaded once); null if the game has none.
+var _base_sheet_cache: SpriteSheet
+
+func _base_sheet() -> SpriteSheet:
+	if _base_sheet_cache == null:
+		_base_sheet_cache = SpriteSheet.load_set("slime")
+	return _base_sheet_cache
+
 ## One paragraph about the body: who you are, and what evolving offers (or that it is the only path).
 func form_note() -> String:
 	var d := _player.form_def()
@@ -628,9 +638,9 @@ func _build_form() -> void:
 		var selected := i == _sel
 		_panel(_list, Vector2(LIST_X, y), Vector2(LIST_W, ROW_H - 2), COL_SELECTED if selected else COL_ROW, 2 if selected else 1)
 		var f: FormDef = _player.forms[row["id"]]
-		var look := FormEffects.look(f, _player.body_sheet() if _player.body_sheet() != null else SpriteSheet.load_set("slime"))
+		var look := FormEffects.look(f, _base_sheet())
 		var thumb := TextureRect.new()
-		thumb.texture = look["texture"]
+		thumb.texture = look["texture"]  # null with no sheet: an empty thumbnail, not a crash
 		thumb.modulate = look["tint"]
 		thumb.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		thumb.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -641,7 +651,7 @@ func _build_form() -> void:
 		y += ROW_H
 	# the selected offer's card
 	var sel: FormDef = _player.forms[_rows[_selectable[_sel]]["id"]]
-	var look2 := FormEffects.look(sel, SpriteSheet.load_set("slime"))
+	var look2 := FormEffects.look(sel, _base_sheet())
 	var big := TextureRect.new()
 	big.texture = look2["texture"]
 	big.modulate = look2["tint"]
