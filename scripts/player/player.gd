@@ -45,6 +45,8 @@ const BODY_BOTTOM := BodyConfig.BOTTOM  # collision box bottom, where the body s
 const SPREAD_STICK_Y := 0.6
 const SPREAD_SPEED := 0.5
 const HURT_FLASH := 0.25
+const EVOLVE_SECONDS := 1.2
+const EVOLVE_SWELL := 0.35
 
 var team := "player"
 var facing := 1
@@ -78,6 +80,8 @@ var _form_sheet: SpriteSheet    # the current form's own sheet, or null
 ## The evolved body: stage and form (Form.advance is the only way they change) and the form definitions.
 var form := Form.new()
 var forms := {}
+## Seconds left of the evolution moment: a short lock and shield while the body changes.
+var _evolve_time := 0.0
 var _animator: SlimeAnimator
 var _shapes: SlimeShapes
 var _shape: CollisionShape2D
@@ -120,6 +124,9 @@ func setup(rules: SkillRulesEngine, compendium: CompendiumModel, creature_defs: 
 
 func _physics_process(delta: float) -> void:
 	if health == null or health.is_dead():
+		return
+	if _evolve_time > 0.0:
+		_evolve_step(delta)
 		return
 	var dir := Input.get_axis("move_left", "move_right")
 	if predation.active():
@@ -207,11 +214,12 @@ func _update_visual(delta: float) -> void:
 	_animator.advance(delta)
 	var frame := _animator.frame()
 	var left := _faces_left(state, get_wall_normal() if is_on_wall() else Vector2.ZERO)
-	var body_scale := body_scale()
+	var glow := evolve_glow()
+	var body_scale := body_scale() * (1.0 + EVOLVE_SWELL * glow)
 	_sprite.texture = _sheet.frame_texture(frame)
 	_sprite.position.y = BODY_BOTTOM - _sheet.frame_size(frame).y * body_scale / 2.0
 	_sprite.scale = Vector2.ONE * body_scale
-	_sprite.modulate = body_tint()
+	_sprite.modulate = body_tint().lerp(Color(2.2, 2.2, 2.2), glow * 0.8)
 	_sprite.flip_h = left
 	_shapes.refresh(_sheet, frame, left)
 
@@ -517,8 +525,40 @@ func advance_form(id: String, force := false) -> bool:
 	_use_form_sheet(def)
 	skillset.refresh()
 	_sync_max_hp()
+	_begin_evolve_moment(def)
 	EventBus.world_event.emit("evolved_body", {"id": id, "stage": form.stage})
 	return true
+
+func evolving() -> bool:
+	return _evolve_time > 0.0
+
+## 1 at the start of the evolution moment, easing to 0: drives the glow and the swell.
+func evolve_glow() -> float:
+	var k := clampf(_evolve_time / EVOLVE_SECONDS, 0.0, 1.0)
+	return k * k
+
+## The lock and shield while the body changes: no walking or acting, no damage, no eat or rope in progress.
+func _begin_evolve_moment(def: FormDef) -> void:
+	_evolve_time = EVOLVE_SECONDS
+	_invuln = maxf(_invuln, EVOLVE_SECONDS)
+	cancel_predate()
+	drop_rope()
+	var fx := EvolutionFx.new()
+	fx.tint = def.tint
+	add_child(fx)
+
+func _evolve_step(delta: float) -> void:
+	_evolve_time = maxf(0.0, _evolve_time - delta)
+	velocity.x = 0.0
+	if not is_on_floor():
+		velocity.y += GRAVITY * delta
+	move_and_slide()
+	tick(delta)
+	_update_visual(delta)
+
+## Grants XP directly (tests, and the --evolve launch shortcut).
+func debug_grant_xp(amount: int) -> void:
+	progression.add_xp(amount)
 
 func _use_form_sheet(def: FormDef) -> void:
 	if def.sprite_set != "" and SpriteSheet.available(def.sprite_set):

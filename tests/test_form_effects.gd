@@ -147,6 +147,7 @@ func test_the_drawn_sprite_follows_the_form_and_stands_on_the_floor_line() -> vo
 	await wait_physics_frames(14)
 	_to_cap()
 	player.advance_form("tide")
+	await wait_seconds(Player.EVOLVE_SECONDS + 0.2)  # the evolution moment swells and glows the sprite; let it settle
 	player._update_visual(0.016)
 	var s: Sprite2D = player.get_node("Sprite")
 	var def: FormDef = player.forms["tide"]
@@ -160,6 +161,7 @@ func test_the_hit_shape_grows_with_the_sprite() -> void:
 	var plain := player.hurt_polygon()
 	_to_cap()
 	player.advance_form("tide")
+	await wait_seconds(Player.EVOLVE_SECONDS + 0.2)
 	player._update_visual(0.016)
 	var grown := player.hurt_polygon()
 	var w0 := 0.0
