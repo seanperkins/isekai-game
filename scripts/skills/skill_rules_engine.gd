@@ -179,7 +179,7 @@ func set_stage_cap(n: int) -> void:
 ## A held, levelling skill sitting at the stage cap with room left below its own max.
 func is_capped(id: String) -> bool:
 	var d: SkillDef = _defs.get(id)
-	return d != null and _owned.has(id) and not d.levels_on.is_empty() and level_of(id) >= stage_cap and level_of(id) < d.max_level
+	return d != null and _owned.has(id) and not is_retired(id) and not d.levels_on.is_empty() and level_of(id) >= stage_cap and level_of(id) < d.max_level
 
 ## After the cap rises: level every HELD skill (not a retired parent) straight to what its counters earned, one skill at a
 ## time, each with its own drain, so a burst of level-ups can never pass the 64-item queue limit.

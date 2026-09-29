@@ -43,7 +43,8 @@ func _physics_process(delta: float) -> void:
 	_elapsed += delta
 	if slow:
 		for n in _enemies_inside():
-			n.slow_for(Enemy.SLOW_SECONDS)
+			if n.has_method("slow_for"):  # a cracked stone is an actor too, and it cannot be slowed
+				n.slow_for(Enemy.SLOW_SECONDS)
 	# A due tick is processed before expiry is checked, so a zone of N whole seconds ticks exactly N times.
 	while float(_ticks + 1) * TICK_SECONDS <= _elapsed + EPS and float(_ticks + 1) * TICK_SECONDS <= _seconds + EPS:
 		_ticks += 1

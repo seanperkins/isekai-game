@@ -173,3 +173,26 @@ func test_puffball_bursts_against_a_wall() -> void:
 func test_puffball_over_a_pit_stops_at_the_cap() -> void:
 	await _cast("puffball", Vector2(1, 0), [64])  # no floor at all
 	assert_eq(_patches().size(), 1)
+	# 40 steps of 1/30 s: x = 220 x 40/30, y = -150 x 40/30 + 300 x (40/30)^2 - a semi-step = the arc's own end
+	var p := (_patches()[0] as Node2D).global_position
+	assert_almost_eq(p.x, 293.33, 1.5)
+	assert_almost_eq(p.y, 320.0, 1.5)
+
+func test_a_ray_from_below_meets_the_underside_of_a_one_way_ledge() -> void:
+	# Pins what the engine does today (the spec accepts either): the ray stops at the ledge's underside, so a Puffball
+	# lobbed up under a thin ledge bursts beneath it. If a physics change lets rays pass, this test says so.
+	var def := RoomDef.new()
+	def.id = "T"
+	def.area = "cave"
+	def.size = Vector2i(1, 1)
+	def.solids = [Rect2(-50, -40, 100, 12)]
+	var room := RoomBuilder.build_room(def, {})
+	add_child_autofree(room)
+	room.position = Vector2.ZERO
+	var a: Ability = load("res://scenes/abilities/puffball.tscn").instantiate()
+	add_child_autofree(a)
+	a.setup(actor, [64], 1)
+	await wait_physics_frames(2)
+	var hit = a.terrain_hit(Vector2(0, 0), Vector2(0, -100))
+	assert_not_null(hit)
+	assert_almost_eq(hit.y, -28.0, 1.0)

@@ -153,3 +153,34 @@ func test_a_successful_evolve_clears_the_armed_state() -> void:
 	s.accept()
 	assert_eq(s._armed, "")
 	s.close()
+
+func test_switching_tabs_disarms() -> void:
+	_ready_both()
+	player.award_xp(10)
+	var s := _screen()
+	_select(s, "water_blade")
+	s.accept()
+	s.switch_tab(4)
+	s.switch_tab(0)
+	_select(s, "water_blade")
+	s.accept()
+	assert_eq(rules.level_of("water_blade"), 0, "the tab round trip disarmed it: this press only arms")
+	s.close()
+
+func test_a_retired_parent_is_not_capped() -> void:
+	rules.set_stage_cap(3)
+	_emit("absorbed", {"essence": "water"}, 4)
+	_emit("skill_used", {"id": "hydraulic_propulsion"}, 30)
+	assert_true(rules.is_capped("hydraulic_propulsion"))
+	rules.evolve("water_blade")
+	assert_false(rules.is_capped("hydraulic_propulsion"))
+
+func test_advancing_the_body_after_an_evolution_changes_no_branch() -> void:
+	_ready_both()
+	rules.evolve("water_blade")
+	player.progression.add_xp(Progression.stage_total(1))
+	assert_true(player.advance_form("tempest") or player.advance_form("tide"))
+	assert_true(rules.is_retired("hydraulic_propulsion"))
+	assert_true(rules.is_closed("jet_dash"))
+	assert_true(rules.owned().has("water_blade"))
+	assert_false(rules.owned().has("hydraulic_propulsion"))

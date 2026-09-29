@@ -11,6 +11,13 @@ class HealActor extends Node2D:
 	var facing := 1
 	var health := Health.new(10)
 
+class FakeProgress extends RefCounted:
+	var opened: Array = []
+	func open_shortcut(id: String) -> void:
+		opened.append(id)
+	func is_open(_id: String) -> bool:
+		return false
+
 var actor: StubActor
 var creatures := {}
 var skills_by_id := {}
@@ -94,3 +101,28 @@ func test_a_no_slow_zone_does_not_slow() -> void:
 	_zone(Vector2.ZERO, 40.0, 2.0, {"slow": false})
 	await wait_physics_frames(30)
 	assert_almost_eq(toad._speed(), Enemy.BASE_SPEED * toad.stats.get_stat("spd") / 100.0, 0.001)
+
+func _switch(pos: Vector2, progress) -> ShortcutSwitch:
+	var sw := ShortcutSwitch.new()
+	add_child_autofree(sw)
+	sw.setup({"shortcut": "c6_drop", "pos": pos}, {"progress": progress})
+	return sw
+
+## The cracked stone is an actor with receive_hit but no slow_for: a slowing zone must skip it without an error, and a
+## damaging zone still opens it (that is how Spore Cloud opens the C6 shortcut).
+func test_a_damaging_zone_still_opens_a_shortcut_switch_and_expires() -> void:
+	var progress := FakeProgress.new()
+	_switch(Vector2(10, 0), progress)
+	var z := _zone(Vector2.ZERO, 40.0, 2.0)
+	await wait_physics_frames(72)
+	assert_eq(progress.opened, ["c6_drop"], "opened on the first tick")
+	await wait_physics_frames(70)
+	assert_false(is_instance_valid(z) and z.is_inside_tree(), "expired on time")
+
+func test_a_slowing_zone_with_no_damage_leaves_a_shortcut_switch_alone_and_expires() -> void:
+	var progress := FakeProgress.new()
+	_switch(Vector2(10, 0), progress)
+	var z := _zone(Vector2.ZERO, 40.0, 2.0, {"damage": 0})
+	await wait_physics_frames(130)
+	assert_eq(progress.opened, [], "damage 0 never hits it")
+	assert_false(is_instance_valid(z) and z.is_inside_tree(), "expired on time")
