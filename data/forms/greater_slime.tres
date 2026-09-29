@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_te1wa"]
+
+[resource]
+script = ExtResource("1_te1wa")
+id = "greater_slime"
+display_name = "Greater Slime"
+lineage = "greater"
+parents = ["slime"]
+stats = {
+"max_hp": 5,
+"max_mp": 3,
+"predation_time": -10
+}
+traits = ["adaptable"]
+grants = ["regeneration"]
+tint = Color(1, 0.92, 0.7, 1)
+size = 1.12
+blurb = "No lineage claimed you. Bigger, and good at recovering."

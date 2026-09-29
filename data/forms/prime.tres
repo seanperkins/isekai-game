@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_k728f"]
+
+[resource]
+script = ExtResource("1_k728f")
+id = "prime"
+display_name = "Prime Sovereign"
+stage = 4
+lineage = "greater"
+parents = ["vast", "radiant"]
+stats = {
+"atk": 2,
+"def": 1,
+"max_hp": 22,
+"max_mp": 10,
+"mp_regen": 25,
+"predation_time": -25
+}
+traits = ["adaptable"]
+grants = ["regeneration", "toughness", "mana_recovery"]
+tint = Color(1, 0.95, 0.75, 1)
+size = 1.4
+blurb = "Everything a slime can become, all at once."

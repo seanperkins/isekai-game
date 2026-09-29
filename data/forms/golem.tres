@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_62u4i"]
+
+[resource]
+script = ExtResource("1_62u4i")
+id = "golem"
+display_name = "Golem"
+stage = 3
+lineage = "bulwark"
+parents = ["bulwark"]
+stats = {
+"atk": 1,
+"def": 2,
+"max_hp": 12,
+"max_mp": 6,
+"spd": -8
+}
+traits = ["hard_shell"]
+grants = ["body_armor", "toughness"]
+tint = Color(0.9, 0.78, 0.6, 1)
+size = 1.25
+blurb = "Living stone."

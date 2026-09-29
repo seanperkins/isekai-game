@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_su77o"]
+
+[resource]
+script = ExtResource("1_su77o")
+id = "venom"
+display_name = "Venom Sovereign"
+stage = 4
+lineage = "toxic"
+parents = ["acid", "blight"]
+stats = {
+"atk": 4,
+"def": 1,
+"max_hp": 22,
+"max_mp": 10
+}
+traits = ["venom_blood"]
+grants = ["poison_breath", "poison_resistance"]
+tint = Color(0.7, 1, 0.6, 1)
+size = 1.4
+blurb = "Every breath is a warning."

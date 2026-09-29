@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_x8gjs"]
+
+[resource]
+script = ExtResource("1_x8gjs")
+id = "storm"
+display_name = "Storm Sovereign"
+stage = 4
+lineage = "echo"
+parents = ["phantom", "sky"]
+stats = {
+"atk": 2,
+"def": 1,
+"jump_height": 30,
+"max_hp": 22,
+"max_mp": 10,
+"spd": 16
+}
+traits = ["sonar"]
+grants = ["echolocation", "leap"]
+tint = Color(1, 0.75, 1, 1)
+size = 1.4
+blurb = "Thunder learned to walk."

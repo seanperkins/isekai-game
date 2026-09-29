@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_qqhed"]
+
+[resource]
+script = ExtResource("1_qqhed")
+id = "vast"
+display_name = "Vast Slime"
+stage = 3
+lineage = "greater"
+parents = ["greater_slime"]
+stats = {
+"atk": 1,
+"max_hp": 18,
+"max_mp": 6,
+"predation_time": -15
+}
+traits = ["adaptable"]
+grants = ["regeneration", "toughness"]
+tint = Color(1, 0.92, 0.7, 1)
+size = 1.25
+blurb = "Simply more of you."

@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_ng0iy"]
+
+[resource]
+script = ExtResource("1_ng0iy")
+id = "tempest"
+display_name = "Tempest"
+stage = 3
+lineage = "tide"
+parents = ["tide"]
+stats = {
+"atk": 2,
+"max_hp": 12,
+"max_mp": 6,
+"mp_regen": 40
+}
+traits = ["water_thrift"]
+grants = ["hydraulic_propulsion", "water_blade"]
+tint = Color(0.55, 0.8, 1, 1)
+size = 1.25
+blurb = "A storm held in a body: it cuts."
