@@ -1,19 +1,19 @@
 class_name TerrainLayers
 extends RefCounted
 ## The depth stack behind and in front of a room, Hollow Knight style. Back to front: far haze,
-## far rock, mid rock, the room's back wall, (terrain and actors), then a dark foreground frame.
+## far rock, mid rock, the room's back wall, a foreground frame of hanging roots, then terrain and actors.
 ## The three far layers wrap in x; the frame is one 640x360 image.
 ## Layers scroll sideways only (see TerrainParallax).
 
 ## piece -> [parallax factor, z_index, tint]. Factor 1 moves with the world, 0 stays on
 ## screen. Nearer layers are dimmed so the platforms in the play plane stay easy to read, and the
-## foreground is a frame of roots and stalactite tips glued to the screen edges, so it never
-## covers the middle of the view.
+## foreground is a frame of roots and stalactite tips glued to the screen edges. It sits behind the
+## terrain, decor and actors, so it can never cover a creature or a ledge.
 const STACK := {
 	"far_haze": [0.10, -30, Color(1, 1, 1, 1)],
 	"far_rock": [0.25, -28, Color(0.7, 0.7, 0.7, 1)],
 	"mid_rock": [0.50, -26, Color(0.5, 0.5, 0.5, 1)],
-	"foreground": [0.0, 12, Color(1, 1, 1, 0.6)],  # see-through: it frames the view without hiding a ledge
+	"foreground": [0.0, -5, Color(1, 1, 1, 0.6)],  # behind terrain, decor and actors (z 0 and up): scenery never covers what you play with
 }
 
 ## Lights only reach items whose light_mask overlaps theirs. The far layers use bit 2, which no

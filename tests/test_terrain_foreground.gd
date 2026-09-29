@@ -44,10 +44,20 @@ func test_the_built_room_uses_the_faded_frame_and_keeps_its_place_in_the_stack()
 	var fg: TerrainParallax = node.get_node("foreground")
 	assert_same(fg.texture, TerrainLayers.foreground_texture("cave"))
 	assert_eq(fg.factor, 0.0)
-	assert_gt(fg.z_index, 5)
+	assert_lt(fg.z_index, 0, "behind everything you play with")
 
 func test_the_faded_texture_is_built_once_per_biome() -> void:
 	assert_same(TerrainLayers.foreground_texture("cave"), TerrainLayers.foreground_texture("cave"))
 
 func test_a_biome_without_a_frame_has_none() -> void:
 	assert_null(TerrainLayers.foreground_texture("no_such_biome"))
+
+func test_nothing_you_play_with_draws_behind_the_frame() -> void:
+	# Terrain, decor and creatures draw at z 0 and the slime at 5: the frame must be below all of them.
+	var fg_z: int = TerrainLayers.STACK["foreground"][1]
+	assert_lt(fg_z, 0)
+	var node := RoomBuilder.build_room(World.load_rooms("res://data/rooms")["C2"], {})
+	add_child_autofree(node)
+	for child in node.get_children():
+		if child is CanvasItem and child.name != "foreground" and not (child is TerrainParallax) and child.name != "BackWall":
+			assert_gte(child.z_index, fg_z, "%s draws at or above the frame" % child.name)
