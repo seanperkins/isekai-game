@@ -19,8 +19,8 @@ levels_on = {
 "event": "wall_touched",
 "tags": {}
 }
-level_curve = 20
-max_level = 3
+level_curve = 12
+max_level = 8
 effects = [{
 "flag": "wall_cling",
 "kind": "capability"
@@ -28,5 +28,5 @@ effects = [{
 "kind": "modifier",
 "op": "add",
 "stat": "slide_speed",
-"values": [-30, -45, -60]
+"values": [-30, -40, -50, -58, -65, -71, -76, -80]
 }]

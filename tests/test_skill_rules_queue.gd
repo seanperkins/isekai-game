@@ -44,6 +44,7 @@ func test_work_queue_cap_reports_and_stops() -> void:
 	var loop := TestDefs.skill("loop", {"unlock": [TestDefs.counter("jumped", 1)],
 		"levels_on": {"event": "wall_touched", "tags": {}}, "level_curve": 1, "max_level": 1000})
 	_make([loop])
+	engine.set_stage_cap(1000)  # the stage cap would otherwise stop the runaway chain before the queue limit
 	engine.skill_leveled.connect(func(_id: String, _lv: int) -> void: engine.handle_event("wall_touched", {}))
 	engine.handle_event("jumped", {})
 	engine.handle_event("wall_touched", {})

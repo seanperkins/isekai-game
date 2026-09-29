@@ -22,7 +22,7 @@ func test_passive_modifiers_follow_unlock_and_level() -> void:
 	_emit("jumped", {"from": "ground"}, 40)
 	assert_eq(stats.get_stat("jump_height"), 110)
 	_emit("jumped", {"from": "ground"}, 40)
-	assert_eq(stats.get_stat("jump_height"), 115)
+	assert_eq(stats.get_stat("jump_height"), 120, "Leap's curve is 20 now: 40 more jumps is two levels, Lv3 (+20)")
 
 func test_capabilities_and_compound_modifier() -> void:
 	_emit("wall_touched", {}, 15)

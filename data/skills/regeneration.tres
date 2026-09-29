@@ -26,10 +26,10 @@ levels_on = {
 }
 }
 level_curve = 8
-max_level = 3
+max_level = 6
 effects = [{
 "kind": "modifier",
 "op": "set",
 "stat": "regen_interval",
-"values": [8, 6, 4]
+"values": [8, 6, 4, 3, 2, 1]
 }]

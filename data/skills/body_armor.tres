@@ -24,10 +24,10 @@ levels_on = {
 "tags": {}
 }
 level_curve = 10
-max_level = 3
+max_level = 8
 effects = [{
 "kind": "modifier",
 "op": "add",
 "stat": "def",
-"values": [1, 2, 3]
+"values": [1, 2, 3, 4, 5, 6, 7, 8]
 }]

@@ -11,11 +11,20 @@ signal run_started
 signal inspect_processed(tags: Dictionary, appraisal_level: int)
 ## An evolution's conditions are met; it unlocks only when the player spends EP (evolve()).
 signal evolution_ready(id: String)
+## recheck_levels() finished; `levels_gained` counts the levels it added across all skills.
+signal rechecked(levels_gained: int)
 
 const MAX_ITERATIONS := 64
 const APPRAISAL_ID := "appraisal"
+## The highest level a skill may reach at the body's first stage; the body raises it on evolving.
+const BASE_STAGE_CAP := 5
 
 var run_active := false
+## Levels are capped by the body's stage (5, 8, 12, 15). A skill above the cap stops levelling but its
+## counters keep counting, so evolving (recheck_levels) can level it straight to the new cap.
+var stage_cap := BASE_STAGE_CAP
+## True while recheck_levels() runs, so the announcer can say one line instead of one per level.
+var rechecking := false
 var report_error: Callable = func(msg: String) -> void: push_error(msg)
 var clock: Callable = func() -> float: return Time.get_ticks_msec() / 1000.0
 
@@ -52,6 +61,8 @@ func start_run() -> void:
 
 func reset_run() -> void:
 	run_active = false
+	stage_cap = BASE_STAGE_CAP
+	rechecking = false
 	_ledger.clear()
 	_owned.clear()
 	_unlock_log.clear()
@@ -110,6 +121,31 @@ func level_progress(id: String) -> Dictionary:
 		return none
 	var gained: int = _ledger.counter(d.levels_on["event"], d.levels_on.get("tags", {})) - int(_owned[id]["base"])
 	return {"current": clampi(gained - (level - 1) * d.level_curve, 0, d.level_curve), "target": d.level_curve}
+
+func set_stage_cap(n: int) -> void:
+	stage_cap = maxi(1, n)
+
+## An owned, levelling skill sitting at the stage cap with room left below its own max.
+func is_capped(id: String) -> bool:
+	var d: SkillDef = _defs.get(id)
+	return d != null and _owned.has(id) and not d.levels_on.is_empty() and level_of(id) >= stage_cap and level_of(id) < d.max_level
+
+## After the cap rises: level every owned skill straight to what its counters earned, one skill at a time,
+## each with its own drain, so a burst of level-ups can never pass the 64-item queue limit.
+func recheck_levels() -> void:
+	rechecking = true
+	var gained := 0
+	for id in _owned.keys():
+		var d: SkillDef = _defs.get(id)
+		if d == null or d.levels_on.is_empty():
+			continue
+		var before := level_of(id)
+		_check_level(d)
+		if not _draining:
+			_drain()
+		gained += level_of(id) - before
+	rechecking = false
+	rechecked.emit(gained)
 
 ## Events of this run matching `tags` (superset match), e.g. essence totals for the status screen.
 func count(event_name: String, tags: Dictionary = {}) -> int:
@@ -172,7 +208,7 @@ func _check_level(d: SkillDef) -> void:
 		return
 	var entry: Dictionary = _owned[d.id]
 	var gained: int = _ledger.counter(d.levels_on["event"], d.levels_on.get("tags", {})) - int(entry["base"])
-	var target: int = mini(d.max_level, 1 + int(floor(float(gained) / d.level_curve)))
+	var target: int = mini(mini(d.max_level, stage_cap), 1 + int(floor(float(gained) / d.level_curve)))
 	while int(entry["level"]) < target:
 		entry["level"] = int(entry["level"]) + 1
 		_queue.append([Events.SKILL_LEVELED, {"id": d.id, "level": entry["level"]}])

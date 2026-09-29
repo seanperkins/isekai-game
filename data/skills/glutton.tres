@@ -25,12 +25,12 @@ levels_on = {
 }
 }
 level_curve = 5
-max_level = 3
+max_level = 8
 effects = [{
 "kind": "modifier",
 "op": "add",
 "stat": "predation_time",
-"values": [-30, -45, -60]
+"values": [-30, -45, -60, -68, -74, -79, -83, -86]
 }]
 trigger = {
 "action": "heal",

@@ -22,6 +22,10 @@ func push_unlock(id: String, text: String) -> void:
 func push_level(id: String, level: int) -> void:
 	_ticker.append({"kind": "level", "id": id, "level": level})
 
+## A one-line note for the ticker (for example "Your skills grew.").
+func push_note(text: String) -> void:
+	_ticker.append({"kind": "note", "text": text})
+
 func push_slot_replaced(new_id: String, old_id: String) -> void:
 	_ticker.append({"kind": "slot_replaced", "new_id": new_id, "old_id": old_id})
 

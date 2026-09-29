@@ -26,10 +26,10 @@ levels_on = {
 }
 }
 level_curve = 6
-max_level = 5
+max_level = 15
 effects = [{
 "kind": "active",
 "scene": "res://scenes/abilities/hydraulic_propulsion.tscn",
-"values": [100, 120, 140, 160, 180]
+"values": [100, 120, 140, 160, 180, 195, 210, 225, 240, 250, 260, 270, 280, 290, 300]
 }]
 mp_cost = 3

@@ -24,7 +24,7 @@ levels_on = {
 }
 }
 level_curve = 6
-max_level = 5
+max_level = 12
 effects = [{
 "kind": "modifier",
 "op": "percent_off",
@@ -32,5 +32,5 @@ effects = [{
 "damage_type": "poison"
 },
 "stat": "damage_taken",
-"values": [20, 35, 50, 65, 80]
+"values": [20, 32, 42, 52, 60, 67, 73, 78, 83, 87, 90, 92]
 }]

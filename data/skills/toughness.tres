@@ -24,10 +24,10 @@ levels_on = {
 }
 }
 level_curve = 20
-max_level = 5
+max_level = 12
 effects = [{
 "kind": "modifier",
 "op": "add",
 "stat": "max_hp",
-"values": [3, 6, 9, 12, 15]
+"values": [3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36]
 }]

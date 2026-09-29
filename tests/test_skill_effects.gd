@@ -20,19 +20,19 @@ func test_stat_modifiers_skip_damage_taken() -> void:
 
 func test_capabilities_include_compound_effects() -> void:
 	assert_eq(SkillEffects.capabilities(skills["wall_cling"], 2), {"wall_cling": 2})
-	assert_eq(SkillEffects.stat_modifiers(skills["wall_cling"], 2), [{"stat": "slide_speed", "op": "add", "value": -45}])
+	assert_eq(SkillEffects.stat_modifiers(skills["wall_cling"], 2), [{"stat": "slide_speed", "op": "add", "value": -40}])
 	var gated := TestDefs.skill("g", {"effects": [{"kind": "capability", "flag": "x", "min_level": 2}]})
 	assert_eq(SkillEffects.capabilities(gated, 1), {})
 	assert_eq(SkillEffects.capabilities(gated, 2), {"x": 2})
 
 func test_damage_reduction_scope_and_condition() -> void:
 	var pairs := [[skills["poison_resistance"], 2], [skills["pain_resistance"], 3]]
-	assert_eq(SkillEffects.damage_reduction(pairs, "poison", 30, 30), {"percent_off": 35, "flat_off": 0})
+	assert_eq(SkillEffects.damage_reduction(pairs, "poison", 30, 30), {"percent_off": 32, "flat_off": 0})
 	assert_eq(SkillEffects.damage_reduction(pairs, "physical", 30, 30), {"percent_off": 0, "flat_off": 0})
 	assert_eq(SkillEffects.damage_reduction(pairs, "physical", 8, 30), {"percent_off": 0, "flat_off": 3})
 	assert_eq(SkillEffects.damage_reduction(pairs, "physical", 9, 30), {"percent_off": 0, "flat_off": 0})
 
 func test_active_scene_and_values() -> void:
 	assert_eq(SkillEffects.active_scene(skills["poison_breath"]), "res://scenes/abilities/poison_breath.tscn")
-	assert_eq(SkillEffects.active_values(skills["poison_breath"]), [2, 3, 4, 5, 6])
+	assert_eq(SkillEffects.active_values(skills["poison_breath"]), [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
 	assert_eq(SkillEffects.active_scene(skills["leap"]), "")
