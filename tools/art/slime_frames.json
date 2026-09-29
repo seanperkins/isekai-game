@@ -92,7 +92,7 @@
   },
   {
    "name": "wall_1",
-   "width": 44,
+   "width": 34,
    "refs": [
     "idle_1"
    ],
@@ -100,7 +100,7 @@
   },
   {
    "name": "wall_2",
-   "width": 44,
+   "width": 34,
    "refs": [
     "idle_1",
     "wall_1"
