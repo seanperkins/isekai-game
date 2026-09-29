@@ -69,7 +69,8 @@ func test_regen_rate_is_a_percent_of_one_mp_per_second() -> void:
 
 func test_every_player_active_has_the_approved_mp_cost() -> void:
 	var costs := {"poison_breath": 4, "hydraulic_propulsion": 3, "water_blade": 5,
-		"sticky_thread": 3, "swing_thread": 4, "jet_dash": 5}
+		"sticky_thread": 3, "swing_thread": 4, "jet_dash": 5, "binding_web": 4, "miasma": 5, "venom_bolt": 5,
+		"healing_spores": 4, "puffball": 5}
 	for id in costs:
 		assert_eq(skills_by_id[id].mp_cost, costs[id], id)
 	for d in skills_by_id.values():

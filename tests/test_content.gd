@@ -66,3 +66,10 @@ func test_essence_minimums_satisfy_every_essence_skill() -> void:
 		for cond in d.unlock:
 			if cond["event"] == "absorbed":
 				assert_gte(int(totals.get(cond["tags"]["essence"], 0)), int(cond["n"]), d.id)
+
+func test_every_parent_has_exactly_two_evolutions() -> void:
+	var counts := {}
+	for d in skills:
+		if d.source == "evolution":
+			counts[d.replaces] = int(counts.get(d.replaces, 0)) + 1
+	assert_eq(counts, {"sticky_thread": 2, "hydraulic_propulsion": 2, "poison_breath": 2, "spore_cloud": 2})
