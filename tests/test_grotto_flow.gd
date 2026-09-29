@@ -7,6 +7,14 @@ func _game() -> Node:
 	await wait_physics_frames(2)
 	return game
 
+## True when the player is on the floor on at least one of a few consecutive ticks (a single tick can read false while it settles).
+func _stands(game) -> bool:
+	for i in 6:
+		if game.player.is_on_floor():
+			return true
+		await wait_physics_frames(1)
+	return false
+
 func _cleanup() -> void:
 	SkillRules.reset_run()
 	Announcer.queue.clear()
@@ -42,9 +50,9 @@ func test_standing_on_a_chains_top_ledge_stays_in_the_lower_room() -> void:
 	game.world.enter_at("G1", Vector2(260, -8))
 	await wait_physics_frames(90)
 	assert_eq(game.world.current_id, "G1", "G1's top ledge")
-	assert_true(game.player.is_on_floor(), "and the player stands on it")
+	assert_true(await _stands(game), "and the player stands on it")
 	game.world.enter_at("G3", Vector2(200, -8))
 	await wait_physics_frames(90)
 	assert_eq(game.world.current_id, "G3", "G3's top ledge")
-	assert_true(game.player.is_on_floor())
+	assert_true(await _stands(game), "and stands on it")
 	_cleanup()

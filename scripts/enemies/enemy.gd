@@ -268,14 +268,21 @@ func _physics_process(delta: float) -> void:
 		velocity.x = 0.0
 		_clear_inactive()
 	var stunned := status.state == EnemyStatus.STUNNED
-	var flying := capabilities.has("flight") and active
-	var hovering := def.drifter and (active or stunned)
-	var tethered := def.id == Sources.VINE_SNAKE and _on_ceiling and (active or stunned)
-	if hovering and not active:
-		velocity.y = 0.0  # a stunned moth holds its height
-	if tethered and not active:
-		velocity = Vector2.ZERO  # a stunned snake stays on its tether
-	if not flying and not hovering and not tethered and not (_on_ceiling and active):
+	var no_gravity := false
+	match kind:
+		Kind.SWOOPER:
+			no_gravity = active  # a stunned bat falls
+		Kind.DRIFTER:
+			no_gravity = active or stunned
+			if stunned:
+				velocity.y = 0.0  # a stunned moth holds its height
+		Kind.SNAKE:
+			no_gravity = _on_ceiling and (active or stunned)
+			if no_gravity and stunned:
+				velocity = Vector2.ZERO  # a stunned snake stays on its tether
+		Kind.DROPPER:
+			no_gravity = _on_ceiling and active  # a stunned hanging spider falls
+	if not no_gravity:
 		velocity.y += GRAVITY * delta
 	move_and_slide()
 	if active and player != null and is_touching(player):
