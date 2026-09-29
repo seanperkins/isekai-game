@@ -43,3 +43,6 @@ Gamepad: left stick / D-pad move (stick also aims) · A jump · X tackle · B ho
 - [ ] Toads puff up (flashing) and lob a green glob in an arc: step aside and it misses; rock stops it.
 - [ ] Lizards stop and flash, charge fast, then pant for a second: that's the moment to tackle them from behind.
 - [ ] Bats hover above you, flash, then dive in a straight line at where you were; sidestep and they miss, then climb back.
+- [ ] The slime is about twice its old size and drawn frame by frame: idle breathes, run is a four-frame squelch, jump/fall/land squash and stretch, the tackle stretches forward.
+- [ ] Hold down (S / ↓ / stick down) on the floor: the slime flattens into a puddle at half speed, and un-squashes when you let go. It can't stand or jump under a low ceiling.
+- [ ] Hold K/B next to a stunned enemy: the slime drapes over it and the enemy shrinks inside until it's eaten; letting go reveals the enemy again.
