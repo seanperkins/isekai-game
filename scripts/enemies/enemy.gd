@@ -161,9 +161,19 @@ func finish_dying() -> void:
 func _on_died() -> void:
 	if def.predatable:
 		status.die()  # the death effect ends in down() and starts the eat window
+		_charge = ""
+		_swoop = "idle"
+		_spit_windup = 0.0
+		_start_death_fx()
 	else:
 		status.consume()  # Plan 3 turns the serpent's death into victory
 	downed.emit(def)
+
+func _start_death_fx() -> void:
+	var fx := DeathFx.new()
+	add_child(fx)
+	fx.finished.connect(finish_dying)
+	fx.begin(self, _cause, _killed_from)
 
 func _physics_process(delta: float) -> void:
 	status.update(delta)
@@ -178,7 +188,7 @@ func _physics_process(delta: float) -> void:
 	if active and player != null:
 		_sense(player, delta)
 		_act(player, delta)
-	else:
+	elif status.state != EnemyStatus.DYING:  # a death effect owns the body while it plays
 		velocity.x = 0.0
 		_charge = ""
 		_spit_windup = 0.0
@@ -241,8 +251,8 @@ func frame_name() -> String:
 	return def.id
 
 func _update_visual() -> void:
-	if _sprite == null:
-		return
+	if _sprite == null or status.state == EnemyStatus.DYING:
+		return  # the death effect owns the sprite
 	Art.set_frame(_sprite, frame_name(), BODY_BOTTOM)
 	_sprite.flip_h = facing < 0
 	_sprite.flip_v = status.state == EnemyStatus.DOWNED
