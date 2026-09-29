@@ -20,9 +20,38 @@ const STACK := {
 ## PointLight2D uses, so crystals and fungus do not wash them out.
 const UNLIT_MASK := 2
 
+## The frame is scenery over the top of the view. Below FADE_START (screen pixels, of 360) it fades out,
+## and it is gone by FADE_END, so the ferns, crystals and mushrooms down its sides never draw over
+## creatures or ledges in the play band.
+const FADE_START := 70.0
+const FADE_END := 130.0
+
+static var _frames := {}
+
+## The biome's foreground frame with the play band faded out, built once per biome. Null when the
+## biome has no frame.
+static func foreground_texture(biome: String) -> Texture2D:
+	if _frames.has(biome):
+		return _frames[biome]
+	var src := TerrainArt.layer(biome, "foreground")
+	if src == null:
+		return null
+	var img := src.get_image()
+	for y in img.get_height():
+		var keep := 1.0 - smoothstep(FADE_START, FADE_END, float(y))
+		if keep >= 1.0:
+			continue
+		for x in img.get_width():
+			var c := img.get_pixel(x, y)
+			if c.a > 0.0:
+				c.a *= keep
+				img.set_pixel(x, y, c)
+	_frames[biome] = ImageTexture.create_from_image(img)
+	return _frames[biome]
+
 static func build(room: Node2D, biome: String) -> void:
 	for piece in STACK:
-		var tex := TerrainArt.layer(biome, piece)
+		var tex := foreground_texture(biome) if piece == "foreground" else TerrainArt.layer(biome, piece)
 		if tex == null:
 			continue
 		var layer := TerrainParallax.new()
