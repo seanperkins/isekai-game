@@ -182,3 +182,15 @@ func test_sheet_only_creatures_have_a_bestiary_portrait() -> void:
 		if id != "nobody":
 			assert_ne(t, Art.texture("icon_locked"), "%s has a real portrait, not the locked icon" % id)
 	assert_not_null(SkillScreen.portrait_texture("nobody"), "an unknown id shows the locked icon")
+
+func test_the_channel_skills_say_how_much_holding_costs() -> void:
+	var by_id := {}
+	for d in skills:
+		by_id[d.id] = d
+	for id in ["sticky_thread", "hydraulic_propulsion"]:
+		var card := SkillScreenModel.detail(rules, by_id[id], player.skillset.slots)
+		assert_true(card["lines"].has("Hold: +1 MP every 0.5 s"), id)
+		assert_string_contains(by_id[id].description.to_lower(), "hold")
+	for id in ["swing_thread", "poison_breath", "water_blade"]:
+		var card := SkillScreenModel.detail(rules, by_id[id], player.skillset.slots)
+		assert_false(card["lines"].any(func(l): return String(l).begins_with("Hold: +")), id)

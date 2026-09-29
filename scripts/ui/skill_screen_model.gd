@@ -111,12 +111,18 @@ static func bestiary_detail(compendium: CompendiumModel, id: String) -> Dictiona
 		out["eat_bonus"] = c.eat_bonus.duplicate()
 	return out
 
+## Skills that can be held (the base thread and the base water jet): the card says what holding costs.
+const CHANNEL_SKILLS := ["sticky_thread", "hydraulic_propulsion"]
+
+static func hold_lines(d: SkillDef) -> Array:
+	return ["Hold: +1 MP every %s s" % str(Player.CHANNEL_BEAT)] if CHANNEL_SKILLS.has(d.id) else []
+
 static func detail(rules, d: SkillDef, slots: ActiveSlots) -> Dictionary:
 	var level: int = rules.level_of(d.id)
 	var p: Dictionary = rules.level_progress(d.id)
 	var slot := slots.slots.find(d.id)  # -1 when not slotted
 	return {"id": d.id, "name": d.display_name, "level": level, "max_level": d.max_level,
-		"description": d.description, "mp_cost": d.mp_cost, "lines": effect_lines(d, maxi(level, 1)),
+		"description": d.description, "mp_cost": d.mp_cost, "lines": effect_lines(d, maxi(level, 1)) + hold_lines(d),
 		"progress": float(p["current"]) / p["target"] if p["target"] > 0 else -1.0, "slot": slot,
 		"capped": rules.is_capped(d.id)}
 

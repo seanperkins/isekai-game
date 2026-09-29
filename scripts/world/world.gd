@@ -133,6 +133,8 @@ func _transition(e: Dictionary) -> void:
 	var vel: Vector2 = player.velocity
 	if player.has_method("drop_rope"):
 		player.drop_rope()
+	if player.has_method("end_channel"):
+		player.end_channel()  # before the slide freezes the player: no spray or strand during it
 	player.set_physics_process(false)
 	var old := room
 	old.process_mode = Node.PROCESS_MODE_DISABLED

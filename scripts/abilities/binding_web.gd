@@ -12,4 +12,4 @@ func _init() -> void:
 func _land(end: Vector2) -> void:
 	var patch := SporeCloudArea.new()
 	actor.get_parent().add_child(patch)
-	patch.launch(end, PATCH_RADIUS, PATCH_SECONDS, actor, {"damage": 0, "slow": true, "color": Color(0.95, 0.95, 1.0, 0.35)})
+	patch.launch(end, PATCH_RADIUS, PATCH_SECONDS, actor, {"damage": 0, "slow": true, "look": "web", "color": Color(0.95, 0.95, 1.0, 0.85)})

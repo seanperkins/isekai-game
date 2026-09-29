@@ -126,3 +126,11 @@ func test_a_slowing_zone_with_no_damage_leaves_a_shortcut_switch_alone_and_expir
 	await wait_physics_frames(130)
 	assert_eq(progress.opened, [], "damage 0 never hits it")
 	assert_false(is_instance_valid(z) and z.is_inside_tree(), "expired on time")
+
+func test_a_web_look_puts_a_web_sprite_where_the_square_was() -> void:
+	var z := _zone(Vector2.ZERO, 40.0, 1.0, {"look": "web", "damage": 0})
+	var s := z.get_child(0)
+	assert_true(s is Sprite2D)
+	assert_eq((s as Sprite2D).texture, VfxArt.web(80))
+	var plain := _zone(Vector2.ZERO, 40.0, 1.0)
+	assert_true(plain.get_child(0) is ColorRect, "no look keeps the square")

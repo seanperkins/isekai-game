@@ -82,6 +82,12 @@ func test_binding_web_webs_full_range_in_open_air() -> void:
 	assert_eq(_patches().size(), 1)
 	assert_almost_eq((_patches()[0] as Node2D).global_position.x, 120.0, 1.0)
 
+func test_the_patch_is_drawn_as_a_web() -> void:
+	await _cast("binding_web", Vector2(1, 0), [2])
+	var z: SporeCloudArea = _patches()[0]
+	assert_true(z.get_child(0) is Sprite2D)
+	assert_eq((z.get_child(0) as Sprite2D).texture, VfxArt.web(80))
+
 func test_the_patch_does_no_damage_and_slows() -> void:
 	await _cast("binding_web", Vector2(1, 0), [2])
 	var z: SporeCloudArea = _patches()[0]

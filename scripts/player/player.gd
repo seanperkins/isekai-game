@@ -70,6 +70,14 @@ var _poison_tick := 0
 var _poison_acc := 0.0
 var _regen_acc := 0.0
 var _abilities := {}
+## One live channel at most: the held ability, its slot, how long it has been held and the MP beat timer.
+const CHANNEL_BEAT := 0.5  # seconds per MP point while a channel is held
+const CHANNEL_EPS := 0.0001
+const CHANNEL_RELEASE := 0.3  # raw strength: a trigger dipping under its 0.5 press deadzone mid-hold keeps the channel
+var _channel: Ability = null
+var _channel_slot := 0
+var _channel_time := 0.0
+var _channel_beat := 0.0
 var _sprite: Sprite2D
 var spreading := false
 ## Set false before setup() to draw the old scaled sprite instead of the slime's own frames.
@@ -174,6 +182,7 @@ func _physics_process(delta: float) -> void:
 		use_active(2)
 	if Input.is_action_just_pressed("active_4"):
 		use_active(3)
+	_channel_step(delta)
 	var fall_speed := velocity.y  # move_and_slide zeroes it on landing
 	move_and_slide()
 	audio_events.update(is_on_floor(), fall_speed, velocity.x, spreading, _clinging())
@@ -329,6 +338,7 @@ func begin_predate() -> void:
 		return
 	target.set_held(true)
 	drop_rope()
+	end_channel()
 	predation.start(target, stats.get_stat("predation_time"))
 	_start_cover(target)
 	EventBus.world_event.emit("eat_started", {"pos": target.global_position})
@@ -386,6 +396,8 @@ func do_inspect() -> void:
 func use_active(i: int) -> void:
 	if health.is_dead() or predation.active():
 		return
+	if _channel != null:
+		return  # a channel is live: release it first
 	var id := skillset.slots.use(i)
 	if id == "":
 		return
@@ -395,17 +407,56 @@ func use_active(i: int) -> void:
 	if not ability.ready():
 		return  # on cooldown: costs nothing
 	var cost := FormEffects.mp_cost(skillset.capabilities, id, _rules.get_def(id).mp_cost)
-	if not mana.spend(cost):
-		not_enough_mp.emit(id)
-		return
 	ability.level = _rules.level_of(id)
 	# Nothing held: zero, so each ability uses its own default (forward, or up-forward for Swing).
 	ability.aim = aim_vector() if aim_held() else Vector2.ZERO
-	ability.activate()
+	var channels := ability.can_channel()  # asked before anything is paid
+	if not mana.spend(cost):
+		not_enough_mp.emit(id)
+		return
+	if channels:
+		ability.begin_channel()
+		_channel = ability
+		_channel_slot = i
+		_channel_time = 0.0
+		_channel_beat = 0.0
+	else:
+		ability.activate()
 	last_cast = {"id": id, "aim": ability.aim_dir()}
 	_emit.call(Events.SKILL_USED, {"id": id})
 	for _point in cost:
 		_emit.call(Events.MANA_SPENT, {})
+
+## Steps the live channel, in this order: release, the MP beat, the cap, then the ability's own tick. Runs right after the
+## four use_active checks, so the press tick is step 1.
+func _channel_step(delta: float) -> void:
+	if _channel == null:
+		return
+	if Input.get_action_raw_strength("active_%d" % (_channel_slot + 1)) < CHANNEL_RELEASE:
+		end_channel(false)
+		return
+	_channel_time += delta
+	_channel_beat += delta
+	while _channel_beat >= CHANNEL_BEAT - CHANNEL_EPS:
+		_channel_beat -= CHANNEL_BEAT
+		if not mana.spend(1):
+			end_channel(false)  # out of MP: silently
+			return
+		_emit.call(Events.MANA_SPENT, {})
+	if _channel.max_channel > 0.0 and _channel_time >= _channel.max_channel - CHANNEL_EPS:
+		end_channel(false)
+		return
+	if not _channel.channel_tick(delta):
+		end_channel(false)
+
+## Ends the live channel, if any. Any stop from outside the hold is hard (it also clears the ability's spray or strand at once);
+## the hold running its course (release, MP, the cap, the ability's own tick) passes false.
+func end_channel(hard := true) -> void:
+	if _channel == null:
+		return
+	var c := _channel
+	_channel = null
+	c.end_channel(hard)
 
 ## Called by a thread that stuck to terrain. Attaching again re-aims the rope.
 func attach_rope(anchor: Vector2, max_length: float, reel_speed: float, boost: float) -> void:
@@ -458,7 +509,7 @@ func _stay_on_rope() -> void:
 func _update_rope_line() -> void:
 	rope_line.visible = rope != null
 	if rope != null:
-		rope_line.points = PackedVector2Array([global_position, rope.anchor])
+		rope_line.points = Vfx.sag_points(global_position, rope.anchor)
 
 func award_xp(amount: int) -> void:
 	if not health.is_dead():
@@ -544,6 +595,7 @@ func _begin_evolve_moment(def: FormDef) -> void:
 	_invuln = maxf(_invuln, EVOLVE_SECONDS)
 	cancel_predate()
 	drop_rope()
+	end_channel()
 	var fx := EvolutionFx.new()
 	fx.tint = def.tint
 	add_child(fx)
@@ -617,6 +669,7 @@ func aim_vector() -> Vector2:
 func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, _cause: String = "") -> void:
 	if _invuln > 0.0 or health.is_dead():
 		return
+	end_channel()  # a hit ends any channel, including a poison hit that carries no `from`
 	var m := skillset.incoming(damage_type, health.hp, health.max_hp)
 	health.take_hit(Damage.direct_hit(raw, m["percent_off"], m["flat_off"] + stats.get_stat("def")), damage_type)
 	_invuln = INVULN_SECONDS
@@ -785,6 +838,7 @@ func _on_run_started() -> void:
 		_sheet = _base_sheet
 	skillset.reset()
 	drop_rope()
+	end_channel()
 	stats.reset_run()
 	_sync_max_hp()
 
@@ -793,6 +847,7 @@ func _on_health_died() -> void:
 	EventBus.world_event.emit("player_died", {})
 	cancel_predate()
 	drop_rope()
+	end_channel()
 	died.emit()
 
 func _build_body() -> void:
@@ -824,7 +879,6 @@ func _build_body() -> void:
 	eat_prompt.add_theme_constant_override("outline_size", 4)
 	add_child(eat_prompt)
 	rope_line.top_level = true  # drawn in world space, from the slime to the anchor
-	rope_line.width = 1.0
-	rope_line.default_color = ThreadAbility.THREAD_COLOR
+	Vfx.style_strand(rope_line)  # silk, tiled along the rope
 	rope_line.visible = false
 	add_child(rope_line)

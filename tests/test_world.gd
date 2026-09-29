@@ -9,6 +9,12 @@ var progress: WorldProgress
 var spawned: Array = []
 var entered_velocity := Vector2.INF
 
+class HeldChannel extends Ability:
+	var ended := []
+	func end_channel(hard := false) -> void:
+		ended.append(hard)
+		super.end_channel(hard)
+
 func _room(id: String, cell: Vector2i, exits: Array, extra: Dictionary = {}) -> RoomDef:
 	var r := RoomDef.new()
 	r.id = id
@@ -153,3 +159,15 @@ func test_a_closed_shortcut_is_gated() -> void:
 	autofree(opened)
 	assert_eq(opened.get_children().filter(func(n: Node) -> bool: return n.is_in_group("gate_s1")).size(), 0)
 	assert_true(RoomBuilder.is_exit_open(def.exits[0], p))
+
+func test_a_channel_ends_when_you_change_rooms() -> void:
+	_side_by_side()
+	var ch := HeldChannel.new()
+	player.add_child(ch)
+	ch.setup(player, [1], 1)
+	player._channel = ch
+	player.global_position = Vector2(641, 314)
+	await wait_physics_frames(2)
+	assert_true(world.sliding)
+	assert_eq(ch.ended, [true], "ended before the slide, not when the room arrives")
+	assert_null(player._channel)

@@ -19,9 +19,9 @@ Gamepad: left stick / D-pad move (stick also aims) · A jump · X tackle · B ho
 - [ ] Dying reloads the room with a fresh run; the Compendium keeps what you discovered.
 - [ ] Pop-ups are readable and don't pause the game.
 - [ ] Casting an active costs MP (blue MP line under HP); with too little MP the ticker says "Not enough MP".
-- [ ] Every active shows an effect: green cloud (Poison Breath), blue streak (Water Blade), thread line, dash afterimages.
+- [ ] Every active shows an effect: green cloud (Poison Breath), a blue crescent that slides to the target (Water Blade), a silk thread with a slight sag, dash afterimages.
 - [ ] Fullscreen: HUD text scales up and stays crisp.
-- [ ] Holding a direction while casting aims the skill (8-way); with nothing held it fires forward. Up + Hydraulic Propulsion = vertical boost.
+- [ ] Holding a direction while casting aims the skill (8-way); with nothing held it fires forward. Up + Hydraulic Propulsion = vertical boost (a tap; holding stretches it a little and never flies).
 - [ ] Esc / Start opens the Skills screen (game pauses): stats, grouped skills with icons and level pips, detail card with MP cost and next-level bar. Q/E or LB/RB switch to Compendium. Enter / A on an active assigns it to U (again: O). Esc / B closes.
 - [ ] Downing and eating creatures earns XP (gold line under the slots); each level gives 1 EP, +2 max HP, +1 max MP.
 - [ ] A base skill that can evolve (Sticky Thread and Hydraulic Propulsion at level 3, Poison Breath and Spore Cloud at level 4) offers BOTH of its evolutions at once; the Great Sage announces them. In the Skills tab the card says what it replaces and what it closes; the first Enter arms it ("Press again to choose"), the second evolves. The other branch and the old skill disappear, and the new skill sits in the old one's slot. Moving the selection or closing the screen disarms it. Dying and being reborn reopens every branch.
@@ -29,6 +29,8 @@ Gamepad: left stick / D-pad move (stick also aims) · A jump · X tackle · B ho
 - [ ] The cave scrolls in both directions: stair towers at x ~1400 and the far east lead up to the middle and upper tiers, and stairs above the upper tier reach the top gallery.
 - [ ] Sticky Thread aimed at rock (up, diagonal, or at a wall) sticks and draws a rope; you swing on it. Left/right pump, up/down reel, Jump lets go with your momentum.
 - [ ] Sticky Thread aimed at an enemy still slows/holds it. Aimed at nothing in range, it just flashes.
+- [ ] A thread-slowed enemy wears a few silk strands (and a small web in one corner) until the slow ends; a thread-held enemy is wrapped completely in a cocoon until it is free. A Spore Cloud or Binding Web patch slow, and a tackle stun, leave no webs on it.
+- [ ] Hold Sticky Thread on an enemy: a silk strand stays taut to it; from Sticky Thread level 3 it stays stunned (below that it only stays slowed, wearing strands), MP ticks down one point every half second, and it lets go at 3 s or when you release. Hold Hydraulic Propulsion: a spray trails the slime and the burst carries on for up to 0.6 s. Holding a skill blocks other casts until you release.
 - [ ] Upper tier swing gap: the three rocks with vines are anchors; chaining swings crosses the gap.
 - [ ] Evolving Swing Thread puts it in Sticky Thread's slot; its rope is longer and launches harder.
 - [ ] Binding Web (Sticky Thread's other branch) never ropes: it holds an enemy at once and leaves a pale web patch where the thread ends (at the enemy, at the rock, or at full range) that slows anything inside for 4 s.
