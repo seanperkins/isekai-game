@@ -145,9 +145,12 @@ static func build_room(def: RoomDef, ctx: Dictionary) -> Node2D:
 	build_decor(node, {"decor": def.decor}, PAINTED_LIGHT if painted else 1.0)
 	var spawn: Callable = ctx.get("spawn", Callable())
 	if spawn.is_valid():
-		for s in def.spawns:
+		for i in def.spawns.size():
+			var s: Dictionary = def.spawns[i]
 			var n = spawn.call(s["id"], s["pos"])
 			if n != null:
+				if "spawn_key" in n:
+					n.spawn_key = "%s:%d" % [def.id, i]
 				node.add_child(n)
 	for f in def.features:
 		var feature := RoomFeatures.make(f, ctx)

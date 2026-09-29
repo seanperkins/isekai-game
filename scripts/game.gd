@@ -71,7 +71,7 @@ func _spawn(id: String, pos: Vector2) -> Node2D:
 	else:
 		node = Enemy.new()
 		node.setup(def, _skills_by_id)
-		node.downed.connect(player.on_enemy_downed)
+		node.downed.connect(func(d: CreatureDef) -> void: player.on_enemy_downed(d, node.spawn_key))
 		node.downed.connect(func(d: CreatureDef) -> void: Compendium.model.on_creature_defeated(d.id))
 	node.position = pos
 	return node

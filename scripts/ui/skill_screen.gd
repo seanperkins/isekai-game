@@ -313,7 +313,7 @@ func _build_stats() -> void:
 	var m := _player.mana
 	var p := _player.progression
 	_label(_stats, "Lv %d    EP %d" % [p.level, p.ep], Vector2(36, 92), Vector2(110, 12), FONT_MAIN, Color(1.0, 0.85, 0.45))
-	_bar(_stats, Vector2(36, 106), Vector2(108, 4), float(p.xp) / Progression.xp_to_next(p.level), Color(1.0, 0.8, 0.3))
+	_bar(_stats, Vector2(36, 106), Vector2(108, 4), float(p.xp) / Progression.xp_to_next(p.level, p.stage), Color(1.0, 0.8, 0.3))
 	_label(_stats, "HP  %d/%d" % [h.hp, h.max_hp], Vector2(36, 114), Vector2(110, 12), FONT_MAIN, Color.WHITE)
 	_bar(_stats, Vector2(36, 128), Vector2(108, 6), float(h.hp) / h.max_hp, Color(0.85, 0.25, 0.3))
 	_label(_stats, "MP  %d/%d" % [m.mp, m.max_mp], Vector2(36, 138), Vector2(110, 12), FONT_MAIN, Color.WHITE)

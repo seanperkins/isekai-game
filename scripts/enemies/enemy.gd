@@ -71,6 +71,8 @@ var _spit_damage := 0
 var _spit_cd := 0.0
 var _slow := 0.0
 var _sprite: Sprite2D
+## "<room id>:<index>" of the room spawn that made this creature (empty for one made by hand); first-time XP is per spawn.
+var spawn_key := ""
 ## Set false before adding to the tree to draw the old single sprites instead of the creature's own frames.
 var use_sheet := true
 var _sheet: SpriteSheet

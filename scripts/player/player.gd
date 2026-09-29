@@ -447,8 +447,9 @@ func award_xp(amount: int) -> void:
 		progression.add_xp(amount)
 
 ## Connected to every enemy's `downed` signal.
-func on_enemy_downed(def: CreatureDef) -> void:
-	award_xp(def.xp)
+func on_enemy_downed(def: CreatureDef, spawn_key := "") -> void:
+	if not health.is_dead():
+		progression.award(spawn_key, "down", def.xp)
 
 ## Spends EP to unlock a ready evolution. False when not ready or not enough EP.
 func try_evolve(id: String) -> bool:
@@ -549,7 +550,8 @@ func _complete_predation(t) -> void:
 	_sync_max_hp()
 	health.heal(EAT_HEAL + skillset.heal_on(Events.PREDATED, {"source": c.id, "kind": kind}))
 	if kind == "creature":
-		award_xp(c.xp)
+		if not health.is_dead():
+			progression.award(t.spawn_key if "spawn_key" in t else "", "eat", c.xp)
 		mana.restore(EAT_MP)
 		_creatures_eaten += 1
 		if _creatures_eaten % 3 == 0:
