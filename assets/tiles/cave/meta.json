@@ -1,0 +1,30 @@
+{
+ "cap_bottom": {
+  "size": [
+   152,
+   23
+  ],
+  "surface": 14
+ },
+ "cap_top": {
+  "size": [
+   152,
+   24
+  ],
+  "surface": 8
+ },
+ "edge_left": {
+  "size": [
+   20,
+   232
+  ],
+  "surface": 8
+ },
+ "ledge": {
+  "size": [
+   21,
+   25
+  ],
+  "surface": 6
+ }
+}
