@@ -47,6 +47,8 @@ func targets_in_front(range_px: float, half_width: float) -> Array:
 	for n in actor.get_tree().get_nodes_in_group("actors"):
 		if n == actor or n.get("team") == actor.team or not n.has_method("receive_hit"):
 			continue
+		if n.has_method("can_be_hit") and not n.can_be_hit():
+			continue  # a corpse must not shadow a living target behind it
 		var d: Vector2 = n.global_position - actor.global_position
 		var along := d.dot(dir)
 		if along >= -4.0 and along <= range_px and absf(d.cross(dir)) <= half_width:

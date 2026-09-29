@@ -121,3 +121,16 @@ func test_a_built_one_screen_room_is_unchanged() -> void:
 	var node := RoomBuilder.build_room(World.load_rooms("res://data/rooms")["C2"], {})
 	add_child_autofree(node)
 	assert_eq(node.get_node("far_rock").texture.get_height(), 360)
+
+func _tall_of_a_fresh_load() -> Texture2D:
+	return TerrainLayers.tall_texture(TerrainArt.layer("cave", "far_rock"), 700)
+
+func test_the_tall_texture_cache_hits_even_after_the_source_texture_was_freed_and_reloaded() -> void:
+	# A tall room's layers keep only the extended copy, so the source is freed with the neighbouring room
+	# and the next load() is a new resource: the cache must not be keyed on the source's identity.
+	var a := _tall_of_a_fresh_load()
+	var count := TerrainLayers._tall.size()
+	await wait_physics_frames(2)
+	var b := _tall_of_a_fresh_load()
+	assert_same(a, b, "the same extended texture is reused")
+	assert_eq(TerrainLayers._tall.size(), count, "and nothing new is cached each trip into a tall room")

@@ -48,7 +48,9 @@ static func layer_height(factor: float, room_height: float) -> int:
 static func tall_texture(src: Texture2D, height: int) -> Texture2D:
 	if height <= src.get_height():
 		return src
-	var key := "%d:%d" % [src.get_rid().get_id(), height]
+	# Keyed on the source's path, not its identity: a tall room's layers keep only the extended copy, so the
+	# source is freed with the neighbouring room and the next load() is a new resource.
+	var key := "%s:%d" % [src.resource_path if src.resource_path != "" else str(src.get_rid().get_id()), height]
 	if _tall.has(key):
 		return _tall[key]
 	var a := src.get_image()

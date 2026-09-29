@@ -578,6 +578,8 @@ func _tackle_target():
 		var dx: float = (n.global_position.x - global_position.x) * facing
 		if dx < -4.0 or absf(n.global_position.y - global_position.y) > TACKLE_REACH_Y:
 			continue
+		if n.has_method("can_be_hit") and not n.can_be_hit():
+			continue  # a corpse must not swallow the tackle meant for the creature beyond it
 		if n.has_method("hurt_polygon"):
 			if _gap_in_front(mine, n.hurt_polygon()) > TACKLE_GAP:
 				continue

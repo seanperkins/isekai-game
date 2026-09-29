@@ -22,7 +22,18 @@ func _init() -> void:
 	add_child(attack)
 	attack_poly.disabled = true
 
+var _sheet: SpriteSheet
+var _frame := ""
+var _left := false
+
+## Only rebuilds when the sheet, frame or facing changed: setting a CollisionPolygon2D's polygon
+## re-decomposes it, which is real cost every physics tick for every creature on screen.
 func refresh(sheet: SpriteSheet, frame: String, left: bool) -> void:
+	if sheet == _sheet and frame == _frame and left == _left:
+		return
+	_sheet = sheet
+	_frame = frame
+	_left = left
 	hurt_poly.polygon = _mirrored(sheet.hurt(frame), left)
 	var front := sheet.attack(frame)
 	attack_poly.polygon = _mirrored(front, left)

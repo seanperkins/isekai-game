@@ -73,3 +73,21 @@ func test_the_armored_front_still_is_not_stunned() -> void:
 	var e := _enemy("lizard", 50.0)
 	player.do_tackle()
 	assert_eq(e.status.state, EnemyStatus.ACTIVE, "unchanged: only a hit from behind stuns a lizard")
+
+func test_a_corpse_in_front_does_not_swallow_the_tackle() -> void:
+	await wait_physics_frames(14)
+	var corpse := _enemy("toad", 30.0)
+	corpse.receive_hit(9999, "physical", Vector2(-1000, 0), "other")
+	corpse.finish_dying()
+	assert_eq(corpse.status.state, EnemyStatus.DOWNED)
+	var live := _enemy("toad", 50.0)
+	player.do_tackle()
+	assert_eq(live.status.state, EnemyStatus.STUNNED, "the live toad behind the corpse is the one that is tackled")
+
+func test_a_dying_creature_is_not_a_tackle_target_either() -> void:
+	await wait_physics_frames(14)
+	var dying := _enemy("toad", 30.0)
+	dying.set_physics_process(false)
+	dying.receive_hit(9999, "physical", Vector2(-1000, 0), "poison")
+	assert_eq(dying.status.state, EnemyStatus.DYING)
+	assert_null(player._tackle_target())

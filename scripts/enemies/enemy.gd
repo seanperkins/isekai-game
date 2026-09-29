@@ -239,6 +239,11 @@ func hurt_polygon() -> PackedVector2Array:
 		return ShapeHit.moved(_shapes.hurt_poly.polygon, _shapes.global_position)
 	return ShapeHit.rect_points(Rect2(global_position - BODY_SIZE / 2.0, BODY_SIZE))
 
+## False for a creature that is dying, downed or gone: blows and tackles do nothing to it, so a target
+## selector must look past it to a living one.
+func can_be_hit() -> bool:
+	return not _untouchable()
+
 ## The two halves a blade kill leaves as its corpse, or null (any other death leaves the whole body).
 func cut_corpse() -> Node2D:
 	return get_node_or_null("CutCorpse") as Node2D
