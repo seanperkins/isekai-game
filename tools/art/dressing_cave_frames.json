@@ -1,0 +1,62 @@
+{
+ "canonical": "assets/backgrounds/cave/mid_rock.png",
+ "style": "Modern pixel art with soft lighting, matching the reference image's prismatic purple crystal-cave palette: lavender and violet rock, teal-green moss, pink wisteria, glowing pastel crystals and mushrooms. Painterly, soft, slightly muted and low contrast so it reads as scenery behind a game, with a soft dark outline and no harsh highlights. One single isolated object, centred, entirely inside the frame. Draw no ground, no floor, no characters, no text, no shadow.",
+ "frames": [
+  {
+   "name": "hanging_roots",
+   "width": 56,
+   "refs": [],
+   "anchor": "top",
+   "prompt": "A tall cluster of long hanging tree roots and wisteria vines dangling straight down, thicker at the top and thinning to loose tips, seen from the side."
+  },
+  {
+   "name": "stalactite_cluster",
+   "width": 90,
+   "refs": [],
+   "anchor": "top",
+   "prompt": "A cluster of three to five stalactites of different lengths hanging from a small lump of ceiling rock, with a little moss and a few tiny glowing crystals."
+  },
+  {
+   "name": "rock_pillar",
+   "width": 64,
+   "refs": [],
+   "anchor": "bottom",
+   "prompt": "A tall natural rock pillar rising from the ground, wider at the base and the top, narrower in the middle, covered in moss with a few small crystals."
+  },
+  {
+   "name": "stone_arch",
+   "width": 200,
+   "refs": [],
+   "anchor": "bottom",
+   "prompt": "A wide natural stone arch, a single big curved rock bridge with an open gap beneath it, mossy on top, with hanging vines from its underside."
+  },
+  {
+   "name": "crystal_cluster",
+   "width": 96,
+   "refs": [],
+   "anchor": "bottom",
+   "prompt": "A cluster of tall glowing prismatic crystals in pastel pink, violet and teal, pointing up at different angles from a small rocky base."
+  },
+  {
+   "name": "mushroom_grove",
+   "width": 110,
+   "refs": [],
+   "anchor": "bottom",
+   "prompt": "A grove of large glowing mushrooms of different sizes in soft pink, blue and violet with pale gills, on a small mossy mound."
+  },
+  {
+   "name": "waterfall_ribbon",
+   "width": 44,
+   "refs": [],
+   "anchor": "top",
+   "prompt": "A thin tall waterfall ribbon pouring straight down, pale blue-white with a soft misty top edge and a little spray at the bottom, no rock around it."
+  },
+  {
+   "name": "mossy_ledge",
+   "width": 130,
+   "refs": [],
+   "anchor": "center",
+   "prompt": "A floating chunk of mossy rock, a broad flat-topped ledge with a rounded rocky underside, thick moss and hanging roots along its edges."
+  }
+ ]
+}
