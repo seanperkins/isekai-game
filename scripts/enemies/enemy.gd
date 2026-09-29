@@ -239,6 +239,10 @@ func hurt_polygon() -> PackedVector2Array:
 		return ShapeHit.moved(_shapes.hurt_poly.polygon, _shapes.global_position)
 	return ShapeHit.rect_points(Rect2(global_position - BODY_SIZE / 2.0, BODY_SIZE))
 
+## The two halves a blade kill leaves as its corpse, or null (any other death leaves the whole body).
+func cut_corpse() -> Node2D:
+	return get_node_or_null("CutCorpse") as Node2D
+
 func is_alert() -> bool:
 	return _alert > 0.0
 

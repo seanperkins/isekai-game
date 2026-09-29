@@ -63,7 +63,11 @@ func test_every_cause_ends_downed_with_the_sprite_restored() -> void:
 		assert_eq(s.rotation, 0.0, cause)
 		assert_eq(s.scale, Vector2.ONE, cause)
 		assert_eq(s.modulate, Color.WHITE, cause)
-		assert_true(s.visible, cause)
+		if cause == "blade":
+			assert_false(s.visible, "a cut creature stays in two pieces: the whole sprite does not come back")
+			assert_not_null(e.cut_corpse(), "the halves stay as the corpse")
+		else:
+			assert_true(s.visible, cause)
 		assert_null(_fx(e), "%s: the effect node is gone" % cause)
 		e.queue_free()
 
@@ -125,8 +129,16 @@ func test_a_blade_kill_shows_two_halves_that_slide_apart_and_leave_nothing() -> 
 	await wait_seconds(0.3)
 	assert_gt(halves[0].position.distance_to(halves[1].position), gap0, "they slide apart")
 	await _run_out(e)
-	assert_true(_sprite(e).visible)
-	assert_null(_fx(e))
+	assert_false(_sprite(e).visible, "the halves do not reconnect into the whole sprite")
+	assert_null(_fx(e), "the effect node is gone")
+	var corpse := e.cut_corpse()
+	assert_not_null(corpse)
+	var pieces: Array = []
+	for c in corpse.get_children():
+		if c is Sprite2D:
+			pieces.append(c)
+	assert_eq(pieces.size(), 2, "still two pieces")
+	assert_gt(pieces[0].position.distance_to(pieces[1].position), 4.0, "still apart")
 
 func test_the_blade_halves_come_to_rest_on_the_floor_not_through_it() -> void:
 	var e := _enemy()
@@ -184,3 +196,26 @@ func test_a_dying_creature_runs_no_ai() -> void:
 	lizard._charge = "windup"
 	lizard.receive_hit(9999, "physical", Vector2(-30, 0), "other")
 	assert_eq(lizard.charge_state(), "", "a lethal blow cancels a telegraph")
+
+
+func test_a_cut_corpse_stays_cut_through_the_eat_window_and_goes_with_the_creature() -> void:
+	var e := _enemy()
+	await wait_physics_frames(2)
+	e.receive_hit(9999, "physical", Vector2(-40, 0), "blade")
+	await _run_out(e)
+	for i in 30:
+		await wait_physics_frames(1)
+		assert_false(_sprite(e).visible, "frame %d: the whole sprite never reappears while the corpse lies there" % i)
+	var corpse := e.cut_corpse()
+	e.consume()
+	await wait_physics_frames(2)
+	assert_false(is_instance_valid(corpse), "eaten: the halves go with it")
+
+func test_only_a_blade_kill_leaves_a_cut_corpse() -> void:
+	for cause in ["tackle", "poison", "other"]:
+		var e := _enemy()
+		await wait_physics_frames(2)
+		e.receive_hit(9999, "physical", Vector2(-20, 0), cause)
+		await _run_out(e)
+		assert_null(e.cut_corpse(), cause)
+		e.free()
