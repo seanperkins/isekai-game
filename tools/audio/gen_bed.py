@@ -9,6 +9,7 @@ Run from the project root:
   TMPDIR="$PWD/.tmp/audio-work" python3 tools/audio/gen_bed.py [biome ...]
 """
 import glob
+import http.client
 import json
 import os
 import random
@@ -40,7 +41,19 @@ def _fetch(url, headers, body):
     request = urllib.request.Request(url, data=body.encode(), headers=headers, method="POST")
     try:
         with urllib.request.urlopen(request, timeout=300) as response:
-            return response.read()
+            data = bytearray()
+            try:
+                while True:
+                    chunk = response.read(65536)
+                    if not chunk:
+                        break
+                    data += chunk
+            except (http.client.IncompleteRead, ConnectionResetError) as e:
+                # The connection dropped mid-download. What arrived is kept; the caller checks that
+                # the decoded audio is about as long as it asked for, so a real truncation is refused.
+                data += getattr(e, "partial", b"")
+                print("warning: response from %s was cut off after %d bytes" % (url, len(data)), file=sys.stderr)
+            return bytes(data)
     except urllib.error.HTTPError as e:  # keep the body: it says why (a plan limit, a bad field)
         detail = e.read()[:300].decode(errors="replace")
         raise audiolib.AudioToolError("request to %s failed: HTTP %s %s" % (url, e.code, detail)) from e
@@ -65,7 +78,12 @@ def _elevenlabs(spec, biome, kind, raw_dir, fetch):
     raw_path = os.path.join(raw_dir, "%s_%s.mp3" % (biome, kind))
     with open(raw_path, "wb") as f:
         f.write(data)
-    return audiolib.decode_pcm(raw_path)
+    samples = audiolib.decode_pcm(raw_path)
+    got = len(samples[0]) / audiolib.RATE
+    if got < 0.9 * seconds:
+        raise audiolib.AudioToolError("%s/%s: got %.1f s of audio, shorter than the %s s requested (the response was cut off; raw file kept at %s)"
+                                      % (biome, kind, got, seconds, raw_path))
+    return samples
 
 
 def raw_samples(spec, biome, kind, raw_dir=RAW_DIR, fetch=_fetch):
