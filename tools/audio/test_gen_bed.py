@@ -1,7 +1,11 @@
+import http.server
+import json
 import math
 import os
+import random
 import sys
 import tempfile
+import threading
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -92,9 +96,11 @@ class GenBedTest(unittest.TestCase):
 
         def fake_fetch(url, headers, body):
             calls.append((url, headers, body))
+            request = json.loads(body)
+            seconds = request.get("duration_seconds", request.get("music_length_ms", 0) / 1000.0)
             with tempfile.TemporaryDirectory() as d:
                 p = os.path.join(d, "x.wav")
-                a.write_wav(p, [0.2 * math.sin(i / 20.0) for i in range(44100)])
+                a.write_wav(p, [0.2 * math.sin(i / 20.0) for i in range(int(seconds * a.RATE))])
                 with open(p, "rb") as f:
                     return f.read()
 
@@ -115,6 +121,100 @@ class GenBedTest(unittest.TestCase):
                 self.assertIn('"loop": true', calls[1][2])
         finally:
             del os.environ["ELEVENLABS_API_KEY"]
+
+    def test_a_refused_request_reports_what_the_server_said(self):
+        class Refuse(http.server.BaseHTTPRequestHandler):
+            def do_POST(self):
+                self.rfile.read(int(self.headers.get("Content-Length", 0)))
+                self.send_response(402)
+                self.end_headers()
+                self.wfile.write(b'{"detail":{"code":"paid_plan_required"}}')
+
+            def log_message(self, *args):
+                pass
+
+        server = http.server.HTTPServer(("127.0.0.1", 0), Refuse)
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        try:
+            with self.assertRaises(a.AudioToolError) as ctx:
+                gen_bed._fetch("http://127.0.0.1:%d/x" % server.server_port, {}, "{}")
+        finally:
+            server.shutdown()
+            server.server_close()
+        self.assertIn("402", str(ctx.exception))
+        self.assertIn("paid_plan_required", str(ctx.exception))
+
+    def test_a_cut_off_response_keeps_the_bytes_that_arrived(self):
+        class CutOff(http.server.BaseHTTPRequestHandler):
+            def do_POST(self):
+                self.rfile.read(int(self.headers.get("Content-Length", 0)))  # unread input makes the close a reset
+                self.send_response(200)
+                self.send_header("Content-Length", "100")
+                self.end_headers()
+                self.wfile.write(b"x" * 90)  # the connection then closes 10 bytes short
+
+            def log_message(self, *args):
+                pass
+
+        server = http.server.HTTPServer(("127.0.0.1", 0), CutOff)
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        try:
+            data = gen_bed._fetch("http://127.0.0.1:%d/x" % server.server_port, {}, "{}")
+        finally:
+            server.shutdown()
+            server.server_close()
+        self.assertEqual(data, b"x" * 90)
+
+    def test_audio_much_shorter_than_requested_is_rejected(self):
+        def short(url, headers, body):
+            with tempfile.TemporaryDirectory() as d:
+                p = os.path.join(d, "x.wav")
+                a.write_wav(p, [0.2 * math.sin(i / 20.0) for i in range(a.RATE)])  # 1 s
+                with open(p, "rb") as f:
+                    return f.read()
+
+        os.environ["ELEVENLABS_API_KEY"] = "test-key"
+        try:
+            with tempfile.TemporaryDirectory() as d:
+                with self.assertRaises(a.AudioToolError) as ctx:
+                    gen_bed.raw_samples({"provider": "elevenlabs", "seconds": 10, "prompt": "x"},
+                                        "t", "ambience", raw_dir=d, fetch=short)
+            self.assertIn("shorter", str(ctx.exception))
+        finally:
+            del os.environ["ELEVENLABS_API_KEY"]
+
+    def test_a_connection_reset_mid_download_keeps_what_arrived(self):
+        class Dropping:
+            def __init__(self):
+                self.chunks = [b"a" * 10, b"b" * 5]
+
+            def read(self, n=-1):
+                if self.chunks:
+                    return self.chunks.pop(0)
+                raise ConnectionResetError(54, "Connection reset by peer")
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *exc):
+                return False
+
+        real = gen_bed.urllib.request.urlopen
+        gen_bed.urllib.request.urlopen = lambda request, timeout=None: Dropping()
+        try:
+            data = gen_bed._fetch("https://example.invalid/x", {}, "{}")
+        finally:
+            gen_bed.urllib.request.urlopen = real
+        self.assertEqual(data, b"a" * 10 + b"b" * 5)
+
+    def test_a_bed_too_peaky_to_reach_its_loudness_is_refused_not_written_quiet(self):
+        rng = random.Random(3)
+        raw = [rng.uniform(-0.01, 0.01) for _ in range(8 * a.RATE)]
+        raw[4 * a.RATE] = 0.9  # one loud pop over a very quiet floor: the peak cap stops it getting louder
+        with self.assertRaises(a.AudioToolError) as ctx:
+            gen_bed.process(raw, "ambience")
+        self.assertIn("peak", str(ctx.exception))
+        self.assertIn("steadier", str(ctx.exception))
 
 
 if __name__ == "__main__":

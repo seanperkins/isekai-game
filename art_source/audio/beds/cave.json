@@ -1,5 +1,19 @@
 {
   "prompt": "Bright, warm, prismatic underground cavern. Slow airy pads, soft glassy crystal chimes, gentle sustained strings, hopeful and curious, unhurried. Instrumental, no drums, no vocals, no dread.",
-  "music": {"provider": "synth", "dur": 24.0, "notes": [130.81, 196.0, 261.63, 329.63], "lfo": 0.08},
-  "ambience": {"provider": "synth", "dur": 20.0, "lp": 900, "lfo": 0.05}
+  "music": {
+    "provider": "synth",
+    "dur": 24.0,
+    "notes": [
+      130.81,
+      196.0,
+      261.63,
+      329.63
+    ],
+    "lfo": 0.08
+  },
+  "ambience": {
+    "provider": "elevenlabs",
+    "seconds": 20,
+    "prompt": "Quiet bright underground cavern ambience: soft airy room tone, faint distant water drips, a gentle glassy crystal shimmer. No music, no melody, no voices, steady and seamless."
+  }
 }

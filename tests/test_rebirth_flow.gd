@@ -177,6 +177,22 @@ func test_a_kit_applies_after_start_run_and_never_survives_into_the_next_life() 
 	RebirthKit.apply(player, rules, comp, {})
 	assert_eq(player.progression.level, 1, "an empty kit gives an empty start")
 
+func test_the_game_gives_a_kit_after_start_run_so_the_new_life_keeps_it() -> void:
+	var game = load("res://scenes/main.tscn").instantiate()
+	add_child_autofree(game)
+	await wait_physics_frames(2)
+	game.player.debug_grant_xp(30)  # some leftover state from the previous life
+	game.begin_life({"default": false, "kit": {"skills": ["leap"], "level": 3}})
+	assert_eq(game.player.progression.level, 3)
+	assert_eq(game.player.progression.xp, 0, "no EP from a starting level")
+	assert_true(SkillRules.owned().has("leap"), "the granted skill survived start_run")
+	assert_eq(SkillRules.level_of("leap"), 1)
+	game.begin_life({"default": true, "kit": {}})
+	assert_eq(game.player.progression.level, 1, "the next life clears the kit")
+	assert_false(SkillRules.owned().has("leap"))
+	SkillRules.reset_run()
+	Announcer.queue.clear()
+
 func test_species_is_carried_on_the_pending_start() -> void:
 	var progress := WorldProgress.new()
 	progress.set_last_choice("C1", "slime")

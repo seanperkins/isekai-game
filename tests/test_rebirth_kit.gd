@@ -158,14 +158,28 @@ func test_kit_validation_accepts_good_kits_and_names_bad_ones() -> void:
 	assert_gt(RebirthKit.validate({"level": 11}).size(), 0)
 	assert_gt(RebirthKit.validate({"affinity": {"bogus": 1}}).size(), 0)
 
-func test_a_pool_with_a_seeded_kit_leaves_two_lineages_eligible() -> void:
-	# the rule every non-default pool must meet: a seeded start does not lock you out of lineages
+func test_the_eligibility_check_bites_on_a_poorly_seeded_kit() -> void:
 	var forms := FormLoader.load_all()
 	var supply := FormOffers.default_supply(forms)
-	var kit := {"affinity": {"thread": 5, "sound": 6, "flight": 6}}  # an illustrative Grotto-like kit
-	var a := FormOffers.affinity(kit["affinity"], supply, forms)
-	var eligible := 0
-	for l in FormOffers.LINEAGE_ORDER:
-		if float(a[l]) >= FormOffers.ELIGIBLE:
-			eligible += 1
-	assert_gte(eligible, 2)
+	assert_lt(RebirthKit.eligible_lineages({"thread": 5}, supply, forms), 2, "one lineage is not enough")
+	assert_gte(RebirthKit.eligible_lineages({"thread": 5, "sound": 6, "flight": 6}, supply, forms), 2)
+
+func test_every_shipped_non_default_pool_leaves_two_lineages_eligible() -> void:
+	# a seeded start must not lock you out of lineages: every pool except the default meets it
+	var forms := FormLoader.load_all()
+	var rooms := World.load_rooms("res://data/rooms")
+	var creatures := {}
+	for c in DefLoader.load_dir("res://data/creatures"):
+		creatures[c.id] = c
+	var supply := FormOffers.supply(rooms, creatures, forms)
+	for p in RebirthChoice.pools(rooms):
+		if p["id"] == WorldProgress.DEFAULT_POOL:
+			continue
+		var kit: Dictionary = p["kit"]
+		assert_gte(RebirthKit.eligible_lineages(kit.get("affinity", {}), supply, forms), 2, "pool %s" % p["id"])
+
+func test_a_starting_level_starts_at_full_health_and_mana() -> void:
+	RebirthKit.apply(player, rules, compendium, {"level": 3})
+	assert_gt(player.stats.get_stat("max_hp"), 30, "the level raised the maximum")
+	assert_eq(player.health.hp, player.health.max_hp, "a new life is not wounded")
+	assert_eq(player.mana.mp, player.mana.max_mp)

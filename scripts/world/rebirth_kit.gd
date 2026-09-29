@@ -19,21 +19,39 @@ static func validate(kit: Dictionary, defs: Array = []) -> PackedStringArray:
 	var by_id := {}
 	for d in all:
 		by_id[d.id] = d
-	for s in kit.get("skills", []):
-		if not by_id.has(s):
-			errs.append("kit names unknown skill '%s'" % s)
+	var skill_ids = kit.get("skills", [])
+	if typeof(skill_ids) != TYPE_ARRAY:
+		errs.append("kit skills must be a list")
+		skill_ids = []
+	for s in skill_ids:
+		if typeof(s) != TYPE_STRING or not by_id.has(s):
+			errs.append("kit names unknown skill '%s'" % str(s))
 		elif (by_id[s] as SkillDef).source == "enemy_only":
 			errs.append("kit names enemy-only skill '%s'" % s)
 	if kit.has("level"):
 		var lv := int(kit["level"])
 		if lv < 1 or lv > Progression.LEVEL_CAP:
 			errs.append("kit level %d is outside 1..%d" % [lv, Progression.LEVEL_CAP])
-	for e in kit.get("affinity", {}):
+	var seeds = kit.get("affinity", {})
+	if typeof(seeds) != TYPE_DICTIONARY:
+		errs.append("kit affinity must be a dictionary")
+		seeds = {}
+	for e in seeds:
 		if not ESSENCES.has(e):
-			errs.append("kit affinity names unknown essence '%s'" % e)
-		elif int(kit["affinity"][e]) < 0:
+			errs.append("kit affinity names unknown essence '%s'" % str(e))
+		elif int(seeds[e]) < 0:
 			errs.append("kit affinity for '%s' has negative units" % e)
 	return errs
+
+## How many lineages a seeded affinity leaves eligible for the first evolution (the rule every pool but the
+## default must meet: at least two).
+static func eligible_lineages(seeds: Dictionary, p_supply: Dictionary, forms: Dictionary) -> int:
+	var a := FormOffers.affinity(seeds, p_supply, forms)
+	var n := 0
+	for l in FormOffers.LINEAGE_ORDER:
+		if float(a.get(l, 0.0)) >= FormOffers.ELIGIBLE:
+			n += 1
+	return n
 
 ## Gives the kit to a player at the start of a life, AFTER SkillRules.start_run() (which clears everything
 ## first). Skills are granted quietly, so the skill set is refreshed, actives are slotted and the Compendium
@@ -57,3 +75,4 @@ static func apply(player: Player, rules: SkillRulesEngine, compendium: Compendiu
 	for e in seeds:
 		player.progression.seeded[e] = int(player.progression.seeded.get(e, 0)) + int(seeds[e])
 	player.refresh_stats()
+	player.fill_vitals()

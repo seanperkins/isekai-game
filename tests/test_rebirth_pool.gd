@@ -1,7 +1,7 @@
 extends GutTest
 ## The rebirth pool feature: built from room data, attuned by the player, validated, and shown on the map.
 
-func _feature(id := "G1", kit := {}) -> Dictionary:
+func _feature(id := "G1", kit = {}) -> Dictionary:
 	return {"kind": "rebirth_pool", "id": id, "area": "grotto", "kit": kit, "pos": Vector2(60, 320)}
 
 func _ctx(progress: WorldProgress, announced: Array) -> Dictionary:
@@ -78,6 +78,21 @@ func test_the_validator_names_each_mistake() -> void:
 	assert_string_contains(_errors([_feature("X", {"level": 11})]), "level")
 	assert_string_contains(_errors([_feature("X", {"affinity": {"bogus": 1}})]), "essence")
 	assert_string_contains(_errors([_feature("X", {"affinity": {"thread": -2}})]), "units")
+
+func test_the_validator_names_malformed_pool_data_instead_of_crashing() -> void:
+	assert_string_contains(_errors([_feature("C1"), _feature("X", [])]), "kit")
+	assert_string_contains(_errors([_feature("C1"), {"kind": "rebirth_pool", "id": "X", "area": "cave", "kit": {}, "pos": "here"}]), "pos")
+	assert_string_contains(_errors([_feature("C1"), {"kind": "rebirth_pool", "id": 7, "area": "cave", "kit": {}, "pos": Vector2(1, 1)}]), "id")
+	assert_string_contains(_errors([_feature("C1"), _feature("X", {"skills": "leap"})]), "skills")
+	assert_string_contains(_errors([_feature("C1"), _feature("X", {"affinity": [1]})]), "affinity")
+	assert_string_contains(_errors([_feature("C1"), _feature("X", {"skills": [3]})]), "skill")
+
+func test_the_default_pool_must_be_in_the_start_room() -> void:
+	var start := _room("T1", [])
+	var other := _room("T2", [_feature("C1")])
+	other.cell = Vector2i(5, 5)
+	other.start = RoomDef.NO_START
+	assert_string_contains(str(WorldValidator.validate({"T1": start, "T2": other})), "start room")
 
 func test_the_shipped_world_validates_and_c1_holds_the_default_pool() -> void:
 	var rooms := World.load_rooms("res://data/rooms")
