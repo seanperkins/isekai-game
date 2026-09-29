@@ -1,0 +1,68 @@
+extends GutTest
+## The four creature sheets: every listed frame is there at the listed scale, standing on the floor
+## line, with shapes inside the frame, and every clip uses frames that exist.
+
+const SETS := ["bat", "toad", "lizard", "spider"]
+
+func _listed(set_name: String) -> Dictionary:
+	var json := JSON.new()
+	json.parse(FileAccess.get_file_as_string("res://tools/art/%s_frames.json" % set_name))
+	return json.data
+
+func test_every_sheet_loads_with_every_listed_frame() -> void:
+	for set_name in SETS:
+		assert_true(SpriteSheet.available(set_name), set_name)
+		var sheet := SpriteSheet.load_set(set_name)
+		var listed: Array = _listed(set_name)["frames"]
+		assert_eq(sheet.frame_names().size(), listed.size(), set_name)
+		for f in listed:
+			assert_true(sheet.has_frame(f["name"]), "%s/%s" % [set_name, f["name"]])
+
+func test_every_frame_has_a_traced_hurt_shape_on_the_floor_line_inside_its_frame() -> void:
+	for set_name in SETS:
+		var sheet := SpriteSheet.load_set(set_name)
+		for n in sheet.frame_names():
+			var size := sheet.frame_size(n)
+			var hurt := sheet.hurt(n)
+			assert_gte(hurt.size(), 3, "%s/%s" % [set_name, n])
+			var lowest := -INF
+			for p in hurt:
+				lowest = maxf(lowest, p.y)
+				assert_between(p.x, -size.x / 2.0 - 0.01, size.x / 2.0 + 0.01, "%s/%s" % [set_name, n])
+				assert_between(p.y, -size.y - 0.01, 0.01, "%s/%s" % [set_name, n])
+			assert_almost_eq(lowest, 0.0, 0.01, "%s/%s stands on the floor line" % [set_name, n])
+
+func test_only_the_charging_lizard_and_the_diving_bat_have_attack_shapes() -> void:
+	for set_name in SETS:
+		var sheet := SpriteSheet.load_set(set_name)
+		var listed: Array = _listed(set_name)["frames"]
+		for f in listed:
+			var expect: bool = f.has("attack_from")
+			assert_eq(sheet.attack(f["name"]).size() >= 3, expect, "%s/%s" % [set_name, f["name"]])
+	assert_true(_listed("lizard")["frames"].any(func(f): return f.has("attack_from")))
+	assert_true(_listed("bat")["frames"].any(func(f): return f.has("attack_from")))
+
+func test_frames_keep_a_shared_scale_within_a_creature() -> void:
+	for set_name in SETS:
+		var sheet := SpriteSheet.load_set(set_name)
+		var anchor: String = _listed(set_name)["anchor"]
+		var ref := sheet.frame_size(anchor)
+		for n in sheet.frame_names():
+			var s := sheet.frame_size(n)
+			assert_between(s.x, ref.x * 0.35, ref.x * 2.0, "%s/%s drifted from the anchor's scale" % [set_name, n])
+
+func test_every_clip_uses_frames_that_exist_and_every_state_has_a_clip() -> void:
+	var clips := SlimeAnimator.load_clips(Enemy.CLIPS)
+	var states := {
+		"bat": ["fly", "hover", "warn", "dive", "stunned", "hurt", "downed"],
+		"toad": ["idle", "walk", "puff", "spit", "stunned", "hurt", "downed"],
+		"lizard": ["idle", "walk", "windup", "charge", "rest", "stunned", "hurt", "downed"],
+		"spider": ["hang", "drop", "crawl", "stunned", "hurt", "downed"]}
+	for set_name in SETS:
+		var sheet := SpriteSheet.load_set(set_name)
+		for state in states[set_name]:
+			assert_true(clips[set_name].has(state), "%s/%s has a clip" % [set_name, state])
+			var clip: Dictionary = clips[set_name][state]
+			assert_gt(float(clip["fps"]), 0.0)
+			for fr in clip["frames"]:
+				assert_true(sheet.has_frame(fr), "%s/%s uses a frame that is not on the sheet: %s" % [set_name, state, fr])

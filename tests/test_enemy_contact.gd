@@ -42,9 +42,16 @@ func test_a_walking_enemy_pressed_against_the_slime_hurts_it() -> void:
 	await wait_physics_frames(200)
 	assert_lt(player.health.hp, player.health.max_hp, "the lizard reached the slime and should have bitten")
 
-func test_touching_boxes_count_as_contact() -> void:
-	var e := _enemy("lizard", 0.0)
-	e.global_position = Vector2(player.body_rect().end.x + e.BODY_SIZE.x / 2.0, BodyConfig.BOTTOM - 6.0)  # edge to edge
+func test_touching_shapes_count_as_contact() -> void:
+	await wait_physics_frames(14)  # the landing squash is over: the slime is its idle frame
+	var e := Enemy.new()
+	e.use_sheet = false  # its box, so the test measures the slime's drawn edge
+	e.setup(creatures["lizard"], skills)
+	add_child_autofree(e)
+	var right := -INF
+	for p in player.hurt_polygon():
+		right = maxf(right, p.x)
+	e.global_position = Vector2(right + e.BODY_SIZE.x / 2.0, BodyConfig.BOTTOM - 6.0)  # edge to edge with the drawn skin
 	assert_true(e.is_touching(player))
 	e.global_position.x += 6.0
 	assert_false(e.is_touching(player))

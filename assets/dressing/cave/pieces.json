@@ -1,0 +1,60 @@
+{
+ "pieces": {
+  "hanging_roots": {
+   "size": [
+    56,
+    141
+   ],
+   "anchor": "top"
+  },
+  "stalactite_cluster": {
+   "size": [
+    90,
+    122
+   ],
+   "anchor": "top"
+  },
+  "rock_pillar": {
+   "size": [
+    64,
+    142
+   ],
+   "anchor": "bottom"
+  },
+  "stone_arch": {
+   "size": [
+    200,
+    137
+   ],
+   "anchor": "bottom"
+  },
+  "crystal_cluster": {
+   "size": [
+    96,
+    118
+   ],
+   "anchor": "bottom"
+  },
+  "mushroom_grove": {
+   "size": [
+    110,
+    127
+   ],
+   "anchor": "bottom"
+  },
+  "waterfall_ribbon": {
+   "size": [
+    44,
+    153
+   ],
+   "anchor": "top"
+  },
+  "mossy_ledge": {
+   "size": [
+    130,
+    90
+   ],
+   "anchor": "center"
+  }
+ }
+}

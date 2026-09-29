@@ -22,6 +22,7 @@ static func validate(rooms: Dictionary) -> PackedStringArray:
 				errors.append("%s overlaps %s" % [a.id, b.id])
 		for e in a.exits:
 			errors.append_array(_check_exit(a, e, rooms))
+		errors.append_array(_check_dressing(a))
 	return errors
 
 ## An exit's span in world pixels: x = from, y = to.
@@ -32,6 +33,32 @@ static func world_span(r: RoomDef, e: Dictionary) -> Vector2:
 
 static func _vertical_edge(edge: String) -> bool:
 	return edge == "left" or edge == "right"
+
+## Set dressing: a known piece, a depth factor in range, a position in or near the room, and no more
+## than SetDressing.MAX_PROPS entries.
+static func _check_dressing(r: RoomDef) -> PackedStringArray:
+	var out := PackedStringArray()
+	if r.dressing.is_empty():
+		return out
+	if not DressingLib.has_biome(r.area):
+		out.append("%s: dressing needs a piece library for biome '%s'" % [r.id, r.area])
+		return out
+	if r.dressing.size() > SetDressing.MAX_PROPS:
+		out.append("%s: %d dressing entries, at most %d" % [r.id, r.dressing.size(), SetDressing.MAX_PROPS])
+	var bounds := Rect2(Vector2.ZERO, r.pixel_size()).grow(200.0)
+	for i in r.dressing.size():
+		var e = r.dressing[i]
+		if typeof(e) != TYPE_DICTIONARY or not e.has("piece") or not e.has("pos") or not e.has("factor"):
+			out.append("%s: dressing[%d] needs piece, pos and factor" % [r.id, i])
+			continue
+		if not DressingLib.has_piece(r.area, str(e["piece"])):
+			out.append("%s: dressing[%d] unknown piece '%s'" % [r.id, i, e["piece"]])
+		var f := float(e["factor"])
+		if f < SetDressing.FACTOR_MIN or f > SetDressing.FACTOR_MAX:
+			out.append("%s: dressing[%d] factor %.2f outside %.1f..%.1f" % [r.id, i, f, SetDressing.FACTOR_MIN, SetDressing.FACTOR_MAX])
+		if not bounds.has_point(e["pos"] as Vector2):
+			out.append("%s: dressing[%d] at %s is outside the room" % [r.id, i, e["pos"]])
+	return out
 
 static func _check_exit(a: RoomDef, e: Dictionary, rooms: Dictionary) -> PackedStringArray:
 	var out := PackedStringArray()

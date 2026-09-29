@@ -50,3 +50,18 @@ func test_the_areas_are_inert() -> void:
 	for a in [shapes.hurt, shapes.attack]:
 		assert_eq(a.collision_layer, 0)
 		assert_eq(a.collision_mask, 0)
+
+func test_refreshing_the_same_frame_and_facing_again_does_not_rebuild_the_shapes() -> void:
+	shapes.refresh(sheet, "idle_1", false)
+	var marker := PackedVector2Array([Vector2(1, 1), Vector2(2, 1), Vector2(2, 2)])
+	shapes.hurt_poly.polygon = marker  # a stand-in for "not rebuilt"
+	shapes.refresh(sheet, "idle_1", false)
+	assert_eq(shapes.hurt_poly.polygon, marker, "unchanged frame and facing: nothing to redo")
+	shapes.refresh(sheet, "idle_1", true)
+	assert_ne(shapes.hurt_poly.polygon, marker, "a new facing rebuilds")
+	shapes.hurt_poly.polygon = marker
+	shapes.refresh(sheet, "idle_2", true)
+	assert_ne(shapes.hurt_poly.polygon, marker, "a new frame rebuilds")
+	shapes.hurt_poly.polygon = marker
+	shapes.refresh(SpriteSheet.load_set("slime"), "idle_2", true)
+	assert_ne(shapes.hurt_poly.polygon, marker, "a different sheet object rebuilds")

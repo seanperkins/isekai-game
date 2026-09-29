@@ -40,6 +40,40 @@ decor = [{
 "light": Color(0.3, 1, 0.9, 1),
 "pos": Vector2(196, 320)
 }]
+dressing = [{
+"factor": 0.2,
+"piece": "stone_arch",
+"pos": Vector2(320, 330)
+}, {
+"factor": 0.3,
+"piece": "waterfall_ribbon",
+"pos": Vector2(320, 20)
+}, {
+"factor": 0.5,
+"piece": "crystal_cluster",
+"pos": Vector2(110, 330)
+}, {
+"factor": 0.45,
+"piece": "mushroom_grove",
+"pos": Vector2(540, 330)
+}, {
+"factor": 0.4,
+"piece": "stalactite_cluster",
+"pos": Vector2(160, 20)
+}, {
+"factor": 0.35,
+"flip": true,
+"piece": "stalactite_cluster",
+"pos": Vector2(480, 20)
+}, {
+"factor": 0.7,
+"piece": "hanging_roots",
+"pos": Vector2(60, 20)
+}, {
+"factor": 0.65,
+"piece": "hanging_roots",
+"pos": Vector2(600, 20)
+}]
 spawns = [{
 "id": "toad",
 "pos": Vector2(520, 300)

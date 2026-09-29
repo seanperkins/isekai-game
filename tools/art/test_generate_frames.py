@@ -19,6 +19,14 @@ class GenerateFramesTest(unittest.TestCase):
         refs = g.refs_for(FRAME, "/out", "/repo")
         self.assertEqual(refs, ["/repo/assets/sprites/slime_idle.png", "/out/idle_1.png", "/out/run_1.png"])
 
+    def test_a_set_can_name_its_own_reference(self):
+        refs = g.refs_for({"name": "fly_1", "refs": []}, "/out", "/repo", "assets/sprites/bat_1.png")
+        self.assertEqual(refs, ["/repo/assets/sprites/bat_1.png"])
+
+    def test_resuming_skips_finished_frames_but_an_explicit_list_regenerates(self):
+        self.assertEqual(g.todo(["a", "b", "c"], {"a", "b"}, False), ["c"])
+        self.assertEqual(g.todo(["a", "b"], {"a", "b"}, True), ["a", "b"])
+
     def test_the_command_passes_one_reference_flag_each_and_reads_stdin(self):
         cmd = g.command("/out", ["/a.png", "/b.png"])
         self.assertEqual(cmd[:2], ["codex", "exec"])

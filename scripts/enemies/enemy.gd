@@ -54,6 +54,9 @@ const ANIM_SECONDS := 0.25
 const SPIT_POSE_SECONDS := 0.4
 const BODY_BOTTOM := 6.0
 const STUNNED_TINT := Color(0.6, 0.6, 0.85)
+## How long a non-lethal hit flinches (the hurt frame).
+const HURT_SECONDS := 0.25
+const CLIPS := "res://data/enemy_clips.json"
 
 var def: CreatureDef
 var stats: Stats
@@ -68,6 +71,12 @@ var _spit_damage := 0
 var _spit_cd := 0.0
 var _slow := 0.0
 var _sprite: Sprite2D
+## Set false before adding to the tree to draw the old single sprites instead of the creature's own frames.
+var use_sheet := true
+var _sheet: SpriteSheet
+var _animator: SlimeAnimator
+var _shapes: SlimeShapes
+var _hurt_t := 0.0
 var _anim_t := 0.0
 var _alert := 0.0
 var _spit_windup := 0.0
@@ -75,6 +84,9 @@ var _charge := ""  # "", "windup", "charge", "rest"
 var _charge_t := 0.0
 var _swoop := "idle"  # idle, hover, warn, dive, climb
 var _swoop_t := 0.0
+## Why the last blow landed ("tackle", "poison", "blade", "other") and where it came from.
+var _cause := ""
+var _killed_from := Vector2.INF
 var _dive_dir := Vector2.ZERO
 var _rng := RandomNumberGenerator.new()
 
@@ -103,18 +115,30 @@ func _ready() -> void:
 	if get_child_count() == 0:
 		_build_body()
 
-func receive_hit(raw: int, damage_type: String) -> void:
-	if status.state == EnemyStatus.DOWNED or status.state == EnemyStatus.GONE:
+static func cause_for(damage_type: String) -> String:
+	return "poison" if damage_type == "poison" else "other"
+
+func _untouchable() -> bool:
+	return status.state == EnemyStatus.DOWNED or status.state == EnemyStatus.GONE or status.state == EnemyStatus.DYING
+
+## `cause` names the blow for the death effect; it is stored before the hit because _on_died() takes
+## no arguments.
+func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, cause: String = "") -> void:
+	if _untouchable():
 		return
 	EventBus.world_event.emit("enemy_hit", {"pos": global_position})
+	_cause = cause if cause != "" else cause_for(damage_type)
+	_killed_from = from
 	health.take_hit(Damage.direct_hit(raw, 0, stats.get_stat("def")), damage_type)
+	if status.state != EnemyStatus.DYING:
+		_hurt_t = HURT_SECONDS
 
 ## Returns true when the tackle stunned or downed this enemy (the player emits stunned_enemy).
-func receive_tackle(atk: int, from_behind: bool) -> bool:
-	if status.state == EnemyStatus.DOWNED or status.state == EnemyStatus.GONE:
+func receive_tackle(atk: int, from_behind: bool, from: Vector2 = Vector2.INF) -> bool:
+	if _untouchable():
 		return false
-	receive_hit(atk, "physical")
-	if status.state == EnemyStatus.DOWNED:
+	receive_hit(atk, "physical", from, "tackle")
+	if status.state == EnemyStatus.DYING or status.state == EnemyStatus.DOWNED:
 		return true
 	if not def.predatable:
 		return false  # the serpent can't be stunned
@@ -124,6 +148,8 @@ func receive_tackle(atk: int, from_behind: bool) -> bool:
 	return true
 
 func receive_thread(tier: int) -> void:
+	if _untouchable():
+		return
 	if tier >= 2 and def.predatable:
 		status.stun()
 	else:
@@ -140,13 +166,37 @@ func consume() -> CreatureDef:
 	queue_free()
 	return def
 
+## Ends the death effect: the creature lies downed and its 5 s eat window starts.
+func finish_dying() -> void:
+	if status.state == EnemyStatus.DYING:
+		status.down()
+
 func _on_died() -> void:
 	EventBus.world_event.emit("enemy_died", {"id": def.id, "pos": global_position})
 	if def.predatable:
-		status.down()
+		status.die()  # the death effect ends in down() and starts the eat window
+		_become_clippable()
+		_charge = ""
+		_swoop = "idle"
+		_spit_windup = 0.0
+		_start_death_fx()
 	else:
 		status.consume()  # Plan 3 turns the serpent's death into victory
 	downed.emit(def)
+
+## A corpse does not block anyone: nothing collides with it any more, and it ignores the bodies that
+## are here so it does not get shoved by them. It still rests on the floor.
+func _become_clippable() -> void:
+	collision_layer = 0
+	for n in get_tree().get_nodes_in_group("actors"):
+		if n != self and n is CollisionObject2D:
+			add_collision_exception_with(n)
+
+func _start_death_fx() -> void:
+	var fx := DeathFx.new()
+	add_child(fx)
+	fx.finished.connect(finish_dying)
+	fx.begin(self, _cause, _killed_from)
 
 func _physics_process(delta: float) -> void:
 	status.update(delta)
@@ -161,7 +211,7 @@ func _physics_process(delta: float) -> void:
 	if active and player != null:
 		_sense(player, delta)
 		_act(player, delta)
-	else:
+	elif status.state != EnemyStatus.DYING:  # a death effect owns the body while it plays
 		velocity.x = 0.0
 		_charge = ""
 		_spit_windup = 0.0
@@ -171,16 +221,35 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	if active and player != null and is_touching(player):
 		player.receive_hit(stats.get_stat("atk"), "physical", global_position)
-	_update_visual()
+	_hurt_t = maxf(0.0, _hurt_t - delta)
+	_update_visual(delta)
 
 ## True when this enemy's box touches the player's. The bodies block each other, so they can only
 ## touch, never overlap: the margin bridges that. A player with no body box (a test stub) falls back
 ## to the old centre distance.
 func is_touching(player: Node2D) -> bool:
+	if player.has_method("hurt_polygon"):
+		return ShapeHit.overlap(hurt_polygon(), player.hurt_polygon(), CONTACT_MARGIN)
 	if player.has_method("body_rect"):
 		var mine := Rect2(global_position - BODY_SIZE / 2.0, BODY_SIZE).grow(CONTACT_MARGIN)
 		return mine.intersects(player.body_rect())
 	return global_position.distance_to(player.global_position) <= CONTACT_RANGE
+
+## Where this creature can be hit and where it hurts on contact: the current frame's traced shape
+## (global points), or its box when it has no sheet.
+func hurt_polygon() -> PackedVector2Array:
+	if _shapes != null and _shapes.hurt_poly.polygon.size() >= 3:
+		return ShapeHit.moved(_shapes.hurt_poly.polygon, _shapes.global_position)
+	return ShapeHit.rect_points(Rect2(global_position - BODY_SIZE / 2.0, BODY_SIZE))
+
+## False for a creature that is dying, downed or gone: blows and tackles do nothing to it, so a target
+## selector must look past it to a living one.
+func can_be_hit() -> bool:
+	return not _untouchable()
+
+## The two halves a blade kill leaves as its corpse, or null (any other death leaves the whole body).
+func cut_corpse() -> Node2D:
+	return get_node_or_null("CutCorpse") as Node2D
 
 func is_alert() -> bool:
 	return _alert > 0.0
@@ -223,18 +292,33 @@ func frame_name() -> String:
 			return "spider_hang" if _on_ceiling else "spider_crawl"
 	return def.id
 
-func _update_visual() -> void:
-	if _sprite == null:
-		return
-	Art.set_frame(_sprite, frame_name(), BODY_BOTTOM)
-	_sprite.flip_h = facing < 0
-	_sprite.flip_v = status.state == EnemyStatus.DOWNED
+func _update_visual(delta: float = 0.0) -> void:
+	if _sprite == null or status.state == EnemyStatus.DYING:
+		return  # the death effect owns the sprite
+	if _sheet != null:
+		_draw_sheet_frame(delta)
+	else:
+		Art.set_frame(_sprite, frame_name(), BODY_BOTTOM)
+		_sprite.flip_h = facing < 0
+		_sprite.flip_v = status.state == EnemyStatus.DOWNED
 	if status.state == EnemyStatus.STUNNED:
 		_sprite.modulate = STUNNED_TINT
 	elif _telegraphing() and int(_anim_t / 0.08) % 2 == 0:
 		_sprite.modulate = TELEGRAPH_TINT
 	else:
 		_sprite.modulate = Color.WHITE
+
+func _draw_sheet_frame(delta: float) -> void:
+	var state := EnemyState.pick(def.id, status.state, _charge, _swoop, _spit_windup > 0.0,
+		_spit_cd > SPIT_COOLDOWN - SPIT_POSE_SECONDS, _on_ceiling, is_on_floor(), absf(velocity.x) > 1.0, _hurt_t > 0.0)
+	_animator.play(state)
+	_animator.advance(delta)
+	var frame := _animator.frame()
+	_sprite.texture = _sheet.frame_texture(frame)
+	_sprite.position.y = BODY_BOTTOM - _sheet.frame_size(frame).y / 2.0
+	_sprite.flip_h = facing < 0
+	_sprite.flip_v = false
+	_shapes.refresh(_sheet, frame, facing < 0)
 
 func _telegraphing() -> bool:
 	return _charge == "windup" or _swoop == "warn" or _spit_windup > 0.0
@@ -382,4 +466,21 @@ func _build_body() -> void:
 	if def != null:
 		_sprite = Art.sprite(frame_name(), BODY_BOTTOM)
 		add_child(_sprite)
+		_load_sheet()
 		_update_visual()
+
+## The creature's own frames, when its sheet and clips exist; otherwise the old single sprites stay.
+func _load_sheet() -> void:
+	if not use_sheet or not SpriteSheet.available(def.id):
+		return
+	var clips := SlimeAnimator.load_clips(CLIPS)
+	if not clips.has(def.id):
+		return
+	_sheet = SpriteSheet.load_set(def.id)
+	if _sheet == null:
+		return
+	_animator = SlimeAnimator.new(clips[def.id])
+	_animator.play("idle" if _animator.clips.has("idle") else "fly")
+	_shapes = SlimeShapes.new()
+	_shapes.position = Vector2(0.0, BODY_BOTTOM)
+	add_child(_shapes)

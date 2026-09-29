@@ -6,6 +6,8 @@ const ACTIVE := 0
 const STUNNED := 1
 const DOWNED := 2
 const GONE := 3
+## The death effect is playing: no AI, not attackable, not edible, and no timer (update() skips it).
+const DYING := 4
 const STUN_SECONDS := 3.0
 const DOWNED_SECONDS := 5.0
 
@@ -23,6 +25,10 @@ func down() -> void:
 		state = DOWNED
 		_timer = DOWNED_SECONDS
 
+func die() -> void:
+	if state != GONE:
+		state = DYING
+
 func consume() -> void:
 	state = GONE
 
@@ -30,7 +36,7 @@ func predatable() -> bool:
 	return state == STUNNED or state == DOWNED
 
 func update(delta: float) -> void:
-	if held or state == ACTIVE or state == GONE:
+	if held or state == ACTIVE or state == GONE or state == DYING:
 		return
 	_timer -= delta
 	if _timer <= 0.0:

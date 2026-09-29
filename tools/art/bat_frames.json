@@ -1,0 +1,88 @@
+{
+ "canonical": "assets/sprites/bat_1.png",
+ "style": "Modern pixel art with soft lighting (Style D): a small dark-purple cave bat with pink glowing eyes, a clean dark outline, chunky readable pixels, gentle highlights and shading. Match the character, colours and proportions of the reference image exactly. Side view, the creature facing right. Draw only the creature: no ground, no thread, no rope, no shadow, no effects.",
+ "frames": [
+  {
+   "name": "fly_1",
+   "width": 34,
+   "refs": [],
+   "prompt": "The same bat in flight, wings raised high above its body, mouth closed."
+  },
+  {
+   "name": "fly_2",
+   "width": 40,
+   "refs": [
+    "fly_1"
+   ],
+   "prompt": "The same bat in flight, wings level and half open, body slightly lower."
+  },
+  {
+   "name": "fly_3",
+   "width": 34,
+   "refs": [
+    "fly_1",
+    "fly_2"
+   ],
+   "prompt": "The same bat in flight, wings swept down below its body."
+  },
+  {
+   "name": "fly_4",
+   "width": 32,
+   "refs": [
+    "fly_1",
+    "fly_3"
+   ],
+   "prompt": "The same bat in flight, wings level and half open again, rising."
+  },
+  {
+   "name": "hover_1",
+   "width": 30,
+   "refs": [
+    "fly_1"
+   ],
+   "prompt": "The same bat hovering in place, wings held out wide and steady, fangs just showing, eyes locked forward."
+  },
+  {
+   "name": "hover_2",
+   "width": 30,
+   "refs": [
+    "hover_1"
+   ],
+   "prompt": "The same bat hovering, wings cupped slightly forward as if bracing to dive, eyes glowing brighter."
+  },
+  {
+   "name": "dive",
+   "width": 26,
+   "refs": [
+    "fly_1"
+   ],
+   "prompt": "The same bat diving hard: wings swept tight back along its body, head down and forward, mouth open with fangs.",
+   "attack_from": 0.3
+  },
+  {
+   "name": "stunned",
+   "width": 28,
+   "refs": [
+    "fly_1"
+   ],
+   "prompt": "The same bat dazed: wings drooping limp, eyes squeezed into spirals or dashes, hanging loosely."
+  },
+  {
+   "name": "hurt",
+   "width": 30,
+   "refs": [
+    "fly_1"
+   ],
+   "prompt": "The same bat flinching from a hit: wings snapped open, eyes shut tight, mouth open in a shriek."
+  },
+  {
+   "name": "downed",
+   "width": 30,
+   "refs": [
+    "fly_1"
+   ],
+   "prompt": "The same bat lying on its back, wings splayed out flat, feet curled up, eyes closed, completely out."
+  }
+ ],
+ "anchor": "fly_2"
+}

@@ -1,0 +1,95 @@
+{
+ "canonical": "assets/sprites/toad_idle.png",
+ "style": "Modern pixel art with soft lighting (Style D): a squat green poison toad with warty skin and yellow eyes, a clean dark outline, chunky readable pixels, gentle highlights and shading. Match the character, colours and proportions of the reference image exactly. Side view, the creature facing right. Draw only the creature: no ground, no thread, no rope, no shadow, no effects.",
+ "frames": [
+  {
+   "name": "idle_1",
+   "width": 40,
+   "refs": [],
+   "prompt": "The same toad sitting at rest, throat slightly deflated, eyes half lidded."
+  },
+  {
+   "name": "idle_2",
+   "width": 40,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same toad sitting, throat puffed a little, breathing in."
+  },
+  {
+   "name": "walk_1",
+   "width": 42,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same toad mid-hop, front legs reaching forward, body low and stretched."
+  },
+  {
+   "name": "walk_2",
+   "width": 40,
+   "refs": [
+    "idle_1",
+    "walk_1"
+   ],
+   "prompt": "The same toad landing from a hop, body compressed, legs tucked."
+  },
+  {
+   "name": "walk_3",
+   "width": 42,
+   "refs": [
+    "idle_1",
+    "walk_2"
+   ],
+   "prompt": "The same toad pushing off, back legs extended, body stretched forward."
+  },
+  {
+   "name": "puff_1",
+   "width": 46,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same toad inflating: throat sac and belly swelling, body rounder, warning colour creeping into its skin."
+  },
+  {
+   "name": "puff_2",
+   "width": 52,
+   "refs": [
+    "puff_1"
+   ],
+   "prompt": "The same toad fully puffed up like a balloon, wide and round, glowing poison-green spots, eyes narrowed."
+  },
+  {
+   "name": "spit",
+   "width": 44,
+   "refs": [
+    "puff_2"
+   ],
+   "prompt": "The same toad spitting: head thrown up and forward, mouth wide open with a green tongue and glowing green throat. Draw no projectile, no glob and nothing leaving the mouth."
+  },
+  {
+   "name": "stunned",
+   "width": 40,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same toad dazed: sagging, eyes rolled, tongue lolling out, slumped low."
+  },
+  {
+   "name": "hurt",
+   "width": 40,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same toad flinching from a hit: body squashed flat, eyes shut tight, mouth open."
+  },
+  {
+   "name": "downed",
+   "width": 40,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same toad lying on its back, pale belly up, legs curled and limp, eyes closed."
+  }
+ ],
+ "anchor": "idle_1"
+}

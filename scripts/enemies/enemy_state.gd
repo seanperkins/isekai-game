@@ -1,0 +1,40 @@
+class_name EnemyState
+extends RefCounted
+## Which animation a creature plays, derived from its AI and status (the AI itself is untouched).
+## Status wins, then a hit flinch, then the creature's own behaviour. Like SlimeState for the slime.
+
+static func pick(creature: String, status: int, charge: String, swoop: String, spit_windup: bool,
+		spit_recent: bool, on_ceiling: bool, on_floor: bool, moving: bool, hurt: bool) -> String:
+	if status == EnemyStatus.DOWNED:
+		return "downed"
+	if status == EnemyStatus.STUNNED:
+		return "stunned"
+	if status == EnemyStatus.DYING or hurt:
+		return "hurt"
+	match creature:
+		"bat":
+			match swoop:
+				"hover":
+					return "hover"
+				"warn":
+					return "warn"
+				"dive":
+					return "dive"
+			return "fly"
+		"toad":
+			if spit_windup:
+				return "puff"
+			if spit_recent:
+				return "spit"
+			return "walk" if moving else "idle"
+		"lizard":
+			if charge != "":
+				return charge
+			return "walk" if moving else "idle"
+		"spider":
+			if on_ceiling:
+				return "hang"
+			if not on_floor:
+				return "drop"
+			return "crawl"
+	return "idle"
