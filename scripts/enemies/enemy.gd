@@ -172,21 +172,28 @@ func _untouchable() -> bool:
 
 ## `cause` names the blow for the death effect; it is stored before the hit because _on_died() takes
 ## no arguments.
-func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, cause: String = "") -> void:
+## `ignore_def` skips the enemy's DEF (a weak-point hit).
+func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, cause: String = "", ignore_def := false) -> void:
 	if _untouchable():
 		return
 	EventBus.world_event.emit("enemy_hit", {"pos": global_position})
 	_cause = cause if cause != "" else cause_for(damage_type)
 	_killed_from = from
-	health.take_hit(Damage.direct_hit(raw, 0, stats.get_stat("def")), damage_type)
+	health.take_hit(Damage.direct_hit(raw, 0, 0 if ignore_def else stats.get_stat("def")), damage_type)
 	if status.state != EnemyStatus.DYING:
 		_hurt_t = HURT_SECONDS
+
+## An armored front has a weak point behind it: a tackle from behind, or on an armored enemy that is already stunned, ignores
+## DEF and does double. (A base slime has ATK 1, so against DEF 2 a plain hit floors at 1: a Mushroom Crab would take eight.)
+## Enemies without armor are unchanged: a backstab still stuns them for the eat.
+const WEAK_POINT_MULT := 2
 
 ## Returns true when the tackle stunned or downed this enemy (the player emits stunned_enemy).
 func receive_tackle(atk: int, from_behind: bool, from: Vector2 = Vector2.INF) -> bool:
 	if _untouchable():
 		return false
-	receive_hit(atk, "physical", from, "tackle")
+	var weak := def.armored_charger and (from_behind or status.state == EnemyStatus.STUNNED)
+	receive_hit(atk * WEAK_POINT_MULT if weak else atk, "physical", from, "tackle", weak)
 	if status.state == EnemyStatus.DYING or status.state == EnemyStatus.DOWNED:
 		return true
 	if not def.predatable:
