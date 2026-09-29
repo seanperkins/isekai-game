@@ -50,6 +50,7 @@ var mana: Mana
 var progression := Progression.new()
 var skillset: PlayerSkillSet
 var sensors := PlayerSensors.new()
+var audio_events := PlayerAudioEvents.new()
 var predation := PredationHold.new()
 
 var _rules: SkillRulesEngine
@@ -155,7 +156,9 @@ func _physics_process(delta: float) -> void:
 		use_active(2)
 	if Input.is_action_just_pressed("active_4"):
 		use_active(3)
+	var fall_speed := velocity.y  # move_and_slide zeroes it on landing
 	move_and_slide()
+	audio_events.update(is_on_floor(), fall_speed, velocity.x, spreading, _clinging())
 	if rope != null:
 		_stay_on_rope()
 	sensors.physics_update(is_on_wall(), is_on_floor())
@@ -230,6 +233,7 @@ func set_spread(value: bool) -> void:
 	if not value and not _can_stand():
 		return
 	spreading = value
+	EventBus.world_event.emit("spread", {"on": value})
 	var size := BodyConfig.spread_size() if value else BodyConfig.size()
 	_rect.size = size
 	_shape.position.y = BODY_BOTTOM - size.y / 2.0
@@ -281,6 +285,7 @@ func do_tackle() -> void:
 	velocity.x = facing * TACKLE_SPEED
 	_dash = TACKLE_SECONDS
 	_tackle_time = TACKLE_SECONDS
+	EventBus.world_event.emit("tackled", {})
 	var target = _nearest_in_front(TACKLE_RANGE)
 	if target == null or not target.has_method("receive_tackle"):
 		return
@@ -298,6 +303,7 @@ func begin_predate() -> void:
 	drop_rope()
 	predation.start(target, stats.get_stat("predation_time"))
 	_start_cover(target)
+	EventBus.world_event.emit("eat_started", {"pos": target.global_position})
 
 func process_predate(delta: float) -> void:
 	var t = predation.target
@@ -441,9 +447,11 @@ func try_evolve(id: String) -> bool:
 	if not _rules.evolve(id):
 		return false
 	progression.spend_ep(cost)
+	EventBus.world_event.emit("evolved", {"id": id})
 	return true
 
-func _on_leveled_up(_level: int) -> void:
+func _on_leveled_up(level: int) -> void:
+	EventBus.world_event.emit("leveled_up", {"level": level})
 	for stat in LEVEL_UP_BONUS:
 		stats.add_level_bonus(stat, LEVEL_UP_BONUS[stat])
 	_sync_max_hp()
@@ -602,6 +610,8 @@ func _on_run_started() -> void:
 	_sync_max_hp()
 
 func _on_health_died() -> void:
+	audio_events.reset()
+	EventBus.world_event.emit("player_died", {})
 	cancel_predate()
 	drop_rope()
 	died.emit()
