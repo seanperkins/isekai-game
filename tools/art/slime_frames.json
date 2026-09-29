@@ -11,7 +11,7 @@
     {"name": "fall", "width": 42, "refs": ["idle_1"], "prompt": "The same slime falling: taller than resting with a wider bottom, its edges trailing upward, eyes wide."},
     {"name": "land", "width": 52, "refs": ["idle_1"], "prompt": "The same slime landing: squashed very flat and wide, eyes squinting."},
     {"name": "hurt", "width": 50, "refs": ["idle_1"], "prompt": "The same slime hit and recoiling: squashed sideways with a slight tilt, eyes squeezed shut in pain."},
-    {"name": "rope", "width": 34, "refs": ["idle_1"], "prompt": "The same slime hanging from a thread: stretched tall and thin with a pointed top like a drop being pulled upward."},
+    {"name": "rope", "width": 34, "refs": ["idle_1"], "prompt": "The same slime hanging from a thread: stretched tall and thin with a pointed top like a drop being pulled upward. Do not draw any thread, rope or line: the pointed tip is the top of the sprite."},
     {"name": "wall_1", "width": 44, "refs": ["idle_1"], "prompt": "The same slime clinging to a wall on its RIGHT side: its front edge pressed flat against the wall, two small jelly arms gripping upward on the right, eyes looking up."},
     {"name": "wall_2", "width": 44, "refs": ["idle_1", "wall_1"], "prompt": "The same clinging pose with the grip shifted: the arms a little lower, the body slightly stretched downward."},
     {"name": "tackle", "width": 54, "attack_from": 0.62, "refs": ["idle_1"], "prompt": "The same slime in a charging tackle: stretched long horizontally with a leading edge pointing forward to the right, streamlined, eyes narrowed and determined."},
