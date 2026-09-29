@@ -62,8 +62,9 @@ mouse** (keys move, the cursor aims). Whichever device was used last is the sche
      motion's `relative` length, so a slow drag counts and a single sensor twitch does not) or a mouse button has been
      pressed (the wheel does not count, and a release does nothing); either also clears `using_joypad`. `_use_pad()` (any
      pad input: the places that set `using_joypad`) clears `mouse_aim` and zeroes `_mouse_travel`, and so does a
-     vertical aim key press (`aim_up` or `aim_down`; key presses only, since the D-pad and left stick already go through
-     `_use_pad()`). The last of "the mouse moved" and "an aim key was pressed" aims. Horizontal movement keys do not affect
+     vertical aim key press while the tree is not paused (`aim_up` or `aim_down`; key presses only, since the D-pad and
+     left stick already go through `_use_pad()`; while the skill screen has the tree paused W/S navigate it and aim
+     nothing, so they leave the mouse aim and the badge alone). The last of "the mouse moved" and "an aim key was pressed" aims. Horizontal movement keys do not affect
      it, so running never drops the mouse aim. A player who never touches the mouse has `mouse_aim` false forever.
    - Mouse buttons are skill aliases, bound for any device: left button to `active_1`, right button to `active_2`
      (`MOUSE_BUTTONS`, added by `ensure_actions`). A click casts on press; holding it holds a channel (the release check reads
@@ -124,10 +125,11 @@ mouse** (keys move, the cursor aims). Whichever device was used last is the sche
   real pad.
 - A keyboard-only player who bumps the mouse (4 px in total) gets mouse aim until they press a vertical aim key. Accepted:
   the reticle shows it at once, and W/S (or the arrows) hands the aim back.
-- W/S are also the puddle key, the rope-reel keys and the menu keys, so a mouse player who crouches or reels presses an
-  aim key: the reticle hides and the chips flip to `U/O/H/L` until the mouse moves 4 px or clicks, and a cast on a keyboard
+- W/S are also the puddle key and the rope-reel keys, so a mouse player who crouches or reels presses an aim key: the reticle hides and the chips flip to `U/O/H/L` until the mouse moves 4 px or clicks, and a cast on a keyboard
   skill key in that window goes along the keys. A click still fires at the cursor (a button press sets `mouse_aim`
   before the physics step that casts). Accepted: every cheaper rule (never clear it, or clear it on any key) is worse.
+- Shift is tackle and is mashable; on Windows five quick Shift presses can open the Sticky Keys prompt. Note it if a
+  Windows build is planned.
 - The click that focuses a windowed game may arrive as a mouse press: it can cast skill 1 and turn mouse aim on. Check in
   the playtest (the game starts fullscreen, where it does not arise).
 - The cursor within 12 px of the origin falls back to the keys or forward, so a cast never fires at a random angle. Where
@@ -156,7 +158,8 @@ mouse** (keys move, the cursor aims). Whichever device was used last is the sche
   (`tests/test_controls_joypad.gd`, which keeps passing: `mouse_aim` is false there).
 - `skill_screen.gd`: connects `Controls.scheme_changed` and refreshes its badge and hints while open.
 - `tools/vfx_shots.gd` runs windowed and scripts casts that expect the default aim: it pins `Controls.mouse_aim = false`.
-- `docs/playtest-checklist.md:25` ("assigns it to U (again: O)") gains "(LMB/RMB with the mouse)".
+- `docs/playtest-checklist.md:25` ("assigns it to U (again: O)") gains "(LMB/RMB with the mouse)", and line 5 the left-hand
+  layout: "(with the mouse: Shift tackle, F hold to eat, R inspect, Q/E skills 3 and 4)".
 - `hud.gd`: the doc above `input_debug_text` and its format string (`aim_device`, the raw right stick, `mouse_aim`,
   `default` for a zero aim). `hydraulic_propulsion.gd`'s header ("A horizontal burst also lifts"): now within 10 degrees.
 - Existing tests that pin bindings and change with the left-hand aliases, each with a comment saying why:
@@ -185,26 +188,30 @@ release), `mouse_move(relative)`, `mouse_button(index, pressed := true)`, and `r
 (which will now push both sticks on a live game), calls `PadInput.reset()` in `after_each`, and a test that pauses the tree
 unpauses it there. Vector comparisons use `is_equal_approx`, except the snapped axes, which are exact.
 
-- `Controls`, right stick: paused, `Controls.can_process()` is still true; a push past 0.25 makes its device the owner and
+- `Controls`, right stick: paused, `Controls.can_process()` is still true and a right-stick push sent while paused still sets
+  `aim_device` (the positive case: `PROCESS_MODE_ALWAYS` delivers input under a pause); a push past 0.25 makes its device the owner and
   the polled reading comes back; a pad button press with no right-stick push (`using_joypad` true, `aim_device` -1) reads
   `ZERO`; an owning push of (0.3, 0.3) reads `ZERO` (0.424, under 0.45), and so does (0.25, 0.25) after it; a sub-0.25
   event from a second device does not take the stick (device 0 right = 1.0, then device 1 right-Y = 0.05: still (1, 0)); a
   real push on the second takes it wholly; a key press makes it `ZERO` and a 0.5 right-stick event after it engages it
   again (the limit, pinned); the disconnect handler, called directly with the axis still held on the departing device,
   resets the owner and reads `ZERO`.
-- `Controls`, mouse: 2 px then 2 px sets `mouse_aim` and clears `using_joypad`; 3 px does neither; a pad input between the
-  two 2 px moves resets the total (nothing set); a left or right button press does both and its release changes
+- `Controls`, mouse (`PadInput.mouse_move` speaks game px: it applies the root viewport's stretch scale first, because the
+  engine divides an event's `relative` by it on the way in, and a pin test checks `_mouse_travel` after a 3 px move):
+  3 px then 3 px sets `mouse_aim` and clears `using_joypad`; a single 3 px does neither; a pad input between two 3 px
+  moves resets the total (nothing set); a left or right button press (each) does both and its release changes
   nothing (hold a button, push the pad, release: the pad stays live); a wheel event does neither; a pad button or push
   clears `mouse_aim`; `aim_up` or `aim_down` pressed clears it; `move_left` pressed does not; `active_1` and `active_2`
   each have a mouse-button event in the `InputMap` and the left-hand aliases exist (`tackle` Shift, `predate` F, `inspect`
   R, `active_3` Q, `active_4` E); a parsed left-button press makes `Input.is_action_pressed("active_1")` true and its
   release false; `slot_labels()` is `LMB/RMB/Q/E` with `mouse_aim`, the pad labels with `using_joypad`, `U/O/H/L`
   otherwise, and `eat_label()`/`inspect_label()` follow the same three states; `scheme_changed` fires once when the labels
-  change and not when they do not; the skill screen, open, refreshes its slot badge when the mouse first moves.
+  change and not when they do not; the skill screen, open with a slotted skill selected, shows `[U]` and then `[LMB]` when
+  the mouse first moves, and pressing S while it is open leaves `mouse_aim` and the badge alone.
 - `Player.free_aim`/`cast_aim`, right stick: 30 degrees up from right is that exact normalised vector; the snap holds on all
   four axes at 5 degrees each side (including 180 +/- 5), does not snap at 10.1 degrees and does at 9.9; a partial tilt of
   (0.55, 0.13) (13 degrees once normalised) is not snapped, so the comparison is on the normalised vector; under the
-  deadzone falls back to the left stick's snapped aim, then to `ZERO`; the right stick wins over a held left stick and over
+  deadzone (a right stick at (0.3, 0.1)) falls back to the left stick's snapped aim, then to `ZERO`; the right stick wins over a held left stick and over
   the keys; a device-1 right stick then a key press (which clears the gate) then a left stick held from before the key
   press (`Controls.last_stick` set directly: a new left-stick event would re-arm the pad and the right stick would win)
   casts along the left stick, and with the left stick neutral along the keys.
