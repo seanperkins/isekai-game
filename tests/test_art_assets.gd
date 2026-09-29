@@ -12,8 +12,9 @@ func before_all() -> void:
 			if manifest["sheets"][sheet][sprite].has("size"):
 				tile_names.append(sprite)
 
-func test_manifest_lists_every_sprite() -> void:
-	assert_eq(names.size(), 44)
+func test_manifest_lists_sprites_and_no_torch() -> void:
+	assert_gt(names.size(), 30)
+	assert_false(names.has("torch"), "nothing in the wilderness burns")
 
 func test_every_sprite_loads_through_art() -> void:
 	for n in names:

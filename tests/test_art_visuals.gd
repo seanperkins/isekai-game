@@ -76,6 +76,21 @@ func test_room_solids_are_textured() -> void:
 	var rooms := World.load_rooms("res://data/rooms")
 	var node := RoomBuilder.build_room(rooms["C1"], {})
 	add_child_autofree(node)
+	# A biome with terrain art paints its solids: bodies only collide, and one Terrain node draws them.
+	var terrain := node.get_node("Terrain")
+	var sprites: Array = terrain.find_children("*", "Sprite2D", true, false)
+	assert_gt(sprites.size(), 0)
+	for s in sprites:
+		assert_not_null(s.texture)
+	for b in node.get_children().filter(func(n): return n is StaticBody2D):
+		assert_eq(b.get_children().filter(func(n): return n is TextureRect).size(), 0)
+
+func test_a_room_without_terrain_art_keeps_the_flat_tiles() -> void:
+	var def: RoomDef = World.load_rooms("res://data/rooms")["C4"].duplicate()
+	def.area = "nowhere"
+	var node := RoomBuilder.build_room(def, {})
+	add_child_autofree(node)
+	assert_null(node.get_node_or_null("Terrain"))
 	for b in node.get_children().filter(func(n): return n is StaticBody2D):
 		var rects: Array = b.get_children().filter(func(n): return n is TextureRect)
 		assert_eq(rects.size(), 1)
@@ -95,11 +110,14 @@ func test_game_is_lit_framed_and_fully_sprited() -> void:
 		assert_not_null(_sprite(n).texture, str(n))
 	assert_false(game.find_children("*", "ColorRect", true, false).any(func(r): return r.get_parent() is Enemy or r.get_parent() is Player))
 
-func test_cave_backdrop_is_textured_behind_the_room() -> void:
+func test_cave_backdrop_is_a_depth_stack_behind_the_room() -> void:
 	var game = load("res://scenes/main.tscn").instantiate()
 	add_child_autofree(game)
 	await wait_physics_frames(1)
-	var backs: Array = game.world.room.get_children().filter(func(n): return n is TextureRect and n.z_index < 0)  # each room carries its own backdrop
-	assert_eq(backs.size(), 1)
-	assert_eq(backs[0].texture, Art.texture("wall"))
+	var room: Node2D = game.world.room  # each room carries its own backdrop
+	var wall: Sprite2D = room.get_node("BackWall")
+	assert_lt(wall.z_index, 0)
+	assert_eq(wall.texture, TerrainArt.tile("cave", "backwall"))
+	for layer in ["far_haze", "far_rock", "mid_rock", "foreground"]:
+		assert_not_null(room.get_node_or_null(layer), layer)
 	assert_gt(game.AMBIENT.v, 0.5)

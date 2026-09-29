@@ -7,23 +7,38 @@ script = ExtResource("1_y5g08")
 id = "C4"
 area = "cave"
 cell = Vector2i(4, 2)
-solids = [Rect2(100, 266, 100, 12), Rect2(440, 266, 100, 12)]
+solids = [Rect2(100, 266, 100, 12), Rect2(440, 266, 100, 12), Rect2(250, 20, 120, 32), Rect2(274, 52, 72, 32), Rect2(298, 84, 24, 32)]
 decor = [{
-"id": "torch",
-"light": Color(1, 0.6, 0.25, 1),
-"pos": Vector2(150, 236)
+"id": "glow_fungus",
+"light": Color(0.35, 0.95, 0.7, 1),
+"pos": Vector2(150, 266)
 }, {
 "id": "crystal_teal",
 "light": Color(0.3, 1, 0.9, 1),
 "pos": Vector2(470, 266)
 }, {
-"id": "crystal_blue",
-"light": Color(0.3, 0.5, 1, 1),
+"id": "crystal_rose",
+"light": Color(1, 0.55, 0.75, 1),
 "pos": Vector2(250, 320)
 }, {
-"id": "crystal_blue",
-"light": Color(0.3, 0.5, 1, 1),
+"id": "crystal_prism",
+"light": Color(0.95, 0.85, 1, 1),
 "pos": Vector2(390, 320)
+}, {
+"anchor": "top",
+"id": "lichen_hang",
+"light": Color(0.35, 0.95, 0.7, 1),
+"pos": Vector2(350, 52)
+}, {
+"id": "rubble",
+"pos": Vector2(110, 320)
+}, {
+"id": "flowers",
+"pos": Vector2(160, 320)
+}, {
+"id": "puddle_glow",
+"light": Color(0.3, 1, 0.9, 1),
+"pos": Vector2(196, 320)
 }]
 spawns = [{
 "id": "toad",

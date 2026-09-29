@@ -3,19 +3,26 @@ extends Node2D
 ## Death shows the Run's card, then resets the run and reloads the scene.
 
 const ROOMS_DIR := "res://data/rooms"
-const AMBIENT := Color(0.6, 0.6, 0.78)  # dim cave; lights bring colour back
+const AMBIENT := Color(0.6, 0.6, 0.78)  # dim cave; lights bring colour back (fallback for areas without art)
 
 var player: Player
 var hud: Hud
 var skill_screen: SkillScreen
 var world: World
 var run: Run
+var ambient: CanvasModulate
 var _skills_by_id := {}
 var _creatures := {}
 
+## Each biome sets its own ambient light: the bright Cave, a darker deep, and so on.
+func _on_room_entered(id: String) -> void:
+	var target: Color = TerrainArt.ambient(world.rooms[id].area, AMBIENT)
+	var tw := create_tween()
+	tw.tween_property(ambient, "color", target, 0.6)
+
 func _ready() -> void:
 	Controls.ensure_actions()
-	var ambient := CanvasModulate.new()
+	ambient = CanvasModulate.new()
 	ambient.color = AMBIENT
 	add_child(ambient)
 	for d in SkillRules.skill_defs:
@@ -31,7 +38,9 @@ func _ready() -> void:
 		push_error(e)
 	world.setup(rooms, player, {"spawn": _spawn, "progress": Compendium.progress,
 		"compendium": Compendium.model, "announce": Announcer.queue.push_unlock})
+	world.room_entered.connect(_on_room_entered)
 	world.enter_start()
+	_on_room_entered(world.current_id)
 	player.skillset.slot_replaced.connect(Announcer.queue.push_slot_replaced)
 	hud = Hud.new()
 	add_child(hud)

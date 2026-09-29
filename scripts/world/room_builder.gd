@@ -15,7 +15,7 @@ static func visual_kind(r: Rect2, room_width: float = 1600.0) -> String:
 
 ## Decorative sprites (crystals, torches, vines, stalactites), each with an optional light.
 ## "top" anchors hang from the ceiling; the default stands on the given point.
-static func build_decor(parent: Node, layout: Dictionary) -> void:
+static func build_decor(parent: Node, layout: Dictionary, light_energy := 1.0) -> void:
 	for d in layout.get("decor", []):
 		var holder := Node2D.new()
 		holder.position = d["pos"]
@@ -23,13 +23,14 @@ static func build_decor(parent: Node, layout: Dictionary) -> void:
 		var s := Art.sprite(d["id"], tex.get_height() if d.get("anchor", "bottom") == "top" else 0.0)
 		holder.add_child(s)
 		if d.has("light"):
-			var l := Art.light(d["light"], 1.0, 1.6)
+			var l := Art.light(d["light"], light_energy, 1.6)
 			l.position.y = s.position.y
 			holder.add_child(l)
 		parent.add_child(holder)
 
-## A static solid drawn with the given tile ("ground", "wall" or "column").
-static func add_solid(parent: Node, r: Rect2, kind: String) -> StaticBody2D:
+## A static solid drawn with the given tile ("ground", "wall" or "column"). `visual` false leaves
+## the drawing to TerrainPainter.
+static func add_solid(parent: Node, r: Rect2, kind: String, visual := true) -> StaticBody2D:
 	var body := StaticBody2D.new()
 	body.position = r.position + r.size / 2.0
 	var shape := CollisionShape2D.new()
@@ -37,13 +38,14 @@ static func add_solid(parent: Node, r: Rect2, kind: String) -> StaticBody2D:
 	rect.size = r.size
 	shape.shape = rect
 	body.add_child(shape)
-	var visual := TextureRect.new()
-	visual.texture = Art.texture(kind)
-	visual.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	visual.stretch_mode = TextureRect.STRETCH_SCALE if kind == "column" else TextureRect.STRETCH_TILE
-	visual.size = r.size
-	visual.position = -r.size / 2.0
-	body.add_child(visual)
+	if visual:
+		var tile := TextureRect.new()
+		tile.texture = Art.texture(kind)
+		tile.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tile.stretch_mode = TextureRect.STRETCH_SCALE if kind == "column" else TextureRect.STRETCH_TILE
+		tile.size = r.size
+		tile.position = -r.size / 2.0
+		body.add_child(tile)
 	parent.add_child(body)
 	return body
 
@@ -95,6 +97,7 @@ static func _piece(band: Rect2, along_x: bool, a: float, b: float) -> Rect2:
 		return Rect2(a, band.position.y, b - a, band.size.y)
 	return Rect2(band.position.x, a, band.size.x, b - a)
 
+const PAINTED_LIGHT := 0.55
 const BACKDROP := Color(0.06, 0.06, 0.12)
 const BACKDROP_TINT := Color(0.22, 0.21, 0.34)  # far cave wall, pushed back
 
@@ -106,17 +109,39 @@ static func build_room(def: RoomDef, ctx: Dictionary) -> Node2D:
 	node.name = def.id
 	node.position = def.world_rect().position
 	var size := def.pixel_size()
-	_backdrop(node, size)
+	# A biome with terrain art gets the parallax stack, a back wall and painted solids; any other
+	# room keeps the flat backdrop and stretched tiles.
+	var painted := TerrainArt.has_biome(def.area)
+	if painted:
+		TerrainLayers.build(node, def.area)
+		TerrainLayers.back_wall(node, def.area, size)
+		TerrainMotes.build(node, size, def.area)
+	else:
+		_backdrop(node, size)
+	var solids: Array = []
 	for w in edge_walls(size, def.exits):
-		add_solid(node, w["rect"], w["kind"])
+		add_solid(node, w["rect"], w["kind"], not painted)
+		solids.append(w)
+	var gates: Array = []
 	var progress = ctx.get("progress")
 	for e in def.exits:
 		if not is_exit_open(e, progress):
-			var gate := add_solid(node, gate_rect(size, e), "ground" if e["edge"] == "bottom" else "wall")
+			var g := gate_rect(size, e)
+			var gate := add_solid(node, g, "ground" if e["edge"] == "bottom" else "wall", not painted)
 			gate.add_to_group("gate_" + str(e["shortcut"]))
+			gates.append({"body": gate, "rect": g})
 	for r in def.solids:
-		add_solid(node, r, visual_kind(r, size.x))
-	build_decor(node, {"decor": def.decor})
+		add_solid(node, r, visual_kind(r, size.x), not painted)
+		solids.append({"rect": r, "kind": visual_kind(r, size.x)})
+	if painted:
+		var bounds := Rect2(Vector2.ZERO, size)
+		TerrainPainter.paint(node, solids, bounds, def.area)
+		for g in gates:
+			# Painted as a child of the gate body, so opening the shortcut removes the art with it.
+			var art := TerrainPainter.paint(g["body"], solids, bounds, def.area, [g["rect"]])
+			art.position = -g["body"].position
+	# Painted stone is pale, so point lights are gentler there or they blow it out to white.
+	build_decor(node, {"decor": def.decor}, PAINTED_LIGHT if painted else 1.0)
 	var spawn: Callable = ctx.get("spawn", Callable())
 	if spawn.is_valid():
 		for s in def.spawns:

@@ -8,28 +8,28 @@ id = "C1"
 area = "cave"
 cell = Vector2i(0, 2)
 size = Vector2i(2, 1)
-start = Vector2(60, 310)
-solids = [Rect2(260, 266, 120, 12), Rect2(420, 214, 100, 12), Rect2(760, 140, 16, 180), Rect2(900, 266, 140, 12), Rect2(1060, 214, 100, 12)]
+start = Vector2(60, 308)
+solids = [Rect2(260, 266, 120, 12), Rect2(420, 214, 100, 12), Rect2(760, 140, 16, 180), Rect2(900, 266, 140, 12), Rect2(1060, 214, 100, 12), Rect2(480, 272, 96, 48), Rect2(300, 20, 120, 32), Rect2(324, 52, 72, 32), Rect2(348, 84, 24, 32), Rect2(980, 20, 120, 32), Rect2(1004, 52, 72, 32), Rect2(1028, 84, 24, 32)]
 decor = [{
 "id": "crystal_teal",
 "light": Color(0.3, 1, 0.9, 1),
 "pos": Vector2(110, 320)
 }, {
-"id": "crystal_purple",
-"light": Color(0.8, 0.4, 1, 1),
+"id": "crystal_prism",
+"light": Color(0.95, 0.85, 1, 1),
 "pos": Vector2(610, 320)
 }, {
-"id": "crystal_blue",
-"light": Color(0.3, 0.5, 1, 1),
+"id": "crystal_rose",
+"light": Color(1, 0.55, 0.75, 1),
 "pos": Vector2(1010, 320)
 }, {
-"id": "crystal_purple",
-"light": Color(0.8, 0.4, 1, 1),
+"id": "crystal_gold",
+"light": Color(1, 0.85, 0.4, 1),
 "pos": Vector2(470, 214)
 }, {
-"id": "torch",
-"light": Color(1, 0.6, 0.25, 1),
-"pos": Vector2(330, 236)
+"id": "glow_fungus",
+"light": Color(0.35, 0.95, 0.7, 1),
+"pos": Vector2(320, 266)
 }, {
 "anchor": "top",
 "id": "vine",
@@ -46,6 +46,34 @@ decor = [{
 "anchor": "top",
 "id": "stalactite",
 "pos": Vector2(1110, 226)
+}, {
+"id": "wall_crystal",
+"light": Color(0.95, 0.85, 1, 1),
+"pos": Vector2(528, 272)
+}, {
+"id": "crystal_gold",
+"light": Color(1, 0.85, 0.4, 1),
+"pos": Vector2(564, 272)
+}, {
+"id": "rubble",
+"pos": Vector2(650, 320)
+}, {
+"id": "flowers",
+"pos": Vector2(700, 320)
+}, {
+"id": "puddle_glow",
+"light": Color(0.3, 1, 0.9, 1),
+"pos": Vector2(736, 320)
+}, {
+"anchor": "top",
+"id": "lichen_hang",
+"light": Color(0.35, 0.95, 0.7, 1),
+"pos": Vector2(400, 52)
+}, {
+"anchor": "top",
+"id": "lichen_hang",
+"light": Color(0.35, 0.95, 0.7, 1),
+"pos": Vector2(1000, 52)
 }]
 spawns = [{
 "id": "bat",

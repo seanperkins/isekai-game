@@ -8,7 +8,10 @@ extends SceneTree
 const TEAL := Color(0.3, 1.0, 0.9)
 const PURPLE := Color(0.8, 0.4, 1.0)
 const BLUE := Color(0.3, 0.5, 1.0)
-const FIRE := Color(1.0, 0.6, 0.25)
+const ROSE := Color(1.0, 0.55, 0.75)
+const GOLD := Color(1.0, 0.85, 0.4)
+const PRISM := Color(0.95, 0.85, 1.0)
+const GLOW := Color(0.35, 0.95, 0.7)  # glow fungus and lichen; nothing in the wilderness burns
 
 func _init() -> void:
 	var failures := 0
@@ -51,77 +54,96 @@ static func rooms() -> Array:
 
 ## C1 Start (2×1): the original lower hall. Floor top 320.
 static func c1() -> RoomDef:
-	return _room({"id": "C1", "area": "cave", "cell": Vector2i(0, 2), "size": Vector2i(2, 1),
-		"start": Vector2(60, 310),
+	var f := {"id": "C1", "area": "cave", "cell": Vector2i(0, 2), "size": Vector2i(2, 1),
+		"start": Vector2(60, 308),  # body centre is 12 px above the floor top (320)
 		"exits": [_exit("right", 200, 320, "C2"), _exit("top", 840, 900, "C6", {"shortcut": "c6_drop"})],
 		"solids": [Rect2(260, 266, 120, 12), Rect2(420, 214, 100, 12), Rect2(760, 140, 16, 180),
 			Rect2(900, 266, 140, 12), Rect2(1060, 214, 100, 12)],
-		"decor": [_lit("crystal_teal", Vector2(110, 320), TEAL), _lit("crystal_purple", Vector2(610, 320), PURPLE),
-			_lit("crystal_blue", Vector2(1010, 320), BLUE), _lit("crystal_purple", Vector2(470, 214), PURPLE),
-			_lit("torch", Vector2(330, 236), FIRE), _hang("vine", Vector2(300, 278)), _hang("vine", Vector2(980, 278)),
+		"decor": [_lit("crystal_teal", Vector2(110, 320), TEAL), _lit("crystal_prism", Vector2(610, 320), PRISM),
+			_lit("crystal_rose", Vector2(1010, 320), ROSE), _lit("crystal_gold", Vector2(470, 214), GOLD),
+			_lit("glow_fungus", Vector2(320, 266), GLOW), _hang("vine", Vector2(300, 278)), _hang("vine", Vector2(980, 278)),
 			_hang("stalactite", Vector2(470, 226)), _hang("stalactite", Vector2(1110, 226))],
 		"spawns": [_s("bat", Vector2(300, 200)), _s("bat", Vector2(470, 170)), _s("bat", Vector2(980, 180)),
 			_s("toad", Vector2(200, 300)), _s("toad", Vector2(420, 300)), _s("toad", Vector2(680, 300)),
-			_s("toad", Vector2(1100, 300)), _s("lizard", Vector2(860, 300)), _s("water_pool", Vector2(150, 316))]})
+			_s("toad", Vector2(1100, 300)), _s("lizard", Vector2(860, 300)), _s("water_pool", Vector2(150, 316))]}
+	Prefabs.stamp(f, "outcrop", Vector2(480, 320))
+	Prefabs.stamp(f, "scatter", Vector2(640, 320))
+	Prefabs.stamp(f, "stalactites", Vector2(300, 20))
+	Prefabs.stamp(f, "stalactites", Vector2(980, 20), true)
+	return _room(f)
 
 ## C2 Thread Gap (2×1): spiders under the ceiling; a chimney up to C3 needs Wall Cling.
 static func c2() -> RoomDef:
-	return _room({"id": "C2", "area": "cave", "cell": Vector2i(2, 2), "size": Vector2i(2, 1),
+	var f := {"id": "C2", "area": "cave", "cell": Vector2i(2, 2), "size": Vector2i(2, 1),
 		"exits": [_exit("left", 200, 320, "C1"), _exit("right", 200, 320, "C4"),
 			_exit("top", 300, 380, "C3", {"gate": "wall_cling"})],
 		"solids": [Rect2(280, 20, 16, 220), Rect2(384, 20, 16, 220),
 			Rect2(160, 266, 90, 12), Rect2(40, 214, 90, 12),
 			Rect2(560, 266, 120, 12), Rect2(740, 214, 120, 12), Rect2(920, 266, 120, 12)],
-		"decor": [_lit("torch", Vector2(800, 184), FIRE), _lit("crystal_teal", Vector2(500, 320), TEAL),
+		"decor": [_lit("glow_fungus", Vector2(800, 214), GLOW), _lit("crystal_teal", Vector2(500, 320), TEAL),
 			_lit("crystal_blue", Vector2(1200, 320), BLUE), _hang("vine", Vector2(620, 20)),
 			_hang("stalactite", Vector2(1150, 20))],
 		"spawns": [_s("spider", Vector2(700, 32)), _s("spider", Vector2(1000, 32)),
-			_s("lizard", Vector2(600, 300)), _s("lizard", Vector2(1100, 300))]})
+			_s("lizard", Vector2(600, 300)), _s("lizard", Vector2(1100, 300))]}
+	Prefabs.stamp(f, "arch", Vector2(420, 320))
+	Prefabs.stamp(f, "stalactites", Vector2(760, 20))
+	Prefabs.stamp(f, "scatter", Vector2(980, 320))
+	return _room(f)
 
 ## C3 Spider Loft (1×2): a climb of ledges; entered from C2's chimney below.
 static func c3() -> RoomDef:
-	return _room({"id": "C3", "area": "cave", "cell": Vector2i(2, 0), "size": Vector2i(1, 2),
+	var f := {"id": "C3", "area": "cave", "cell": Vector2i(2, 0), "size": Vector2i(1, 2),
 		"exits": [_exit("bottom", 300, 380, "C2", {"gate": "wall_cling"}), _exit("left", 560, 680, "C6")],
 		"solids": [Rect2(60, 626, 100, 12), Rect2(200, 574, 100, 12), Rect2(60, 522, 100, 12),
 			Rect2(200, 470, 100, 12), Rect2(340, 418, 120, 12), Rect2(500, 366, 100, 12),
 			Rect2(340, 314, 100, 12), Rect2(180, 262, 100, 12), Rect2(40, 210, 120, 12)],
-		"decor": [_lit("crystal_teal", Vector2(100, 210), TEAL), _lit("torch", Vector2(390, 388), FIRE),
+		"decor": [_lit("crystal_gold", Vector2(100, 210), GOLD), _lit("glow_fungus", Vector2(390, 418), GLOW),
 			_hang("vine", Vector2(560, 20)), _hang("vine", Vector2(120, 20))],
-		"spawns": [_s("spider", Vector2(240, 32)), _s("spider", Vector2(520, 32)), _s("bat", Vector2(450, 300))]})
+		"spawns": [_s("spider", Vector2(240, 32)), _s("spider", Vector2(520, 32)), _s("bat", Vector2(450, 300))]}
+	Prefabs.stamp(f, "pillars", Vector2(450, 680))
+	Prefabs.stamp(f, "stalactites", Vector2(60, 20))
+	return _room(f)
 
 ## C4 Glow Pool (1×1): rest here.
 static func c4() -> RoomDef:
-	return _room({"id": "C4", "area": "cave", "cell": Vector2i(4, 2), "size": Vector2i(1, 1),
+	var f := {"id": "C4", "area": "cave", "cell": Vector2i(4, 2), "size": Vector2i(1, 1),
 		"exits": [_exit("left", 200, 320, "C2"), _exit("right", 200, 320, "C5")],
 		"solids": [Rect2(100, 266, 100, 12), Rect2(440, 266, 100, 12)],
 		"features": [{"kind": "glow_pool", "id": "c4_pool", "pos": Vector2(320, 320)}],
-		"decor": [_lit("torch", Vector2(150, 236), FIRE), _lit("crystal_teal", Vector2(470, 266), TEAL),
-			_lit("crystal_blue", Vector2(250, 320), BLUE), _lit("crystal_blue", Vector2(390, 320), BLUE)],
-		"spawns": [_s("toad", Vector2(520, 300))]})
+		"decor": [_lit("glow_fungus", Vector2(150, 266), GLOW), _lit("crystal_teal", Vector2(470, 266), TEAL),
+			_lit("crystal_rose", Vector2(250, 320), ROSE), _lit("crystal_prism", Vector2(390, 320), PRISM)],
+		"spawns": [_s("toad", Vector2(520, 300))]}
+	Prefabs.stamp(f, "stalactites", Vector2(250, 20))
+	Prefabs.stamp(f, "scatter", Vector2(100, 320))
+	return _room(f)
 
 ## C5 Drop Shaft (1×3): a zigzag of ledges down to the floor. Plan 2 opens its floor to G1.
 static func c5() -> RoomDef:
-	var solids: Array = [Rect2(20, 320, 180, 12)]  # entry ledge by the left exit
+	var solids: Array = [Rect2(20, 320, 70, 12)]  # entry ledge by the left exit; it stops short of the k=13 platform (x 100+) so the taller slime has full headroom there
 	for k in range(1, 14):
 		solids.append(Rect2(100.0 if k % 2 == 1 else 240.0, 1040.0 - 52.0 * k, 100, 12))
-	return _room({"id": "C5", "area": "cave", "cell": Vector2i(5, 2), "size": Vector2i(1, 3),
+	var f := {"id": "C5", "area": "cave", "cell": Vector2i(5, 2), "size": Vector2i(1, 3),
 		"exits": [_exit("left", 200, 320, "C4")],
 		"solids": solids,
-		"decor": [_lit("torch", Vector2(150, 290), FIRE), _lit("torch", Vector2(290, 490), FIRE),
-			_lit("crystal_purple", Vector2(500, 1040), PURPLE), _lit("crystal_teal", Vector2(150, 1040), TEAL),
+		"decor": [_lit("glow_fungus", Vector2(150, 364), GLOW), _lit("glow_fungus", Vector2(290, 520), GLOW),
+			_lit("crystal_prism", Vector2(500, 1040), PRISM), _lit("crystal_teal", Vector2(150, 1040), TEAL),
 			_hang("stalactite", Vector2(400, 20))],
 		"spawns": [_s("bat", Vector2(450, 500)), _s("bat", Vector2(420, 800)), _s("lizard", Vector2(400, 1020)),
-			_s("spider", Vector2(500, 32)), _s("water_pool", Vector2(560, 1036))]})
+			_s("spider", Vector2(500, 32)), _s("water_pool", Vector2(560, 1036))]}
+	Prefabs.stamp(f, "stalactites", Vector2(300, 20))
+	return _room(f)
 
 ## C6 nook (1×1): a quiet crystal cavern with a tablet, and the switch that opens the floor
 ## down into C1 for good.
 static func c6() -> RoomDef:
-	return _room({"id": "C6", "area": "cave", "cell": Vector2i(1, 1), "size": Vector2i(1, 1),
+	var f := {"id": "C6", "area": "cave", "cell": Vector2i(1, 1), "size": Vector2i(1, 1),
 		"exits": [_exit("right", 200, 320, "C3"), _exit("bottom", 200, 260, "C1", {"shortcut": "c6_drop"})],
 		"solids": [Rect2(440, 266, 120, 12)],
 		"features": [
 			{"kind": "tablet", "id": "c6_tablet", "pos": Vector2(480, 320), "title": "Worn tablet",
 				"text": "Eat what hunts by sound in the dark, and you will hear as it does.", "hint": "echolocation"},
 			{"kind": "switch", "id": "c6_switch", "shortcut": "c6_drop", "pos": Vector2(290, 320)}],
-		"decor": [_lit("crystal_purple", Vector2(100, 320), PURPLE), _lit("crystal_purple", Vector2(160, 320), PURPLE),
-			_lit("crystal_blue", Vector2(380, 320), BLUE), _lit("crystal_teal", Vector2(500, 266), TEAL)]})
+		"decor": [_lit("crystal_rose", Vector2(100, 320), ROSE), _lit("crystal_gold", Vector2(160, 320), GOLD),
+			_lit("crystal_prism", Vector2(380, 320), PRISM), _lit("crystal_teal", Vector2(500, 266), TEAL)]}
+	Prefabs.stamp(f, "stalactites", Vector2(120, 20))
+	return _room(f)

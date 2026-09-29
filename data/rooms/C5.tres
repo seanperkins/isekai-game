@@ -8,18 +8,18 @@ id = "C5"
 area = "cave"
 cell = Vector2i(5, 2)
 size = Vector2i(1, 3)
-solids = [Rect2(20, 320, 180, 12), Rect2(100, 988, 100, 12), Rect2(240, 936, 100, 12), Rect2(100, 884, 100, 12), Rect2(240, 832, 100, 12), Rect2(100, 780, 100, 12), Rect2(240, 728, 100, 12), Rect2(100, 676, 100, 12), Rect2(240, 624, 100, 12), Rect2(100, 572, 100, 12), Rect2(240, 520, 100, 12), Rect2(100, 468, 100, 12), Rect2(240, 416, 100, 12), Rect2(100, 364, 100, 12)]
+solids = [Rect2(20, 320, 70, 12), Rect2(100, 988, 100, 12), Rect2(240, 936, 100, 12), Rect2(100, 884, 100, 12), Rect2(240, 832, 100, 12), Rect2(100, 780, 100, 12), Rect2(240, 728, 100, 12), Rect2(100, 676, 100, 12), Rect2(240, 624, 100, 12), Rect2(100, 572, 100, 12), Rect2(240, 520, 100, 12), Rect2(100, 468, 100, 12), Rect2(240, 416, 100, 12), Rect2(100, 364, 100, 12), Rect2(300, 20, 120, 32), Rect2(324, 52, 72, 32), Rect2(348, 84, 24, 32)]
 decor = [{
-"id": "torch",
-"light": Color(1, 0.6, 0.25, 1),
-"pos": Vector2(150, 290)
+"id": "glow_fungus",
+"light": Color(0.35, 0.95, 0.7, 1),
+"pos": Vector2(150, 364)
 }, {
-"id": "torch",
-"light": Color(1, 0.6, 0.25, 1),
-"pos": Vector2(290, 490)
+"id": "glow_fungus",
+"light": Color(0.35, 0.95, 0.7, 1),
+"pos": Vector2(290, 520)
 }, {
-"id": "crystal_purple",
-"light": Color(0.8, 0.4, 1, 1),
+"id": "crystal_prism",
+"light": Color(0.95, 0.85, 1, 1),
 "pos": Vector2(500, 1040)
 }, {
 "id": "crystal_teal",
@@ -29,6 +29,11 @@ decor = [{
 "anchor": "top",
 "id": "stalactite",
 "pos": Vector2(400, 20)
+}, {
+"anchor": "top",
+"id": "lichen_hang",
+"light": Color(0.35, 0.95, 0.7, 1),
+"pos": Vector2(400, 52)
 }]
 spawns = [{
 "id": "bat",

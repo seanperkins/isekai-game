@@ -14,7 +14,7 @@ func setup(p_def: CreatureDef) -> void:
 func _ready() -> void:
 	if get_child_count() == 0:
 		add_child(Art.sprite("water_pool", 4.0))
-		add_child(Art.light(Color(0.3, 0.6, 1.0), 0.9, 1.0))
+		add_child(Art.light(Color(0.3, 0.6, 1.0), 0.6, 1.0))
 
 func can_be_predated() -> bool:
 	return not _consumed

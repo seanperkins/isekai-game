@@ -16,7 +16,7 @@ func _ready() -> void:
 		var s := Art.sprite("water_pool", 4.0)
 		s.modulate = Color(0.6, 1.0, 0.9)
 		add_child(s)
-		add_child(Art.light(Color(0.4, 1.0, 0.9), 1.3, 1.4))
+		add_child(Art.light(Color(0.4, 1.0, 0.9), 0.75, 1.4))
 
 func prompt() -> String:
 	return "soak"

@@ -7,23 +7,28 @@ script = ExtResource("1_v66ca")
 id = "C6"
 area = "cave"
 cell = Vector2i(1, 1)
-solids = [Rect2(440, 266, 120, 12)]
+solids = [Rect2(440, 266, 120, 12), Rect2(120, 20, 120, 32), Rect2(144, 52, 72, 32), Rect2(168, 84, 24, 32)]
 decor = [{
-"id": "crystal_purple",
-"light": Color(0.8, 0.4, 1, 1),
+"id": "crystal_rose",
+"light": Color(1, 0.55, 0.75, 1),
 "pos": Vector2(100, 320)
 }, {
-"id": "crystal_purple",
-"light": Color(0.8, 0.4, 1, 1),
+"id": "crystal_gold",
+"light": Color(1, 0.85, 0.4, 1),
 "pos": Vector2(160, 320)
 }, {
-"id": "crystal_blue",
-"light": Color(0.3, 0.5, 1, 1),
+"id": "crystal_prism",
+"light": Color(0.95, 0.85, 1, 1),
 "pos": Vector2(380, 320)
 }, {
 "id": "crystal_teal",
 "light": Color(0.3, 1, 0.9, 1),
 "pos": Vector2(500, 266)
+}, {
+"anchor": "top",
+"id": "lichen_hang",
+"light": Color(0.35, 0.95, 0.7, 1),
+"pos": Vector2(220, 52)
 }]
 exits = [{
 "edge": "right",
