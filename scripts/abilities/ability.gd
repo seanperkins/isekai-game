@@ -1,7 +1,7 @@
 class_name Ability
 extends Node2D
-## Base for active skills. The actor supplies facing, team and apply_impulse(); targets are
-## other-team members of group "actors". Abilities never emit gameplay events themselves.
+## Base for active skills. The actor supplies facing, team and apply_impulse() (and, for a channelling stream, velocity);
+## targets are other-team members of group "actors". Abilities never emit gameplay events themselves.
 
 const COOLDOWN_SECONDS := 0.8
 
@@ -30,6 +30,25 @@ func ready() -> bool:
 
 func _process(delta: float) -> void:
 	_cooldown = maxf(0.0, _cooldown - delta)
+
+## Channelling (opt in): an ability that can be held. `can_channel` is asked after `aim` is set and before anything is paid;
+## `begin_channel` defaults to the one-shot cast, so a tap is today's cast; `channel_tick` returns false to end the hold;
+## `end_channel` starts the cooldown. `max_channel` is the hold's cap in seconds (0 = none), set in `_init()` like
+## `rope_range`, since a subclass cannot redeclare a parent const.
+var max_channel := 0.0
+
+func can_channel() -> bool:
+	return false
+
+func begin_channel() -> void:
+	_perform()
+
+func channel_tick(_delta: float) -> bool:
+	return true
+
+## `hard` is a stop from outside the hold (menu, hit, room change): subclasses also hide their persistent nodes at once.
+func end_channel(_hard := false) -> void:
+	_cooldown = COOLDOWN_SECONDS
 
 func value() -> int:
 	if values.is_empty():

@@ -88,6 +88,8 @@ func is_open() -> bool:
 	return visible
 
 func open() -> void:
+	if _player != null:
+		_player.end_channel()  # the tree is about to pause: a held channel would freeze mid-hold
 	_refresh()
 	visible = true
 	get_tree().paused = true
