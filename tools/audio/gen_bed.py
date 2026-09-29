@@ -14,6 +14,7 @@ import os
 import random
 import sys
 import tempfile
+import urllib.request
 import zlib
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -24,13 +25,49 @@ BEDS = "art_source/audio/beds"
 OUT = "assets/audio"
 KINDS = ("music", "ambience")
 XFADE = 2.0
+RAW_DIR = "art_source/audio/raw"
+ELEVENLABS = {"music": "https://api.elevenlabs.io/v1/music",
+              "ambience": "https://api.elevenlabs.io/v1/sound-generation"}
+# The API's documented length limits, in seconds: music 3 to 600, sound generation 0.5 to 30.
+ELEVENLABS_SECONDS = {"music": (3.0, 600.0), "ambience": (0.5, 30.0)}
 HEADROOM_DB = -1.5  # a bed's peak may never rise above this while it is being made loud enough
 WORK_PEAK_DB = -6.0  # level a bed is brought to before its loudness is measured
 EDGE_FADE = 0.01  # Vorbis zero-pads a stream's end: both ends go to silence so the wrap stays continuous
 
 
-def raw_samples(spec, biome, kind):
+def _fetch(url, headers, body):
+    request = urllib.request.Request(url, data=body.encode(), headers=headers, method="POST")
+    try:
+        with urllib.request.urlopen(request, timeout=300) as response:
+            return response.read()
+    except OSError as e:
+        raise audiolib.AudioToolError("request to %s failed: %s" % (url, e)) from e
+
+
+def _elevenlabs(spec, biome, kind, raw_dir, fetch):
+    key = os.environ.get("ELEVENLABS_API_KEY")
+    if not key:
+        raise audiolib.AudioToolError("%s/%s: set ELEVENLABS_API_KEY in the environment" % (biome, kind))
+    seconds = float(spec["seconds"])
+    low, high = ELEVENLABS_SECONDS[kind]
+    if not low <= seconds <= high:
+        raise audiolib.AudioToolError("%s/%s: %s s is outside the API's %s to %s s" % (biome, kind, seconds, low, high))
+    if kind == "music":
+        payload = {"prompt": spec["prompt"], "music_length_ms": int(seconds * 1000), "force_instrumental": True}
+    else:
+        payload = {"text": spec["prompt"], "duration_seconds": seconds, "loop": True}
+    data = fetch(ELEVENLABS[kind], {"xi-api-key": key, "Content-Type": "application/json"}, json.dumps(payload))
+    os.makedirs(raw_dir, exist_ok=True)
+    raw_path = os.path.join(raw_dir, "%s_%s.mp3" % (biome, kind))
+    with open(raw_path, "wb") as f:
+        f.write(data)
+    return audiolib.decode_pcm(raw_path)
+
+
+def raw_samples(spec, biome, kind, raw_dir=RAW_DIR, fetch=_fetch):
     provider = spec.get("provider")
+    if provider == "elevenlabs":
+        return _elevenlabs(spec, biome, kind, raw_dir, fetch)
     if provider == "synth":
         rng = random.Random(zlib.crc32(("%s/%s" % (biome, kind)).encode()))
         if kind == "music":
@@ -78,7 +115,9 @@ def main(argv):
                 spec = json.load(f)
             for kind in KINDS:
                 if kind in spec:
-                    build(biome, kind, spec[kind])
+                    kind_spec = dict(spec[kind])
+                    kind_spec.setdefault("prompt", spec.get("prompt", ""))
+                    build(biome, kind, kind_spec)
                     print("built", kind, biome)
     except audiolib.AudioToolError as e:
         print("error:", e, file=sys.stderr)

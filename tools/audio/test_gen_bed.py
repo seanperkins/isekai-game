@@ -1,3 +1,4 @@
+import math
 import os
 import sys
 import tempfile
@@ -63,6 +64,57 @@ class GenBedTest(unittest.TestCase):
             with self.assertRaises(a.AudioToolError):
                 gen_bed.build("u", "music", {"provider": "nope"}, d)
             self.assertFalse(os.path.exists(os.path.join(d, "music", "u.ogg")))
+
+    def test_elevenlabs_needs_the_key_in_the_environment(self):
+        old = os.environ.pop("ELEVENLABS_API_KEY", None)
+        try:
+            with self.assertRaises(a.AudioToolError) as ctx:
+                gen_bed.raw_samples({"provider": "elevenlabs", "seconds": 30, "prompt": "x"}, "t", "music")
+            self.assertIn("ELEVENLABS_API_KEY", str(ctx.exception))
+        finally:
+            if old is not None:
+                os.environ["ELEVENLABS_API_KEY"] = old
+
+    def test_elevenlabs_rejects_a_length_the_api_would_refuse_before_calling_it(self):
+        os.environ["ELEVENLABS_API_KEY"] = "test-key"
+        try:
+            for kind, seconds in (("music", 1), ("music", 700), ("ambience", 0.1), ("ambience", 31)):
+                def boom(url, headers, body):
+                    raise AssertionError("must not call the API")
+                with self.assertRaises(a.AudioToolError, msg="%s %s" % (kind, seconds)):
+                    gen_bed.raw_samples({"provider": "elevenlabs", "seconds": seconds, "prompt": "x"},
+                                        "t", kind, fetch=boom)
+        finally:
+            del os.environ["ELEVENLABS_API_KEY"]
+
+    def test_elevenlabs_saves_the_raw_response_and_decodes_it(self):
+        calls = []
+
+        def fake_fetch(url, headers, body):
+            calls.append((url, headers, body))
+            with tempfile.TemporaryDirectory() as d:
+                p = os.path.join(d, "x.wav")
+                a.write_wav(p, [0.2 * math.sin(i / 20.0) for i in range(44100)])
+                with open(p, "rb") as f:
+                    return f.read()
+
+        os.environ["ELEVENLABS_API_KEY"] = "test-key"
+        try:
+            with tempfile.TemporaryDirectory() as d:
+                spec = {"provider": "elevenlabs", "seconds": 5, "prompt": "warm cave pads"}
+                samples = gen_bed.raw_samples(spec, "t", "music", raw_dir=d, fetch=fake_fetch)
+                self.assertEqual(len(calls), 1)
+                self.assertEqual(calls[0][0], "https://api.elevenlabs.io/v1/music")
+                self.assertEqual(calls[0][1]["xi-api-key"], "test-key")
+                self.assertIn("warm cave pads", calls[0][2])
+                self.assertIn('"force_instrumental": true', calls[0][2])
+                self.assertTrue(os.path.exists(os.path.join(d, "t_music.mp3")))
+                self.assertEqual(len(samples), 2)
+                gen_bed.raw_samples(dict(spec, seconds=10), "t", "ambience", raw_dir=d, fetch=fake_fetch)
+                self.assertEqual(calls[1][0], "https://api.elevenlabs.io/v1/sound-generation")
+                self.assertIn('"loop": true', calls[1][2])
+        finally:
+            del os.environ["ELEVENLABS_API_KEY"]
 
 
 if __name__ == "__main__":
