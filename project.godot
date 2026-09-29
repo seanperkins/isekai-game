@@ -13,6 +13,7 @@ EventBus="*res://autoload/event_bus.gd"
 SkillRules="*res://autoload/skill_rules.gd"
 Compendium="*res://autoload/compendium.gd"
 Announcer="*res://autoload/announcer.gd"
+Audio="*res://autoload/audio.gd"
 
 [rendering]
 
