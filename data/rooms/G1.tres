@@ -103,3 +103,18 @@ exits = [{
 "room": "G2",
 "to": 320.0
 }]
+features = [{
+"area": "grotto",
+"id": "G1",
+"kind": "rebirth_pool",
+"kit": {
+"affinity": {
+"flight": 4,
+"sound": 2,
+"thread": 2
+},
+"level": 3,
+"skills": ["leap", "wall_cling"]
+},
+"pos": Vector2(560, 320)
+}]

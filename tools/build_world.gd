@@ -202,11 +202,13 @@ static func _gl(id: String, pos: Vector2, color := G_GLOW) -> Dictionary:
 	return _lit("grotto_" + id, pos, color)
 
 ## G1 Grotto Mouth (2×1, cell (5,5)): the landing under C5's floor. A ledge chain under the hole climbs back
-## up to C5; the rebirth pool arrives with the kit task.
+## up to C5; the Grotto's rebirth pool stands a little way in, with the first real kit.
 static func g1() -> RoomDef:
 	var f := {"id": "G1", "area": "grotto", "cell": Vector2i(5, 5), "size": Vector2i(2, 1),
 		"exits": [_exit("top", 220, 380, "C5"), _exit("right", 200, 320, "G2")],
 		"solids": [],
+		"features": [{"kind": "rebirth_pool", "id": "G1", "area": "grotto", "pos": Vector2(560, 320),
+			"kit": {"skills": ["leap", "wall_cling"], "level": 3, "affinity": {"thread": 2, "sound": 2, "flight": 4}}}],
 		"decor": [_gl("glow_fungus", Vector2(180, 320)), _gl("glow_fungus", Vector2(700, 320)), _gl("glow_fungus", Vector2(980, 320)),
 			_lit("grotto_flowers", Vector2(560, 320), GOLD), _hang("grotto_lichen_hang", Vector2(500, 20)), _hang("grotto_lichen_hang", Vector2(900, 20)),
 			_hang("grotto_root_hang", Vector2(1120, 20))],

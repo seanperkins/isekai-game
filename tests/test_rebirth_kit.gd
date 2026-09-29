@@ -164,19 +164,51 @@ func test_the_eligibility_check_bites_on_a_poorly_seeded_kit() -> void:
 	assert_lt(RebirthKit.eligible_lineages({"thread": 5}, supply, forms), 2, "one lineage is not enough")
 	assert_gte(RebirthKit.eligible_lineages({"thread": 7, "sound": 6, "flight": 8}, supply, forms), 2)
 
-func test_every_shipped_non_default_pool_leaves_two_lineages_eligible() -> void:
-	# a seeded start must not lock you out of lineages: every pool except the default meets it
+## The essences a life eats in the ungated Grotto (G1..G4), as units.
+func _ungated_grotto_units(rooms: Dictionary, creatures: Dictionary) -> Dictionary:
+	var out := {}
+	for id in ["G1", "G2", "G3", "G4"]:
+		for s in (rooms[id] as RoomDef).spawns:
+			var c: CreatureDef = creatures[s["id"]]
+			for e in c.essences:
+				out[e] = int(out.get(e, 0)) + int(c.essences[e])
+	return out
+
+func test_every_shipped_grotto_pool_leaves_two_lineages_eligible_and_its_seeds_matter() -> void:
+	# a seeded start must not lock you out of lineages: the kit's seeds plus what a life eats in the ungated
+	# Grotto, against the whole world's supply, leave at least two eligible, and more than without the seeds
 	var forms := FormLoader.load_all()
 	var rooms := World.load_rooms("res://data/rooms")
 	var creatures := {}
 	for c in DefLoader.load_dir("res://data/creatures"):
 		creatures[c.id] = c
 	var supply := FormOffers.supply(rooms, creatures, forms)
+	var checked := 0
 	for p in RebirthChoice.pools(rooms):
-		if p["id"] == WorldProgress.DEFAULT_POOL:
+		if p["id"] == WorldProgress.DEFAULT_POOL or p["area"] != "grotto":
 			continue
-		var kit: Dictionary = p["kit"]
-		assert_gte(RebirthKit.eligible_lineages(kit.get("affinity", {}), supply, forms), 2, "pool %s" % p["id"])
+		checked += 1
+		var seeds: Dictionary = (p["kit"] as Dictionary).get("affinity", {})
+		var without := _ungated_grotto_units(rooms, creatures)
+		var with_seeds := without.duplicate()
+		for e in seeds:
+			with_seeds[e] = int(with_seeds.get(e, 0)) + int(seeds[e])
+		var n_with := RebirthKit.eligible_lineages(with_seeds, supply, forms)
+		var n_without := RebirthKit.eligible_lineages(without, supply, forms)
+		assert_gte(n_with, 2, "pool %s leaves two lineages eligible" % p["id"])
+		assert_gt(n_with, n_without, "pool %s: the seeds are not decoration" % p["id"])
+	assert_gte(checked, 1, "the Grotto ships a pool")
+
+func test_the_grotto_pool_kit_is_valid_and_quietly_grants_leap_and_wall_cling() -> void:
+	var rooms := World.load_rooms("res://data/rooms")
+	var pool: Dictionary = {}
+	for p in RebirthChoice.pools(rooms):
+		if p["id"] == "G1":
+			pool = p
+	assert_eq(pool["room"], "G1")
+	assert_eq(RebirthKit.validate(pool["kit"]).size(), 0)
+	assert_eq(pool["kit"]["skills"], ["leap", "wall_cling"])
+	assert_eq(pool["kit"]["level"], 3)
 
 func test_a_starting_level_starts_at_full_health_and_mana() -> void:
 	RebirthKit.apply(player, rules, compendium, {"level": 3})

@@ -63,6 +63,9 @@ func _ready() -> void:
 	add_child(run)
 	run.bind(player, world, Compendium.progress, pools)
 	run.restart_requested.connect(_restart)
+	var menu := ReincarnationMenu.new()  # bound after the run: a connected menu means the run waits for the choice
+	add_child(menu)
+	menu.bind(run)
 	begin_life(start)
 	if Game.wants_evolve(OS.get_cmdline_user_args()):
 		player.debug_grant_xp(Progression.stage_total(1))  # reach the first evolution without a grind
