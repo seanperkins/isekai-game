@@ -77,6 +77,52 @@ class AssembleFramesTest(unittest.TestCase):
                         cross = (q[0] - p[0]) * (c[1] - p[1]) - (q[1] - p[1]) * (c[0] - p[0])
                         self.assertGreaterEqual(cross, -1e-9, "pixel %s outside the hull" % (c,))
 
+    @staticmethod
+    def _poly_area(poly):
+        return abs(sum(p[0] * poly[(i + 1) % len(poly)][1] - poly[(i + 1) % len(poly)][0] * p[1]
+                       for i, p in enumerate(poly))) / 2.0
+
+    @staticmethod
+    def _inside(poly, c):
+        inside = False
+        for i in range(len(poly)):
+            (x1, y1), (x2, y2) = poly[i], poly[(i + 1) % len(poly)]
+            if (y1 > c[1]) != (y2 > c[1]) and c[0] < (x2 - x1) * (c[1] - y1) / (y2 - y1) + x1:
+                inside = not inside
+        return inside
+
+    def _l_shape(self):
+        """A tall bar on the left with a long low tail: a convex hull would fill the empty corner."""
+        im = Image.new("RGBA", (30, 20), (0, 0, 0, 0))
+        for y in range(4, 20):
+            for x in range(0, 6):
+                im.putpixel((x, y), BLUE)
+        for y in range(16, 20):
+            for x in range(6, 30):
+                im.putpixel((x, y), BLUE)
+        return im
+
+    def test_the_outline_follows_the_drawn_pixels_not_the_hull(self):
+        im = self._l_shape()
+        opaque = sum(1 for p in im.getdata() if p[3] == 255)
+        outline = a.outline(im)
+        hull = a.convex_hull(a.boundary_corners(im))
+        self.assertLess(self._poly_area(outline), opaque * 1.1, "hugs the pixels")
+        self.assertGreater(self._poly_area(hull), opaque * 1.5, "the hull is the loose thing this replaces")
+
+    def test_the_outline_contains_every_opaque_pixel_and_stays_small(self):
+        im = self._l_shape()
+        outline = a.outline(im)
+        for y in range(im.height):
+            for x in range(im.width):
+                if im.getpixel((x, y))[3] == 255:
+                    self.assertTrue(self._inside(outline, (x + 0.5, y + 0.5)), "pixel %d,%d outside" % (x, y))
+        self.assertLess(len(outline), 20, "simplified")
+
+    def test_a_solid_block_outlines_to_its_four_corners(self):
+        outline = a.outline(Image.new("RGBA", (10, 6), BLUE))
+        self.assertEqual(set(outline), {(0, 0), (10, 0), (10, 6), (0, 6)})
+
     def test_pack_places_every_frame_without_overlap_inside_the_sheet(self):
         frames = {"a": Image.new("RGBA", (200, 30)), "b": Image.new("RGBA", (200, 20)),
                   "c": Image.new("RGBA", (200, 40)), "d": Image.new("RGBA", (10, 10))}
