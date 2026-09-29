@@ -5,3 +5,6 @@ art_source/terrain/
 
 # Raw provider output behind the music and ambience beds (regenerable with tools/audio/gen_bed.py). The built assets in assets/audio are committed.
 art_source/audio/raw/
+
+# Python bytecode from the tools
+__pycache__/
