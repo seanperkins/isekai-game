@@ -24,6 +24,24 @@ func test_a_jostle_under_the_threshold_does_nothing() -> void:
 	assert_false(Controls.mouse_aim)
 	assert_true(Controls.using_joypad)
 
+func test_a_key_press_between_two_moves_resets_the_total() -> void:
+	# a keyboard-only laptop player's stray trackpad brushes must not add up over a session into mouse aim
+	PadInput.mouse_move(Vector2(3, 0))
+	PadInput.key(KEY_J)  # tackle: any key press while the mouse is not aiming
+	PadInput.mouse_move(Vector2(3, 0))
+	assert_false(Controls.mouse_aim)
+
+func test_a_key_press_does_not_drop_a_live_mouse_aim() -> void:
+	PadInput.mouse_move(Vector2(10, 0))
+	PadInput.key(KEY_J)
+	assert_true(Controls.mouse_aim)
+
+func test_the_pad_disconnect_signal_is_wired_to_the_owner_reset() -> void:
+	PadInput.axis(JOY_AXIS_RIGHT_X, 1.0)
+	assert_eq(Controls.aim_device, 0)
+	Input.joy_connection_changed.emit(0, false)
+	assert_eq(Controls.aim_device, -1)
+
 func test_a_pad_input_between_two_moves_resets_the_total() -> void:
 	PadInput.mouse_move(Vector2(3, 0))
 	PadInput.axis(JOY_AXIS_LEFT_X, 0.8)

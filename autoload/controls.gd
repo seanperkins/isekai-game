@@ -116,6 +116,8 @@ func _input(event: InputEvent) -> void:
 		_use_pad()
 	elif event is InputEventKey and event.pressed:
 		using_joypad = false
+		if not mouse_aim:
+			_mouse_travel = 0.0  # stray trackpad brushes between key presses must not add up over a session into mouse aim
 		if not get_tree().paused and (event.is_action_pressed("aim_up") or event.is_action_pressed("aim_down")):
 			mouse_aim = false  # the keyboard is aiming now (is_action_pressed ignores key repeats); paused, W/S navigate a menu
 			_mouse_travel = 0.0

@@ -252,6 +252,18 @@ func test_a_mouse_click_starts_a_channel_and_its_release_ends_it() -> void:
 	await wait_physics_frames(3)
 	assert_null(player._channel)
 
+func test_a_click_after_an_s_press_still_fires_at_the_cursor() -> void:
+	# S (crouch, reel) hands the aim to the keys; the click must take it back before the physics step that casts
+	_hydraulic()
+	player.pointer_override = Vector2(100, 0)
+	PadInput.mouse_move(Vector2(10, 0))
+	PadInput.key(KEY_S)
+	assert_false(Controls.mouse_aim)
+	PadInput.mouse_button(MOUSE_BUTTON_LEFT)
+	await wait_physics_frames(3)
+	assert_true(player.last_cast["aim"].is_equal_approx(Vector2(1, 0)), "the click aimed at the cursor")
+	PadInput.mouse_button(MOUSE_BUTTON_LEFT, false)
+
 func _slash() -> Sprite2D:
 	return get_tree().get_nodes_in_group("vfx").filter(func(n): return n is Sprite2D and n.texture == VfxArt.water_slash())[0]
 
