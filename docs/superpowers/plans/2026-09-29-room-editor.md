@@ -122,10 +122,10 @@ func test_the_public_edge_helpers() -> void:
 func test_the_shipped_world_is_one_connected_graph() -> void:
 	var rooms := World.load_rooms("res://data/rooms")
 	assert_eq(WorldValidator.reachable(rooms).size(), rooms.size())
-	assert_eq(WorldValidator.reachable(rooms, true).size(), rooms.size() - 2 - 0 if false else WorldValidator.reachable(rooms, true).size())
+	assert_eq("\n".join(WorldValidator.validate(rooms)), "")
 ```
 
-Delete the last, meaningless line of `test_the_shipped_world_is_one_connected_graph` before running: the test is the first assertion plus `assert_eq("\n".join(WorldValidator.validate(rooms)), "")`. (`tests/test_rooms.gd`'s `test_the_main_route_needs_no_skills` keeps the ungated pin.)
+(`tests/test_rooms.gd`'s `test_the_main_route_needs_no_skills` keeps the ungated pin.)
 
 In `tests/test_rooms.gd` replace `_reach(skip_gated)` with the validator: delete the function and change the two callers to `WorldValidator.reachable(rooms, true)` and `WorldValidator.reachable(rooms)`. In `tests/test_grotto_rooms.gd` change `_reach_ungated()` to `return WorldValidator.reachable(rooms, true)`.
 
@@ -627,11 +627,9 @@ func test_floor_spot_drops_to_the_first_rock_below_and_refuses_rock_and_no_floor
 	assert_eq(model.floor_spot("C1", Vector2(120, 100)), Vector2(120, floor_y - BodyConfig.BOTTOM), "lands on the floor")
 	assert_null(model.floor_spot("C1", Vector2(250, 255)), "inside rock")
 	assert_null(model.floor_spot("C1", Vector2(-10, 100)), "outside the room")
-	var gap := Rect2(0, 0, 1, 1)
-	assert_null(model.floor_spot("C1", Vector2(r.pixel_size().x - 4, 100)) if false else null)
 ```
 
-Delete the last two lines of `test_floor_spot_drops_to_the_first_rock_below_and_refuses_rock_and_no_floor` (`var gap` and the dummy assert) before running: the no-floor case is covered by a room with an exit in its floor, added in Task B4 (`test_a_new_room_on_a_bottom_edge...`).
+The no-floor case is covered in Task B4 (`test_a_room_on_a_bottom_edge_is_connected_but_the_hole_has_no_floor_below`).
 
 - [ ] **Step 2: Run to verify it fails.** Expected: FAIL (Parse Error: `add_solid`, `drag_rect`, ... not found).
 
@@ -922,7 +920,7 @@ func test_the_span_rules_are_the_validators_own() -> void:
 	assert_ne(model.add_exit("C1", "right", h - 120.0, h - 36.0), "", "height - 36 is into the floor")
 	assert_ne(model.add_exit("C1", "right", 200.0, 230.0), "", "shorter than 36")
 	assert_ne(model.add_exit("C1", "right", 4.0, 100.0), "", "starts inside the corner")
-	assert_ne(model.add_exit("C1", "top", 200.0, 260.0) if model.rooms["C1"].cell.y == 0 else "no room above", "", "no room across the edge")
+	assert_ne(model.add_exit("C2", "bottom", 60.0, 120.0), "", "no room across that edge covers the span")
 
 func test_an_overlapping_span_is_refused_on_either_side() -> void:
 	assert_ne(model.add_exit("C1", "right", 240.0, 300.0), "", "overlaps C1's existing exit to C2")
@@ -997,7 +995,7 @@ func test_partner_of_uses_the_validators_rule() -> void:
 	assert_true(model.partner_of("C1", idx).is_empty(), "a span that no longer matches is not a partner")
 ```
 
-The mixed-case test lines `assert_ne(model.add_exit("C1", "top", ...) if ... else ..., "", ...)` in `test_the_span_rules_are_the_validators_own` are replaced by one line `assert_ne(model.add_exit("C2", "bottom", 60.0, 120.0), "", "no room across that edge covers the span")` **only if C2 has no room beneath it**; check the shipped map with `WorldValidator.touches` while writing the test and pick an edge of a shipped room with no neighbour. `test_a_span_the_neighbour_does_not_cover_is_refused`: if C5's shipped neighbours do not make the case (a span is refused only when it lies outside the neighbour's range along the shared edge), derive the case from the shipped layout the same way the spec's C5/C4 note does; the assertion that matters is that no refused add leaves the world with a validator error, and that an accepted span past the neighbour's range never happens.
+While writing `test_the_span_rules_are_the_validators_own`, confirm with `WorldValidator.touches` that C2 has no room beneath it (if it does, pick an edge of a shipped room that has none). In `test_a_span_the_neighbour_does_not_cover_is_refused`, if C5's shipped neighbours do not produce a refused case (a span is refused only when it lies outside the neighbour's range along the shared edge), derive the case from the shipped layout the way the spec's C5/C4 note does; the assertions that matter are that a span past the neighbour's range is refused and that no refused add leaves a validator error.
 
 - [ ] **Step 2: Run to verify it fails.** Expected: FAIL (`validate`, `add_exit`, `partner_of` not found). Add the wrapper `func validate() -> PackedStringArray: return WorldValidator.validate(rooms, creature_ids)` to the model in Step 3.
 
