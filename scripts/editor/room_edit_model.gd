@@ -301,12 +301,138 @@ func floor_spot(room_id: String, p: Vector2) -> Variant:
 		return null
 	return Vector2(p.x, best - BodyConfig.BOTTOM)
 
-# The exit halves of begin_move / move_to / delete are written with the exits.
-func _begin_move_exit(_sel: Dictionary) -> bool:
+func validate() -> PackedStringArray:
+	return WorldValidator.validate(rooms, creature_ids)
+
+# --- exits ---
+
+static func _exit(edge: String, from: float, to: float, room: String, opts: Dictionary) -> Dictionary:
+	var e := {"edge": edge, "from": from, "to": to, "room": room}
+	if opts.has("gate"):
+		e["gate"] = opts["gate"]
+	if opts.has("shortcut"):
+		e["shortcut"] = opts["shortcut"]
+	return e
+
+## Does an exit on `edge` of `r` covering [from, to] (r-local) overlap another exit on that edge? `skip` is an index to ignore.
+static func _overlaps(r: RoomDef, edge: String, from: float, to: float, skip := -1) -> bool:
+	for i in r.exits.size():
+		var e: Dictionary = r.exits[i]
+		if i != skip and e["edge"] == edge and from < float(e["to"]) and float(e["from"]) < to:
+			return true
 	return false
 
-func _move_exit_to(_d: Vector2) -> void:
-	pass
+static func _within(r: RoomDef, edge: String, from: float, to: float) -> bool:
+	var limits := WorldValidator.edge_range(r, edge)
+	return from >= limits.x and to <= limits.y and from < to
+
+## The room across `edge` of `a` whose facing edge line coincides with a's and whose allowed range holds the world span.
+func _across(a: RoomDef, edge: String, w0: float, w1: float) -> RoomDef:
+	var opp: String = WorldValidator.OPPOSITE[edge]
+	for id in rooms:
+		var b: RoomDef = rooms[id]
+		if b == a or not WorldValidator.touches(a.world_rect(), b.world_rect(), edge):
+			continue
+		var o := WorldValidator.edge_origin(b, opp)
+		var limits := WorldValidator.edge_range(b, opp)
+		if w0 >= o + limits.x and w1 <= o + limits.y:
+			return b
+	return null
+
+## Adds an exit on `edge` of room `a_id` over [from, to] (a-local pixels along the edge) and its partner in the room across,
+## in one undo step. `opts` may carry "gate" and "shortcut", copied to both halves. Returns "" or the reason it was refused.
+func add_exit(a_id: String, edge: String, from: float, to: float, opts := {}) -> String:
+	if not WorldValidator.OPPOSITE.has(edge):
+		return "not an edge"
+	var a: RoomDef = rooms[a_id]
+	var lo := snap(minf(from, to))
+	var hi := snap(maxf(from, to))
+	if hi - lo < MIN_EXIT:
+		return "too short: an exit is at least %d px" % int(MIN_EXIT)
+	if not _within(a, edge, lo, hi):
+		return "outside what this edge allows"
+	if _overlaps(a, edge, lo, hi):
+		return "overlaps another exit"
+	var oa := WorldValidator.edge_origin(a, edge)
+	var b := _across(a, edge, oa + lo, oa + hi)
+	if b == null:
+		return "no room across this edge covers that span"
+	var opp: String = WorldValidator.OPPOSITE[edge]
+	var ob := WorldValidator.edge_origin(b, opp)
+	if _overlaps(b, opp, oa + lo - ob, oa + hi - ob):
+		return "overlaps an exit in %s" % b.id
+	var before := _snap([a_id, b.id])
+	a.exits.append(_exit(edge, lo, hi, b.id, opts))
+	b.exits.append(_exit(opp, oa + lo - ob, oa + hi - ob, a_id, opts))
+	_push(before)
+	selection = _sel(a_id, "exit", a.exits.size() - 1)
+	return ""
+
+## The exit in the neighbour that answers exit `index` of `room_id`, by the validator's rule: opposite edge, pointing back,
+## the same world span. {} when there is none.
+func partner_of(room_id: String, index: int) -> Dictionary:
+	var a: RoomDef = rooms[room_id]
+	var e: Dictionary = a.exits[index]
+	var b: RoomDef = rooms.get(e.get("room", ""))
+	if b == null or not WorldValidator.OPPOSITE.has(e.get("edge", "")):
+		return {}
+	var span := WorldValidator.world_span(a, e)
+	for i in b.exits.size():
+		var f: Dictionary = b.exits[i]
+		if f.get("edge", "") == WorldValidator.OPPOSITE[e["edge"]] and f.get("room", "") == room_id \
+				and WorldValidator.world_span(b, f).is_equal_approx(span):
+			return {"room": b.id, "index": i}
+	return {}
+
+func _begin_move_exit(sel: Dictionary) -> bool:
+	var r: RoomDef = rooms[sel["room"]]
+	var i: int = sel["index"]
+	if sel["kind"] != "exit" or i >= r.exits.size():
+		return false
+	var p := partner_of(sel["room"], i)
+	var ids: Array = [sel["room"]]
+	if not p.is_empty():
+		ids.append(p["room"])
+	_drag = {"sel": sel, "before": _snap(ids), "orig": r.exits[i].duplicate(), "partner": p}
+	selection = sel
+	return true
+
+func _move_exit_to(d: Vector2) -> void:
+	var sel: Dictionary = _drag["sel"]
+	var a: RoomDef = rooms[sel["room"]]
+	var orig: Dictionary = _drag["orig"]
+	var edge: String = orig["edge"]
+	var axis := d.y if edge == "left" or edge == "right" else d.x
+	var lo := float(orig["from"]) + axis
+	var hi := float(orig["to"]) + axis
+	var i: int = sel["index"]
+	if not _within(a, edge, lo, hi) or _overlaps(a, edge, lo, hi, i):
+		return
+	var p: Dictionary = _drag["partner"]
+	if not p.is_empty():
+		var b: RoomDef = rooms[p["room"]]
+		var opp: String = WorldValidator.OPPOSITE[edge]
+		var shift := WorldValidator.edge_origin(a, edge) - WorldValidator.edge_origin(b, opp)
+		if not _within(b, opp, lo + shift, hi + shift) or _overlaps(b, opp, lo + shift, hi + shift, p["index"]):
+			return
+		b.exits[p["index"]]["from"] = lo + shift
+		b.exits[p["index"]]["to"] = hi + shift
+	a.exits[i]["from"] = lo
+	a.exits[i]["to"] = hi
 
 func _delete_exit() -> String:
-	return "nothing selected"
+	var r: RoomDef = rooms[selection["room"]]
+	var i: int = selection["index"]
+	if i >= r.exits.size():
+		return "nothing selected"
+	var p := partner_of(selection["room"], i)
+	var ids: Array = [selection["room"]]
+	if not p.is_empty():
+		ids.append(p["room"])
+	var before := _snap(ids)
+	if not p.is_empty():
+		(rooms[p["room"]] as RoomDef).exits.remove_at(p["index"])
+	r.exits.remove_at(i)
+	_push(before)
+	selection = {}
+	return ""
