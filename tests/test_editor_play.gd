@@ -103,3 +103,28 @@ func test_f5_is_ignored_on_key_repeat_and_while_the_death_card_shows() -> void:
 	get_viewport().push_input(_key(KEY_F5))
 	await wait_process_frames(3)
 	assert_false(get_tree().current_scene is RoomEditor, "F5 does nothing under the death card")
+
+# --- the sandbox check ---
+
+func after_all() -> void:
+	RoomEditor.sandbox_root = ""
+
+func test_in_sandbox_is_a_directory_prefix_test() -> void:
+	var root := "/x/.tmp/editor-home"
+	assert_true(RoomEditor.in_sandbox("/x/.tmp/editor-home/Library/Application Support/Godot/app_userdata/Slime", root))
+	assert_true(RoomEditor.in_sandbox("/x/.tmp/editor-home", root))
+	assert_true(RoomEditor.in_sandbox("/x/.tmp/editor-home/", root))
+	assert_false(RoomEditor.in_sandbox("/x/.tmp/editor-home2/Library", root), "a sibling that shares the prefix")
+	assert_false(RoomEditor.in_sandbox("/Users/sean/Library/Application Support/Godot/app_userdata/Slime", root))
+	assert_false(RoomEditor.in_sandbox("/x/.tmp/editor-home/Library", ""), "an empty root is never a sandbox")
+
+func test_the_suites_own_home_is_not_the_editor_sandbox() -> void:
+	RoomEditor.sandbox_root = ""
+	assert_false(RoomEditor.sandbox_ok(), "the suite runs with HOME=.tmp/gdhome: Play must refuse there")
+
+func test_an_injected_root_is_trusted_for_the_editors_own_tests() -> void:
+	RoomEditor.sandbox_root = OS.get_user_data_dir()
+	assert_true(RoomEditor.sandbox_ok())
+	RoomEditor.sandbox_root = "/nowhere/.tmp/editor-home"
+	assert_false(RoomEditor.sandbox_ok())
+	RoomEditor.sandbox_root = ""
