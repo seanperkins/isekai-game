@@ -19,6 +19,13 @@ static func hit(power: int, damage_type: String, defense: int, resist_pct: int, 
 	var through := (100 - armor) * (100 - clampi(resist_pct, 0, RESIST_CAP))
 	return maxi(1, floori(float(power * through) / 10000.0) - flat_off)
 
+## Each point of ATK above 1 adds this percent to a direct-damage skill's table value.
+const SKILL_ATK_PCT := 25
+
+## A direct-damage skill's table value amplified by the caster's ATK: ATK 1 is the table exactly.
+static func skill_power(value: int, atk: int) -> int:
+	return maxi(1, floori(float(value * (100 + SKILL_ATK_PCT * (maxi(atk, 1) - 1))) / 100.0))
+
 ## Thousandths of an HP: what a poison tick is counted in, so a resisted 1-point tick is a fraction to carry, not a zero.
 const MILLI := 1000
 

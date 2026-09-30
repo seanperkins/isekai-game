@@ -129,3 +129,13 @@ func test_a_lizard_takes_poison_whole_and_physical_through_its_armor() -> void:
 	assert_eq(lizard.health.hp, 43, "4 vs DEF 3 is 4 x 100 / (300 + 320) -> 52% off -> 2")
 	lizard.receive_hit(4, "physical", Vector2.INF, "", true)
 	assert_eq(lizard.health.hp, 39, "a weak-point hit ignores DEF")
+
+func test_skill_power_is_the_table_at_atk_1_and_grows_25_percent_per_point() -> void:
+	for v in [2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16]:  # Poison Breath's values, Water Blade's 3, Venom Bolt's 9
+		assert_eq(Damage.skill_power(v, 1), v)
+	assert_eq(Damage.skill_power(16, 8), 44)
+	assert_eq(Damage.skill_power(16, 3), 24)
+	assert_eq(Damage.skill_power(2, 3), 3)
+	assert_eq(Damage.skill_power(9, 3), 13)
+	assert_eq(Damage.skill_power(1, 5), 2, "why the clouds do not use it: the value 1 is all rounding cliff")
+	assert_eq(Damage.skill_power(3, 0), 3, "ATK below 1 is treated as 1")

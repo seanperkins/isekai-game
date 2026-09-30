@@ -85,6 +85,29 @@ func test_detail_card_for_an_active() -> void:
 	assert_almost_eq(card["progress"], 0.5, 0.001)
 	assert_eq(card["slot"], 0)
 
+func test_the_damage_line_follows_atk_and_no_other_line_does() -> void:
+	var by_id := {}
+	for d in skills:
+		by_id[d.id] = d
+	assert_eq(SkillScreenModel.effect_lines(by_id["poison_breath"], 1), ["Damage 2"], "two arguments: ATK 1")
+	assert_eq(SkillScreenModel.effect_lines(by_id["poison_breath"], 1, 5), ["Damage 4"], "2 x 200 / 100")
+	assert_eq(SkillScreenModel.effect_lines(by_id["spore_cloud"], 3, 5), SkillScreenModel.effect_lines(by_id["spore_cloud"], 3))
+	assert_eq(SkillScreenModel.effect_lines(by_id["hydraulic_propulsion"], 2, 5), SkillScreenModel.effect_lines(by_id["hydraulic_propulsion"], 2))
+	assert_eq(SkillScreenModel.effect_lines(by_id["poison_resistance"], 1, 5), ["Poison damage −20%"])
+	var card := SkillScreenModel.detail(rules, by_id["poison_breath"], player.skillset.slots, 5)
+	assert_eq(card["lines"], ["Damage 4"])
+
+func test_the_open_screen_shows_the_players_atk_in_the_damage_line() -> void:
+	_emit("absorbed", {"essence": "poison"}, 4)
+	player.stats.set_modifiers("t", [{"stat": "atk", "op": "add", "value": 4}])
+	_screen()
+	screen.open()
+	var guard := 0
+	while screen.selected_id() != "poison_breath" and guard < 20:
+		screen.move(1)
+		guard += 1
+	assert_string_contains("\n".join(screen.detail_texts()), "Damage 4")
+
 func test_detail_lines_for_passives() -> void:
 	var by_id := {}
 	for d in skills:

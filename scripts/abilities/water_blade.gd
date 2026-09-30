@@ -7,7 +7,7 @@ func _perform() -> void:
 	var targets := targets_in_front(RANGE, 20.0)
 	var end := actor.global_position + aim_dir() * RANGE
 	if not targets.is_empty():
-		targets[0].receive_hit(value(), "physical", actor.global_position, "blade")
+		targets[0].receive_hit(Damage.skill_power(value(), actor_atk()), "physical", actor.global_position, "blade")
 		end = targets[0].global_position
 	var dir := aim_dir()
 	var crescent := Sprite2D.new()

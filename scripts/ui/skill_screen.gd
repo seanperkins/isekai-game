@@ -479,7 +479,7 @@ func _build_detail() -> void:
 			action = "Press again to choose" if _armed == id else "[%s] Evolve" % ("A" if Controls.using_joypad else "Enter")
 		_label(_detail, action, Vector2(DETAIL_X, 182), Vector2(190, 12), FONT_MAIN, Color.WHITE if can else COL_DIM)
 		return
-	var card := SkillScreenModel.detail(_rules, d, _player.skillset.slots)
+	var card := SkillScreenModel.detail(_rules, d, _player.skillset.slots, int(_player.stats.get_stat("atk")))
 	_icon(_detail, "icon_" + id, Vector2(DETAIL_X, 50), 40)
 	_label(_detail, card["name"], Vector2(DETAIL_X + 46, 50), Vector2(146, 16), FONT_BIG, Color.WHITE)
 	_label(_detail, "Lv %d / %d" % [card["level"], card["max_level"]], Vector2(DETAIL_X + 46, 68), Vector2(80, 12), FONT_MAIN, COL_TITLE)
