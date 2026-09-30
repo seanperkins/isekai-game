@@ -47,14 +47,23 @@ func show_room(model: RoomEditModel, room_id: String) -> void:
 	_model = model
 	_room_id = room_id
 	if _room != null:
+		remove_child(_room)  # out of the tree at once: the new room may reuse its name, and its gates leave their groups
 		_room.queue_free()
 	var def: RoomDef = model.rooms[room_id]
 	_room = RoomBuilder.build_room(def, {"progress": null})  # no progress: closed shortcuts draw as gates
 	_room.position = Vector2.ZERO
+	_ignore_mouse(_room)
 	add_child(_room)
 	_tint.color = TerrainArt.ambient(def.area, Game.AMBIENT)
 	fit()
 	_redraw_overlay()
+
+## The built room is decoration here: none of its Controls (tiles, backdrops) may swallow a click meant for the tools.
+static func _ignore_mouse(node: Node) -> void:
+	if node is Control:
+		(node as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for c in node.get_children():
+		_ignore_mouse(c)
 
 func room_node() -> Node2D:
 	return _room

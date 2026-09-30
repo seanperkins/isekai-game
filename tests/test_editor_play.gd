@@ -128,3 +128,39 @@ func test_an_injected_root_is_trusted_for_the_editors_own_tests() -> void:
 	RoomEditor.sandbox_root = "/nowhere/.tmp/editor-home"
 	assert_false(RoomEditor.sandbox_ok())
 	RoomEditor.sandbox_root = ""
+
+# --- the whole round trip ---
+
+func test_the_editor_plays_and_returns_and_save_after_the_round_trip_writes_the_edit() -> void:
+	Game.editor_resume = null
+	var ed: RoomEditor = load("res://scenes/room_editor.tscn").instantiate()
+	add_child_autofree(ed)
+	await wait_process_frames(3)
+	var kept := ed.model
+	ed.open_room("C2")
+	ed.model.add_solid("C2", Vector2(400, 200), Vector2(480, 216))
+	RoomEditor.sandbox_root = OS.get_user_data_dir()
+	assert_eq(ed.play_error(Vector2(200, 100)), "")
+	ed.play(Vector2(200, 100))
+	ed.queue_free()
+	await wait_process_frames(3)
+	await wait_physics_frames(3)
+	var g := get_tree().current_scene as Game
+	assert_not_null(g, "the real game")
+	assert_eq(g.world.current_id, "C2")
+	assert_true((g.world.rooms["C2"] as RoomDef).solids.has(Rect2(400, 200, 80, 16)), "the unsaved edit is in the played room")
+	g.return_to_editor()
+	await wait_seconds(0.5)
+	var back := get_tree().current_scene as RoomEditor
+	assert_not_null(back)
+	assert_same(back.model, kept)
+	assert_eq(back.room_id, "C2")
+	assert_true(back.model.dirty.has("C2"), "the dirty set survived")
+	back.save_dir = "res://.tmp/editor_roundtrip_save"
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(back.save_dir))
+	back.save()
+	var reloaded := ResourceLoader.load("%s/C2.tres" % back.save_dir, "", ResourceLoader.CACHE_MODE_IGNORE) as RoomDef
+	assert_true(reloaded.solids.has(Rect2(400, 200, 80, 16)))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path("%s/C2.tres" % back.save_dir))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(back.save_dir))
+	RoomEditor.sandbox_root = ""

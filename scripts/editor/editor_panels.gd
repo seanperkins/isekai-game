@@ -117,7 +117,7 @@ func _build_status() -> void:
 	back.color = Color(0.08, 0.08, 0.12, 0.92)
 	back.position = Vector2(0, 344)
 	back.size = Vector2(640, 16)
-	back.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	back.mouse_filter = Control.MOUSE_FILTER_STOP
 	_root.add_child(back)
 	_status.position = Vector2(2, 345)
 	_status.size = Vector2(636, 14)

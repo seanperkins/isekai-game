@@ -21,6 +21,16 @@ func test_the_view_builds_the_room_the_way_the_game_does() -> void:
 	assert_eq(built.position, Vector2.ZERO, "the room sits at the origin, not its world position")
 	assert_eq(get_tree().get_nodes_in_group("actors").filter(func(n): return n is Enemy).size(), 0, "no live enemies")
 
+func test_no_control_in_the_built_room_swallows_the_mouse() -> void:
+	var stoppers := []
+	var stack: Array = [view.room_node()]
+	while not stack.is_empty():
+		var n: Node = stack.pop_back()
+		if n is Control and (n as Control).mouse_filter != Control.MOUSE_FILTER_IGNORE:
+			stoppers.append(n.get_path())
+		stack.append_array(n.get_children())
+	assert_eq(stoppers, [], "clicks must reach the tools")
+
 func test_the_gates_of_closed_shortcuts_draw_closed() -> void:
 	var shortcuts: Array = model.rooms["C1"].exits.filter(func(e): return e.has("shortcut"))
 	assert_gt(shortcuts.size(), 0)
@@ -284,3 +294,147 @@ func test_the_status_bar_shows_the_sandbox_directory_and_the_message() -> void:
 	p.set_status("saved 2 rooms")
 	assert_string_contains(p.status_text(), "saved 2 rooms")
 	assert_string_contains(p.status_text(), OS.get_user_data_dir())
+
+# --- the assembled scene ---
+
+## GUT's own on-screen runner (a Control that stops the mouse) covers the whole 640x360 viewport; events pushed through the
+## viewport would land on it. The editor tests hide it and put it back.
+func _gut_ui(visible: bool) -> void:
+	var layer := get_tree().root.get_node_or_null("GutRunner/GutLayer")
+	if layer != null:
+		layer.visible = visible
+
+func after_each() -> void:
+	_gut_ui(true)
+	Game.play_request = {}
+	Game.editor_resume = null
+	RoomEditor.sandbox_root = ""
+
+func _editor() -> RoomEditor:
+	_gut_ui(false)
+	Game.editor_resume = null
+	var ed: RoomEditor = load("res://scenes/room_editor.tscn").instantiate()
+	add_child_autofree(ed)
+	await wait_process_frames(3)
+	return ed
+
+func _button_at(screen: Vector2, pressed: bool) -> InputEventMouseButton:
+	var e := InputEventMouseButton.new()
+	e.button_index = MOUSE_BUTTON_LEFT
+	e.pressed = pressed
+	e.position = screen
+	return e
+
+func _motion_at(screen: Vector2) -> InputEventMouseMotion:
+	var e := InputEventMouseMotion.new()
+	e.position = screen
+	return e
+
+func after_all() -> void:
+	RoomEditor.sandbox_root = ""
+
+func test_the_scene_boots_on_c1_with_a_view_and_panels_and_draws_a_solid_from_events() -> void:
+	var ed := await _editor()
+	assert_eq(ed.room_id, "C1")
+	assert_not_null(ed.view)
+	assert_not_null(ed.panels)
+	ed.panels.press("Solid")
+	var a := ed.view.to_screen(Vector2(100, 100))
+	var b := ed.view.to_screen(Vector2(200, 116))
+	for ev in [_button_at(a, true), _motion_at(b), _button_at(b, false)]:
+		get_viewport().push_input(ev, true)  # true: the positions are already viewport (640x360) coordinates
+	await wait_process_frames(2)
+	assert_true(ed.model.rooms["C1"].solids.has(Rect2(100, 100, 100, 16)), "the drag reached the model through the viewport")
+	assert_eq(ed.view.room_node().name, "C1")
+	assert_true(ed.panels.room_labels().has("C1 *"), "the dirty mark shows")
+
+func test_a_toolbar_click_does_not_reach_the_room() -> void:
+	var ed := await _editor()
+	ed.panels.press("Solid")
+	for ev in [_button_at(Vector2(300, 10), true), _motion_at(Vector2(320, 12)), _button_at(Vector2(320, 12), false)]:
+		get_viewport().push_input(ev, true)
+	await wait_process_frames(2)
+	assert_eq(ed.model.undo_depth(), 0, "a click on the bar is not a drag in the room")
+
+func test_the_keyboard_shortcuts_undo_and_redo_and_typing_an_id_does_not_undo() -> void:
+	var ed := await _editor()
+	ed.model.add_solid("C1", Vector2(100, 100), Vector2(200, 116))
+	var z := InputEventKey.new()
+	z.keycode = KEY_Z
+	z.pressed = true
+	z.ctrl_pressed = true
+	get_viewport().push_input(z)
+	await wait_process_frames(1)
+	assert_eq(ed.model.undo_depth(), 0, "ctrl+z undoes")
+	var redo := InputEventKey.new()
+	redo.keycode = KEY_Z
+	redo.pressed = true
+	redo.ctrl_pressed = true
+	redo.shift_pressed = true
+	get_viewport().push_input(redo)
+	await wait_process_frames(1)
+	assert_eq(ed.model.undo_depth(), 1, "ctrl+shift+z redoes")
+	ed.panels.focus_new_room_id()
+	await wait_process_frames(1)
+	var typed := InputEventKey.new()
+	typed.keycode = KEY_Z
+	typed.pressed = true
+	typed.ctrl_pressed = true
+	get_viewport().push_input(typed)
+	await wait_process_frames(1)
+	assert_eq(ed.model.undo_depth(), 1, "typing in the id field does not undo")
+
+func test_play_refuses_in_rock_outside_the_sandbox_and_with_an_exit_to_a_missing_room() -> void:
+	var ed := await _editor()
+	RoomEditor.sandbox_root = OS.get_user_data_dir()
+	var solid: Rect2 = ed.model.rooms["C1"].solids[0]
+	assert_string_contains(ed.play_error(solid.get_center()), "click open floor")
+	assert_eq(ed.play_error(Vector2(300, 100)), "")
+	RoomEditor.sandbox_root = "/nowhere/.tmp/editor-home"
+	assert_string_contains(ed.play_error(Vector2(300, 100)), "tools/edit_rooms.sh")
+	RoomEditor.sandbox_root = OS.get_user_data_dir()
+	ed.model.rooms["C1"].exits.append({"edge": "top", "from": 100.0, "to": 200.0, "room": "Z"})
+	assert_string_contains(ed.play_error(Vector2(300, 100)), "unknown room")
+
+func test_a_refused_play_says_why_in_the_status_bar_and_does_not_leave_the_scene() -> void:
+	var ed := await _editor()
+	RoomEditor.sandbox_root = "/nowhere/.tmp/editor-home"
+	ed.play(Vector2(300, 100))
+	assert_string_contains(ed.panels.status_text(), "tools/edit_rooms.sh")
+	assert_eq(Game.play_request, {})
+	assert_null(Game.editor_resume)
+
+func test_save_writes_the_edited_rooms_to_the_directory_it_is_given() -> void:
+	var ed := await _editor()
+	ed.save_dir = "res://.tmp/editor_scene_save"
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(ed.save_dir))
+	ed.model.add_solid("C1", Vector2(100, 100), Vector2(200, 116))
+	ed.save()
+	assert_true(FileAccess.file_exists("%s/C1.tres" % ed.save_dir))
+	assert_string_contains(ed.panels.status_text(), "saved 1 room")
+	assert_false(ed.panels.room_labels().has("C1 *"), "saved rooms lose their dirty mark")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path("%s/C1.tres" % ed.save_dir))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(ed.save_dir))
+
+func test_choosing_a_room_switches_the_view_and_a_new_room_opens() -> void:
+	var ed := await _editor()
+	ed.open_room("C2")
+	assert_eq(ed.view.room_id(), "C2")
+	ed.open_room("C6")
+	ed.new_room("left", "Fresh", "cave", Vector2i(1, 1))
+	assert_eq(ed.room_id, "Fresh")
+	assert_eq(ed.view.room_id(), "Fresh")
+	assert_true(ed.model.rooms.has("Fresh"))
+	assert_true(ed.panels.room_labels().has("Fresh *"))
+	ed.new_room("left", "c6", "cave", Vector2i(1, 1))
+	assert_ne(ed.panels.status_text().find("already"), -1, "a bad id is explained")
+
+func test_undo_from_the_button_rebuilds_the_room() -> void:
+	var ed := await _editor()
+	ed.model.add_solid("C1", Vector2(100, 100), Vector2(200, 116))
+	ed.view.refresh()
+	var before := ed.view.room_node()
+	ed.panels.press("Undo")
+	await wait_process_frames(2)
+	assert_eq(ed.model.undo_depth(), 0)
+	assert_ne(ed.view.room_node(), before)
