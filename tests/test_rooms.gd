@@ -59,27 +59,14 @@ func test_every_ledge_is_reachable_from_its_floor_by_base_jumps() -> void:
 		for q in ledges:
 			assert_true(reached.has(q), "%s ledge at %s" % [r.id, q])
 
-func _reach(skip_gated: bool) -> Array:
-	var seen := ["C1"]
-	var frontier := ["C1"]
-	while not frontier.is_empty():
-		var id: String = frontier.pop_back()
-		for e in rooms[id].exits:
-			if skip_gated and (e.has("gate") or e.has("shortcut")):
-				continue
-			if not seen.has(e["room"]):
-				seen.append(e["room"])
-				frontier.append(e["room"])
-	return seen
-
 func test_the_main_route_needs_no_skills() -> void:
-	var open := _reach(true)
+	var open := WorldValidator.reachable(rooms, true)
 	for id in ["C1", "C2", "C4", "C5", "G1", "G2", "G3", "G4"]:
 		assert_true(open.has(id), id)
 	assert_false(open.has("C3"), "C3 is behind the wall-cling chimney")
 
 func test_every_room_is_reachable_through_its_gates() -> void:
-	assert_eq(_reach(false).size(), rooms.size())
+	assert_eq(WorldValidator.reachable(rooms).size(), rooms.size())
 
 func test_the_nook_holds_a_tablet_and_the_shortcut_switch() -> void:
 	var kinds: Array = rooms["C6"].features.map(func(f: Dictionary) -> String: return f["kind"])

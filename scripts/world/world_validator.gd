@@ -30,13 +30,51 @@ static func validate(rooms: Dictionary, creature_ids: Array = []) -> PackedStrin
 		errors.append_array(_check_hard_ledges(a))
 		errors.append_array(_check_content(a, creature_ids))
 	errors.append_array(_check_rebirth_pools(rooms))
+	if starts == 1:
+		var reached := reachable(rooms)
+		for id in ids:
+			if not reached.has(id):
+				errors.append("%s: no way in from the start room" % id)
 	return errors
 
 ## An exit's span in world pixels: x = from, y = to.
 static func world_span(r: RoomDef, e: Dictionary) -> Vector2:
-	var origin := r.world_rect().position
-	var base := origin.y if _vertical_edge(e.get("edge", "")) else origin.x
+	var base := edge_origin(r, e.get("edge", ""))
 	return Vector2(base + float(e["from"]), base + float(e["to"]))
+
+## The rooms the start room reaches by following exits, start first. Exits to unknown rooms are skipped (validate reports
+## them). `skip_gated` leaves out exits that carry a `gate` or a `shortcut`. Empty unless exactly one room is the start.
+static func reachable(rooms: Dictionary, skip_gated := false) -> Array:
+	var start := ""
+	var starts := 0
+	for id in rooms:
+		if (rooms[id] as RoomDef).is_start():
+			start = id
+			starts += 1
+	if starts != 1:
+		return []
+	var seen := [start]
+	var frontier := [start]
+	while not frontier.is_empty():
+		var id: String = frontier.pop_back()
+		for e in (rooms[id] as RoomDef).exits:
+			if skip_gated and (e.has("gate") or e.has("shortcut")):
+				continue
+			var to: String = e.get("room", "")
+			if rooms.has(to) and not seen.has(to):
+				seen.append(to)
+				frontier.append(to)
+	return seen
+
+## The span an exit on `edge` may cover, in the room's own pixels: clear of the corners and, on a side edge, of the floor.
+static func edge_range(r: RoomDef, edge: String) -> Vector2:
+	var size := r.pixel_size()
+	return Vector2(RoomDef.WALL, size.y - RoomDef.FLOOR if _vertical_edge(edge) else size.x - RoomDef.WALL)
+
+## The room's world position along the axis an exit on `edge` runs (y for a left or right edge, x for a top or bottom one).
+static func edge_origin(r: RoomDef, edge: String) -> float:
+	var origin := r.world_rect().position
+	return origin.y if _vertical_edge(edge) else origin.x
 
 static func _vertical_edge(edge: String) -> bool:
 	return edge == "left" or edge == "right"
@@ -123,9 +161,9 @@ static func _check_exit(a: RoomDef, e: Dictionary, rooms: Dictionary) -> PackedS
 	if not OPPOSITE.has(edge):
 		out.append("%s: bad exit edge '%s'" % [a.id, edge])
 		return out
-	var size := a.pixel_size()
-	var lo := RoomDef.WALL
-	var hi := size.y - RoomDef.FLOOR if _vertical_edge(edge) else size.x - RoomDef.WALL
+	var limits := edge_range(a, edge)
+	var lo := limits.x
+	var hi := limits.y
 	var from := float(e.get("from", 0.0))
 	var to := float(e.get("to", 0.0))
 	if from < lo or to > hi or from >= to:
@@ -134,7 +172,7 @@ static func _check_exit(a: RoomDef, e: Dictionary, rooms: Dictionary) -> PackedS
 	if b == null:
 		out.append("%s: exit to unknown room '%s'" % [a.id, e.get("room", "")])
 		return out
-	if not _touches(a.world_rect(), b.world_rect(), edge):
+	if not touches(a.world_rect(), b.world_rect(), edge):
 		out.append("%s: %s edge does not touch %s" % [a.id, edge, b.id])
 		return out
 	var span := world_span(a, e)
@@ -148,7 +186,7 @@ static func _check_exit(a: RoomDef, e: Dictionary, rooms: Dictionary) -> PackedS
 		out.append("%s: %s exit to %s has a different shortcut than its partner" % [a.id, edge, b.id])
 	return out
 
-static func _touches(a: Rect2, b: Rect2, edge: String) -> bool:
+static func touches(a: Rect2, b: Rect2, edge: String) -> bool:
 	match edge:
 		"right":
 			return is_equal_approx(a.end.x, b.position.x)

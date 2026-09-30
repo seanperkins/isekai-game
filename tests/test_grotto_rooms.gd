@@ -37,17 +37,7 @@ func test_c5_opens_into_g1_and_spawn_keys_are_unique() -> void:
 # --- pacing: one rule, summing spawn xp directly (a Progression stops paying at the cap) ---
 
 func _reach_ungated() -> Array:
-	var seen := ["C1"]
-	var frontier := ["C1"]
-	while not frontier.is_empty():
-		var id: String = frontier.pop_back()
-		for e in (rooms[id] as RoomDef).exits:
-			if e.has("gate") or e.has("shortcut"):
-				continue
-			if not seen.has(e["room"]):
-				seen.append(e["room"])
-				frontier.append(e["room"])
-	return seen
+	return WorldValidator.reachable(rooms, true)
 
 ## First-time XP of a pass through `room_ids`: each spawn pays its xp for the down and again for the eat.
 func _first_time(room_ids: Array) -> int:
