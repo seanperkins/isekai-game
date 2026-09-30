@@ -9,7 +9,7 @@ display_name = "Spore Moth"
 stats = {
 "atk": 1,
 "def": 0,
-"max_hp": 3,
+"max_hp": 4,
 "spd": 90
 }
 essences = {

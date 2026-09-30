@@ -6,7 +6,7 @@
 script = ExtResource("1_qje2h")
 id = "poison_spit"
 display_name = "Poison Spit"
-description = "4 poison on hit, then 2 per second for 3 s."
+description = "4 poison on hit, then 1 per second for 3 s."
 source = "enemy_only"
 hidden = false
 effects = [{

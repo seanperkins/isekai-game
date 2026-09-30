@@ -18,9 +18,9 @@ func test_new_essences_and_sources_are_registered() -> void:
 		assert_true(creatures.has(id), id)
 
 func test_the_creatures_have_the_approved_numbers() -> void:
-	var want := {"spore_moth": [3, 1, 0, 90, 2, {"spore": 1, "flight": 1}],
-		"mushroom_crab": [8, 2, 2, 70, 4, {"shell": 2, "earth": 1}],
-		"vine_snake": [5, 3, 0, 150, 3, {"poison": 1, "thread": 1}]}
+	var want := {"spore_moth": [4, 1, 0, 90, 2, {"spore": 1, "flight": 1}],
+		"mushroom_crab": [10, 2, 2, 70, 4, {"shell": 2, "earth": 1}],
+		"vine_snake": [6, 4, 0, 150, 3, {"poison": 1, "thread": 1}]}
 	for id in want:
 		var c: CreatureDef = creatures[id]
 		var w: Array = want[id]
@@ -56,3 +56,25 @@ func test_the_content_validates_and_both_skills_have_icons() -> void:
 	assert_eq(loaded["errors"].size(), 0, str(loaded["errors"]))
 	assert_not_null(Art.texture("icon_spore_cloud"))
 	assert_not_null(Art.texture("icon_hardened_shell"))
+
+func test_the_cave_creatures_are_untouched_by_the_grotto_level() -> void:
+	var want := {"bat": [2, 3, 0, 140], "toad": [3, 3, 0, 70], "lizard": [5, 5, 1, 80], "spider": [3, 4, 0, 110],
+		"serpent": [40, 6, 1, 90]}
+	for id in want:
+		var c: CreatureDef = creatures[id]
+		assert_eq([c.stats["max_hp"], c.stats["atk"], c.stats["def"], c.stats["spd"]], want[id], id)
+
+func test_the_generator_scales_hp_atk_and_def_by_8_percent_a_level_and_nothing_else() -> void:
+	var gen = load("res://tools/build_content.gd")
+	assert_eq(gen._at_level(1, {"max_hp": 8, "atk": 2, "def": 2, "spd": 70}), {"max_hp": 8, "atk": 2, "def": 2, "spd": 70}, "level 1 is the identity")
+	assert_eq(gen._at_level(4, {"max_hp": 8, "atk": 2, "def": 2, "spd": 70}), {"max_hp": 10, "atk": 2, "def": 2, "spd": 70}, "SPD is untouched")
+	assert_eq(gen._at_level(4, {"max_hp": 5, "atk": 3, "def": 0, "spd": 150}), {"max_hp": 6, "atk": 4, "def": 0, "spd": 150}, "0 stays 0")
+	assert_eq(gen._at_level(4, {}), {}, "an absent key is not added")
+	assert_eq(gen._scaled(3, 4), 4)
+	assert_eq(gen._scaled(6, 4), 7)
+	assert_eq(gen._scaled(1, 4), 1)
+
+func test_the_skill_descriptions_say_what_armor_and_poison_do() -> void:
+	assert_eq(skills["poison_spit"].description, "4 poison on hit, then 1 per second for 3 s.")
+	assert_string_contains(skills["body_armor"].description, "physical")
+	assert_string_contains(skills["poison_resistance"].description, "over time")

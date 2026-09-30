@@ -9,7 +9,7 @@ display_name = "Mushroom Crab"
 stats = {
 "atk": 2,
 "def": 2,
-"max_hp": 8,
+"max_hp": 10,
 "spd": 70
 }
 essences = {

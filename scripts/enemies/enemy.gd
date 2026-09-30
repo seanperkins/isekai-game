@@ -188,7 +188,7 @@ func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, cau
 		_hurt_t = HURT_SECONDS
 
 ## An armored front has a weak point behind it: a tackle from behind, or on an armored enemy that is already stunned, ignores
-## DEF and does double. (A base slime has ATK 1, so against DEF 2 a plain hit floors at 1: a Mushroom Crab would take eight.)
+## DEF and does double. (A base slime has ATK 1, so against DEF 2 a plain hit floors at 1: a Mushroom Crab would take ten.)
 ## Enemies without armor are unchanged: a backstab still stuns them for the eat.
 const WEAK_POINT_MULT := 2
 
