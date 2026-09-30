@@ -223,3 +223,9 @@ func test_floor_spot_drops_to_the_first_rock_below_and_refuses_rock_and_no_floor
 	assert_eq(model.floor_spot("C1", Vector2(120, 100)), Vector2(120, floor_y - BodyConfig.BOTTOM), "lands on the floor")
 	assert_null(model.floor_spot("C1", Vector2(250, 255)), "inside rock")
 	assert_null(model.floor_spot("C1", Vector2(-10, 100)), "outside the room")
+
+func test_the_generator_is_gone_and_no_code_refers_to_it() -> void:
+	assert_false(FileAccess.file_exists("res://tools/build_world.gd"))
+	for path in ["res://scripts/world/room_def.gd", "res://tools/prefabs.gd"]:
+		assert_false(FileAccess.get_file_as_string(path).contains("build_world"), path)
+	assert_true(FileAccess.file_exists("res://docs/rooms.md"), "the rationale the generator's comments held")

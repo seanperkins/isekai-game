@@ -1,6 +1,6 @@
 class_name Prefabs
 extends RefCounted
-## Reusable room pieces, stamped into a room dict by tools/build_world.gd. A stamp expands to plain
+## Reusable room pieces, stamped into a room dict by a script or a test. A stamp expands to plain
 ## `solids` and `decor` entries, so the game reads the same data as before and never sees a prefab.
 ##
 ## Coordinates inside a prefab are relative to its anchor. A floor prefab stands on the anchor
@@ -11,7 +11,8 @@ extends RefCounted
 ## in front of an exit (tests/test_prefabs.gd keeps 64 px clear there), and keep gaps between
 ## floating solids at least 36 px so the 28 px body fits.
 
-const GLOW := Color(0.35, 0.95, 0.7)
+const GLOW := Color(0.35, 0.95, 0.7)  # glow fungus and lichen; nothing in the wilderness burns
+const G_GLOW := Color(0.5, 1.0, 0.6)  # the Grotto's glowing fungus and spores
 const TEAL := Color(0.3, 1.0, 0.9)
 const PURPLE := Color(0.8, 0.4, 1.0)
 const BLUE := Color(0.3, 0.5, 1.0)
