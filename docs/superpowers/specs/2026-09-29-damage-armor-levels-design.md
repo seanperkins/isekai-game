@@ -1,6 +1,6 @@
 # Damage, Armor and Levels — Design
 
-Status: revised after round 1 of the debate (2026-09-29). Answers Sean's note: "I saw something that was talking about how
+Status: revised after round 2 of the debate (2026-09-29). Answers Sean's note: "I saw something that was talking about how
 damage and armor work in Diablo 4 where it uses an equation to determine damage. Can you research that and see if we can
 improve our stats and damage calculations based on level and stats?" Research: `docs/research/damage-formulas.md` (Diablo
 4, Diablo 3, Path of Exile, Elden Ring, Pokemon, Dragon Quest; our own code audited).
@@ -8,17 +8,22 @@ improve our stats and damage calculations based on level and stats?" Research: `
 ## What I understood
 
 Sean wants damage, armor and level scaling to be a considered model instead of the flat subtraction the game uses now,
-inspired by how Diablo 4 turns armor into a percentage with an equation. Success, stated to match what this spec
-actually delivers:
+inspired by how Diablo 4 turns armor into a percentage with an equation. Success, stated to match what this spec delivers:
 
-- DEF stops being a cliff: a big hit is reduced by a percentage that never reaches 100%, and DEF beyond a hit's size still
+- DEF stops being a cliff: a hit is reduced by a percentage that never reaches 100%, and DEF beyond a hit's size still
   helps a little instead of being wasted.
-- ATK matters to skills as well as tackles: a skill's damage grows with the player's ATK.
-- Poison resistance reaches poison ticks, and stacked resistance percentages cannot exceed a cap.
-- Creatures carry a **level**, and their numbers are derived from it by one formula, so a later area is stronger by data,
-  not by hand-editing each creature. Appraisal and the Bestiary show the level and the real numbers.
-- **A slime with DEF 0 and no resistance keeps today's numbers everywhere.** Armoured slimes and poisoned slimes change in
-  a short, listed set of cases (below); those are accepted, not hidden.
+- ATK matters to skills as well as tackles: the damage of the direct-damage skills (Poison Breath and its evolutions'
+  cones, Water Blade, Venom Bolt) grows with the player's ATK.
+- Poison is not reduced by DEF (DEF is for physical hits) and Poison Resistance reaches poison ticks; resistance
+  percentages stack up to a cap.
+- A creature's numbers come from a **level** by one formula in the content generator, so a later area is stronger by
+  declaring a level rather than by hand-editing each creature; the Grotto creatures are level 4. Appraisal and the Bestiary
+  already read the generated numbers, so what is shown is what is fought.
+
+**What stays the same:** at ATK 1 in the Cave, damage *taken* by a slime with DEF 0 and no resistance is unchanged on every
+path (contact, spit and its ticks, puffs), and so are its tackles and its skill hits on DEF-0 targets. Everything else that
+changes is a class listed below: physical hits against DEF above 0, poison against any DEF (both directions), poison ticks
+under resistance, skills at ATK 2 or more, and the Grotto's level. Those are accepted, not hidden.
 
 What it does not do: at the game's integer scale (ATK at most 6, hits of 1-6) a percentage of a small hit still rounds to
 whole HP, so the ATK 1 to 3 vs high DEF cliff mostly remains. A x10 HP and damage scale would remove it; that is its own
@@ -44,7 +49,7 @@ subtraction in `Player.receive_hit` and `Enemy.receive_hit`. Consequences:
 1. DEF at or above a hit's power floors it at 1 and further DEF is wasted: Body Armor L5 (the stage-1 cap) already makes
    every hit from ATK 5 or less do 1.
 2. ATK growth is a cliff against armour: the lizard (DEF 3) takes 1 from ATK 1 to 4.
-3. Skill tables ignore ATK: Water Blade is always 3, Poison Breath is 2 to 16 by skill level only, the clouds a fixed 1.
+3. Skill tables ignore ATK: Water Blade is always 3, Poison Breath is 2 to 16 by skill level only.
 4. Any poison resistance deletes 1-point poison ticks (`Damage.tick(1, p) = 0` for every p >= 1), and every tick source is
    1, so the resistance table does nothing against ticks.
 5. Percent sources add and clamp at 100 (Poison Resistance L9 83% + Venom Blood 30% = 113%).
@@ -58,15 +63,15 @@ stunned armoured enemy ignores DEF and does double. This spec keeps it exactly.)
 
 | Topic | Decision |
 |---|---|
-| One resolution | `Damage.hit(power, damage_type, defense, resist_pct, flat_off) -> int`: DEF becomes an armor percent **only for `"physical"`**; resistance percent (clamped at `RESIST_CAP` 95) applies to any type; the two multiply; the flat reductions subtract; minimum 1. Player and enemy both call it; `Damage.direct_hit` and `Damage.tick` are **deleted in the same change** and their nine pins in `tests/test_stats.gd` are ported to `hit` and `tick_milli` |
+| One resolution | `Damage.hit(power, damage_type, defense, resist_pct, flat_off) -> int`: DEF becomes an armor percent **only for `"physical"`**; resistance percent (clamped at `RESIST_CAP` 95) applies to any type; the two multiply; the flat reductions subtract; minimum 1. Player and enemy both call it; `Damage.direct_hit` and `Damage.tick` are **deleted in the same change** and the nine pins in `tests/test_stats.gd` are ported (`direct_hit(raw, p, flat)` becomes `hit(raw, "physical", 0, p, flat)`; the flat argument stays `flat_off`, so `direct_hit(6, 0, 1) == 5` stays 5) |
 | Armor | `armor_pct(def, power) = floor(10000 x def / (100 x def + 80 x power))` for `def, power > 0`, else 0. No cap: it is below 100 for every finite DEF, and the minimum-1 rule is the only floor. A DEF equal to 0.8 x the hit's power removes half of it |
-| Weak point | `Enemy.receive_hit(raw, damage_type, from, cause, ignore_def := false)` keeps its signature: when `ignore_def` the defense passed to `hit` is 0 (resistance still applies). The double-damage tackle is unchanged |
-| Resistances | Additive, as today, but clamped at `RESIST_CAP := 95` inside `hit` and `tick_milli` (above the Poison Resistance table's maximum of 92, so the shipped table is not edited and stays honest on the Skills tab). No `combine_pct`: multiplicative stacking is a design taste, not a fix, and only two poison sources exist |
-| Poison ticks | Fractional: `tick_milli(raw, resist_pct) = raw x (100 - clamp(resist, 0, 95)) x MILLI / 100` thousandths of an HP per second (`MILLI := 1000`), carried in a persistent `Player._poison_milli` and **not reset by a new application** (only on death or a new life), so a 3 s toad tick at 67% resistance costs its 0.99 HP over three spits rather than 0 forever. `receive_poison` keeps whole-HP arguments (`SPIT_TICK` stays 1). `Health.take_tick` still never drops HP below 1 |
-| Skills scale with ATK | `Damage.skill_power(value, atk) = 0 if value <= 0 else max(1, floor(value x (100 + 25 x (max(atk, 1) - 1)) / 100))`. ATK 1 is today's table for every value including 0. Applied to the **damaging** abilities only: Poison Breath, Water Blade, Venom Bolt (their direct hit), and the damage the poison clouds pass to `SporeCloudArea` (Spore Cloud, Miasma's cloud, Puffball, via the `damage` option **at the ability, never inside `SporeCloudArea`**, so Healing Spores and Binding Web keep damage 0). An actor without `stats` (test stubs) uses ATK 1. The Skills tab shows the amplified number for the player's ATK on the lines labelled "Damage" only (radius, distance and hold lines are not amplified) |
-| Creature level | New `CreatureDef.level: int` (default 1, validated >= 1). `tools/build_content.gd` keeps each creature's hand-written base numbers and writes the generated `.tres` with `max_hp`, `atk` and `def` scaled by `CreatureScale.scaled(base, level) = floor((base x (100 + 8 x (level - 1)) + 50) / 100)` (0 stays 0, level 1 is the identity); SPD, XP, skill values and the spit and puff numbers are not scaled. The Cave creatures are level 1 (unchanged); the Grotto creatures are **level 4** (x1.24). `CompendiumModel.creature_report`, the Bestiary card and the appraisal show `Lv N` and the baked numbers, so what is shown is what is fought. There is no runtime level plumbing: `Enemy`, `RoomBuilder`, `Game._spawn` and `SporePuff` are untouched |
+| Weak point | `Enemy.receive_hit(raw, damage_type, from, cause, ignore_def := false)` keeps its signature: when `ignore_def` the defense passed to `hit` is 0. Enemies do not read their own resistances (deferred), so `Enemy.receive_hit` passes `resist_pct` 0. The double-damage tackle is unchanged |
+| Resistances | Additive, as today, but clamped at `RESIST_CAP := 95` inside `hit` and `tick_milli` (above the Poison Resistance table's maximum of 92, so the shipped table is not edited and stays honest on the Skills tab). No `combine_pct`. Consequence, accepted: on the Toxic line (Poison Resistance plus Venom Blood 30%) L6 and above now clamp at 95 where today they clamp at 100, so a maxed Toxic slime takes 0.05 HP a second of poison ticks instead of none |
+| Poison ticks | Fractional: `tick_milli(raw, resist_pct) = floor(raw x (100 - clamp(resist, 0, 95)) x MILLI / 100)` thousandths of an HP per second (`MILLI := 1000`), carried in a persistent `Player._poison_milli` (initialised 0; a new life is a new `Player`, so nothing needs clearing) that is **not reset by a new application**, and separate from `_poison_acc`. A whole HP drawn from the carry is consumed even at HP 1 (`Health.take_tick` holds HP at 1; ticks never kill). `receive_poison` keeps whole-HP arguments (`SPIT_TICK` stays 1) |
+| Skills scale with ATK | `Damage.skill_power(value, atk) = max(1, floor(value x (100 + 25 x (max(atk, 1) - 1)) / 100))`. ATK 1 is today's table exactly. Applied to the **direct-damage** abilities only: Poison Breath (Miasma extends it and calls `super._perform()`, so its cone is amplified exactly once), Water Blade and Venom Bolt, through a base-class `Ability.actor_atk()` (the actor's `stats` ATK read with `actor.get("stats")`, ATK 1 for a test stub without stats). **The clouds (Spore Cloud, Miasma's cloud, Puffball) stay a fixed 1**: they are area control, their tick value 1 is all rounding cliff (`skill_power(1, atk)` is 1 until ATK 5), and nothing on the Skills tab would show it. The Skills tab shows the amplified number for the player's ATK on the lines labelled "Damage" only; `SkillScreenModel.detail` and `effect_lines` take an ATK argument defaulting to 1 and `SkillScreen` passes the player's current ATK where it calls `detail` |
+| Creature level | Level is a **generator concept**: `tools/build_content.gd` keeps each creature's hand-written base numbers and derives the generated numbers through `_at_level(level, base)` (`max_hp`, `atk` and `def` scaled by `scaled(base, level) = floor((base x (100 + 8 x (level - 1)) + 50) / 100)`, 0 stays 0, level 1 is the identity; SPD, XP, skill values and the spit and puff numbers are not scaled). The Cave creatures are level 1 (their `.tres` do not change); the four Grotto creatures declare level 4 (x1.24). There is no `level` field, no validator rule, no `Lv` label and no runtime code: `Enemy`, `RoomBuilder`, `Game._spawn`, `SporePuff`, `CompendiumModel` are untouched, and appraisal and the Bestiary already show the generated numbers because they read the def's stats. A visible `Lv` label is a later, independent change |
 | Player level | Unchanged: +2 HP and +1 MP per level; stages and forms keep granting flat ATK/DEF and the skill caps |
-| Deferred | Enemies reading their own resistances (the toad's Poison Resistance L2 stays dead data; turning it on is a Cave nerf to Poison Breath 2 to 1 and needs its own decision), combine_pct, per-creature XP by level, and the x10 scale |
+| Deferred | Enemies reading their own resistances (the toad's Poison Resistance L2 stays dead data; turning it on is a Cave nerf to Poison Breath 2 to 1 and needs its own decision), combine_pct, per-creature XP by level, a visible `Lv`, cloud amplification, and the x10 scale |
 
 ## Formulas (GDScript-ready)
 
@@ -85,45 +90,52 @@ static func hit(power: int, damage_type: String, defense: int, resist_pct: int, 
 	var through := (100 - armor) * (100 - clampi(resist_pct, 0, RESIST_CAP))
 	return maxi(1, floori(float(power * through) / 10000.0) - flat_off)
 static func tick_milli(raw: int, resist_pct: int) -> int:  # thousandths of an HP per second
-	return raw * (100 - clampi(resist_pct, 0, RESIST_CAP)) * MILLI / 100
+	return floori(float(raw * (100 - clampi(resist_pct, 0, RESIST_CAP)) * MILLI) / 100.0)
 static func skill_power(value: int, atk: int) -> int:
-	if value <= 0:
-		return 0
 	return maxi(1, floori(float(value * (100 + SKILL_ATK_PCT * (maxi(atk, 1) - 1))) / 100.0))
 
-# scripts/stats/creature_scale.gd (new; pure, used by tools/build_content.gd)
-class_name CreatureScale
-const POWER_PCT_PER_LEVEL := 8
-static func power_pct(level: int) -> int:
-	return 100 + POWER_PCT_PER_LEVEL * (maxi(level, 1) - 1)
-static func scaled(base: int, level: int) -> int:
-	return floori(float(base * power_pct(level) + 50) / 100.0)
+# tools/build_content.gd (generation time only)
+static func _scaled(base: int, level: int) -> int:
+	return floori(float(base * (100 + 8 * (maxi(level, 1) - 1)) + 50) / 100.0)
 ```
 
 Call sites (search by symbol): `Player.receive_hit` (DEF leaves `flat_off` and enters `hit`), `Player.tick` and
-`receive_poison` (the carried tick), `Enemy.receive_hit` (DEF physical only; `ignore_def`), the damaging abilities (a small
-`Ability.actor_atk()` returns the actor's ATK or 1 for a stub; each damaging ability calls `Damage.skill_power(value(), atk)`
-itself), `SporeCloud`, `Miasma`, `Puffball` (the `damage` option), `SkillScreenModel.detail` and `effect_lines` (an ATK
-argument, default 1, applied to "Damage" lines), `CompendiumModel.creature_report` and the Bestiary card (level),
-`tools/build_content.gd` and the regenerated `data/creatures/*.tres`, `DefValidator` (level >= 1).
+`receive_poison` (the carried tick), `Enemy.receive_hit` (DEF physical only; `ignore_def`; resist 0), `Ability.actor_atk()` and
+Poison Breath, Water Blade and Venom Bolt (`Damage.skill_power(value(), actor_atk())`), `SkillScreenModel.detail` and
+`effect_lines`, and `SkillScreen` where it calls `detail`, `tools/build_content.gd` (the Grotto creatures' levels and the
+skill descriptions below) with the regenerated `data/creatures/*.tres` and `data/skills/*.tres`. The descriptions that
+change: Body Armor (raises DEF, which no longer helps against poison), Poison Resistance, and Poison Spit ("4 poison on hit,
+then 1 per second for 3 s": it says 2 today, `SPIT_TICK` is 1).
 
-## Accepted changes for armoured or poisoned slimes (all others are the identity)
+## What changes, by class (all others are the identity)
 
-Every DEF-0, resistance-free hit is identical to today. These change, each pinned in `tests/test_damage.gd`:
+Every damage-taken path at DEF 0 with no resistance is identical at ATK 1 in the Cave. These change; each has a row pinned
+(in `tests/test_damage.gd` where the row is pure formula, and in a `Player` or content test where it is not):
 
 | Case | Before | After |
 |---|---|---|
 | Spider (ATK 4) vs DEF 3 | 1 | 2 |
 | Lizard (ATK 5) vs DEF 4, 5, 6 | 1 | 2 |
 | Serpent (ATK 6, unspawned) vs DEF 1 | 5 | 4 |
-| Toad spit on a DEF-3 slime, no resistance | 1 + 3 ticks = 4 | 4 + 3 ticks = 7 (the application no longer loses 3 to DEF; the ticks are unchanged) |
-| Toad spit on a DEF-5 slime with Poison Resistance L1 | 1 + 0 = 1 | 3 + 2 = 5 |
-| Toad ticks vs Poison Resistance L1, 3 s | 0 HP | 2 HP |
-| Poison Breath L1 vs lizard (DEF 3) | 1 | 2 |
-| Water Blade at ATK 5 vs lizard | 1 | 3 |
 | Tackle at ATK 4 vs lizard | 1 | 2 |
+| Water Blade at ATK 5 vs lizard | 1 | 3 |
+| Poison Breath L1 / L2 / L3 / L4 vs lizard (DEF 3), ATK 1 | 1 / 1 / 1 / 2 | 2 / 3 / 4 / 5 (poison ignores DEF) |
+| Venom Bolt vs lizard | 6 | 9 |
+| Poison Breath L1 / L4 vs crab (DEF 2) | 1 / 3 | 2 / 5 (poison ignores DEF) |
 | Poison Breath L15 at ATK 8 (DEF 0) | 16 | 44 |
+| Poison Breath L1 at ATK 3 (DEF 0) | 2 | 3 |
+| Toad spit on a DEF-3 slime, no resistance (fresh `Player`) | 1 + 3 ticks = 4 | 4 + 3 ticks = 7 |
+| Toad spit on a DEF-5 slime with Poison Resistance L1 (fresh `Player`) | 1 + 0 = 1 | 3 + 2 = 5 |
+| Toad ticks vs Poison Resistance L1, 3 s (fresh `Player`) | 0 HP | 2 HP |
+| Moth puff vs Poison Resistance L1, 2 s (fresh `Player`) | 0 HP | 1 HP |
+| Two toad spits at 67% resistance, more than 1 s apart | ticks 0 HP | ticks 1 HP (carry 980) |
+| Three toad spits at 67% resistance | ticks 0 HP, 3 HP applications | ticks 2 HP (carry 970), 3 HP applications |
 | Grotto crab / snake / moth / pale moth (level 4) | 8 HP, ATK 2, DEF 2 / 5, 3, 0 / 3, 1, 0 / 6, 1, 0 | 10, 2, 2 / 6, 4, 0 / 4, 1, 0 / 7, 1, 0 |
+
+The poison rows are the biggest outgoing change: every poison skill now gains the target's DEF back (up to the value itself).
+That includes the crab, whose weak point exists so that ATK 1 can hurt it: Poison Breath L1 now does 2 to it from any side and
+at range. Keeping it is a decision (Ruling 2): DEF is for physical hits. The carried tick makes resistance rows depend on
+history (PR L1 costs 2, 2, 3, 2, 3 HP over five consecutive toad spits); the rows above are from a fresh `Player`.
 
 ## Failure modes and edge cases
 
@@ -132,49 +144,56 @@ Every DEF-0, resistance-free hit is identical to today. These change, each pinne
 - Out-levelling is intended: a stage-4 slime (DEF 14) takes 1 from Cave lizards forever.
 - Skills now grow with ATK: a maxed stage-4 build one-shots a level-4 crab (HP 10). `SKILL_ATK_PCT` is the knob. Water Blade
   (a single value) still converges toward a free tackle at high ATK; that is not a regression.
-- The carried tick: `_poison_milli` is cleared on death and on a new life, never on a new application; `receive_poison` and
-  `SPIT_TICK` keep their whole-HP meaning, so the enemy trace fixtures and `test_tuning.gd` stay green.
-- A level-4 crab needs 5 weak-point tackles instead of 4 (HP 10, double damage 2): the stun window is checked by a test that
-  runs the real tackle rate.
+- A level-4 crab needs 5 weak-point tackles instead of 4 (HP 10, double damage 2). The tackle gate is 0.15 s, so the fifth
+  lands at 0.6 s of the 3.0 s stun (a test pins `4 x TACKLE_SECONDS < STUN_SECONDS` and the sequence).
+- The level is per creature id, not per area: a crab reused in a later area at a different strength would need a new id
+  (and its own Bestiary entry) or a re-level that also moves the Grotto crab. "A later area is stronger by data" holds for new
+  creatures; runtime levels return when one creature must appear at two strengths.
 - Body Armor no longer helps against poison (DEF is physical); Poison Resistance now reaches ticks. The skill descriptions say so.
 - Appraisal shows the def's baked stats; a creature's runtime DEF also includes its own skills' modifiers (the lizard's Body
   Armor), which the report already omitted before this change. Out of scope.
-- `CreatureDef.level` missing in an old `.tres` loads as 1.
+- The Toxic line's clamp at 95 (Resistances row).
 
 ## Testing
 
 New `tests/test_damage.gd`: identity (`hit(p, "physical", 0, 0, 0) == p`), `armor_pct(4, 5) == 50`, `hit(40, "physical", 30,
 0, 0) == 20`, monotone in DEF and non-decreasing in power over a property loop (power 1..60, DEF 0..80), poison ignores DEF,
-the resistance clamp (`hit(10, "poison", 0, 200, 0)` and 113% behave as 95%), the 20-cell legacy grid ATK 1..5 x DEF 0..3
-as literal expected values (one difference, ATK 4 vs DEF 3), every row of the accepted-changes table, `tick_milli(1, 20) ==
-800` and a `Player` test that three 3 s toad applications at 67% cost 1 HP in total with the carry surviving between
-applications and cleared on death, `skill_power(v, 1) == v` for every Breath value and `skill_power(0, n) == 0`,
-`skill_power(16, 8) == 44`. `CreatureScale`: `power_pct` at levels 1, 4, 6, 28, `scaled(8, 4) == 10`, `scaled(0, n) == 0`,
-`scaled(v, 1) == v`. Content: the regenerated `.tres` pin (Grotto numbers), `DefValidator` rejects level 0, the appraisal and
-the Bestiary card show `Lv` and the baked numbers, the Skills tab shows the amplified value on "Damage" lines and not on
-radius, distance or hold lines (`effect_lines` keeps its two-argument form working). Integration: a real `Player` at ATK 3
-casting Poison Breath at a real toad; Healing Spores and Binding Web still do no damage (`test_zone.gd`'s zero-damage pin);
-Spore Cloud, Miasma's cloud and Puffball amplify. Existing pins that must stay green: `test_stats.gd` (ported), `test_player.gd`,
-`test_enemy.gd` (weak-point tests re-derived for the Grotto crab), `test_tuning.gd`, `test_levels.gd`, `test_player_skill_set.gd`,
-`test_skill_effects.gd`, `test_skill_screen.gd`, `test_hardened_shell.gd`, `test_spore_cloud.gd`, `test_abilities.gd`,
-`test_evolution_abilities.gd`, `test_zone.gd`, `test_form_effects.gd`, `test_grotto_data.gd` (re-pinned) and the enemy traces.
+a clamp test that can fail (`hit(100, "poison", 0, 113, 0) == 5`, which a clamp of 100 would make 1, and `tick_milli(1, 100)
+== 50`, which a clamp of 100 would make 0), the 20-cell legacy grid ATK 1..5 x DEF 0..3 as literal expected values (one
+difference, ATK 4 vs DEF 3), the pure-formula rows of the table, `tick_milli(1, 20) == 800`, `skill_power(v, 1) == v` for every
+Breath value and `skill_power(16, 8) == 44`. `Player` tests on a fresh player with at least 1 s between applications (the
+1 s invulnerability would swallow a second poison): the carry rows above (2 spits at 67% cost 1 HP of ticks with carry 980;
+3 spits cost 2 HP with carry 970 plus 3 HP of applications), a whole HP drawn at HP 1 is consumed, the DEF-3 and DEF-5 spit
+rows and the moth-puff row. Content: the regenerated `.tres` pin (Grotto numbers, in `test_grotto_data.gd` and the pale moth
+in `test_pale_moth.gd:23`), the four crab weak-point tests in `test_enemy.gd` re-derived for HP 10 (the front tackle 7 becomes
+9, from behind 6 becomes 8, stunned 4 becomes 6, and "falls in four" becomes five tackles, plus the stale "would take eight"
+comment in `enemy.gd`), the crab stun-window test (`receive_tackle(1, true)` then four times `status.update(Player.TACKLE_SECONDS)`
+and `receive_tackle(1, false)`, STUNNED before the last, DYING after), the Skills tab shows the amplified value on "Damage"
+lines and not on radius, distance or hold lines (`effect_lines` keeps its two-argument form working), the poison-vs-lizard and
+poison-vs-crab rows with real enemies and a real `Player` at ATK 3 casting Poison Breath at a real toad, and the regenerated
+skill-description pins. Existing pins that must stay green: `test_stats.gd` (ported), `test_player.gd`, `test_tuning.gd`,
+`test_levels.gd`, `test_player_skill_set.gd`, `test_skill_effects.gd`, `test_skill_screen.gd`, `test_hardened_shell.gd`,
+`test_spore_cloud.gd`, `test_abilities.gd`, `test_evolution_abilities.gd`, `test_zone.gd` (the zero-damage pin), `test_form_effects.gd`,
+`test_compendium_model.gd`, `test_status_text.gd` and the enemy traces.
 
 ## Rulings I made
 
 1. **Hit-relative hyperbolic armor** (Path of Exile's form) rather than level-relative (Diablo's), because creature level
    enters through the creature's stats, so a level term in the armor constant would double-count it. Cost if wrong: one
    constant and one function.
-2. **DEF physical only, resistance for poison**, as Blizzard did in 1.2.0. Cost if wrong: Body Armor no longer helps
-   against toads (the accepted-changes table lists it).
-3. **Levels are baked into creature data at generation time**, not computed at spawn: appraisal and the Bestiary then show
-   the real numbers for free and no runtime code changes. Cost if wrong: re-deriving numbers means regenerating content.
-4. **Grotto is level 4** (x1.24) so early play is unchanged and the Grotto is modestly harder. Cost if wrong: one number.
-5. **ATK amplifies skills by 25% per point above 1.** Cost if wrong: playtest tuning of one constant.
+2. **DEF physical only, resistance for poison**, as Blizzard did in 1.2.0. Cost if wrong: Body Armor no longer helps against
+   toads, and every poison skill ignores enemy armour (the table lists both).
+3. **Levels are a generator concept, baked into creature data**, with no runtime code, field or label: appraisal and the
+   Bestiary show the real numbers for free. Cost if wrong: a visible `Lv` or per-area strength needs a later change.
+4. **Grotto is level 4** (x1.24). Cost if wrong: one number.
+5. **ATK amplifies the direct-damage skills by 25% per point above 1; the clouds stay fixed.** Cost if wrong: playtest
+   tuning of one constant, or cloud amplification later.
 6. **Resistances stay additive with a 95 clamp** and the shipped Poison Resistance table is not edited. Cost if wrong: a
    multiplicative rule later is one function and two call sites.
 7. **The integer scale is kept.** Cost if wrong: the ATK-vs-armour cliff at small numbers remains until the x10 spec.
+8. **The poison carry persists across applications.** Cost if wrong: resistance rows are history-dependent.
 
 ## Not here
 
-Enemies reading their own resistances, combine_pct, per-creature XP by level, a dodge or block stat, damage types beyond
-physical and poison, an item system, the x10 scale, runtime enemy levels, and the new areas' level rows (added with each area).
+Enemies reading their own resistances, combine_pct, per-creature XP by level, a visible `Lv`, cloud amplification, a dodge or
+block stat, damage types beyond physical and poison, an item system, the x10 scale, runtime enemy levels.
