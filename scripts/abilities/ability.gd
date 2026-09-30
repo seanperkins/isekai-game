@@ -55,6 +55,11 @@ func value() -> int:
 		return 0
 	return int(values[clampi(level, 1, values.size()) - 1])
 
+## The caster's ATK, 1 for an actor without stats (test stubs). Read with get() so a stub needs no property.
+func actor_atk() -> int:
+	var s = actor.get("stats")
+	return int(s.get_stat("atk")) if s != null else 1
+
 func aim_dir() -> Vector2:
 	return aim.normalized() if aim != Vector2.ZERO else Vector2(actor.facing, 0.0)
 

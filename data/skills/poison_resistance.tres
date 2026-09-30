@@ -6,7 +6,7 @@
 script = ExtResource("1_uwvtj")
 id = "poison_resistance"
 display_name = "Poison Resistance"
-description = "Take less poison damage."
+description = "Take less poison damage, and less from poison over time."
 hint = "Poison stings a little less each time."
 announce = "Proficiency reached. Acquired [Poison Resistance]."
 unlock = [{

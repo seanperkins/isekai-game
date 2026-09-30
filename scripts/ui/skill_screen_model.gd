@@ -117,12 +117,13 @@ const CHANNEL_SKILLS := ["sticky_thread", "hydraulic_propulsion"]
 static func hold_lines(d: SkillDef) -> Array:
 	return ["Hold: +1 MP every %s s" % str(Player.CHANNEL_BEAT)] if CHANNEL_SKILLS.has(d.id) else []
 
-static func detail(rules, d: SkillDef, slots: ActiveSlots) -> Dictionary:
+## `atk` is the player's ATK: it amplifies the "Damage" line of the direct-damage skills, as the abilities do when cast.
+static func detail(rules, d: SkillDef, slots: ActiveSlots, atk := 1) -> Dictionary:
 	var level: int = rules.level_of(d.id)
 	var p: Dictionary = rules.level_progress(d.id)
 	var slot := slots.slots.find(d.id)  # -1 when not slotted
 	return {"id": d.id, "name": d.display_name, "level": level, "max_level": d.max_level,
-		"description": d.description, "mp_cost": d.mp_cost, "lines": effect_lines(d, maxi(level, 1)) + hold_lines(d),
+		"description": d.description, "mp_cost": d.mp_cost, "lines": effect_lines(d, maxi(level, 1), atk) + hold_lines(d),
 		"progress": float(p["current"]) / p["target"] if p["target"] > 0 else -1.0, "slot": slot,
 		"capped": rules.is_capped(d.id)}
 
@@ -130,14 +131,15 @@ static func detail(rules, d: SkillDef, slots: ActiveSlots) -> Dictionary:
 static func capped_text() -> String:
 	return "Capped until you evolve"
 
-static func effect_lines(d: SkillDef, level: int) -> Array:
+static func effect_lines(d: SkillDef, level: int, atk := 1) -> Array:
 	var lines: Array = []
 	for e in d.effects:
 		var v := int(SkillEffects.value_at(e, level))
 		match e.get("kind", ""):
 			"active":
 				if e.has("values"):
-					lines.append("%s %d" % [ACTIVE_LABEL.get(d.id, "Power"), v])
+					var label: String = ACTIVE_LABEL.get(d.id, "Power")
+					lines.append("%s %d" % [label, Damage.skill_power(v, atk) if label == "Damage" else v])
 			"modifier", "conditional_modifier":
 				var stat: String = e.get("stat", "")
 				if stat == SkillEffects.DAMAGE_TAKEN:

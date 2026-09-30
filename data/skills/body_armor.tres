@@ -6,7 +6,7 @@
 script = ExtResource("1_hrkxy")
 id = "body_armor"
 display_name = "Body Armor"
-description = "Raise DEF."
+description = "Raise DEF against physical damage."
 hint = "Your skin wants to harden."
 announce = "Analysis complete. Acquired [Body Armor]."
 source = "essence"

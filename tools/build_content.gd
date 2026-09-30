@@ -60,7 +60,7 @@ func _skills() -> Array:
 			"unlock": [_c("wall_touched", 15)], "levels_on": _on("wall_touched"), "level_curve": 12, "max_level": 8,
 			"effects": [{"kind": "capability", "flag": "wall_cling"}, _mod("slide_speed", [-30, -40, -50, -58, -65, -71, -76, -80])]}),
 		_s({"id": "poison_resistance", "display_name": "Poison Resistance", "source": "proficiency",
-			"description": "Take less poison damage.", "hint": "Poison stings a little less each time.",
+			"description": "Take less poison damage, and less from poison over time.", "hint": "Poison stings a little less each time.",
 			"announce": "Proficiency reached. Acquired [Poison Resistance].",
 			"unlock": [_c("damaged", 6, {"damage_type": "poison"})],
 			"levels_on": _on("damaged", {"damage_type": "poison"}), "level_curve": 6, "max_level": 12,
@@ -111,7 +111,7 @@ func _skills() -> Array:
 			"levels_on": _on("skill_used", {"id": "poison_breath"}), "level_curve": 8, "max_level": 15,
 			"effects": [_active("poison_breath", [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])], "mp_cost": 4}),
 		_s({"id": "body_armor", "display_name": "Body Armor", "source": "essence", "hidden": false,
-			"description": "Raise DEF.", "hint": "Your skin wants to harden.",
+			"description": "Raise DEF against physical damage.", "hint": "Your skin wants to harden.",
 			"announce": "Analysis complete. Acquired [Body Armor].",
 			"unlock": [_c("absorbed", 3, {"essence": "armor"})],
 			"levels_on": _on("damaged"), "level_curve": 10, "max_level": 8,
@@ -193,13 +193,28 @@ func _skills() -> Array:
 		_s({"id": "ceiling_walk", "display_name": "Ceiling Walk", "source": "enemy_only", "hidden": false,
 			"description": "Clings to ceilings and drops on prey.", "effects": [{"kind": "capability", "flag": "ceiling_walk"}]}),
 		_s({"id": "poison_spit", "display_name": "Poison Spit", "source": "enemy_only", "hidden": false,
-			"description": "4 poison on hit, then 2 per second for 3 s.", "effects": [_active("poison_spit", [4])]}),
+			"description": "4 poison on hit, then 1 per second for 3 s.", "effects": [_active("poison_spit", [4])]}),
 		_s({"id": "tail_swipe", "display_name": "Tail Swipe", "source": "enemy_only", "hidden": false,
 			"description": "5 physical damage and knockback.", "effects": [_active("tail_swipe", [5])]}),
 		_s({"id": "constrict", "display_name": "Constrict", "source": "enemy_only", "hidden": false,
 			"description": "Grabs for 2 s: a 3-physical hit each second. Jump twice to break free.",
 			"effects": [_active("constrict", [3])]}),
 	]
+
+## A creature's stats at a level: max_hp, atk and def (the keys present) grow 8% a level, rounded half up; SPD and the rest are
+## untouched. Level 1 is the identity and 0 stays 0. The level is a generator concept: the .tres files carry only the result.
+static func _at_level(level: int, stats: Dictionary) -> Dictionary:
+	var out := stats.duplicate()
+	for key in ["max_hp", "atk", "def"]:
+		if out.has(key):
+			out[key] = _scaled(int(out[key]), level)
+	return out
+
+static func _scaled(base: int, level: int) -> int:
+	return floori(float(base * (100 + 8 * (maxi(level, 1) - 1)) + 50) / 100.0)
+
+## The Grotto's creatures are level 4; the Cave's stay at their base numbers.
+const GROTTO_LEVEL := 4
 
 func _cr(f: Dictionary) -> CreatureDef:
 	var c := CreatureDef.new()
@@ -225,16 +240,16 @@ func _creatures() -> Array:
 			"essences": {"thread": 1, "poison": 1},
 			"skills": [{"id": "sticky_thread", "level": 1}, {"id": "ceiling_walk", "level": 1}],
 			"eat_bonus": {"stat": "atk", "amount": 1, "per": 3}, "xp": 3}),
-		_cr({"id": "spore_moth", "display_name": "Spore Moth", "stats": {"max_hp": 3, "atk": 1, "def": 0, "spd": 90},
+		_cr({"id": "spore_moth", "display_name": "Spore Moth", "stats": _at_level(GROTTO_LEVEL, {"max_hp": 3, "atk": 1, "def": 0, "spd": 90}),
 			"essences": {"spore": 1, "flight": 1}, "skills": [], "drifter": true,
 			"eat_bonus": {"stat": "max_mp", "amount": 1, "per": 2}, "xp": 2}),
-		_cr({"id": "mushroom_crab", "display_name": "Mushroom Crab", "stats": {"max_hp": 8, "atk": 2, "def": 2, "spd": 70},
+		_cr({"id": "mushroom_crab", "display_name": "Mushroom Crab", "stats": _at_level(GROTTO_LEVEL, {"max_hp": 8, "atk": 2, "def": 2, "spd": 70}),
 			"essences": {"shell": 2, "earth": 1}, "skills": [], "armored_charger": true,
 			"eat_bonus": {"stat": "def", "amount": 1, "per": 3}, "xp": 4}),
-		_cr({"id": "vine_snake", "display_name": "Vine Snake", "stats": {"max_hp": 5, "atk": 3, "def": 0, "spd": 150},
+		_cr({"id": "vine_snake", "display_name": "Vine Snake", "stats": _at_level(GROTTO_LEVEL, {"max_hp": 5, "atk": 3, "def": 0, "spd": 150}),
 			"essences": {"poison": 1, "thread": 1}, "skills": [{"id": "ceiling_walk", "level": 1}],
 			"eat_bonus": {"stat": "atk", "amount": 1, "per": 3}, "xp": 3}),
-		_cr({"id": "pale_moth", "display_name": "Pale Moth", "stats": {"max_hp": 6, "atk": 1, "def": 0, "spd": 110},
+		_cr({"id": "pale_moth", "display_name": "Pale Moth", "stats": _at_level(GROTTO_LEVEL, {"max_hp": 6, "atk": 1, "def": 0, "spd": 110}),
 			"essences": {"spore": 3, "flight": 2}, "skills": [], "drifter": true,
 			"eat_bonus": {"stat": "max_mp", "amount": 2, "per": 1}, "xp": 8}),
 		_cr({"id": "water_pool", "display_name": "Water Pool", "stats": {},

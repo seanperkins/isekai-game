@@ -74,6 +74,9 @@ var _dash := 0.0
 var _poison_left := 0.0
 var _poison_tick := 0
 var _poison_acc := 0.0
+## The fraction of an HP the poison ticks so far have left over, in thousandths (Damage.MILLI). Kept across applications:
+## a new spit restarts the clock but not this; a new life is a new Player.
+var _poison_milli := 0
 var _regen_acc := 0.0
 var _abilities := {}
 ## One live channel at most: the held ability, its slot, how long it has been held and the MP beat timer.
@@ -725,7 +728,7 @@ func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, _ca
 		return
 	end_channel()  # a hit ends any channel, including a poison hit that carries no `from`
 	var m := skillset.incoming(damage_type, health.hp, health.max_hp)
-	health.take_hit(Damage.direct_hit(raw, m["percent_off"], m["flat_off"] + stats.get_stat("def")), damage_type)
+	health.take_hit(Damage.hit(raw, damage_type, stats.get_stat("def"), m["percent_off"], m["flat_off"]), damage_type)
 	_invuln = INVULN_SECONDS
 	if from != Vector2.INF and not health.is_dead():
 		var away := 1.0 if global_position.x >= from.x else -1.0
@@ -750,7 +753,10 @@ func tick(delta: float) -> void:
 			_poison_acc -= 1.0
 			_poison_left -= 1.0
 			var m := skillset.incoming("poison", health.hp, health.max_hp)
-			health.take_tick(Damage.tick(_poison_tick, m["percent_off"]))
+			_poison_milli += Damage.tick_milli(_poison_tick, m["percent_off"])
+			var whole := floori(float(_poison_milli) / float(Damage.MILLI))
+			_poison_milli -= whole * Damage.MILLI
+			health.take_tick(whole)  # a whole HP drawn at 1 HP is spent all the same
 	mana.regen(delta, stats.get_stat("mp_regen"))
 	var interval := stats.get_stat("regen_interval")
 	if interval > 0:
