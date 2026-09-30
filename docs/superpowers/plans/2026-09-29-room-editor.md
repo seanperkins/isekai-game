@@ -17,7 +17,7 @@
 - Constants copied from the spec: snap 4 px on drag deltas and created edges; `MIN_EXIT` 36; undo cap 200; `KEEP_CLEAR` 64; exit bounds are the validator's own (`WALL` to `size.y - FLOOR` on a left or right edge, `WALL` to `size.x - WALL` on a top or bottom edge); new-room ids are letters, digits and underscore, unique case-insensitively.
 - The editor never edits `dressing`, `decor`, `features`, `start` or `hard_ledges` except that moving or deleting a solid keeps `hard_ledges` consistent with it.
 - New files that Godot indexes get a `.gd.uid` from the import; stage directories (`git add scripts tests tools docs scenes data`) so those are committed.
-- The suite runs with `HOME=$PWD/.tmp/gdhome`; the editor is launched with `HOME=$PWD/.tmp/editor-home` (Task C2). No production code special-cases the sandbox except `RoomEditor.in_sandbox`, which only gates Play.
+- The suite runs with `HOME=$PWD/.tmp/gdhome`; the editor is launched with `HOME=$PWD/.tmp/editor-home` (Task 9). No production code special-cases the sandbox except `RoomEditor.in_sandbox`, which only gates Play.
 - No attribution lines in commit messages.
 - Tests that set `Game.play_request`, `Game.editor_resume` or `RoomEditor.sandbox_root` reset them in `after_each`.
 
@@ -40,12 +40,12 @@
 
 ## Milestone A: the validator and the suite (no editor code)
 
-### Task A1: `WorldValidator.reachable` and the graph rule
+### Task 1: `WorldValidator.reachable` and the graph rule
 
 **Files:** Modify `scripts/world/world_validator.gd`, `tests/test_rooms.gd`, `tests/test_grotto_rooms.gd`; Create `tests/test_room_reachable.gd`.
 
 **Interfaces:**
-- Produces: `WorldValidator.reachable(rooms: Dictionary, skip_gated := false) -> Array` (ids, start first; `[]` unless exactly one start), and in `validate` one error per unreached room: `"<id>: no way in from the start room"`. Also public statics `edge_range(r: RoomDef, edge: String) -> Vector2` (lo, hi along the edge, in the room's own pixels), `edge_origin(r: RoomDef, edge: String) -> float` (the room's world origin along that edge's axis) and `touches(a: Rect2, b: Rect2, edge: String) -> bool` (the old `_touches`), all used by Task B3.
+- Produces: `WorldValidator.reachable(rooms: Dictionary, skip_gated := false) -> Array` (ids, start first; `[]` unless exactly one start), and in `validate` one error per unreached room: `"<id>: no way in from the start room"`. Also public statics `edge_range(r: RoomDef, edge: String) -> Vector2` (lo, hi along the edge, in the room's own pixels), `edge_origin(r: RoomDef, edge: String) -> float` (the room's world origin along that edge's axis) and `touches(a: Rect2, b: Rect2, edge: String) -> bool` (the old `_touches`), all used by Task 5.
 
 - [ ] **Step 1: Write the failing tests** (`tests/test_room_reachable.gd`)
 
@@ -198,7 +198,7 @@ git add scripts tests tools docs && git commit -m "feat: the world validator rep
 
 ---
 
-### Task A2: content pins iterate the shipped rooms
+### Task 2: content pins iterate the shipped rooms
 
 **Files:** Create `tests/support/shipped_rooms.gd`; Modify `tests/test_rooms.gd`, `tests/test_room_dressing.gd`, `tests/test_grotto_rooms.gd`, `tests/test_form_offers.gd`, `tests/test_skill_caps.gd`, `tests/test_progression_stages.gd`, `tests/test_rebirth_kit.gd`.
 
@@ -275,7 +275,7 @@ git add scripts tests tools docs && git commit -m "test: content pins iterate th
 
 ## Milestone B: the model and the save (headless, pure)
 
-### Task B1: the model core, deep copy and snapshot undo
+### Task 3: the model core, deep copy and snapshot undo
 
 **Files:** Create `scripts/editor/room_edit_model.gd`, `tests/test_room_edit_model.gd`.
 
@@ -366,7 +366,7 @@ func test_editing_marks_only_the_touched_room_dirty() -> void:
 	assert_eq(model.dirty.keys(), ["C1"])
 ```
 
-- [ ] **Step 2: Run to verify it fails.** Run `tools/run_tests.sh test_room_edit_model`. Expected: FAIL (Parse Error: `RoomEditModel` not found). (Add `add_solid` in Task B2; for this task write the class with a minimal `add_solid` first, or run B1 and B2 back to back and treat B1's RED as the missing class.)
+- [ ] **Step 2: Run to verify it fails.** Run `tools/run_tests.sh test_room_edit_model`. Expected: FAIL (Parse Error: `RoomEditModel` not found). (Add `add_solid` in Task 4; for this task write the class with a minimal `add_solid` first, or run B1 and B2 back to back and treat B1's RED as the missing class.)
 
 - [ ] **Step 3: Implement** the first half of `scripts/editor/room_edit_model.gd`:
 
@@ -392,7 +392,7 @@ var creature_ids: Array = []
 var selection := {}
 var _undo: Array = []   # each: {id: RoomDef or null}, the state before a step
 var _redo: Array = []
-var _drag := {}         # a move in progress (Task B2)
+var _drag := {}         # a move in progress (Task 4)
 
 func _init(source: Dictionary, p_creature_ids: Array = []) -> void:
 	creature_ids = p_creature_ids
@@ -486,18 +486,18 @@ func redo_depth() -> int:
 	return _redo.size()
 ```
 
-- [ ] **Step 4: Run to verify it passes** once Task B2's `add_solid` exists (Steps 1-3 of B2 follow immediately; B1's tests call it). Expected: PASS.
+- [ ] **Step 4: Run to verify it passes** once Task 4's `add_solid` exists (Steps 1-3 of B2 follow immediately; B1's tests call it). Expected: PASS.
 
 - [ ] **Step 5: Commit** after B2 (one commit per task; B1's commit may hold the class with only `add_solid` stubbed to the minimal working form if you want it green alone: `add_solid(room_id, a, b)` per B2's Step 3).
 
 ---
 
-### Task B2: solids, creatures, the selection, moving and deleting
+### Task 4: solids, creatures, the selection, moving and deleting
 
 **Files:** Modify `scripts/editor/room_edit_model.gd`; Append to `tests/test_room_edit_model.gd`.
 
 **Interfaces:**
-- Produces: `drag_rect(a: Vector2, b: Vector2) -> Rect2` (static, snapped corners), `label_for(rect: Rect2, hard: Array = []) -> String` (static: `"one-way ledge"` or `"rock"`), `rock(room_id: String, with_gates := false) -> Array` (interior solids plus the boundary walls, plus closed-shortcut gate rects when asked), `add_solid(room_id: String, a: Vector2, b: Vector2) -> String` (`""` on success, else a reason), `add_spawn(room_id: String, creature_id: String, pos: Vector2) -> String`, `hit(room_id: String, p: Vector2, pick: float) -> Dictionary` (a selection or `{}`), `select(sel: Dictionary)`, `begin_move(sel: Dictionary) -> bool`, `move_to(delta: Vector2) -> void`, `end_move() -> void`, `delete_selection() -> String`, `floor_spot(room_id: String, p: Vector2) -> Variant` (a `Vector2` or `null`). Task B3 extends `begin_move`/`move_to`/`delete_selection` for exits.
+- Produces: `drag_rect(a: Vector2, b: Vector2) -> Rect2` (static, snapped corners), `label_for(rect: Rect2, hard: Array = []) -> String` (static: `"one-way ledge"` or `"rock"`), `rock(room_id: String, with_gates := false) -> Array` (interior solids plus the boundary walls, plus closed-shortcut gate rects when asked), `add_solid(room_id: String, a: Vector2, b: Vector2) -> String` (`""` on success, else a reason), `add_spawn(room_id: String, creature_id: String, pos: Vector2) -> String`, `hit(room_id: String, p: Vector2, pick: float) -> Dictionary` (a selection or `{}`), `select(sel: Dictionary)`, `begin_move(sel: Dictionary) -> bool`, `move_to(delta: Vector2) -> void`, `end_move() -> void`, `delete_selection() -> String`, `floor_spot(room_id: String, p: Vector2) -> Variant` (a `Vector2` or `null`). Task 5 extends `begin_move`/`move_to`/`delete_selection` for exits.
 
 - [ ] **Step 1: Write the failing tests** (append to `tests/test_room_edit_model.gd`)
 
@@ -629,7 +629,7 @@ func test_floor_spot_drops_to_the_first_rock_below_and_refuses_rock_and_no_floor
 	assert_null(model.floor_spot("C1", Vector2(-10, 100)), "outside the room")
 ```
 
-The no-floor case is covered in Task B4 (`test_a_room_on_a_bottom_edge_is_connected_but_the_hole_has_no_floor_below`).
+The no-floor case is covered in Task 6 (`test_a_room_on_a_bottom_edge_is_connected_but_the_hole_has_no_floor_below`).
 
 - [ ] **Step 2: Run to verify it fails.** Expected: FAIL (Parse Error: `add_solid`, `drag_rect`, ... not found).
 
@@ -821,7 +821,7 @@ func floor_spot(room_id: String, p: Vector2) -> Variant:
 		return null
 	return Vector2(p.x, best - BodyConfig.BOTTOM)
 
-# The exit halves of begin_move / move_to / delete are written in Task B3.
+# The exit halves of begin_move / move_to / delete are written in Task 5.
 func _begin_move_exit(_sel: Dictionary) -> bool:
 	return false
 
@@ -845,7 +845,7 @@ git add scripts tests tools docs && git commit -m "feat: the room editor model h
 
 ---
 
-### Task B3: paired exits
+### Task 5: paired exits
 
 **Files:** Modify `scripts/editor/room_edit_model.gd`; Create `tests/test_room_edit_exits.gd`.
 
@@ -1152,7 +1152,7 @@ git add scripts tests tools docs && git commit -m "feat: exits are written in pa
 
 ---
 
-### Task B4: new rooms beside a room, room ids, every shipped room opens
+### Task 6: new rooms beside a room, room ids, every shipped room opens
 
 **Files:** Modify `scripts/editor/room_edit_model.gd`; Append to `tests/test_room_edit_exits.gd` (or a new `tests/test_room_edit_new_room.gd`).
 
@@ -1407,7 +1407,7 @@ git add scripts tests tools docs && git commit -m "feat: a new room is created b
 
 ---
 
-### Task B5: save
+### Task 7: save
 
 **Files:** Modify `scripts/editor/room_edit_model.gd`; Create `tests/test_room_edit_save.gd`.
 
@@ -1519,7 +1519,7 @@ git add scripts tests tools docs && git commit -m "feat: the room editor model s
 
 ## Milestone C: the Game seam and the launcher
 
-### Task C1: `Game.play_request`, `Game.editor_resume`, the return path
+### Task 8: `Game.play_request`, `Game.editor_resume`, the return path
 
 **Files:** Modify `scripts/game.gd`; Create `scripts/editor/editor_return.gd`, `scripts/editor/room_editor.gd` (skeleton), `scenes/room_editor.tscn`, `tests/test_editor_play.gd`.
 
@@ -1737,7 +1737,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 ```gdscript
 class_name RoomEditor
 extends Node
-## The room editor scene root. Task C1: it only takes its model back from Game.editor_resume; the view and panels follow.
+## The room editor scene root. Task 8: it only takes its model back from Game.editor_resume; the view and panels follow.
 
 var model: RoomEditModel
 var room_id := ""
@@ -1771,7 +1771,7 @@ git add scripts tests tools docs scenes && git commit -m "feat: the editor can p
 
 ---
 
-### Task C2: the launcher and the sandbox check
+### Task 9: the launcher and the sandbox check
 
 **Files:** Create `tools/edit_rooms.sh`; Modify `scripts/editor/room_editor.gd`; Append to `tests/test_editor_play.gd`.
 
@@ -1842,7 +1842,7 @@ git add scripts tests tools docs scenes && git commit -m "feat: tools/edit_rooms
 
 ## Milestone D: the view, the tools and the panels
 
-### Task D1: the room view and coordinates
+### Task 10: the room view and coordinates
 
 **Files:** Create `scripts/editor/room_view.gd`, `tests/test_room_editor_scene.gd`; Modify `scripts/editor/room_editor.gd` and `scenes/room_editor.tscn`.
 
@@ -2018,7 +2018,7 @@ git add scripts tests tools docs scenes && git commit -m "feat: the room view dr
 
 ---
 
-### Task D2: tools, markers, overlays and input
+### Task 11: tools, markers, overlays and input
 
 **Files:** Modify `scripts/editor/room_view.gd`; Append to `tests/test_room_editor_scene.gd`.
 
@@ -2194,7 +2194,7 @@ git add scripts tests tools docs scenes && git commit -m "feat: the editor's too
 
 ---
 
-### Task D3: panels
+### Task 12: panels
 
 **Files:** Create `scripts/editor/editor_panels.gd`; Append to `tests/test_room_editor_scene.gd`.
 
@@ -2276,7 +2276,7 @@ git add scripts tests tools docs scenes && git commit -m "feat: the editor's pan
 
 ---
 
-### Task D4: the editor scene, shortcuts, Save, Play and the round trip
+### Task 13: the editor scene, shortcuts, Save, Play and the round trip
 
 **Files:** Modify `scripts/editor/room_editor.gd`, `scenes/room_editor.tscn`; Append to `tests/test_room_editor_scene.gd` and `tests/test_editor_play.gd`.
 
@@ -2403,7 +2403,7 @@ func test_the_editor_plays_and_returns_and_save_after_the_round_trip_writes_the_
 
 - [ ] **Step 2: Run to verify it fails.** Expected: FAIL (`view`, `panels`, `play_error`, `save`, `save_dir`, `open_room`, `play` not found).
 
-- [ ] **Step 3: Implement** `RoomEditor` (replace the skeleton): `var view: RoomView`, `var panels: EditorPanels`, `var save_dir := "res://data/rooms"`; `_ready` builds `view` (added first, so the room draws under the panels) and `panels` (`setup(model)`), wires the signals (`tool_chosen` to `view.tool` and the palette, `undo_pressed` to `model.undo()` then `view.refresh()`, `fit_pressed`, `one_to_one_pressed`, `validate_pressed` to `panels.show_validation(model.validate())`, `save_pressed` to `save()`, `play_pressed` to `play(view.to_room(get_viewport().get_mouse_position()))`, `room_chosen` to `open_room`, `new_room_requested` to `new_room`, and `view.message` to `panels.set_status`, `view.changed` to update the dirty marks and the window title), restores the view state from `Game.editor_resume` when present, and forwards `_unhandled_input` mouse events to `view.handle_event`. `_unhandled_key_input` reads the shortcuts (`event.is_command_or_control_pressed()` covers Cmd on macOS and Ctrl elsewhere): a `LineEdit` that has focus consumes its own key events in `_gui_input`, so the shortcut handler never sees them; the test `focus_new_room_id()` (a helper on `EditorPanels` that opens the dialog's id field and grabs focus) proves it. `play_error(pos: Vector2) -> String` returns `""` or the first refusal in the order: not in the sandbox (`"launch the editor with tools/edit_rooms.sh so Play cannot touch your save"`), an exit to an unknown room (`"an exit points at an unknown room: fix it (Validate lists it)"`), no floor (`"click open floor"`). `play(pos)` calls `play_error`, shows a refusal in the status bar, else builds the request exactly as in Task C1 and calls `get_tree().change_scene_to_file("res://scenes/main.tscn")`. `save()` uses `save_dir`, reports `saved N room(s)` and each error `"<id>: <message>"`.
+- [ ] **Step 3: Implement** `RoomEditor` (replace the skeleton): `var view: RoomView`, `var panels: EditorPanels`, `var save_dir := "res://data/rooms"`; `_ready` builds `view` (added first, so the room draws under the panels) and `panels` (`setup(model)`), wires the signals (`tool_chosen` to `view.tool` and the palette, `undo_pressed` to `model.undo()` then `view.refresh()`, `fit_pressed`, `one_to_one_pressed`, `validate_pressed` to `panels.show_validation(model.validate())`, `save_pressed` to `save()`, `play_pressed` to `play(view.to_room(get_viewport().get_mouse_position()))`, `room_chosen` to `open_room`, `new_room_requested` to `new_room`, and `view.message` to `panels.set_status`, `view.changed` to update the dirty marks and the window title), restores the view state from `Game.editor_resume` when present, and forwards `_unhandled_input` mouse events to `view.handle_event`. `_unhandled_key_input` reads the shortcuts (`event.is_command_or_control_pressed()` covers Cmd on macOS and Ctrl elsewhere): a `LineEdit` that has focus consumes its own key events in `_gui_input`, so the shortcut handler never sees them; the test `focus_new_room_id()` (a helper on `EditorPanels` that opens the dialog's id field and grabs focus) proves it. `play_error(pos: Vector2) -> String` returns `""` or the first refusal in the order: not in the sandbox (`"launch the editor with tools/edit_rooms.sh so Play cannot touch your save"`), an exit to an unknown room (`"an exit points at an unknown room: fix it (Validate lists it)"`), no floor (`"click open floor"`). `play(pos)` calls `play_error`, shows a refusal in the status bar, else builds the request exactly as in Task 8 and calls `get_tree().change_scene_to_file("res://scenes/main.tscn")`. `save()` uses `save_dir`, reports `saved N room(s)` and each error `"<id>: <message>"`.
 
 - [ ] **Step 4: Run to verify it passes:** `tools/run_tests.sh test_room_editor_scene`, `test_editor_play`. Expected: PASS.
 
@@ -2416,7 +2416,7 @@ git add scripts tests tools docs scenes && git commit -m "feat: the editor scene
 
 ---
 
-### Task D5: look at it
+### Task 14: look at it
 
 **Files:** Create `tools/editor_shots.gd` (a windowed `-s` script, like `tools/aim_shots.gd`), commit the shots under `.tmp/` only (not committed).
 
@@ -2428,7 +2428,7 @@ git add scripts tests tools docs scenes && git commit -m "feat: the editor scene
 
 ## Milestone E: retire the generator
 
-### Task E1: delete `tools/build_world.gd`, write `docs/rooms.md`, fix the headers
+### Task 15: delete `tools/build_world.gd`, write `docs/rooms.md`, fix the headers
 
 **Files:** Delete `tools/build_world.gd`; Create `docs/rooms.md`; Modify `scripts/world/room_def.gd`, `tools/prefabs.gd`.
 
@@ -2450,7 +2450,7 @@ func test_the_generator_is_gone_and_no_code_refers_to_it() -> void:
 git add scripts tests tools docs && git commit -m "chore: retire the room generator; the room data is the source of truth and docs/rooms.md keeps its rationale"
 ```
 
-### Task E2: playtest checklist and the final suite
+### Task 16: playtest checklist and the final suite
 
 **Files:** Modify `docs/playtest-checklist.md`.
 
@@ -2466,4 +2466,4 @@ git add docs && git commit -m "docs: playtest lines for the room editor"
 
 ## Final steps
 
-Whole-branch review with an opus reviewer (`review-package` per the executing-plans skill; give it the Review Focus above verbatim and the spec), one fix pass (each fix RED to GREEN, suite green), a real windowed look at the editor and at a played room (Task D5's shots re-run on the merged tree), then `finishing-a-development-branch`: merge to `main`, run the full suite on the merged tree, push, relaunch the game.
+Whole-branch review with an opus reviewer (`review-package` per the executing-plans skill; give it the Review Focus above verbatim and the spec), one fix pass (each fix RED to GREEN, suite green), a real windowed look at the editor and at a played room (Task 14's shots re-run on the merged tree), then `finishing-a-development-branch`: merge to `main`, run the full suite on the merged tree, push, relaunch the game.
