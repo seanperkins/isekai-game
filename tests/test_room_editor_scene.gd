@@ -206,3 +206,81 @@ func test_creature_markers_are_static_and_an_unknown_id_is_red() -> void:
 	assert_true(markers.any(func(m): return m.get_meta("unknown", false)), "the unknown id is marked")
 	assert_eq(markers.filter(func(m): return m.get_meta("unknown", false)).size(), 1)
 	assert_true(markers.any(func(m): return m.get_node_or_null("Sprite") != null), "a known creature is its sprite")
+
+# --- panels ---
+
+func _panels() -> EditorPanels:
+	var p := EditorPanels.new()
+	add_child_autofree(p)
+	p.setup(model)
+	await wait_process_frames(1)
+	return p
+
+func test_the_panels_list_rooms_creatures_and_mark_dirty_rooms() -> void:
+	var p := await _panels()
+	model.dirty["C2"] = true
+	p.set_rooms(model.rooms.keys(), model.dirty)
+	assert_true(p.room_labels().has("C2 *"))
+	assert_true(p.room_labels().has("C1"))
+	assert_eq(p.palette_ids(), model.creature_ids)
+
+func test_choosing_a_room_or_a_creature_emits_the_id() -> void:
+	var p := await _panels()
+	watch_signals(p)
+	p.set_rooms(["C1", "C2"], {})
+	p.choose_room("C2")
+	assert_signal_emitted_with_parameters(p, "room_chosen", ["C2"])
+	p.choose_creature("toad")
+	assert_signal_emitted_with_parameters(p, "creature_chosen", ["toad"])
+
+func test_pressing_the_buttons_emits_the_signals() -> void:
+	var p := await _panels()
+	watch_signals(p)
+	for label in ["Undo", "Redo", "Fit room", "1:1", "Validate", "Save", "Play"]:
+		p.press(label)
+	for s in ["undo_pressed", "redo_pressed", "fit_pressed", "one_to_one_pressed", "validate_pressed", "save_pressed", "play_pressed"]:
+		assert_signal_emitted(p, s)
+	p.press("Solid")
+	assert_signal_emitted_with_parameters(p, "tool_chosen", ["solid"])
+
+func test_the_palette_shows_only_for_the_creature_tool() -> void:
+	var p := await _panels()
+	p.set_tool("select")
+	assert_false(p.palette_visible())
+	p.press("Creature")
+	assert_true(p.palette_visible())
+
+func test_the_validate_list_shows_the_validators_errors_and_says_so_when_clean() -> void:
+	var p := await _panels()
+	model.rooms["C1"].exits.append({"edge": "top", "from": 100.0, "to": 200.0, "room": "Z"})
+	p.show_validation(model.validate())
+	assert_true(p.validation_lines().any(func(l): return l.contains("unknown room 'Z'")))
+	p.show_validation(PackedStringArray())
+	assert_eq(p.validation_lines(), ["No problems found."])
+
+func test_the_new_room_dialog_refuses_a_taken_id_and_emits_a_valid_request() -> void:
+	var p := await _panels()
+	watch_signals(p)
+	p.open_new_room("right")
+	p.set_new_room_fields("c1", "cave", Vector2i(1, 1))
+	assert_ne(p.new_room_error(), "", "c1 collides with C1")
+	p.confirm_new_room()
+	assert_signal_not_emitted(p, "new_room_requested")
+	p.set_new_room_fields("Fresh", "cave", Vector2i(2, 1))
+	assert_eq(p.new_room_error(), "")
+	p.confirm_new_room()
+	assert_signal_emitted_with_parameters(p, "new_room_requested", ["right", "Fresh", "cave", Vector2i(2, 1)])
+	assert_false(p.new_room_visible(), "the dialog closes")
+
+func test_the_new_room_dialog_warns_about_holes_on_a_vertical_edge() -> void:
+	var p := await _panels()
+	p.open_new_room("bottom")
+	assert_string_contains(p.new_room_note(), "hole")
+	p.open_new_room("right")
+	assert_false(p.new_room_note().contains("hole"))
+
+func test_the_status_bar_shows_the_sandbox_directory_and_the_message() -> void:
+	var p := await _panels()
+	p.set_status("saved 2 rooms")
+	assert_string_contains(p.status_text(), "saved 2 rooms")
+	assert_string_contains(p.status_text(), OS.get_user_data_dir())
