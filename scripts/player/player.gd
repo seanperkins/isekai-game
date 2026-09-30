@@ -725,7 +725,7 @@ func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, _ca
 		return
 	end_channel()  # a hit ends any channel, including a poison hit that carries no `from`
 	var m := skillset.incoming(damage_type, health.hp, health.max_hp)
-	health.take_hit(Damage.direct_hit(raw, m["percent_off"], m["flat_off"] + stats.get_stat("def")), damage_type)
+	health.take_hit(Damage.hit(raw, damage_type, stats.get_stat("def"), m["percent_off"], m["flat_off"]), damage_type)
 	_invuln = INVULN_SECONDS
 	if from != Vector2.INF and not health.is_dead():
 		var away := 1.0 if global_position.x >= from.x else -1.0

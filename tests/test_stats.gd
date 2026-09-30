@@ -44,12 +44,12 @@ func test_reset_run_clears_eat_bonus_and_modifiers() -> void:
 	s.reset_run()
 	assert_eq(s.get_stat("max_hp"), 30)
 
-func test_direct_hit_percent_then_flat_then_floor_min_one() -> void:
-	assert_eq(Damage.direct_hit(4, 20, 0), 3)    # 3.2 -> 3
-	assert_eq(Damage.direct_hit(4, 80, 0), 1)    # 0.8 -> min 1
-	assert_eq(Damage.direct_hit(3, 0, 5), 1)     # DEF above damage -> min 1
-	assert_eq(Damage.direct_hit(6, 0, 1), 5)
-	assert_eq(Damage.direct_hit(10, 90, 0), 1)   # integer math, no 0.999 error
+func test_hit_percent_then_flat_then_floor_min_one() -> void:
+	assert_eq(Damage.hit(4, "physical", 0, 20, 0), 3)    # 3.2 -> 3
+	assert_eq(Damage.hit(4, "physical", 0, 80, 0), 1)    # 0.8 -> min 1
+	assert_eq(Damage.hit(3, "physical", 0, 0, 5), 1)     # flat above the damage -> min 1
+	assert_eq(Damage.hit(6, "physical", 0, 0, 1), 5)     # the flat argument, not DEF: DEF 1 would be the serpent row (4)
+	assert_eq(Damage.hit(10, "physical", 0, 90, 0), 1)   # integer math, no 0.999 error
 
 func test_tick_takes_percent_only_and_may_reach_zero() -> void:
 	assert_eq(Damage.tick(2, 0), 2)

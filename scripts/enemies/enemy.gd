@@ -183,7 +183,7 @@ func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, cau
 	EventBus.world_event.emit("enemy_hit", {"pos": global_position})
 	_cause = cause if cause != "" else cause_for(damage_type)
 	_killed_from = from
-	health.take_hit(Damage.direct_hit(raw, 0, 0 if ignore_def else stats.get_stat("def")), damage_type)
+	health.take_hit(Damage.hit(raw, damage_type, 0 if ignore_def else stats.get_stat("def"), 0, 0), damage_type)
 	if status.state != EnemyStatus.DYING:
 		_hurt_t = HURT_SECONDS
 
