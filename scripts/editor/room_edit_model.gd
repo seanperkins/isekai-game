@@ -20,6 +20,8 @@ var selection := {}
 var _undo: Array = []   # each: {id: RoomDef or null}, the state before a step
 var _redo: Array = []
 var _drag := {}         # a move in progress
+## Counts every recorded edit, undo and redo, so a view can tell that the rooms changed without diffing them.
+var serial := 0
 
 func _init(source: Dictionary, p_creature_ids: Array = []) -> void:
 	creature_ids = p_creature_ids
@@ -80,6 +82,7 @@ func _push(before: Dictionary) -> void:
 	if _undo.size() > UNDO_CAP:
 		_undo.pop_front()
 	_redo.clear()
+	serial += 1
 
 ## Puts `snap` back and returns the state it replaced (the other stack's step).
 func _swap(snap: Dictionary) -> Dictionary:
@@ -92,6 +95,7 @@ func _swap(snap: Dictionary) -> Dictionary:
 			rooms[id] = snap[id]
 			dirty[id] = true
 	selection = {}
+	serial += 1
 	return now
 
 func undo() -> bool:

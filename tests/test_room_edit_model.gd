@@ -76,6 +76,17 @@ func test_the_undo_stack_is_capped() -> void:
 		model.add_solid("C1", Vector2(24 + (i % 40) * 4, 100), Vector2(28 + (i % 40) * 4, 140 + floori(i / 40.0) * 4))
 	assert_eq(model.undo_depth(), RoomEditModel.UNDO_CAP)
 
+func test_serial_counts_edits_undo_and_redo_but_not_clicks() -> void:
+	var s0 := model.serial
+	model._push(model._snap(["C1"]))
+	assert_eq(model.serial, s0, "a step that changed nothing")
+	_add()
+	assert_eq(model.serial, s0 + 1)
+	model.undo()
+	assert_eq(model.serial, s0 + 2)
+	model.redo()
+	assert_eq(model.serial, s0 + 3)
+
 func test_editing_marks_only_the_touched_room_dirty() -> void:
 	_add()
 	assert_eq(model.dirty.keys(), ["C1"])
