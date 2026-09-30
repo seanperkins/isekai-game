@@ -548,3 +548,26 @@ func _clear_in_front(a: RoomDef, edge: String, from: float, to: float) -> bool:
 		if (s as Rect2).intersects(strip):
 			return false
 	return true
+
+# --- save ---
+
+## Writes each dirty room to `<dir>/<id>.tres` with ResourceSaver (the call the generator used). Rooms save independently: a
+## failure leaves that room dirty and the others written. Returns {"saved": [ids], "errors": {id: message}}.
+func save_dirty(dir: String) -> Dictionary:
+	var saved: Array = []
+	var errors := {}
+	var dir_ok := DirAccess.dir_exists_absolute(ProjectSettings.globalize_path(dir))
+	for id in dirty.keys():
+		if not rooms.has(id):
+			dirty.erase(id)
+			continue
+		if not dir_ok:
+			errors[id] = "no such directory: %s" % dir
+			continue
+		var err := ResourceSaver.save(rooms[id], "%s/%s.tres" % [dir, id])
+		if err == OK:
+			saved.append(id)
+			dirty.erase(id)
+		else:
+			errors[id] = error_string(err)
+	return {"saved": saved, "errors": errors}
