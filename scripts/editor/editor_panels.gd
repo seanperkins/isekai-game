@@ -222,6 +222,12 @@ func show_validation(errors: PackedStringArray) -> void:
 		_validation.add_item(e)
 	_validation.visible = true
 
+func hide_validation() -> void:
+	_validation.visible = false
+
+func validation_visible() -> bool:
+	return _validation.visible
+
 func open_new_room(edge: String) -> void:
 	_new_edge.select(maxi(0, EDGES.find(edge)))
 	_new_id.text = ""

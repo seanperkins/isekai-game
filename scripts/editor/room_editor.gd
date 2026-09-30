@@ -13,6 +13,7 @@ var view: RoomView
 var panels: EditorPanels
 var save_dir := "res://data/rooms"
 var _choosing_spot := false
+var _previous_room := ""  # the room you were in before the current one, for when the current one is undone away
 
 func _ready() -> void:
 	var resume = Game.editor_resume
@@ -43,14 +44,21 @@ func _ready() -> void:
 	panels.redo_pressed.connect(redo)
 	panels.fit_pressed.connect(view.fit)
 	panels.one_to_one_pressed.connect(view.one_to_one)
-	panels.validate_pressed.connect(func() -> void: panels.show_validation(model.validate()))
+	panels.validate_pressed.connect(_toggle_validation)
 	panels.save_pressed.connect(save)
 	panels.play_pressed.connect(_ask_for_spot)
 	panels.new_room_requested.connect(new_room)
 	_sync()
 	panels.set_status("Cmd/Ctrl+Z undo, Cmd/Ctrl+S save, F5 play from the pointer")
 
+func _toggle_validation() -> void:
+	if panels.validation_visible():
+		panels.hide_validation()
+	else:
+		panels.show_validation(model.validate())
+
 func _sync() -> void:
+	panels.hide_validation()  # it lists what was true before the edit that made us sync
 	panels.set_rooms(model.rooms.keys(), model.dirty)
 	panels.select_room(room_id)
 	get_window().title = "Room editor - %s%s" % [room_id, " *" if model.dirty.has(room_id) else ""]
@@ -59,6 +67,8 @@ func _sync_status() -> void:
 	pass
 
 func open_room(id: String) -> void:
+	if id != room_id:
+		_previous_room = room_id
 	room_id = id
 	model.select({})
 	view.show_room(model, id)
@@ -66,13 +76,21 @@ func open_room(id: String) -> void:
 
 func undo() -> void:
 	if model.undo():
-		view.refresh()
-		_sync()
+		_after_history()
 
 func redo() -> void:
 	if model.redo():
+		_after_history()
+
+## An undo or redo can remove the room being edited (undoing a new room): go back to where you came from.
+func _after_history() -> void:
+	if model.rooms.has(room_id):
 		view.refresh()
 		_sync()
+		return
+	var ids := model.rooms.keys()
+	ids.sort()
+	open_room(_previous_room if model.rooms.has(_previous_room) else ids[0])
 
 ## Creates a room beside the current one and opens it; a refusal goes to the status bar.
 func new_room(edge: String, id: String, area: String, size: Vector2i) -> void:
@@ -87,6 +105,8 @@ func save() -> void:
 	var result := model.save_dirty(save_dir)
 	var n: int = result["saved"].size()
 	var text := "saved %d room%s" % [n, "" if n == 1 else "s"]
+	for id in result["removed"]:
+		text += "; removed the undone room %s" % id
 	for id in result["errors"]:
 		text += "; %s: %s" % [id, result["errors"][id]]
 	panels.set_status(text)

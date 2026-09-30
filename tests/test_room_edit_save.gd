@@ -84,3 +84,64 @@ func test_an_unedited_room_saves_identical_to_the_shipped_file_but_for_the_scrip
 	for id in ["C1", "G3"]:
 		assert_eq(_without_script_ids(FileAccess.get_file_as_string("%s/%s.tres" % [TMP, id])),
 			_without_script_ids(FileAccess.get_file_as_string("res://data/rooms/%s.tres" % id)), id)
+
+# --- undoing what a Save already wrote ---
+
+func _reload_all(dir: String, ids: Array) -> Dictionary:
+	var out := {}
+	for id in ids:
+		var path := "%s/%s.tres" % [dir, id]
+		if not FileAccess.file_exists(path):
+			path = "res://data/rooms/%s.tres" % id
+		out[id] = ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_IGNORE)
+	return out
+
+func test_undoing_a_saved_new_room_removes_its_file_on_the_next_save_and_redo_brings_it_back() -> void:
+	var ids: Array = ShippedRooms.IDS.duplicate()
+	assert_eq(model.new_room_beside("C6", "left", "Fresh", "cave", Vector2i(1, 1)), "")
+	model.save_dirty(TMP)
+	assert_true(FileAccess.file_exists("%s/Fresh.tres" % TMP))
+	model.undo()
+	var result := model.save_dirty(TMP)
+	assert_eq(result["removed"], ["Fresh"])
+	assert_false(FileAccess.file_exists("%s/Fresh.tres" % TMP), "no orphan room left on disk")
+	assert_true(FileAccess.file_exists("%s/C6.tres" % TMP), "C6 is rewritten without the exit")
+	var dir_ids := ids.duplicate()
+	var reloaded := _reload_all(TMP, dir_ids)
+	var creature_ids: Array = DefLoader.load_dir("res://data/creatures").map(func(c): return c.id)
+	assert_eq("\n".join(WorldValidator.validate(reloaded, creature_ids)), "", "the saved directory is a valid world again")
+	model.redo()
+	model.save_dirty(TMP)
+	assert_true(FileAccess.file_exists("%s/Fresh.tres" % TMP), "redo and Save write it again")
+
+func test_undoing_a_new_room_that_was_never_saved_removes_nothing() -> void:
+	model.new_room_beside("C6", "left", "Fresh", "cave", Vector2i(1, 1))
+	model.undo()
+	var result := model.save_dirty(TMP)
+	assert_eq(result["removed"], [])
+
+func test_a_room_that_was_loaded_is_never_removed_from_disk() -> void:
+	model.dirty["C1"] = true
+	model.save_dirty(TMP)
+	model._removed_on_save["C1"] = true  # even if the set were wrong, only rooms this session created may be deleted
+	var result := model.save_dirty(TMP)
+	assert_eq(result["removed"], [])
+	assert_true(FileAccess.file_exists("%s/C1.tres" % TMP))
+
+# --- dirty means differs from what is on disk ---
+
+func test_undoing_back_to_the_saved_state_clears_the_dirty_mark() -> void:
+	model.add_solid("C1", Vector2(100, 100), Vector2(200, 116))
+	assert_true(model.dirty.has("C1"))
+	model.undo()
+	assert_false(model.dirty.has("C1"), "back to what is on disk")
+	assert_eq(model.save_dirty(TMP)["saved"], [], "nothing to write")
+
+func test_after_a_save_the_saved_state_is_the_new_baseline() -> void:
+	model.add_solid("C1", Vector2(100, 100), Vector2(200, 116))
+	model.save_dirty(TMP)
+	model.add_solid("C1", Vector2(300, 100), Vector2(360, 116))
+	model.undo()
+	assert_false(model.dirty.has("C1"), "undoing to the saved state clears it")
+	model.undo()
+	assert_true(model.dirty.has("C1"), "undoing past the saved state marks it again")

@@ -20,6 +20,10 @@ var selection := {}
 var _undo: Array = []   # each: {id: RoomDef or null}, the state before a step
 var _redo: Array = []
 var _drag := {}         # a move in progress
+var _source_ids := {}   # the rooms that were on disk when the editor opened: never deleted from disk
+var _baseline := {}     # id -> RoomDef: what is on disk (the loaded rooms, then whatever the last Save wrote); dirty = differs
+var _written := {}      # ids Save has written this session
+var _removed_on_save := {}  # rooms created and saved this session, then undone: their file goes on the next Save
 ## Counts every recorded edit, undo and redo, so a view can tell that the rooms changed without diffing them.
 var serial := 0
 
@@ -27,6 +31,8 @@ func _init(source: Dictionary, p_creature_ids: Array = []) -> void:
 	creature_ids = p_creature_ids
 	for id in source:
 		rooms[id] = copy_room(source[id])
+		_baseline[id] = copy_room(source[id])
+		_source_ids[id] = true
 
 ## The exported (stored) properties of RoomDef, so a property added later is copied and compared without an edit here.
 static func _props() -> Array:
@@ -75,7 +81,7 @@ func _push(before: Dictionary) -> void:
 	for id in before:
 		if not same_room(before[id], rooms.get(id)):
 			changed = true
-			dirty[id] = true
+			_mark(id)
 	if not changed:
 		return
 	_undo.append(before)
@@ -84,6 +90,13 @@ func _push(before: Dictionary) -> void:
 	_redo.clear()
 	serial += 1
 
+## A room is dirty when it differs from what is on disk, so undoing back to the saved state clears the mark.
+func _mark(id: String) -> void:
+	if same_room(rooms.get(id), _baseline.get(id)):
+		dirty.erase(id)
+	else:
+		dirty[id] = true
+
 ## Puts `snap` back and returns the state it replaced (the other stack's step).
 func _swap(snap: Dictionary) -> Dictionary:
 	var now := _snap(snap.keys())
@@ -91,9 +104,12 @@ func _swap(snap: Dictionary) -> Dictionary:
 		if snap[id] == null:
 			rooms.erase(id)
 			dirty.erase(id)
+			if _written.has(id) and not _source_ids.has(id):
+				_removed_on_save[id] = true  # a room this session created and saved: its file must not outlive the undo
 		else:
 			rooms[id] = snap[id]
-			dirty[id] = true
+			_removed_on_save.erase(id)
+			_mark(id)
 	selection = {}
 	serial += 1
 	return now
@@ -556,9 +572,12 @@ func _clear_in_front(a: RoomDef, edge: String, from: float, to: float) -> bool:
 # --- save ---
 
 ## Writes each dirty room to `<dir>/<id>.tres` with ResourceSaver (the call the generator used). Rooms save independently: a
-## failure leaves that room dirty and the others written. Returns {"saved": [ids], "errors": {id: message}}.
+## failure leaves that room dirty and the others written. A room this session created, saved and then undid has its file
+## removed (never a room that was on disk when the editor opened). Returns {"saved": [ids], "errors": {id: message},
+## "removed": [ids]}.
 func save_dirty(dir: String) -> Dictionary:
 	var saved: Array = []
+	var removed: Array = []
 	var errors := {}
 	var dir_ok := DirAccess.dir_exists_absolute(ProjectSettings.globalize_path(dir))
 	for id in dirty.keys():
@@ -572,6 +591,23 @@ func save_dirty(dir: String) -> Dictionary:
 		if err == OK:
 			saved.append(id)
 			dirty.erase(id)
+			_baseline[id] = copy_room(rooms[id])
+			_written[id] = true
 		else:
 			errors[id] = error_string(err)
-	return {"saved": saved, "errors": errors}
+	for id in _removed_on_save.keys():
+		if _source_ids.has(id) or rooms.has(id):
+			_removed_on_save.erase(id)
+			continue
+		var path := ProjectSettings.globalize_path("%s/%s.tres" % [dir, id])
+		if dir_ok and FileAccess.file_exists(path):
+			if DirAccess.remove_absolute(path) != OK:
+				errors[id] = "could not remove %s" % path
+				continue
+			if FileAccess.file_exists(path + ".uid"):
+				DirAccess.remove_absolute(path + ".uid")
+			removed.append(id)
+		_removed_on_save.erase(id)
+		_written.erase(id)
+		_baseline.erase(id)
+	return {"saved": saved, "errors": errors, "removed": removed}
