@@ -436,3 +436,115 @@ func _delete_exit() -> String:
 	_push(before)
 	selection = {}
 	return ""
+
+# --- new rooms ---
+
+## The length of the door a new room is created with.
+const DOOR := 80.0
+const MAX_SCREENS := 6
+static var _id_rx: RegEx
+
+static func valid_id(id: String) -> bool:
+	if _id_rx == null:
+		_id_rx = RegEx.new()
+		_id_rx.compile("^[A-Za-z0-9_]+$")
+	return _id_rx.search(id) != null
+
+## "" when `id` may name a new room; else why not. Ids are unique case-insensitively (the file system is).
+func id_error(id: String) -> String:
+	if not valid_id(id):
+		return "an id is letters, digits and underscore"
+	for k in rooms:
+		if String(k).to_lower() == id.to_lower():
+			return "'%s' is already a room (ids differ by more than case)" % k
+	return ""
+
+## A new room across `edge` of `a_id`: bottom-aligned beside a side edge (so the floors are level), left-aligned above or
+## below. Created with the paired exit toward its neighbour, in one undo step. Returns "" or the reason it was refused.
+func new_room_beside(a_id: String, edge: String, new_id: String, area: String, size: Vector2i) -> String:
+	if not WorldValidator.OPPOSITE.has(edge):
+		return "not an edge"
+	var err := id_error(new_id)
+	if err != "":
+		return err
+	if not TerrainArt.has_biome(area):
+		return "unknown area '%s'" % area
+	if size.x < 1 or size.y < 1 or size.x > MAX_SCREENS or size.y > MAX_SCREENS:
+		return "a room is 1 to %d screens each way" % MAX_SCREENS
+	var a: RoomDef = rooms[a_id]
+	var cell: Vector2i
+	match edge:
+		"right": cell = Vector2i(a.cell.x + a.size.x, a.cell.y + a.size.y - size.y)
+		"left": cell = Vector2i(a.cell.x - size.x, a.cell.y + a.size.y - size.y)
+		"bottom": cell = Vector2i(a.cell.x, a.cell.y + a.size.y)
+		_: cell = Vector2i(a.cell.x, a.cell.y - size.y)
+	var b := RoomDef.new()
+	b.id = new_id
+	b.area = area
+	b.cell = cell
+	b.size = size
+	for id in rooms:
+		if (rooms[id] as RoomDef).world_rect().intersects(b.world_rect()):
+			return "would overlap %s" % id
+	var door := _default_door(a, b, edge)
+	if door.x < 0.0:
+		return "no free span for a door on that edge"
+	var opp: String = WorldValidator.OPPOSITE[edge]
+	var oa := WorldValidator.edge_origin(a, edge)
+	var ob := WorldValidator.edge_origin(b, opp)
+	var before := _snap([a_id, new_id])
+	a.exits.append(_exit(edge, door.x, door.y, new_id, {}))
+	b.exits.append(_exit(opp, oa + door.x - ob, oa + door.y - ob, a_id, {}))
+	rooms[new_id] = b
+	_push(before)
+	selection = {}
+	return ""
+
+## A door of DOOR px along the shared edge (a-local from and to, as a Vector2), inside both rooms' allowed range, clear of a's
+## exits, with KEEP_CLEAR px in front of it free of a's interior solids. Side edges try from the floor upward; top and bottom
+## edges from the middle outward. (-1, -1) when nothing fits.
+func _default_door(a: RoomDef, b: RoomDef, edge: String) -> Vector2:
+	var opp: String = WorldValidator.OPPOSITE[edge]
+	var oa := WorldValidator.edge_origin(a, edge)
+	var ob := WorldValidator.edge_origin(b, opp)
+	var la := WorldValidator.edge_range(a, edge)
+	var lb := WorldValidator.edge_range(b, opp)
+	var lo := maxf(oa + la.x, ob + lb.x)
+	var hi := minf(oa + la.y, ob + lb.y)
+	var candidates: Array = []
+	if edge == "left" or edge == "right":
+		var w := hi - DOOR
+		while w >= lo:
+			candidates.append(w)
+			w -= 20.0
+	else:
+		var mid := snap((lo + hi) / 2.0 - DOOR / 2.0)
+		var step := 0.0
+		while mid - step >= lo or mid + step + DOOR <= hi:
+			if mid + step + DOOR <= hi:
+				candidates.append(mid + step)
+			if step > 0.0 and mid - step >= lo:
+				candidates.append(mid - step)
+			step += 20.0
+	for w in candidates:
+		var from: float = snap(w) - oa
+		var to := from + DOOR
+		if from < la.x or to > la.y or _overlaps(a, edge, from, to):
+			continue
+		if not _clear_in_front(a, edge, from, to):
+			continue
+		return Vector2(from, to)
+	return Vector2(-1.0, -1.0)
+
+func _clear_in_front(a: RoomDef, edge: String, from: float, to: float) -> bool:
+	var size := a.pixel_size()
+	var strip: Rect2
+	match edge:
+		"right": strip = Rect2(size.x - KEEP_CLEAR, from, KEEP_CLEAR, to - from)
+		"left": strip = Rect2(0, from, KEEP_CLEAR, to - from)
+		"top": strip = Rect2(from, 0, to - from, KEEP_CLEAR)
+		_: strip = Rect2(from, size.y - KEEP_CLEAR, to - from, KEEP_CLEAR)
+	for s in a.solids:
+		if (s as Rect2).intersects(strip):
+			return false
+	return true
