@@ -5,6 +5,15 @@ extends Node2D
 
 const ROOMS_DIR := "res://data/rooms"
 const AMBIENT := Color(0.6, 0.6, 0.78)  # dim cave; lights bring colour back (fallback for areas without art)
+const EDITOR_SCENE := "res://scenes/room_editor.tscn"
+
+## Set by the room editor before it changes to main.tscn, consumed and cleared by _ready:
+## {"rooms": Dictionary, "room": String, "pos": Vector2} (the player's origin, room-local). Statics, not scene state, so both
+## scenes reach them.
+static var play_request := {}
+## What the editor gets back when Play ends: {"model": RoomEditModel, "room": String, "view": Dictionary}. Consumed by the
+## editor's _ready.
+static var editor_resume = null
 
 var player: Player
 var hud: Hud
@@ -14,6 +23,7 @@ var run: Run
 var ambient: CanvasModulate
 var _skills_by_id := {}
 var _creatures := {}
+var _editor_play := false
 
 ## Each biome sets its own ambient light and sound: the bright Cave, a darker deep, and so on.
 func _on_room_entered(id: String) -> void:
@@ -36,15 +46,22 @@ func _ready() -> void:
 	player.setup(SkillRules, Compendium.model, SkillRules.creature_defs, _emit_game_event)
 	world = World.new()
 	add_child(world)
-	var rooms := World.load_rooms(ROOMS_DIR)
-	for e in WorldValidator.validate(rooms, _creatures.keys()):
-		push_error(e)
-	world.setup(rooms, player, {"spawn": _spawn, "progress": Compendium.progress,
+	var request := Game.play_request
+	Game.play_request = {}
+	_editor_play = not request.is_empty()
+	var rooms: Dictionary = request["rooms"] if _editor_play else World.load_rooms(ROOMS_DIR)
+	# The editor's Play runs on a fresh in-memory progress, so nothing it visits or opens reaches the real profile.
+	var progress = WorldProgress.new() if _editor_play else Compendium.progress
+	if not _editor_play:
+		for e in WorldValidator.validate(rooms, _creatures.keys()):
+			push_error(e)
+	world.setup(rooms, player, {"spawn": _spawn, "progress": progress,
 		"compendium": Compendium.model, "announce": Announcer.queue.push_unlock})
 	world.room_entered.connect(_on_room_entered)
 	var pools := RebirthChoice.pools(rooms)
-	Compendium.progress.sanitize(pools.map(func(p: Dictionary) -> String: return p["id"]))
-	var start := Game.resolve_start(pools, Compendium.progress.take_pending(), Compendium.progress.is_attuned)
+	progress.sanitize(pools.map(func(p: Dictionary) -> String: return p["id"]))
+	var start := {"default": false, "room": request["room"], "pos": request["pos"], "kit": {}} if _editor_play \
+		else Game.resolve_start(pools, progress.take_pending(), progress.is_attuned)
 	if start["default"]:
 		world.enter_start()
 	else:
@@ -57,11 +74,12 @@ func _ready() -> void:
 	skill_screen = SkillScreen.new()
 	add_child(skill_screen)
 	skill_screen.bind(player, SkillRules, Compendium.model, SkillRules.skill_defs)
-	skill_screen.bind_world(world, Compendium.progress)
+	skill_screen.bind_world(world, progress)
 	skill_screen.visibility_changed.connect(func() -> void: hud.visible = not skill_screen.visible)
 	run = Run.new()
 	add_child(run)
-	run.bind(player, world, Compendium.progress, pools)
+	# Bound without progress in an editor Play: a death emits restart_requested at once and never opens the rebirth menu.
+	run.bind(player, world, null if _editor_play else Compendium.progress, pools)
 	run.restart_requested.connect(_restart)
 	var menu := ReincarnationMenu.new()  # bound after the run: a connected menu means the run waits for the choice
 	add_child(menu)
@@ -69,6 +87,10 @@ func _ready() -> void:
 	begin_life(start)
 	if Game.wants_evolve(OS.get_cmdline_user_args()):
 		player.debug_grant_xp(Progression.stage_total(1))  # reach the first evolution without a grind
+	if _editor_play:
+		var back := EditorReturn.new()
+		back.game = self
+		add_child(back)
 
 ## Starts a life: the run's state is cleared, then the pool's kit is given. The kit comes second because
 ## start_run() clears everything a kit would set.
@@ -99,8 +121,17 @@ func _emit_game_event(event_name: String, tags: Dictionary) -> void:
 	EventBus.game_event.emit(event_name, tags)
 
 func _restart() -> void:
+	if _editor_play:
+		return_to_editor()
+		return
 	_prepare_restart()
 	get_tree().reload_current_scene.call_deferred()
+
+## The end of an editor Play: the same clean-up as a restart, then back to the editor scene (the model waits in editor_resume).
+func return_to_editor() -> void:
+	_prepare_restart()
+	Audio.reset()
+	get_tree().change_scene_to_file.call_deferred(EDITOR_SCENE)
 
 ## Everything a fresh run needs before the scene reloads. A pause never carries over.
 func _prepare_restart() -> void:
