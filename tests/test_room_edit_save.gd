@@ -15,6 +15,8 @@ func after_each() -> void:
 	if d != null:
 		for f in d.get_files():
 			d.remove(f)
+		for sub in d.get_directories():
+			d.remove(sub)
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(TMP))
 
 func _load(id: String) -> RoomDef:
@@ -44,6 +46,17 @@ func test_a_failed_save_names_the_room_and_leaves_it_dirty() -> void:
 	assert_eq(result["saved"], [])
 	assert_true(result["errors"].has("C1"))
 	assert_true(model.dirty.has("C1"))
+
+func test_a_write_failure_leaves_that_room_dirty_and_the_others_written() -> void:
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("%s/C1.tres" % TMP))  # a directory where C1's file goes
+	model.add_solid("C1", Vector2(100, 100), Vector2(200, 116))
+	model.add_solid("C2", Vector2(100, 100), Vector2(200, 116))
+	var result := model.save_dirty(TMP)
+	assert_engine_error("Cannot save file")
+	assert_eq(result["saved"], ["C2"])
+	assert_true(result["errors"].has("C1"))
+	assert_true(model.dirty.has("C1"), "the failed room stays dirty")
+	assert_false(model.dirty.has("C2"))
 
 func test_a_new_room_saves_and_so_does_its_neighbours_partner_exit() -> void:
 	assert_eq(model.new_room_beside("C6", "left", "Fresh", "cave", Vector2i(1, 1)), "")
