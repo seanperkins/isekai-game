@@ -83,24 +83,25 @@ func test_atk_3_amplifies_water_blade() -> void:
 	await _cast("water_blade", [3])
 	assert_eq(e.hits, [[4, "physical"]], "3 x 150 / 100 = 4.5 -> 4")
 
-func test_miasma_amplifies_its_cone_once_and_leaves_its_cloud_at_1() -> void:
+func test_miasma_amplifies_its_cone_once() -> void:
 	_atk(3)
 	var e := _enemy(40)
 	await _cast("miasma", [9])
 	assert_eq(e.hits, [[13, "poison"]], "once, at 9 x 150 / 100: not 19, not 9")
-	assert_eq((_clouds()[0] as SporeCloudArea).damage, 1)
 
 func test_the_clouds_holds_and_heals_stay_fixed_at_high_atk() -> void:
 	_atk(5)
 	await _cast("spore_cloud", [32], 3)
 	await _cast("puffball", [64])
 	await _cast("healing_spores", [40])
+	await _cast("miasma", [9])
 	var by_radius := {}
 	for c in _clouds():
 		by_radius[(c as SporeCloudArea).radius] = [(c as SporeCloudArea).damage, (c as SporeCloudArea).heals]
 	assert_eq(by_radius[32.0], [1, 0], "Spore Cloud")
 	assert_eq(by_radius[64.0], [1, 0], "Puffball")
 	assert_eq(by_radius[40.0], [0, 1], "Healing Spores")
+	assert_eq(by_radius[36.0], [1, 0], "Miasma's cloud: at ATK 5 an amplified 1 would be 2")
 	var e := _enemy(50)
 	await _cast("binding_web", [2])
 	assert_eq(e.threads, [2], "a hold tier is not damage")
@@ -134,3 +135,35 @@ func test_a_real_player_at_atk_3_breathes_3_on_a_toad() -> void:
 	a.aim = Vector2(1, 0)
 	a.activate()
 	assert_eq(toad.health.hp, 47, "ATK 3 turns the level 1 Damage 2 into 3")
+
+func _real(id: String, x: float) -> Enemy:
+	var defs := {}
+	for c in DefLoader.load_dir("res://data/creatures"):
+		defs[c.id] = c
+	var skills := {}
+	for d in DefLoader.load_dir("res://data/skills"):
+		skills[d.id] = d
+	var e := Enemy.new()
+	e.setup(defs[id], skills)
+	add_child_autofree(e)
+	e.set_physics_process(false)
+	e.health.hp = 50
+	e.health.max_hp = 50
+	e.global_position = Vector2(x, 0)
+	return e
+
+func test_poison_breath_ignores_the_crabs_armor_at_levels_1_and_4() -> void:
+	var values := [2, 3, 4, 5, 6]
+	var crab := _real("mushroom_crab", 40)
+	await _cast("poison_breath", values, 1)
+	assert_eq(crab.health.hp, 48, "level 1: Damage 2 through DEF 2 (it was 1)")
+	crab.health.hp = 50
+	await _cast("poison_breath", values, 4)
+	assert_eq(crab.health.hp, 45, "level 4: Damage 5 through DEF 2 (it was 3)")
+
+func test_water_blade_at_atk_5_against_the_lizards_armor() -> void:
+	_atk(5)
+	var lizard := _real("lizard", 60)
+	assert_eq(lizard.stats.get_stat("def"), 3)
+	await _cast("water_blade", [3])
+	assert_eq(lizard.health.hp, 47, "3 x 200 / 100 = 6 physical, 38% off for DEF 3: 3")

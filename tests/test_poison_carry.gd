@@ -44,7 +44,6 @@ func test_toad_spit_ticks_at_20_percent_cost_two_hp_from_a_fresh_player() -> voi
 	_run_out()
 	assert_eq(after_application - player.health.hp, 2, "800, then 1600 -> 1, then 1400 -> 1")
 	assert_eq(player._poison_milli, 400)
-	assert_eq(rules.level_of("poison_resistance"), 0, "the stub is the resistance; no real skill was levelled")
 
 func test_two_spits_at_67_percent_cost_one_hp_of_ticks_and_the_carry_survives() -> void:
 	_resist(67)
@@ -71,7 +70,6 @@ func test_three_spits_at_67_percent_cost_two_hp_of_ticks_with_970_carried() -> v
 	assert_eq(applications, 3, "each application is max(1, 4 x 33 / 100)")
 	assert_eq(tick_hp, 2)
 	assert_eq(player._poison_milli, 970)
-	assert_eq(rules.level_of("poison_resistance"), 0)
 
 func test_a_moth_puff_at_20_percent_costs_one_hp_of_ticks() -> void:
 	_resist(20)
@@ -98,3 +96,31 @@ func test_a_new_application_keeps_the_carry_and_restarts_the_clock() -> void:
 	assert_eq(player._poison_milli, 330, "a new application keeps the fraction")
 	_run_out()
 	assert_eq(player._poison_milli, 320, "660, 990, 1320 -> 1 HP: a fresh three seconds of ticks")
+
+## The real skill and the real trait, not the stub: what reaches the ticks is what the skill set says for "poison".
+func _own_poison_resistance() -> void:
+	for i in 6:
+		rules.handle_event("damaged", {"damage_type": "poison"})
+	assert_eq(rules.level_of("poison_resistance"), 1, "six poison hits unlock Poison Resistance at level 1")
+
+func test_real_poison_resistance_l1_shaves_the_ticks_of_a_toad_spit() -> void:
+	_own_poison_resistance()
+	assert_eq(player.skillset.incoming("poison", 30, 30)["percent_off"], 20)
+	var hp := player.health.hp
+	_spit()
+	assert_eq(hp - player.health.hp, 3, "the application: 4 x 80 / 100 = 3.2 -> 3")
+	var after := player.health.hp
+	_run_out()
+	assert_eq(after - player.health.hp, 2, "800, then 1600 -> 1, then 1400 -> 1")
+	assert_eq(rules.level_of("poison_resistance"), 1, "one more poison hit does not level it")
+
+func test_venom_blood_shaves_the_ticks_too() -> void:
+	player.skillset.form_flags = {"trait_venom_blood": true}
+	player.skillset.refresh()
+	assert_eq(player.skillset.incoming("poison", 30, 30)["percent_off"], FormEffects.VENOM_PERCENT)
+	var hp := player.health.hp
+	_spit()
+	assert_eq(hp - player.health.hp, 2, "the application: 4 x 70 / 100 = 2.8 -> 2")
+	var after := player.health.hp
+	_run_out()
+	assert_eq(after - player.health.hp, 2, "700, then 1400 -> 1, then 1100 -> 1")

@@ -139,3 +139,10 @@ func test_skill_power_is_the_table_at_atk_1_and_grows_25_percent_per_point() -> 
 	assert_eq(Damage.skill_power(9, 3), 13)
 	assert_eq(Damage.skill_power(1, 5), 2, "why the clouds do not use it: the value 1 is all rounding cliff")
 	assert_eq(Damage.skill_power(3, 0), 3, "ATK below 1 is treated as 1")
+
+func test_a_toad_spit_on_def_3_costs_its_application_and_all_three_ticks() -> void:
+	_def(3)
+	player.receive_poison(4, 1, 3.0)
+	for i in 3:
+		player.tick(1.0)
+	assert_eq(player.health.hp, 30 - 4 - 3, "poison ignores DEF, ticks included")

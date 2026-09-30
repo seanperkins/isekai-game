@@ -57,4 +57,5 @@ func test_tick_milli_takes_percent_only_in_thousandths() -> void:
 	assert_eq(Damage.tick_milli(2, 65), 700, "not 0: the fraction is carried")
 	assert_eq(Damage.tick_milli(10, 90), 1000)
 	assert_eq(Damage.tick_milli(1, 20), 800)
+	assert_eq(Damage.tick_milli(1, 30), 700, "Venom Blood")
 	assert_eq(Damage.tick_milli(1, 100), 50, "clamped at 95%; a clamp of 100 would give 0")
