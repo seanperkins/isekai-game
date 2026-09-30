@@ -24,6 +24,15 @@ func before_each() -> void:
 func after_each() -> void:
 	SkillRules.reset_run()
 	Announcer.queue.clear()
+	FormOffers._default_supply = {}  # forget a supply a test pinned; the next reader recomputes it from disk
+
+## Evolution offers read FormOffers.default_supply (every room on disk). A pin about what the shipped rooms feed pins that
+## cache to the shipped rooms, so a room added later does not move it.
+func _pin_supply_to_the_shipped_rooms() -> void:
+	var creatures := {}
+	for c in DefLoader.load_dir("res://data/creatures"):
+		creatures[c.id] = c
+	FormOffers._default_supply = FormOffers.supply(ShippedRooms.load_all(), creatures, FormLoader.load_all())
 
 func _tickers() -> Array:
 	var out: Array = []
@@ -122,6 +131,7 @@ func test_a_starting_level_plays_no_level_up_events() -> void:
 	assert_false(seen.has("leveled_up"), "no fanfare at the start of a life")
 
 func test_seeded_affinity_counts_toward_the_first_evolution_and_nothing_else() -> void:
+	_pin_supply_to_the_shipped_rooms()
 	RebirthKit.apply(player, rules, compendium, {"affinity": {"thread": 7}})
 	assert_eq(player.progression.seeded["thread"], 7)
 	assert_eq(rules.count("absorbed", {"essence": "thread"}), 0, "the ledger is untouched: no skill unlocks from seeds")
@@ -160,7 +170,10 @@ func test_kit_validation_accepts_good_kits_and_names_bad_ones() -> void:
 
 func test_the_eligibility_check_bites_on_a_poorly_seeded_kit() -> void:
 	var forms := FormLoader.load_all()
-	var supply := FormOffers.default_supply(forms)
+	var creatures := {}
+	for c in DefLoader.load_dir("res://data/creatures"):
+		creatures[c.id] = c
+	var supply := FormOffers.supply(ShippedRooms.load_all(), creatures, forms)  # the shipped rooms, not whatever is on disk
 	assert_lt(RebirthKit.eligible_lineages({"thread": 5}, supply, forms), 2, "one lineage is not enough")
 	assert_gte(RebirthKit.eligible_lineages({"thread": 7, "sound": 8, "flight": 8}, supply, forms), 2)
 
@@ -178,7 +191,7 @@ func test_every_shipped_grotto_pool_leaves_two_lineages_eligible_and_its_seeds_m
 	# a seeded start must not lock you out of lineages: the kit's seeds plus what a life eats in the ungated
 	# Grotto, against the whole world's supply, leave at least two eligible, and more than without the seeds
 	var forms := FormLoader.load_all()
-	var rooms := World.load_rooms("res://data/rooms")
+	var rooms := ShippedRooms.load_all()
 	var creatures := {}
 	for c in DefLoader.load_dir("res://data/creatures"):
 		creatures[c.id] = c

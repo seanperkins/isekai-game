@@ -84,7 +84,7 @@ func test_an_untracked_award_with_no_key_is_always_full() -> void:
 	assert_eq(p.award("", "down", 5), 5)
 
 func test_a_full_first_pass_of_the_cave_stays_under_the_stage_one_cap() -> void:
-	var rooms := World.load_rooms("res://data/rooms")
+	var rooms := ShippedRooms.load_all()
 	var creatures := {}
 	for c in DefLoader.load_dir("res://data/creatures"):
 		creatures[c.id] = c

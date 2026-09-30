@@ -171,7 +171,7 @@ func test_the_bundled_content_still_validates() -> void:
 	assert_eq(loaded["errors"].size(), 0, str(loaded["errors"]))
 
 func test_the_top_levels_are_reachable_against_what_their_sources_supply() -> void:
-	var rooms := World.load_rooms("res://data/rooms")
+	var rooms := ShippedRooms.load_all()
 	var creatures := {}
 	for c in DefLoader.load_dir("res://data/creatures"):
 		creatures[c.id] = c

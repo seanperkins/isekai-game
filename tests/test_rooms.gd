@@ -9,11 +9,13 @@ func before_all() -> void:
 		rooms[r.id] = r
 
 func test_the_world_has_the_cave_and_the_grotto_and_validates() -> void:
-	var ids := rooms.keys()
-	ids.sort()
-	assert_eq(ids, ["C1", "C2", "C3", "C4", "C5", "C6", "G1", "G2", "G3", "G4", "G5"])
+	for id in ShippedRooms.IDS:
+		assert_true(rooms.has(id), id)
 	assert_eq("\n".join(WorldValidator.validate(rooms)), "")
 	assert_true(rooms["C1"].is_start())
+
+func test_the_shipped_list_names_rooms_that_exist() -> void:
+	assert_eq(ShippedRooms.load_all().size(), ShippedRooms.IDS.size())
 
 func test_cave_meets_the_food_minimums() -> void:
 	var counts := {}
