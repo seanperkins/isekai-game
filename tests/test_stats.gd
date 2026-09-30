@@ -51,8 +51,10 @@ func test_hit_percent_then_flat_then_floor_min_one() -> void:
 	assert_eq(Damage.hit(6, "physical", 0, 0, 1), 5)     # the flat argument, not DEF: DEF 1 would be the serpent row (4)
 	assert_eq(Damage.hit(10, "physical", 0, 90, 0), 1)   # integer math, no 0.999 error
 
-func test_tick_takes_percent_only_and_may_reach_zero() -> void:
-	assert_eq(Damage.tick(2, 0), 2)
-	assert_eq(Damage.tick(2, 35), 1)   # 1.3 -> 1
-	assert_eq(Damage.tick(2, 65), 0)   # 0.7 -> 0
-	assert_eq(Damage.tick(10, 90), 1)  # exactly 1, not 0.999
+func test_tick_milli_takes_percent_only_in_thousandths() -> void:
+	assert_eq(Damage.tick_milli(2, 0), 2000)
+	assert_eq(Damage.tick_milli(2, 35), 1300)
+	assert_eq(Damage.tick_milli(2, 65), 700, "not 0: the fraction is carried")
+	assert_eq(Damage.tick_milli(10, 90), 1000)
+	assert_eq(Damage.tick_milli(1, 20), 800)
+	assert_eq(Damage.tick_milli(1, 100), 50, "clamped at 95%; a clamp of 100 would give 0")

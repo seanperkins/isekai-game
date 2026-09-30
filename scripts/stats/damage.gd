@@ -19,7 +19,9 @@ static func hit(power: int, damage_type: String, defense: int, resist_pct: int, 
 	var through := (100 - armor) * (100 - clampi(resist_pct, 0, RESIST_CAP))
 	return maxi(1, floori(float(power * through) / 10000.0) - flat_off)
 
-## DoT ticks: percent reductions only; may reach 0.
-static func tick(raw: int, percent_off: int) -> int:
-	var p := clampi(percent_off, 0, 100)
-	return maxi(0, floori(float(raw * (100 - p)) / 100.0))
+## Thousandths of an HP: what a poison tick is counted in, so a resisted 1-point tick is a fraction to carry, not a zero.
+const MILLI := 1000
+
+## A poison tick in thousandths of an HP per second: Poison Resistance reaches 1-point ticks instead of deleting them.
+static func tick_milli(raw: int, resist_pct: int) -> int:
+	return floori(float(raw * (100 - clampi(resist_pct, 0, RESIST_CAP)) * MILLI) / 100.0)
