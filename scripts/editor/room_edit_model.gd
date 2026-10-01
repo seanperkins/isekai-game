@@ -5,6 +5,7 @@ extends RefCounted
 
 const GRID := 4.0
 const UNDO_CAP := 200
+const FEATURE_KINDS := ["glow_pool", "tablet", "switch", "rebirth_pool"]
 const MIN_SOLID := 4.0
 
 static var _prop_names: Array = []
@@ -12,7 +13,7 @@ static var _prop_names: Array = []
 var rooms := {}     # id -> RoomDef (working copies)
 var dirty := {}     # id -> true: rooms edited since the last successful save
 var creature_ids: Array = []
-## {} or {"room", "kind": "solid" | "spawn" | "exit", "index"}
+## {} or {"room", "kind": "solid" | "spawn" | "exit" | "feature", "index"}
 var selection := {}
 var _undo: Array = []   # each: {id: RoomDef or null}, the state before a step
 var _redo: Array = []
@@ -143,9 +144,7 @@ static func label_for(rect: Rect2, hard: Array = []) -> String:
 ## gates of closed shortcut exits (what the editor view and Play draw).
 func rock(room_id: String, with_gates := false) -> Array:
 	var r: RoomDef = rooms[room_id]
-	var out: Array = r.solids.duplicate()
-	for w in RoomBuilder.edge_walls(r.pixel_size(), r.exits):
-		out.append(w["rect"])
+	var out: Array = RoomLint.rock(r)
 	if with_gates:
 		for e in r.exits:
 			if e.has("shortcut"):
@@ -194,7 +193,8 @@ func add_spawn(room_id: String, creature_id: String, pos: Vector2) -> String:
 
 # --- hit-testing ---
 
-## The element under a room-local point: the nearest creature within `pick`, else an exit's gap, else the smallest solid.
+## The element under a room-local point: the nearest creature within `pick`, else a feature's drawn box, else an exit's gap, else
+## the smallest solid.
 func hit(room_id: String, p: Vector2, pick: float) -> Dictionary:
 	var r: RoomDef = rooms[room_id]
 	var best := -1
@@ -206,6 +206,11 @@ func hit(room_id: String, p: Vector2, pick: float) -> Dictionary:
 			best_d = d
 	if best >= 0:
 		return _sel(room_id, "spawn", best)
+	for i in r.features.size():
+		var f: Dictionary = r.features[i]
+		var box: Rect2 = RoomLint.FEATURE_BOX.get(f.get("kind", ""), Rect2(-6, -12, 12, 12))
+		if Rect2(box.position + (f["pos"] as Vector2), box.size).grow(pick).has_point(p):
+			return _sel(room_id, "feature", i)
 	for i in r.exits.size():
 		if RoomBuilder.gate_rect(r.pixel_size(), r.exits[i]).grow(pick).has_point(p):
 			return _sel(room_id, "exit", i)
@@ -234,8 +239,14 @@ func begin_move(sel: Dictionary) -> bool:
 			if i >= r.spawns.size():
 				return false
 			_drag = {"sel": sel, "before": _snap([sel["room"]]), "orig": r.spawns[i]["pos"]}
-		_:
+		"feature":
+			if i >= r.features.size():
+				return false
+			_drag = {"sel": sel, "before": _snap([sel["room"]]), "orig": r.features[i]["pos"]}
+		"exit":
 			return _begin_move_exit(sel)
+		_:
+			return false
 	selection = sel
 	return true
 
@@ -261,8 +272,14 @@ func move_to(delta: Vector2) -> void:
 			var p: Vector2 = (_drag["orig"] as Vector2) + d
 			if bounds(r).has_point(p) and not _in_rock(sel["room"], p):
 				r.spawns[sel["index"]]["pos"] = p
-		_:
+		"feature":
+			var base = _feature_base(sel["room"], (_drag["orig"] as Vector2) + d, r.features[sel["index"]]["kind"])
+			if base is Vector2:
+				r.features[sel["index"]]["pos"] = base
+		"exit":
 			_move_exit_to(d)
+		_:
+			pass
 
 func end_move() -> void:
 	if _drag.is_empty():
@@ -295,28 +312,95 @@ func delete_selection() -> String:
 			var before := _snap([selection["room"]])
 			r.spawns.remove_at(i)
 			_push(before)
-		_:
+		"feature":
+			if i >= r.features.size():
+				return "nothing selected"
+			var before := _snap([selection["room"]])
+			r.features.remove_at(i)
+			_push(before)
+		"exit":
 			return _delete_exit()
+		_:
+			return "nothing selected"
 	selection = {}
 	return ""
 
 # --- where Play starts ---
 
-## Where Play puts the slime for a click at `p`: the point straight down to the first rock below, a ledge included; null when
-## `p` is outside the room or in rock, or nothing is below it. The returned point is the player's origin (feet on the rock).
-func floor_spot(room_id: String, p: Vector2) -> Variant:
+## The top of the first solid or boundary floor at or under `p`: null when `p` is outside the room, inside rock, or nothing is
+## below it. `with_gates` adds the gates of closed shortcut exits as surfaces (Play stands on them; a feature does not, since
+## they vanish when the shortcut opens).
+func surface_below(room_id: String, p: Vector2, with_gates := false) -> Variant:
 	if not bounds(rooms[room_id]).has_point(p):
 		return null
 	var best := INF
-	for rect in rock(room_id, true):
+	for rect in rock(room_id, with_gates):
 		var q: Rect2 = rect
 		if q.has_point(p):
 			return null
 		if p.x >= q.position.x and p.x < q.end.x and q.position.y >= p.y and q.position.y < best:
 			best = q.position.y
-	if best == INF:
-		return null
-	return Vector2(p.x, best - BodyConfig.BOTTOM)
+	return null if best == INF else best
+
+## Where Play puts the slime for a click at `p` (the surface below it, a closed gate included by default; Play passes false when
+## shortcuts are open). The player's origin: feet on the rock. The two defaults are opposite on purpose: Play stands on a closed
+## gate, a feature never does.
+func floor_spot(room_id: String, p: Vector2, with_gates := true) -> Variant:
+	var y = surface_below(room_id, p, with_gates)
+	return null if y == null else Vector2(p.x, float(y) - BodyConfig.BOTTOM)
+
+# --- features ---
+
+## A feature's base for a candidate point: x snapped, y the surface found from one pixel above the candidate (so a point exactly
+## on a surface top, as every drag step is, finds that surface instead of being "inside" it). A Vector2, or the reason it is
+## refused.
+func _feature_base(room_id: String, p: Vector2, kind: String) -> Variant:
+	var r: RoomDef = rooms[room_id]
+	var q := Vector2(snap(p.x), snap(p.y))
+	if not bounds(r).has_point(q):
+		return "outside the room"
+	var y = surface_below(room_id, q - Vector2(0.0, 1.0))
+	if y == null:
+		return "nothing to stand on there: click open space above a floor or a ledge"
+	var base := Vector2(q.x, float(y))
+	if RoomLint.embedded(r, base, kind):
+		return "stuck in rock or a wall"
+	return base
+
+## The first n for which "<room>_<kind>_<n>" is not used by any feature in the world.
+func _feature_id(room_id: String, kind: String) -> String:
+	var taken := {}
+	for id in rooms:
+		for f in (rooms[id] as RoomDef).features:
+			taken[f.get("id", "")] = true
+	var n := 1
+	while taken.has("%s_%s_%d" % [room_id.to_lower(), kind, n]):
+		n += 1
+	return "%s_%s_%d" % [room_id.to_lower(), kind, n]
+
+func add_feature(room_id: String, kind: String, pos: Vector2) -> String:
+	if not FEATURE_KINDS.has(kind):
+		return "unknown feature '%s'" % kind
+	var base = _feature_base(room_id, pos, kind)
+	if base is String:
+		return base
+	var r: RoomDef = rooms[room_id]
+	var id := _feature_id(room_id, kind)
+	var f := {"kind": kind, "id": id, "pos": base}
+	match kind:
+		"tablet":
+			f["title"] = "Tablet"
+			f["text"] = ""
+		"switch":
+			f["shortcut"] = id
+		"rebirth_pool":
+			f["area"] = r.area
+			f["kit"] = {}
+	var before := _snap([room_id])
+	r.features.append(f)
+	_push(before)
+	selection = _sel(room_id, "feature", r.features.size() - 1)
+	return ""
 
 func validate() -> PackedStringArray:
 	return WorldValidator.validate(rooms, creature_ids)
