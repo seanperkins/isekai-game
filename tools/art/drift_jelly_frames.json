@@ -1,0 +1,13 @@
+{
+ "canonical": "assets/sprites/lizard_1.png",
+ "style": "Modern pixel art with soft lighting (Style D): a small drifting cave jellyfish with a rounded translucent lavender-pink bell, a faint inner glow, a few short trailing tentacles and two tiny dark dots for eyes, a clean dark outline, chunky readable pixels, gentle highlights and shading. Match the palette, outline weight and rendering of the reference image (an armored lizard) but draw this jellyfish. Side view. Draw only the creature: no water, no ground, no shadow, no effects.",
+ "anchor": "drift_1",
+ "frames": [
+  {"name": "drift_1", "width": 34, "refs": [], "prompt": "The jellyfish with its bell wide open, tentacles hanging straight down."},
+  {"name": "drift_2", "width": 34, "refs": ["drift_1"], "prompt": "The same jellyfish with its bell contracted narrow, tentacles gathered together."},
+  {"name": "drift_3", "width": 34, "refs": ["drift_1"], "prompt": "The same jellyfish with its bell relaxing open, tentacles flaring outward."},
+  {"name": "stunned", "width": 34, "refs": ["drift_1"], "prompt": "The same jellyfish dazed: bell slumped to one side, tentacles limp, a few small sparks drifting around it."},
+  {"name": "hurt", "width": 34, "refs": ["drift_1"], "prompt": "The same jellyfish flinching, bell clenched tight, tentacles curled up."},
+  {"name": "downed", "width": 36, "refs": ["drift_1"], "prompt": "The same jellyfish collapsed, bell flat, tentacles spread limp, the glow dim."}
+ ]
+}
