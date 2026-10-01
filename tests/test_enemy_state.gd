@@ -80,3 +80,17 @@ func test_the_flooded_creatures_map_to_their_clips() -> void:
 	assert_eq(_pick("bog_lizardman", {"spit_recent": true}), "spit")
 	assert_eq(_pick("bog_lizardman", {"moving": true}), "walk")
 	assert_eq(_pick("bog_lizardman"), "idle")
+
+func test_the_deep_creatures_map_to_their_clips() -> void:
+	assert_eq(_pick("gloom_wolf"), "idle")
+	assert_eq(_pick("gloom_wolf", {"moving": true}), "walk")
+	assert_eq(_pick("gloom_wolf", {"charge": "windup"}), "windup")
+	assert_eq(_pick("gloom_wolf", {"charge": "charge", "moving": true}), "charge")
+	assert_eq(_pick("gloom_wolf", {"charge": "rest"}), "rest")
+	assert_eq(_pick("armed_ant"), "idle")
+	assert_eq(_pick("armed_ant", {"moving": true}), "walk", "an ant must not fall back to idle while it marches")
+	assert_eq(_pick("stone_drake"), "idle")
+	assert_eq(_pick("stone_drake", {"moving": true}), "walk")
+	assert_eq(_pick("stone_drake", {"charge": "windup"}), "windup")
+	assert_eq(_pick("stone_drake", {"charge": "rest"}), "stomp", "the slam pose is held for the whole rest")
+	assert_eq(_pick("stone_drake", {"status": EnemyStatus.STUNNED, "charge": "windup"}), "stunned")

@@ -3,7 +3,7 @@ extends GutTest
 ## line, with shapes inside the frame, and every clip uses frames that exist.
 
 const SETS := ["bat", "toad", "lizard", "spider", "spore_moth", "mushroom_crab", "vine_snake", "pale_moth", "glass_eel", "cave_crayfish",
-	"drift_jelly", "bog_lizardman", "storm_eel"]
+	"drift_jelly", "bog_lizardman", "storm_eel", "gloom_wolf", "armed_ant", "stone_drake"]
 
 func _listed(set_name: String) -> Dictionary:
 	var json := JSON.new()
@@ -50,6 +50,9 @@ func test_only_the_creatures_that_strike_have_attack_shapes() -> void:
 	assert_true(_listed("cave_crayfish")["frames"].any(func(f): return f.has("attack_from")), "the crayfish's lunge")
 	assert_false(_listed("drift_jelly")["frames"].any(func(f): return f.has("attack_from")), "the jelly stings by touch")
 	assert_false(_listed("bog_lizardman")["frames"].any(func(f): return f.has("attack_from")), "the lizardman strikes with its spear")
+	assert_true(_listed("gloom_wolf")["frames"].any(func(f): return f.has("attack_from")), "the wolf's leap")
+	assert_false(_listed("armed_ant")["frames"].any(func(f): return f.has("attack_from")), "the ant strikes by touch")
+	assert_false(_listed("stone_drake")["frames"].any(func(f): return f.has("attack_from")), "the drake's hit is the slam check, not a frame")
 
 func test_frames_keep_a_shared_scale_within_a_creature() -> void:
 	for set_name in SETS:
@@ -75,7 +78,10 @@ func test_every_clip_uses_frames_that_exist_and_every_state_has_a_clip() -> void
 		"cave_crayfish": ["idle", "walk", "windup", "charge", "rest", "stunned", "hurt", "downed"],
 		"drift_jelly": ["drift", "stunned", "hurt", "downed"],
 		"bog_lizardman": ["idle", "walk", "puff", "spit", "stunned", "hurt", "downed"],
-		"storm_eel": ["swim", "warn", "dart", "stunned", "hurt", "downed"]}
+		"storm_eel": ["swim", "warn", "dart", "stunned", "hurt", "downed"],
+		"gloom_wolf": ["idle", "walk", "windup", "charge", "rest", "stunned", "hurt", "downed"],
+		"armed_ant": ["idle", "walk", "stunned", "hurt", "downed"],
+		"stone_drake": ["idle", "walk", "windup", "stomp", "stunned", "hurt", "downed"]}
 	for set_name in SETS:
 		var sheet := SpriteSheet.load_set(set_name)
 		for state in states[set_name]:

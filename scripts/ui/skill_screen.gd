@@ -18,7 +18,8 @@ const PORTRAIT := {"bat": "bat_1", "toad": "toad_idle", "lizard": "lizard_1", "s
 	"serpent": "serpent"}
 ## Creatures that only have a sheet (no single sprite) use this frame of it as their portrait.
 const PORTRAIT_FRAME := {"spore_moth": "fly_1", "mushroom_crab": "idle_1", "vine_snake": "hide_1", "pale_moth": "fly_1",
-	"glass_eel": "swim_1", "cave_crayfish": "idle_1", "drift_jelly": "drift_1", "bog_lizardman": "idle_1", "storm_eel": "swim_1"}
+	"glass_eel": "swim_1", "cave_crayfish": "idle_1", "drift_jelly": "drift_1", "bog_lizardman": "idle_1", "storm_eel": "swim_1",
+	"gloom_wolf": "idle_1", "armed_ant": "idle_1", "stone_drake": "idle_1"}
 const ROW_H := 22.0
 const HEADER_H := 16.0
 const LIST_X := 158.0
