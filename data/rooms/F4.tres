@@ -1,0 +1,84 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_ae6ak"]
+
+[resource]
+script = ExtResource("1_ae6ak")
+id = "F4"
+area = "flooded"
+cell = Vector2i(15, 6)
+size = Vector2i(2, 1)
+solids = [Rect2(680, 266, 100, 12), Rect2(900, 266, 100, 12), Rect2(1120, 266, 100, 12), Rect2(790, 212, 80, 12)]
+decor = [{
+"id": "flooded_puddle_glow",
+"light": Color(0.3, 1, 0.9, 1),
+"pos": Vector2(60, 320)
+}, {
+"id": "flooded_puddle_glow",
+"light": Color(0.3, 1, 0.9, 1),
+"pos": Vector2(760, 320)
+}, {
+"id": "flooded_puddle_glow",
+"light": Color(0.3, 1, 0.9, 1),
+"pos": Vector2(1060, 320)
+}, {
+"id": "flooded_crystal_prism",
+"light": Color(0.95, 0.85, 1, 1),
+"pos": Vector2(700, 266)
+}, {
+"id": "flooded_glow_fungus",
+"light": Color(0.5, 1, 0.6, 1),
+"pos": Vector2(1180, 266)
+}, {
+"id": "flooded_flowers",
+"light": Color(1, 0.85, 0.4, 1),
+"pos": Vector2(1230, 320)
+}, {
+"anchor": "top",
+"id": "flooded_root_hang",
+"pos": Vector2(800, 20)
+}, {
+"anchor": "top",
+"id": "flooded_lichen_hang",
+"pos": Vector2(1100, 20)
+}]
+spawns = [{
+"id": "bog_lizardman",
+"pos": Vector2(720, 254)
+}, {
+"id": "bog_lizardman",
+"pos": Vector2(940, 254)
+}, {
+"id": "bog_lizardman",
+"pos": Vector2(1160, 254)
+}, {
+"id": "bog_lizardman",
+"pos": Vector2(1235, 308)
+}, {
+"id": "cave_crayfish",
+"pos": Vector2(120, 308)
+}, {
+"id": "cave_crayfish",
+"pos": Vector2(800, 308)
+}, {
+"id": "cave_crayfish",
+"pos": Vector2(1000, 308)
+}]
+exits = [{
+"edge": "left",
+"from": 200.0,
+"room": "F3",
+"to": 320.0
+}, {
+"edge": "bottom",
+"from": 220.0,
+"room": "F5",
+"to": 380.0
+}, {
+"edge": "top",
+"from": 440.0,
+"gate": "swim",
+"room": "F6",
+"to": 600.0
+}]
+water = [Rect2(430, 0, 180, 320)]

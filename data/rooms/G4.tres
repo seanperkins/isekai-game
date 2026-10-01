@@ -19,11 +19,11 @@ decor = [{
 }, {
 "id": "grotto_crystal_prism",
 "light": Color(0.95, 0.85, 1, 1),
-"pos": Vector2(250, 320)
+"pos": Vector2(130, 320)
 }, {
 "id": "grotto_flowers",
 "light": Color(1, 0.85, 0.4, 1),
-"pos": Vector2(400, 320)
+"pos": Vector2(520, 320)
 }, {
 "anchor": "top",
 "id": "grotto_lichen_hang",
@@ -52,7 +52,7 @@ dressing = [{
 }, {
 "factor": 0.5,
 "piece": "spore_pod",
-"pos": Vector2(360, 330)
+"pos": Vector2(610, 330)
 }]
 spawns = [{
 "id": "spore_moth",
@@ -68,26 +68,31 @@ spawns = [{
 "pos": Vector2(150, 308)
 }, {
 "id": "mushroom_crab",
-"pos": Vector2(260, 308)
+"pos": Vector2(190, 308)
 }, {
 "id": "mushroom_crab",
-"pos": Vector2(560, 308)
+"pos": Vector2(530, 308)
 }]
 exits = [{
 "edge": "left",
 "from": 200.0,
 "room": "G3",
 "to": 320.0
+}, {
+"edge": "bottom",
+"from": 240.0,
+"room": "F1",
+"to": 400.0
 }]
 features = [{
 "id": "g4_pool",
 "kind": "glow_pool",
-"pos": Vector2(320, 320)
+"pos": Vector2(470, 320)
 }, {
 "hint": "spore_cloud",
 "id": "g4_tablet",
 "kind": "tablet",
-"pos": Vector2(500, 320),
+"pos": Vector2(580, 320),
 "text": "Spores and shells shape those who eat them.",
 "title": "Mossy tablet"
 }]

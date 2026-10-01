@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_amecs"]
+
+[resource]
+script = ExtResource("1_amecs")
+id = "swim"
+display_name = "Swim"
+description = "Move freely through deep water."
+hint = "The water holds you up a little more each time."
+announce = "Proficiency reached. Acquired [Swim]."
+unlock = [{
+"event": "submerged",
+"kind": "counter",
+"n": 20,
+"tags": {}
+}]
+levels_on = {
+"event": "submerged",
+"tags": {}
+}
+level_curve = 40
+max_level = 3
+effects = [{
+"flag": "swim",
+"kind": "capability"
+}, {
+"kind": "modifier",
+"op": "add",
+"stat": "swim_speed",
+"values": [0, 30, 60]
+}]

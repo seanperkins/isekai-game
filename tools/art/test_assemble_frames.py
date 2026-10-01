@@ -119,6 +119,20 @@ class AssembleFramesTest(unittest.TestCase):
                     self.assertTrue(self._inside(outline, (x + 0.5, y + 0.5)), "pixel %d,%d outside" % (x, y))
         self.assertLess(len(outline), 20, "simplified")
 
+    def test_a_frame_ends_where_the_drawing_does(self):
+        # the generated art has anti-aliased edge rows too faint to survive the alpha threshold; the crop (which keeps any alpha)
+        # leaves them in the frame, so the creature would stand a pixel above the floor line
+        im = Image.new("RGBA", (40, 40), (0, 0, 0, 0))
+        for y in range(10, 30):
+            for x in range(10, 30):
+                im.putpixel((x, y), BLUE)
+        for x in range(10, 30):
+            im.putpixel((x, 9), (40, 120, 255, 40))   # a faint row above
+            im.putpixel((x, 30), (40, 120, 255, 40))  # and below
+        fitted = a.fit_scaled(im.copy(), 1.0)
+        self.assertEqual(fitted.getbbox(), (0, 0) + fitted.size, "no empty edge row survives")
+        self.assertEqual(a.trim(Image.new("RGBA", (4, 4), (0, 0, 0, 0))).size, (4, 4), "an empty frame is left alone")
+
     def test_a_solid_block_outlines_to_its_four_corners(self):
         outline = a.outline(Image.new("RGBA", (10, 6), BLUE))
         self.assertEqual(set(outline), {(0, 0), (10, 0), (10, 6), (0, 6)})

@@ -57,6 +57,10 @@ const STUNNED_TINT := Color(0.6, 0.6, 0.85)
 ## How long a non-lethal hit flinches (the hurt frame).
 const HURT_SECONDS := 0.25
 const CLIPS := "res://data/enemy_clips.json"
+## The Bog Lizardman's spear: how far, how level and how often it throws (the toad's are SPIT_*; Spear.SPEED is its speed).
+const SPEAR_RANGE := 140.0
+const SPEAR_LEVEL := 40.0
+const SPEAR_COOLDOWN := 3.0
 ## The spore moth drops a puff every PUFF_INTERVAL while the player is within PUFF_RANGE, flashing PUFF_WINDUP first.
 const PUFF_INTERVAL := 3.0
 const PUFF_WINDUP := 0.4
@@ -98,7 +102,8 @@ var _hurt_t := 0.0
 var _anim_t := 0.0
 var _alert := 0.0
 ## Which behaviour this creature has, resolved once in setup() from what its def and skills say (the precedence the
-## old _act chain used): the vine snake by id, then a ceiling walker, a drifter, a flier, an armored charger, a spitter.
+## old _act chain used): the vine snake by id, then a ceiling walker, a drifter, a flier or a swimmer (the eels are swoopers),
+## an armored charger, a spitter.
 enum Kind { WALKER, CHARGER, SPITTER, SWOOPER, DROPPER, DRIFTER, SNAKE }
 var kind := Kind.WALKER
 ## The one live behaviour state, its timer and its aim. Tokens per kind: swooper idle/hover/warn/dive/climb; charger and
@@ -115,6 +120,9 @@ var _anchor := Vector2.ZERO
 var _puff_t := PUFF_INTERVAL
 ## The animation state _draw_sheet_frame last chose (EnemyState.pick), "" for a creature with no sheet.
 var _anim_state := ""
+## The water rect a swimmer lives in, resolved on the first physics frame (a spawn's position and room are not set in setup).
+var _home_water: DeepWater
+var _water_resolved := false
 
 func setup(p_def: CreatureDef, skill_defs_by_id: Dictionary) -> void:
 	def = p_def
@@ -152,11 +160,11 @@ func _resolve_kind() -> Kind:
 		return Kind.DROPPER
 	if def.drifter:
 		return Kind.DRIFTER
-	if capabilities.has("flight"):
+	if capabilities.has("flight") or def.swimmer:
 		return Kind.SWOOPER
 	if def.armored_charger:
 		return Kind.CHARGER
-	if _spit_damage > 0:
+	if _spit_damage > 0 or def.projectile == "spear":
 		return Kind.SPITTER
 	return Kind.WALKER
 
@@ -276,9 +284,15 @@ func _physics_process(delta: float) -> void:
 	_web_slow = maxf(0.0, _web_slow - delta)
 	var player: Node2D = get_tree().get_first_node_in_group("player")
 	var active := status.state == EnemyStatus.ACTIVE
+	if def.swimmer and not _water_resolved:
+		_home_water = DeepWater.at(get_tree(), global_position)
+		_water_resolved = true
 	if active and player != null:
 		_sense(player, delta)
-		_act(player, delta)
+		if def.swimmer and _home_water == null:
+			velocity = Vector2.ZERO  # no water: nothing to swim in (lint's swimmer_dry reports it)
+		else:
+			_act(player, delta)
 	elif status.state != EnemyStatus.DYING:  # a death effect owns the body while it plays
 		velocity.x = 0.0
 		_clear_inactive()
@@ -300,8 +314,10 @@ func _physics_process(delta: float) -> void:
 	if not no_gravity:
 		velocity.y += GRAVITY * delta
 	move_and_slide()
+	if def.swimmer and _home_water != null:
+		_confine()
 	if active and player != null and is_touching(player):
-		player.receive_hit(stats.get_stat("atk"), "physical", global_position)
+		player.receive_hit(stats.get_stat("atk"), def.contact_type, global_position)
 	_hurt_t = maxf(0.0, _hurt_t - delta)
 	_update_visual(delta)
 
@@ -362,10 +378,33 @@ func can_see(target: Node2D) -> bool:
 	return get_world_2d().direct_space_state.intersect_ray(query).is_empty()
 
 func _sense(player: Node2D, delta: float) -> void:
-	if global_position.distance_to(player.global_position) < CHASE_RANGE and can_see(player):
+	var sees := global_position.distance_to(player.global_position) < CHASE_RANGE and can_see(player)
+	if sees and def.swimmer and _home_water != null and not _home_water.world_rect().has_point(player.global_position):
+		sees = false  # an eel is stirred only by a player in its own water
+	if sees:
 		_alert = ALERT_MEMORY
 	else:
 		_alert = maxf(0.0, _alert - delta)
+
+## Holds a swimmer inside its water rect (shrunk by its half body): the position is clamped, the clamped velocity component is
+## zeroed (a stunned eel's fall does not keep growing against a rect bottom that is not floor) and facing turns inward, which
+## the drifter turns on.
+func _confine() -> void:
+	var half := BODY_SIZE / 2.0
+	var box := _home_water.world_rect()
+	var lo := box.position + half
+	var hi := box.end - half
+	if hi.x < lo.x or hi.y < lo.y:
+		global_position = box.get_center()
+		return
+	var p := global_position
+	var c := Vector2(clampf(p.x, lo.x, hi.x), clampf(p.y, lo.y, hi.y))
+	if c.x != p.x:
+		velocity.x = 0.0
+		facing = 1 if p.x < lo.x else -1
+	if c.y != p.y:
+		velocity.y = 0.0
+	global_position = c
 
 ## Which sprite to draw for this creature right now. All sheets face right.
 func frame_name() -> String:
@@ -374,7 +413,7 @@ func frame_name() -> String:
 		"bat":
 			return "bat_2" if alternate else "bat_1"
 		"toad":
-			return "toad_spit" if _state == "puff" or _spit_cd > SPIT_COOLDOWN - SPIT_POSE_SECONDS else "toad_idle"
+			return "toad_spit" if _state == "puff" or _spit_cd > _spit_cooldown() - SPIT_POSE_SECONDS else "toad_idle"
 		"lizard":
 			return "lizard_2" if alternate and absf(velocity.x) > 1.0 else "lizard_1"
 		"spider":
@@ -417,7 +456,7 @@ func _update_web() -> void:
 
 func _draw_sheet_frame(delta: float) -> void:
 	var state := EnemyState.pick(def.id, status.state, charge_state(), swoop_state(), _state == "puff",
-		_spit_cd > SPIT_COOLDOWN - SPIT_POSE_SECONDS, _on_ceiling, is_on_floor(), absf(velocity.x) > 1.0, _hurt_t > 0.0)
+		_spit_cd > _spit_cooldown() - SPIT_POSE_SECONDS, _on_ceiling, is_on_floor(), absf(velocity.x) > 1.0, _hurt_t > 0.0)
 	_anim_state = state
 	_animator.play(state)
 	_animator.advance(delta)
@@ -439,6 +478,13 @@ func telegraphing() -> bool:
 		Kind.DRIFTER:
 			return _state == "flash"
 	return false
+
+func _throws_spear() -> bool:
+	return def.projectile == "spear"
+
+## Seconds between a throw and the next: the spear's own, else the toad's.
+func _spit_cooldown() -> float:
+	return SPEAR_COOLDOWN if _throws_spear() else SPIT_COOLDOWN
 
 func _speed() -> float:
 	return BASE_SPEED * stats.get_stat("spd") / 100.0 * (0.5 if _slow > 0.0 else 1.0)
@@ -471,6 +517,11 @@ func _act(player: Node2D, delta: float) -> void:
 ## Chase while alert (holding at a ledge or wall rather than walking off it), else patrol home.
 func _walk(to_player: Vector2) -> void:
 	var speed := _speed()
+	if def.projectile != "" and is_alert():
+		velocity.x = 0.0  # a thrower holds its post, facing you
+		if absf(to_player.x) > TURN_LOCK_RANGE:
+			facing = 1 if to_player.x > 0.0 else -1
+		return
 	if is_alert() and absf(to_player.y) < 48.0:
 		if absf(to_player.x) > TURN_LOCK_RANGE:
 			facing = 1 if to_player.x > 0.0 else -1
@@ -539,7 +590,7 @@ func _drift_act(player: Node2D, to_player: Vector2, delta: float) -> void:
 	velocity.x = facing * _speed() * 0.6
 	var target_y := _home_y + sin(_anim_t * 1.6) * 14.0
 	velocity.y = clampf((target_y - global_position.y) * 2.0, -60.0, 60.0)
-	if to_player.length() > PUFF_RANGE or not can_see(player):  # no puffs through rock
+	if not def.puffs or to_player.length() > PUFF_RANGE or not can_see(player):  # no puffs through rock, and only the moths puff
 		_puff_t = PUFF_INTERVAL
 		_state = ""
 		return
@@ -596,13 +647,20 @@ func _spitter_act(player: Node2D, to_player: Vector2, delta: float) -> bool:
 		velocity.x = 0.0
 		_state_t -= delta
 		if _state_t <= 0.0:
-			var blob := SpitBlob.new()
-			get_parent().add_child(blob)
-			blob.launch(global_position + Vector2(facing * 8.0, -6.0), player.global_position, _spit_damage, SPIT_TICK, SPIT_SECONDS)
-			_spit_cd = SPIT_COOLDOWN
+			if _throws_spear():
+				var spear := Spear.new()
+				get_parent().add_child(spear)
+				spear.launch(global_position + Vector2(facing * 8.0, -6.0), player.global_position, stats.get_stat("atk"), 0, 0.0)
+			else:
+				var blob := SpitBlob.new()
+				get_parent().add_child(blob)
+				blob.launch(global_position + Vector2(facing * 8.0, -6.0), player.global_position, _spit_damage, SPIT_TICK, SPIT_SECONDS)
+			_spit_cd = _spit_cooldown()
 			_state = ""
 		return true
-	if is_alert() and _spit_cd <= 0.0 and to_player.length() < SPIT_RANGE:
+	var reach := SPEAR_RANGE if _throws_spear() else SPIT_RANGE
+	var level_ok := absf(to_player.y) <= SPEAR_LEVEL if _throws_spear() else true
+	if is_alert() and _spit_cd <= 0.0 and to_player.length() < reach and level_ok:
 		facing = 1 if to_player.x > 0.0 else -1
 		_state = "puff"
 		_state_t = SPIT_WINDUP
@@ -672,7 +730,10 @@ func _load_sheet() -> void:
 	if _sheet == null:
 		return
 	_animator = SlimeAnimator.new(clips[def.id])
-	_animator.play("idle" if _animator.clips.has("idle") else ("fly" if _animator.clips.has("fly") else "hide"))
+	for first in ["idle", "fly", "swim", "drift", "hide"]:  # the clip a creature starts on: its resting loop
+		if _animator.clips.has(first):
+			_animator.play(first)
+			break
 	_shapes = SlimeShapes.new()
 	_shapes.position = Vector2(0.0, BODY_BOTTOM)
 	add_child(_shapes)

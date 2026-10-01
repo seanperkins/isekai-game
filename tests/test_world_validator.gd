@@ -131,3 +131,6 @@ func test_an_unknown_gate_is_reported_even_when_both_halves_agree() -> void:
 	rooms["A"].exits[0]["gate"] = "wall_clinng"
 	rooms["B"].exits[0]["gate"] = "wall_clinng"
 	assert_string_contains(_errors(rooms), "unknown gate 'wall_clinng'")
+
+func test_swim_is_a_gate_label() -> void:
+	assert_true(WorldValidator.GATES.has("swim"))

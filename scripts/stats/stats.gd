@@ -5,7 +5,7 @@ extends RefCounted
 
 const EAT_CAPS := {"max_hp": 10, "atk": 3, "def": 2, "spd": 20, "max_mp": 10}
 const DEFAULTS := {"max_hp": 0, "atk": 0, "def": 0, "spd": 100, "jump_height": 100,
-	"slide_speed": 100, "predation_time": 100, "regen_interval": 0, "max_mp": 0, "mp_regen": 100}
+	"slide_speed": 100, "predation_time": 100, "regen_interval": 0, "max_mp": 0, "mp_regen": 100, "swim_speed": 120}
 
 var _base := {}
 var _eat := {}     # stat -> bonus

@@ -13,7 +13,7 @@ signal changed
 signal message(text: String)
 signal selection_changed
 
-## "select", "solid", "creature", "exit", "feature" or "decor".
+## "select", "solid", "water", "creature", "exit", "feature" or "decor".
 var tool := "select"
 var creature_id := ""
 var feature_kind := "tablet"  # what the Feature tool places
@@ -28,7 +28,7 @@ var _overlay_layer := CanvasLayer.new()
 var _pressed := false          # the left button is down for the current tool
 var _panning := false
 var _press_room := Vector2.ZERO
-var _rect_live := Rect2()      # the Solid tool's drag
+var _rect_live := Rect2()      # the Solid and Water tools' drag
 var _live_text := ""
 var _exit_edge := ""
 var _exit_live := Vector2(-1.0, -1.0)  # the Exit tool's span along its edge
@@ -190,6 +190,9 @@ func _motion(e: InputEventMouseMotion) -> bool:
 		"solid":
 			_rect_live = RoomEditModel.drag_rect(_press_room, p).intersection(RoomEditModel.bounds(_model.rooms[_room_id]))
 			_live_text = RoomEditModel.label_for(_rect_live, _model.rooms[_room_id].hard_ledges)
+		"water":
+			_rect_live = RoomEditModel.drag_rect(_press_room, p).intersection(RoomEditModel.bounds(_model.rooms[_room_id]))
+			_live_text = "water %d x %d" % [_rect_live.size.x, _rect_live.size.y]
 		"exit":
 			var a := _along(_exit_edge, _press_room)
 			var b := _along(_exit_edge, p)
@@ -224,7 +227,7 @@ func _press(p: Vector2, alt := false, screen := Vector2.ZERO) -> void:
 				_model.begin_move(sel)
 			selection_changed.emit()
 			_serial_at_press = _model.serial
-		"solid":
+		"solid", "water":
 			_rect_live = Rect2(Vector2(RoomEditModel.snap(p.x), RoomEditModel.snap(p.y)), Vector2.ZERO)
 			_live_text = ""
 		"exit":
@@ -249,6 +252,10 @@ func _release(p: Vector2) -> void:
 			_rect_live = Rect2()
 			_live_text = ""
 			_report(_model.add_solid(_room_id, _press_room, p))
+		"water":
+			_rect_live = Rect2()
+			_live_text = ""
+			_report(_model.add_water(_room_id, _press_room, p))
 		"creature":
 			if creature_id == "":
 				message.emit("choose a creature in the palette first")
@@ -363,6 +370,8 @@ func _selection_rect(r: RoomDef, sel: Dictionary) -> Rect2:
 	match sel["kind"]:
 		"solid":
 			return r.solids[i] if i < r.solids.size() else Rect2()
+		"water":
+			return r.water[i] if i < r.water.size() else Rect2()
 		"spawn":
 			return Rect2((r.spawns[i]["pos"] as Vector2) - Vector2(8, 16), Vector2(16, 20)) if i < r.spawns.size() else Rect2()
 		"exit":

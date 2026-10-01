@@ -1,0 +1,18 @@
+{
+ "canonical": "assets/sprites/lizard_1.png",
+ "style": "Modern pixel art with soft lighting (Style D): a stocky cave crayfish with a pale blue-grey armored carapace, a segmented tail curled under, two large pincers, long thin antennae, small black eyes on short stalks, a clean dark outline, chunky readable pixels, gentle highlights and shading. Match the palette, outline weight and rendering of the reference image (an armored lizard) but draw this crayfish. Side view, the creature facing right. Draw only the creature: no ground, no shadow, no effects.",
+ "anchor": "idle_1",
+ "frames": [
+  {"name": "idle_1", "width": 44, "refs": [], "prompt": "The crayfish standing still on all legs, pincers held low, antennae raised."},
+  {"name": "walk_1", "width": 44, "refs": ["idle_1"], "prompt": "The same crayfish mid-scuttle, legs on the near side reaching forward."},
+  {"name": "walk_2", "width": 44, "refs": ["idle_1"], "prompt": "The same crayfish mid-scuttle, legs gathered under the body."},
+  {"name": "walk_3", "width": 44, "refs": ["idle_1"], "prompt": "The same crayfish mid-scuttle, legs on the far side reaching forward."},
+  {"name": "windup_1", "width": 44, "refs": ["idle_1"], "prompt": "The same crayfish rearing up and back, pincers raised wide, tail tucked, about to lunge."},
+  {"name": "charge_1", "width": 50, "refs": ["idle_1"], "prompt": "The same crayfish lunging hard: body low and stretched forward, pincers thrust out in front.", "attack_from": 0.55},
+  {"name": "charge_2", "width": 50, "refs": ["idle_1", "charge_1"], "prompt": "The same crayfish lunging hard, a stride later, legs blurred, pincers snapping.", "attack_from": 0.55},
+  {"name": "rest_1", "width": 44, "refs": ["idle_1"], "prompt": "The same crayfish panting after a lunge: body sagging low, pincers drooping.", "outline_eps": 0.9},
+  {"name": "stunned", "width": 44, "refs": ["idle_1"], "prompt": "The same crayfish dazed: eyestalks drooping and crossed, pincers limp, a few stars above the carapace."},
+  {"name": "hurt", "width": 44, "refs": ["idle_1"], "prompt": "The same crayfish flinching in pain, eyestalks flattened, pincers clamped shut.", "outline_eps": 0.9},
+  {"name": "downed", "width": 46, "refs": ["idle_1"], "prompt": "The same crayfish knocked onto its back, legs curled in the air, carapace to the ground."}
+ ]
+}

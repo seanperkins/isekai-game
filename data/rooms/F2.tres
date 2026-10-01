@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_ej0os"]
+
+[resource]
+script = ExtResource("1_ej0os")
+id = "F2"
+area = "flooded"
+cell = Vector2i(12, 7)
+size = Vector2i(1, 2)
+decor = [{
+"id": "flooded_stalagmite",
+"pos": Vector2(120, 680)
+}, {
+"id": "flooded_glow_fungus",
+"light": Color(0.5, 1, 0.6, 1),
+"pos": Vector2(520, 680)
+}, {
+"id": "flooded_rubble",
+"pos": Vector2(300, 680)
+}]
+spawns = [{
+"id": "glass_eel",
+"pos": Vector2(480, 400)
+}, {
+"id": "glass_eel",
+"pos": Vector2(160, 560)
+}]
+exits = [{
+"edge": "left",
+"from": 560.0,
+"room": "F1",
+"to": 680.0
+}, {
+"edge": "top",
+"from": 240.0,
+"gate": "swim",
+"room": "F3",
+"to": 400.0
+}]
+water = [Rect2(0, 0, 640, 720)]

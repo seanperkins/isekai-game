@@ -1,0 +1,16 @@
+{
+ "canonical": "assets/sprites/lizard_1.png",
+ "style": "Modern pixel art with soft lighting (Style D): a small upright lizardman of the marsh with olive-green scales and a pale belly, a crest along its head, a long snout, a wrapped cloth belt, a thick tail, holding a long wooden spear, a clean dark outline, chunky readable pixels, gentle highlights and shading. Match the palette, outline weight and rendering of the reference image (an armored lizard) but draw this lizardman. Side view, the creature facing right. Draw only the creature: no ground, no shadow, no effects.",
+ "anchor": "idle_1",
+ "frames": [
+  {"name": "idle_1", "width": 40, "refs": [], "prompt": "The lizardman standing on guard, the spear held upright beside him.", "outline_eps": 0.12},
+  {"name": "walk_1", "width": 40, "refs": ["idle_1"], "prompt": "The same lizardman mid-stride, near leg forward, spear carried at his side."},
+  {"name": "walk_2", "width": 40, "refs": ["idle_1"], "prompt": "The same lizardman mid-stride, legs together, spear carried at his side."},
+  {"name": "walk_3", "width": 40, "refs": ["idle_1"], "prompt": "The same lizardman mid-stride, far leg forward, spear carried at his side."},
+  {"name": "windup_1", "width": 44, "refs": ["idle_1"], "prompt": "The same lizardman leaning back with the spear drawn behind his shoulder, aiming it, eyes narrowed."},
+  {"name": "throw_1", "width": 46, "refs": ["idle_1", "windup_1"], "prompt": "The same lizardman following through on a throw: arm thrust forward and empty, body leaning into it, tail swung back."},
+  {"name": "stunned", "width": 40, "refs": ["idle_1"], "prompt": "The same lizardman dazed: swaying, eyes crossed, spear sagging, a few stars above his head."},
+  {"name": "hurt", "width": 40, "refs": ["idle_1"], "prompt": "The same lizardman flinching in pain, head thrown back, spear gripped tight."},
+  {"name": "downed", "width": 46, "refs": ["idle_1"], "prompt": "The same lizardman knocked flat on his back, limbs sprawled, spear beside him."}
+ ]
+}

@@ -1,6 +1,7 @@
 class_name PlayerSensors
 extends RefCounted
-## Edge-triggered player event emitters. Only the player owns one (actor boundary).
+## Edge-triggered player event emitters (submerged, emitted by the player's water model, is periodic). Only the player owns one
+## (actor boundary).
 
 var emit_event: Callable = Callable()
 var _was_on_wall := false

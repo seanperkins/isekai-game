@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="CreatureDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/creature_def.gd" id="1_jhl0r"]
+
+[resource]
+script = ExtResource("1_jhl0r")
+id = "storm_eel"
+display_name = "Storm Eel"
+stats = {
+"atk": 6,
+"def": 1,
+"max_hp": 15,
+"spd": 160
+}
+essences = {
+"shock": 3,
+"water": 2
+}
+eat_bonus = {
+"amount": 2,
+"per": 1,
+"stat": "spd"
+}
+xp = 10
+swimmer = true
+contact_type = "shock"

@@ -137,6 +137,8 @@ static func build_room(def: RoomDef, ctx: Dictionary) -> Node2D:
 			SetDressing.build(node, def.area, def.dressing, size)
 	else:
 		_backdrop(node, size)
+	for w in def.water:
+		node.add_child(DeepWater.make(w))  # behind the solids and the creatures, over the background
 	var solids: Array = []
 	for w in edge_walls(size, def.exits):
 		add_solid(node, w["rect"], w["kind"], not painted)

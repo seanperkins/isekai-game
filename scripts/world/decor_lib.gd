@@ -1,8 +1,8 @@
 class_name DecorLib
 extends RefCounted
 ## The decor sprites the editor can place: id -> {anchor: "bottom" | "top", light: Color (optional)}. A bottom-anchored piece
-## stands on its position, a top-anchored one hangs from it (RoomBuilder.build_decor). The 21 ids the shipped rooms use are pinned
-## to the data by test_decor_lib; the other 25 rows have no shipped instance and are chosen, not pinned: each takes the anchor of
+## stands on its position, a top-anchored one hangs from it (RoomBuilder.build_decor). The 31 ids the shipped rooms use are pinned
+## to the data by test_decor_lib; the other 15 rows have no shipped instance and are chosen, not pinned: each takes the anchor of
 ## its cave counterpart and the light of its grotto or cave counterpart (deep_bones has none: bottom, no light). A new biome's art
 ## needs rows here. An id is bound to a biome by its `<biome>_` prefix; no prefix means cave (tools/prefabs.gd decor_id is the
 ## forward mapping).

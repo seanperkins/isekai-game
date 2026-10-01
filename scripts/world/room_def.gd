@@ -29,6 +29,9 @@ const NO_START := Vector2(-1, -1)
 @export var exits: Array = []
 ## [{"kind": "glow_pool"|"rebirth_pool"|"tablet"|"switch", "id", "pos", ...}]; a `pos` is the feature's base, the top of the surface it stands on
 @export var features: Array = []
+## Deep water (Rect2, local px): swim physics, the swimmers' homes, drawn by RoomBuilder as DeepWater. At least 32x32, inside the
+## room, never overlapping or touching another. Shallow water is decor.
+@export var water: Array = []
 
 func pixel_size() -> Vector2:
 	return Vector2(size) * SCREEN

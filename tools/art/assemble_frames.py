@@ -37,7 +37,14 @@ def fit_frame(im, width):
         raise ValueError("frame is empty after keying")
     im = im.crop(box)
     height = max(1, round(im.height * width / im.width))
-    return crisp_alpha(im.resize((width, height), Image.BOX))
+    return trim(crisp_alpha(im.resize((width, height), Image.BOX)))
+
+
+def trim(im):
+    """Crop to the solid pixels. Scaling a thin feature (a spear butt, a whisker) can leave an edge row too faint to survive
+    crisp_alpha; the frame must end where the drawing does, or the creature stands a pixel above the floor line."""
+    box = im.split()[3].getbbox()
+    return im.crop(box) if box is not None else im
 
 
 def cropped(im):
@@ -82,7 +89,7 @@ def fit_scaled(im, scale, look=None):
     """Key, crop, apply a `look` (see apply_look), and scale by a shared factor (BOX), then crisp the alpha."""
     c = apply_look(cropped(im), look)
     size = (max(1, round(c.width * scale)), max(1, round(c.height * scale)))
-    return crisp_alpha(c.resize(size, Image.BOX))
+    return trim(crisp_alpha(c.resize(size, Image.BOX)))
 
 
 def boundary_corners(im):

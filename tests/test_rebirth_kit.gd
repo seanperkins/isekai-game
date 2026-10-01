@@ -32,7 +32,7 @@ func _pin_supply_to_the_shipped_rooms() -> void:
 	var creatures := {}
 	for c in DefLoader.load_dir("res://data/creatures"):
 		creatures[c.id] = c
-	FormOffers._default_supply = FormOffers.supply(ShippedRooms.load_all(), creatures, FormLoader.load_all())
+	FormOffers._default_supply = FormOffers.supply(ShippedRooms.load_all(), creatures, FormLoader.load_all(), FormOffers.FIRST_EVOLUTION_AREAS)
 
 func _tickers() -> Array:
 	var out: Array = []
@@ -173,7 +173,7 @@ func test_the_eligibility_check_bites_on_a_poorly_seeded_kit() -> void:
 	var creatures := {}
 	for c in DefLoader.load_dir("res://data/creatures"):
 		creatures[c.id] = c
-	var supply := FormOffers.supply(ShippedRooms.load_all(), creatures, forms)  # the shipped rooms, not whatever is on disk
+	var supply := FormOffers.supply(ShippedRooms.load_all(), creatures, forms, FormOffers.FIRST_EVOLUTION_AREAS)  # the shipped rooms, not whatever is on disk
 	assert_lt(RebirthKit.eligible_lineages({"thread": 5}, supply, forms), 2, "one lineage is not enough")
 	assert_gte(RebirthKit.eligible_lineages({"thread": 7, "sound": 8, "flight": 8}, supply, forms), 2)
 
@@ -195,7 +195,7 @@ func test_every_shipped_grotto_pool_leaves_two_lineages_eligible_and_its_seeds_m
 	var creatures := {}
 	for c in DefLoader.load_dir("res://data/creatures"):
 		creatures[c.id] = c
-	var supply := FormOffers.supply(rooms, creatures, forms)
+	var supply := FormOffers.supply(rooms, creatures, forms, FormOffers.FIRST_EVOLUTION_AREAS)
 	var checked := 0
 	for p in RebirthChoice.pools(rooms):
 		if p["id"] == WorldProgress.DEFAULT_POOL or p["area"] != "grotto":
@@ -232,3 +232,80 @@ func test_a_starting_level_starts_at_full_health_and_mana() -> void:
 func test_a_kit_may_not_name_an_evolution() -> void:
 	assert_string_contains("\n".join(RebirthKit.validate({"skills": ["water_blade"]})), "kit names evolution 'water_blade'")
 	assert_eq(RebirthKit.validate({"skills": ["hydraulic_propulsion"]}), PackedStringArray())
+
+## The essences a life can eat in the rooms before the first door (F1 and F2), without a stun source: jellies cannot be downed
+## by tackle, so they are not counted.
+func _flooded_units(rooms: Dictionary, creatures: Dictionary) -> Dictionary:
+	var out := {}
+	for id in ["F1", "F2"]:
+		for s in (rooms[id] as RoomDef).spawns:
+			var c: CreatureDef = creatures[s["id"]]
+			if c.untackleable:
+				continue
+			for e in c.essences:
+				out[e] = int(out.get(e, 0)) + int(c.essences[e])
+	return out
+
+func test_the_flooded_pool_leaves_two_lineages_eligible_and_its_seeds_matter() -> void:
+	var forms := FormLoader.load_all()
+	var rooms := ShippedRooms.load_all()
+	var creatures := {}
+	for c in DefLoader.load_dir("res://data/creatures"):
+		creatures[c.id] = c
+	var supply := FormOffers.supply(rooms, creatures, forms, FormOffers.FIRST_EVOLUTION_AREAS)
+	var checked := 0
+	for p in RebirthChoice.pools(rooms):
+		if p["id"] == WorldProgress.DEFAULT_POOL or p["area"] != "flooded":
+			continue
+		checked += 1
+		var seeds: Dictionary = (p["kit"] as Dictionary).get("affinity", {})
+		var without := _flooded_units(rooms, creatures)
+		var with_seeds := without.duplicate()
+		for e in seeds:
+			with_seeds[e] = int(with_seeds.get(e, 0)) + int(seeds[e])
+		var n_with := RebirthKit.eligible_lineages(with_seeds, supply, forms)
+		var n_without := RebirthKit.eligible_lineages(without, supply, forms)
+		assert_gte(n_with, 2, "pool %s leaves two lineages eligible" % p["id"])
+		assert_gt(n_with, n_without, "pool %s: the seeds are not decoration" % p["id"])
+	assert_eq(checked, 1, "the Flooded ships one pool")
+
+func test_the_flooded_pool_kit_is_valid_and_grants_leap_wall_cling_and_swim() -> void:
+	var rooms := World.load_rooms("res://data/rooms")
+	var pool: Dictionary = {}
+	for p in RebirthChoice.pools(rooms):
+		if p["id"] == "F1":
+			pool = p
+	assert_eq(pool["room"], "F1")
+	assert_eq(pool["area"], "flooded")
+	assert_eq(RebirthKit.validate(pool["kit"]).size(), 0)
+	assert_eq(pool["kit"]["skills"], ["leap", "wall_cling", "swim"])
+	assert_eq(pool["kit"]["level"], 4)
+
+func test_an_f1_life_reaches_its_first_evolution_only_by_going_back_up() -> void:
+	var rooms := ShippedRooms.load_all()
+	var creatures := {}
+	for c in DefLoader.load_dir("res://data/creatures"):
+		creatures[c.id] = c
+	var kit_level := 0
+	for p in RebirthChoice.pools(rooms):
+		if p["id"] == "F1":
+			kit_level = int((p["kit"] as Dictionary).get("level", 1))
+	var need := 0
+	for l in range(kit_level, Progression.LEVEL_CAP):
+		need += Progression.xp_to_next(l)
+	assert_eq(kit_level, 4)
+	assert_eq(need, 225, "25 + 30 + 35 + 40 + 45 + 50")
+	var first_pass := 0
+	for id in ["F1", "F2", "F3", "F4", "F5"]:
+		for s in (rooms[id] as RoomDef).spawns:
+			var c: CreatureDef = creatures[s["id"]]
+			first_pass += c.xp * 2
+	assert_lt(first_pass, need, "the Flooded alone is not enough: the life climbs back to the Grotto or the Cave")
+	var areas_total := 0
+	for id in WorldValidator.reachable(rooms, true):
+		var r: RoomDef = rooms[id]
+		if FormOffers.FIRST_EVOLUTION_AREAS.has(r.area):
+			for s in r.spawns:
+				var c2: CreatureDef = creatures[s["id"]]
+				areas_total += c2.xp * (1 if c2.id == "water_pool" else 2)
+	assert_lte(need, areas_total, "the first-evolution areas supply it")

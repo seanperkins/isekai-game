@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="CreatureDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/creature_def.gd" id="1_nhpkm"]
+
+[resource]
+script = ExtResource("1_nhpkm")
+id = "drift_jelly"
+display_name = "Drift Jelly"
+stats = {
+"atk": 3,
+"def": 0,
+"max_hp": 4,
+"spd": 30
+}
+essences = {
+"shock": 1,
+"water": 2
+}
+eat_bonus = {
+"amount": 1,
+"per": 2,
+"stat": "max_mp"
+}
+xp = 3
+drifter = true
+swimmer = true
+untackleable = true
+contact_type = "shock"

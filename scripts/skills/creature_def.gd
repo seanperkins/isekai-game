@@ -20,3 +20,13 @@ extends Resource
 @export var armored_charger: bool = false
 ## Hovers in a slow loop; no gravity while active or stunned (the moths).
 @export var drifter: bool = false
+## Lives in a water rect (confined to it) and is what Jolt stuns: the eels and the jelly.
+@export var swimmer: bool = false
+## A tackle skips it: the jelly.
+@export var untackleable: bool = false
+## The damage type of its contact hit: "physical", or "shock" for the eels and the jelly.
+@export var contact_type: String = "physical"
+## "" for none, "spear" for the lizardman (a spitter that throws a Spear).
+@export var projectile: String = ""
+## Drops a spore puff (the two moths).
+@export var puffs: bool = false

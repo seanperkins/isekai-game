@@ -1,0 +1,55 @@
+{
+ "derive_from": "glass_eel",
+ "lighten": 0.25,
+ "tint": [
+  190,
+  215,
+  255
+ ],
+ "tint_amount": 0.4,
+ "anchor": "swim_1",
+ "frames": [
+  {
+   "name": "swim_1",
+   "width": 73,
+   "refs": []
+  },
+  {
+   "name": "swim_2",
+   "width": 73,
+   "refs": []
+  },
+  {
+   "name": "swim_3",
+   "width": 73,
+   "refs": []
+  },
+  {
+   "name": "warn",
+   "width": 73,
+   "refs": []
+  },
+  {
+   "name": "dart",
+   "width": 84,
+   "refs": [],
+   "attack_from": 0.6,
+   "outline_eps": 0.9
+  },
+  {
+   "name": "stunned",
+   "width": 73,
+   "refs": []
+  },
+  {
+   "name": "hurt",
+   "width": 73,
+   "refs": []
+  },
+  {
+   "name": "downed",
+   "width": 76,
+   "refs": []
+  }
+ ]
+}

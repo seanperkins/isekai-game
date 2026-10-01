@@ -5,7 +5,7 @@ extends RefCounted
 ## validator (WorldValidator) is what the game needs to load and run; this is design.
 ##
 ## A finding is {room, rule, text, pick}: pick is a room-editor selection ({room, kind, index}) of an element that is a selection
-## kind (solid, spawn, exit, feature, decor), else {}.
+## kind (solid, water, spawn, exit, feature, decor), else {}.
 
 ## The smallest exit span: the rigged body plus 8 on either axis (test_room_lint pins MIN_EXIT >= both).
 const MIN_EXIT := 36.0
@@ -18,6 +18,13 @@ const REACH_RISE := 55.0
 const REACH_GAP := 60.0
 const REACH_HOP := 80.0
 const POOL_CLEARANCE := 200.0
+## How far above a water rect's top edge a swimmer's surface jump can put its feet: the jump's apex less the body's reach below
+## its centre, less 4 px of margin. A literal (Player is not safe to read from a static initializer in every load order);
+## test_room_lint_water derives it: floor(JUMP_VELOCITY^2 / (2 GRAVITY) - BodyConfig.BOTTOM - 4).
+const SURFACE_LIFT := 44.0
+## The smallest water rect either way (the largest swimmer's body fits), and how close a shore must lie to the rect's x-span.
+const WATER_MIN := 32.0
+const SHORE_REACH := 24.0
 ## The drawn box of each feature kind relative to its base point: the one source for lint, hit-testing, the selection outline and
 ## the marker. The pools are the 37x23 water_pool sprite, whose bottom sits 4 px below the base.
 const FEATURE_BOX := {
@@ -28,7 +35,7 @@ const FEATURE_BOX := {
 }
 
 const RULES := ["solid_outside", "outside", "in_rock", "exit_blocked", "exit_narrow", "start_floor", "ledge_reach", "over_hole",
-	"pool_clearance", "feature_id", "shortcut_pair", "hint_unknown", "decor_unknown"]
+	"pool_clearance", "feature_id", "shortcut_pair", "hint_unknown", "decor_unknown", "water_rect", "swimmer_dry", "water_exit"]
 
 static var _hintable: Array = []
 
@@ -64,6 +71,9 @@ static func check_room(r: RoomDef, rooms: Dictionary) -> Array:
 	out.append_array(_feature_id(r, rooms))
 	out.append_array(_shortcut_pair(r, rooms))
 	out.append_array(_hint_unknown(r))
+	out.append_array(_water_rect(r))
+	out.append_array(_swimmer_dry(r))
+	out.append_array(_water_exit(r))
 	return out
 
 ## The findings of the named rules, one per line; "" when there are none.
@@ -296,4 +306,159 @@ static func _hint_unknown(r: RoomDef) -> Array:
 		var hint: String = f.get("hint", "")
 		if f.get("kind", "") == "tablet" and hint != "" and not hintable_skill_ids().has(hint):
 			out.append(_f(r, "hint_unknown", "the tablet %s hints '%s', which is not a skill the Compendium holds" % [f.get("id", "?"), hint], "feature", i))
+	return out
+
+# --- water ---
+
+static var _swimmers: Dictionary = {}
+
+## creature id -> whether its def is a `swimmer`, from the shipped defs (cached, like _hintable).
+static func swimmer_ids() -> Dictionary:
+	if _swimmers.is_empty():
+		for c in DefLoader.load_dir("res://data/creatures"):
+			_swimmers[c.id] = (c as CreatureDef).swimmer
+	return _swimmers
+
+## Every water rect lies inside the room, is at least WATER_MIN either way, and neither overlaps nor touches another (so a rect's
+## top edge is always a real surface).
+static func _water_rect(r: RoomDef) -> Array:
+	var out: Array = []
+	var bounds := Rect2(Vector2.ZERO, r.pixel_size())
+	for i in r.water.size():
+		var w: Rect2 = r.water[i]
+		if not bounds.encloses(w):
+			out.append(_f(r, "water_rect", "the water at %s is outside the room" % _rect_text(w), "water", i))
+		elif w.size.x < WATER_MIN or w.size.y < WATER_MIN:
+			out.append(_f(r, "water_rect", "the water at %s is under %d px either way" % [_rect_text(w), int(WATER_MIN)], "water", i))
+		for j in range(i + 1, r.water.size()):
+			if w.intersects(r.water[j], true):
+				out.append(_f(r, "water_rect", "the water at %s overlaps or touches the water at %s" % [_rect_text(w), _rect_text(r.water[j])], "water", i))
+	return out
+
+## A swimmer spawn must be inside some water rect (outside, it idles: Enemy has no home water for it).
+static func _swimmer_dry(r: RoomDef) -> Array:
+	var out: Array = []
+	for i in r.spawns.size():
+		var s: Dictionary = r.spawns[i]
+		if not bool(swimmer_ids().get(s["id"], false)):
+			continue
+		var wet := false
+		for w in r.water:
+			if (w as Rect2).has_point(s["pos"]):
+				wet = true
+		if not wet:
+			out.append(_f(r, "swimmer_dry", "%s at %s is not in any water" % [s["id"], s["pos"]], "spawn", i))
+	return out
+
+## True when exit `e` is a way out of the room for a swimmer: no shortcut (closed until opened) and no gate but swim.
+static func _open_for_swimmer(e: Dictionary) -> bool:
+	return not e.has("shortcut") and (not e.has("gate") or e["gate"] == "swim")
+
+## True when `rect` reaches the room's own edge (not the inside face of the wall: a swimmer leaving through a band of dry wall would
+## fall back) over exit `e`'s span.
+static func reaches_edge(r: RoomDef, rect: Rect2, e: Dictionary) -> bool:
+	var size := r.pixel_size()
+	var a := float(e["from"])
+	var b := float(e["to"])
+	match e["edge"]:
+		"top": return rect.position.y <= 0.5 and rect.end.x > a and rect.position.x < b
+		"bottom": return rect.end.y >= size.y - 0.5 and rect.end.x > a and rect.position.x < b
+		"left": return rect.position.x <= 0.5 and rect.end.y > a and rect.position.y < b
+		"right": return rect.end.x >= size.x - 0.5 and rect.end.y > a and rect.position.y < b
+	return false
+
+## The standable tops of a room: its interior solids and its floor pieces (the generated floor, cut at every exit gap). The
+## ceiling and the side walls are not standable.
+static func standable(r: RoomDef) -> Array:
+	var out: Array = r.solids.duplicate()
+	for w in RoomBuilder.edge_walls(r.pixel_size(), r.exits):
+		if w["kind"] == "ground":
+			out.append(w["rect"])
+	return out
+
+## True when a standable top lies near `rect`: within SHORE_REACH of its x-span, its top between SURFACE_LIFT above the rect's
+## top edge and the body's reach (BodyConfig.BOTTOM) below it, so a body standing on it has its centre out of the water.
+static func has_shore(r: RoomDef, rect: Rect2) -> bool:
+	for s in standable(r):
+		var rr: Rect2 = s
+		if rr.end.x < rect.position.x - SHORE_REACH or rr.position.x > rect.end.x + SHORE_REACH:
+			continue
+		if rr.position.y >= rect.position.y - SURFACE_LIFT and rr.position.y <= rect.position.y + BodyConfig.BOTTOM:
+			return true
+	return false
+
+## A swimmer must be able to leave each water rect of the room: it crosses an open exit span, or it has a shore.
+static func _water_exit(r: RoomDef) -> Array:
+	var out: Array = []
+	for i in r.water.size():
+		var rect: Rect2 = r.water[i]
+		var escapes := false
+		for e in r.exits:
+			if _open_for_swimmer(e) and reaches_edge(r, rect, e):
+				escapes = true
+		if not escapes and not has_shore(r, rect):
+			out.append(_f(r, "water_exit", "a swimmer in the water at %s cannot get out: no shore within reach of its surface and no open exit" % _rect_text(rect), "water", i))
+	return out
+
+## The authored-world check: water rects joined across open exit spans (a rect that reaches an exit's edge, and the partner
+## room's rect that reaches the opposite edge over the same world span). A connected group is trapped when no member has a shore
+## and no member leaves the water through an open exit that leads somewhere with no water at that span. One entry per trapped
+## group: {rooms: [ids], text}.
+static func water_groups(rooms: Dictionary) -> Array:
+	var nodes: Array = []  # {room, i}
+	var index := {}
+	for id in rooms:
+		var r: RoomDef = rooms[id]
+		for i in r.water.size():
+			index["%s:%d" % [id, i]] = nodes.size()
+			nodes.append({"room": id, "i": i})
+	var parent: Array = range(nodes.size())
+	var leaves: Array = []
+	leaves.resize(nodes.size())
+	leaves.fill(false)
+	var find := func(x: int) -> int:
+		while parent[x] != x:
+			parent[x] = parent[parent[x]]
+			x = parent[x]
+		return x
+	for id in rooms:
+		var r: RoomDef = rooms[id]
+		for e in r.exits:
+			if not _open_for_swimmer(e) or not rooms.has(e.get("room", "")):
+				continue
+			var b: RoomDef = rooms[e["room"]]
+			var span := WorldValidator.world_span(r, e)
+			for i in r.water.size():
+				if not reaches_edge(r, r.water[i], e):
+					continue
+				var joined := false
+				for f in b.exits:
+					if f.get("room", "") != id or f["edge"] != WorldValidator.OPPOSITE[e["edge"]]:
+						continue
+					if not WorldValidator.world_span(b, f).is_equal_approx(span):
+						continue
+					for j in b.water.size():
+						if reaches_edge(b, b.water[j], f):
+							joined = true
+							var x: int = find.call(index["%s:%d" % [id, i]])
+							var y: int = find.call(index["%s:%d" % [e["room"], j]])
+							parent[x] = y
+				if not joined:
+					leaves[index["%s:%d" % [id, i]]] = true
+	var groups := {}
+	for k in nodes.size():
+		var root: int = find.call(k)
+		if not groups.has(root):
+			groups[root] = []
+		groups[root].append(k)
+	var out: Array = []
+	for root in groups:
+		var safe := false
+		for k in groups[root]:
+			var m: Dictionary = nodes[k]
+			var rr: RoomDef = rooms[m["room"]]
+			if leaves[k] or has_shore(rr, rr.water[m["i"]]):
+				safe = true
+		if not safe:
+			out.append({"rooms": groups[root].map(func(k): return nodes[k]["room"]), "text": "a swimmer in this connected water has no shore and no way out"})
 	return out

@@ -10,7 +10,7 @@ const OPPOSITE := {"left": "right", "right": "left", "top": "bottom", "bottom": 
 const FEATURE_KINDS := ["glow_pool", "rebirth_pool", "tablet", "switch"]
 
 ## The labels an exit's `gate` may carry (a label for the validator and lint, not an obstacle in play); P4 gives them teeth.
-const GATES := ["wall_cling"]
+const GATES := ["wall_cling", "swim"]
 
 ## `creature_ids`, when given, is every creature id the game defines: spawns naming another are errors (a typo
 ## must not silently drop a creature and its XP).

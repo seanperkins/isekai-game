@@ -6,14 +6,15 @@ const GROUPS := [["PROFICIENCY", "proficiency"], ["ESSENCE", "essence"], ["EVOLU
 const ACTIVE_LABEL := {"poison_breath": "Damage", "water_blade": "Damage",
 	"hydraulic_propulsion": "Distance %", "sticky_thread": "Hold tier",
 	"swing_thread": "Hold tier", "spore_cloud": "Radius", "binding_web": "Hold tier",
-	"miasma": "Damage", "venom_bolt": "Damage",
+	"miasma": "Damage", "venom_bolt": "Damage", "jolt": "Damage",
 	"healing_spores": "Radius", "puffball": "Radius"}
 const STAT_LABEL := {"max_hp": "Max HP", "atk": "ATK", "def": "DEF", "spd": "SPD",
 	"jump_height": "Jump height", "slide_speed": "Slide speed", "predation_time": "Eat time",
 	"max_mp": "Max MP", "mp_regen": "MP regen"}
 const EVENT_TEXT := {"jumped": "Jump", "wall_touched": "Touch a wall mid-air",
 	"hp_low_exited": "Recover from low HP", "predated": "Eat creatures", "mana_spent": "Spend MP",
-	"inspected": "Appraise", "skill_used": "Use the skill", "stunned_enemy": "Stun enemies"}
+	"inspected": "Appraise", "skill_used": "Use the skill", "stunned_enemy": "Stun enemies",
+	"submerged": "Spend time underwater"}
 
 ## True when a skill should keep the "???" row showing: never reached, non-secret, not ready and not closed. A retired
 ## parent has reached a level, and a closed evolution can no longer be taken, so neither counts.
@@ -153,6 +154,8 @@ static func effect_lines(d: SkillDef, level: int, atk := 1) -> Array:
 					lines.append("Knockback taken −%d%%" % -v)
 				elif stat == StatKeys.REGEN_INTERVAL:
 					lines.append("Regen 1 HP every %d s" % v)
+				elif stat == StatKeys.SWIM_SPEED:
+					lines.append("Swim speed %d px/s" % (int(Stats.DEFAULTS[StatKeys.SWIM_SPEED]) + v))
 				else:
 					var pct := "%" if StatKeys.PERCENT.has(stat) else ""
 					lines.append("%s %+d%s" % [STAT_LABEL.get(stat, stat), v, pct])

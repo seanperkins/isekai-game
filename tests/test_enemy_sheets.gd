@@ -2,7 +2,8 @@ extends GutTest
 ## The four creature sheets: every listed frame is there at the listed scale, standing on the floor
 ## line, with shapes inside the frame, and every clip uses frames that exist.
 
-const SETS := ["bat", "toad", "lizard", "spider", "spore_moth", "mushroom_crab", "vine_snake", "pale_moth"]
+const SETS := ["bat", "toad", "lizard", "spider", "spore_moth", "mushroom_crab", "vine_snake", "pale_moth", "glass_eel", "cave_crayfish",
+	"drift_jelly", "bog_lizardman", "storm_eel"]
 
 func _listed(set_name: String) -> Dictionary:
 	var json := JSON.new()
@@ -44,6 +45,11 @@ func test_only_the_creatures_that_strike_have_attack_shapes() -> void:
 	assert_true(_listed("mushroom_crab")["frames"].any(func(f): return f.has("attack_from")))
 	assert_true(_listed("vine_snake")["frames"].any(func(f): return f.has("attack_from")))
 	assert_false(_listed("spore_moth")["frames"].any(func(f): return f.has("attack_from")), "the moth strikes with its puffs, not its body")
+	assert_true(_listed("glass_eel")["frames"].any(func(f): return f.has("attack_from")), "the eel's dart")
+	assert_true(_listed("storm_eel")["frames"].any(func(f): return f.has("attack_from")), "the storm eel's dart")
+	assert_true(_listed("cave_crayfish")["frames"].any(func(f): return f.has("attack_from")), "the crayfish's lunge")
+	assert_false(_listed("drift_jelly")["frames"].any(func(f): return f.has("attack_from")), "the jelly stings by touch")
+	assert_false(_listed("bog_lizardman")["frames"].any(func(f): return f.has("attack_from")), "the lizardman strikes with its spear")
 
 func test_frames_keep_a_shared_scale_within_a_creature() -> void:
 	for set_name in SETS:
@@ -64,7 +70,12 @@ func test_every_clip_uses_frames_that_exist_and_every_state_has_a_clip() -> void
 		"spore_moth": ["fly", "stunned", "hurt", "downed"],
 		"pale_moth": ["fly", "stunned", "hurt", "downed"],
 		"mushroom_crab": ["idle", "walk", "windup", "charge", "rest", "stunned", "hurt", "downed"],
-		"vine_snake": ["hide", "coil", "lunge", "rest", "slither", "stunned", "hurt", "downed"]}
+		"vine_snake": ["hide", "coil", "lunge", "rest", "slither", "stunned", "hurt", "downed"],
+		"glass_eel": ["swim", "warn", "dart", "stunned", "hurt", "downed"],
+		"cave_crayfish": ["idle", "walk", "windup", "charge", "rest", "stunned", "hurt", "downed"],
+		"drift_jelly": ["drift", "stunned", "hurt", "downed"],
+		"bog_lizardman": ["idle", "walk", "puff", "spit", "stunned", "hurt", "downed"],
+		"storm_eel": ["swim", "warn", "dart", "stunned", "hurt", "downed"]}
 	for set_name in SETS:
 		var sheet := SpriteSheet.load_set(set_name)
 		for state in states[set_name]:
