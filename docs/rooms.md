@@ -32,11 +32,29 @@ every room.
 ## Decor
 
 Decor is the standing and hanging pieces (crystals, fungus, hanging roots, stalactites) drawn in front of the back wall. The catalog the
-editor offers is `DecorLib.CATALOG` in `scripts/world/decor_lib.gd`: 46 rows, `id -> {anchor, light}`. The 21 ids the shipped rooms use
-are pinned to the data by `tests/test_decor_lib.gd`; the other 25 (all of `deep_*` and `flooded_*`, 5 grotto ids and `crystal_purple`)
+editor offers is `DecorLib.CATALOG` in `scripts/world/decor_lib.gd`: 46 rows, `id -> {anchor, light}`. The 31 ids the shipped rooms use
+are pinned to the data by `tests/test_decor_lib.gd`; the other 15 (all of `deep_*`, `flooded_wall_crystal`, 5 grotto ids and `crystal_purple`)
 are chosen, not pinned. An id belongs to a biome by its `<biome>_` prefix (none means cave). A new biome's art needs rows there. A
 bottom-anchored piece stands on its position and a top-anchored one hangs from it; the editor places them on the surface below or the
 rock above the click. An id outside the catalog is lint's `decor_unknown` and the builder skips it.
+
+## Water
+
+`RoomDef.water` is a list of deep-water rects (local px): at least 32x32, inside the room, never overlapping or touching another. The
+builder adds one `DeepWater` node per rect (a translucent tint behind the solids and creatures). The player is "in water" while the
+centre of its body is inside a rect: without Swim it is slow and floaty and a Jump is a small bob; with Swim it swims 8-way and a Jump near
+the surface launches it out. Twenty seconds in water teach Swim (the `submerged` event), so water cannot trap anyone who lacks it.
+Shallow water is decor (`flooded_puddle_glow`, `flooded_flowers`).
+
+Three lint rules guard it: `water_rect` (a rect outside the room, under 32 px, or overlapping or touching another), `swimmer_dry` (an
+eel or a jelly spawned outside every water rect idles) and `water_exit` (a swimmer must be able to leave: the rect crosses an open exit
+span, or a **shore** lies within 24 px of it, its top between `RoomLint.SURFACE_LIFT` (44 px) above the surface and one body (12 px)
+below it). `RoomLint.water_groups` joins rects across open exit spans and `tests/test_flooded_rooms.gd` asserts no joined group is
+trapped.
+
+The **Swim door** is a water column with no solid inside it and a top exit marked `gate: "swim"` (F2 into F3): a water-filled shaft only a
+swimmer climbs (Hydraulic Propulsion and threads may pass it, as they may pass G5's chimney). `test_flooded_rooms.gd` derives the bound:
+a non-swimmer's true reach above the column floor is 160.8 px (`B_entry`), and the sill must clear it by 3.
 
 ## Set dressing
 
@@ -55,6 +73,10 @@ These are the choices in the data that a test does not catch and a casual edit w
   ledge back to the zigzag.
 - **The G1 and G3 ledge chains** under a floor hole climb back up to the room above with their top ledge at y 14, so the
   standing centre is 2 px inside the room above.
+- **G4's floor hole** (x 240-400) drops into F1; its content (the pool at x 470, the tablet at 580, the crystal and flowers, two crabs) stands
+  clear of it, and F1's chain (top ledge at y 14, flush with x 240) climbs back up. F4's hole (x 220-380) and F5's chain are the same.
+- **F2's column** has nothing inside it on purpose: a ledge in the water would let a non-swimmer climb it. The gate test fails if one appears.
+- **F1's learning pool** (x 820-1080) has a far bank whose top (y 244) is its shore: without it `water_exit` would trap a swimmer there.
 - **G2's and G3's overhangs** (the slabs the vine snakes hang from) are mass, not ledges: they are not meant to be stood on.
 - **G3's hanging wall** (`Rect2(108, 20, 16, 400)`) drops from the ceiling to y 420, 100 px below the sill of the opening to G5
   (y 320), so the shaft between it and the west wall can only be climbed with Wall Cling. It is the one thing that makes the G5
@@ -73,5 +95,10 @@ These are the choices in the data that a test does not catch and a casual edit w
 | G1 Grotto Mouth | 2x1, cell (5, 5) | the landing under C5's floor; a ledge chain under the hole climbs back up to C5; the Grotto's rebirth pool stands a little way in, with the first real kit |
 | G2 Spore Hall | 3x2, cell (7, 5) | the hub: two levels, the lower floor (with the hole down to G3) and an upper walkway that meets G1, with two shafts of ledges between them |
 | G3 Vine Maze | 2x2, cell (8, 7) | snakes under overhangs, crabs below; a chain under the hole up to G2's floor, and a climb to the upper level and the exit to G4 |
-| G4 Glow Pool | 1x1, cell (10, 7) | the last room, a rest before the area's end, with a tablet |
+| G4 Glow Pool | 1x1, cell (10, 7) | a rest with a tablet, and the way down into the Flooded Tunnels: its floor opens into F1 at x 240-400 |
 | G5 Pale Moth | 1x1, cell (7, 7) | the rare room, reached only by wall cling up the chimney in G3; the Pale Moth drifts here |
+| F1 Seep Mouth | 2x1, cell (10, 8) | the landing under G4's drop with a chain up to it; the Flooded's rebirth pool; crayfish; the learning pool (a deep pool with a far bank) with two jellies |
+| F2 Sump | 1x2, cell (12, 7) | the Swim door: a water column from the floor to the top exit (gate `swim`), two eels, no solid inside it |
+| F3 Eel Run | 3x1, cell (12, 6) | a long flooded corridor: eels and jellies, stair-ledges climbing out of the water, the floor hole where F2's column arrives |
+| F4 Marsh Hall | 2x1, cell (15, 6) | dry platforms and the lizardmen's posts, crayfish; a floor hole with a chain down to F5 |
+| F5 Quiet Pool | 1x1, cell (15, 7) | the area's last room: a Glow Pool, the tablet, a small eel pool and two lizardmen; the chain up to F4 |

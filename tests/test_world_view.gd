@@ -7,7 +7,7 @@ func _rooms() -> Dictionary:
 func test_the_layout_has_one_rect_per_room_inside_the_panel() -> void:
 	var panel := Rect2(20, 40, 600, 280)
 	var layout := WorldView.layout(_rooms(), panel)
-	assert_eq(layout.size(), 11)
+	assert_eq(layout.size(), 16)
 	for item in layout:
 		assert_true(panel.grow(0.01).encloses(item["rect"]), item["id"])
 

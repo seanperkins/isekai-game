@@ -1,0 +1,55 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_d8ox6"]
+
+[resource]
+script = ExtResource("1_d8ox6")
+id = "F5"
+area = "flooded"
+cell = Vector2i(15, 7)
+solids = [Rect2(220, 14, 100, 12), Rect2(360, 62, 100, 12), Rect2(220, 110, 100, 12), Rect2(360, 158, 100, 12), Rect2(220, 206, 100, 12), Rect2(360, 254, 100, 12), Rect2(220, 302, 100, 12), Rect2(180, 260, 40, 60)]
+decor = [{
+"id": "flooded_glow_fungus",
+"light": Color(0.5, 1, 0.6, 1),
+"pos": Vector2(40, 320)
+}, {
+"id": "flooded_crystal_gold",
+"light": Color(1, 0.85, 0.4, 1),
+"pos": Vector2(610, 320)
+}, {
+"anchor": "top",
+"id": "flooded_lichen_hang",
+"pos": Vector2(120, 20)
+}]
+spawns = [{
+"id": "glass_eel",
+"pos": Vector2(80, 290)
+}, {
+"id": "glass_eel",
+"pos": Vector2(140, 288)
+}, {
+"id": "bog_lizardman",
+"pos": Vector2(330, 308)
+}, {
+"id": "bog_lizardman",
+"pos": Vector2(440, 308)
+}]
+exits = [{
+"edge": "top",
+"from": 220.0,
+"room": "F4",
+"to": 380.0
+}]
+features = [{
+"id": "f5_pool",
+"kind": "glow_pool",
+"pos": Vector2(500, 320)
+}, {
+"hint": "jolt",
+"id": "f5_tablet",
+"kind": "tablet",
+"pos": Vector2(580, 320),
+"text": "Water learns to carry you, and lightning learns to ride it.",
+"title": "Drowned tablet"
+}]
+water = [Rect2(40, 256, 140, 64)]

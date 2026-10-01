@@ -1,0 +1,67 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_m4abe"]
+
+[resource]
+script = ExtResource("1_m4abe")
+id = "F1"
+area = "flooded"
+cell = Vector2i(10, 8)
+size = Vector2i(2, 1)
+solids = [Rect2(240, 14, 100, 12), Rect2(380, 62, 100, 12), Rect2(240, 110, 100, 12), Rect2(380, 158, 100, 12), Rect2(240, 206, 100, 12), Rect2(380, 254, 100, 12), Rect2(240, 302, 100, 12), Rect2(1080, 244, 100, 76)]
+decor = [{
+"id": "flooded_glow_fungus",
+"light": Color(0.5, 1, 0.6, 1),
+"pos": Vector2(120, 320)
+}, {
+"id": "flooded_puddle_glow",
+"light": Color(0.3, 1, 0.9, 1),
+"pos": Vector2(700, 320)
+}, {
+"id": "flooded_crystal_gold",
+"light": Color(1, 0.85, 0.4, 1),
+"pos": Vector2(1200, 320)
+}, {
+"anchor": "top",
+"id": "flooded_lichen_hang",
+"pos": Vector2(900, 20)
+}, {
+"anchor": "top",
+"id": "flooded_root_hang",
+"pos": Vector2(600, 20)
+}, {
+"id": "flooded_rubble",
+"pos": Vector2(660, 320)
+}]
+spawns = [{
+"id": "cave_crayfish",
+"pos": Vector2(780, 308)
+}, {
+"id": "cave_crayfish",
+"pos": Vector2(1130, 232)
+}, {
+"id": "drift_jelly",
+"pos": Vector2(880, 270)
+}, {
+"id": "drift_jelly",
+"pos": Vector2(980, 285)
+}]
+exits = [{
+"edge": "top",
+"from": 240.0,
+"room": "G4",
+"to": 400.0
+}, {
+"edge": "right",
+"from": 200.0,
+"room": "F2",
+"to": 320.0
+}]
+features = [{
+"area": "flooded",
+"id": "F1",
+"kind": "rebirth_pool",
+"kit": {},
+"pos": Vector2(560, 320)
+}]
+water = [Rect2(820, 240, 260, 80)]
