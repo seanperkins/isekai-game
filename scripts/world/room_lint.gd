@@ -73,6 +73,10 @@ static func text(findings: Array, rules: Array) -> String:
 			lines.append("%s [%s] %s" % [f["room"], f["rule"], f["text"]])
 	return "\n".join(lines)
 
+## A rectangle as a person reads it: "x 100..160, y 60..76" (Godot's own Rect2 text is "[P: (100.0, 60.0), S: (60.0, 16.0)]").
+static func _rect_text(rect: Rect2) -> String:
+	return "x %d..%d, y %d..%d" % [rect.position.x, rect.end.x, rect.position.y, rect.end.y]
+
 static func _f(r: RoomDef, rule: String, msg: String, kind := "", index := -1) -> Dictionary:
 	var pick := {} if kind == "" else {"room": r.id, "kind": kind, "index": index}
 	return {"room": r.id, "rule": rule, "text": msg, "pick": pick}
@@ -113,7 +117,7 @@ static func _solid_outside(r: RoomDef) -> Array:
 	var bounds := Rect2(Vector2.ZERO, r.pixel_size())
 	for i in r.solids.size():
 		if not bounds.encloses(r.solids[i]):
-			out.append(_f(r, "solid_outside", "solid %s is outside the room" % r.solids[i], "solid", i))
+			out.append(_f(r, "solid_outside", "the solid at %s is outside the room" % _rect_text(r.solids[i]), "solid", i))
 	return out
 
 static func _outside(r: RoomDef) -> Array:
@@ -132,12 +136,12 @@ static func _in_rock(r: RoomDef) -> Array:
 	for i in r.spawns.size():
 		for rect in rocks:
 			if (rect as Rect2).has_point(r.spawns[i]["pos"]):
-				out.append(_f(r, "in_rock", "%s at %s is inside %s" % [r.spawns[i]["id"], r.spawns[i]["pos"], rect], "spawn", i))
+				out.append(_f(r, "in_rock", "%s at %s is inside rock at %s" % [r.spawns[i]["id"], r.spawns[i]["pos"], _rect_text(rect)], "spawn", i))
 				break
 	if r.is_start():
 		for rect in rocks:
 			if (rect as Rect2).has_point(r.start):
-				out.append(_f(r, "in_rock", "the start at %s is inside %s" % [r.start, rect]))
+				out.append(_f(r, "in_rock", "the start at %s is inside rock at %s" % [r.start, _rect_text(rect)]))
 				break
 	for i in r.features.size():
 		var f: Dictionary = r.features[i]
@@ -152,7 +156,7 @@ static func _exit_blocked(r: RoomDef) -> Array:
 		var zone := exit_zone(size, r.exits[i])
 		for s: Rect2 in r.solids:
 			if s.size.y > MASS and s.size.x > MASS and zone.intersects(s):
-				out.append(_f(r, "exit_blocked", "solid %s blocks the %s exit" % [s, r.exits[i]["edge"]], "exit", i))
+				out.append(_f(r, "exit_blocked", "the solid at %s blocks the %s exit" % [_rect_text(s), r.exits[i]["edge"]], "exit", i))
 				break
 	return out
 
@@ -194,7 +198,7 @@ static func _ledge_reach(r: RoomDef) -> Array:
 	for i in r.solids.size():
 		var s: Rect2 = r.solids[i]
 		if ledges.has(s) and not reached.has(s):
-			out.append(_f(r, "ledge_reach", "the ledge at %s cannot be reached from the floor by the base jump" % s, "solid", i))
+			out.append(_f(r, "ledge_reach", "the ledge at %s cannot be reached from the floor by the base jump" % _rect_text(s), "solid", i))
 	return out
 
 ## `pos` with `extent` (centred in x) overlaps the span horizontally and sits within 120 px above the floor line or below it.

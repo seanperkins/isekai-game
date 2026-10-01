@@ -77,11 +77,14 @@ func _ready() -> void:
 func _commit_pending() -> void:
 	get_viewport().gui_release_focus()
 
-## The screen area the panels leave open: below the toolbar, above the status bar, beside a palette or the slot when shown.
+## The screen area the panels leave open: below the toolbar, above the status bar, beside a palette when one shows, and always
+## clear of the right-hand slot's column, so the room does not jump when a selection opens the slot over it. With the panels
+## hidden (Tab) it is the whole window.
 func _free_rect() -> Rect2:
+	if not panels.panels_visible():
+		return Rect2(0.0, 0.0, 640.0, 360.0)
 	var left := 92.0 if panels.palette_visible() or panels.feature_palette_visible() else 0.0
-	var right := 168.0 if slot.visible else 0.0
-	return Rect2(left, 48.0, 640.0 - left - right, 296.0)
+	return Rect2(left, 48.0, 640.0 - left - 168.0, 296.0)
 
 func _refit() -> void:
 	view.fit_in(_free_rect())

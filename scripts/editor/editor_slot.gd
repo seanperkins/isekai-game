@@ -11,7 +11,7 @@ const FONT := 8
 
 var _scroll := ScrollContainer.new()
 var _inspector: InspectorPanel
-var _list: ItemList
+var _list: VBoxContainer
 var _problems: Array = []
 var _showing := ""
 
@@ -20,7 +20,7 @@ func _init() -> void:
 	size = Vector2(168, 290)
 	visible = false
 	var back := ColorRect.new()
-	back.color = Color(0.08, 0.08, 0.12, 0.92)
+	back.color = Color(0.3, 0.3, 0.36)  # opaque and light enough that an unticked checkbox shows against it
 	back.set_anchors_preset(Control.PRESET_FULL_RECT)
 	back.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(back)
@@ -44,25 +44,31 @@ func show_inspector(model: RoomEditModel, sel: Dictionary) -> void:
 func show_problems(problems: Array) -> void:
 	_clear()
 	_problems = problems
-	_list = ItemList.new()
-	_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_list.custom_minimum_size = Vector2(160, 280)
-	_list.add_theme_font_size_override("font_size", FONT)
-	_list.auto_height = true
+	_list = VBoxContainer.new()
+	_list.custom_minimum_size = Vector2(160, 0)
 	if problems.is_empty():
-		_list.add_item("No problems found.")
-	for p in problems:
-		var room: String = p["room"]
-		var text: String = p["text"]
-		_list.add_item(text if room == "" or text.begins_with(room) else "%s: %s" % [room, text])
-	_list.item_clicked.connect(func(i: int, _at: Vector2, button: int) -> void:
-		if button == MOUSE_BUTTON_LEFT:
-			click_problem(i))
-	_list.item_activated.connect(click_problem)
+		_list.add_child(_text("No problems found."))
+	for i in problems.size():
+		var room: String = problems[i]["room"]
+		var text: String = problems[i]["text"]
+		var b := Button.new()
+		b.text = text if room == "" or text.begins_with(room) else "%s: %s" % [room, text]
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART  # a finding is a sentence: wrap it rather than cut it at the slot's edge
+		b.custom_minimum_size = Vector2(160, 0)
+		b.focus_mode = Control.FOCUS_NONE
+		b.add_theme_font_size_override("font_size", FONT)
+		b.pressed.connect(click_problem.bind(i))
+		_list.add_child(b)
 	_scroll.add_child(_list)
 	_showing = "problems"
 	visible = true
+
+func _text(text: String) -> Label:
+	var l := Label.new()
+	l.text = text
+	l.add_theme_font_size_override("font_size", FONT)
+	return l
 
 func click_problem(i: int) -> void:
 	if i >= 0 and i < _problems.size():
@@ -76,8 +82,8 @@ func hide_slot() -> void:
 func problem_lines() -> Array:
 	var out: Array = []
 	if _list != null:
-		for i in _list.item_count:
-			out.append(_list.get_item_text(i))
+		for c in _list.get_children():
+			out.append(c.text)
 	return out
 
 func find_field(key: String) -> Control:
