@@ -86,17 +86,20 @@ rooms.
   Water rects in a room may not overlap **or touch** (`intersects(b, true)`), so a rect's top edge is always a real surface. Because the
   exit clause is room-local, an **authored-world test** joins the water rects across exit spans and asserts every connected group holds a
   shore (F2's column ends in F3's water, which has one). The learning pool, F3's water and F5's eel pool each have a shore.
-- A water column's door is **structural**, derived like the Grotto's chimney `T`: the bob's apex is
+- A water column's door is **structural**, derived like the Grotto's chimney `T`. The bob's apex is
   `B = BOB_VELOCITY² · (jump_height / 100) / (2 · GRAVITY · WATER_GRAVITY)` at the true maximum jump height over all stages (stage 4
-  Storm with Leap 10: 185) = 160² · 1.85 / (2 · 900 · 0.35) = 75.2 px. A new **gate test** (F2's column, and F4's in the slice) asserts the
-  three parts the Grotto's G5 test has: (a) the top exit's span lies inside the column's x-range and the column reaches the room's top
-  edge; (b) no solid lies inside the column between its floor and its sill, and the sill is at least `B + 3` above the floor (a guard on a
-  later edit, not a design number); (c) the existing hop model over the room's dry surfaces cannot reach the exit without water. A swimmer
-  needs nothing else. The two chains' feet and ledges stand on dry floor, outside every water rect (the chain test asserts it).
+  Storm with Leap 10: 185) = 160² · 1.85 / (2 · 900 · 0.35) = 75.2 px. A **lateral dry jump** can enter the column's side already above
+  its floor, so the non-swimmer's true reach above the column floor is `B_entry = (JUMP_VELOCITY² − BOB_VELOCITY²) · jh_max / (2 · GRAVITY
+  · 100) + B` = 85.6 + 75.2 = 160.8 px (at base, 86.9). A new **gate test** (F2's column, and F4's in the slice) asserts the three parts the
+  Grotto's G5 test has: (a) the top exit's span lies inside the column's x-range and the column reaches the room's top edge; (b) no solid
+  lies inside the column between its floor and its sill, and the sill is at least `B_entry + 3` above the floor (a guard on a later edit, not
+  a design number: the columns are far taller); (c) the existing hop model over the room's dry surfaces, each extended by `B_entry` when it
+  lies within reach of the column, cannot reach the exit without water. A swimmer needs nothing else. The two chains' feet and ledges stand
+  on dry floor, outside every water rect (the chain test asserts it).
 - `B` is the bound only if nothing carries a dry jump's speed into the water: a base jump (−330) entering a column keeps most of it, and
   at 0.35 gravity it rises `330² · (jump_height / 100) / (2 · 900 · 0.35)` = 173 px at base and 320 px at stage 4, far over `B`. So on the
   in-water **entry edge**, without Swim, `PlayerWater` caps the upward speed at the bob (`velocity.y = maxf(velocity.y, −BOB_VELOCITY ·
-  boost)`). A Water test pins it ("a dry jump into water rises no higher than `B`"). The cap is on entry only: Hydraulic Propulsion fired
+  boost)`). A Water test pins it ("a dry jump into water rises no higher than `B` above the point where it entered"). The cap is on entry only: Hydraulic Propulsion fired
   mid-water keeps the ruling below.
 - A **Wall Cling** wall jump is a dry-land move: in water, without Swim, a wall gives no bob, so Wall Cling alone does not climb a column. Other
   traversal skills (Hydraulic Propulsion, whose impulse is not damped in water, and threads) may pass the column, exactly as Wall Cling,
@@ -246,7 +249,7 @@ Core (not optional):
   `_shift_content` gains a `water` arm so a Grow to the west or north does not detach water from its solids and swimmers (with a case in
   `test_room_edit_grow`).
 - The room view draws water read-only with the in-game tint. `RoomLint` gains `water_rect` (a rect outside the room, smaller than 32×32,
-  or overlapping another), `swimmer_dry` (a swimmer spawn outside every water rect; it reads the creatures' `swimmer` flag from a cached
+  or overlapping or touching another: `intersects(b, true)`), `swimmer_dry` (a swimmer spawn outside every water rect; it reads the creatures' `swimmer` flag from a cached
   `DefLoader.load_dir("res://data/creatures")` like `_hintable`, never hard-coded ids) and `water_exit` (above). `WorldValidator.GATES` gains `swim` (a gated exit still matches on both
   halves), and `docs/rooms.md` says so.
 
@@ -285,7 +288,7 @@ precedence and state-token docs, and `FormOffers`'s header. The count pins move 
 - Data: every room validates; spawn keys unique; the pacing rule; the F1 kit eligibility; the first-evolution areas rule; every world event
   has a cue; no spawn or decor over a floor hole; the three water lint rules, `water_exit` on every authored water rect.
 - Water: a body in a rect is in water, one outside is not; a room change fires no exit-and-enter pair; a surface jump stays ballistic until the
-  centre leaves the rect; a dry jump into water rises no higher than `B`; a swimmer surfaces and launches with an eel alerted in the same
+  centre leaves the rect; a dry jump into water rises no higher than `B` above its entry point; a swimmer surfaces and launches with an eel alerted in the same
   rect (the bodies block each other); each non-swim modifier on the exact constants, with the bob boosted by
   `jump_height` and no bob from a wall; Swim moves 8-way and leaves at the surface within `SURFACE_REACH`; `submerged` once per second and
   only in water; a non-swimmer who stays 20 s in F2's column learns Swim.
@@ -329,8 +332,8 @@ precedence and state-token docs, and `FormOffers`'s header. The count pins move 
   eel-like movement than a patrol-and-dart state machine, fixable later in one act function.
 - The Bog Lizardman stays (the user asked for creatures from these series) but is the toad's spitter with a `Spear extends SpitBlob`, its
   own constants and a no-chase walk, not a new Kind.
-- The gate test's `B` is the true maximum over all stages (75.2 px), a floor guarding later edits, not a design number: the columns are far
-  taller. A dry jump's speed is capped on water entry (without Swim) so `B` is really the bound; Hydraulic Propulsion fired in the water is
+- The gate test's reach is the true maximum over all stages, a lateral dry jump's height included (`B_entry`, 160.8 px), a floor guarding later
+  edits, not a design number: the columns are far taller. A dry jump's speed is capped on water entry (without Swim) so `B` is really the bound; Hydraulic Propulsion fired in the water is
   not capped.
 - The Water tool is a slice, not core; the editor core is the part that keeps water safe.
 - Deferred to a playtest: F2's eels against the 20 s the column asks of a non-swimmer (a damage race, never a trap), and whether the 0.3 s
