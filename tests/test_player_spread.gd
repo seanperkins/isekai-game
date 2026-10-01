@@ -90,9 +90,5 @@ func test_the_wall_grip_faces_the_wall() -> void:
 
 func test_every_room_exit_fits_the_rigged_slime() -> void:
 	var rooms := World.load_rooms("res://data/rooms")
-	var body := BodyConfig.COLLISION * float(BodyConfig.SCALE)
-	for id in rooms:
-		for e in (rooms[id] as RoomDef).exits:
-			var span := float(e["to"]) - float(e["from"])
-			var needed := body.y if e["edge"] == "left" or e["edge"] == "right" else body.x
-			assert_gte(span, needed + 8.0, "%s %s exit" % [id, e["edge"]])
+	assert_eq(RoomLint.text(RoomLint.check(rooms), ["exit_narrow"]), "")
+

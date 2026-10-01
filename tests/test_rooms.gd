@@ -27,18 +27,7 @@ func test_cave_meets_the_food_minimums() -> void:
 		assert_gte(int(counts.get(id, 0)), minimums[id], id)
 
 func test_spawns_and_the_start_sit_inside_their_room_and_outside_rock() -> void:
-	for r: RoomDef in rooms.values():
-		var local := Rect2(Vector2.ZERO, r.pixel_size())
-		var rock: Array = r.solids.duplicate()
-		for w in RoomBuilder.edge_walls(r.pixel_size(), r.exits):
-			rock.append(w["rect"])
-		var points: Array = r.spawns.map(func(s: Dictionary) -> Array: return [s["id"], s["pos"]])
-		if r.is_start():
-			points.append(["start", r.start])
-		for p in points:
-			assert_true(local.has_point(p[1]), "%s %s at %s" % [r.id, p[0], p[1]])
-			for rect in rock:
-				assert_false(rect.has_point(p[1]), "%s %s at %s is inside %s" % [r.id, p[0], p[1], rect])
+	assert_eq(RoomLint.text(RoomLint.check(rooms), ["outside", "in_rock"]), "")
 
 func test_every_ledge_is_reachable_from_its_floor_by_base_jumps() -> void:
 	# Base apex: v^2 / 2g = 330^2 / 1800 = 60.5 px; allow 55 px of rise and a 60 px gap per
@@ -75,3 +64,6 @@ func test_the_nook_holds_a_tablet_and_the_shortcut_switch() -> void:
 	assert_true(kinds.has("tablet"))
 	assert_true(kinds.has("switch"))
 	assert_true(rooms["C4"].features.any(func(f: Dictionary) -> bool: return f["kind"] == "glow_pool"))
+
+func test_the_world_has_no_lint_findings() -> void:
+	assert_eq(RoomLint.text(RoomLint.check(rooms), RoomLint.RULES), "", "Validate clean is the same set as the suite's rules")

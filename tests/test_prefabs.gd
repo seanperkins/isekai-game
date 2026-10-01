@@ -1,8 +1,6 @@
 extends GutTest
 ## Prefabs expand to plain room data, and the rooms they dress stay walkable.
 
-const CLEAR := 64.0   # nothing may stand this close in front of an exit
-const MIN_EXIT := 36.0  # the 28 px body plus 8
 
 var rooms := {}
 
@@ -40,53 +38,19 @@ func test_steps_never_exceed_the_ledge_limit() -> void:
 			prev = t
 
 func test_every_solid_is_inside_its_room() -> void:
-	for id in rooms:
-		var def: RoomDef = rooms[id]
-		var bounds := Rect2(Vector2.ZERO, def.pixel_size())
-		for r in def.solids:
-			assert_true(bounds.encloses(r), "%s solid %s" % [id, r])
+	assert_eq(RoomLint.text(RoomLint.check(rooms), ["solid_outside"]), "")
 
 func test_nothing_stands_in_front_of_an_exit() -> void:
-	for id in rooms:
-		var def: RoomDef = rooms[id]
-		var size := def.pixel_size()
-		for e in def.exits:
-			var zone := _exit_zone(size, e)
-			for r: Rect2 in def.solids:
-				if r.size.y > 24.0 and r.size.x > 24.0:  # ledges by an exit are level design; mass is not
-					assert_false(zone.intersects(r), "%s solid %s blocks the %s exit" % [id, r, e["edge"]])
+	assert_eq(RoomLint.text(RoomLint.check(rooms), ["exit_blocked"]), "")
 
 func test_exits_fit_the_body() -> void:
-	for id in rooms:
-		for e in rooms[id].exits:
-			assert_gte(float(e["to"]) - float(e["from"]), MIN_EXIT, "%s %s" % [id, e])
+	assert_eq(RoomLint.text(RoomLint.check(rooms), ["exit_narrow"]), "")
 
 func test_spawns_and_features_are_not_inside_solids() -> void:
-	for id in rooms:
-		var def: RoomDef = rooms[id]
-		for s in def.spawns:
-			for r in def.solids:
-				assert_false(r.has_point(s["pos"]), "%s spawn %s inside %s" % [id, s["id"], r])
-		for f in def.features:
-			for r in def.solids:
-				assert_false(r.has_point(f["pos"]), "%s feature %s inside %s" % [id, f["id"], r])
+	assert_eq(RoomLint.text(RoomLint.check(rooms), ["in_rock"]), "")
 
 func test_start_stands_on_the_floor() -> void:
-	# The body centre sits BodyConfig.BOTTOM above the floor top (height - RoomDef.FLOOR).
-	for id in rooms:
-		var def: RoomDef = rooms[id]
-		if def.is_start():
-			assert_almost_eq(def.start.y, def.pixel_size().y - RoomDef.FLOOR - BodyConfig.BOTTOM, 0.6)
-
-## The floor space in front of an exit that must stay open: CLEAR deep, the exit's span wide.
-func _exit_zone(size: Vector2, e: Dictionary) -> Rect2:
-	var a := float(e["from"])
-	var b := float(e["to"])
-	match e["edge"]:
-		"left": return Rect2(RoomDef.WALL, a, CLEAR, b - a)
-		"right": return Rect2(size.x - RoomDef.WALL - CLEAR, a, CLEAR, b - a)
-		"top": return Rect2(a, RoomDef.WALL, b - a, CLEAR)
-	return Rect2(a, size.y - RoomDef.FLOOR - CLEAR, b - a, CLEAR)
+	assert_eq(RoomLint.text(RoomLint.check(rooms), ["start_floor"]), "")
 
 func test_every_biome_set_names_real_prefabs() -> void:
 	for biome in Prefabs.SETS:
