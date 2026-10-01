@@ -261,6 +261,151 @@ func test_creature_markers_are_static_and_an_unknown_id_is_red() -> void:
 	assert_eq(markers.filter(func(m): return m.get_meta("unknown", false)).size(), 1)
 	assert_true(markers.any(func(m): return m.get_node_or_null("Sprite") != null), "a known creature is its sprite")
 
+# --- the inspector and the right-hand slot ---
+
+func _slot() -> EditorSlot:
+	var s := EditorSlot.new()
+	add_child_autofree(s)
+	await wait_process_frames(1)
+	return s
+
+func test_the_inspector_edits_a_tablet_through_the_model() -> void:
+	model.add_feature("C1", "tablet", Vector2(300, 100))
+	var slot := await _slot()
+	slot.show_inspector(model, model.selection)
+	assert_eq(slot.is_showing(), "inspector")
+	var title: LineEdit = slot.find_field("title")
+	title.text = "Moss"
+	title.text_submitted.emit("Moss")
+	assert_eq(model.rooms["C1"].features.back()["title"], "Moss")
+	assert_eq(model.undo_depth(), 2, "placement then the edit")
+	title.text_submitted.emit("Moss")
+	title.focus_exited.emit()
+	assert_eq(model.undo_depth(), 2, "Enter then focus loss is one step")
+
+func test_a_pending_edit_goes_to_the_element_it_was_typed_for() -> void:
+	model.add_feature("C1", "tablet", Vector2(300, 100))
+	model.add_feature("C1", "tablet", Vector2(400, 100))
+	var first := {"room": "C1", "kind": "feature", "index": model.rooms["C1"].features.size() - 2}
+	var slot := await _slot()
+	slot.show_inspector(model, first)
+	var title: LineEdit = slot.find_field("title")
+	title.text = "First one"
+	model.select({"room": "C1", "kind": "feature", "index": model.rooms["C1"].features.size() - 1})
+	title.focus_exited.emit()
+	assert_eq(model.rooms["C1"].features[first["index"]]["title"], "First one")
+
+func test_a_refused_edit_shows_the_stored_value_and_reports_the_reason() -> void:
+	model.add_feature("C1", "tablet", Vector2(300, 100))
+	var slot := await _slot()
+	var errors := []
+	slot.field_error.connect(func(t: String) -> void: errors.append(t))
+	slot.show_inspector(model, model.selection)
+	var title: LineEdit = slot.find_field("title")
+	title.text = ""
+	title.text_submitted.emit("")
+	assert_eq(errors.size(), 1)
+	assert_eq(title.text, "Tablet")
+
+func test_a_pending_edit_for_an_element_that_is_gone_is_dropped_quietly() -> void:
+	model.add_feature("C1", "tablet", Vector2(300, 100))
+	var slot := await _slot()
+	var errors := []
+	slot.field_error.connect(func(t: String) -> void: errors.append(t))
+	slot.show_inspector(model, model.selection)
+	var title: LineEdit = slot.find_field("title")
+	title.text = "Late"
+	model.delete_selection()
+	title.focus_exited.emit()
+	assert_eq(errors, [])
+	assert_eq(model.undo_depth(), 2, "the placement and the delete; the late edit did nothing")
+
+func test_the_exit_inspector_sets_the_shortcut_on_both_halves() -> void:
+	var idx := -1
+	for i in model.rooms["C1"].exits.size():
+		if model.rooms["C1"].exits[i]["room"] == "C2":
+			idx = i
+	var slot := await _slot()
+	slot.show_inspector(model, {"room": "C1", "kind": "exit", "index": idx})
+	var line: LineEdit = slot.find_field("shortcut")
+	line.text = "front_door"
+	line.text_submitted.emit("front_door")
+	assert_eq(model.rooms["C1"].exits[idx]["shortcut"], "front_door")
+	assert_eq(model.undo_depth(), 1)
+
+func test_the_pool_inspector_offers_level_and_the_kit_legal_skills() -> void:
+	var sel := {"room": "G1", "kind": "feature", "index": model.rooms["G1"].features.find_custom(func(f): return f["kind"] == "rebirth_pool")}
+	var slot := await _slot()
+	slot.show_inspector(model, sel)
+	var checks := slot.skill_checkboxes()
+	var legal := RebirthKit.skill_defs().filter(func(d): return d.source != "enemy_only" and d.source != "evolution")
+	assert_eq(checks.size(), legal.size(), "every skill a kit may name, none other")
+	assert_eq(checks.size(), 16, "29 skills less 5 enemy-only and 8 evolution")
+	var ids := checks.map(func(c): return c.get_meta("skill"))
+	assert_false(ids.has("flight"))
+	assert_true(slot.find_field("kit_level") is OptionButton)
+	for c in checks:
+		assert_eq(c.focus_mode, Control.FOCUS_NONE)
+
+func test_ticking_a_skill_and_choosing_a_level_write_the_kit_and_keep_the_affinity() -> void:
+	var idx: int = model.rooms["G1"].features.find_custom(func(f): return f["kind"] == "rebirth_pool")
+	var sel := {"room": "G1", "kind": "feature", "index": idx}
+	var affinity: Dictionary = model.rooms["G1"].features[idx]["kit"]["affinity"].duplicate()
+	var had: Array = model.get_field(sel, "kit_skills")
+	assert_false(had.is_empty(), "G1 ships skills in its kit")
+	var slot := await _slot()
+	slot.show_inspector(model, sel)
+	for c in slot.skill_checkboxes():
+		assert_eq(c.button_pressed, had.has(c.get_meta("skill")), "a box is ticked for each skill the kit holds")
+	var extra: CheckBox = slot.skill_checkboxes().filter(func(c): return not had.has(c.get_meta("skill")))[0]
+	extra.button_pressed = true
+	var now: Array = model.get_field(sel, "kit_skills")
+	assert_eq(now.size(), had.size() + 1)
+	assert_true(now.has(extra.get_meta("skill")))
+	for id in had:
+		assert_true(now.has(id), "the skills it had are kept")
+	var level: OptionButton = slot.find_field("kit_level")
+	level.item_selected.emit(4)
+	assert_eq(model.get_field(sel, "kit_level"), 4)
+	assert_eq(model.rooms["G1"].features[idx]["kit"].get("affinity", {}), affinity)
+	extra.button_pressed = false
+	assert_eq(model.get_field(sel, "kit_skills").size(), had.size())
+
+func test_the_problems_list_lands_on_the_problem() -> void:
+	model.rooms["C2"].spawns.append({"id": "toad", "pos": Vector2(5, 100)})
+	model.serial += 1
+	var slot := await _slot()
+	var clicked := []
+	slot.problem_clicked.connect(func(p: Dictionary) -> void: clicked.append(p))
+	slot.show_problems(model.problems())
+	assert_eq(slot.is_showing(), "problems")
+	slot.click_problem(0)
+	assert_eq(clicked[0]["room"], "C2")
+	assert_eq(clicked[0]["pick"]["kind"], "spawn")
+
+func test_the_slot_hides_and_reports_what_it_shows() -> void:
+	var slot := await _slot()
+	assert_eq(slot.is_showing(), "")
+	model.add_feature("C1", "glow_pool", Vector2(300, 100))
+	slot.show_inspector(model, model.selection)
+	assert_eq(slot.is_showing(), "inspector")
+	slot.hide_slot()
+	assert_eq(slot.is_showing(), "")
+	assert_false(slot.visible)
+
+func test_typing_means_a_line_edit_or_spin_box_has_focus() -> void:
+	var p := await _panels()
+	assert_false(p.typing())
+	var edit := LineEdit.new()
+	add_child_autofree(edit)
+	edit.grab_focus()
+	assert_true(p.typing())
+	var box := CheckBox.new()
+	box.focus_mode = Control.FOCUS_NONE
+	add_child_autofree(box)
+	edit.release_focus()
+	assert_false(p.typing(), "a checkbox never counts")
+
 # --- panels ---
 
 func _panels() -> EditorPanels:
