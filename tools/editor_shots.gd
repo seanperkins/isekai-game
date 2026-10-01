@@ -57,6 +57,16 @@ func _process(_delta: float) -> bool:
 			_shot("editor_solid_drag_rock")
 			_mouse(true, false, Vector2(820, 260))
 			ed.panels.press("Creature")
+		30:
+			# a real click on the first palette entry (a FOCUS_NONE ItemList must still select): the log line below says if it did
+			for pressed in [true, false]:
+				var b := InputEventMouseButton.new()
+				b.button_index = MOUSE_BUTTON_LEFT
+				b.pressed = pressed
+				b.position = Vector2(20, 62)
+				root.push_input(b, true)
+		32:
+			print("PALETTE_CLICK creature_id=", ed.view.creature_id)
 		34:
 			_shot("editor_palette")
 			ed.panels.press("Validate")

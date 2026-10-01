@@ -134,6 +134,7 @@ func _build_grow() -> void:
 func _build_palette() -> void:
 	_palette.position = Vector2(0, 50)
 	_palette.size = Vector2(92, 290)
+	_palette.focus_mode = Control.FOCUS_NONE  # a palette that kept focus would eat Tab (the panels toggle) and the arrow keys
 	_small(_palette)
 	for id in _model.creature_ids:
 		_palette.add_item(id)
@@ -141,6 +142,7 @@ func _build_palette() -> void:
 	_root.add_child(_palette)
 	_feature_palette.position = Vector2(0, 50)
 	_feature_palette.size = Vector2(92, 120)
+	_feature_palette.focus_mode = Control.FOCUS_NONE
 	_small(_feature_palette)
 	for kind in RoomEditModel.FEATURE_KINDS:
 		_feature_palette.add_item(kind)

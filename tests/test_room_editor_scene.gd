@@ -890,3 +890,88 @@ func test_the_overview_follows_the_model_while_it_is_open() -> void:
 	ed.grow("left")
 	assert_true(ed.world.visible)
 	assert_almost_eq(float(ratio.call()), before * float(c6w + 1) / float(c6w), 0.001, "the overview was laid out again with the grown room")
+
+# --- review fixes: real events where the plan's tests emitted signals by hand ---
+
+func _key(code: Key, ctrl := false) -> InputEventKey:
+	var k := InputEventKey.new()
+	k.keycode = code
+	k.pressed = true
+	k.ctrl_pressed = ctrl
+	return k
+
+func test_delete_and_backspace_inside_a_field_edit_the_text_and_never_delete_the_element() -> void:
+	var ed := await _editor()
+	ed.model.add_feature("C1", "tablet", Vector2(300, 100))
+	ed.view.refresh()
+	var n: int = ed.model.rooms["C1"].features.size()
+	var title: LineEdit = ed.slot.find_field("title")
+	title.grab_focus()
+	assert_true(ed.panels.typing())
+	get_viewport().push_input(_key(KEY_DELETE))
+	get_viewport().push_input(_key(KEY_BACKSPACE))
+	await wait_process_frames(1)
+	assert_eq(ed.model.rooms["C1"].features.size(), n, "keys typed in a field never reach the room")
+
+func test_delete_after_ticking_a_kit_skill_deletes_the_pool() -> void:
+	var ed := await _editor()
+	ed.open_room("G1")
+	var idx: int = ed.model.rooms["G1"].features.find_custom(func(f): return f["kind"] == "rebirth_pool")
+	ed.model.select({"room": "G1", "kind": "feature", "index": idx})
+	ed.view.refresh()
+	var had: Array = ed.model.get_field(ed.model.selection, "kit_skills")
+	ed.slot.skill_checkboxes().filter(func(c): return not had.has(c.get_meta("skill")))[0].button_pressed = true
+	var n: int = ed.model.rooms["G1"].features.size()
+	get_viewport().push_input(_key(KEY_DELETE))
+	await wait_process_frames(1)
+	assert_eq(ed.model.rooms["G1"].features.size(), n - 1, "a ticked box left no focus behind to swallow Delete")
+
+func test_a_real_click_on_another_feature_commits_the_typed_text_to_the_first() -> void:
+	var ed := await _editor()
+	ed.model.add_feature("C1", "tablet", Vector2(300, 100))
+	ed.model.add_feature("C1", "tablet", Vector2(420, 100))
+	ed.view.refresh()
+	var features: Array = ed.model.rooms["C1"].features
+	var first_idx := features.size() - 2
+	ed.model.select({"room": "C1", "kind": "feature", "index": first_idx})
+	ed.view.refresh()
+	var title: LineEdit = ed.slot.find_field("title")
+	title.grab_focus()
+	title.text = "Typed for the first"
+	var second: Vector2 = features[features.size() - 1]["pos"]
+	var at := ed.view.to_screen(second + Vector2(0, -8))
+	for ev in [_button_at(at, true), _button_at(at, false)]:
+		get_viewport().push_input(ev, true)
+	await wait_process_frames(2)
+	assert_eq(features[first_idx]["title"], "Typed for the first", "the click committed the text before the selection moved")
+	assert_eq(ed.model.selection["index"], features.size() - 1, "and selected the second tablet")
+
+func test_clicking_a_problem_button_for_real_lands_without_a_crash() -> void:
+	var ed := await _editor()
+	ed.model.rooms["C2"].spawns.append({"id": "toad", "pos": Vector2(5, 100)})
+	ed.model.add_solid("C2", Vector2(100, 100), Vector2(160, 116))
+	ed.view.refresh()
+	ed.panels.press("Validate")
+	ed.slot._list.get_child(0).pressed.emit()  # the button frees itself while its signal runs
+	await wait_process_frames(2)
+	assert_eq(ed.slot.is_showing(), "problems")
+	assert_true(ed.model.rooms.has(ed.room_id))
+
+func test_with_the_world_view_open_delete_cannot_reach_the_hidden_room() -> void:
+	var ed := await _editor()
+	ed.model.add_feature("C1", "tablet", Vector2(300, 100))
+	ed.view.refresh()
+	var n: int = ed.model.rooms["C1"].features.size()
+	ed.panels.press("World")
+	get_viewport().push_input(_key(KEY_DELETE))
+	await wait_process_frames(1)
+	assert_eq(ed.model.rooms["C1"].features.size(), n, "Delete did nothing under the overview")
+	ed.panels.press("World")
+	get_viewport().push_input(_key(KEY_DELETE))
+	await wait_process_frames(1)
+	assert_eq(ed.model.rooms["C1"].features.size(), n - 1, "and works again once it is closed")
+
+func test_the_palettes_never_take_keyboard_focus_so_tab_keeps_hiding_the_panels() -> void:
+	var p := await _panels()
+	assert_eq(p._palette.focus_mode, Control.FOCUS_NONE)
+	assert_eq(p._feature_palette.focus_mode, Control.FOCUS_NONE)

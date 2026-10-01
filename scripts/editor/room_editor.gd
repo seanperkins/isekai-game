@@ -275,6 +275,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		play(view.to_room((event as InputEventMouseButton).position))
 		get_viewport().set_input_as_handled()
 		return
+	if world.visible:
+		return  # the overview covers the room: Delete, the wheel and F5 must not reach what it hides
 	if view.handle_event(event):
 		get_viewport().set_input_as_handled()
 
@@ -296,7 +298,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			undo()
 	elif cmd and key.keycode == KEY_S:
 		save()
-	elif key.keycode == KEY_F5:
+	elif key.keycode == KEY_F5 and not world.visible:
 		var p := view.to_room(get_viewport().get_mouse_position())
 		if not RoomEditModel.bounds(model.rooms[room_id]).has_point(p):
 			p = view.to_room(Vector2(320, 180))

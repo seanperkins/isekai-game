@@ -141,6 +141,30 @@ func test_a_feature_on_a_ledge_whose_top_is_off_the_grid_still_drags() -> void:
 	assert_eq(r.features[sel["index"]]["pos"], Vector2(280, 266), "the base y is a surface top, never snapped into the ledge")
 	model.end_move()
 
+func test_a_pointer_that_dips_into_the_surface_keeps_the_feature_sliding_along_it() -> void:
+	var r: RoomDef = model.rooms["C2"]
+	r.solids = []
+	var floor_y: float = r.pixel_size().y - RoomDef.FLOOR
+	assert_eq(model.add_feature("C2", "tablet", Vector2(220, 100)), "")
+	var sel := {"room": "C2", "kind": "feature", "index": r.features.size() - 1}
+	assert_eq(r.features[sel["index"]]["pos"], Vector2(220, floor_y))
+	assert_true(model.begin_move(sel))
+	model.move_to(Vector2(40, 4))  # a hand never drags dead level: the pointer is a pixel or two below the floor line
+	assert_eq(r.features[sel["index"]]["pos"], Vector2(260, floor_y), "it follows along the floor")
+	model.move_to(Vector2(80, 2))
+	assert_eq(r.features[sel["index"]]["pos"], Vector2(300, floor_y))
+	model.end_move()
+
+func test_a_pointer_that_dips_into_a_ledge_keeps_the_feature_on_it() -> void:
+	var r: RoomDef = model.rooms["C2"]
+	r.solids = [Rect2(200, 200, 160, 12)]
+	assert_eq(model.add_feature("C2", "tablet", Vector2(220, 100)), "")
+	var sel := {"room": "C2", "kind": "feature", "index": r.features.size() - 1}
+	model.begin_move(sel)
+	model.move_to(Vector2(60, 6))
+	assert_eq(r.features[sel["index"]]["pos"], Vector2(280, 200), "still on the ledge, not stuck at 220")
+	model.end_move()
+
 func test_a_drag_into_rock_stays_at_the_last_valid_spot() -> void:
 	var r: RoomDef = model.rooms["C2"]
 	r.solids = [Rect2(400, 100, 100, 220)]  # down to the floor

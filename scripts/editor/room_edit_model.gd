@@ -275,7 +275,13 @@ func move_to(delta: Vector2) -> void:
 			if bounds(r).has_point(p) and not _in_rock(sel["room"], p):
 				r.spawns[sel["index"]]["pos"] = p
 		"feature":
-			var base = _feature_base(sel["room"], (_drag["orig"] as Vector2) + d, r.features[sel["index"]]["kind"])
+			var orig: Vector2 = _drag["orig"]
+			var kind: String = r.features[sel["index"]]["kind"]
+			var base = _feature_base(sel["room"], orig + d, kind)
+			if base is String and d.y != 0.0:
+				# a hand never drags dead level: a pointer a pixel below the floor line puts the candidate inside the surface the
+				# feature stands on, so try the same x at the original height and keep sliding along it
+				base = _feature_base(sel["room"], orig + Vector2(d.x, 0.0), kind)
 			if base is Vector2:
 				r.features[sel["index"]]["pos"] = base
 		"exit":
