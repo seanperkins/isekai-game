@@ -1,6 +1,6 @@
 # The Deep — Design
 
-Status: revised after debate round 1 (2026-10-01). Sub-project 7, the fourth area. It builds on the exploration spec
+Status: revised after debate round 3 and a verification pass (2026-10-01). Sub-project 7, the fourth area. It builds on the exploration spec
 (`2026-09-28-exploration-world-design.md`), the Fungal Grotto (`2026-09-29-fungal-grotto-design.md`: the template for an area and its pacing)
 and the Flooded Tunnels (`2026-10-01-flooded-tunnels-design.md`: the last area, the registration surfaces a new creature or skill touches, and the
 way an area is authored with the editor's model). The art for the biome already ships: `assets/tiles/deep`, `assets/backgrounds/deep`, the
@@ -63,7 +63,8 @@ shrinks (a 1×1 room is about 25 px wide in the test panel, 35 before): a screen
   and the ledge is trimmed to `Rect2(1120, 266, 76, 12)` (it ends at x 1196: touching rects do not intersect). `new_room_beside` rejects a door whose zone
   holds any solid, ledges included, and would otherwise pick a span 60 px above the floor (180–260), a sill no base jump climbs back to. So the Flooded's
   spawn list and first pass are unchanged and a test pins that F4's east exit and D1's west exit both end at `to == 320`. `RoomLint` checks solids only
-  in a door's zone, so a second test loops over every exit of F4 and D1–D5 and asserts no spawn or decor position lies in `RoomLint.exit_zone(size, e)` as a closed rect on both
+  in a door's zone, so a second test loops over F4's new east exit and every exit of D1–D5 (not F4's other doors, whose shipped puddle decor at (60, 320) sits on its west zone's edge
+  and is not this spec's business) and asserts no spawn or decor position lies in `RoomLint.exit_zone(size, e)` as a closed rect on both
   axes (`>=` and `<=`, not `has_point`, whose far edges are open: a decor base on the zone's bottom edge would slip through; y stays in, so a tall room's
   floor column away from the door is not flagged). The zone paired with the new door is F4's x 1196–1260 and D1's west x 20–84 (D1's east zone is
   x 556–620). D1's ants stay clear of the pool (the lint's pool clearance) and of D1's two zones.
@@ -97,7 +98,7 @@ script authors each room's solids after its east neighbour exists, or builds the
   the floor and the exit graph, never an exit's sill.
 - **D6's gate** (slice) is the C2→C3 shape (a top exit over a chimney, not G5's side sill): the chimney's two walls hang from the ceiling to at least 80 px above
   the floor, flanking the opening with nothing between them, so no base jump reaches the opening and the floor underneath still walks. It is the existing `wall_cling` label; no new gate label,
-  and a gated exit matches on both halves. Its tests: the Deep's gated exits equal `["D2:wall_cling"]` (the Flooded's gate-list shape; an "ungated route excludes D6" assertion would be vacuous,
+  and a gated exit matches on both halves. Its tests: the gated exits of D1–D5 equal `["D2:wall_cling"]` (the Flooded's gate-list shape, over D1–D5 only: D6's own half carries the gate too; an "ungated route excludes D6" assertion would be vacuous,
   because the whole Deep sits behind the Swim door), `test_rooms`'s existing reachability assertion once D6 exists, one short geometry assertion (both walls
   start at the ceiling, flank the opening's span, nothing stands between them) and the D2 walking test above. No BFS and no cling-climb simulation (none exists in the repo), so
   nothing is copied from the Grotto's private reach helpers and no shipped test is rewritten.
@@ -141,7 +142,7 @@ ATK 9, DEF 2. A front tackle from a base slime does 1 to the drake (armor floors
   `receive_hit(atk, "physical", position)`, then `rest` for `STOMP_REST` (1.4 s) instead of the charge. A stun cancels it like every other kind's. If the
   fold needs more than about 15 lines of stomper branching, the plan extracts a `_stomp` helper called from `_charger_act`; it still adds no Kind.
   Because the windup and rest are the charger's tokens, `charge_state()`, `telegraphing()` and the tint need no new arms. The slam hit and miss tests use the real
-  `Player` or a stub with one line (`func is_on_floor() -> bool: return grounded`), the misses (airborne, out in x, out in y) as one parametrised case. No
+  `Player` or a stub with one method and a `grounded` flag (`func is_on_floor() -> bool: return grounded`), the misses (airborne, out in x, out in y) as one parametrised case. No
   drake trace is recorded: the existing `lizard_*` and `crab_plain` traces in `test_enemy_traces` are the regression net that the fold leaves the charger
   unchanged, with zero edits, and re-recording the goldens in the same change would bless any accident.
 - **Animation.** `EnemyState.pick`: `gloom_wolf` and `armed_ant` join the crab and crayfish arm (it returns `walk`/`idle` when the token is `""`, which a
@@ -226,7 +227,7 @@ the rooms table, "the last room"), `docs/playtest-checklist.md` (a Deep section)
 ## Testing approach
 
 - Data: every room validates and lints clean; spawn keys unique; the pacing rule; the D1 stored kit's eligibility; the Tremor threshold above the
-  pre-Deep earth supply; every Deep room sits at its layout cell, size and area; F4's and D1's door halves end at `to == 320`; no spawn or decor lies in any door zone of F4 and D1–D5
+  pre-Deep earth supply; every Deep room sits at its layout cell, size and area; F4's and D1's door halves end at `to == 320`; no spawn or decor lies in F4's new door zone or any door zone of D1–D5
   (`RoomLint` checks solids only; the Flooded's own 188 pin already guards the relocation); creature stats at `DEEP_LEVEL` (a pin like
   the Flooded's); every creature def loads with its sheet and every frame, its portrait and its clips.
 - Behaviours: a wolf that sees you alerts a wolf within 240 px and not one beyond, never alerts an ant, and the mate is calm again ALERT_MEMORY after its finder loses sight (one line: it is the existing decay); a creature alerted by a packmate does not alert onward; a `charges` creature is a CHARGER, is stunned by a front
@@ -247,7 +248,7 @@ the rooms table, "the last room"), `docs/playtest-checklist.md` (a Deep section)
 3. Art: the three creature frame sets and the Tremor icon, generated in parallel.
 4. Rooms: F4's east exit (and its relocated lizardman and flowers), D1–D5 authored by script through the editor model, the D1 pool and kit, the tablet,
    the D3 chain test, the kit-test table, docs.
-5. The rare slice: the derived Taratect sheet, def, clips and portrait, D2's chimney and top exit, D6, its reachability and chimney assertions.
+5. The rare slice: the derived Taratect sheet, def, clips and portrait, D2's chimney and top exit, D6, its gate-list, reachability and chimney assertions and D2's walking test.
 6. Review, gate, merge.
 
 ## Rulings made in this spec
