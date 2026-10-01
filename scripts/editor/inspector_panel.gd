@@ -5,6 +5,7 @@ extends VBoxContainer
 ## value may be: a refusal is reported and the control shows the stored value again.
 
 signal field_error(text: String)
+signal field_changed
 
 const FONT := 8
 ## kind -> [[key, label, control], ...]; the keys are RoomEditModel.get_field / set_field's.
@@ -133,6 +134,8 @@ func _commit(key: String, value) -> void:
 	if err != "":
 		field_error.emit(err)
 		_show_stored(key)
+	else:
+		field_changed.emit()
 
 func _show_stored(key: String) -> void:
 	var control: Control = _fields.get(key)

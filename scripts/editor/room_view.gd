@@ -83,10 +83,25 @@ func pick_radius() -> float:
 	return PICK_PX / camera.zoom.x
 
 func fit() -> void:
+	fit_in(Rect2(Vector2.ZERO, Vector2(640, 360)))
+
+## Fits the whole room into `free`, a screen rectangle (the part of the window the panels leave open).
+func fit_in(free: Rect2) -> void:
 	var size: Vector2 = _model.rooms[_room_id].pixel_size()
-	var z := minf(640.0 / size.x, 360.0 / size.y)
+	var z := minf(free.size.x / size.x, free.size.y / size.y)
 	camera.zoom = Vector2(z, z)
-	camera.position = (size - Vector2(640, 360) / z) / 2.0
+	camera.position = size / 2.0 - free.get_center() / z
+
+## Pans (never zooms) so the room rectangle `rect` is at the centre of the screen rectangle `free`.
+func center_on(rect: Rect2, free: Rect2) -> void:
+	camera.position = rect.get_center() - free.get_center() / camera.zoom.x
+
+## The room-space rectangle of the current selection, or an empty Rect2.
+func selection_rect() -> Rect2:
+	var sel := _model.selection
+	if sel.is_empty() or sel["room"] != _room_id:
+		return Rect2()
+	return _selection_rect(_model.rooms[_room_id], sel)
 
 func one_to_one() -> void:
 	var c := to_room(Vector2(320, 180))

@@ -5,6 +5,7 @@ extends Control
 
 signal problem_clicked(problem: Dictionary)
 signal field_error(text: String)
+signal field_changed
 
 const FONT := 8
 
@@ -34,6 +35,7 @@ func show_inspector(model: RoomEditModel, sel: Dictionary) -> void:
 	_clear()
 	_inspector = InspectorPanel.new()
 	_inspector.field_error.connect(func(t: String) -> void: field_error.emit(t))
+	_inspector.field_changed.connect(func() -> void: field_changed.emit())
 	_scroll.add_child(_inspector)
 	_inspector.build(model, sel)
 	_showing = "inspector"
@@ -48,6 +50,8 @@ func show_problems(problems: Array) -> void:
 	_list.custom_minimum_size = Vector2(160, 280)
 	_list.add_theme_font_size_override("font_size", FONT)
 	_list.auto_height = true
+	if problems.is_empty():
+		_list.add_item("No problems found.")
 	for p in problems:
 		var room: String = p["room"]
 		var text: String = p["text"]
@@ -68,6 +72,13 @@ func hide_slot() -> void:
 	_clear()
 	_showing = ""
 	visible = false
+
+func problem_lines() -> Array:
+	var out: Array = []
+	if _list != null:
+		for i in _list.item_count:
+			out.append(_list.get_item_text(i))
+	return out
 
 func find_field(key: String) -> Control:
 	return _inspector.find_field(key) if _inspector != null else null

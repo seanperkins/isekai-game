@@ -449,13 +449,14 @@ func test_the_palette_shows_only_for_the_creature_tool() -> void:
 	p.press("Creature")
 	assert_true(p.palette_visible())
 
-func test_the_validate_list_shows_the_validators_errors_and_says_so_when_clean() -> void:
-	var p := await _panels()
+func test_the_problems_list_shows_lint_and_validator_text_and_says_so_when_clean() -> void:
+	var slot := await _slot()
 	model.rooms["C1"].exits.append({"edge": "top", "from": 100.0, "to": 200.0, "room": "Z"})
-	p.show_validation(model.validate())
-	assert_true(p.validation_lines().any(func(l): return l.contains("unknown room 'Z'")))
-	p.show_validation(PackedStringArray())
-	assert_eq(p.validation_lines(), ["No problems found."])
+	model.serial += 1
+	slot.show_problems(model.problems())
+	assert_true(slot.problem_lines().any(func(l): return l.contains("unknown room 'Z'")))
+	slot.show_problems([])
+	assert_eq(slot.problem_lines(), ["No problems found."])
 
 func test_the_new_room_dialog_refuses_a_taken_id_and_emits_a_valid_request() -> void:
 	var p := await _panels()
@@ -643,20 +644,19 @@ func test_undoing_the_new_room_you_are_standing_in_returns_to_the_room_you_came_
 	ed.open_room("Fresh")
 	assert_eq(ed.view.room_id(), "Fresh")
 
-func test_the_validate_list_toggles_and_goes_away_on_any_edit() -> void:
+func test_the_validate_list_toggles_and_an_open_list_refreshes_on_any_edit() -> void:
 	var ed := await _editor()
 	ed.panels.press("Validate")
-	assert_true(ed.panels.validation_visible())
+	assert_eq(ed.slot.is_showing(), "problems")
 	ed.panels.press("Validate")
-	assert_false(ed.panels.validation_visible(), "pressing Validate again hides it")
+	assert_eq(ed.slot.is_showing(), "", "pressing Validate again hides it")
 	ed.panels.press("Validate")
-	assert_true(ed.panels.validation_visible())
+	assert_eq(ed.slot.is_showing(), "problems")
 	ed.model.add_solid("C1", Vector2(100, 100), Vector2(200, 116))
 	ed.view.refresh()
-	assert_false(ed.panels.validation_visible(), "the list is stale after an edit, so it goes")
-	ed.panels.press("Validate")
+	assert_eq(ed.slot.is_showing(), "problems", "an edit refreshes the list instead of closing it")
 	ed.undo()
-	assert_false(ed.panels.validation_visible())
+	assert_eq(ed.slot.is_showing(), "problems")
 
 func test_a_drag_where_the_validate_list_was_reaches_the_room_after_it_is_closed() -> void:
 	var ed := await _editor()
@@ -669,3 +669,185 @@ func test_a_drag_where_the_validate_list_was_reaches_the_room_after_it_is_closed
 		get_viewport().push_input(ev, true)
 	await wait_process_frames(2)
 	assert_eq(ed.model.undo_depth(), 1)
+
+# --- Task 12: toolbar, Validate count, Grow, toggles, pending text ---
+
+func test_the_validate_button_carries_the_count_and_the_open_list_refreshes() -> void:
+	var ed := await _editor()
+	assert_eq(ed.panels.validate_label(), "Validate (0)")
+	ed.model.rooms["C1"].spawns.append({"id": "toad", "pos": Vector2(5, 100)})
+	ed.model.add_solid("C1", Vector2(100, 100), Vector2(160, 116))
+	ed.view.refresh()
+	var n: int = ed.model.problems().size()
+	assert_gt(n, 0)
+	assert_eq(ed.panels.validate_label(), "Validate (%d)" % n)
+	ed.panels.press("Validate")
+	assert_eq(ed.slot.is_showing(), "problems")
+	var before: int = ed.slot.problem_lines().size()
+	ed.model.add_solid("C1", Vector2(300, 100), Vector2(360, 116))
+	ed.view.refresh()
+	assert_eq(ed.slot.is_showing(), "problems", "an open list refreshes instead of closing")
+	assert_gte(ed.slot.problem_lines().size(), before)
+
+func test_clicking_a_problem_opens_its_room_selects_it_and_centres_it() -> void:
+	var ed := await _editor()
+	ed.model.rooms["C2"].spawns.append({"id": "toad", "pos": Vector2(5, 100)})
+	ed.model.add_solid("C2", Vector2(100, 100), Vector2(160, 116))
+	ed.view.refresh()
+	var at := ed.model.problems().find_custom(func(p): return p["pick"].get("kind", "") == "spawn")
+	assert_gte(at, 0)
+	ed.panels.press("Validate")
+	ed.slot.click_problem(at)
+	assert_eq(ed.room_id, "C2")
+	assert_eq(ed.model.selection["kind"], "spawn")
+	var free := ed._free_rect()
+	assert_almost_eq(ed.view.to_screen(ed.view.selection_rect().get_center()), free.get_center(), Vector2(1, 1), "the problem is centred in the free area")
+
+func test_the_toggles_reach_the_play_request() -> void:
+	var ed := await _editor()
+	RoomEditor.sandbox_root = OS.get_user_data_dir()
+	ed.panels.press("Wall Cling")
+	ed.panels.press("Open shortcuts")
+	assert_true(ed.play_options["movement"])
+	assert_true(ed.play_options["shortcuts"])
+	ed.play(Vector2(300, 100))
+	assert_eq(Game.play_request["kit"], {"skills": ["leap", "wall_cling"]})
+	assert_true(Game.play_request["open_shortcuts"])
+	assert_eq(Game.editor_resume["play_options"], {"movement": true, "shortcuts": true})
+	Game.play_request = {}
+	Game.editor_resume = null
+
+func test_the_movement_kit_is_a_kit_the_validator_accepts() -> void:
+	assert_eq(RebirthKit.validate(RoomEditor.CAVE_MOVEMENT_KIT), PackedStringArray())
+
+func test_play_options_survive_the_round_trip_and_set_the_buttons() -> void:
+	Game.editor_resume = {"model": model, "room": "C1", "view": {}, "play_options": {"movement": true, "shortcuts": false}}
+	_gut_ui(false)
+	var ed: RoomEditor = load("res://scenes/room_editor.tscn").instantiate()
+	add_child_autofree(ed)
+	await wait_process_frames(3)
+	assert_true(ed.play_options["movement"])
+	assert_true(ed.panels.toggle_state("Wall Cling"))
+	assert_false(ed.panels.toggle_state("Open shortcuts"))
+
+func test_play_error_and_play_agree_on_the_spot_with_the_toggle_on_and_off() -> void:
+	var ed := await _editor()
+	RoomEditor.sandbox_root = OS.get_user_data_dir()
+	ed.open_room("C6")
+	var gate: Rect2 = RoomBuilder.gate_rect(ed.model.rooms["C6"].pixel_size(), ed.model.rooms["C6"].exits.filter(func(e): return e.has("shortcut"))[0])
+	var over := Vector2(gate.get_center().x, 100)
+	assert_eq(ed.play_error(over), "", "a closed gate is a surface")
+	ed.panels.press("Open shortcuts")
+	assert_ne(ed.play_error(over), "", "with shortcuts open it is a hole")
+	assert_null(ed._spot(over))
+
+func test_grow_from_the_menu_changes_the_room_and_refuses_an_overlap() -> void:
+	var ed := await _editor()
+	ed.open_room("C6")
+	var w: int = ed.model.rooms["C6"].size.x
+	ed.grow("left")
+	assert_eq(ed.model.rooms["C6"].size.x, w + 1)
+	ed.open_room("C1")
+	ed.grow("right")
+	assert_string_contains(ed.panels.status_text(), "overlap")
+
+func test_the_grow_menu_emits_the_side() -> void:
+	var p := await _panels()
+	watch_signals(p)
+	p.choose_grow("top")
+	assert_signal_emitted_with_parameters(p, "grow_requested", ["top"])
+
+func test_pending_text_is_committed_before_save_undo_and_play() -> void:
+	var ed := await _editor()
+	ed.save_dir = "res://.tmp/editor_scene_save"
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(ed.save_dir))
+	ed.model.add_feature("C1", "tablet", Vector2(300, 100))
+	ed.view.refresh()
+	assert_eq(ed.slot.is_showing(), "inspector")
+	var title: LineEdit = ed.slot.find_field("title")
+	title.grab_focus()
+	title.text = "Typed"
+	ed.panels.press("Save")
+	assert_eq(ed.model.rooms["C1"].features.back()["title"], "Typed", "Save committed the pending text first")
+	var saved := ResourceLoader.load("%s/C1.tres" % ed.save_dir, "", ResourceLoader.CACHE_MODE_IGNORE) as RoomDef
+	assert_eq(saved.features.back()["title"], "Typed")
+	title = ed.slot.find_field("title")
+	title.grab_focus()
+	title.text = "Typed again"
+	ed.panels.press("Undo")
+	assert_eq(ed.model.rooms["C1"].features.back()["title"], "Typed", "the text committed as an edit and Undo undid it")
+	assert_eq(ed.slot.is_showing(), "", "undo clears the selection, so the inspector closes rather than show stale text")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path("%s/C1.tres" % ed.save_dir))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(ed.save_dir))
+
+func test_cmd_s_saves_even_while_a_field_has_focus() -> void:
+	var ed := await _editor()
+	ed.save_dir = "res://.tmp/editor_scene_save"
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(ed.save_dir))
+	ed.model.add_feature("C1", "tablet", Vector2(300, 100))
+	ed.view.refresh()
+	var title: LineEdit = ed.slot.find_field("title")
+	title.grab_focus()
+	title.text = "Via shortcut"
+	assert_true(ed.panels.typing())
+	var s := InputEventKey.new()
+	s.keycode = KEY_S
+	s.pressed = true
+	s.ctrl_pressed = true
+	get_viewport().push_input(s)
+	await wait_process_frames(1)
+	var saved := ResourceLoader.load("%s/C1.tres" % ed.save_dir, "", ResourceLoader.CACHE_MODE_IGNORE) as RoomDef
+	assert_not_null(saved)
+	assert_eq(saved.features.back()["title"], "Via shortcut")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path("%s/C1.tres" % ed.save_dir))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(ed.save_dir))
+
+func test_selecting_a_feature_shows_its_inspector_and_a_solid_hides_it() -> void:
+	var ed := await _editor()
+	ed.model.add_feature("C1", "tablet", Vector2(300, 100))
+	ed.view.refresh()
+	assert_eq(ed.slot.is_showing(), "inspector")
+	ed.model.select({"room": "C1", "kind": "solid", "index": 0})
+	ed.view.refresh()
+	assert_eq(ed.slot.is_showing(), "")
+
+func test_delete_and_undo_still_work_after_ticking_a_kit_skill() -> void:
+	var ed := await _editor()
+	ed.open_room("G1")
+	var idx: int = ed.model.rooms["G1"].features.find_custom(func(f): return f["kind"] == "rebirth_pool")
+	ed.model.select({"room": "G1", "kind": "feature", "index": idx})
+	ed.view.refresh()
+	assert_eq(ed.slot.is_showing(), "inspector")
+	var had: Array = ed.model.get_field(ed.model.selection, "kit_skills")
+	ed.slot.skill_checkboxes().filter(func(c): return not had.has(c.get_meta("skill")))[0].button_pressed = true
+	var box: CheckBox = ed.slot.skill_checkboxes()[0]
+	assert_eq(box.focus_mode, Control.FOCUS_NONE, "a click on the box cannot leave focus on it")
+	assert_false(ed.panels.typing())
+	var z := InputEventKey.new()
+	z.keycode = KEY_Z
+	z.pressed = true
+	z.ctrl_pressed = true
+	get_viewport().push_input(z)
+	await wait_process_frames(1)
+	assert_eq(ed.model.get_field({"room": "G1", "kind": "feature", "index": idx}, "kit_skills").size(), had.size())
+
+func test_tab_hides_and_shows_every_panel() -> void:
+	var ed := await _editor()
+	var tab := InputEventKey.new()
+	tab.keycode = KEY_TAB
+	tab.pressed = true
+	get_viewport().push_input(tab)
+	await wait_process_frames(1)
+	assert_false(ed.panels.panels_visible())
+	get_viewport().push_input(tab)
+	await wait_process_frames(1)
+	assert_true(ed.panels.panels_visible())
+
+func test_the_feature_palette_shows_for_the_feature_tool_and_chooses_the_kind() -> void:
+	var ed := await _editor()
+	ed.panels.press("Feature")
+	assert_true(ed.panels.feature_palette_visible())
+	assert_false(ed.panels.palette_visible())
+	assert_eq(ed.view.tool, "feature")
+	ed.panels.choose_feature("switch")
+	assert_eq(ed.view.feature_kind, "switch")
