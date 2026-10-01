@@ -249,7 +249,7 @@ func hit_all(room_id: String, p: Vector2, pick: float) -> Array:
 			out.append(_sel(room_id, "feature", i))
 	for i in r.decor.size():
 		var d: Dictionary = r.decor[i]
-		var dbox := DecorLib.texture_box(str(d.get("id", "")))
+		var dbox := DecorLib.box_of(d)
 		if Rect2(dbox.position + (d["pos"] as Vector2), dbox.size).has_point(p):  # un-grown: a grown box would cover the ledge it stands on
 			out.append(_sel(room_id, "decor", i))
 	for i in r.exits.size():
@@ -331,10 +331,10 @@ func move_to(delta: Vector2) -> void:
 				r.features[sel["index"]]["pos"] = base
 		"decor":
 			var dorig: Vector2 = _drag["orig"]
-			var did := str(r.decor[sel["index"]].get("id", ""))
-			var pos = _decor_base(sel["room"], dorig + d, did)
+			var hangs := str(r.decor[sel["index"]].get("anchor", "bottom")) == "top"
+			var pos = _decor_base(sel["room"], dorig + d, hangs)
 			if pos is String and d.y != 0.0:
-				pos = _decor_base(sel["room"], dorig + Vector2(d.x, 0.0), did)  # a pointer that dips: keep sliding along the surface
+				pos = _decor_base(sel["room"], dorig + Vector2(d.x, 0.0), hangs)  # a pointer that dips: keep sliding along the surface
 			if pos is Vector2:
 				r.decor[sel["index"]]["pos"] = pos
 		"exit":
@@ -488,11 +488,10 @@ func surface_above(room_id: String, p: Vector2) -> Variant:
 
 ## A decor piece's position for a candidate point: x snapped; y the surface it stands on (found from one pixel above the point, as
 ## for features) or, for a top-anchored piece, hangs from (found from one pixel below). A Vector2, or the reason it is refused.
-func _decor_base(room_id: String, p: Vector2, id: String) -> Variant:
+func _decor_base(room_id: String, p: Vector2, top: bool) -> Variant:
 	var q := Vector2(snap(p.x), p.y)
 	if not bounds(rooms[room_id]).has_point(q):
 		return "outside the room"
-	var top := str(DecorLib.CATALOG.get(id, {}).get("anchor", "bottom")) == "top"
 	var y = surface_above(room_id, q + Vector2(0.0, 1.0)) if top else surface_below(room_id, q - Vector2(0.0, 1.0))
 	if y == null:
 		if top:
@@ -503,7 +502,7 @@ func _decor_base(room_id: String, p: Vector2, id: String) -> Variant:
 func add_decor(room_id: String, id: String, pos: Vector2) -> String:
 	if not DecorLib.CATALOG.has(id):
 		return "unknown decor '%s'" % id
-	var base = _decor_base(room_id, pos, id)
+	var base = _decor_base(room_id, pos, str(DecorLib.CATALOG[id].get("anchor", "bottom")) == "top")
 	if base is String:
 		return base
 	var r: RoomDef = rooms[room_id]

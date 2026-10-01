@@ -195,9 +195,17 @@ func open_room(id: String) -> void:
 	_refit()
 	_sync()
 
-## The Decor tool's palette is the current room's biome's decor.
+## The Decor tool's palette is the current room's biome's decor. A choice the new
+## palette does not list is dropped, so the tool never places a piece nobody can see
+## selected; one it does list stays chosen and highlighted.
 func _refresh_decor_palette() -> void:
-	panels.set_decor_ids(DecorLib.ids_for_biome(model.rooms[room_id].area))
+	var ids := DecorLib.ids_for_biome(model.rooms[room_id].area)
+	var keep: String = view.decor_id if ids.has(view.decor_id) else ""
+	panels.set_decor_ids(ids)
+	if keep == "":
+		view.decor_id = ""
+	else:
+		panels.choose_decor(keep)
 
 func undo() -> void:
 	_commit_pending()

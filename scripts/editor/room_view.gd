@@ -344,7 +344,7 @@ func _redraw_overlay() -> void:
 	for i in r.decor.size():
 		var did := str(r.decor[i].get("id", ""))
 		if not DecorLib.CATALOG.has(did) or Art.texture(did) == null:
-			var ubox := DecorLib.texture_box(did)
+			var ubox := DecorLib.box_of(r.decor[i])
 			_box(Rect2(ubox.position + (r.decor[i]["pos"] as Vector2), ubox.size), COL_UNKNOWN, true)  # a hand-edited unknown piece
 	var sel := _model.selection
 	if not sel.is_empty() and sel["room"] == _room_id:
@@ -375,7 +375,7 @@ func _selection_rect(r: RoomDef, sel: Dictionary) -> Rect2:
 		"decor":
 			if i >= r.decor.size():
 				return Rect2()
-			var dbox := DecorLib.texture_box(str(r.decor[i].get("id", "")))
+			var dbox := DecorLib.box_of(r.decor[i])
 			return Rect2(dbox.position + (r.decor[i]["pos"] as Vector2), dbox.size)
 		_:
 			return Rect2()

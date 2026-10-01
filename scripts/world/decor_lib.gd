@@ -89,14 +89,20 @@ static func entry(id: String, pos: Vector2) -> Dictionary:
 	return e
 
 ## The sprite's box relative to the piece's position (RoomBuilder.build_decor: a bottom-anchored sprite ends at the position, a
-## top-anchored one starts there, both centred in x). An id with no catalog row or no sprite gets a fixed fallback box, so a
-## hand-edited unknown piece can still be hit, outlined and deleted.
-static func texture_box(id: String) -> Rect2:
+## top-anchored one starts there, both centred in x). `anchor` is the piece's own ("" = the catalog's, for a piece not placed yet).
+## An id with no catalog row or no sprite gets a fixed fallback box on the same side, so a hand-edited unknown piece can still be
+## hit, outlined and deleted.
+static func texture_box(id: String, anchor := "") -> Rect2:
+	if anchor == "":
+		anchor = str(CATALOG.get(id, {}).get("anchor", "bottom"))
 	var tex := Art.texture(id) if CATALOG.has(id) else null
-	if tex == null:
-		return UNKNOWN_BOX
-	var w := float(tex.get_width())
-	var h := float(tex.get_height())
-	if CATALOG[id].get("anchor", "bottom") == "top":
-		return Rect2(-w / 2.0, 0.0, w, h)
-	return Rect2(-w / 2.0, -h, w, h)
+	var w := UNKNOWN_BOX.size.x
+	var h := UNKNOWN_BOX.size.y
+	if tex != null:
+		w = float(tex.get_width())
+		h = float(tex.get_height())
+	return Rect2(-w / 2.0, 0.0 if anchor == "top" else -h, w, h)
+
+## The box of a piece in a room's data. The play builder reads the entry's own `anchor` (default bottom), so this does too.
+static func box_of(d: Dictionary) -> Rect2:
+	return texture_box(str(d.get("id", "")), str(d.get("anchor", "bottom")))

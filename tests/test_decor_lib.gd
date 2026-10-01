@@ -62,3 +62,11 @@ func test_texture_box_is_bottom_or_top_anchored_and_falls_back_for_an_unknown_id
 	var vine := Art.texture("vine")
 	assert_eq(DecorLib.texture_box("vine"), Rect2(-vine.get_width() / 2.0, 0.0, vine.get_width(), vine.get_height()))
 	assert_eq(DecorLib.texture_box("no_such_sprite"), DecorLib.UNKNOWN_BOX)
+
+func test_texture_box_takes_the_anchor_a_piece_carries_over_the_catalogs() -> void:
+	var u := DecorLib.UNKNOWN_BOX
+	assert_eq(DecorLib.texture_box("no_such_sprite", "top"), Rect2(u.position.x, 0.0, u.size.x, u.size.y))
+	var vine := Art.texture("vine")
+	assert_eq(DecorLib.texture_box("vine", "bottom"), Rect2(-vine.get_width() / 2.0, -vine.get_height(), vine.get_width(), vine.get_height()))
+	assert_eq(DecorLib.box_of({"id": "vine", "pos": Vector2.ZERO, "anchor": "top"}), DecorLib.texture_box("vine"))
+	assert_eq(DecorLib.box_of({"id": "vine", "pos": Vector2.ZERO}), DecorLib.texture_box("vine", "bottom"))

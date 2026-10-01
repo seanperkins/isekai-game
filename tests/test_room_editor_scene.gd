@@ -1297,3 +1297,38 @@ func test_the_rock_from_below_checkbox_is_not_labelled_twice() -> void:
 			labels += 1
 		stack.append_array(n.get_children())
 	assert_eq(labels, 0, "the checkbox carries its own text")
+
+# --- review fixes ---
+
+func test_a_decor_choice_that_the_new_rooms_palette_does_not_list_is_dropped() -> void:
+	var ed := await _editor()
+	ed.panels.press("Decor")
+	ed.panels.choose_decor("crystal_teal")
+	assert_eq(ed.view.decor_id, "crystal_teal")
+	ed.open_room("G1")   # a grotto room: the palette lists grotto_* ids only
+	assert_eq(ed.view.decor_id, "", "the old choice is not in the new palette, so it must not still be placed")
+	var n: int = ed.model.rooms["G1"].decor.size()
+	ed.view.handle_event(_button_at(ed.view.to_screen(Vector2(300, 100)), true))
+	ed.view.handle_event(_button_at(ed.view.to_screen(Vector2(300, 100)), false))
+	assert_eq(ed.model.rooms["G1"].decor.size(), n, "nothing was placed")
+
+func test_a_decor_choice_that_the_new_rooms_palette_lists_is_kept() -> void:
+	var ed := await _editor()
+	ed.panels.press("Decor")
+	ed.panels.choose_decor("crystal_teal")
+	ed.open_room("C2")   # still a cave room
+	assert_eq(ed.view.decor_id, "crystal_teal")
+	assert_eq(ed.panels._decor_palette.get_selected_items().size(), 1, "and it is still highlighted")
+
+func test_the_number_field_shows_the_new_text_after_a_refresh_not_only_the_new_value() -> void:
+	var ed := await _editor()
+	ed.model.select({"room": "C1", "kind": "solid", "index": 1})
+	ed.view.refresh()
+	ed.model.rooms["C1"].solids[1].position.x = 500.0
+	ed.slot.refresh_inspector()
+	await wait_process_frames(2)
+	assert_eq((ed.slot.find_field("x") as SpinBox).get_line_edit().text, "500", "what the author sees, not only .value")
+
+func test_the_decor_palette_never_takes_keyboard_focus() -> void:
+	var p := await _panels()
+	assert_eq(p._decor_palette.focus_mode, Control.FOCUS_NONE)

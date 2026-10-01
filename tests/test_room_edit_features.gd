@@ -262,7 +262,7 @@ func test_an_unknown_decor_id_can_be_selected_and_deleted() -> void:
 	r.spawns = []
 	r.features = []
 	r.decor = [{"id": "no_such_sprite", "pos": Vector2(300, 300), "anchor": "top"}]
-	var box := DecorLib.UNKNOWN_BOX
+	var box := DecorLib.box_of(r.decor[0])
 	var inside := Vector2(300, 300) + box.position + box.size / 2.0
 	assert_eq(model.hit("C2", inside, 0.0), {"room": "C2", "kind": "decor", "index": 0})
 	model.select(model.hit("C2", inside, 0.0))
@@ -275,3 +275,22 @@ func test_a_closed_shortcut_gate_is_not_rock_to_hang_from() -> void:
 	var mid := (float(top["from"]) + float(top["to"])) / 2.0
 	assert_null(model.surface_above("C1", Vector2(mid, 200)), "the gate vanishes when the shortcut opens")
 	assert_ne(model.add_decor("C1", "vine", Vector2(mid, 200)), "")
+
+func test_a_hand_edited_top_anchored_piece_is_boxed_below_its_position_and_drags_along_the_rock_above() -> void:
+	var r: RoomDef = model.rooms["C2"]
+	r.spawns = []
+	r.features = []
+	r.solids = [Rect2(200, 200, 160, 12)]
+	r.decor = [{"id": "no_such_sprite", "pos": Vector2(240, 212), "anchor": "top"}]
+	var below := Vector2(240, 212) + DecorLib.UNKNOWN_BOX.size / 2.0 * Vector2(0.0, 1.0)
+	assert_eq(model.hit("C2", below, 0.0), {"room": "C2", "kind": "decor", "index": 0}, "a hanging piece's box is under its position")
+	var sel := {"room": "C2", "kind": "decor", "index": 0}
+	assert_true(model.begin_move(sel))
+	model.move_to(Vector2(40, 0))
+	assert_eq(r.decor[0]["pos"], Vector2(280, 212), "it keeps hanging from the ledge's underside, not dropped onto a floor")
+
+func test_a_hand_edited_piece_without_an_anchor_stands_even_when_the_catalog_says_it_hangs() -> void:
+	var r: RoomDef = model.rooms["C2"]
+	r.solids = [Rect2(200, 200, 160, 12)]
+	r.decor = [{"id": "vine", "pos": Vector2(240, 200)}]   # RoomBuilder.build_decor reads the entry's anchor, default bottom
+	assert_eq(DecorLib.box_of(r.decor[0]).position.y, -float(Art.texture("vine").get_height()), "the box ends at the position")
