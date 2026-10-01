@@ -32,7 +32,7 @@ sheet, D6 and its wall-cling gate). Nothing else here is a slice: the creatures,
 | Rooms | D1 Gloom Gate (1×1, the rebirth pool), D2 Wolf Run (2×1), D3 the Sinkhole (1×2, a climb), D4 the Den (2×1), D5 the Heart (1×1, Glow Pool and tablet; the area's last room); slice: D6 the Hollow (1×1, above D2) |
 | Creatures | Gloom Wolf, Armed Ant, Stone Drake; in the slice the rare Taratect (a derived sheet of the Black Spider, no new drawing) |
 | Behaviour | **No new Kind.** `CreatureDef` gains three flags: `pack` (the wolves and ants: a creature that sees you alerts its packmates), `charges` (the wolf: the charger's sequence without the armored front) and `stomper` (the drake: a charger whose "charge" is a ground slam you dodge by being airborne) |
-| Skill | **Tremor**, an essence skill from `earth` ×24 that slams the ground: it damages every grounded enemy near you through its DEF and stuns it. It is the counter to armor and the first use of `earth`. `flight` stays reserved (see Out of scope) |
+| Skill | **Tremor**, an essence skill from `earth` ×24 that slams the ground: it damages every grounded enemy near you through its DEF and stuns the stunnable ones (all but the serpent). It is the counter to armor and the first use of `earth`. `flight` stays reserved (see Out of scope) |
 | Art | Three frame sets (wolf, ant, drake) generated one at a time (the Grotto's pipeline) and assembled with traced shapes; the Taratect derives from the spider's frames; one skill icon. Tiles, backgrounds, decor, ambience and music exist |
 | Evolution | Unchanged: `FormOffers.FIRST_EVOLUTION_AREAS` stays `["cave","grotto"]`. A life reborn in the Deep counts its Deep absorptions in the numerator in full (the Flooded's note) |
 | Rebirth | D1 holds the area's pool and the third real kit (below) |
@@ -63,10 +63,14 @@ shrinks (a 1×1 room is about 25 px wide in the test panel, 35 before): a screen
   and the ledge is trimmed to `Rect2(1120, 266, 76, 12)` (it ends at x 1196: touching rects do not intersect). `new_room_beside` rejects a door whose zone
   holds any solid, ledges included, and would otherwise pick a span 60 px above the floor (180–260), a sill no base jump climbs back to. So the Flooded's
   spawn list and first pass are unchanged and a test pins that F4's east exit and D1's west exit both end at `to == 320`. `RoomLint` checks solids only
-  in a door's zone, so a second test pins that no spawn or decor stands in it, by x-range (F4's is x 1196–1260, D1's x 556–620), since a decor base on the
-  zone's bottom edge is outside `Rect2.has_point`. D1's ants stay clear of the pool (the lint's pool clearance) and of D1's zone.
-- **D2** (wolves): a long hall with three Gloom Wolves and three ants; low ledges to jump a charge. In the slice, a one-screen chimney in its east half
-  (two facing walls) under the top exit, kept clear of the walking route to the east exit and its clear zone.
+  in a door's zone, so a second test loops over every exit of F4 and D1–D5 and asserts no spawn or decor position lies in `RoomLint.exit_zone(size, e)` as a closed rect on both
+  axes (`>=` and `<=`, not `has_point`, whose far edges are open: a decor base on the zone's bottom edge would slip through; y stays in, so a tall room's
+  floor column away from the door is not flagged). The zone paired with the new door is F4's x 1196–1260 and D1's west x 20–84 (D1's east zone is
+  x 556–620). D1's ants stay clear of the pool (the lint's pool clearance) and of D1's two zones.
+- **D2** (wolves): a long hall with three Gloom Wolves and three ants; low ledges to jump a charge. In the slice, a chimney in its east half under the top exit:
+  two facing walls that hang from the ceiling to a bottom edge at least 80 px above the floor (C2's arch: the legs are scenery to walk under, not a wall), so
+  D2's floor stays walkable from the west door to the east door with no skill; the chimney is clear of the east exit's zone. A walking test along D2's
+  floor, like `test_c2_walkthrough`, pins it (the exit graph cannot see a solid across the route).
 - **D3** (the Sinkhole): a tall shaft. D2's east door arrives at D3's upper row at floor height (local y about 320) and D4's door leaves from D3's lower
   row, so the shaft is climbed in both directions: a ledge stands flush with D3's west wall at the door's floor height, and a chain of ledges goes down
   from it to D3's floor (every hop at most 55 px, the Flooded's chain geometry rules). A Stone Drake on its floor shelf and three ants.
@@ -78,10 +82,11 @@ shrinks (a 1×1 room is about 25 px wide in the test panel, 35 before): a screen
 ### Authoring
 
 The rooms are written by a throwaway script through `RoomEditModel` (the Flooded's way). `new_room_beside` bottom-aligns a room it places to the right,
-which gives D1, D2, D4 (beside D3's 1×2 cell) and D5's cells but not D3's (it would put D3 at (20,5)); the script creates D3's `RoomDef` with the
-layout's `cell` and pairs its exits with `add_exit`, then places D4 beside it. F4's doorway is made after the ledge is trimmed and the lizardman and flowers are cleared, so
+which gives D1, D2, D4 (beside D3's 1×2 cell) and D5's cells but not D3's (it would put D3 at (20,5)) nor D6's (on D2's top edge it lands at (18,5), not (19,5), and silently succeeds); the script creates those
+`RoomDef`s with the layout's `cell` and pairs their exits with `add_exit`, then places D4 beside D3. A "rooms sit where the spec puts them" test pins every Deep
+room's cell, size and area, as the Flooded's does, so a wrong placement fails loudly. F4's doorway is made after the ledge is trimmed and the lizardman and flowers are cleared, so
 the floor-height door is the one the editor finds. The same trap applies to any room made beside one that already has solids near the shared wall: the
-script authors each room's solids after its east neighbour exists, or passes the span explicitly. The `.tres` files are the source of truth and the validator the arbiter.
+script authors each room's solids after its east neighbour exists, or builds the room explicitly (the D3 route: a `RoomDef` plus `add_exit`; `new_room_beside` has no span argument). The `.tres` files are the source of truth and the validator the arbiter.
 
 ### Traversal
 
@@ -90,10 +95,11 @@ script authors each room's solids after its east neighbour exists, or passes the
   edge, sorted by y, start with one flush with the west wall at the door's floor height (the exit's sill), every hop up is at most 55 px and the lowest
   ledge is within 55 px of D3's floor. The existing `RoomLint._ledge_reach` and `WorldValidator.reachable` do not prove this: they check ledges against
   the floor and the exit graph, never an exit's sill.
-- **D6's gate** (slice) is the C2→C3 shape (a top exit over a chimney, not G5's side sill): the chimney's two walls rise from the floor to the room's
-  ceiling flanking the opening, with nothing between them, so no base jump reaches the opening. It is the existing `wall_cling` label; no new gate label,
-  and a gated exit matches on both halves. Its tests are C3's kind: the ungated route excludes D6 and the gated route includes it (`test_rooms`'s two
-  reachability assertions), plus one short geometry assertion on the chimney's walls. No BFS and no cling-climb simulation (none exists in the repo), so
+- **D6's gate** (slice) is the C2→C3 shape (a top exit over a chimney, not G5's side sill): the chimney's two walls hang from the ceiling to at least 80 px above
+  the floor, flanking the opening with nothing between them, so no base jump reaches the opening and the floor underneath still walks. It is the existing `wall_cling` label; no new gate label,
+  and a gated exit matches on both halves. Its tests: the Deep's gated exits equal `["D2:wall_cling"]` (the Flooded's gate-list shape; an "ungated route excludes D6" assertion would be vacuous,
+  because the whole Deep sits behind the Swim door), `test_rooms`'s existing reachability assertion once D6 exists, one short geometry assertion (both walls
+  start at the ceiling, flank the opening's span, nothing stands between them) and the D2 walking test above. No BFS and no cling-climb simulation (none exists in the repo), so
   nothing is copied from the Grotto's private reach helpers and no shipped test is rewritten.
 
 ## Creatures
@@ -130,13 +136,14 @@ ATK 9, DEF 2. A front tackle from a base slime does 1 to the drake (armor floors
 - **The stomp** is a `def.stomper` variant inside `_charger_act` (which gains the `player` argument; one call site), as the lizardman's spear is a variant
   inside the spitter. Three branches: the **trigger** (alerted, `absf(dx) <= STOMP_RANGE` 110 and `absf(dy) <= STOMP_LEVEL` 40, not the charger's
   forward-only test, so a point-blank stomp is allowed); the **windup** (`STOMP_WINDUP` 0.7 s, the charger's `windup` token and telegraph tint); and the
-  **slam** at the windup's end: one `_slam(player)` check (`player` is a `Node2D`, so the floor read is `player is CharacterBody2D and player.is_on_floor()`; the
+  **slam** at the windup's end: one `_slam(player)` check (`player` is a `Node2D`, so the floor read duck-types as `is_touching` does: `player.has_method("is_on_floor") and player.is_on_floor()`; the
   player on the floor, `absf(dx) <= STOMP_RANGE`, `absf(dy) <= STOMP_LEVEL`) that does
   `receive_hit(atk, "physical", position)`, then `rest` for `STOMP_REST` (1.4 s) instead of the charge. A stun cancels it like every other kind's. If the
   fold needs more than about 15 lines of stomper branching, the plan extracts a `_stomp` helper called from `_charger_act`; it still adds no Kind.
-  Because the windup and rest are the charger's tokens, `charge_state()`, `telegraphing()` and the tint need no new arms. The slam tests use the real
-  `Player` or a stub that reports floor state (`EnemyRecorder.StubPlayer` has no `is_on_floor`), and the drake joins `test_enemy_traces` (`stone_drake_plain`,
-  `stone_drake_stunned_in_windup`) next to the existing `lizard_*` and `crab_plain` traces, which are the regression net that the fold leaves the charger unchanged.
+  Because the windup and rest are the charger's tokens, `charge_state()`, `telegraphing()` and the tint need no new arms. The slam hit and miss tests use the real
+  `Player` or a stub with one line (`func is_on_floor() -> bool: return grounded`), the misses (airborne, out in x, out in y) as one parametrised case. No
+  drake trace is recorded: the existing `lizard_*` and `crab_plain` traces in `test_enemy_traces` are the regression net that the fold leaves the charger
+  unchanged, with zero edits, and re-recording the goldens in the same change would bless any accident.
 - **Animation.** `EnemyState.pick`: `gloom_wolf` and `armed_ant` join the crab and crayfish arm (it returns `walk`/`idle` when the token is `""`, which a
   WALKER's is); `stone_drake` has its own arm (`windup` → the windup clip, `rest` → the `stomp` pose held for the whole rest, else `walk`/`idle`);
   `taratect` joins the spider's arm. `data/enemy_clips.json` gains each sheet's clips (the Taratect's copy the spider's), and per-creature `pick` tests (as
@@ -154,7 +161,7 @@ ATK 9, DEF 2. A front tackle from a base slime does 1 to the drake (armor floors
 
 | Skill | Source | Unlock | Effect | Levels |
 |---|---|---|---|---|
-| Tremor | essence | absorb earth ×24 | Active, 5 MP: slam the ground. Every enemy standing on the floor within 72 px takes the skill's damage (3/4/5/6/7 through `Damage.skill_power(value, ATK)`, as Jolt does) ignoring its DEF and is stunned for 1.0 s | used ×8, max 5 |
+| Tremor | essence | absorb earth ×24 | Active, 5 MP: slam the ground. Every enemy standing on the floor within 72 px takes the skill's damage (3/4/5/6/7 through `Damage.skill_power(value, ATK)`, as Jolt does) ignoring its DEF and, if it can be stunned (every creature but the serpent), is stunned for 1.0 s | used ×8, max 5 |
 
 - **The threshold is derived, not trusted.** Earth is already in the Cave's lizards (4), the Grotto's crabs (12) and the Flooded's lizardmen (6): 22
   units before the Deep, so earth ×4 would hand a Cave life a skill that pierces armor at its start (a respawning room can be lapped, so ×24 raises the cost; it does not forbid
@@ -186,8 +193,8 @@ life would actually evolve; it mirrors the Flooded's F1 and F2 frame on purpose.
 
 The kit tests stop being copied: `tests/test_rebirth_kit.gd` already carries two near-identical sets (the Grotto's and the Flooded's units helpers,
 eligibility and kit-valid tests). The Deep's arrive as one table, each row `{rooms, expected pool count, expected kit skills, expected kit level}`
-(`grotto`: G1..G4, one or more pools, Leap and Wall Cling at level 3; `flooded`: F1 and F2, exactly one pool, Leap, Wall Cling and Swim at level 4; `deep`:
-D1 and D2, exactly one pool, Leap, Wall Cling, Swim and Tremor at level 5, so the refactor drops none of the existing per-area pins), and one loop over it
+(each area has exactly one pool, in the row's first room: `grotto`: G1..G4, Leap and Wall Cling at level 3; `flooded`: F1 and F2, Leap, Wall Cling and Swim at
+level 4; `deep`: D1 and D2, Leap, Wall Cling, Swim and Tremor at level 5, so the refactor drops none of the existing per-area pins), and one loop over it
 (the `untackleable` skip is a no-op outside the Flooded, so it applies everywhere), including the generic assertion that a kit's XP to the cap is at most the
 first-evolution areas' total. No Deep-specific XP pins. The Flooded's "an F1 life reaches its first evolution only by going back up" test keeps its
 assertions but is renamed or commented: an F1 life can also now go forward (188 + D1 + D2 reaches 225).
@@ -219,16 +226,18 @@ the rooms table, "the last room"), `docs/playtest-checklist.md` (a Deep section)
 ## Testing approach
 
 - Data: every room validates and lints clean; spawn keys unique; the pacing rule; the D1 stored kit's eligibility; the Tremor threshold above the
-  pre-Deep earth supply; nothing spawns or stands in F4's opened doorway zone (`RoomLint` checks solids only; the Flooded's own 188 pin already guards the relocation); creature stats at `DEEP_LEVEL` (a pin like
+  pre-Deep earth supply; every Deep room sits at its layout cell, size and area; F4's and D1's door halves end at `to == 320`; no spawn or decor lies in any door zone of F4 and D1–D5
+  (`RoomLint` checks solids only; the Flooded's own 188 pin already guards the relocation); creature stats at `DEEP_LEVEL` (a pin like
   the Flooded's); every creature def loads with its sheet and every frame, its portrait and its clips.
 - Behaviours: a wolf that sees you alerts a wolf within 240 px and not one beyond, never alerts an ant, and the mate is calm again ALERT_MEMORY after its finder loses sight (one line: it is the existing decay); a creature alerted by a packmate does not alert onward; a `charges` creature is a CHARGER, is stunned by a front
   tackle, and the drake is not; the drake's slam hits a grounded player in the zone, misses an airborne one, misses one outside the zone (horizontally and
   vertically), and a stun cancels the windup; each Deep creature has a `pick` arm that is not `idle` while moving.
-- Tremor: damages grounded enemies through DEF with an exact expected number at ATK > 1 and stuns them; skips a flier in the air, a body off the floor,
+- Tremor: damages grounded enemies through DEF with an exact expected number at ATK > 1 and stuns the stunnable ones; skips a flier in the air, a body off the floor,
   one out of range (the in-air and off-floor cases are one parametrised case), a shortcut switch, and the serpent's stun (it takes the hit); hits a crab on
   a ledge above the caster; casts while airborne and hits what stands on the floor below within the radius; hits a stunned flier that landed; never hurts the player; unlocks at its threshold and
   levels with use; casts with its scene.
-- Traversal: the D3 strip test; in the slice, D6's reachability and chimney assertions.
+- Traversal: the D3 strip test; in the slice, D6's gate-list, reachability and chimney assertions and D2's walking test (a C2-style walk from its west door to its
+  east door with no skill).
 - Real screenshots of each room, each creature, a stomp (the windup and the held slam pose), a pack, and the map tab.
 
 ## Build order
