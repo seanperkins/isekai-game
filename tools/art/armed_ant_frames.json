@@ -1,0 +1,14 @@
+{
+ "canonical": "assets/sprites/lizard_1.png",
+ "style": "Modern pixel art with soft lighting (Style D): a small soldier ant that walks on four legs with its upper body raised, dark red-brown chitin with pale stone-grey armor plates on its head and back, large pincer mandibles, two bent antennae, small black eyes, holding a short stone-tipped spear in its forelegs, a clean dark outline, chunky readable pixels, gentle highlights and shading. Match the palette, outline weight and rendering of the reference image (an armored lizard) but draw this ant. Side view, the creature facing right. Draw only the creature: no ground, no shadow, no effects.",
+ "anchor": "idle_1",
+ "frames": [
+  {"name": "idle_1", "width": 36, "refs": [], "prompt": "The ant standing on guard on its four hind legs, spear held upright, antennae raised."},
+  {"name": "walk_1", "width": 36, "refs": ["idle_1"], "prompt": "The same ant mid-march, near legs reaching forward, spear carried at an angle."},
+  {"name": "walk_2", "width": 36, "refs": ["idle_1"], "prompt": "The same ant mid-march, legs gathered under the body."},
+  {"name": "walk_3", "width": 36, "refs": ["idle_1"], "prompt": "The same ant mid-march, far legs reaching forward, spear carried at an angle."},
+  {"name": "stunned", "width": 36, "refs": ["idle_1"], "prompt": "The same ant dazed: swaying, antennae drooping and crossed, spear sagging, a few stars above its head."},
+  {"name": "hurt", "width": 36, "refs": ["idle_1"], "prompt": "The same ant flinching in pain, antennae flattened, mandibles clenched, body twisted away."},
+  {"name": "downed", "width": 38, "refs": ["idle_1"], "prompt": "The same ant knocked onto its back, legs curled in the air, spear beside it."}
+ ]
+}

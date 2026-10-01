@@ -1,4 +1,4 @@
-"""Turn the generated skill icons (art_source/frames/skill_icons_grotto/*.png and skill_icons_flooded/*.png, magenta key) into the
+"""Turn the generated skill icons (art_source/frames/skill_icons_grotto/*.png and skill_icons_flooded/*.png and skill_icons_deep/*.png, magenta key) into the
 32x32 game icons in assets/sprites/. Keys, crops to the drawn pixels, scales with a box filter and crisps the alpha.
 Run from the project root (the whole command):
   uv run --python 3.12 --with Pillow python tools/art/make_icons.py
@@ -11,7 +11,7 @@ from PIL import Image
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from slice_sheets import crisp_alpha, keyed  # noqa: E402
 
-SRC_DIRS = ["art_source/frames/skill_icons_grotto", "art_source/frames/skill_icons_flooded"]
+SRC_DIRS = ["art_source/frames/skill_icons_grotto", "art_source/frames/skill_icons_flooded", "art_source/frames/skill_icons_deep"]
 OUT = "assets/sprites"
 
 
