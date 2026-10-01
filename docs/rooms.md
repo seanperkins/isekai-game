@@ -102,5 +102,6 @@ These are the choices in the data that a test does not catch and a casual edit w
 | F1 Seep Mouth | 2x1, cell (10, 8) | the landing under G4's drop with a chain up to it; the Flooded's rebirth pool; crayfish; the learning pool (a deep pool with a far bank) with two jellies |
 | F2 Sump | 1x2, cell (12, 7) | the Swim door: a water column from the floor to the top exit (gate `swim`), two eels, no solid inside it |
 | F3 Eel Run | 3x1, cell (12, 6) | a long flooded corridor: eels and jellies, stair-ledges climbing out of the water, the floor hole where F2's column arrives |
-| F4 Marsh Hall | 2x1, cell (15, 6) | dry platforms and the lizardmen's posts, crayfish; a floor hole with a chain down to F5 |
+| F4 Marsh Hall | 2x1, cell (15, 6) | dry platforms and the lizardmen's posts, crayfish; a floor hole with a chain down to F5; a second water column (x 430-610) up to F6 (gate `swim`) |
 | F5 Quiet Pool | 1x1, cell (15, 7) | the area's last room: a Glow Pool, the tablet, a small eel pool and two lizardmen; the chain up to F4 |
+| F6 Storm Pocket | 1x1, cell (15, 5) | the rare room above F4's column (gate `swim`): a pool with stair-ledges and the Storm Eel; it never counts toward the pacing rule |

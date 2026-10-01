@@ -39,7 +39,7 @@ func test_every_gated_exit_is_the_swim_door() -> void:
 			if e.has("gate"):
 				gated.append("%s:%s" % [id, e["gate"]])
 	gated.sort()
-	assert_eq(gated, ["F2:swim", "F3:swim"], "F2's top exit and F3's floor hole")
+	assert_eq(gated, ["F2:swim", "F3:swim", "F4:swim"], "F2's top exit, F3's floor hole and F4's top exit (the slice)")
 
 func test_the_pacing_rule() -> void:
 	var total := _first_time(ROOMS)
@@ -104,8 +104,9 @@ func _assert_door(room_id: String) -> void:
 			continue
 		assert_lte((floor_top - rr.position.y) + b_entry + 3.0, sill_height, "%s (c) a dry ledge beside the column reaches the sill" % room_id)
 
-func test_the_swim_door_is_structural() -> void:
+func test_the_swim_doors_are_structural() -> void:
 	_assert_door("F2")
+	_assert_door("F4")  # the slice's column up to F6
 
 func test_no_swimmer_is_trapped_anywhere_in_the_world() -> void:
 	assert_eq(RoomLint.water_groups(rooms), [])
@@ -131,3 +132,32 @@ func test_f1_holds_the_rebirth_pool_and_f5_the_tablet() -> void:
 func test_g4_is_no_longer_the_last_room_and_has_a_hole_with_nothing_over_it() -> void:
 	var g4: RoomDef = rooms["G4"]
 	assert_true(g4.exits.any(func(e): return e["edge"] == "bottom" and e["room"] == "F1"))
+
+# --- the rare slice: F6 and the Storm Eel ---
+
+func test_f6_sits_above_f4_behind_a_gated_floor_hole_and_holds_one_storm_eel_in_water() -> void:
+	var f6: RoomDef = rooms["F6"]
+	assert_eq(f6.cell, Vector2i(15, 5))
+	assert_eq(f6.size, Vector2i(1, 1))
+	assert_eq(f6.area, "flooded")
+	assert_true(f6.exits.any(func(e): return e["edge"] == "bottom" and e["room"] == "F4" and e.get("gate", "") == "swim"))
+	assert_eq(f6.spawns.size(), 1)
+	assert_eq(f6.spawns[0]["id"], "storm_eel")
+	var wet := false
+	for w in f6.water:
+		if (w as Rect2).has_point(f6.spawns[0]["pos"]):
+			wet = true
+	assert_true(wet)
+
+func test_f6_never_counts_toward_the_pacing_rule() -> void:
+	assert_eq(_first_time(["F1", "F2", "F3", "F4", "F5"]), 188)
+	var with_f6 := _first_time(["F1", "F2", "F3", "F4", "F5", "F6"])
+	assert_eq(with_f6, 188 + 20, "the Storm Eel's first-time value is 20, and it is outside the rule")
+
+func test_f4s_column_does_not_overlap_its_platforms_or_hole() -> void:
+	var f4: RoomDef = rooms["F4"]
+	var column: Rect2 = f4.water[0]
+	for s in f4.solids:
+		assert_false((s as Rect2).intersects(column), "no platform stands in the column")
+	var hole: Dictionary = f4.exits.filter(func(e): return e["edge"] == "bottom")[0]
+	assert_lt(float(hole["to"]) + 40.0, column.position.x, "the column keeps clear of the floor hole")

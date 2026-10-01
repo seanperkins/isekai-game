@@ -70,7 +70,7 @@ func test_load_content_collects_load_and_validation_errors() -> void:
 		ResourceSaver.save(c, creatures_dir.path_join("%s.tres" % c.id))
 	var content := DefLoader.load_content(skills_dir, creatures_dir)
 	assert_eq(content["skills"].size(), 1)
-	assert_eq(content["creatures"].size(), 14)
+	assert_eq(content["creatures"].size(), 15)
 	assert_eq(content["errors"].size(), 1)
 	assert_string_contains(content["errors"][0], "stray.tres: is not a SkillDef")
 	_cleanup(skills_dir)

@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_psoda"]
+
+[resource]
+script = ExtResource("1_psoda")
+id = "F6"
+area = "flooded"
+cell = Vector2i(15, 5)
+solids = [Rect2(60, 266, 90, 12), Rect2(170, 212, 90, 12), Rect2(60, 158, 90, 12)]
+decor = [{
+"anchor": "top",
+"id": "flooded_lichen_hang",
+"pos": Vector2(200, 20)
+}, {
+"anchor": "top",
+"id": "flooded_root_hang",
+"pos": Vector2(480, 20)
+}, {
+"id": "flooded_crystal_gold",
+"light": Color(1, 0.85, 0.4, 1),
+"pos": Vector2(300, 320)
+}]
+spawns = [{
+"id": "storm_eel",
+"pos": Vector2(320, 270)
+}]
+exits = [{
+"edge": "bottom",
+"from": 440.0,
+"gate": "swim",
+"room": "F4",
+"to": 600.0
+}]
+water = [Rect2(20, 200, 600, 160)]

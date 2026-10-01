@@ -68,3 +68,23 @@ func test_swim_and_jolt() -> void:
 	assert_eq(jolt.unlock[0]["tags"], {"essence": "shock"})
 	assert_eq(jolt.max_level, 5)
 	assert_eq(jolt.effects[0]["values"], [3, 4, 5, 6, 7])
+
+func test_the_storm_eel_is_the_eels_behaviour_on_bigger_numbers() -> void:
+	var storm: CreatureDef = creatures["storm_eel"]
+	var eel: CreatureDef = creatures["glass_eel"]
+	assert_true(Sources.ALL.has("storm_eel"))
+	assert_true(storm.swimmer)
+	assert_eq(storm.contact_type, "shock")
+	assert_eq(storm.xp, 10)
+	assert_eq(storm.essences, {"shock": 3, "water": 2})
+	assert_eq(storm.stats["spd"], 160)
+	assert_gt(storm.stats["max_hp"], eel.stats["max_hp"])
+	assert_gt(storm.stats["atk"], eel.stats["atk"])
+
+func test_the_storm_eels_sheet_is_the_eels_frames_enlarged() -> void:
+	var eel := SpriteSheet.load_set("glass_eel")
+	var storm := SpriteSheet.load_set("storm_eel")
+	assert_eq(storm.frame_names().size(), eel.frame_names().size())
+	for n in eel.frame_names():
+		assert_true(storm.has_frame(n), n)
+		assert_gt(storm.frame_size(n).x, eel.frame_size(n).x, "%s is enlarged" % n)

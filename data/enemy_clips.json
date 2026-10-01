@@ -99,5 +99,13 @@
     "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
     "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
     "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
+  },
+  "storm_eel": {
+    "swim": {"frames": ["swim_1", "swim_2", "swim_3", "swim_2"], "fps": 8.0, "loop": true},
+    "warn": {"frames": ["warn"], "fps": 1.0, "loop": false},
+    "dart": {"frames": ["dart"], "fps": 1.0, "loop": false},
+    "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
+    "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
+    "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
   }
 }

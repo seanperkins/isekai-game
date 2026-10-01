@@ -2,7 +2,7 @@ extends GutTest
 
 func test_autoloads_boot_with_valid_content_and_wiring() -> void:
 	assert_eq(SkillRules.skill_defs.size(), 31)
-	assert_eq(SkillRules.creature_defs.size(), 14)
+	assert_eq(SkillRules.creature_defs.size(), 15)
 	assert_not_null(SkillRules.get_def("leap"))
 	assert_not_null(Compendium.model)
 	assert_not_null(Announcer.queue)
