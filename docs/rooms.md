@@ -19,6 +19,8 @@ and this file keeps the reasoning its comments carried, which the `.tres` files 
   No shipped room uses `hard_ledges`.
 - Every exit is matched by an exit on the neighbour's opposite edge covering the same world span (the validator checks it),
   with the same shortcut id. Keep 64 px in front of a door free of rock (`RoomLint`'s `exit_blocked`).
+- An exit's `gate` is a label from `WorldValidator.GATES` (today `wall_cling`) that must match on both halves; it does not stop the
+  player in play, but a gated bottom exit still counts as a floor hole (only a `shortcut` closes one), so nothing may stand over it.
 - Keep every step at most 54 px (the slime's ledge limit) and gaps between floating solids at least 36 px so the 28 px body
   fits.
 
@@ -26,6 +28,15 @@ The rules a room must meet that are not the world validator's (a spawn in rock, 
 floor, a blocked or too narrow exit, a feature id used twice, a switch with no exit, ...) are in `scripts/world/room_lint.gd`.
 The editor's `Validate (N)` button lists them with the validator's findings, and the test suite runs the same functions on
 every room.
+
+## Decor
+
+Decor is the standing and hanging pieces (crystals, fungus, hanging roots, stalactites) drawn in front of the back wall. The catalog the
+editor offers is `DecorLib.CATALOG` in `scripts/world/decor_lib.gd`: 46 rows, `id -> {anchor, light}`. The 21 ids the shipped rooms use
+are pinned to the data by `tests/test_decor_lib.gd`; the other 25 (all of `deep_*` and `flooded_*`, 5 grotto ids and `crystal_purple`)
+are chosen, not pinned. An id belongs to a biome by its `<biome>_` prefix (none means cave). A new biome's art needs rows there. A
+bottom-anchored piece stands on its position and a top-anchored one hangs from it; the editor places them on the surface below or the
+rock above the click. An id outside the catalog is lint's `decor_unknown` and the builder skips it.
 
 ## Set dressing
 

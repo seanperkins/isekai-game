@@ -1278,3 +1278,22 @@ func test_a_refresh_selects_a_string_choice_by_its_text() -> void:
 	ed.slot.refresh_inspector()
 	var pick: OptionButton = ed.slot.find_field("gate")
 	assert_eq(pick.get_item_text(pick.selected), "wall_cling", "by item text, not by an index parsed from a string")
+
+func test_a_new_room_says_which_room_it_was_made_beside() -> void:
+	var ed := await _editor()
+	ed.open_room("C6")
+	ed.new_room("left", "Fresh", "cave", Vector2i(1, 1))
+	assert_string_contains(ed.panels.status_text(), "created Fresh beside C6")
+
+func test_the_rock_from_below_checkbox_is_not_labelled_twice() -> void:
+	var ed := await _editor()
+	ed.model.select({"room": "C1", "kind": "solid", "index": 1})
+	ed.view.refresh()
+	var labels := 0
+	var stack: Array = [ed.slot]
+	while not stack.is_empty():
+		var n: Node = stack.pop_back()
+		if n is Label and (n as Label).text == "Rock from below":
+			labels += 1
+		stack.append_array(n.get_children())
+	assert_eq(labels, 0, "the checkbox carries its own text")

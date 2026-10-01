@@ -79,7 +79,7 @@ func _ready() -> void:
 	if view_state.is_empty():
 		_refit()
 	_sync()
-	panels.set_status("Cmd/Ctrl+Z undo, Cmd/Ctrl+S save, F5 play from the pointer, Tab hides the panels, Validate (N) lists the problems")
+	panels.set_status("Cmd/Ctrl+Z undo, Cmd/Ctrl+S save, F5 play from the pointer, Tab hides the panels, Validate (N) lists the problems, Alt/Option-click selects what is under the selection")
 
 ## A click in the room, a button or a shortcut is the end of any inspector edit: releasing focus commits a pending LineEdit first
 ## (before the room changes under it, or the model is saved, undone or played).
@@ -226,8 +226,9 @@ func new_room(edge: String, id: String, area: String, size: Vector2i) -> void:
 	if err != "":
 		panels.set_status(err)
 		return
+	var beside := room_id
 	open_room(id)
-	panels.set_status("created %s beside %s" % [id, room_id])
+	panels.set_status("created %s beside %s" % [id, beside])
 
 func save() -> void:
 	_commit_pending()

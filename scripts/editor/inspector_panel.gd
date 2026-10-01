@@ -37,7 +37,8 @@ func build(model: RoomEditModel, sel: Dictionary) -> void:
 		add_child(_label("nothing to edit"))
 		return
 	for spec in FIELDS[kind]:
-		add_child(_label(spec[1]))
+		if spec[2] != "check":
+			add_child(_label(spec[1]))  # a checkbox carries its own text
 		var control := _make(spec[0], spec[2])
 		_fields[spec[0]] = control
 		add_child(control)
