@@ -145,6 +145,8 @@ New ids: `glass_eel`, `cave_crayfish`, `drift_jelly`, `bog_lizardman` (and `stor
 
 First-time value per spawn is twice the XP (down plus eat, paid once each): eel 6, crayfish 10, jelly 6, lizardman 10, storm eel 20.
 
+The table's HP, ATK and DEF are level-1 bases: the generator scales them by +8% a level at level 7 (`FLOODED_LEVEL`), as the Grotto's creatures are at level 4 (so an eel has 6 HP, a jelly 4).
+
 ### What `CreatureDef` and `Enemy` gain
 
 - `CreatureDef` gains `swimmer` (the eels and the jelly: confined to a water rect, and the one flag Jolt's stun reads), `untackleable`
@@ -187,7 +189,7 @@ First-time value per spawn is twice the XP (down plus eat, paid once each): eel 
   `targets_in_front`, sharing its team and can-be-hit filter through one private helper; `SporeCloudArea` is not touched): every enemy in range takes `receive_hit(damage, "shock")`, and a
   creature with `swimmer` also takes `status.stun(1.5)`; `EnemyStatus.stun` is changed to keep the longer timer on an already stunned
   creature (`_timer = seconds if ACTIVE else maxf(_timer, seconds)`; every existing caller stuns an active creature, so nothing else
-  changes), so no second name is needed. It never hurts the player. Jolt downs a jelly outright (3 damage against 3 HP) and a downed
+  changes), so no second name is needed. It never hurts the player. Jolt hurts a jelly and stuns it (the swimmer flag; at level 7 a jelly has 4 HP, so a level-1 Jolt's 3 damage does not down it) and a downed
   jelly is eatable, so Jolt is also the jelly's XP; the stun test uses an eel.
 
 ### Frames (each generated alone, then assembled with a shared per-creature scale)
@@ -298,7 +300,7 @@ precedence and state-token docs, and `FormOffers`'s header. The count pins move 
   crayfish and lizardman telegraph, the lizardman holds its beat, throws at its own cooldown (the pose shows) and never poisons; the spear
   flies flat, hits physical and dies on rock); every sheet loads with every
   frame; every creature × state has a clip.
-- Skills: Jolt stuns an eel (and `stun` never shortens a longer stun), downs a jelly, damages the rest and never the player; Swim unlocks and levels from `submerged`.
+- Skills: Jolt stuns an eel and a jelly (and `stun` never shortens a longer stun), damages the rest and never the player; Swim unlocks and levels from `submerged`.
 - Editor: water survives snapshot, undo, redo, save and a Grow; the lint rules fire from a room built in a test; and in the slice, the Water
   tool draws, selects, moves, deletes and undoes.
 - Real screenshots of each room, each creature, a swim (in and out of water) and the editor's water.
