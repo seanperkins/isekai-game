@@ -28,6 +28,8 @@ const SPIT_SECONDS := 3.0
 const SLOW_SECONDS := 2.0
 ## Seconds an enemy keeps hunting after it last saw you.
 const ALERT_MEMORY := 2.0
+## A pack creature that sees you alerts every other of its kind within this many px, with no line of sight needed.
+const PACK_RADIUS := 240.0
 ## Walkers probe this far ahead and this far down for the ground before stepping on.
 const LEDGE_PROBE := 10.0
 const LEDGE_DEPTH := 16.0
@@ -383,8 +385,17 @@ func _sense(player: Node2D, delta: float) -> void:
 		sees = false  # an eel is stirred only by a player in its own water
 	if sees:
 		_alert = ALERT_MEMORY
+		if def.pack:
+			_share_alert()
 	else:
 		_alert = maxf(0.0, _alert - delta)
+
+## The howl: wakes every other pack creature of this kind near this one. Only sight calls it, so a creature woken here never wakes
+## another, and a pack does not chain across a level. `actors` also holds the player, the shortcut switch and test stubs.
+func _share_alert() -> void:
+	for n in get_tree().get_nodes_in_group("actors"):
+		if n is Enemy and n != self and n.def.pack and n.def.id == def.id and global_position.distance_to(n.global_position) <= PACK_RADIUS:
+			n._alert = ALERT_MEMORY
 
 ## Holds a swimmer inside its water rect (shrunk by its half body): the position is clamped, the clamped velocity component is
 ## zeroed (a stunned eel's fall does not keep growing against a rect bottom that is not floor) and facing turns inward, which
