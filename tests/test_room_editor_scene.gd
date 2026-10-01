@@ -1122,3 +1122,51 @@ func test_building_the_panel_for_a_solid_that_sticks_out_of_the_room_changes_not
 	ed.view.refresh()
 	assert_eq(ed.model.rooms["C1"].solids[i], Rect2(100, 358, 8, 4), "the control clamps what it shows; building commits nothing")
 	assert_eq(ed.model.undo_depth(), depth)
+
+# --- the inspector never shows a stale number ---
+
+func test_a_drag_updates_the_number_that_was_showing() -> void:
+	var ed := await _editor()
+	ed.model.select({"room": "C1", "kind": "solid", "index": 1})
+	ed.view.refresh()
+	assert_true(ed.model.begin_move(ed.model.selection))
+	ed.model.move_to(Vector2(40, 0))
+	ed.model.end_move()
+	ed.view.refresh()
+	assert_eq((ed.slot.find_field("x") as SpinBox).value, 460.0, "the field follows the drag")
+
+func test_a_grow_moves_the_number_and_the_range_with_the_room() -> void:
+	var ed := await _editor()
+	ed.open_room("C6")
+	var solid: Rect2 = ed.model.rooms["C6"].solids[0]
+	ed.model.select({"room": "C6", "kind": "solid", "index": 0})
+	ed.view.refresh()
+	var depth: int = ed.model.undo_depth()
+	ed.grow("left")
+	var x: SpinBox = ed.slot.find_field("x")
+	assert_eq(ed.model.rooms["C6"].solids[0].position.x, solid.position.x + 640.0)
+	assert_eq(x.value, solid.position.x + 640.0, "the shifted value is shown, not clamped to the old maximum")
+	assert_eq(x.max_value, 1280.0 - 4.0)
+	assert_eq(ed.model.undo_depth(), depth + 1, "a refresh never commits: only the grow is a step")
+
+func test_a_refresh_leaves_a_focused_field_alone_and_updates_it_once_it_is_not() -> void:
+	var ed := await _editor()
+	ed.model.select({"room": "C1", "kind": "solid", "index": 1})
+	ed.view.refresh()
+	var x: SpinBox = ed.slot.find_field("x")
+	x.get_line_edit().grab_focus()
+	ed.model.rooms["C1"].solids[1].position.x = 500.0   # the model changed under the focused field
+	ed.slot.refresh_inspector()
+	assert_eq(x.value, 420.0, "the author is typing in it: not overwritten")
+	x.get_line_edit().release_focus()
+	ed.slot.refresh_inspector()
+	assert_eq(x.value, 500.0, "and refreshed once it is not focused")
+
+func test_the_rock_from_below_checkbox_follows_the_height() -> void:
+	var ed := await _editor()
+	ed.model.select({"room": "C1", "kind": "solid", "index": 1})
+	ed.view.refresh()
+	(ed.slot.find_field("h") as SpinBox).value = 30.0
+	assert_false((ed.slot.find_field("hard") as CheckBox).visible, "typed thick: the checkbox hides")
+	(ed.slot.find_field("h") as SpinBox).value = 12.0
+	assert_true((ed.slot.find_field("hard") as CheckBox).visible, "typed thin again: it shows")

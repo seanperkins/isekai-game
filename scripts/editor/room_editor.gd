@@ -137,6 +137,8 @@ func _sync_slot() -> void:
 		if slot.is_showing() != "inspector" or model.selection != _slot_sel:
 			_slot_sel = model.selection.duplicate()
 			slot.show_inspector(model, model.selection)
+		else:
+			slot.refresh_inspector()
 	else:
 		_slot_sel = {}
 		slot.hide_slot()

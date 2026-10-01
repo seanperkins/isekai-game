@@ -188,6 +188,19 @@ func _commit(key: String, value) -> void:
 	else:
 		field_changed.emit()
 
+## Re-reads every control from the model (after a drag, a Grow or any other edit made outside the panel), skipping a control
+## that has keyboard focus: the author may be typing in it. Writes use set_value_no_signal / set_pressed_no_signal, so a refresh
+## can never commit.
+func refresh() -> void:
+	for key in _fields:
+		if not _has_focus(_fields[key]):
+			_show_stored(key)
+
+func _has_focus(c: Control) -> bool:
+	if c is SpinBox:
+		return (c as SpinBox).get_line_edit().has_focus()
+	return c.has_focus()
+
 func _show_stored(key: String) -> void:
 	var control: Control = _fields.get(key)
 	var stored = _model.get_field(_sel, key)
