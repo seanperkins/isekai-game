@@ -975,3 +975,91 @@ func test_the_palettes_never_take_keyboard_focus_so_tab_keeps_hiding_the_panels(
 	var p := await _panels()
 	assert_eq(p._palette.focus_mode, Control.FOCUS_NONE)
 	assert_eq(p._feature_palette.focus_mode, Control.FOCUS_NONE)
+
+# --- Alt-press selection and the drag threshold ---
+
+func _alt_press(p: Vector2) -> InputEventMouseButton:
+	var e := _press(p)
+	e.alt_pressed = true
+	return e
+
+## Two nested solids in a far-away room, stacked on one point.
+func _nested_room() -> void:
+	var r := RoomDef.new()
+	r.id = "L1"
+	r.area = "cave"
+	r.cell = Vector2i(20, 20)
+	r.solids = [Rect2(100, 100, 200, 60), Rect2(150, 120, 40, 20)]
+	model.rooms["L1"] = r
+	model._baseline["L1"] = RoomEditModel.copy_room(r)
+	view.show_room(model, "L1")
+
+func test_a_plain_press_takes_the_first_candidate_and_alt_presses_walk_the_rest() -> void:
+	_nested_room()
+	view.tool = "select"
+	var at := Vector2(170, 130)
+	view.handle_event(_press(at))
+	view.handle_event(_release(at))
+	assert_eq(model.selection["index"], 1, "plain press: the smaller solid, as P2")
+	view.handle_event(_alt_press(at))
+	view.handle_event(_release(at))
+	assert_eq(model.selection["index"], 0, "Alt-press: the next candidate")
+	view.handle_event(_alt_press(at))
+	view.handle_event(_release(at))
+	assert_eq(model.selection["index"], 1, "and it wraps")
+
+func test_an_alt_drag_moves_what_it_selected() -> void:
+	_nested_room()
+	view.tool = "select"
+	var at := Vector2(170, 130)
+	view.handle_event(_press(at))
+	view.handle_event(_release(at))
+	view.handle_event(_alt_press(at))
+	view.handle_event(_motion(at + Vector2(40, 0)))
+	view.handle_event(_release(at + Vector2(40, 0)))
+	assert_eq(model.rooms["L1"].solids[0], Rect2(140, 100, 200, 60), "the big solid moved")
+	assert_eq(model.rooms["L1"].solids[1], Rect2(150, 120, 40, 20), "the small one did not")
+
+func test_a_creature_beside_a_selected_ledge_is_selected_by_a_plain_press() -> void:
+	_nested_room()
+	model.rooms["L1"].spawns = [{"id": "toad", "pos": Vector2(250, 120)}]
+	view.tool = "select"
+	view.handle_event(_press(Vector2(170, 130)))
+	view.handle_event(_release(Vector2(170, 130)))
+	view.handle_event(_press(Vector2(250, 120)))
+	view.handle_event(_release(Vector2(250, 120)))
+	assert_eq(model.selection["kind"], "spawn", "a plain press never keeps the old selection")
+
+func test_a_press_with_a_pixel_of_jitter_moves_nothing_even_in_a_huge_room() -> void:
+	var r := RoomDef.new()
+	r.id = "L1"
+	r.area = "cave"
+	r.cell = Vector2i(20, 20)
+	r.size = Vector2i(6, 6)
+	r.solids = [Rect2(100, 100, 200, 12)]
+	model.rooms["L1"] = r
+	model._baseline["L1"] = RoomEditModel.copy_room(r)
+	view.show_room(model, "L1")
+	view.tool = "select"
+	var at := Vector2(200, 106)
+	var press := _press(at)
+	view.handle_event(press)
+	var jitter := InputEventMouseMotion.new()
+	jitter.position = press.position + Vector2(2, 0)   # 2 screen px: about 12 room px at this zoom
+	view.handle_event(jitter)
+	view.handle_event(_release(at))
+	assert_eq(model.rooms["L1"].solids[0], Rect2(100, 100, 200, 12))
+	assert_eq(model.undo_depth(), 0)
+
+func test_a_drag_starts_after_three_screen_pixels_and_applies_from_the_press() -> void:
+	_nested_room()
+	view.tool = "select"
+	var at := Vector2(170, 130)
+	var press := _press(at)
+	view.handle_event(press)
+	var far := InputEventMouseMotion.new()
+	far.position = press.position + Vector2(20, 0)
+	view.handle_event(far)
+	view.handle_event(_release(view.to_room(far.position)))
+	var moved: Rect2 = model.rooms["L1"].solids[1]
+	assert_almost_eq(moved.position.x, 150.0 + view.to_room(far.position).x - at.x, 4.0, "the whole distance applied, no lag")

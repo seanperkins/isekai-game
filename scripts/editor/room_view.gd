@@ -5,6 +5,7 @@ extends Node2D
 ## dim them. All positions are in the 640x360 viewport space the project's canvas_items stretch gives mouse events.
 
 const PICK_PX := 8.0
+const CLICK_PX := 3.0  # a Select press becomes a drag only after the pointer has travelled this many screen pixels
 const ZOOM_MIN := 0.25
 const ZOOM_MAX := 4.0
 
@@ -31,6 +32,8 @@ var _live_text := ""
 var _exit_edge := ""
 var _exit_live := Vector2(-1.0, -1.0)  # the Exit tool's span along its edge
 var _serial_at_press := 0     # the model's edit counter when a Select press began
+var _press_screen := Vector2.ZERO  # where the press was, in screen pixels (the drag threshold is measured there)
+var _dragging := false         # the Select press has become a drag
 
 func _ready() -> void:
 	camera.name = "Camera"
@@ -164,7 +167,7 @@ func _button(e: InputEventMouseButton) -> bool:
 			return true
 		MOUSE_BUTTON_LEFT:
 			if e.pressed:
-				_press(to_room(e.position))
+				_press(to_room(e.position), e.alt_pressed, e.position)
 			else:
 				_release(to_room(e.position))
 			return true
@@ -179,6 +182,9 @@ func _motion(e: InputEventMouseMotion) -> bool:
 	var p := to_room(e.position)
 	match tool:
 		"select":
+			if not _dragging and e.position.distance_to(_press_screen) < CLICK_PX:
+				return true  # a click with a little jitter is not a drag
+			_dragging = true
 			_model.move_to(p - _press_room)
 		"solid":
 			_rect_live = RoomEditModel.drag_rect(_press_room, p).intersection(RoomEditModel.bounds(_model.rooms[_room_id]))
@@ -194,13 +200,24 @@ func _motion(e: InputEventMouseMotion) -> bool:
 func _commit_pending() -> void:
 	get_viewport().gui_release_focus()
 
-func _press(p: Vector2) -> void:
+## A plain press takes the first candidate (what hit returns). An Alt press takes the one after the current selection, wrapping;
+## the first when the selection is not among them.
+func _pick_candidate(cands: Array, alt: bool) -> Dictionary:
+	if cands.is_empty():
+		return {}
+	if not alt:
+		return cands[0]
+	return cands[(cands.find(_model.selection) + 1) % cands.size()]  # find is -1 when absent, so the first
+
+func _press(p: Vector2, alt := false, screen := Vector2.ZERO) -> void:
 	_commit_pending()
 	_pressed = true
 	_press_room = p
+	_press_screen = screen
+	_dragging = false
 	match tool:
 		"select":
-			var sel := _model.hit(_room_id, p, pick_radius())
+			var sel := _pick_candidate(_model.hit_all(_room_id, p, pick_radius()), alt)
 			_model.select(sel)
 			if not sel.is_empty():
 				_model.begin_move(sel)
