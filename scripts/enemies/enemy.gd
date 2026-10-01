@@ -5,6 +5,7 @@ extends CharacterBody2D
 ## losing you; walkers turn at ledges and walls; every attack is telegraphed:
 ##   swoop (bats):     hover above you, flash, dive at where you were, climb back
 ##   charger (lizard): stop and flick, charge, then rest (hit it from behind)
+##   stomper (drake):  rear, slam the ground in a zone around it (jump to dodge), then rest
 ##   spitter (toad):   puff up, then lob a poison glob in an arc
 ##   dropper (spider): hang until you pass under, then drop and walk
 ## Enemies never emit gameplay events (Health has no emitter). They do emit audio-only world
@@ -28,6 +29,8 @@ const SPIT_SECONDS := 3.0
 const SLOW_SECONDS := 2.0
 ## Seconds an enemy keeps hunting after it last saw you.
 const ALERT_MEMORY := 2.0
+## A pack creature that sees you alerts every other of its kind within this many px, with no line of sight needed.
+const PACK_RADIUS := 240.0
 ## Walkers probe this far ahead and this far down for the ground before stepping on.
 const LEDGE_PROBE := 10.0
 const LEDGE_DEPTH := 16.0
@@ -38,6 +41,12 @@ const CHARGE_WINDUP := 0.5
 const CHARGE_SECONDS := 0.6
 const CHARGE_REST := 1.0
 const CHARGE_MULT := 3.0
+## The stone drake rears for STOMP_WINDUP and slams: a player standing on the floor within STOMP_RANGE across and STOMP_LEVEL up or
+## down is hit (jump to dodge it). It rests STOMP_REST afterwards. One zone triggers the windup and decides the hit.
+const STOMP_RANGE := 110.0
+const STOMP_LEVEL := 40.0
+const STOMP_WINDUP := 0.7
+const STOMP_REST := 1.4
 ## Bats hover this high over you for HOVER_SECONDS (+ up to HOVER_JITTER, per bat).
 const HOVER_HEIGHT := 60.0
 const HOVER_SECONDS := 0.8
@@ -103,11 +112,11 @@ var _anim_t := 0.0
 var _alert := 0.0
 ## Which behaviour this creature has, resolved once in setup() from what its def and skills say (the precedence the
 ## old _act chain used): the vine snake by id, then a ceiling walker, a drifter, a flier or a swimmer (the eels are swoopers),
-## an armored charger, a spitter.
+## an armored charger or a `charges` creature, a spitter.
 enum Kind { WALKER, CHARGER, SPITTER, SWOOPER, DROPPER, DRIFTER, SNAKE }
 var kind := Kind.WALKER
 ## The one live behaviour state, its timer and its aim. Tokens per kind: swooper idle/hover/warn/dive/climb; charger and
-## snake ""/windup/charge/rest; spitter ""/puff; drifter ""/flash; walker and dropper never write it.
+## snake ""/windup/charge/rest (a stomper never writes `charge`: its windup ends in the slam, then rest); spitter ""/puff; drifter ""/flash; walker and dropper never write it.
 var _state := ""
 var _state_t := 0.0
 var _aim := Vector2.ZERO
@@ -162,7 +171,7 @@ func _resolve_kind() -> Kind:
 		return Kind.DRIFTER
 	if capabilities.has("flight") or def.swimmer:
 		return Kind.SWOOPER
-	if def.armored_charger:
+	if def.armored_charger or def.charges:
 		return Kind.CHARGER
 	if _spit_damage > 0 or def.projectile == "spear":
 		return Kind.SPITTER
@@ -383,8 +392,17 @@ func _sense(player: Node2D, delta: float) -> void:
 		sees = false  # an eel is stirred only by a player in its own water
 	if sees:
 		_alert = ALERT_MEMORY
+		if def.pack:
+			_share_alert()
 	else:
 		_alert = maxf(0.0, _alert - delta)
+
+## The howl: wakes every other pack creature of this kind near this one. Only sight calls it, so a creature woken here never wakes
+## another, and a pack does not chain across a level. `actors` also holds the player, the shortcut switch and test stubs.
+func _share_alert() -> void:
+	for n in get_tree().get_nodes_in_group("actors"):
+		if n is Enemy and n != self and n.def.pack and n.def.id == def.id and global_position.distance_to(n.global_position) <= PACK_RADIUS:
+			n._alert = ALERT_MEMORY
 
 ## Holds a swimmer inside its water rect (shrunk by its half body): the position is clamped, the clamped velocity component is
 ## zeroed (a stunned eel's fall does not keep growing against a rect bottom that is not floor) and facing turns inward, which
@@ -506,7 +524,7 @@ func _act(player: Node2D, delta: float) -> void:
 		Kind.SWOOPER:
 			_swoop_act(player, delta)
 		Kind.CHARGER:
-			if not _charger_act(to_player, delta):
+			if not _charger_act(player, to_player, delta):
 				_walk(to_player)
 		Kind.SPITTER:
 			if not _spitter_act(player, to_player, delta):
@@ -546,15 +564,21 @@ func _blocked_ahead() -> bool:
 	query.exclude = [get_rid()]
 	return get_world_2d().direct_space_state.intersect_ray(query).is_empty()
 
-## Wind-up, charge, rest. Returns true while the charge sequence owns movement.
-func _charger_act(to_player: Vector2, delta: float) -> bool:
+## Wind-up, charge, rest. A stomper's "charge" is a slam: the windup ends in `_slam` and the rest follows. Returns true while the
+## charge sequence owns movement.
+func _charger_act(player: Node2D, to_player: Vector2, delta: float) -> bool:
 	match _state:
 		"windup":
 			velocity.x = 0.0
 			_state_t -= delta
 			if _state_t <= 0.0:
-				_state = "charge"
-				_state_t = CHARGE_SECONDS
+				if def.stomper:
+					_slam(player)
+					_state = "rest"
+					_state_t = STOMP_REST
+				else:
+					_state = "charge"
+					_state_t = CHARGE_SECONDS
 			return true
 		"charge":
 			_state_t -= delta
@@ -571,6 +595,13 @@ func _charger_act(to_player: Vector2, delta: float) -> bool:
 			if _state_t <= 0.0:
 				_state = ""
 			return true
+	if def.stomper:
+		if is_alert() and absf(to_player.x) <= STOMP_RANGE and absf(to_player.y) <= STOMP_LEVEL:
+			_state = "windup"
+			_state_t = STOMP_WINDUP
+			velocity.x = 0.0
+			return true
+		return false
 	var ahead := to_player.x * facing
 	if is_alert() and absf(to_player.y) < CHARGE_LEVEL and ahead > TURN_LOCK_RANGE and ahead <= CHARGE_RANGE:
 		_state = "windup"
@@ -578,6 +609,13 @@ func _charger_act(to_player: Vector2, delta: float) -> bool:
 		velocity.x = 0.0
 		return true
 	return false
+
+## The drake's slam: a hit on a player standing on the floor in the stomp zone. A player with no floor query (a test stub without
+## is_on_floor) is never grounded.
+func _slam(player: Node2D) -> void:
+	var d := player.global_position - global_position
+	if absf(d.x) <= STOMP_RANGE and absf(d.y) <= STOMP_LEVEL and player.has_method("is_on_floor") and player.is_on_floor():
+		player.receive_hit(stats.get_stat("atk"), "physical", global_position)
 
 ## A slow side-to-side loop about its home; drops a spore puff every PUFF_INTERVAL while the player is near.
 func _drift_act(player: Node2D, to_player: Vector2, delta: float) -> void:

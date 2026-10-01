@@ -31,7 +31,7 @@ static func pick(creature: String, status: int, charge: String, swoop: String, s
 			if charge != "":
 				return charge
 			return "walk" if moving else "idle"
-		"spider":
+		"spider", "taratect":
 			if on_ceiling:
 				return "hang"
 			if not on_floor:
@@ -39,7 +39,7 @@ static func pick(creature: String, status: int, charge: String, swoop: String, s
 			return "crawl"
 		"spore_moth", "pale_moth":
 			return "fly"
-		"mushroom_crab", "cave_crayfish":
+		"mushroom_crab", "cave_crayfish", "gloom_wolf", "armed_ant":
 			if charge != "":
 				return charge
 			return "walk" if moving else "idle"
@@ -61,4 +61,11 @@ static func pick(creature: String, status: int, charge: String, swoop: String, s
 			return "swim"
 		"drift_jelly":
 			return "drift"
+		"stone_drake":
+			match charge:
+				"windup":
+					return "windup"
+				"rest":
+					return "stomp"
+			return "walk" if moving else "idle"
 	return "idle"

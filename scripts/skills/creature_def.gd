@@ -16,7 +16,8 @@ extends Resource
 @export var appraisal_target: bool = true
 ## XP for downing this creature (and again for eating it).
 @export var xp: int = 0
-## Walks and charges with an armored front: a front tackle hurts but does not stun it (the lizard, the crab).
+## The front block: a front tackle hurts but does not stun it. It also makes the creature a charger (the lizard, the crab, the crayfish,
+## the drake); `charges` makes one without the block (the wolf).
 @export var armored_charger: bool = false
 ## Hovers in a slow loop; no gravity while active or stunned (the moths).
 @export var drifter: bool = false
@@ -30,3 +31,9 @@ extends Resource
 @export var projectile: String = ""
 ## Drops a spore puff (the two moths).
 @export var puffs: bool = false
+## Alerts its packmates (same def id, within Enemy.PACK_RADIUS) when it sees the player: the wolves and the ants.
+@export var pack: bool = false
+## A charger with no armored front: a front tackle still stuns it (the wolf).
+@export var charges: bool = false
+## A charger whose "charge" is a ground slam you dodge by being airborne (the drake). Set with `armored_charger`.
+@export var stomper: bool = false

@@ -29,7 +29,7 @@ func test_the_creatures_have_the_approved_numbers() -> void:
 func test_only_the_armored_creatures_charge_and_only_moths_and_the_jelly_drift() -> void:
 	for id in creatures:
 		var c: CreatureDef = creatures[id]
-		assert_eq(c.armored_charger, id == "lizard" or id == "mushroom_crab" or id == "cave_crayfish", id)
+		assert_eq(c.armored_charger, id == "lizard" or id == "mushroom_crab" or id == "cave_crayfish" or id == "stone_drake", id)
 		assert_eq(c.drifter, id == "spore_moth" or id == "pale_moth" or id == "drift_jelly", id)
 
 func test_the_two_skills_match_the_spec() -> void:

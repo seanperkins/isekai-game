@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="CreatureDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/creature_def.gd" id="1_vnojy"]
+
+[resource]
+script = ExtResource("1_vnojy")
+id = "taratect"
+display_name = "Taratect"
+stats = {
+"atk": 9,
+"def": 2,
+"max_hp": 24,
+"spd": 120
+}
+essences = {
+"poison": 2,
+"thread": 3
+}
+skills = [{
+"id": "sticky_thread",
+"level": 1
+}, {
+"id": "ceiling_walk",
+"level": 1
+}]
+eat_bonus = {
+"amount": 2,
+"per": 1,
+"stat": "atk"
+}
+xp = 12

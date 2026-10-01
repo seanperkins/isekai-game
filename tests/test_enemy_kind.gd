@@ -6,7 +6,8 @@ const KINDS := {"bat": Enemy.Kind.SWOOPER, "toad": Enemy.Kind.SPITTER, "lizard":
 	"spider": Enemy.Kind.DROPPER, "water_pool": Enemy.Kind.WALKER, "serpent": Enemy.Kind.WALKER,
 	"spore_moth": Enemy.Kind.DRIFTER, "mushroom_crab": Enemy.Kind.CHARGER, "vine_snake": Enemy.Kind.SNAKE,
 	"pale_moth": Enemy.Kind.DRIFTER, "cave_crayfish": Enemy.Kind.CHARGER, "drift_jelly": Enemy.Kind.DRIFTER,
-	"glass_eel": Enemy.Kind.SWOOPER, "bog_lizardman": Enemy.Kind.SPITTER, "storm_eel": Enemy.Kind.SWOOPER}
+	"glass_eel": Enemy.Kind.SWOOPER, "bog_lizardman": Enemy.Kind.SPITTER, "storm_eel": Enemy.Kind.SWOOPER,
+	"gloom_wolf": Enemy.Kind.CHARGER, "armed_ant": Enemy.Kind.WALKER, "stone_drake": Enemy.Kind.CHARGER, "taratect": Enemy.Kind.DROPPER}
 
 var creatures := {}
 var skills_by_id := {}
@@ -50,3 +51,9 @@ func test_no_def_combines_behaviours_one_kind_cannot_express() -> void:
 		if id != "vine_snake" and f["ceiling"]:
 			assert_false(f["flight"] or f["drifter"] or f["armored"] or f["spit"], "%s: a ceiling walker falls through to a walker after it drops" % id)
 		assert_false(f["armored"] and f["spit"], "%s: an armored charger that also spits would need two live states" % id)
+		var c: CreatureDef = creatures[id]
+		if c.stomper:
+			assert_true(c.armored_charger or c.charges, "%s: a stomper is a charger" % id)
+			assert_false(f["spit"], "%s: a stomper that also spits would need two live states" % id)
+		if c.charges:
+			assert_false(f["spit"] or f["flight"] or f["drifter"] or f["ceiling"], "%s: a charges creature is only a charger" % id)

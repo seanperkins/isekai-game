@@ -1,0 +1,16 @@
+{
+ "canonical": "assets/sprites/lizard_1.png",
+ "style": "Modern pixel art with soft lighting (Style D): a heavy wingless stone drake, a squat four-legged dragon with rough grey-brown rock plates over its back and head, a blunt horned snout, thick clawed legs, a short heavy tail, dim amber eyes, a clean dark outline, chunky readable pixels, gentle highlights and shading. Match the palette, outline weight and rendering of the reference image (an armored lizard) but draw this drake. Side view, the creature facing right. Draw only the creature: no ground, no shadow, no effects.",
+ "anchor": "idle_1",
+ "frames": [
+  {"name": "idle_1", "width": 72, "refs": [], "prompt": "The drake standing still on all four legs, head low and level, tail resting behind it."},
+  {"name": "walk_1", "width": 72, "refs": ["idle_1"], "prompt": "The same drake mid-plod, near foreleg lifted and reaching forward, head swaying low."},
+  {"name": "walk_2", "width": 72, "refs": ["idle_1"], "prompt": "The same drake mid-plod, all four feet planted under the heavy body."},
+  {"name": "walk_3", "width": 72, "refs": ["idle_1"], "prompt": "The same drake mid-plod, far foreleg lifted and reaching forward, head swaying low."},
+  {"name": "windup_1", "width": 72, "refs": ["idle_1"], "prompt": "The same drake rearing up on its hind legs, both forelegs raised high above its head, claws spread, mouth open, the rock plates rattling apart, about to slam down."},
+  {"name": "stomp_1", "width": 76, "refs": ["idle_1", "windup_1"], "prompt": "The same drake crashing down onto its forelegs: both fists planted on the ground, the body hunched low over them, cracks and dust bursting out from under its claws."},
+  {"name": "stunned", "width": 72, "refs": ["idle_1"], "prompt": "The same drake dazed: head sagging, eyes crossed, legs wobbling, a few stars above its horns."},
+  {"name": "hurt", "width": 72, "refs": ["idle_1"], "prompt": "The same drake flinching in pain, head thrown back, eyes squeezed shut, rock plates jarred loose."},
+  {"name": "downed", "width": 76, "refs": ["idle_1"], "prompt": "The same drake collapsed on its side, legs limp, the amber glow of its eyes gone out."}
+ ]
+}

@@ -1,0 +1,8 @@
+{
+ "canonical": "art_source/skill_icons_d.png",
+ "style": "Modern pixel art with soft lighting (Style D), exactly matching the skill icons in the reference sheet: a single square skill icon, a dark navy rounded-square badge with a thin bright outline, and one glowing item centred inside it, chunky readable pixels, gentle highlights. Draw exactly one icon, centred, filling most of the frame.",
+ "anchor": "icon_tremor",
+ "frames": [
+  {"name": "icon_tremor", "width": 128, "refs": [], "prompt": "A skill icon of a cracked slab of earth split by a jagged fissure, rock chunks flying up from it and amber shock rings spreading out along the ground."}
+ ]
+}

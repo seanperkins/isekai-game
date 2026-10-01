@@ -32,8 +32,8 @@ every room.
 ## Decor
 
 Decor is the standing and hanging pieces (crystals, fungus, hanging roots, stalactites) drawn in front of the back wall. The catalog the
-editor offers is `DecorLib.CATALOG` in `scripts/world/decor_lib.gd`: 46 rows, `id -> {anchor, light}`. The 31 ids the shipped rooms use
-are pinned to the data by `tests/test_decor_lib.gd`; the other 15 (all of `deep_*`, `flooded_wall_crystal`, 5 grotto ids and `crystal_purple`)
+editor offers is `DecorLib.CATALOG` in `scripts/world/decor_lib.gd`: 46 rows, `id -> {anchor, light}`. The 39 ids the shipped rooms use
+are pinned to the data by `tests/test_decor_lib.gd`; the other 7 (`flooded_wall_crystal`, 5 grotto ids and `crystal_purple`)
 are chosen, not pinned. An id belongs to a biome by its `<biome>_` prefix (none means cave). A new biome's art needs rows there. A
 bottom-anchored piece stands on its position and a top-anchored one hangs from it; the editor places them on the surface below or the
 rock above the click. An id outside the catalog is lint's `decor_unknown` and the builder skips it.
@@ -102,6 +102,12 @@ These are the choices in the data that a test does not catch and a casual edit w
 | F1 Seep Mouth | 2x1, cell (10, 8) | the landing under G4's drop with a chain up to it; the Flooded's rebirth pool; crayfish; the learning pool (a deep pool with a far bank) with two jellies |
 | F2 Sump | 1x2, cell (12, 7) | the Swim door: a water column from the floor to the top exit (gate `swim`), two eels, no solid inside it |
 | F3 Eel Run | 3x1, cell (12, 6) | a long flooded corridor: eels and jellies, stair-ledges climbing out of the water, the floor hole where F2's column arrives |
-| F4 Marsh Hall | 2x1, cell (15, 6) | dry platforms and the lizardmen's posts, crayfish; a floor hole with a chain down to F5; a second water column (x 430-610) up to F6 (gate `swim`) |
-| F5 Quiet Pool | 1x1, cell (15, 7) | the area's last room: a Glow Pool, the tablet, a small eel pool and two lizardmen; the chain up to F4 |
+| F4 Marsh Hall | 2x1, cell (15, 6) | dry platforms and the lizardmen's posts, crayfish; a floor hole with a chain down to F5; a second water column (x 430-610) up to F6 (gate `swim`); a floor-height doorway in its east wall into the Deep (D1) |
+| F5 Quiet Pool | 1x1, cell (15, 7) | a rest nook off F4: a Glow Pool, the tablet, a small eel pool and two lizardmen; the chain up to F4 |
 | F6 Storm Pocket | 1x1, cell (15, 5) | the rare room above F4's column (gate `swim`): a pool with stair-ledges and the Storm Eel; it never counts toward the pacing rule |
+| D1 Gloom Gate | 1x1, cell (17, 6) | the landing east of F4's marsh hall (a floor-height doorway at y 240-320); the Deep's rebirth pool (kit: Leap, Wall Cling, Swim and Tremor at level 5) and three Armed Ants |
+| D2 Wolf Run | 2x1, cell (18, 6) | a long hall of three Gloom Wolves and three ants; low ledges to jump a charge |
+| D3 the Sinkhole | 1x2, cell (20, 6) | a tall shaft climbed both ways: a ledge flush with the west wall at the door's floor height (y 320) and a chain of hops down to the floor; a Stone Drake on its shelf and three ants |
+| D4 the Den | 2x1, cell (21, 7) | four wolves and a drake under a stair of platforms: the pack is the room's danger |
+| D5 the Heart | 1x1, cell (23, 7) | the world's last room for now: a Glow Pool, the tablet (hint Tremor), a drake and two wolves |
+| D6 the Hollow | 1x1, cell (19, 5) | the rare room above D2's chimney (gate `wall_cling`: two walls hang from the ceiling to 80 px above D2's floor, an arch you walk under; the top exit between them is D6's floor hole); the Taratect hangs here; it never counts toward the pacing rule |

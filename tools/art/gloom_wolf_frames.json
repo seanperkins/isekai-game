@@ -1,0 +1,18 @@
+{
+ "canonical": "assets/sprites/lizard_1.png",
+ "style": "Modern pixel art with soft lighting (Style D): a lean cave wolf with thick near-black fur, a faint violet star-shaped mark on its forehead, pale glowing violet eyes, pointed ears, a bushy tail, bared white fangs, a clean dark outline, chunky readable pixels, gentle highlights and shading. Match the palette, outline weight and rendering of the reference image (an armored lizard) but draw this wolf. Side view, the creature facing right. Draw only the creature: no ground, no shadow, no effects.",
+ "anchor": "idle_1",
+ "frames": [
+  {"name": "idle_1", "width": 54, "refs": [], "prompt": "The wolf standing alert on all four legs, head level, ears pricked, tail low."},
+  {"name": "walk_1", "width": 54, "refs": ["idle_1"], "prompt": "The same wolf mid-trot, near foreleg reaching forward, head low."},
+  {"name": "walk_2", "width": 54, "refs": ["idle_1"], "prompt": "The same wolf mid-trot, legs gathered under the body."},
+  {"name": "walk_3", "width": 54, "refs": ["idle_1"], "prompt": "The same wolf mid-trot, far foreleg reaching forward, head low."},
+  {"name": "windup_1", "width": 54, "refs": ["idle_1"], "prompt": "The same wolf crouched low on its haunches, shoulders down, head lowered, fangs bared, the star mark flaring bright, about to spring."},
+  {"name": "charge_1", "width": 62, "refs": ["idle_1"], "prompt": "The same wolf leaping forward at full speed: body stretched long and low, forelegs reaching, jaws open wide.", "attack_from": 0.55},
+  {"name": "charge_2", "width": 62, "refs": ["idle_1", "charge_1"], "prompt": "The same wolf mid-bound a stride later, hind legs driving, jaws snapping, the fur streaming back.", "attack_from": 0.55},
+  {"name": "rest_1", "width": 54, "refs": ["idle_1"], "prompt": "The same wolf panting after a lunge: head hanging low, sides heaving, tongue out."},
+  {"name": "stunned", "width": 54, "refs": ["idle_1"], "prompt": "The same wolf dazed: legs splayed and wobbling, eyes crossed, tongue lolling, a few stars above its head."},
+  {"name": "hurt", "width": 54, "refs": ["idle_1"], "prompt": "The same wolf flinching in pain, ears flat, eyes squeezed shut, body twisted away."},
+  {"name": "downed", "width": 56, "refs": ["idle_1"], "prompt": "The same wolf collapsed on its side, legs limp, tongue out, the violet glow gone dim."}
+ ]
+}

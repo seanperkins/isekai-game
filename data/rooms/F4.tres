@@ -8,7 +8,7 @@ id = "F4"
 area = "flooded"
 cell = Vector2i(15, 6)
 size = Vector2i(2, 1)
-solids = [Rect2(680, 266, 100, 12), Rect2(900, 266, 100, 12), Rect2(1120, 266, 100, 12), Rect2(790, 212, 80, 12)]
+solids = [Rect2(680, 266, 100, 12), Rect2(900, 266, 100, 12), Rect2(1120, 266, 76, 12), Rect2(790, 212, 80, 12)]
 decor = [{
 "id": "flooded_puddle_glow",
 "light": Color(0.3, 1, 0.9, 1),
@@ -32,7 +32,7 @@ decor = [{
 }, {
 "id": "flooded_flowers",
 "light": Color(1, 0.85, 0.4, 1),
-"pos": Vector2(1230, 320)
+"pos": Vector2(1090, 320)
 }, {
 "anchor": "top",
 "id": "flooded_root_hang",
@@ -53,7 +53,7 @@ spawns = [{
 "pos": Vector2(1160, 254)
 }, {
 "id": "bog_lizardman",
-"pos": Vector2(1235, 308)
+"pos": Vector2(1100, 308)
 }, {
 "id": "cave_crayfish",
 "pos": Vector2(120, 308)
@@ -80,5 +80,10 @@ exits = [{
 "gate": "swim",
 "room": "F6",
 "to": 600.0
+}, {
+"edge": "right",
+"from": 240.0,
+"room": "D1",
+"to": 320.0
 }]
 water = [Rect2(430, 0, 180, 320)]

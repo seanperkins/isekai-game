@@ -199,7 +199,8 @@ func test_tabs_cycle_through_all_five() -> void:
 	assert_eq(screen.tab(), "sound")
 
 func test_sheet_only_creatures_have_a_bestiary_portrait() -> void:
-	for id in ["bat", "toad", "lizard", "spider", "serpent", "spore_moth", "mushroom_crab", "vine_snake"]:
+	for id in ["bat", "toad", "lizard", "spider", "serpent", "spore_moth", "mushroom_crab", "vine_snake",
+			"gloom_wolf", "armed_ant", "stone_drake", "taratect"]:
 		var t := SkillScreen.portrait_texture(id)
 		assert_not_null(t, id)
 		assert_gt(t.get_size().x, 8.0, id)
@@ -249,3 +250,9 @@ func test_swim_and_jolt_read_in_the_skill_screens_own_words() -> void:
 	assert_eq(SkillScreenModel.effect_lines(by_id["jolt"], 1), ["Damage 3"], "ATK 1, power 3")
 	assert_eq(SkillScreenModel.condition_text(by_id["swim"], by_id), "Spend time underwater ×20")
 	assert_eq(SkillScreenModel.condition_text(by_id["jolt"], by_id), "Absorb shock essence ×4")
+
+func test_tremor_reads_as_damage_scaled_by_attack() -> void:
+	var tremor: SkillDef = DefLoader.load_dir("res://data/skills").filter(func(d): return d.id == "tremor")[0]
+	assert_eq(SkillScreenModel.effect_lines(tremor, 1), ["Damage 3"], "ATK 1: the table value")
+	assert_eq(SkillScreenModel.effect_lines(tremor, 1, 5), ["Damage 6"], "3 x 200 / 100")
+	assert_eq(SkillScreenModel.condition_text(tremor, {"tremor": tremor}), "Absorb earth essence ×24")

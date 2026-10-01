@@ -10,13 +10,13 @@ func _shipped_decor() -> Array:
 			out.append({"room": id, "d": d})
 	return out
 
-func test_the_31_shipped_decor_ids_are_pinned_to_the_catalog() -> void:
+func test_the_39_shipped_decor_ids_are_pinned_to_the_catalog() -> void:
 	var ids := {}
 	for item in _shipped_decor():
 		var d: Dictionary = item["d"]
 		ids[d["id"]] = true
 		assert_eq(DecorLib.entry(d["id"], d["pos"]), d, "%s in %s" % [d["id"], item["room"]])
-	assert_eq(ids.size(), 31)
+	assert_eq(ids.size(), 39)
 
 func test_every_row_has_a_sprite_a_valid_anchor_and_a_light_that_is_absent_or_a_color() -> void:
 	assert_eq(DecorLib.CATALOG.size(), 46)

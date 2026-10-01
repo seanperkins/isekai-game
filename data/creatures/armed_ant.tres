@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="CreatureDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/creature_def.gd" id="1_a8p51"]
+
+[resource]
+script = ExtResource("1_a8p51")
+id = "armed_ant"
+display_name = "Armed Ant"
+stats = {
+"atk": 3,
+"def": 2,
+"max_hp": 9,
+"spd": 90
+}
+essences = {
+"armor": 1,
+"earth": 1
+}
+eat_bonus = {
+"amount": 1,
+"per": 3,
+"stat": "def"
+}
+xp = 3
+pack = true

@@ -157,6 +157,12 @@ func _skills() -> Array:
 			"unlock": [_c("absorbed", 4, {"essence": "shock"})],
 			"levels_on": _on("skill_used", {"id": "jolt"}), "level_curve": 8, "max_level": 5,
 			"effects": [_active("jolt", [3, 4, 5, 6, 7])], "mp_cost": 5}),
+		_s({"id": "tremor", "display_name": "Tremor", "source": "essence", "hidden": false,
+			"description": "Slam the ground: everything standing near you is hurt through its armor and stunned.", "hint": "The ground feels heavier underfoot.",
+			"announce": "Analysis complete. Acquired [Tremor].",
+			"unlock": [_c("absorbed", 24, {"essence": "earth"})],
+			"levels_on": _on("skill_used", {"id": "tremor"}), "level_curve": 8, "max_level": 5,
+			"effects": [_active("tremor", [3, 4, 5, 6, 7])], "mp_cost": 5}),
 		# --- Evolutions (each replaces its parent; siblings unlock together on it) ---
 		_s({"id": "water_blade", "display_name": "Water Blade", "source": "evolution",
 			"description": "Fire a blade of water.", "hint": "",
@@ -228,6 +234,8 @@ static func _scaled(base: int, level: int) -> int:
 const GROTTO_LEVEL := 4
 ## The Flooded Tunnels' creatures are level 7: the spec's numbers are level-1 bases, scaled as the Grotto's are.
 const FLOODED_LEVEL := 7
+## The Deep's creatures are level 10.
+const DEEP_LEVEL := 10
 
 func _cr(f: Dictionary) -> CreatureDef:
 	var c := CreatureDef.new()
@@ -280,6 +288,19 @@ func _creatures() -> Array:
 		_cr({"id": "storm_eel", "display_name": "Storm Eel", "stats": _at_level(FLOODED_LEVEL, {"max_hp": 10, "atk": 4, "def": 1, "spd": 160}),
 			"essences": {"shock": 3, "water": 2}, "skills": [], "swimmer": true, "contact_type": "shock",
 			"eat_bonus": {"stat": "spd", "amount": 2, "per": 1}, "xp": 10}),
+		_cr({"id": "gloom_wolf", "display_name": "Gloom Wolf", "stats": _at_level(DEEP_LEVEL, {"max_hp": 6, "atk": 3, "def": 0, "spd": 100}),
+			"essences": {"sound": 1, "earth": 1}, "skills": [], "charges": true, "pack": true,
+			"eat_bonus": {"stat": "spd", "amount": 2, "per": 2}, "xp": 6}),
+		_cr({"id": "armed_ant", "display_name": "Armed Ant", "stats": _at_level(DEEP_LEVEL, {"max_hp": 5, "atk": 2, "def": 1, "spd": 90}),
+			"essences": {"armor": 1, "earth": 1}, "skills": [], "pack": true,
+			"eat_bonus": {"stat": "def", "amount": 1, "per": 3}, "xp": 3}),
+		_cr({"id": "stone_drake", "display_name": "Stone Drake", "stats": _at_level(DEEP_LEVEL, {"max_hp": 16, "atk": 4, "def": 3, "spd": 40}),
+			"essences": {"earth": 3, "armor": 1}, "skills": [], "armored_charger": true, "stomper": true,
+			"eat_bonus": {"stat": "max_hp", "amount": 1, "per": 1}, "xp": 12}),
+		_cr({"id": "taratect", "display_name": "Taratect", "stats": _at_level(DEEP_LEVEL, {"max_hp": 14, "atk": 5, "def": 1, "spd": 120}),
+			"essences": {"thread": 3, "poison": 2},
+			"skills": [{"id": "sticky_thread", "level": 1}, {"id": "ceiling_walk", "level": 1}],
+			"eat_bonus": {"stat": "atk", "amount": 2, "per": 1}, "xp": 12}),
 		_cr({"id": "water_pool", "display_name": "Water Pool", "stats": {},
 			"essences": {"water": 2}, "skills": [], "eat_bonus": {}}),
 		_cr({"id": "serpent", "display_name": "Cave Serpent", "stats": {"max_hp": 40, "atk": 6, "def": 1, "spd": 90},
