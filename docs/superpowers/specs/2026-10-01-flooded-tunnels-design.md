@@ -1,6 +1,6 @@
 # The Flooded Tunnels — Design
 
-Status: revised after debate round 2 (2026-10-01). Sub-project 6, the third area. It builds on the exploration spec
+Status: revised after debate round 3 (2026-10-01). Sub-project 6, the third area. It builds on the exploration spec
 (`2026-09-28-exploration-world-design.md`: the Flooded Tunnels, deep water, Swim, the shock creatures), the Fungal Grotto
 (`2026-09-29-fungal-grotto-design.md`: the template for an area, its pacing and its climb chains) and the room editor
 (`2026-10-01-room-editor-p3-design.md`: a new biome is data, so the area is authored with the editor's model). The art for the biome already
@@ -32,7 +32,7 @@ smaller and not optional: water survives every editor operation, shows in the ro
 | Entry | G4's floor opens: a `bottom` exit from G4 to F1's `top`, two-way (a ledge chain under the drop, the same `Prefabs` stamp the Grotto's chains use) |
 | Rooms | F1 Seep Mouth (2×1), F2 Sump (1×2, a water column), F3 Eel Run (3×1), F4 Marsh Hall (2×1), F5 Quiet Pool (1×1, holds the tablet; the area's last room); slice: F6 Storm Pocket (1×1, above F4) |
 | Water | `RoomDef.water`: deep water rects. Shallow water is decor only (the `flooded_*` decor and the tile art), as in the exploration spec |
-| Swim | A proficiency learned by being underwater (`submerged` ×20). Water cannot trap anyone, because twenty seconds in it teaches the way out. A water column is the Swim door; the Grotto's rule applies to it (a graph label, and other traversal skills may pass). A swimmer can always leave: lint's `water_exit` requires every water to have a way out |
+| Swim | A proficiency learned by being underwater (`submerged` ×20). Water cannot trap anyone, because twenty seconds in it teaches the way out. A water column is the Swim door; the Grotto's rule applies to it (a graph label, and other traversal skills may pass). A swimmer can always leave the rect: lint's `water_exit` and a world test require it |
 | Shock | A new damage type (armor already applies to physical only), a new essence `shock`, and Jolt, the player's burst. A shock hit also locks the player's walk and swim input for 0.3 s |
 | Creatures | Glass Eel, Cave Crayfish, Drift Jelly, Bog Lizardman; in the slice the rare Storm Eel (a derived sheet of the Glass Eel, no new drawing) |
 | Art | The creatures' frames are generated one at a time (the Grotto's pipeline), assembled into sheets with traced shapes. Tiles, backgrounds and decor exist; `simple_layers` is on, so no dressing library is needed. Two skill icons (Swim, Jolt) |
@@ -76,12 +76,16 @@ rooms.
 - The two floor holes (G4→F1 and F4→F5) each get a ledge chain back up, from the `Prefabs` stamp, with the Grotto's geometry rules (the
   top ledge at local y 12–15, flush with the span's west edge, every hop at most 55 px rise). A new **directed** reachability test covers the
   two chains.
-- A **non-swimmer** is never stuck in water: 20 s in any water teaches Swim (`submerged` accrues across visits). A **swimmer** is never stuck
-  either, by a lint rule: `water_exit` requires every water rect either to cross an exit span on the room edge, or to have a **shore** —
-  a standable top (the floor, a ledge, a solid's top) within 24 px horizontally of the rect and between `SURFACE_LIFT` above its top edge and
-  24 px below it. `SURFACE_LIFT` is derived: the surface jump's apex, `JUMP_VELOCITY² / (2 · GRAVITY)` = 60.5 px, less the body's 12 px above
-  its feet = 48 px. Water rects may not overlap (so a rect's top edge is always a real surface). The learning pool, F3's water and F5's
-  eel pool each have a shore.
+- A **non-swimmer** is never stuck in water: 20 s in any water teaches Swim (`submerged` accrues across visits). A **swimmer** is never
+  stuck either, by a lint rule: `water_exit` requires every water rect either to cross an **open exit span** on the room edge (no
+  `shortcut`, and no gate but `swim`), or to have a **shore**: a standable top (the floor, a ledge, a solid's top) within 24 px
+  horizontally of the rect whose top lies between `SURFACE_LIFT` above the rect's top edge and `BodyConfig.BOTTOM` (12 px) below it (a
+  ledge deeper than that leaves the standing body still in water). `SURFACE_LIFT` is computed in code, as the Grotto's `T` is, from
+  `Player.JUMP_VELOCITY`, `Player.GRAVITY` and `BodyConfig.BOTTOM`, less a 4 px margin: `⌊330² / (2 · 900) − 12 − 4⌋` = 44 px. It assumes
+  the surface jump has full velocity when the centre crosses the surface, which holds because a swimmer has no gravity inside the rect.
+  Water rects in a room may not overlap **or touch** (`intersects(b, true)`), so a rect's top edge is always a real surface. Because the
+  exit clause is room-local, an **authored-world test** joins the water rects across exit spans and asserts every connected group holds a
+  shore (F2's column ends in F3's water, which has one). The learning pool, F3's water and F5's eel pool each have a shore.
 - A water column's door is **structural**, derived like the Grotto's chimney `T`: the bob's apex is
   `B = BOB_VELOCITY² · (jump_height / 100) / (2 · GRAVITY · WATER_GRAVITY)` at the true maximum jump height over all stages (stage 4
   Storm with Leap 10: 185) = 160² · 1.85 / (2 · 900 · 0.35) = 75.2 px. A new **gate test** (F2's column, and F4's in the slice) asserts the
@@ -89,6 +93,11 @@ rooms.
   edge; (b) no solid lies inside the column between its floor and its sill, and the sill is at least `B + 3` above the floor (a guard on a
   later edit, not a design number); (c) the existing hop model over the room's dry surfaces cannot reach the exit without water. A swimmer
   needs nothing else. The two chains' feet and ledges stand on dry floor, outside every water rect (the chain test asserts it).
+- `B` is the bound only if nothing carries a dry jump's speed into the water: a base jump (−330) entering a column keeps most of it, and
+  at 0.35 gravity it rises `330² · (jump_height / 100) / (2 · 900 · 0.35)` = 173 px at base and 320 px at stage 4, far over `B`. So on the
+  in-water **entry edge**, without Swim, `PlayerWater` caps the upward speed at the bob (`velocity.y = maxf(velocity.y, −BOB_VELOCITY ·
+  boost)`). A Water test pins it ("a dry jump into water rises no higher than `B`"). The cap is on entry only: Hydraulic Propulsion fired
+  mid-water keeps the ruling below.
 - A **Wall Cling** wall jump is a dry-land move: in water, without Swim, a wall gives no bob, so Wall Cling alone does not climb a column. Other
   traversal skills (Hydraulic Propulsion, whose impulse is not damped in water, and threads) may pass the column, exactly as Wall Cling,
   Sticky Thread and Hydraulic Propulsion may reach G5 and C3. The column is a door for Swim, not a wall against everything.
@@ -97,7 +106,7 @@ rooms.
 
 - `RoomDef.water` is an array of `Rect2` (local px), each at least 32×32 and inside the room. `RoomBuilder.build_room` builds one **`DeepWater`**
   per rect: a `Node2D` holding its rect in group `deep_water`, drawn as a translucent tint with a lighter surface line and bubbles while the
-  player is under; solids draw in front of it. `DeepWater.at(tree, world_point)` (the node or null; `contains` wraps it) is the one query everything uses, and the confinement clamp reads the node's rect.
+  player is under; solids draw in front of it. `DeepWater.at(tree, world_point)` (the node or null) is the one query everything uses: the surface test, the confinement clamp and the eel's "same rect" check all want the node or its rect.
 - The player is **in water** while the centre of its body is inside a water rect. The water model is one collaborator, **`PlayerWater`**
   (a `RefCounted`, like `PlayerSensors` and `Rope`), which owns the in-water state, the `submerged` clock, the edges and the constants
   (`WATER_GRAVITY`, `BOB_VELOCITY`, `SURFACE_REACH`) and exposes three calls: step the clock and edges, adjust the frame's velocity, answer
@@ -108,8 +117,8 @@ rooms.
 - **With Swim** (a capability `swim` plus a modifier on a new stat `swim_speed`, base 120, values `[0, 30, 60]` by level, so 120 / 150 /
   180 px/s): in water, no gravity and 8-way movement from the same stick or keys that steer (`move_left`, `move_right`, `aim_up`,
   `aim_down`; the right stick still aims). Jump while the body centre is within `SURFACE_REACH` (24 px) of the top edge of its water rect
-  launches out of it at the normal jump velocity; swim input is ignored (the launch stays ballistic) until the centre leaves the rect, so the
-  next frame's input cannot overwrite it.
+  launches out of it at the normal jump velocity; swim input is ignored (the launch stays ballistic, with no gravity until the centre leaves the
+  rect) so the next frame's input cannot overwrite it.
 - `submerged` is a new player event in `Events.ALL`, emitted once per second spent in water by the player only (the Events doc, which says
   every event is edge-triggered, learns this one is periodic). Swim is a proficiency: `submerged` ×20 to unlock, ×40 per level, max 3.
 - No drowning and no damage from water. Entering and leaving water emit the existing audio-only world events `water_entered` and
@@ -127,8 +136,8 @@ New ids: `glass_eel`, `cave_crayfish`, `drift_jelly`, `bog_lizardman` (and `stor
 |---|---|---|---|---|---|---|---|
 | Glass Eel | 4 | 2 | 0 | 140 | shock 1, water 1 | 3 | The bat's swooper, confined to its water rect: it bobs until you are in the same rect and in sight, then stalks above you, flashes (the telegraph) and dives at where you were, then climbs back. Contact is 2 shock |
 | Cave Crayfish | 9 | 3 | 3 | 60 | shell 1, water 1 | 5 | The Crab's armored charger on its own numbers and sheet: patrols, telegraphs, lunges when level with you; stunned only from behind |
-| Drift Jelly | 3 | 2 | 0 | 30 | shock 1, water 2 | 3 | The moth's drifter (no gravity, a vertical bob, a slow loop) confined to its water rect. Stings on contact (2 shock) and cannot be tackled: a tackle skips it (it is not a target) and touching it hurts. Jolt, or a thread at level 3, will stun it |
-| Bog Lizardman | 7 | 3 | 1 | 80 | earth 1, water 1 | 5 | The toad's spitter with a spear (below): patrols a short beat and faces you but never chases; in sight and level (within 40 px vertically, 140 px away) it raises its spear (the windup), throws it flat at where you were (the throw pose), and waits 3 s. Not armored: a front tackle stuns it |
+| Drift Jelly | 3 | 2 | 0 | 30 | shock 1, water 2 | 3 | The moth's drifter (no gravity, a vertical bob, a slow loop) confined to its water rect. Stings on contact (2 shock) and cannot be tackled: a tackle skips it (it is not a target) and touching it hurts. Jolt downs it outright (3 damage against 3 HP), and Sticky Thread from level 3 or Swing Thread stuns it |
+| Bog Lizardman | 7 | 3 | 1 | 80 | earth 1, water 1 | 5 | The toad's spitter with a spear (below): patrols a short beat and, once alerted, stands still facing you (it never chases); in sight and level (within 40 px vertically, 140 px away) it raises its spear (the windup), throws it flat at where you were (the throw pose), and waits 3 s. Not armored: a front tackle stuns it |
 | Storm Eel (rare, slice) | 10 | 4 | 1 | 160 | shock 3, water 2 | 10 | The Glass Eel's behaviour on a lightened, enlarged derived sheet; it hits harder through ATK |
 
 First-time value per spawn is twice the XP (down plus eat, paid once each): eel 6, crayfish 10, jelly 6, lizardman 10, storm eel 20.
@@ -140,26 +149,31 @@ First-time value per spawn is twice the XP (down plus eat, paid once each): eel 
   lizardman) and `puffs` (the two moths: the spore puff in `_drift_act` is gated on it, so the jelly drifts without puffing). The crayfish
   reuses `armored_charger`.
 - **Contact and shock.** `Enemy`'s contact hit reads `def.contact_type` where it now hard-codes `"physical"`. The stun is applied where the
-  hit is accepted, inside `Player.receive_hit` after its invulnerability guard: for `damage_type == "shock"` it does `_dash = maxf(_dash,
-  SHOCK_STUN)` (a constant 0.3), the same lock a hit's knockback already uses (no walk input, no swim input velocity while it runs). So a
-  contact that runs every frame cannot re-arm it through the invulnerability, and there is no `Player.shock` or `shock_stun`. The lock is
-  deliberately light (it adds about 0.1 s over a physical hit's knockback lock); gating the other actions is a later change if a playtest
-  says so. `test_hit_fairness` mirrors the contact call and follows the `contact_type` read.
+  hit is accepted, inside `Player.receive_hit` after its invulnerability guard **and after the knockback block** (which assigns `_dash =
+  0.2` and would overwrite an earlier 0.3): for `damage_type == "shock"` it does `_dash = maxf(_dash, SHOCK_STUN)` (a constant 0.3), the lock a
+  hit's knockback already uses (no walk input, no swim input velocity, no tackle: `do_tackle` refuses while `_dash > 0`). So a contact that
+  runs every frame cannot re-arm it through the invulnerability, and there is no `Player.shock` or `shock_stun`. The lock is deliberately
+  light (0.1 s over a physical hit's); locking jump and skills too is a later change if a playtest says so. A test asserts `_dash >=
+  SHOCK_STUN` after a shock contact that carries a `from`. `test_hit_fairness` stays as it is (its four creatures are all physical).
 - **Eels are swoopers.** `_resolve_kind` becomes `capabilities.has("flight") or def.swimmer` after the drifter check, so the jelly stays a
   DRIFTER (it also has `swimmer`) and the eels resolve to SWOOPER with no new Kind, act function or gravity arm (a swooper has none while
   active, and a stunned eel sinks and is eatable). The swooper's `warn` state is the eel's telegraph.
 - **Confinement.** For any creature with `def.swimmer`, the **home water** (the rect holding its position) is resolved on the first
   physics frame (a spawn's position and room are not set when `setup` runs) and its position is clamped to that rect, shrunk by its half
-  body, after every move. The clamp turns it around: an x clamp flips `facing`, a y clamp reverses the vertical target, so a jelly in a
-  narrow rect (the learning pool is about 200 px wide, and the drifter's loop is ±96 px) does not pin itself to a wall. A swimmer with no
+  body, after every move. The clamp holds the position, zeroes the clamped velocity component (a stunned eel's fall does not keep growing against a rect
+  bottom that is not floor) and flips `facing`, which the drifter turns on: a jelly in a narrow rect (the learning pool is about 200 px
+  wide, and the drifter's loop is ±96 px) does not pin itself to a wall. A swooper's dive that is clamped runs out its 0.6 s timer. A swimmer with no
   home water idles, and lint reports it. The eel also needs the player in the same rect to be alerted (one line in `_sense`).
 - **The lizardman is the spitter with a spear.** `_resolve_kind` makes a SPITTER for `_spit_damage > 0` (the toad's `poison_spit`) **or**
   `def.projectile == "spear"`; the lizardman has no `poison_spit` skill (that would put poison in its Appraisal and the compendium). The
   spear's numbers are named constants beside the toad's: `SPEAR_RANGE` 140, `SPEAR_LEVEL` 40 (the vertical band the spitter gains for a
   spear), `SPEAR_COOLDOWN` 3.0, `SPEAR_SPEED` 220; the pose window is derived from the creature's own cooldown
-  (`_spit_cd > cooldown − SPIT_POSE_SECONDS`). A creature with a projectile does not chase in `_walk`: it patrols its beat and turns to
-  face you while alerted. The **`Spear`** extends `SpitBlob`, overriding its launch (a straight line at `SPEAR_SPEED`, no gravity) and its hit
-  (`receive_hit(atk, "physical", position)`); the rock test is the blob's own. `SpitBlob` itself gets no flags.
+  (`_spit_cd > cooldown − SPIT_POSE_SECONDS`). A creature with a projectile does not chase in `_walk`: alerted, it stands still facing you; otherwise it
+  patrols its beat. The **`Spear`** extends `SpitBlob`, which gains two seams for it (a per-instance gravity member and a `_hit(player)`
+  hook, with a look hook for its draw); the spear sets no gravity, strikes with `receive_hit(atk, "physical", position)` (its damage is
+  the creature's ATK, passed through the parent's five-parameter `launch`) and flies a **straight aimed line** at `SPEAR_SPEED` toward
+  where you were; the rock test, the lifetime and `hits` are the blob's own. `_spitter_act` makes a `Spear` where it makes a `SpitBlob`
+  today.
 - **Animation.** `EnemyState.pick` shares arms where the behaviour matches: `cave_crayfish` joins the crab's, `bog_lizardman` the toad's
   (`puff` windup, `spit` throw), the eels map the swooper's `warn` and `dive` to the sheet's `warn` and `dart` (otherwise `swim`), and the
   jelly has its own `drift`. `data/enemy_clips.json` gains each sheet's clips, and the test that walks every creature × every state still
@@ -167,9 +181,11 @@ First-time value per spawn is twice the XP (down plus eat, paid once each): eel 
 - **Tackle.** A creature with `untackleable` is skipped by the player's tackle-target search, so a tackle toward a jelly does nothing and
   never swallows a tackle aimed at a creature behind it.
 - **Jolt.** An ability modelled on `poison_breath`, using a new `Ability.targets_around(radius)` (the radial sibling of
-  `targets_in_front`, so the team and can-be-hit filters are written once): every enemy in range takes `receive_hit(damage, "shock")`, and a
-  creature with `swimmer` also takes `status.stun_at_least(1.5)` (a new `EnemyStatus` helper that never shortens a longer stun, since
-  `stun` overwrites the timer). It never hurts the player. A stunned jelly is eatable, so Jolt is also the jelly's XP.
+  `targets_in_front`, sharing its team and can-be-hit filter through one private helper; `SporeCloudArea` is not touched): every enemy in range takes `receive_hit(damage, "shock")`, and a
+  creature with `swimmer` also takes `status.stun(1.5)`; `EnemyStatus.stun` is changed to keep the longer timer on an already stunned
+  creature (`_timer = seconds if ACTIVE else maxf(_timer, seconds)`; every existing caller stuns an active creature, so nothing else
+  changes), so no second name is needed. It never hurts the player. Jolt downs a jelly outright (3 damage against 3 HP) and a downed
+  jelly is eatable, so Jolt is also the jelly's XP; the stun test uses an eel.
 
 ### Frames (each generated alone, then assembled with a shared per-creature scale)
 
@@ -190,8 +206,9 @@ First-time value per spawn is twice the XP (down plus eat, paid once each): eel 
 
 - `shock` joins `Essences.ALL` (it feeds Jolt). It does not join `RebirthKit.ESSENCES`: no lineage reads it and a kit's seeds only reach the
   affinity, so a shock seed would do nothing. `water` and `shell` already exist.
-- Registration surfaces: `Essences.ALL`, `Events.ALL`, `Sources.ALL`, `StatKeys` and `Stats` (`swim_speed`), the
-  skill screen's stat label and effect text (Swim's speed line), `tools/build_content.gd` (skills and creatures), the icon manifest (Swim
+- Registration surfaces: `Essences.ALL`, `Events.ALL`, `Sources.ALL`, `StatKeys` and `Stats` (`swim_speed`, in px/s: neither the integer nor the percent group, so `stat_keys.gd`'s doc gains a line), the
+  audio catalog (`data/audio/cues.json`: `events.submerged` maps to nothing audible through a `_why:` entry like `_why:inspected`, and
+  `skill_used.jolt` gets its cue), the skill screen's stat label and effect text (Swim's speed line), `tools/build_content.gd` (skills and creatures), the icon manifest (Swim
   and Jolt get icons, generated like the existing ones), `test_skill_caps`'s `TABLE`, `DefValidator`, the compendium.
 - `Damage.hit` already applies armor to `"physical"` only, so shock needs no change there; one test pins it.
 
@@ -248,17 +265,16 @@ One rule, computed by a test from the room data. A spawn's **first-time value** 
 - It is below stage 2's cap, 403, so stage 2's evolution needs more than this area.
 
 A guide, not a contract: F1 2 crayfish and 2 jellies (20 + 12); F2 2 eels (12); F3 4 eels and 3 jellies (24 + 18); F4 4 lizardmen and 3
-crayfish (40 + 30); F5 2 eels and 2 lizardmen (12 + 20) sum to 188. Jellies pay only with a stun source (Jolt, or a thread at level 3), so a life without
+crayfish (40 + 30); F5 2 eels and 2 lizardmen (12 + 20) sum to 188. Jellies pay only with a stun source (Jolt, Sticky Thread from level 3 or Swing Thread), so a life without
 one collects 158 (five jellies at 6), still over 150.
 
 ## Existing tests rescoped
 
 `tests/support/shipped_rooms.gd` (`IDS`, and its docstring's room and rule counts), `test_rooms` (its room id list), `test_constants`
-(`Sources.ALL`, `Essences.ALL`, `Events.ALL`), `test_content` (counts of skills and creatures; its "every essence skill is supplied" check
+(`Sources.ALL`, `Essences.ALL`, `Events.ALL`, `StatKeys.ALL`), `test_audio_catalog` (the new event and skill cues), `test_content` (counts of skills and creatures; its "every essence skill is supplied" check
 learns shock), `test_enemy_sheets` (`SETS`), `test_skill_caps` (`TABLE`), `test_decor_lib` (its used-id pins change when the F rooms use
 `flooded_*` pieces), the rebirth kit tests (the eligibility test skips every pool outside the Grotto and hard-codes G1–G4 as the rooms a life
-eats in: it learns F1 and F1/F2), `test_world_view` (the room count, 11 to 16/17), `test_audio_boundary` (`reserved`), `test_hit_fairness`
-(its contact call follows `contact_type`), `test_enemy_kind` (its idle-for-a-bat assertion becomes idle-for-a-swooper), `test_room_lint`
+eats in: it learns F1 and F1/F2), `test_world_view` (the room count, 11 to 16/17), `test_audio_boundary` (`reserved`), `test_enemy_kind` (its idle-for-a-bat assertion becomes idle-for-a-swooper), `test_room_lint`
 (the rules count, 13 to 16), `test_form_offers`, `test_form_tab` and `test_rebirth_kit` (the scoped supply), and the progression pacing
 tests (the Cave and Grotto rules stay scoped to their areas). The docs and comments that change: `docs/rooms.md` (its gate line says "today
 `wall_cling`"; G4 stops being "the last room"), the Events doc and `player_sensors.gd`'s header ("edge-triggered"), `enemy.gd`'s
@@ -269,7 +285,8 @@ precedence and state-token docs, and `FormOffers`'s header. The count pins move 
 - Data: every room validates; spawn keys unique; the pacing rule; the F1 kit eligibility; the first-evolution areas rule; every world event
   has a cue; no spawn or decor over a floor hole; the three water lint rules, `water_exit` on every authored water rect.
 - Water: a body in a rect is in water, one outside is not; a room change fires no exit-and-enter pair; a surface jump stays ballistic until the
-  centre leaves the rect; each non-swim modifier on the exact constants, with the bob boosted by
+  centre leaves the rect; a dry jump into water rises no higher than `B`; a swimmer surfaces and launches with an eel alerted in the same
+  rect (the bodies block each other); each non-swim modifier on the exact constants, with the bob boosted by
   `jump_height` and no bob from a wall; Swim moves 8-way and leaves at the surface within `SURFACE_REACH`; `submerged` once per second and
   only in water; a non-swimmer who stays 20 s in F2's column learns Swim.
 - Traversal: the directed chain test and the gate test on each column.
@@ -278,7 +295,7 @@ precedence and state-token docs, and `FormOffers`'s header. The count pins move 
   crayfish and lizardman telegraph, the lizardman holds its beat, throws at its own cooldown (the pose shows) and never poisons; the spear
   flies flat, hits physical and dies on rock); every sheet loads with every
   frame; every creature × state has a clip.
-- Skills: Jolt stuns swimmers (never shortening a longer stun), damages the rest and never the player; Swim unlocks and levels from `submerged`.
+- Skills: Jolt stuns an eel (and `stun` never shortens a longer stun), downs a jelly, damages the rest and never the player; Swim unlocks and levels from `submerged`.
 - Editor: water survives snapshot, undo, redo, save and a Grow; the lint rules fire from a room built in a test; and in the slice, the Water
   tool draws, selects, moves, deletes and undoes.
 - Real screenshots of each room, each creature, a swim (in and out of water) and the editor's water.
@@ -286,13 +303,13 @@ precedence and state-token docs, and `FormOffers`'s header. The count pins move 
 ## Build order
 
 1. Data: `RoomDef.water`, `Events.SUBMERGED`, the shock essence, the two skills and four creature defs and their registration, the
-   `CreatureDef` flags, the lint and validator checks, the first-evolution supply scope, the rescoped tests.
+   `CreatureDef` flags, the three lint rules (and the rules-count pin with them) and the validator check, the first-evolution supply scope, the rescoped tests.
 2. Water: `DeepWater`, the builder, `PlayerWater` and its call sites, the shock lock in `receive_hit`, the audio edges.
 3. Art: the four creature frame sets and the two icons, generated in parallel.
 4. Behaviours: the eel's swooper resolution and confinement, the jelly's puff gate, the lizardman's spear, `Jolt`, the clips.
 5. Rooms: F1–F5 authored by script through the editor model (the Water tool is for later hand edits), the stamps and chains, the F2 column and its gate test, the F1 pool and kit, G4's hole
    (moving its contents).
-6. The editor core (water kept, shifted, drawn, linted).
+6. The editor core (water kept, shifted, drawn).
 7. The Water tool (a slice).
 8. The rare slice: the derived Storm Eel sheet, def and clips, F4's second column and F6.
 9. Review, gate, merge.
@@ -302,7 +319,7 @@ precedence and state-token docs, and `FormOffers`'s header. The count pins move 
 - Hydraulic Propulsion and threads may pass a water column (the Grotto's rule for G5 and C3): damping impulses in water is out of scope. Wall
   Cling alone does not (a wall gives no bob in water). Cost if wrong: a water-essence life skips Swim's door.
 - The Swim door is self-teaching: 20 s in the column teaches Swim, so the F1 pool is a convenience and a non-swimmer is never stuck. A
-  swimmer is kept from being stuck by lint (`water_exit`), not by geometry rules in the spec. Cost if wrong: the door costs a delay, not a
+  swimmer is kept from being stuck by lint (`water_exit`) and an authored-world test, not by geometry rules in the spec. Cost if wrong: the door costs a delay, not a
   decision; a data-edited trap is reported by Validate.
 - The supply for the first evolution is scoped to the Cave and Grotto by a constant a test derives (not recomputed from "rooms reachable
   before the first evolution"). Cost if wrong: a fifth area must edit the constant if it feeds the first evolution.
@@ -313,7 +330,8 @@ precedence and state-token docs, and `FormOffers`'s header. The count pins move 
 - The Bog Lizardman stays (the user asked for creatures from these series) but is the toad's spitter with a `Spear extends SpitBlob`, its
   own constants and a no-chase walk, not a new Kind.
 - The gate test's `B` is the true maximum over all stages (75.2 px), a floor guarding later edits, not a design number: the columns are far
-  taller.
+  taller. A dry jump's speed is capped on water entry (without Swim) so `B` is really the bound; Hydraulic Propulsion fired in the water is
+  not capped.
 - The Water tool is a slice, not core; the editor core is the part that keeps water safe.
 - Deferred to a playtest: F2's eels against the 20 s the column asks of a non-swimmer (a damage race, never a trap), and whether the 0.3 s
   shock lock reads as a stun.
