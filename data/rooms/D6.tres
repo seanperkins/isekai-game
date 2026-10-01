@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_t2g7r"]
+
+[resource]
+script = ExtResource("1_t2g7r")
+id = "D6"
+area = "deep"
+cell = Vector2i(19, 5)
+solids = [Rect2(100, 268, 120, 12), Rect2(420, 268, 120, 12)]
+decor = [{
+"id": "deep_bones",
+"pos": Vector2(160, 268)
+}, {
+"id": "deep_glow_fungus",
+"light": Color(0.5, 1, 0.6, 1),
+"pos": Vector2(480, 268)
+}, {
+"id": "deep_stalagmite",
+"pos": Vector2(60, 320)
+}, {
+"anchor": "top",
+"id": "deep_lichen_hang",
+"pos": Vector2(240, 20)
+}, {
+"anchor": "top",
+"id": "deep_root_hang",
+"pos": Vector2(440, 20)
+}]
+spawns = [{
+"id": "taratect",
+"pos": Vector2(320, 32)
+}]
+exits = [{
+"edge": "bottom",
+"from": 280.0,
+"gate": "wall_cling",
+"room": "D2",
+"to": 360.0
+}]

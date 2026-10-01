@@ -7,7 +7,7 @@ const KINDS := {"bat": Enemy.Kind.SWOOPER, "toad": Enemy.Kind.SPITTER, "lizard":
 	"spore_moth": Enemy.Kind.DRIFTER, "mushroom_crab": Enemy.Kind.CHARGER, "vine_snake": Enemy.Kind.SNAKE,
 	"pale_moth": Enemy.Kind.DRIFTER, "cave_crayfish": Enemy.Kind.CHARGER, "drift_jelly": Enemy.Kind.DRIFTER,
 	"glass_eel": Enemy.Kind.SWOOPER, "bog_lizardman": Enemy.Kind.SPITTER, "storm_eel": Enemy.Kind.SWOOPER,
-	"gloom_wolf": Enemy.Kind.CHARGER, "armed_ant": Enemy.Kind.WALKER, "stone_drake": Enemy.Kind.CHARGER}
+	"gloom_wolf": Enemy.Kind.CHARGER, "armed_ant": Enemy.Kind.WALKER, "stone_drake": Enemy.Kind.CHARGER, "taratect": Enemy.Kind.DROPPER}
 
 var creatures := {}
 var skills_by_id := {}

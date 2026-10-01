@@ -1,0 +1,18 @@
+{
+ "derive_from": "spider",
+ "tint": [95, 45, 150],
+ "tint_amount": 0.5,
+ "anchor": "crawl_1",
+ "frames": [
+  {"name": "hang_1", "width": 43, "refs": []},
+  {"name": "hang_2", "width": 43, "refs": []},
+  {"name": "drop", "width": 47, "refs": []},
+  {"name": "crawl_1", "width": 65, "refs": []},
+  {"name": "crawl_2", "width": 61, "refs": []},
+  {"name": "crawl_3", "width": 65, "refs": []},
+  {"name": "crawl_4", "width": 61, "refs": []},
+  {"name": "stunned", "width": 58, "refs": []},
+  {"name": "hurt", "width": 58, "refs": []},
+  {"name": "downed", "width": 58, "refs": []}
+ ]
+}

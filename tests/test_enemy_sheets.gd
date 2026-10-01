@@ -3,7 +3,7 @@ extends GutTest
 ## line, with shapes inside the frame, and every clip uses frames that exist.
 
 const SETS := ["bat", "toad", "lizard", "spider", "spore_moth", "mushroom_crab", "vine_snake", "pale_moth", "glass_eel", "cave_crayfish",
-	"drift_jelly", "bog_lizardman", "storm_eel", "gloom_wolf", "armed_ant", "stone_drake"]
+	"drift_jelly", "bog_lizardman", "storm_eel", "gloom_wolf", "armed_ant", "stone_drake", "taratect"]
 
 func _listed(set_name: String) -> Dictionary:
 	var json := JSON.new()
@@ -81,7 +81,8 @@ func test_every_clip_uses_frames_that_exist_and_every_state_has_a_clip() -> void
 		"storm_eel": ["swim", "warn", "dart", "stunned", "hurt", "downed"],
 		"gloom_wolf": ["idle", "walk", "windup", "charge", "rest", "stunned", "hurt", "downed"],
 		"armed_ant": ["idle", "walk", "stunned", "hurt", "downed"],
-		"stone_drake": ["idle", "walk", "windup", "stomp", "stunned", "hurt", "downed"]}
+		"stone_drake": ["idle", "walk", "windup", "stomp", "stunned", "hurt", "downed"],
+		"taratect": ["hang", "drop", "crawl", "stunned", "hurt", "downed"]}
 	for set_name in SETS:
 		var sheet := SpriteSheet.load_set(set_name)
 		for state in states[set_name]:

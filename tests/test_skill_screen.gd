@@ -200,7 +200,7 @@ func test_tabs_cycle_through_all_five() -> void:
 
 func test_sheet_only_creatures_have_a_bestiary_portrait() -> void:
 	for id in ["bat", "toad", "lizard", "spider", "serpent", "spore_moth", "mushroom_crab", "vine_snake",
-			"gloom_wolf", "armed_ant", "stone_drake"]:
+			"gloom_wolf", "armed_ant", "stone_drake", "taratect"]:
 		var t := SkillScreen.portrait_texture(id)
 		assert_not_null(t, id)
 		assert_gt(t.get_size().x, 8.0, id)

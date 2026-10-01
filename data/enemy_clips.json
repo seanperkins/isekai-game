@@ -133,5 +133,13 @@
     "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
     "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
     "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
+  },
+  "taratect": {
+    "hang": {"frames": ["hang_1", "hang_2"], "fps": 2.0, "loop": true},
+    "drop": {"frames": ["drop"], "fps": 1.0, "loop": false},
+    "crawl": {"frames": ["crawl_1", "crawl_2", "crawl_3", "crawl_4"], "fps": 8.0, "loop": true},
+    "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
+    "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
+    "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
   }
 }

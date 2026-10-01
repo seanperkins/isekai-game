@@ -31,7 +31,7 @@ static func pick(creature: String, status: int, charge: String, swoop: String, s
 			if charge != "":
 				return charge
 			return "walk" if moving else "idle"
-		"spider":
+		"spider", "taratect":
 			if on_ceiling:
 				return "hang"
 			if not on_floor:

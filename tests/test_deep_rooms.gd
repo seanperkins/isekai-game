@@ -25,12 +25,12 @@ func test_the_rooms_sit_where_the_spec_puts_them() -> void:
 		assert_eq((rooms[id] as RoomDef).size, want[id][1], id)
 		assert_eq((rooms[id] as RoomDef).area, "deep", id)
 
-func test_the_deep_is_behind_the_swim_door_and_has_no_gate_of_its_own() -> void:
+func test_the_deep_is_behind_the_swim_door_and_its_only_gate_is_d2s_top_exit() -> void:
 	var reach := WorldValidator.reachable(rooms, true)
 	for id in ROOMS:
 		assert_false(reach.has(id), "%s hangs off F4, behind the Swim door" % id)
 		for e in (rooms[id] as RoomDef).exits:
-			assert_false(e.has("gate"), "%s: no gate in the core" % id)
+			assert_true(not e.has("gate") or (id == "D2" and e["edge"] == "top" and e["gate"] == "wall_cling"), "%s: no gate but D2's top exit (the slice)" % id)
 
 func test_the_doorway_from_the_marsh_ends_at_the_floor_on_both_halves() -> void:
 	# new_room_beside rejects a door whose zone holds any solid, a ledge included, and would pick a span 60 px above the floor
