@@ -181,6 +181,7 @@ func test_the_eligibility_check_bites_on_a_poorly_seeded_kit() -> void:
 const AREA_KITS := {
 	"grotto": {"rooms": ["G1", "G2", "G3", "G4"], "skills": ["leap", "wall_cling"], "level": 3},
 	"flooded": {"rooms": ["F1", "F2"], "skills": ["leap", "wall_cling", "swim"], "level": 4},
+	"deep": {"rooms": ["D1", "D2"], "skills": ["leap", "wall_cling", "swim", "tremor"], "level": 5},
 }
 
 ## The essences a life can eat in `ids`, as units: a creature that cannot be downed by tackle (the jelly) is not counted.
