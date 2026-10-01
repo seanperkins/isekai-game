@@ -7,7 +7,7 @@ script = ExtResource("1_t2g7r")
 id = "D6"
 area = "deep"
 cell = Vector2i(19, 5)
-solids = [Rect2(100, 268, 120, 12), Rect2(420, 268, 120, 12)]
+solids = [Rect2(452, 20, 60, 100), Rect2(100, 268, 120, 12), Rect2(420, 268, 120, 12)]
 decor = [{
 "id": "deep_bones",
 "pos": Vector2(160, 268)
@@ -29,7 +29,7 @@ decor = [{
 }]
 spawns = [{
 "id": "taratect",
-"pos": Vector2(320, 32)
+"pos": Vector2(480, 132)
 }]
 exits = [{
 "edge": "bottom",

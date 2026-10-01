@@ -88,3 +88,17 @@ func test_a_player_can_walk_d2s_floor_under_the_chimney() -> void:
 			break
 	Input.action_release("move_right")
 	assert_gte(best, 1150.0, "walked from x 100 to the east door along the floor (reached %.0f)" % best)
+
+## The Taratect must hang clear of D6's floor hole (a stunned or dying hanging creature falls straight down: over the hole it would fall out of the
+## room and could not be eaten) and within a creature's sight of a place the player can stand (it is alerted under CHASE_RANGE, and drops when the
+## player is under it), or it never drops on anyone.
+func test_the_taratect_hangs_clear_of_the_floor_hole_and_within_sight_of_a_perch() -> void:
+	var d6: RoomDef = rooms["D6"]
+	var hole: Dictionary = d6.exits.filter(func(e): return e["edge"] == "bottom")[0]
+	var spawn: Vector2 = d6.spawns[0]["pos"]
+	assert_true(spawn.x <= float(hole["from"]) - 40.0 or spawn.x >= float(hole["to"]) + 40.0, "at least 40 px from the hole's span")
+	var perch := d6.solids.any(func(s):
+		var r: Rect2 = s
+		return r.size.y <= 12.0 and absf(spawn.x - (r.position.x + r.size.x * 0.5)) <= r.size.x * 0.5 \
+			and r.position.y > spawn.y and (r.position.y - 12.0 - spawn.y) < Enemy.CHASE_RANGE)
+	assert_true(perch, "a ledge under it that a standing player is within CHASE_RANGE of")
