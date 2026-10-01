@@ -5,7 +5,7 @@ extends Control
 
 signal room_chosen(id: String)
 
-const AREA_FILL := {"cave": Color(0.42, 0.33, 0.58), "grotto": Color(0.62, 0.4, 0.2)}
+const AREA_FILL := {"cave": Color(0.42, 0.33, 0.58), "grotto": Color(0.62, 0.4, 0.2), "deep": Color(0.3, 0.35, 0.55), "flooded": Color(0.2, 0.5, 0.6)}
 const FILL_UNKNOWN := Color(0.4, 0.4, 0.4)
 const MARGIN := 16.0
 const FONT := 10

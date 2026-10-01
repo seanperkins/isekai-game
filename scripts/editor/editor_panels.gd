@@ -22,7 +22,9 @@ signal play_pressed
 signal new_room_requested(edge: String, id: String, area: String, size: Vector2i)
 
 const FONT := 8
-const AREAS := ["cave", "grotto"]
+## The areas New room offers: every biome the terrain art supports.
+static func areas() -> Array:
+	return TerrainArt.biomes()
 const EDGES := ["left", "right", "top", "bottom"]
 ## The tools in toolbar row one; Creature and Feature also show their palette at the left.
 const TOOLS := ["Select", "Solid", "Creature", "Feature", "Exit"]
@@ -184,7 +186,7 @@ func _build_dialog() -> void:
 	_new_id.custom_minimum_size = Vector2(120, 0)
 	_new_id.text_changed.connect(func(_t: String) -> void: _refresh_dialog())
 	box.add_child(_row("Area", _new_area))
-	for a in AREAS:
+	for a in areas():
 		_new_area.add_item(a)
 	_new_w.min_value = 1
 	_new_w.max_value = RoomEditModel.MAX_SCREENS
@@ -282,7 +284,7 @@ func open_new_room(edge: String) -> void:
 
 func set_new_room_fields(id: String, area: String, size: Vector2i) -> void:
 	_new_id.text = id
-	_new_area.select(maxi(0, AREAS.find(area)))
+	_new_area.select(maxi(0, areas().find(area)))
 	_new_w.value = size.x
 	_new_h.value = size.y
 	_refresh_dialog()
@@ -296,7 +298,7 @@ func confirm_new_room() -> void:
 		_new_error.text = err
 		return
 	_dialog.visible = false
-	new_room_requested.emit(EDGES[_new_edge.selected], _new_id.text, AREAS[_new_area.selected],
+	new_room_requested.emit(EDGES[_new_edge.selected], _new_id.text, areas()[_new_area.selected],
 		Vector2i(int(_new_w.value), int(_new_h.value)))
 
 func _refresh_dialog() -> void:
