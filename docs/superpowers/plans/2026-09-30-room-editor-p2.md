@@ -14,7 +14,7 @@
 
 - Run tests with `tools/run_tests.sh [file-substring]` from `/Users/sean/sites/isekai-game/.worktrees/room-editor-p2`; any SCRIPT ERROR or Parse Error fails the run. After adding or renaming a `class_name` script or a scene, run `gtimeout -k 5 300 env HOME="$PWD/.tmp/gdhome" godot --headless --import >/dev/null 2>&1` before the tests.
 - BSD `sed` needs `sed -i ''`. Edit files with Python or the Edit tool. Never `git checkout` a file to undo a mutation made on top of uncommitted work: copy it to `.tmp/` first and restore from the copy. Never `rm` a path built from a shell variable (the safety check refuses it): spell the path out.
-- Constants from the spec: `MIN_EXIT` 36, `CLEAR` 64, reach budget 55 / 60 / 80, pool clearance 200 px, `MAX_SCREENS` 6, feature boxes tablet `Rect2(-6, -18, 12, 18)`, switch `Rect2(-9, -22, 18, 22)`, pools `Rect2(-19, -20, 38, 24)`; the Wall Cling kit is `{"skills": ["leap", "wall_cling"]}`.
+- Constants from the spec: `MIN_EXIT` 36, `CLEAR` 64, reach budget 55 / 60 / 80, pool clearance 200 px, `MAX_SCREENS` 6, feature boxes (`RoomLint.FEATURE_BOX`) tablet `Rect2(-6, -18, 12, 18)`, switch `Rect2(-9, -22, 18, 22)`, pools `Rect2(-19, -20, 38, 24)`; the Wall Cling kit is `{"skills": ["leap", "wall_cling"]}`.
 - Stage directories (`git add scripts tests tools docs scenes data`) so `.gd.uid` files are committed. No attribution lines in commit messages.
 - A test that sets `Game.play_request`, `Game.editor_resume` or `RoomEditor.sandbox_root` resets them in `after_each`. Scene tests that push mouse events hide GUT's own UI first and push with `push_input(ev, true)` (see `tests/test_room_editor_scene.gd`).
 - Real windowed screenshots are taken unsandboxed with `env HOME="$PWD/.tmp/editor-home" godot --path . -s res://tools/editor_shots.gd`; the script cannot name `RoomEditor` or an autoload at compile time.
@@ -101,6 +101,9 @@ func test_a_feature_is_embedded_only_when_it_is_stuck() -> void:
 	assert_true(RoomLint.embedded(r, Vector2(250, 204)), "four pixels into the ledge")
 	assert_true(RoomLint.embedded(r, Vector2(12, 320)), "in the wall column")
 	assert_true(RoomLint.embedded(r, Vector2(630, 320)), "in the right wall column")
+	assert_true(RoomLint.embedded(r, Vector2(30, 320), "rebirth_pool"), "the pool's 38 px box reaches into the wall")
+	assert_false(RoomLint.embedded(r, Vector2(40, 320), "rebirth_pool"))
+	assert_false(RoomLint.embedded(r, Vector2(20, 320), "tablet"), "half-open: x = 20 is clean for a 12 px tablet")
 
 func test_in_rock_flags_an_embedded_feature_and_not_one_on_a_ledge() -> void:
 	var on_ledge := _room("T1", {"solids": [Rect2(200, 200, 100, 12)], "features": [{"kind": "tablet", "id": "t1_tablet_1", "pos": Vector2(250, 200), "title": "T"}]})
@@ -163,6 +166,14 @@ const REACH_RISE := 55.0
 const REACH_GAP := 60.0
 const REACH_HOP := 80.0
 const POOL_CLEARANCE := 200.0
+## The drawn box of each feature kind relative to its base point: the one source for lint, hit-testing, the selection outline and
+## the marker. The pools are the 37x23 water_pool sprite, whose bottom sits 4 px below the base.
+const FEATURE_BOX := {
+	"tablet": Rect2(-6, -18, 12, 18),
+	"switch": Rect2(-9, -22, 18, 22),
+	"glow_pool": Rect2(-19, -20, 38, 24),
+	"rebirth_pool": Rect2(-19, -20, 38, 24),
+}
 
 const RULES := ["solid_outside", "outside", "in_rock", "exit_blocked", "exit_narrow", "start_floor", "ledge_reach", "over_hole",
 	"pool_clearance", "feature_id", "shortcut_pair", "hint_unknown"]
@@ -208,12 +219,13 @@ static func rock(r: RoomDef) -> Array:
 		out.append(w["rect"])
 	return out
 
-## A feature's `pos` is its base. It is stuck when its x is inside a side wall column (a wall or a side doorway), or the point
-## one pixel above the base is inside rock: Rect2.has_point includes the top edge, so testing the base itself would flag every
+## A feature's `pos` is its base. It is stuck when its drawn box reaches into a side wall column (a wall or a side doorway), or
+## the point one pixel above the base is inside rock: Rect2.has_point includes the top edge, so testing the base itself would flag every
 ## feature standing on a ledge and refuse every horizontal drag.
-static func embedded(r: RoomDef, base: Vector2) -> bool:
+static func embedded(r: RoomDef, base: Vector2, kind := "") -> bool:
 	var width := r.pixel_size().x
-	if base.x < RoomDef.WALL or base.x > width - RoomDef.WALL:
+	var box: Rect2 = FEATURE_BOX.get(kind, Rect2(0, 0, 0, 0))
+	if base.x + box.position.x < RoomDef.WALL or base.x + box.end.x > width - RoomDef.WALL:
 		return true
 	var above := base - Vector2(0.0, 1.0)
 	for rect in rock(r):
@@ -264,7 +276,7 @@ static func _in_rock(r: RoomDef) -> Array:
 				break
 	for i in r.features.size():
 		var f: Dictionary = r.features[i]
-		if embedded(r, f["pos"]):
+		if embedded(r, f["pos"], f.get("kind", "")):
 			out.append(_f(r, "in_rock", "feature %s at %s is stuck in rock or a wall" % [f.get("id", "?"), f["pos"]], "feature", i))
 	return out
 
@@ -651,7 +663,7 @@ git add scripts tests tools docs scenes data && git commit -m "feat: the new-roo
 **Files:** Modify `scripts/editor/room_edit_model.gd`; Create `tests/test_room_edit_features.gd`.
 
 **Interfaces:**
-- Produces: `RoomEditModel.FEATURE_KINDS`, `FEATURE_BOX`, `surface_below(room_id, p, with_gates := false) -> Variant`, `floor_spot(room_id, p, with_gates := true) -> Variant` (behaviour unchanged), `add_feature(room_id: String, kind: String, pos: Vector2) -> String`, selection kind `feature` in `hit`, `begin_move`, `move_to`, `delete_selection`, and explicit refusing fallbacks.
+- Produces: `RoomEditModel.FEATURE_KINDS`, `RoomLint.FEATURE_BOX`, `surface_below(room_id, p, with_gates := false) -> Variant`, `floor_spot(room_id, p, with_gates := true) -> Variant` (behaviour unchanged), `add_feature(room_id: String, kind: String, pos: Vector2) -> String`, selection kind `feature` in `hit`, `begin_move`, `move_to`, `delete_selection`, and explicit refusing fallbacks.
 
 - [ ] **Step 1: Write the failing tests** (`tests/test_room_edit_features.gd`)
 
@@ -827,14 +839,6 @@ func test_a_new_feature_is_lint_clean_and_undo_restores_the_room() -> void:
 
 ```gdscript
 const FEATURE_KINDS := ["glow_pool", "tablet", "switch", "rebirth_pool"]
-## The drawn box of each feature kind relative to its base point: the one source for hit-testing, the selection outline and the
-## marker. The pools are the 37x23 water_pool sprite, whose bottom sits 4 px below the base.
-const FEATURE_BOX := {
-	"tablet": Rect2(-6, -18, 12, 18),
-	"switch": Rect2(-9, -22, 18, 22),
-	"glow_pool": Rect2(-19, -20, 38, 24),
-	"rebirth_pool": Rect2(-19, -20, 38, 24),
-}
 
 ## The top of the first solid or boundary floor at or under `p`: null when `p` is outside the room, inside rock, or nothing is
 ## below it. `with_gates` adds the gates of closed shortcut exits as surfaces (Play stands on them; a feature does not, since
@@ -863,7 +867,7 @@ func floor_spot(room_id: String, p: Vector2, with_gates := true) -> Variant:
 ```gdscript
 ## A feature's base for a candidate point: x snapped, y the surface found from one pixel above the candidate (so a point exactly
 ## on a surface top, as every drag step is, finds that surface instead of being "inside" it). A Vector2, or the reason it is refused.
-func _feature_base(room_id: String, p: Vector2) -> Variant:
+func _feature_base(room_id: String, p: Vector2, kind: String) -> Variant:
 	var r: RoomDef = rooms[room_id]
 	var q := Vector2(snap(p.x), snap(p.y))
 	if not bounds(r).has_point(q):
@@ -872,7 +876,7 @@ func _feature_base(room_id: String, p: Vector2) -> Variant:
 	if y == null:
 		return "nothing to stand on there: click open space above a floor or a ledge"
 	var base := Vector2(q.x, float(y))
-	if RoomLint.embedded(r, base):
+	if RoomLint.embedded(r, base, kind):
 		return "stuck in rock or a wall"
 	return base
 
@@ -890,7 +894,7 @@ func _feature_id(room_id: String, kind: String) -> String:
 func add_feature(room_id: String, kind: String, pos: Vector2) -> String:
 	if not FEATURE_KINDS.has(kind):
 		return "unknown feature '%s'" % kind
-	var base = _feature_base(room_id, pos)
+	var base = _feature_base(room_id, pos, kind)
 	if base is String:
 		return base
 	var r: RoomDef = rooms[room_id]
@@ -917,7 +921,7 @@ func add_feature(room_id: String, kind: String, pos: Vector2) -> String:
 ```gdscript
 	for i in r.features.size():
 		var f: Dictionary = r.features[i]
-		var box: Rect2 = FEATURE_BOX.get(f.get("kind", ""), Rect2(-6, -12, 12, 12))
+		var box: Rect2 = RoomLint.FEATURE_BOX.get(f.get("kind", ""), Rect2(-6, -12, 12, 12))
 		if Rect2(box.position + (f["pos"] as Vector2), box.size).grow(pick).has_point(p):
 			return _sel(room_id, "feature", i)
 ```
@@ -926,7 +930,7 @@ func add_feature(room_id: String, kind: String, pos: Vector2) -> String:
 
 ```gdscript
 		"feature":
-			var base = _feature_base(sel["room"], (_drag["orig"] as Vector2) + d)
+			var base = _feature_base(sel["room"], (_drag["orig"] as Vector2) + d, r.features[sel["index"]]["kind"])
 			if base is Vector2:
 				r.features[sel["index"]]["pos"] = base
 ```
@@ -1678,7 +1682,7 @@ func test_a_press_releases_gui_focus_first() -> void:
 **Interfaces:**
 - `InspectorPanel` (a `VBoxContainer`): `build(model: RoomEditModel, sel: Dictionary)` builds the controls for the selection from a const per-kind field list; `signal field_error(text: String)`; each control is bound to the `sel` captured at build; `commit_pending()` is not needed (the `LineEdit` commits on `text_submitted` and `focus_exited`; `OptionButton` and `CheckBox` use `FOCUS_NONE`).
 - `EditorSlot` (a `Control`, 168 px wide, scrolling): `show_inspector(model, sel)`, `show_problems(problems: Array)`, `hide_slot()`, `signal problem_clicked(problem: Dictionary)`, `is_showing() -> String` (`"inspector"`, `"problems"` or `""`).
-- `EditorPanels.typing()` is "a `LineEdit` has focus".
+- `EditorPanels.typing()` stays "a `LineEdit` or `SpinBox` has focus".
 
 - [ ] **Step 1: Write the failing tests** (append to `tests/test_room_editor_scene.gd`)
 
@@ -1751,7 +1755,7 @@ func test_the_problems_list_lands_on_the_problem() -> void:
 	assert_eq(clicked[0]["room"], "C2")
 	assert_eq(clicked[0]["pick"]["kind"], "spawn")
 
-func test_typing_means_a_line_edit_has_focus() -> void:
+func test_typing_means_a_line_edit_or_spin_box_has_focus() -> void:
 	var p := await _panels()
 	assert_false(p.typing())
 	var edit := LineEdit.new()
@@ -1770,7 +1774,7 @@ func test_typing_means_a_line_edit_has_focus() -> void:
 - [ ] **Step 3: Implement.**
   - `inspector_panel.gd`: `const FIELDS := {"exit": [["shortcut", "Shortcut", "line"]], "tablet": [["title", "Title", "line"], ["text", "Text", "line"]], "switch": [["shortcut", "Shortcut", "line"]], "rebirth_pool": [["kit_level", "Level", "level"], ["kit_skills", "Skills", "skills"]], "glow_pool": []}`. `build()` clears children, resolves the kind (`exit`, or the feature's `kind`), adds a title `Label`, then per field: `"line"` a `LineEdit` (named `field_<key>`, text from `model.get_field`, `text_submitted` and `focus_exited` call `_commit(key, line.text)`), `"level"` an `OptionButton` (`FOCUS_NONE`; items "none", 1..`Progression.LEVEL_CAP`; `item_selected` calls `_commit("kit_level", index)`), `"skills"` a `VBoxContainer` of `CheckBox`es (`FOCUS_NONE`, `set_meta("skill", id)`, one per kit-legal skill id from `RebirthKit.skill_defs()` filtered by `source != "enemy_only" and source != "evolution"`; `toggled` rebuilds the list from the ticked boxes and calls `_commit("kit_skills", ids)`). `_commit` calls `model.set_field(captured_sel, key, value)`; a non-empty result emits `field_error` and resets the control to `model.get_field(...)`. `find_field(key) -> Control` and `skill_checkboxes() -> Array`.
   - `editor_slot.gd`: a `ScrollContainer` (position (472, 50), size (168, 290)) holding either an `InspectorPanel` or an `ItemList` for problems (`show_problems` lists `"%s: %s" % [room, text]`, `click_problem(i)` and `item_selected` emit `problem_clicked(problems[i])`); forwards `InspectorPanel.field_error`; `find_field` and `skill_checkboxes` delegate to the inspector. The inspector is rebuilt with `queue_free` (remove the old child, then `queue_free`).
-  - `editor_panels.gd::typing()` becomes `var f := ...gui_get_focus_owner(); return f is LineEdit`.
+  - `editor_panels.gd::typing()` stays as P1 wrote it (`f is LineEdit or f is SpinBox`); the inspector's `OptionButton`s and `CheckBox`es are `FOCUS_NONE`, so they never count. The inspector is rebuilt only when the selection changes; other model changes refresh the control values in place and skip the focused control.
   - Land-on-problem lives in `RoomEditor` (Task 12).
 
 - [ ] **Step 4: Run to verify it passes:** `tools/run_tests.sh test_room_editor_scene`. Expected: PASS.
