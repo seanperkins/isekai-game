@@ -32,7 +32,7 @@ func _pin_supply_to_the_shipped_rooms() -> void:
 	var creatures := {}
 	for c in DefLoader.load_dir("res://data/creatures"):
 		creatures[c.id] = c
-	FormOffers._default_supply = FormOffers.supply(ShippedRooms.load_all(), creatures, FormLoader.load_all())
+	FormOffers._default_supply = FormOffers.supply(ShippedRooms.load_all(), creatures, FormLoader.load_all(), FormOffers.FIRST_EVOLUTION_AREAS)
 
 func _tickers() -> Array:
 	var out: Array = []
@@ -173,7 +173,7 @@ func test_the_eligibility_check_bites_on_a_poorly_seeded_kit() -> void:
 	var creatures := {}
 	for c in DefLoader.load_dir("res://data/creatures"):
 		creatures[c.id] = c
-	var supply := FormOffers.supply(ShippedRooms.load_all(), creatures, forms)  # the shipped rooms, not whatever is on disk
+	var supply := FormOffers.supply(ShippedRooms.load_all(), creatures, forms, FormOffers.FIRST_EVOLUTION_AREAS)  # the shipped rooms, not whatever is on disk
 	assert_lt(RebirthKit.eligible_lineages({"thread": 5}, supply, forms), 2, "one lineage is not enough")
 	assert_gte(RebirthKit.eligible_lineages({"thread": 7, "sound": 8, "flight": 8}, supply, forms), 2)
 
@@ -195,7 +195,7 @@ func test_every_shipped_grotto_pool_leaves_two_lineages_eligible_and_its_seeds_m
 	var creatures := {}
 	for c in DefLoader.load_dir("res://data/creatures"):
 		creatures[c.id] = c
-	var supply := FormOffers.supply(rooms, creatures, forms)
+	var supply := FormOffers.supply(rooms, creatures, forms, FormOffers.FIRST_EVOLUTION_AREAS)
 	var checked := 0
 	for p in RebirthChoice.pools(rooms):
 		if p["id"] == WorldProgress.DEFAULT_POOL or p["area"] != "grotto":

@@ -129,9 +129,9 @@ func test_absorbed_units_read_the_runs_ledger() -> void:
 	assert_eq(u["thread"], 1)
 	assert_eq(u.get("water", 0), 0)
 
-func test_the_whole_worlds_supply_includes_the_grotto() -> void:
+func test_the_first_evolution_areas_supply_includes_the_grotto() -> void:
 	var all_rooms := ShippedRooms.load_all()
-	var whole := FormOffers.supply(all_rooms, creatures, forms)
+	var whole := FormOffers.supply(all_rooms, creatures, forms, FormOffers.FIRST_EVOLUTION_AREAS)
 	assert_gt(whole["toxic"], supply["toxic"], "spore feeds Toxic")
 	assert_gt(whole["bulwark"], supply["bulwark"], "shell feeds Bulwark")
 	assert_gt(whole["weaver"], supply["weaver"], "the snake's thread feeds Weaver")
