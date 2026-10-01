@@ -402,6 +402,123 @@ func add_feature(room_id: String, kind: String, pos: Vector2) -> String:
 	selection = _sel(room_id, "feature", r.features.size() - 1)
 	return ""
 
+# --- inspector fields ---
+
+## The value of an inspector field for the selection (see set_field for the keys), or null for an unknown one.
+func get_field(sel: Dictionary, key: String) -> Variant:
+	if sel.is_empty() or not rooms.has(sel["room"]):
+		return null
+	var r: RoomDef = rooms[sel["room"]]
+	var i: int = sel["index"]
+	match sel["kind"]:
+		"exit":
+			if i < r.exits.size() and key == "shortcut":
+				return r.exits[i].get("shortcut", "")
+		"feature":
+			if i >= r.features.size():
+				return null
+			var f: Dictionary = r.features[i]
+			match key:
+				"title", "text", "shortcut":
+					return f.get(key, "")
+				"kit_level":
+					return int((f.get("kit", {}) as Dictionary).get("level", 0))
+				"kit_skills":
+					return ((f.get("kit", {}) as Dictionary).get("skills", []) as Array).duplicate()
+	return null
+
+## Sets one inspector field: exit "shortcut" (both halves); tablet "title" (required) and "text"; switch "shortcut" (required);
+## rebirth pool "kit_level" (0 unsets) and "kit_skills" (a list), merged into the kit so every other key (G1's affinity) is kept.
+## Optional keys are removed by "" or 0; required keys are never removed. A refusal returns the reason and changes nothing; a
+## value equal to the stored one pushes nothing (_push declines an unchanged room).
+func set_field(sel: Dictionary, key: String, value) -> String:
+	if sel.is_empty() or not rooms.has(sel["room"]):
+		return "nothing selected"
+	var room_id: String = sel["room"]
+	var r: RoomDef = rooms[room_id]
+	var i: int = sel["index"]
+	match sel["kind"]:
+		"exit":
+			if i >= r.exits.size() or key != "shortcut":
+				return "no such field"
+			return _set_exit_shortcut(room_id, i, str(value))
+		"feature":
+			if i >= r.features.size():
+				return "nothing selected"
+			return _set_feature_field(room_id, i, key, value)
+	return "no such field"
+
+func _set_exit_shortcut(room_id: String, i: int, value: String) -> String:
+	if value != "" and not valid_id(value):
+		return "a shortcut id is letters, digits and underscore"
+	var r: RoomDef = rooms[room_id]
+	var p := partner_of(room_id, i)
+	var ids: Array = [room_id]
+	if not p.is_empty():
+		ids.append(p["room"])
+	var before := _snap(ids)
+	_write_exit_shortcut(r.exits[i], value)
+	if not p.is_empty():
+		_write_exit_shortcut((rooms[p["room"]] as RoomDef).exits[p["index"]], value)
+	_push(before)
+	return ""
+
+static func _write_exit_shortcut(e: Dictionary, value: String) -> void:
+	if value == "":
+		e.erase("shortcut")
+	else:
+		e["shortcut"] = value
+
+func _set_feature_field(room_id: String, i: int, key: String, value) -> String:
+	var r: RoomDef = rooms[room_id]
+	var f: Dictionary = r.features[i]
+	var kind: String = f.get("kind", "")
+	if (key == "title" or key == "text") and kind != "tablet":
+		return "a %s has no %s" % [kind, key]
+	if key == "shortcut" and kind != "switch":
+		return "a %s has no shortcut" % kind
+	if (key == "kit_level" or key == "kit_skills") and kind != "rebirth_pool":
+		return "a %s has no kit" % kind
+	var next: Dictionary = f.duplicate(true)
+	match key:
+		"title":
+			if str(value) == "":
+				return "a tablet needs a title"
+			next["title"] = str(value)
+		"text":
+			if str(value) == "":
+				next.erase("text")
+			else:
+				next["text"] = str(value)
+		"shortcut":
+			if not valid_id(str(value)):
+				return "a shortcut id is letters, digits and underscore (and not empty)"
+			next["shortcut"] = str(value)
+		"kit_level":
+			var kit: Dictionary = next.get("kit", {})
+			if int(value) == 0:
+				kit.erase("level")
+			else:
+				kit["level"] = int(value)
+			next["kit"] = kit
+		"kit_skills":
+			var kit: Dictionary = next.get("kit", {})
+			if (value as Array).is_empty():
+				kit.erase("skills")
+			else:
+				kit["skills"] = (value as Array).duplicate()
+			next["kit"] = kit
+		_:
+			return "no such field"
+	if kind == "rebirth_pool":
+		var errs := RebirthKit.validate(next["kit"])
+		if not errs.is_empty():
+			return errs[0]
+	var before := _snap([room_id])
+	r.features[i] = next
+	_push(before)
+	return ""
+
 func validate() -> PackedStringArray:
 	return WorldValidator.validate(rooms, creature_ids)
 
