@@ -186,6 +186,10 @@ static func _check_creatures(creatures: Array, by_id: Dictionary, errors: Packed
 			errors.append("%s: eat_bonus stat '%s' is not in StatKeys" % [w, c.eat_bonus.get("stat", "")])
 		if c.xp < 0:
 			errors.append("%s: xp must not be negative" % w)
+		if not ["physical", "shock"].has(c.contact_type):
+			errors.append("%s: contact_type '%s' is not physical or shock" % [w, c.contact_type])
+		if not ["", "spear"].has(c.projectile):
+			errors.append("%s: projectile '%s' is not '' or spear" % [w, c.projectile])
 		if not c.appraisal_target and c.predatable:
 			errors.append("%s: appraisal_target may be false only on non-predatable sources" % w)
 	for sid in Sources.ALL:

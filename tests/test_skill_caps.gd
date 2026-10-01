@@ -126,7 +126,7 @@ const TABLE := {
 	"leap": [10, 20], "wall_cling": [8, 12], "poison_resistance": [12, 6], "pain_resistance": [6, 2],
 	"toughness": [12, 20], "appraisal": [5, 2], "glutton": [8, 5], "mana_recovery": [8, 60],
 	"echolocation": [8, 3], "poison_breath": [15, 8], "body_armor": [8, 10], "sticky_thread": [15, 8],
-	"hydraulic_propulsion": [15, 6], "regeneration": [6, 8], "spore_cloud": [8, 8], "hardened_shell": [8, 10]}
+	"hydraulic_propulsion": [15, 6], "regeneration": [6, 8], "spore_cloud": [8, 8], "hardened_shell": [8, 10], "swim": [3, 40], "jolt": [5, 8]}
 
 func test_every_levelling_skill_has_its_planned_maximum_and_curve() -> void:
 	var defs := _defs()

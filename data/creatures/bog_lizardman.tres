@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="CreatureDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/creature_def.gd" id="1_xxdw6"]
+
+[resource]
+script = ExtResource("1_xxdw6")
+id = "bog_lizardman"
+display_name = "Bog Lizardman"
+stats = {
+"atk": 4,
+"def": 1,
+"max_hp": 10,
+"spd": 80
+}
+essences = {
+"earth": 1,
+"water": 1
+}
+eat_bonus = {
+"amount": 1,
+"per": 3,
+"stat": "atk"
+}
+xp = 5
+projectile = "spear"

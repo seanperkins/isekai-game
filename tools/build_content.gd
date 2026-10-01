@@ -146,6 +146,17 @@ func _skills() -> Array:
 			"unlock": [_c("absorbed", 4, {"essence": "shell"})],
 			"levels_on": _on("damaged", {"damage_type": "physical"}), "level_curve": 10, "max_level": 8,
 			"effects": [_mod(SkillEffects.KNOCKBACK_TAKEN, [-8, -16, -24, -32, -40, -48, -56, -64])]}),
+		_s({"id": "swim", "display_name": "Swim", "source": "proficiency",
+			"description": "Move freely through deep water.", "hint": "The water holds you up a little more each time.",
+			"announce": "Proficiency reached. Acquired [Swim].",
+			"unlock": [_c("submerged", 20)], "levels_on": _on("submerged"), "level_curve": 40, "max_level": 3,
+			"effects": [{"kind": "capability", "flag": "swim"}, _mod(StatKeys.SWIM_SPEED, [0, 30, 60])]}),
+		_s({"id": "jolt", "display_name": "Jolt", "source": "essence", "hidden": false,
+			"description": "A burst of shock around you that stuns swimmers.", "hint": "Something crackles faintly within.",
+			"announce": "Analysis complete. Acquired [Jolt].",
+			"unlock": [_c("absorbed", 4, {"essence": "shock"})],
+			"levels_on": _on("skill_used", {"id": "jolt"}), "level_curve": 8, "max_level": 5,
+			"effects": [_active("jolt", [3, 4, 5, 6, 7])], "mp_cost": 5}),
 		# --- Evolutions (each replaces its parent; siblings unlock together on it) ---
 		_s({"id": "water_blade", "display_name": "Water Blade", "source": "evolution",
 			"description": "Fire a blade of water.", "hint": "",
@@ -215,6 +226,8 @@ static func _scaled(base: int, level: int) -> int:
 
 ## The Grotto's creatures are level 4; the Cave's stay at their base numbers.
 const GROTTO_LEVEL := 4
+## The Flooded Tunnels' creatures are level 7: the spec's numbers are level-1 bases, scaled as the Grotto's are.
+const FLOODED_LEVEL := 7
 
 func _cr(f: Dictionary) -> CreatureDef:
 	var c := CreatureDef.new()
@@ -241,7 +254,7 @@ func _creatures() -> Array:
 			"skills": [{"id": "sticky_thread", "level": 1}, {"id": "ceiling_walk", "level": 1}],
 			"eat_bonus": {"stat": "atk", "amount": 1, "per": 3}, "xp": 3}),
 		_cr({"id": "spore_moth", "display_name": "Spore Moth", "stats": _at_level(GROTTO_LEVEL, {"max_hp": 3, "atk": 1, "def": 0, "spd": 90}),
-			"essences": {"spore": 1, "flight": 1}, "skills": [], "drifter": true,
+			"essences": {"spore": 1, "flight": 1}, "skills": [], "drifter": true, "puffs": true,
 			"eat_bonus": {"stat": "max_mp", "amount": 1, "per": 2}, "xp": 2}),
 		_cr({"id": "mushroom_crab", "display_name": "Mushroom Crab", "stats": _at_level(GROTTO_LEVEL, {"max_hp": 8, "atk": 2, "def": 2, "spd": 70}),
 			"essences": {"shell": 2, "earth": 1}, "skills": [], "armored_charger": true,
@@ -250,8 +263,20 @@ func _creatures() -> Array:
 			"essences": {"poison": 1, "thread": 1}, "skills": [{"id": "ceiling_walk", "level": 1}],
 			"eat_bonus": {"stat": "atk", "amount": 1, "per": 3}, "xp": 3}),
 		_cr({"id": "pale_moth", "display_name": "Pale Moth", "stats": _at_level(GROTTO_LEVEL, {"max_hp": 6, "atk": 1, "def": 0, "spd": 110}),
-			"essences": {"spore": 3, "flight": 2}, "skills": [], "drifter": true,
+			"essences": {"spore": 3, "flight": 2}, "skills": [], "drifter": true, "puffs": true,
 			"eat_bonus": {"stat": "max_mp", "amount": 2, "per": 1}, "xp": 8}),
+		_cr({"id": "glass_eel", "display_name": "Glass Eel", "stats": _at_level(FLOODED_LEVEL, {"max_hp": 4, "atk": 2, "def": 0, "spd": 140}),
+			"essences": {"shock": 1, "water": 1}, "skills": [], "swimmer": true, "contact_type": "shock",
+			"eat_bonus": {"stat": "spd", "amount": 2, "per": 2}, "xp": 3}),
+		_cr({"id": "cave_crayfish", "display_name": "Cave Crayfish", "stats": _at_level(FLOODED_LEVEL, {"max_hp": 9, "atk": 3, "def": 3, "spd": 60}),
+			"essences": {"shell": 1, "water": 1}, "skills": [], "armored_charger": true,
+			"eat_bonus": {"stat": "def", "amount": 1, "per": 3}, "xp": 5}),
+		_cr({"id": "drift_jelly", "display_name": "Drift Jelly", "stats": _at_level(FLOODED_LEVEL, {"max_hp": 3, "atk": 2, "def": 0, "spd": 30}),
+			"essences": {"shock": 1, "water": 2}, "skills": [], "drifter": true, "swimmer": true, "untackleable": true, "contact_type": "shock",
+			"eat_bonus": {"stat": "max_mp", "amount": 1, "per": 2}, "xp": 3}),
+		_cr({"id": "bog_lizardman", "display_name": "Bog Lizardman", "stats": _at_level(FLOODED_LEVEL, {"max_hp": 7, "atk": 3, "def": 1, "spd": 80}),
+			"essences": {"earth": 1, "water": 1}, "skills": [], "projectile": "spear",
+			"eat_bonus": {"stat": "atk", "amount": 1, "per": 3}, "xp": 5}),
 		_cr({"id": "water_pool", "display_name": "Water Pool", "stats": {},
 			"essences": {"water": 2}, "skills": [], "eat_bonus": {}}),
 		_cr({"id": "serpent", "display_name": "Cave Serpent", "stats": {"max_hp": 40, "atk": 6, "def": 1, "spd": 90},

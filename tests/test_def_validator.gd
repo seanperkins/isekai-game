@@ -203,3 +203,13 @@ func test_an_evolution_of_an_evolution_is_rejected() -> void:
 	s.append(_evo("a"))
 	s.append(_evo("b", {"replaces": "a", "unlock": [TestDefs.level("a", 1)]}))
 	assert_string_contains(_errors_with(s), "which is itself an evolution")
+
+func test_a_creatures_contact_type_and_projectile_must_be_known() -> void:
+	var creatures := TestDefs.all_creatures()
+	creatures[0].contact_type = "acid"
+	assert_string_contains(_errors_with(_valid_skills(), creatures), "contact_type 'acid'")
+	creatures[0].contact_type = "shock"
+	creatures[1].projectile = "rock"
+	assert_string_contains(_errors_with(_valid_skills(), creatures), "projectile 'rock'")
+	creatures[1].projectile = "spear"
+	assert_eq(DefValidator.validate(_valid_skills(), creatures).size(), 0)

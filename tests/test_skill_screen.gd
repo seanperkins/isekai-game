@@ -239,3 +239,13 @@ func test_s_pressed_on_the_paused_screen_does_not_hand_the_mouse_aim_back() -> v
 	PadInput.mouse_move(Vector2(10, 0))
 	PadInput.key(KEY_S)  # navigates the screen; aims nothing
 	assert_true(Controls.mouse_aim)
+
+func test_swim_and_jolt_read_in_the_skill_screens_own_words() -> void:
+	var by_id := {}
+	for d in DefLoader.load_dir("res://data/skills"):
+		by_id[d.id] = d
+	assert_true(SkillScreenModel.effect_lines(by_id["swim"], 2).has("Swim speed 150 px/s"), str(SkillScreenModel.effect_lines(by_id["swim"], 2)))
+	assert_true(SkillScreenModel.effect_lines(by_id["swim"], 1).has("Swim speed 120 px/s"))
+	assert_eq(SkillScreenModel.effect_lines(by_id["jolt"], 1), ["Damage 3"], "ATK 1, power 3")
+	assert_eq(SkillScreenModel.condition_text(by_id["swim"], by_id), "Spend time underwater ×20")
+	assert_eq(SkillScreenModel.condition_text(by_id["jolt"], by_id), "Absorb shock essence ×4")

@@ -26,11 +26,11 @@ func test_the_creatures_have_the_approved_numbers() -> void:
 		var w: Array = want[id]
 		assert_eq([c.stats["max_hp"], c.stats["atk"], c.stats["def"], c.stats["spd"], c.xp, c.essences], w, id)
 
-func test_only_the_lizard_and_crab_are_armored_chargers_and_only_moths_drift() -> void:
+func test_only_the_armored_creatures_charge_and_only_moths_and_the_jelly_drift() -> void:
 	for id in creatures:
 		var c: CreatureDef = creatures[id]
-		assert_eq(c.armored_charger, id == "lizard" or id == "mushroom_crab", id)
-		assert_eq(c.drifter, id == "spore_moth" or id == "pale_moth", id)
+		assert_eq(c.armored_charger, id == "lizard" or id == "mushroom_crab" or id == "cave_crayfish", id)
+		assert_eq(c.drifter, id == "spore_moth" or id == "pale_moth" or id == "drift_jelly", id)
 
 func test_the_two_skills_match_the_spec() -> void:
 	var sc: SkillDef = skills["spore_cloud"]

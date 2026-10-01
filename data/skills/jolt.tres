@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_r50j3"]
+
+[resource]
+script = ExtResource("1_r50j3")
+id = "jolt"
+display_name = "Jolt"
+description = "A burst of shock around you that stuns swimmers."
+hint = "Something crackles faintly within."
+announce = "Analysis complete. Acquired [Jolt]."
+source = "essence"
+hidden = false
+unlock = [{
+"event": "absorbed",
+"kind": "counter",
+"n": 4,
+"tags": {
+"essence": "shock"
+}
+}]
+levels_on = {
+"event": "skill_used",
+"tags": {
+"id": "jolt"
+}
+}
+level_curve = 8
+max_level = 5
+effects = [{
+"kind": "active",
+"scene": "res://scenes/abilities/jolt.tscn",
+"values": [3, 4, 5, 6, 7]
+}]
+mp_cost = 5
