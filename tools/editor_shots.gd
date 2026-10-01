@@ -132,6 +132,12 @@ func _process(_delta: float) -> bool:
 		110:
 			_shot("editor_world_new_biomes")
 			ed.panels.press("World")
+			ed.open_room("F2")  # the Flooded's rooms carry water: the room view draws it
+		113:
+			_shot("editor_water_f2")
+			ed.open_room("F3")
+		116:
+			_shot("editor_water_f3")
 			ed.open_room("C6")
 			ed.model.add_solid("C6", Vector2(200, 200), Vector2(280, 216))
 			ed.view.refresh()
