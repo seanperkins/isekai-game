@@ -1,7 +1,8 @@
 class_name SpitBlob
 extends Node2D
 ## A toad's poison glob. It flies in an arc to where the player stood when it was spat, so it
-## can be dodged; rock stops it. Hitting the player applies the toad's poison.
+## can be dodged; rock stops it. Hitting the player applies the toad's poison. A Spear (the Bog Lizardman's) extends it through
+## the seams: `gravity`, `_hit` and `_look`.
 
 const GRAVITY := 600.0
 const FLIGHT_SECONDS := 0.6
@@ -11,6 +12,8 @@ const GLOB_RADIUS := 3.0
 const LIFETIME := 2.5
 
 var velocity := Vector2.ZERO
+## Falling acceleration of this projectile (a spear sets 0).
+var gravity := GRAVITY
 var _damage := 0
 var _tick := 0
 var _seconds := 0.0
@@ -31,19 +34,23 @@ func launch(from: Vector2, to: Vector2, damage: int, tick: int, seconds: float) 
 
 func _ready() -> void:
 	if get_child_count() == 0:
-		var glob := ColorRect.new()
-		glob.color = Color(0.55, 0.95, 0.3)
-		glob.size = Vector2(5, 5)
-		glob.position = Vector2(-2.5, -2.5)
-		add_child(glob)
-		add_child(Art.light(Color(0.5, 1.0, 0.3), 0.6, 0.4))
+		_look()
+
+## What it looks like: the toad's green glob and its glow (a Spear draws its own).
+func _look() -> void:
+	var glob := ColorRect.new()
+	glob.color = Color(0.55, 0.95, 0.3)
+	glob.size = Vector2(5, 5)
+	glob.position = Vector2(-2.5, -2.5)
+	add_child(glob)
+	add_child(Art.light(Color(0.5, 1.0, 0.3), 0.6, 0.4))
 
 func _physics_process(delta: float) -> void:
 	_age += delta
 	if _age > LIFETIME:
 		queue_free()
 		return
-	velocity.y += GRAVITY * delta
+	velocity.y += gravity * delta
 	var next := global_position + velocity * delta
 	if _hits_rock(global_position, next):
 		queue_free()
@@ -51,8 +58,12 @@ func _physics_process(delta: float) -> void:
 	global_position = next
 	var player: Node2D = get_tree().get_first_node_in_group("player")
 	if player != null and SpitBlob.hits(player, global_position):
-		player.receive_poison(_damage, _tick, _seconds)
+		_hit(player)
 		queue_free()
+
+## What a hit does to the player: the toad's poison (a Spear overrides this).
+func _hit(player: Node2D) -> void:
+	player.receive_poison(_damage, _tick, _seconds)
 
 ## True when a glob at `point` hits `target`: within its traced shape (plus the glob's size), or the
 ## old centre distance for a target with no shape.
