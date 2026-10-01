@@ -10,8 +10,8 @@ signal field_changed
 const FONT := 8
 ## kind -> [[key, label, control], ...]; the keys are RoomEditModel.get_field / set_field's.
 const FIELDS := {
-	"exit": [["shortcut", "Shortcut", "line"]],
-	"tablet": [["title", "Title", "line"], ["text", "Text", "line"]],
+	"exit": [["shortcut", "Shortcut", "line"], ["gate", "Gate", "choice"]],
+	"tablet": [["title", "Title", "line"], ["text", "Text", "line"], ["hint", "Hint", "choice"]],
 	"switch": [["shortcut", "Shortcut", "line"]],
 	"rebirth_pool": [["kit_level", "Level", "level"], ["kit_skills", "Skills", "skills"]],
 	"glow_pool": [],
@@ -82,6 +82,8 @@ func _make(key: String, control: String) -> Control:
 			return _number(key)
 		"check":
 			return _check(key)
+		"choice":
+			return _choice(key)
 	return _line(key)
 
 func _line(key: String) -> LineEdit:
@@ -137,6 +139,35 @@ func _check(key: String) -> CheckBox:
 ## Thin solids (a one-way ledge unless marked) are the only ones the mark means anything for.
 func _thin_solid() -> bool:
 	return float(_model.get_field(_sel, "h")) <= 24.0 and float(_model.get_field(_sel, "w")) > 24.0
+
+## A string choice (gate, hint): "none" plus the legal values, selected by item text. A stored value outside the list (hand-edited
+## data) appears as its own item, so the control never shows "none" for a value that is there.
+func _choice(key: String) -> OptionButton:
+	var pick := OptionButton.new()
+	pick.name = "field_" + key
+	pick.focus_mode = Control.FOCUS_NONE
+	pick.add_theme_font_size_override("font_size", FONT)
+	pick.set_meta("choice", true)  # selected by item text, unlike the index-based level choice
+	pick.add_item("none")
+	for v in _choices(key):
+		pick.add_item(str(v))
+	_select_choice(pick, str(_model.get_field(_sel, key)))
+	pick.item_selected.connect(func(i: int) -> void: _commit(key, "" if i == 0 else pick.get_item_text(i)))
+	return pick
+
+func _choices(key: String) -> Array:
+	return WorldValidator.GATES if key == "gate" else RoomLint.hintable_skill_ids()
+
+func _select_choice(pick: OptionButton, stored: String) -> void:
+	if stored == "":
+		pick.select(0)
+		return
+	for i in pick.item_count:
+		if pick.get_item_text(i) == stored:
+			pick.select(i)
+			return
+	pick.add_item(stored)
+	pick.select(pick.item_count - 1)
 
 func _level(key: String) -> OptionButton:
 	var pick := OptionButton.new()
@@ -215,7 +246,10 @@ func _show_stored(key: String) -> void:
 		(control as CheckBox).set_pressed_no_signal(bool(stored))
 		control.visible = _thin_solid()
 	elif control is OptionButton:
-		(control as OptionButton).select(int(stored))
+		if control.has_meta("choice"):
+			_select_choice(control as OptionButton, str(stored))
+		else:
+			(control as OptionButton).select(int(stored))
 	else:
 		for c in _checks:
 			(c as CheckBox).set_pressed_no_signal((stored as Array).has(c.get_meta("skill")))

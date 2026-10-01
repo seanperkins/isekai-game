@@ -1236,3 +1236,45 @@ func test_the_decor_palette_shows_for_the_decor_tool_and_follows_the_rooms_area(
 	ed.panels.choose_decor("grotto_flowers")
 	assert_eq(ed.view.decor_id, "grotto_flowers")
 	assert_eq(ed._free_rect().position.x, 92.0, "the palette is counted when fitting")
+
+# --- gate and hint controls ---
+
+func test_the_gate_dropdown_writes_both_halves_and_shows_a_stored_unknown_gate_as_its_own_item() -> void:
+	var ed := await _editor()
+	var idx := -1
+	for i in ed.model.rooms["C1"].exits.size():
+		if ed.model.rooms["C1"].exits[i]["room"] == "C2":
+			idx = i
+	ed.model.select({"room": "C1", "kind": "exit", "index": idx})
+	ed.view.refresh()
+	var pick: OptionButton = ed.slot.find_field("gate")
+	assert_eq(pick.get_item_text(pick.selected), "none")
+	pick.item_selected.emit(1)   # wall_cling
+	assert_eq(ed.model.rooms["C1"].exits[idx].get("gate", ""), "wall_cling")
+	ed.model.rooms["C1"].exits[idx]["gate"] = "typo_gate"   # hand-edited data
+	ed.slot.show_inspector(ed.model, ed.model.selection)
+	var shown: OptionButton = ed.slot.find_field("gate")
+	assert_eq(shown.get_item_text(shown.selected), "typo_gate", "the control never shows 'none' for a gate that is there")
+
+func test_the_hint_dropdown_sets_and_clears_a_tablets_hint() -> void:
+	var ed := await _editor()
+	ed.open_room("C6")
+	var idx: int = ed.model.rooms["C6"].features.find_custom(func(f): return f["kind"] == "tablet")
+	ed.model.select({"room": "C6", "kind": "feature", "index": idx})
+	ed.view.refresh()
+	var pick: OptionButton = ed.slot.find_field("hint")
+	pick.item_selected.emit(0)   # none
+	assert_false(ed.model.rooms["C6"].features[idx].has("hint"))
+
+func test_a_refresh_selects_a_string_choice_by_its_text() -> void:
+	var ed := await _editor()
+	var idx := -1
+	for i in ed.model.rooms["C1"].exits.size():
+		if ed.model.rooms["C1"].exits[i]["room"] == "C2":
+			idx = i
+	ed.model.select({"room": "C1", "kind": "exit", "index": idx})
+	ed.view.refresh()
+	ed.model.rooms["C1"].exits[idx]["gate"] = "wall_cling"   # changed under the open panel
+	ed.slot.refresh_inspector()
+	var pick: OptionButton = ed.slot.find_field("gate")
+	assert_eq(pick.get_item_text(pick.selected), "wall_cling", "by item text, not by an index parsed from a string")

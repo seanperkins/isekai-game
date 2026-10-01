@@ -523,14 +523,14 @@ func get_field(sel: Dictionary, key: String) -> Variant:
 	var i: int = sel["index"]
 	match sel["kind"]:
 		"exit":
-			if i < r.exits.size() and key == "shortcut":
-				return r.exits[i].get("shortcut", "")
+			if i < r.exits.size() and (key == "shortcut" or key == "gate"):
+				return r.exits[i].get(key, "")
 		"feature":
 			if i >= r.features.size():
 				return null
 			var f: Dictionary = r.features[i]
 			match key:
-				"title", "text", "shortcut":
+				"title", "text", "shortcut", "hint":
 					return f.get(key, "")
 				"kit_level":
 					return int((f.get("kit", {}) as Dictionary).get("level", 0))
@@ -552,7 +552,7 @@ func get_field(sel: Dictionary, key: String) -> Variant:
 						return r.hard_ledges.has(s)
 	return null
 
-## Sets one inspector field: exit "shortcut" (both halves); tablet "title" (required) and "text"; switch "shortcut" (required);
+## Sets one inspector field: exit "shortcut" and "gate" (both halves); tablet "title" (required), "text" and "hint"; switch "shortcut" (required);
 ## rebirth pool "kit_level" (0 unsets) and "kit_skills" (a list), merged into the kit so every other key (G1's affinity) is kept;
 ## solid "x" "y" "w" "h" (exact numbers, never snapped) and "hard" (Rock from below: thin solids only).
 ## Optional keys are removed by "" or 0; required keys are never removed. A refusal returns the reason and changes nothing; a
@@ -565,9 +565,18 @@ func set_field(sel: Dictionary, key: String, value) -> String:
 	var i: int = sel["index"]
 	match sel["kind"]:
 		"exit":
-			if i >= r.exits.size() or key != "shortcut":
+			if i >= r.exits.size():
 				return "no such field"
-			return _set_exit_shortcut(room_id, i, str(value))
+			match key:
+				"shortcut":
+					if str(value) != "" and not valid_id(str(value)):
+						return "a shortcut id is letters, digits and underscore"
+					return _set_exit_pair_key(room_id, i, "shortcut", str(value))
+				"gate":
+					if str(value) != "" and not WorldValidator.GATES.has(str(value)):
+						return "unknown gate '%s'" % str(value)
+					return _set_exit_pair_key(room_id, i, "gate", str(value))
+			return "no such field"
 		"feature":
 			if i >= r.features.size():
 				return "nothing selected"
@@ -605,32 +614,31 @@ func _set_solid_field(room_id: String, i: int, key: String, value) -> String:
 	_push(before)
 	return ""
 
-func _set_exit_shortcut(room_id: String, i: int, value: String) -> String:
-	if value != "" and not valid_id(value):
-		return "a shortcut id is letters, digits and underscore"
+## Writes one key ("shortcut" or "gate"; "" removes it) on an exit and on its partner, in one undo step.
+func _set_exit_pair_key(room_id: String, i: int, key: String, value: String) -> String:
 	var r: RoomDef = rooms[room_id]
 	var p := partner_of(room_id, i)
 	var ids: Array = [room_id]
 	if not p.is_empty():
 		ids.append(p["room"])
 	var before := _snap(ids)
-	_write_exit_shortcut(r.exits[i], value)
+	_write_exit_key(r.exits[i], key, value)
 	if not p.is_empty():
-		_write_exit_shortcut((rooms[p["room"]] as RoomDef).exits[p["index"]], value)
+		_write_exit_key((rooms[p["room"]] as RoomDef).exits[p["index"]], key, value)
 	_push(before)
 	return ""
 
-static func _write_exit_shortcut(e: Dictionary, value: String) -> void:
+static func _write_exit_key(e: Dictionary, key: String, value: String) -> void:
 	if value == "":
-		e.erase("shortcut")
+		e.erase(key)
 	else:
-		e["shortcut"] = value
+		e[key] = value
 
 func _set_feature_field(room_id: String, i: int, key: String, value) -> String:
 	var r: RoomDef = rooms[room_id]
 	var f: Dictionary = r.features[i]
 	var kind: String = f.get("kind", "")
-	if (key == "title" or key == "text") and kind != "tablet":
+	if (key == "title" or key == "text" or key == "hint") and kind != "tablet":
 		return "a %s has no %s" % [kind, key]
 	if key == "shortcut" and kind != "switch":
 		return "a %s has no shortcut" % kind
@@ -651,6 +659,13 @@ func _set_feature_field(room_id: String, i: int, key: String, value) -> String:
 			if not valid_id(str(value)):
 				return "a shortcut id is letters, digits and underscore (and not empty)"
 			next["shortcut"] = str(value)
+		"hint":
+			if str(value) == "":
+				next.erase("hint")
+			elif not RoomLint.hintable_skill_ids().has(str(value)):
+				return "'%s' is not a skill the Compendium holds" % str(value)
+			else:
+				next["hint"] = str(value)
 		"kit_level":
 			var kit: Dictionary = next.get("kit", {})
 			if int(value) == 0:

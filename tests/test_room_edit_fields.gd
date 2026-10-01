@@ -143,3 +143,32 @@ func test_a_solid_that_stops_being_thin_loses_its_mark_in_the_same_step() -> voi
 	assert_eq(model.set_field(sel, "h", 30.0), "")
 	assert_eq(model.rooms["C1"].hard_ledges, [])
 	assert_eq("\n".join(model.validate()), "", "the validator would reject a mark on a thick solid")
+
+# --- an exit's gate and a tablet's hint ---
+
+func test_an_exits_gate_lands_on_both_halves_in_one_step_and_none_removes_it() -> void:
+	var sel := _exit_sel("C1", "C2")
+	assert_eq(model.get_field(sel, "gate"), "")
+	assert_eq(model.set_field(sel, "gate", "wall_cling"), "")
+	var partner := model.partner_of("C1", sel["index"])
+	assert_eq(model.rooms["C2"].exits[partner["index"]].get("gate", ""), "wall_cling")
+	assert_eq(model.undo_depth(), 1)
+	assert_eq(model.set_field(sel, "gate", ""), "")
+	assert_false(model.rooms["C1"].exits[sel["index"]].has("gate"))
+	assert_false(model.rooms["C2"].exits[partner["index"]].has("gate"))
+	assert_eq("\n".join(model.validate()), "")
+
+func test_an_unknown_gate_is_refused() -> void:
+	var sel := _exit_sel("C1", "C2")
+	assert_ne(model.set_field(sel, "gate", "wall_clinng"), "")
+	assert_eq(model.undo_depth(), 0)
+
+func test_a_tablets_hint_is_set_removed_and_checked_against_the_compendium() -> void:
+	var sel := _feature_sel("C6", "tablet")
+	assert_eq(model.get_field(sel, "hint"), "echolocation")
+	assert_eq(model.set_field(sel, "hint", "spore_cloud"), "")
+	assert_eq(model.get_field(sel, "hint"), "spore_cloud")
+	assert_ne(model.set_field(sel, "hint", "flight"), "", "an enemy-only skill has no Compendium slot")
+	assert_eq(model.set_field(sel, "hint", ""), "")
+	assert_false(model.rooms["C6"].features[sel["index"]].has("hint"))
+	assert_ne(model.set_field(_feature_sel("C4", "glow_pool"), "hint", "leap"), "", "only a tablet has a hint")
