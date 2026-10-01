@@ -27,6 +27,8 @@ const INSPECT_RANGE := 96.0
 const INTERACT_RANGE := 24.0
 const INVULN_SECONDS := 1.0
 const KNOCKBACK := Vector2(160.0, -140.0)
+## A shock hit locks input this long (the same lock a hit's knockback uses, so it only adds the difference).
+const SHOCK_STUN := 0.3
 const EAT_HEAL := 5
 const BASE_STATS := {"max_hp": 30, "atk": 1, "def": 0, "spd": 100, "max_mp": 20, "mp_regen": 100}
 const EAT_MP := 4
@@ -71,6 +73,8 @@ var _creatures := {}
 var _emit: Callable
 var _invuln := 0.0
 var _dash := 0.0
+## The water model: whether the body centre is in a DeepWater, the submerged clock, the edges (see PlayerWater).
+var _water := PlayerWater.new()
 var _poison_left := 0.0
 var _poison_tick := 0
 var _poison_acc := 0.0
@@ -147,6 +151,7 @@ func _physics_process(delta: float) -> void:
 	if _evolve_time > 0.0:
 		_evolve_step(delta)
 		return
+	var wet := _step_water(delta)
 	var dir := Input.get_axis("move_left", "move_right")
 	if predation.active():
 		dir = 0.0
@@ -165,7 +170,11 @@ func _physics_process(delta: float) -> void:
 		velocity.y += GRAVITY * delta
 	if rope != null:
 		_swing(dir, delta)
-	if skillset.has("wall_cling") and is_on_wall() and not is_on_floor() and velocity.y > 0.0:
+	if _water.in_water:
+		velocity = _water.adjust(velocity, is_on_floor(), skillset.has("swim"),
+			Input.get_vector("move_left", "move_right", "aim_up", "aim_down"), float(stats.get_stat("swim_speed")),
+			sqrt(stats.get_stat("jump_height") / 100.0), _dash > 0.0, wet["entered"], delta)
+	if skillset.has("wall_cling") and is_on_wall() and not is_on_floor() and velocity.y > 0.0 and not _water.in_water:
 		velocity.y = minf(velocity.y, WALL_SLIDE_SPEED * stats.get_stat("slide_speed") / 100.0)
 	if Input.is_action_just_pressed("jump"):
 		do_jump()
@@ -317,6 +326,14 @@ func do_jump() -> void:
 		release_rope()
 		return
 	var boost := sqrt(stats.get_stat("jump_height") / 100.0)
+	if _water.in_water:
+		# a Jump in water is a bob from the floor (a swimmer's is the surface launch); it never falls through to the dry
+		# branches, so a wall gives a non-swimmer nothing
+		var launched = _water.jump(velocity, is_on_floor(), skillset.has("swim"), boost, global_position)
+		if launched != null:
+			velocity = launched
+			sensors.jumped("ground")
+		return
 	if is_on_floor():
 		velocity.y = JUMP_VELOCITY * boost
 		sensors.jumped("ground")
@@ -734,6 +751,19 @@ func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, _ca
 		var away := 1.0 if global_position.x >= from.x else -1.0
 		velocity = Vector2(away * KNOCKBACK.x, KNOCKBACK.y) * skillset.knockback_factor()
 		_dash = 0.2
+	if damage_type == "shock" and not health.is_dead():
+		_dash = maxf(_dash, SHOCK_STUN)  # after the knockback block, which assigns 0.2
+
+## Steps the water model and emits what it saw: the audio edges and one `submerged` per second.
+func _step_water(delta: float) -> Dictionary:
+	var out := _water.step(get_tree(), global_position, delta)
+	if out["entered"]:
+		EventBus.world_event.emit("water_entered", {"pos": global_position})
+	if out["exited"]:
+		EventBus.world_event.emit("water_exited", {"pos": global_position})
+	for i in int(out["submerged"]):
+		_emit.call(Events.SUBMERGED, {})
+	return out
 
 func receive_poison(application: int, tick_amount: int, seconds: float) -> void:
 	if _invuln > 0.0 or health.is_dead():
@@ -897,6 +927,7 @@ func _on_run_started() -> void:
 	if _base_sheet != null:
 		_sheet = _base_sheet
 	skillset.reset()
+	_water.reset()
 	drop_rope()
 	end_channel()
 	stats.reset_run()

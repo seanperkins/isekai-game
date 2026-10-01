@@ -48,7 +48,7 @@ func test_every_emitted_world_event_has_a_catalog_entry() -> void:
 
 func test_every_event_entry_that_plays_is_reachable_or_reserved() -> void:
 	# Events the catalog maps but no script emits yet; each is reserved on purpose.
-	var reserved := ["water_entered", "water_exited"]
+	var reserved := []
 	var emitted := RegEx.create_from_string("(?:world_event\\.emit|_emit)\\(\"([a-z_]+)\"")
 	var names := {}
 	for f in _gameplay_files():
