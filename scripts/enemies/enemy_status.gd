@@ -15,10 +15,11 @@ var state := ACTIVE
 var held := false
 var _timer := 0.0
 
+## Stuns for `seconds`; on a creature already stunned the longer timer stays (a short stun never shortens a long one).
 func stun(seconds: float = STUN_SECONDS) -> void:
 	if state == ACTIVE or state == STUNNED:
+		_timer = seconds if state == ACTIVE else maxf(_timer, seconds)
 		state = STUNNED
-		_timer = seconds
 
 func down() -> void:
 	if state != GONE:

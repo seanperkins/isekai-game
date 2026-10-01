@@ -63,16 +63,29 @@ func actor_atk() -> int:
 func aim_dir() -> Vector2:
 	return aim.normalized() if aim != Vector2.ZERO else Vector2(actor.facing, 0.0)
 
-## Other-team actors along the aim within `range_px`, at most `half_width` off the line,
-## nearest first.
-func targets_in_front(range_px: float, half_width: float) -> Array:
-	var dir := aim_dir()
+## Every other-team actor that can be hit, unsorted (a corpse must not shadow a living target behind it).
+func _foes() -> Array:
 	var out: Array = []
 	for n in actor.get_tree().get_nodes_in_group("actors"):
 		if n == actor or n.get("team") == actor.team or not n.has_method("receive_hit"):
 			continue
 		if n.has_method("can_be_hit") and not n.can_be_hit():
-			continue  # a corpse must not shadow a living target behind it
+			continue
+		out.append(n)
+	return out
+
+## Other-team actors within `radius` of the caster, nearest first.
+func targets_around(radius: float) -> Array:
+	var out: Array = _foes().filter(func(n): return actor.global_position.distance_to(n.global_position) <= radius)
+	out.sort_custom(func(a, b): return actor.global_position.distance_to(a.global_position) < actor.global_position.distance_to(b.global_position))
+	return out
+
+## Other-team actors along the aim within `range_px`, at most `half_width` off the line,
+## nearest first.
+func targets_in_front(range_px: float, half_width: float) -> Array:
+	var dir := aim_dir()
+	var out: Array = []
+	for n in _foes():
 		var d: Vector2 = n.global_position - actor.global_position
 		var along := d.dot(dir)
 		if along >= -4.0 and along <= range_px and absf(d.cross(dir)) <= half_width:
