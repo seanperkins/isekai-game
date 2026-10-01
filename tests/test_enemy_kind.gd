@@ -6,8 +6,8 @@ const KINDS := {"bat": Enemy.Kind.SWOOPER, "toad": Enemy.Kind.SPITTER, "lizard":
 	"spider": Enemy.Kind.DROPPER, "water_pool": Enemy.Kind.WALKER, "serpent": Enemy.Kind.WALKER,
 	"spore_moth": Enemy.Kind.DRIFTER, "mushroom_crab": Enemy.Kind.CHARGER, "vine_snake": Enemy.Kind.SNAKE,
 	"pale_moth": Enemy.Kind.DRIFTER, "cave_crayfish": Enemy.Kind.CHARGER, "drift_jelly": Enemy.Kind.DRIFTER,
-	# the eel and the lizardman take their final kinds (SWOOPER, SPITTER) in the tasks that give them their behaviour
-	"glass_eel": Enemy.Kind.WALKER, "bog_lizardman": Enemy.Kind.WALKER}
+	# the lizardman takes its final kind (SPITTER) in the task that gives it its spear
+	"glass_eel": Enemy.Kind.SWOOPER, "bog_lizardman": Enemy.Kind.WALKER}
 
 var creatures := {}
 var skills_by_id := {}
@@ -27,13 +27,13 @@ func test_every_shipped_creature_has_its_kind() -> void:
 		assert_eq(e.kind, KINDS[id], id)
 		e.free()
 
-func test_the_initial_state_is_idle_for_a_bat_and_empty_for_everyone_else() -> void:
+func test_the_initial_state_is_idle_for_a_swooper_and_empty_for_everyone_else() -> void:
 	for id in KINDS:
 		var e := Enemy.new()
 		e.use_sheet = false
 		e.setup(creatures[id], skills_by_id)
-		assert_eq(e._state, "idle" if id == "bat" else "", id)
-		assert_eq(e.swoop_state(), "idle", "%s: swoop_state is idle for everyone until a bat changes it" % id)
+		assert_eq(e._state, "idle" if KINDS[id] == Enemy.Kind.SWOOPER else "", id)
+		assert_eq(e.swoop_state(), "idle", "%s: swoop_state is idle for everyone until a swooper changes it" % id)
 		assert_eq(e.charge_state(), "", id)
 		e.free()
 

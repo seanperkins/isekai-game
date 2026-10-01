@@ -856,6 +856,9 @@ func _tackle_target():
 			continue
 		if n.has_method("can_be_hit") and not n.can_be_hit():
 			continue  # a corpse must not swallow the tackle meant for the creature beyond it
+		var nd = n.get("def")
+		if nd is CreatureDef and nd.untackleable:
+			continue  # the jelly cannot be tackled, and must not swallow a tackle meant for a creature beyond it
 		if n.has_method("hurt_polygon"):
 			if _gap_in_front(mine, n.hurt_polygon()) > TACKLE_GAP:
 				continue

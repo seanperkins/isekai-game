@@ -98,7 +98,8 @@ var _hurt_t := 0.0
 var _anim_t := 0.0
 var _alert := 0.0
 ## Which behaviour this creature has, resolved once in setup() from what its def and skills say (the precedence the
-## old _act chain used): the vine snake by id, then a ceiling walker, a drifter, a flier, an armored charger, a spitter.
+## old _act chain used): the vine snake by id, then a ceiling walker, a drifter, a flier or a swimmer (the eels are swoopers),
+## an armored charger, a spitter.
 enum Kind { WALKER, CHARGER, SPITTER, SWOOPER, DROPPER, DRIFTER, SNAKE }
 var kind := Kind.WALKER
 ## The one live behaviour state, its timer and its aim. Tokens per kind: swooper idle/hover/warn/dive/climb; charger and
@@ -115,6 +116,9 @@ var _anchor := Vector2.ZERO
 var _puff_t := PUFF_INTERVAL
 ## The animation state _draw_sheet_frame last chose (EnemyState.pick), "" for a creature with no sheet.
 var _anim_state := ""
+## The water rect a swimmer lives in, resolved on the first physics frame (a spawn's position and room are not set in setup).
+var _home_water: DeepWater
+var _water_resolved := false
 
 func setup(p_def: CreatureDef, skill_defs_by_id: Dictionary) -> void:
 	def = p_def
@@ -152,7 +156,7 @@ func _resolve_kind() -> Kind:
 		return Kind.DROPPER
 	if def.drifter:
 		return Kind.DRIFTER
-	if capabilities.has("flight"):
+	if capabilities.has("flight") or def.swimmer:
 		return Kind.SWOOPER
 	if def.armored_charger:
 		return Kind.CHARGER
@@ -276,9 +280,15 @@ func _physics_process(delta: float) -> void:
 	_web_slow = maxf(0.0, _web_slow - delta)
 	var player: Node2D = get_tree().get_first_node_in_group("player")
 	var active := status.state == EnemyStatus.ACTIVE
+	if def.swimmer and not _water_resolved:
+		_home_water = DeepWater.at(get_tree(), global_position)
+		_water_resolved = true
 	if active and player != null:
 		_sense(player, delta)
-		_act(player, delta)
+		if def.swimmer and _home_water == null:
+			velocity = Vector2.ZERO  # no water: nothing to swim in (lint's swimmer_dry reports it)
+		else:
+			_act(player, delta)
 	elif status.state != EnemyStatus.DYING:  # a death effect owns the body while it plays
 		velocity.x = 0.0
 		_clear_inactive()
@@ -300,8 +310,10 @@ func _physics_process(delta: float) -> void:
 	if not no_gravity:
 		velocity.y += GRAVITY * delta
 	move_and_slide()
+	if def.swimmer and _home_water != null:
+		_confine()
 	if active and player != null and is_touching(player):
-		player.receive_hit(stats.get_stat("atk"), "physical", global_position)
+		player.receive_hit(stats.get_stat("atk"), def.contact_type, global_position)
 	_hurt_t = maxf(0.0, _hurt_t - delta)
 	_update_visual(delta)
 
@@ -362,10 +374,33 @@ func can_see(target: Node2D) -> bool:
 	return get_world_2d().direct_space_state.intersect_ray(query).is_empty()
 
 func _sense(player: Node2D, delta: float) -> void:
-	if global_position.distance_to(player.global_position) < CHASE_RANGE and can_see(player):
+	var sees := global_position.distance_to(player.global_position) < CHASE_RANGE and can_see(player)
+	if sees and def.swimmer and _home_water != null and not _home_water.world_rect().has_point(player.global_position):
+		sees = false  # an eel is stirred only by a player in its own water
+	if sees:
 		_alert = ALERT_MEMORY
 	else:
 		_alert = maxf(0.0, _alert - delta)
+
+## Holds a swimmer inside its water rect (shrunk by its half body): the position is clamped, the clamped velocity component is
+## zeroed (a stunned eel's fall does not keep growing against a rect bottom that is not floor) and facing turns inward, which
+## the drifter turns on.
+func _confine() -> void:
+	var half := BODY_SIZE / 2.0
+	var box := _home_water.world_rect()
+	var lo := box.position + half
+	var hi := box.end - half
+	if hi.x < lo.x or hi.y < lo.y:
+		global_position = box.get_center()
+		return
+	var p := global_position
+	var c := Vector2(clampf(p.x, lo.x, hi.x), clampf(p.y, lo.y, hi.y))
+	if c.x != p.x:
+		velocity.x = 0.0
+		facing = 1 if p.x < lo.x else -1
+	if c.y != p.y:
+		velocity.y = 0.0
+	global_position = c
 
 ## Which sprite to draw for this creature right now. All sheets face right.
 func frame_name() -> String:
@@ -539,7 +574,7 @@ func _drift_act(player: Node2D, to_player: Vector2, delta: float) -> void:
 	velocity.x = facing * _speed() * 0.6
 	var target_y := _home_y + sin(_anim_t * 1.6) * 14.0
 	velocity.y = clampf((target_y - global_position.y) * 2.0, -60.0, 60.0)
-	if to_player.length() > PUFF_RANGE or not can_see(player):  # no puffs through rock
+	if not def.puffs or to_player.length() > PUFF_RANGE or not can_see(player):  # no puffs through rock, and only the moths puff
 		_puff_t = PUFF_INTERVAL
 		_state = ""
 		return
