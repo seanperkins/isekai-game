@@ -24,7 +24,7 @@ suite's rule tests would pass".
 |---|---|
 | P1 (shipped) | Separate editor scene; Solids, creatures, paired exits, New room beside, undo, Validate (the world validator), save, Play from here |
 | **P2 (this spec)** | `RoomLint` (the suite's rule tests as one shared module); a live, clickable problems list; the Feature tool (glow pool, tablet, switch, rebirth pool); an inspector for an exit's `shortcut`, a tablet's title and text, a switch's shortcut, a pool's level and skills; growing a room (left, right, top); two play toggles (Wall Cling, open shortcuts); a read-only World view |
-| P3 (later spec) | The Start tool and moving the world's start; scenery (the decor palette and `dressing`); the hard-ledge toggle; numeric geometry fields; an exit's `gate`, assumed abilities and the stricter `over_hole`; tablet hints; a pool's room `area` and kit affinity; a free-form play kit; shrinking and deleting rooms; physical reachability from one shared surface model; prefab stamps; jump ruler; moving a room on the World view; copy and paste; selection cycling; templates; autosave; a JSON export for CI |
+| P3 (shipped: `2026-10-01-room-editor-p3-design.md`; what moved to P4 is listed there) | The Start tool and moving the world's start; scenery (the decor palette and `dressing`); the hard-ledge toggle; numeric geometry fields; an exit's `gate`, assumed abilities and the stricter `over_hole`; tablet hints; a pool's room `area` and kit affinity; a free-form play kit; shrinking and deleting rooms; physical reachability from one shared surface model; prefab stamps; jump ruler; moving a room on the World view; copy and paste; selection cycling; templates; autosave; a JSON export for CI |
 
 ## Lint
 

@@ -3,7 +3,8 @@ extends SceneTree
 ##   env HOME="$PWD/.tmp/editor-home" godot --path . -s res://tools/editor_shots.gd
 ## Writes .tmp/editor/*.png: C1 fitted, C2 edited (a solid, a toad) at 1:1, a Solid drag in progress with its live label, the
 ## Creature palette, the Validate list, a placed tablet with its inspector, the problems list with findings, G1's pool with the
-## kit checklist, the World overview, and C6 played from the editor with Wall Cling granted and every shortcut open.
+## kit checklist, the World overview, a new `deep` room dressed with decor (the Decor tool, a ledge's panel) and a `flooded` one on the
+## overview, and C6 played from the editor with Wall Cling granted and every shortcut open.
 
 const OUT := "res://.tmp/editor/"
 var ed
@@ -104,17 +105,44 @@ func _process(_delta: float) -> bool:
 		80:
 			_shot("editor_world")
 			ed.panels.press("World")  # close it
+			# a new room in each new biome beside C6, dressed with that biome's decor
+			ed.open_room("C6")
+			ed.new_room("left", "DeepA", "deep", Vector2i(1, 1))
+		86:
+			ed.model.add_solid("DeepA", Vector2(240, 220), Vector2(360, 232))  # a ledge
+			ed.model.add_decor("DeepA", "deep_glow_fungus", Vector2(200, 100))  # stands on the floor
+			ed.model.add_decor("DeepA", "deep_bones", Vector2(450, 100))
+			ed.model.add_decor("DeepA", "deep_lichen_hang", Vector2(300, 150))  # hangs from the ceiling
+			ed.model.add_decor("DeepA", "deep_wall_crystal", Vector2(260, 100))  # stands on the ledge
+			ed.view.refresh()
+			ed.panels.press("Decor")
+		92:
+			_shot("editor_decor_deep")
+			ed.panels.press("Select")
+			ed.model.select({"room": "DeepA", "kind": "solid", "index": ed.model.rooms["DeepA"].solids.size() - 1})
+			ed.view.refresh()
+		98:
+			_shot("editor_solid_panel")
+			ed.new_room("left", "FloodA", "flooded", Vector2i(1, 1))
+		104:
+			ed.model.add_decor("FloodA", "flooded_crystal_gold", Vector2(300, 100))
+			ed.model.add_decor("FloodA", "flooded_root_hang", Vector2(450, 150))
+			ed.view.refresh()
+			ed.panels.press("World")
+		110:
+			_shot("editor_world_new_biomes")
+			ed.panels.press("World")
 			ed.open_room("C6")
 			ed.model.add_solid("C6", Vector2(200, 200), Vector2(280, 216))
 			ed.view.refresh()
 			ed.panels.press("Wall Cling")
 			ed.panels.press("Open shortcuts")
-		90:
+		120:
 			_shot("editor_c6_toggles")
 			ed.get_script().set("sandbox_root", OS.get_user_data_dir())  # naming RoomEditor here would compile it before the autoloads exist
 			ed.play(Vector2(120, 250))
 			ed.queue_free()
-		190:
+		220:
 			_shot("play_c6_cling")
 			quit()
 	return false

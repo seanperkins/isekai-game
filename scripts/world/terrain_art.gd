@@ -61,6 +61,15 @@ static func ambient(biome: String, fallback: Color) -> Color:
 static func has_biome(biome: String) -> bool:
 	return ResourceLoader.exists(TILE % [biome, "fill_a"])
 
+## The biomes with terrain art: the directory names under res://assets/tiles/ that has_biome accepts, sorted.
+static func biomes() -> Array:
+	var out: Array = []
+	for d in DirAccess.get_directories_at("res://assets/tiles"):
+		if has_biome(d):
+			out.append(d)
+	out.sort()
+	return out
+
 ## Per-piece facts from terrain_build.py: "surface" is the row (or column, for side faces) of the
 ## piece that lines up with the collision edge; "size" is its pixel size.
 static func meta(biome: String, piece: String) -> Dictionary:

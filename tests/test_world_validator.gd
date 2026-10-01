@@ -114,3 +114,20 @@ func test_a_listed_thin_solid_is_valid() -> void:
 	rooms["A"].solids = [Rect2(100, 200, 100, 12)]
 	rooms["A"].hard_ledges = [Rect2(100, 200, 100, 12)]
 	assert_eq(_errors(rooms), "")
+
+func test_a_known_gate_on_both_halves_is_valid() -> void:
+	var rooms := _pair()
+	rooms["A"].exits[0]["gate"] = "wall_cling"
+	rooms["B"].exits[0]["gate"] = "wall_cling"
+	assert_eq(_errors(rooms), "")
+
+func test_a_gate_on_one_half_only_is_reported() -> void:
+	var rooms := _pair()
+	rooms["A"].exits[0]["gate"] = "wall_cling"
+	assert_string_contains(_errors(rooms), "A: right exit to B has a different gate than its partner")
+
+func test_an_unknown_gate_is_reported_even_when_both_halves_agree() -> void:
+	var rooms := _pair()
+	rooms["A"].exits[0]["gate"] = "wall_clinng"
+	rooms["B"].exits[0]["gate"] = "wall_clinng"
+	assert_string_contains(_errors(rooms), "unknown gate 'wall_clinng'")

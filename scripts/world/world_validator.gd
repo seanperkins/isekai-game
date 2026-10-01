@@ -1,13 +1,16 @@
 class_name WorldValidator
 extends RefCounted
 ## Checks the room graph. Every exit must be matched by an exit on the neighbour's opposite
-## edge covering the same world span, with the same shortcut id. Rooms must not overlap,
+## edge covering the same world span, with the same shortcut id and the same gate. Rooms must not overlap,
 ## spans must fit their edge (clear of the corners and the floor), and exactly one room
 ## must be the start.
 
 const OPPOSITE := {"left": "right", "right": "left", "top": "bottom", "bottom": "top"}
 
 const FEATURE_KINDS := ["glow_pool", "rebirth_pool", "tablet", "switch"]
+
+## The labels an exit's `gate` may carry (a label for the validator and lint, not an obstacle in play); P4 gives them teeth.
+const GATES := ["wall_cling"]
 
 ## `creature_ids`, when given, is every creature id the game defines: spawns naming another are errors (a typo
 ## must not silently drop a creature and its XP).
@@ -168,6 +171,8 @@ static func _check_exit(a: RoomDef, e: Dictionary, rooms: Dictionary) -> PackedS
 	var to := float(e.get("to", 0.0))
 	if from < lo or to > hi or from >= to:
 		out.append("%s: %s exit span %d..%d outside %d..%d" % [a.id, edge, from, to, lo, hi])
+	if e.has("gate") and not GATES.has(str(e["gate"])):
+		out.append("%s: %s exit to %s has an unknown gate '%s'" % [a.id, edge, e.get("room", ""), e["gate"]])
 	var b: RoomDef = rooms.get(e.get("room", ""))
 	if b == null:
 		out.append("%s: exit to unknown room '%s'" % [a.id, e.get("room", "")])
@@ -184,6 +189,8 @@ static func _check_exit(a: RoomDef, e: Dictionary, rooms: Dictionary) -> PackedS
 		out.append("%s: %s exit to %s has no matching exit back" % [a.id, edge, b.id])
 	elif partner.get("shortcut", "") != e.get("shortcut", ""):
 		out.append("%s: %s exit to %s has a different shortcut than its partner" % [a.id, edge, b.id])
+	elif partner.get("gate", "") != e.get("gate", ""):
+		out.append("%s: %s exit to %s has a different gate than its partner" % [a.id, edge, b.id])
 	return out
 
 static func touches(a: Rect2, b: Rect2, edge: String) -> bool:

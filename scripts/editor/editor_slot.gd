@@ -79,6 +79,11 @@ func hide_slot() -> void:
 	_showing = ""
 	visible = false
 
+## Re-reads the inspector's controls (see InspectorPanel.refresh); a no-op when it is not showing.
+func refresh_inspector() -> void:
+	if _inspector != null:
+		_inspector.refresh()
+
 func problem_lines() -> Array:
 	var out: Array = []
 	if _list != null:

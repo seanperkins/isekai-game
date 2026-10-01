@@ -13,7 +13,7 @@ static var _prop_names: Array = []
 var rooms := {}     # id -> RoomDef (working copies)
 var dirty := {}     # id -> true: rooms edited since the last successful save
 var creature_ids: Array = []
-## {} or {"room", "kind": "solid" | "spawn" | "exit" | "feature", "index"}
+## {} or {"room", "kind": "solid" | "spawn" | "exit" | "feature" | "decor", "index"}
 var selection := {}
 var _undo: Array = []   # each: {id: RoomDef or null}, the state before a step
 var _redo: Array = []
@@ -172,10 +172,43 @@ func add_solid(room_id: String, a: Vector2, b: Vector2) -> String:
 	var rect := drag_rect(a, b).intersection(bounds(r))
 	if rect.size.x < MIN_SOLID or rect.size.y < MIN_SOLID:
 		return "too small, or outside the room"
+	if _has_solid(r, rect):
+		return "an identical solid is already there"
 	var before := _snap([room_id])
 	r.solids.append(rect)
 	_push(before)
 	selection = _sel(room_id, "solid", r.solids.size() - 1)
+	return ""
+
+## True when another solid in the room has exactly this rect. hard_ledges holds rect values, so two equal rects would make a mark
+## ambiguous (a drag onto an identical marked solid would move the mark onto the wrong one).
+static func _has_solid(r: RoomDef, rect: Rect2, skip := -1) -> bool:
+	for i in r.solids.size():
+		if i != skip and r.solids[i] == rect:
+			return true
+	return false
+
+## The one writer for a solid's rect (a drag step, a typed number, the Rock-from-below toggle): refuses a rect smaller than
+## MIN_SOLID, not wholly inside the room, or identical to another solid; writes it; and keeps hard_ledges in step: a `marked` thin
+## rect is in the list (at the position its old rect had), anything else is not. Returns "" or the reason; a refusal writes nothing.
+func _put_solid(room_id: String, i: int, rect: Rect2, marked: bool) -> String:
+	var r: RoomDef = rooms[room_id]
+	if rect.size.x < MIN_SOLID or rect.size.y < MIN_SOLID:
+		return "too small: a solid is at least %d px each way" % int(MIN_SOLID)
+	if not bounds(r).encloses(rect):
+		return "outside the room"
+	if _has_solid(r, rect, i):
+		return "an identical solid is already there"
+	var was: Rect2 = r.solids[i]
+	r.solids[i] = rect
+	var keep := marked and rect.size.y <= 24.0 and rect.size.x > 24.0
+	var h := r.hard_ledges.find(was)
+	if h >= 0 and keep:
+		r.hard_ledges[h] = rect
+	elif h >= 0:
+		r.hard_ledges.remove_at(h)
+	elif keep:
+		r.hard_ledges.append(rect)
 	return ""
 
 func add_spawn(room_id: String, creature_id: String, pos: Vector2) -> String:
@@ -195,35 +228,47 @@ func add_spawn(room_id: String, creature_id: String, pos: Vector2) -> String:
 
 # --- hit-testing ---
 
-## The element under a room-local point: the nearest creature within `pick`, else a feature's drawn box, else an exit's gap, else
-## the smallest solid.
-func hit(room_id: String, p: Vector2, pick: float) -> Dictionary:
+## Every element under a room-local point, in hit order: creatures within `pick`, nearest first; then features (their drawn box
+## grown by `pick`), decor (its drawn box, not grown) and exits (their gap grown by `pick`) by index; then solids (grown by `pick`), smallest area first. Ties go by
+## index. `hit` is the first element, so a plain press is the same as it was before hit_all existed.
+func hit_all(room_id: String, p: Vector2, pick: float) -> Array:
 	var r: RoomDef = rooms[room_id]
-	var best := -1
-	var best_d := INF
+	var out: Array = []
+	var near: Array = []
 	for i in r.spawns.size():
 		var d := (r.spawns[i]["pos"] as Vector2).distance_to(p)
-		if d <= pick and d < best_d:
-			best = i
-			best_d = d
-	if best >= 0:
-		return _sel(room_id, "spawn", best)
+		if d <= pick:
+			near.append([d, i])
+	near.sort_custom(func(a, b) -> bool: return a[0] < b[0] or (a[0] == b[0] and a[1] < b[1]))
+	for n in near:
+		out.append(_sel(room_id, "spawn", n[1]))
 	for i in r.features.size():
 		var f: Dictionary = r.features[i]
 		var box: Rect2 = RoomLint.FEATURE_BOX.get(f.get("kind", ""), Rect2(-6, -12, 12, 12))
 		if Rect2(box.position + (f["pos"] as Vector2), box.size).grow(pick).has_point(p):
-			return _sel(room_id, "feature", i)
+			out.append(_sel(room_id, "feature", i))
+	for i in r.decor.size():
+		var d: Dictionary = r.decor[i]
+		var dbox := DecorLib.box_of(d)
+		if Rect2(dbox.position + (d["pos"] as Vector2), dbox.size).has_point(p):  # un-grown: a grown box would cover the ledge it stands on
+			out.append(_sel(room_id, "decor", i))
 	for i in r.exits.size():
 		if RoomBuilder.gate_rect(r.pixel_size(), r.exits[i]).grow(pick).has_point(p):
-			return _sel(room_id, "exit", i)
-	var area := INF
-	best = -1
+			out.append(_sel(room_id, "exit", i))
+	var under: Array = []
 	for i in r.solids.size():
 		var s: Rect2 = r.solids[i]
-		if s.grow(pick).has_point(p) and s.get_area() < area:
-			area = s.get_area()
-			best = i
-	return _sel(room_id, "solid", best) if best >= 0 else {}
+		if s.grow(pick).has_point(p):
+			under.append([s.get_area(), i])
+	under.sort_custom(func(a, b) -> bool: return a[0] < b[0] or (a[0] == b[0] and a[1] < b[1]))
+	for u in under:
+		out.append(_sel(room_id, "solid", u[1]))
+	return out
+
+## The element under a room-local point: the first of hit_all, or {}.
+func hit(room_id: String, p: Vector2, pick: float) -> Dictionary:
+	var all := hit_all(room_id, p, pick)
+	return all[0] if not all.is_empty() else {}
 
 # --- moving ---
 
@@ -245,6 +290,10 @@ func begin_move(sel: Dictionary) -> bool:
 			if i >= r.features.size():
 				return false
 			_drag = {"sel": sel, "before": _snap([sel["room"]]), "orig": r.features[i]["pos"]}
+		"decor":
+			if i >= r.decor.size():
+				return false
+			_drag = {"sel": sel, "before": _snap([sel["room"]]), "orig": r.decor[i]["pos"]}
 		"exit":
 			return _begin_move_exit(sel)
 		_:
@@ -265,11 +314,7 @@ func move_to(delta: Vector2) -> void:
 			var moved := Rect2(orig.position + d, orig.size)
 			moved.position = moved.position.clamp(Vector2.ZERO, r.pixel_size() - moved.size)
 			var i: int = sel["index"]
-			var was: Rect2 = r.solids[i]
-			r.solids[i] = moved
-			var h := r.hard_ledges.find(was)
-			if h >= 0:
-				r.hard_ledges[h] = moved
+			_put_solid(sel["room"], i, moved, r.hard_ledges.has(r.solids[i]))  # a refused step keeps the last valid rect
 		"spawn":
 			var p: Vector2 = (_drag["orig"] as Vector2) + d
 			if bounds(r).has_point(p) and not _in_rock(sel["room"], p):
@@ -284,6 +329,14 @@ func move_to(delta: Vector2) -> void:
 				base = _feature_base(sel["room"], orig + Vector2(d.x, 0.0), kind)
 			if base is Vector2:
 				r.features[sel["index"]]["pos"] = base
+		"decor":
+			var dorig: Vector2 = _drag["orig"]
+			var hangs := str(r.decor[sel["index"]].get("anchor", "bottom")) == "top"
+			var pos = _decor_base(sel["room"], dorig + d, hangs)
+			if pos is String and d.y != 0.0:
+				pos = _decor_base(sel["room"], dorig + Vector2(d.x, 0.0), hangs)  # a pointer that dips: keep sliding along the surface
+			if pos is Vector2:
+				r.decor[sel["index"]]["pos"] = pos
 		"exit":
 			_move_exit_to(d)
 		_:
@@ -325,6 +378,12 @@ func delete_selection() -> String:
 				return "nothing selected"
 			var before := _snap([selection["room"]])
 			r.features.remove_at(i)
+			_push(before)
+		"decor":
+			if i >= r.decor.size():
+				return "nothing selected"
+			var before := _snap([selection["room"]])
+			r.decor.remove_at(i)
 			_push(before)
 		"exit":
 			return _delete_exit()
@@ -411,6 +470,48 @@ func add_feature(room_id: String, kind: String, pos: Vector2) -> String:
 	selection = _sel(room_id, "feature", r.features.size() - 1)
 	return ""
 
+# --- decor ---
+
+## The bottom edge of the first rock at or above `p`: null when `p` is outside the room, inside rock, or nothing is above it (under
+## a top exit the generated ceiling is cut). A closed shortcut gate is not rock here, as in surface_below's default.
+func surface_above(room_id: String, p: Vector2) -> Variant:
+	if not bounds(rooms[room_id]).has_point(p):
+		return null
+	var best := -INF
+	for rect in rock(room_id):
+		var q: Rect2 = rect
+		if q.has_point(p):
+			return null
+		if p.x >= q.position.x and p.x < q.end.x and q.end.y <= p.y and q.end.y > best:
+			best = q.end.y
+	return null if best == -INF else best
+
+## A decor piece's position for a candidate point: x snapped; y the surface it stands on (found from one pixel above the point, as
+## for features) or, for a top-anchored piece, hangs from (found from one pixel below). A Vector2, or the reason it is refused.
+func _decor_base(room_id: String, p: Vector2, top: bool) -> Variant:
+	var q := Vector2(snap(p.x), p.y)
+	if not bounds(rooms[room_id]).has_point(q):
+		return "outside the room"
+	var y = surface_above(room_id, q + Vector2(0.0, 1.0)) if top else surface_below(room_id, q - Vector2(0.0, 1.0))
+	if y == null:
+		if top:
+			return "nothing to hang from there: click under a ledge or the ceiling"
+		return "nothing to stand on there: click open space above a floor or a ledge"
+	return Vector2(q.x, float(y))
+
+func add_decor(room_id: String, id: String, pos: Vector2) -> String:
+	if not DecorLib.CATALOG.has(id):
+		return "unknown decor '%s'" % id
+	var base = _decor_base(room_id, pos, str(DecorLib.CATALOG[id].get("anchor", "bottom")) == "top")
+	if base is String:
+		return base
+	var r: RoomDef = rooms[room_id]
+	var before := _snap([room_id])
+	r.decor.append(DecorLib.entry(id, base))
+	_push(before)
+	selection = _sel(room_id, "decor", r.decor.size() - 1)
+	return ""
+
 # --- inspector fields ---
 
 ## The value of an inspector field for the selection (see set_field for the keys), or null for an unknown one.
@@ -421,23 +522,38 @@ func get_field(sel: Dictionary, key: String) -> Variant:
 	var i: int = sel["index"]
 	match sel["kind"]:
 		"exit":
-			if i < r.exits.size() and key == "shortcut":
-				return r.exits[i].get("shortcut", "")
+			if i < r.exits.size() and (key == "shortcut" or key == "gate"):
+				return r.exits[i].get(key, "")
 		"feature":
 			if i >= r.features.size():
 				return null
 			var f: Dictionary = r.features[i]
 			match key:
-				"title", "text", "shortcut":
+				"title", "text", "shortcut", "hint":
 					return f.get(key, "")
 				"kit_level":
 					return int((f.get("kit", {}) as Dictionary).get("level", 0))
 				"kit_skills":
 					return ((f.get("kit", {}) as Dictionary).get("skills", []) as Array).duplicate()
+		"solid":
+			if i < r.solids.size():
+				var s: Rect2 = r.solids[i]
+				match key:
+					"x":
+						return s.position.x
+					"y":
+						return s.position.y
+					"w":
+						return s.size.x
+					"h":
+						return s.size.y
+					"hard":
+						return r.hard_ledges.has(s)
 	return null
 
-## Sets one inspector field: exit "shortcut" (both halves); tablet "title" (required) and "text"; switch "shortcut" (required);
-## rebirth pool "kit_level" (0 unsets) and "kit_skills" (a list), merged into the kit so every other key (G1's affinity) is kept.
+## Sets one inspector field: exit "shortcut" and "gate" (both halves); tablet "title" (required), "text" and "hint"; switch "shortcut" (required);
+## rebirth pool "kit_level" (0 unsets) and "kit_skills" (a list), merged into the kit so every other key (G1's affinity) is kept;
+## solid "x" "y" "w" "h" (exact numbers, never snapped) and "hard" (Rock from below: thin solids only).
 ## Optional keys are removed by "" or 0; required keys are never removed. A refusal returns the reason and changes nothing; a
 ## value equal to the stored one pushes nothing (_push declines an unchanged room).
 func set_field(sel: Dictionary, key: String, value) -> String:
@@ -448,41 +564,80 @@ func set_field(sel: Dictionary, key: String, value) -> String:
 	var i: int = sel["index"]
 	match sel["kind"]:
 		"exit":
-			if i >= r.exits.size() or key != "shortcut":
+			if i >= r.exits.size():
 				return "no such field"
-			return _set_exit_shortcut(room_id, i, str(value))
+			match key:
+				"shortcut":
+					if str(value) != "" and not valid_id(str(value)):
+						return "a shortcut id is letters, digits and underscore"
+					return _set_exit_pair_key(room_id, i, "shortcut", str(value))
+				"gate":
+					if str(value) != "" and not WorldValidator.GATES.has(str(value)):
+						return "unknown gate '%s'" % str(value)
+					return _set_exit_pair_key(room_id, i, "gate", str(value))
+			return "no such field"
 		"feature":
 			if i >= r.features.size():
 				return "nothing selected"
 			return _set_feature_field(room_id, i, key, value)
+		"solid":
+			if i >= r.solids.size():
+				return "nothing selected"
+			return _set_solid_field(room_id, i, key, value)
 	return "no such field"
 
-func _set_exit_shortcut(room_id: String, i: int, value: String) -> String:
-	if value != "" and not valid_id(value):
-		return "a shortcut id is letters, digits and underscore"
+func _set_solid_field(room_id: String, i: int, key: String, value) -> String:
+	var r: RoomDef = rooms[room_id]
+	var s: Rect2 = r.solids[i]
+	var next := s
+	var marked := r.hard_ledges.has(s)
+	match key:
+		"x":
+			next.position.x = float(value)
+		"y":
+			next.position.y = float(value)
+		"w":
+			next.size.x = float(value)
+		"h":
+			next.size.y = float(value)
+		"hard":
+			if bool(value) and not (s.size.y <= 24.0 and s.size.x > 24.0):
+				return "only a thin solid can be rock from below"
+			marked = bool(value)
+		_:
+			return "no such field"
+	var before := _snap([room_id])
+	var err := _put_solid(room_id, i, next, marked)
+	if err != "":
+		return err
+	_push(before)
+	return ""
+
+## Writes one key ("shortcut" or "gate"; "" removes it) on an exit and on its partner, in one undo step.
+func _set_exit_pair_key(room_id: String, i: int, key: String, value: String) -> String:
 	var r: RoomDef = rooms[room_id]
 	var p := partner_of(room_id, i)
 	var ids: Array = [room_id]
 	if not p.is_empty():
 		ids.append(p["room"])
 	var before := _snap(ids)
-	_write_exit_shortcut(r.exits[i], value)
+	_write_exit_key(r.exits[i], key, value)
 	if not p.is_empty():
-		_write_exit_shortcut((rooms[p["room"]] as RoomDef).exits[p["index"]], value)
+		_write_exit_key((rooms[p["room"]] as RoomDef).exits[p["index"]], key, value)
 	_push(before)
 	return ""
 
-static func _write_exit_shortcut(e: Dictionary, value: String) -> void:
+static func _write_exit_key(e: Dictionary, key: String, value: String) -> void:
 	if value == "":
-		e.erase("shortcut")
+		e.erase(key)
 	else:
-		e["shortcut"] = value
+		e[key] = value
 
 func _set_feature_field(room_id: String, i: int, key: String, value) -> String:
 	var r: RoomDef = rooms[room_id]
 	var f: Dictionary = r.features[i]
 	var kind: String = f.get("kind", "")
-	if (key == "title" or key == "text") and kind != "tablet":
+	if (key == "title" or key == "text" or key == "hint") and kind != "tablet":
 		return "a %s has no %s" % [kind, key]
 	if key == "shortcut" and kind != "switch":
 		return "a %s has no shortcut" % kind
@@ -503,6 +658,13 @@ func _set_feature_field(room_id: String, i: int, key: String, value) -> String:
 			if not valid_id(str(value)):
 				return "a shortcut id is letters, digits and underscore (and not empty)"
 			next["shortcut"] = str(value)
+		"hint":
+			if str(value) == "":
+				next.erase("hint")
+			elif not RoomLint.hintable_skill_ids().has(str(value)):
+				return "'%s' is not a skill the Compendium holds" % str(value)
+			else:
+				next["hint"] = str(value)
 		"kit_level":
 			var kit: Dictionary = next.get("kit", {})
 			if int(value) == 0:

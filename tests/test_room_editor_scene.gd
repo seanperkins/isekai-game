@@ -802,14 +802,14 @@ func test_cmd_s_saves_even_while_a_field_has_focus() -> void:
 	DirAccess.remove_absolute(ProjectSettings.globalize_path("%s/C1.tres" % ed.save_dir))
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(ed.save_dir))
 
-func test_selecting_a_feature_shows_its_inspector_and_a_solid_hides_it() -> void:
+func test_selecting_a_feature_shows_its_inspector_and_a_creature_hides_it() -> void:
 	var ed := await _editor()
 	ed.model.add_feature("C1", "tablet", Vector2(300, 100))
 	ed.view.refresh()
 	assert_eq(ed.slot.is_showing(), "inspector")
-	ed.model.select({"room": "C1", "kind": "solid", "index": 0})
+	ed.model.select({"room": "C1", "kind": "spawn", "index": 0})
 	ed.view.refresh()
-	assert_eq(ed.slot.is_showing(), "")
+	assert_eq(ed.slot.is_showing(), "", "a solid now has a panel (a number each); a creature still has none")
 
 func test_delete_and_undo_still_work_after_ticking_a_kit_skill() -> void:
 	var ed := await _editor()
@@ -975,3 +975,360 @@ func test_the_palettes_never_take_keyboard_focus_so_tab_keeps_hiding_the_panels(
 	var p := await _panels()
 	assert_eq(p._palette.focus_mode, Control.FOCUS_NONE)
 	assert_eq(p._feature_palette.focus_mode, Control.FOCUS_NONE)
+
+# --- Alt-press selection and the drag threshold ---
+
+func _alt_press(p: Vector2) -> InputEventMouseButton:
+	var e := _press(p)
+	e.alt_pressed = true
+	return e
+
+## Two nested solids in a far-away room, stacked on one point.
+func _nested_room() -> void:
+	var r := RoomDef.new()
+	r.id = "L1"
+	r.area = "cave"
+	r.cell = Vector2i(20, 20)
+	r.solids = [Rect2(100, 100, 200, 60), Rect2(150, 120, 40, 20)]
+	model.rooms["L1"] = r
+	model._baseline["L1"] = RoomEditModel.copy_room(r)
+	view.show_room(model, "L1")
+
+func test_a_plain_press_takes_the_first_candidate_and_alt_presses_walk_the_rest() -> void:
+	_nested_room()
+	view.tool = "select"
+	var at := Vector2(170, 130)
+	view.handle_event(_press(at))
+	view.handle_event(_release(at))
+	assert_eq(model.selection["index"], 1, "plain press: the smaller solid, as P2")
+	view.handle_event(_alt_press(at))
+	view.handle_event(_release(at))
+	assert_eq(model.selection["index"], 0, "Alt-press: the next candidate")
+	view.handle_event(_alt_press(at))
+	view.handle_event(_release(at))
+	assert_eq(model.selection["index"], 1, "and it wraps")
+
+func test_an_alt_drag_moves_what_it_selected() -> void:
+	_nested_room()
+	view.tool = "select"
+	var at := Vector2(170, 130)
+	view.handle_event(_press(at))
+	view.handle_event(_release(at))
+	view.handle_event(_alt_press(at))
+	view.handle_event(_motion(at + Vector2(40, 0)))
+	view.handle_event(_release(at + Vector2(40, 0)))
+	assert_eq(model.rooms["L1"].solids[0], Rect2(140, 100, 200, 60), "the big solid moved")
+	assert_eq(model.rooms["L1"].solids[1], Rect2(150, 120, 40, 20), "the small one did not")
+
+func test_a_creature_beside_a_selected_ledge_is_selected_by_a_plain_press() -> void:
+	_nested_room()
+	model.rooms["L1"].spawns = [{"id": "toad", "pos": Vector2(250, 120)}]
+	view.tool = "select"
+	view.handle_event(_press(Vector2(170, 130)))
+	view.handle_event(_release(Vector2(170, 130)))
+	view.handle_event(_press(Vector2(250, 120)))
+	view.handle_event(_release(Vector2(250, 120)))
+	assert_eq(model.selection["kind"], "spawn", "a plain press never keeps the old selection")
+
+func test_a_press_with_a_pixel_of_jitter_moves_nothing_even_in_a_huge_room() -> void:
+	var r := RoomDef.new()
+	r.id = "L1"
+	r.area = "cave"
+	r.cell = Vector2i(20, 20)
+	r.size = Vector2i(6, 6)
+	r.solids = [Rect2(100, 100, 200, 12)]
+	model.rooms["L1"] = r
+	model._baseline["L1"] = RoomEditModel.copy_room(r)
+	view.show_room(model, "L1")
+	view.tool = "select"
+	var at := Vector2(200, 106)
+	var press := _press(at)
+	view.handle_event(press)
+	var jitter := InputEventMouseMotion.new()
+	jitter.position = press.position + Vector2(2, 0)   # 2 screen px: about 12 room px at this zoom
+	view.handle_event(jitter)
+	view.handle_event(_release(at))
+	assert_eq(model.rooms["L1"].solids[0], Rect2(100, 100, 200, 12))
+	assert_eq(model.undo_depth(), 0)
+
+func test_a_drag_starts_after_three_screen_pixels_and_applies_from_the_press() -> void:
+	_nested_room()
+	view.tool = "select"
+	var at := Vector2(170, 130)
+	var press := _press(at)
+	view.handle_event(press)
+	var far := InputEventMouseMotion.new()
+	far.position = press.position + Vector2(20, 0)
+	view.handle_event(far)
+	view.handle_event(_release(view.to_room(far.position)))
+	var moved: Rect2 = model.rooms["L1"].solids[1]
+	assert_almost_eq(moved.position.x, 150.0 + view.to_room(far.position).x - at.x, 4.0, "the whole distance applied, no lag")
+
+# --- a solid's panel ---
+
+func test_a_selected_solid_shows_its_numbers() -> void:
+	var ed := await _editor()
+	ed.model.select({"room": "C1", "kind": "solid", "index": 1})
+	ed.view.refresh()
+	assert_eq(ed.slot.is_showing(), "inspector")
+	var x: SpinBox = ed.slot.find_field("x")
+	assert_eq([x.value, x.min_value, x.max_value], [420.0, 0.0, 1276.0], "a new SpinBox starts at 0..100: ranges first, then the value")
+	assert_eq((ed.slot.find_field("y") as SpinBox).value, 214.0)
+	assert_eq((ed.slot.find_field("w") as SpinBox).value, 100.0)
+	assert_eq((ed.slot.find_field("h") as SpinBox).value, 12.0)
+
+func test_typing_a_number_commits_it_once_and_never_while_building() -> void:
+	var ed := await _editor()
+	var depth_before: int = ed.model.undo_depth()
+	ed.model.select({"room": "C1", "kind": "solid", "index": 1})
+	ed.view.refresh()
+	assert_eq(ed.model.undo_depth(), depth_before, "building the panel commits nothing")
+	var x: SpinBox = ed.slot.find_field("x")
+	x.value = 440.0
+	assert_eq(ed.model.rooms["C1"].solids[1].position.x, 440.0)
+	assert_eq(ed.model.undo_depth(), depth_before + 1)
+
+func test_a_refused_number_shows_the_stored_value_again() -> void:
+	var ed := await _editor()
+	var errors := []
+	ed.slot.field_error.connect(func(t: String) -> void: errors.append(t))
+	ed.model.rooms["C1"].solids.append(Rect2(500, 100, 120, 12))
+	var i: int = ed.model.rooms["C1"].solids.size() - 1
+	ed.model.select({"room": "C1", "kind": "solid", "index": i})
+	ed.view.refresh()
+	(ed.slot.find_field("x") as SpinBox).value = 260.0
+	(ed.slot.find_field("y") as SpinBox).value = 266.0   # now identical to C1's first ledge
+	assert_eq(errors.size(), 1)
+	assert_eq((ed.slot.find_field("y") as SpinBox).value, 100.0, "back to the stored value")
+
+func test_rock_from_below_is_a_checkbox_that_hides_for_a_thick_solid() -> void:
+	var ed := await _editor()
+	ed.model.select({"room": "C1", "kind": "solid", "index": 1})
+	ed.view.refresh()
+	var box: CheckBox = ed.slot.find_field("hard")
+	assert_true(box.visible)
+	box.button_pressed = true
+	assert_true(ed.model.rooms["C1"].hard_ledges.has(Rect2(420, 214, 100, 12)))
+	ed.model.select({"room": "C1", "kind": "solid", "index": 5})
+	ed.view.refresh()
+	assert_false((ed.slot.find_field("hard") as CheckBox).visible, "a thick solid is rock anyway")
+
+func test_building_the_panel_for_a_solid_that_sticks_out_of_the_room_changes_nothing() -> void:
+	var ed := await _editor()
+	ed.model.rooms["C1"].solids.append(Rect2(100, 358, 8, 4))  # lint's solid_outside: y is past the control's maximum (356)
+	var i: int = ed.model.rooms["C1"].solids.size() - 1
+	var depth: int = ed.model.undo_depth()
+	ed.model.select({"room": "C1", "kind": "solid", "index": i})
+	ed.view.refresh()
+	assert_eq(ed.model.rooms["C1"].solids[i], Rect2(100, 358, 8, 4), "the control clamps what it shows; building commits nothing")
+	assert_eq(ed.model.undo_depth(), depth)
+
+# --- the inspector never shows a stale number ---
+
+func test_a_drag_updates_the_number_that_was_showing() -> void:
+	var ed := await _editor()
+	ed.model.select({"room": "C1", "kind": "solid", "index": 1})
+	ed.view.refresh()
+	assert_true(ed.model.begin_move(ed.model.selection))
+	ed.model.move_to(Vector2(40, 0))
+	ed.model.end_move()
+	ed.view.refresh()
+	assert_eq((ed.slot.find_field("x") as SpinBox).value, 460.0, "the field follows the drag")
+
+func test_a_grow_moves_the_number_and_the_range_with_the_room() -> void:
+	var ed := await _editor()
+	ed.open_room("C6")
+	var solid: Rect2 = ed.model.rooms["C6"].solids[0]
+	ed.model.select({"room": "C6", "kind": "solid", "index": 0})
+	ed.view.refresh()
+	var depth: int = ed.model.undo_depth()
+	ed.grow("left")
+	var x: SpinBox = ed.slot.find_field("x")
+	assert_eq(ed.model.rooms["C6"].solids[0].position.x, solid.position.x + 640.0)
+	assert_eq(x.value, solid.position.x + 640.0, "the shifted value is shown, not clamped to the old maximum")
+	assert_eq(x.max_value, 1280.0 - 4.0)
+	assert_eq(ed.model.undo_depth(), depth + 1, "a refresh never commits: only the grow is a step")
+
+func test_a_refresh_leaves_a_focused_field_alone_and_updates_it_once_it_is_not() -> void:
+	var ed := await _editor()
+	ed.model.select({"room": "C1", "kind": "solid", "index": 1})
+	ed.view.refresh()
+	var x: SpinBox = ed.slot.find_field("x")
+	x.get_line_edit().grab_focus()
+	ed.model.rooms["C1"].solids[1].position.x = 500.0   # the model changed under the focused field
+	ed.slot.refresh_inspector()
+	assert_eq(x.value, 420.0, "the author is typing in it: not overwritten")
+	x.get_line_edit().release_focus()
+	ed.slot.refresh_inspector()
+	assert_eq(x.value, 500.0, "and refreshed once it is not focused")
+
+func test_the_rock_from_below_checkbox_follows_the_height() -> void:
+	var ed := await _editor()
+	ed.model.select({"room": "C1", "kind": "solid", "index": 1})
+	ed.view.refresh()
+	(ed.slot.find_field("h") as SpinBox).value = 30.0
+	assert_false((ed.slot.find_field("hard") as CheckBox).visible, "typed thick: the checkbox hides")
+	(ed.slot.find_field("h") as SpinBox).value = 12.0
+	assert_true((ed.slot.find_field("hard") as CheckBox).visible, "typed thin again: it shows")
+
+# --- the Decor tool ---
+
+func test_the_decor_tool_places_a_piece_that_stands_on_the_surface() -> void:
+	view.tool = "decor"
+	view.decor_id = "crystal_teal"
+	view.handle_event(_press(Vector2(300, 100)))
+	view.handle_event(_release(Vector2(300, 100)))
+	var placed: Dictionary = model.rooms["C1"].decor.back()
+	assert_eq(placed["id"], "crystal_teal")
+	assert_eq(model.selection["kind"], "decor")
+	assert_eq(model.undo_depth(), 1)
+
+func test_the_decor_tool_without_a_choice_says_so_and_refuses_with_a_message() -> void:
+	view.tool = "decor"
+	view.decor_id = ""
+	var messages := []
+	view.message.connect(func(t: String) -> void: messages.append(t))
+	view.handle_event(_press(Vector2(300, 100)))
+	view.handle_event(_release(Vector2(300, 100)))
+	assert_eq(messages.size(), 1)
+	view.decor_id = "vine"
+	var top: Dictionary = model.rooms["C1"].exits.filter(func(e): return e["edge"] == "top")[0]
+	var mid := (float(top["from"]) + float(top["to"])) / 2.0
+	view.handle_event(_press(Vector2(mid, 200)))
+	view.handle_event(_release(Vector2(mid, 200)))
+	assert_eq(messages.size(), 2, "a hanging piece under a top exit has nothing to hang from")
+	assert_eq(model.undo_depth(), 0)
+
+func test_the_selected_decor_outline_and_an_unknown_pieces_red_box() -> void:
+	model.rooms["C1"].decor.append({"id": "no_such_sprite", "pos": Vector2(300, 300)})
+	view.show_room(model, "C1")
+	await wait_process_frames(1)
+	var i: int = model.rooms["C1"].decor.size() - 1
+	model.select({"room": "C1", "kind": "decor", "index": i})
+	assert_eq(view.selection_rect(), Rect2(Vector2(300, 300) + DecorLib.UNKNOWN_BOX.position, DecorLib.UNKNOWN_BOX.size))
+	model.select({})
+	view.refresh()
+	assert_gt(view.overlay.get_children().filter(func(n): return n is Line2D).size(), 0, "nothing is selected, so the lines are the unknown piece's red box")
+
+func test_an_unknown_decor_piece_can_be_reached_from_the_problems_list_and_deleted() -> void:
+	var ed := await _editor()
+	ed.model.rooms["C1"].decor.append({"id": "no_such_sprite", "pos": Vector2(300, 300), "anchor": "top"})
+	ed.model.serial += 1
+	ed.view.refresh()
+	ed.panels.press("Validate")
+	var at := ed.model.problems().find_custom(func(p): return p["pick"].get("kind", "") == "decor")
+	assert_gte(at, 0, "decor_unknown lists it")
+	ed.slot.click_problem(at)
+	assert_eq(ed.model.selection["kind"], "decor")
+	assert_ne(ed.view.selection_rect().size, Vector2.ZERO, "it has a box to centre on")
+	var n: int = ed.model.rooms["C1"].decor.size()
+	assert_eq(ed.model.delete_selection(), "")
+	assert_eq(ed.model.rooms["C1"].decor.size(), n - 1)
+
+func test_the_decor_palette_shows_for_the_decor_tool_and_follows_the_rooms_area() -> void:
+	var ed := await _editor()
+	ed.panels.press("Decor")
+	assert_true(ed.panels.decor_palette_visible())
+	assert_false(ed.panels.palette_visible())
+	assert_eq(ed.panels.decor_palette_ids(), DecorLib.ids_for_biome("cave"))
+	ed.open_room("G1")
+	assert_eq(ed.panels.decor_palette_ids(), DecorLib.ids_for_biome("grotto"), "rebuilt for the new room's area")
+	ed.panels.choose_decor("grotto_flowers")
+	assert_eq(ed.view.decor_id, "grotto_flowers")
+	assert_eq(ed._free_rect().position.x, 92.0, "the palette is counted when fitting")
+
+# --- gate and hint controls ---
+
+func test_the_gate_dropdown_writes_both_halves_and_shows_a_stored_unknown_gate_as_its_own_item() -> void:
+	var ed := await _editor()
+	var idx := -1
+	for i in ed.model.rooms["C1"].exits.size():
+		if ed.model.rooms["C1"].exits[i]["room"] == "C2":
+			idx = i
+	ed.model.select({"room": "C1", "kind": "exit", "index": idx})
+	ed.view.refresh()
+	var pick: OptionButton = ed.slot.find_field("gate")
+	assert_eq(pick.get_item_text(pick.selected), "none")
+	pick.item_selected.emit(1)   # wall_cling
+	assert_eq(ed.model.rooms["C1"].exits[idx].get("gate", ""), "wall_cling")
+	ed.model.rooms["C1"].exits[idx]["gate"] = "typo_gate"   # hand-edited data
+	ed.slot.show_inspector(ed.model, ed.model.selection)
+	var shown: OptionButton = ed.slot.find_field("gate")
+	assert_eq(shown.get_item_text(shown.selected), "typo_gate", "the control never shows 'none' for a gate that is there")
+
+func test_the_hint_dropdown_sets_and_clears_a_tablets_hint() -> void:
+	var ed := await _editor()
+	ed.open_room("C6")
+	var idx: int = ed.model.rooms["C6"].features.find_custom(func(f): return f["kind"] == "tablet")
+	ed.model.select({"room": "C6", "kind": "feature", "index": idx})
+	ed.view.refresh()
+	var pick: OptionButton = ed.slot.find_field("hint")
+	pick.item_selected.emit(0)   # none
+	assert_false(ed.model.rooms["C6"].features[idx].has("hint"))
+
+func test_a_refresh_selects_a_string_choice_by_its_text() -> void:
+	var ed := await _editor()
+	var idx := -1
+	for i in ed.model.rooms["C1"].exits.size():
+		if ed.model.rooms["C1"].exits[i]["room"] == "C2":
+			idx = i
+	ed.model.select({"room": "C1", "kind": "exit", "index": idx})
+	ed.view.refresh()
+	ed.model.rooms["C1"].exits[idx]["gate"] = "wall_cling"   # changed under the open panel
+	ed.slot.refresh_inspector()
+	var pick: OptionButton = ed.slot.find_field("gate")
+	assert_eq(pick.get_item_text(pick.selected), "wall_cling", "by item text, not by an index parsed from a string")
+
+func test_a_new_room_says_which_room_it_was_made_beside() -> void:
+	var ed := await _editor()
+	ed.open_room("C6")
+	ed.new_room("left", "Fresh", "cave", Vector2i(1, 1))
+	assert_string_contains(ed.panels.status_text(), "created Fresh beside C6")
+
+func test_the_rock_from_below_checkbox_is_not_labelled_twice() -> void:
+	var ed := await _editor()
+	ed.model.select({"room": "C1", "kind": "solid", "index": 1})
+	ed.view.refresh()
+	var labels := 0
+	var stack: Array = [ed.slot]
+	while not stack.is_empty():
+		var n: Node = stack.pop_back()
+		if n is Label and (n as Label).text == "Rock from below":
+			labels += 1
+		stack.append_array(n.get_children())
+	assert_eq(labels, 0, "the checkbox carries its own text")
+
+# --- review fixes ---
+
+func test_a_decor_choice_that_the_new_rooms_palette_does_not_list_is_dropped() -> void:
+	var ed := await _editor()
+	ed.panels.press("Decor")
+	ed.panels.choose_decor("crystal_teal")
+	assert_eq(ed.view.decor_id, "crystal_teal")
+	ed.open_room("G1")   # a grotto room: the palette lists grotto_* ids only
+	assert_eq(ed.view.decor_id, "", "the old choice is not in the new palette, so it must not still be placed")
+	var n: int = ed.model.rooms["G1"].decor.size()
+	ed.view.handle_event(_button_at(ed.view.to_screen(Vector2(300, 100)), true))
+	ed.view.handle_event(_button_at(ed.view.to_screen(Vector2(300, 100)), false))
+	assert_eq(ed.model.rooms["G1"].decor.size(), n, "nothing was placed")
+
+func test_a_decor_choice_that_the_new_rooms_palette_lists_is_kept() -> void:
+	var ed := await _editor()
+	ed.panels.press("Decor")
+	ed.panels.choose_decor("crystal_teal")
+	ed.open_room("C2")   # still a cave room
+	assert_eq(ed.view.decor_id, "crystal_teal")
+	assert_eq(ed.panels._decor_palette.get_selected_items().size(), 1, "and it is still highlighted")
+
+func test_the_number_field_shows_the_new_text_after_a_refresh_not_only_the_new_value() -> void:
+	var ed := await _editor()
+	ed.model.select({"room": "C1", "kind": "solid", "index": 1})
+	ed.view.refresh()
+	ed.model.rooms["C1"].solids[1].position.x = 500.0
+	ed.slot.refresh_inspector()
+	await wait_process_frames(2)
+	assert_eq((ed.slot.find_field("x") as SpinBox).get_line_edit().text, "500", "what the author sees, not only .value")
+
+func test_the_decor_palette_never_takes_keyboard_focus() -> void:
+	var p := await _panels()
+	assert_eq(p._decor_palette.focus_mode, Control.FOCUS_NONE)

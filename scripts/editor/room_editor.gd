@@ -61,6 +61,8 @@ func _ready() -> void:
 	panels.tool_chosen.connect(func(t: String) -> void: view.tool = t)
 	panels.creature_chosen.connect(func(id: String) -> void: view.creature_id = id)
 	panels.feature_chosen.connect(func(kind: String) -> void: view.feature_kind = kind)
+	panels.decor_chosen.connect(func(id: String) -> void: view.decor_id = id)
+	_refresh_decor_palette()
 	panels.room_chosen.connect(open_room)
 	panels.undo_pressed.connect(undo)
 	panels.redo_pressed.connect(redo)
@@ -77,7 +79,7 @@ func _ready() -> void:
 	if view_state.is_empty():
 		_refit()
 	_sync()
-	panels.set_status("Cmd/Ctrl+Z undo, Cmd/Ctrl+S save, F5 play from the pointer, Tab hides the panels, Validate (N) lists the problems")
+	panels.set_status("Cmd/Ctrl+Z undo, Cmd/Ctrl+S save, F5 play from the pointer, Tab hides the panels, Validate (N) lists the problems, Alt/Option-click selects what is under the selection")
 
 ## A click in the room, a button or a shortcut is the end of any inspector edit: releasing focus commits a pending LineEdit first
 ## (before the room changes under it, or the model is saved, undone or played).
@@ -90,7 +92,7 @@ func _commit_pending() -> void:
 func _free_rect() -> Rect2:
 	if not panels.panels_visible():
 		return Rect2(0.0, 0.0, 640.0, 360.0)
-	var left := 92.0 if panels.palette_visible() or panels.feature_palette_visible() else 0.0
+	var left := 92.0 if panels.palette_visible() or panels.feature_palette_visible() or panels.decor_palette_visible() else 0.0
 	return Rect2(left, 48.0, 640.0 - left - 168.0, 296.0)
 
 func _refit() -> void:
@@ -137,6 +139,8 @@ func _sync_slot() -> void:
 		if slot.is_showing() != "inspector" or model.selection != _slot_sel:
 			_slot_sel = model.selection.duplicate()
 			slot.show_inspector(model, model.selection)
+		else:
+			slot.refresh_inspector()
 	else:
 		_slot_sel = {}
 		slot.hide_slot()
@@ -150,6 +154,8 @@ func _inspectable(sel: Dictionary) -> bool:
 			return sel["index"] < r.exits.size()
 		"feature":
 			return sel["index"] < r.features.size()
+		"solid":
+			return sel["index"] < r.solids.size()
 	return false
 
 ## Opens the problem's room, selects the element it points at and centres the view on it.
@@ -185,8 +191,21 @@ func open_room(id: String) -> void:
 	room_id = id
 	model.select({})
 	view.show_room(model, id)
+	_refresh_decor_palette()
 	_refit()
 	_sync()
+
+## The Decor tool's palette is the current room's biome's decor. A choice the new
+## palette does not list is dropped, so the tool never places a piece nobody can see
+## selected; one it does list stays chosen and highlighted.
+func _refresh_decor_palette() -> void:
+	var ids := DecorLib.ids_for_biome(model.rooms[room_id].area)
+	var keep: String = view.decor_id if ids.has(view.decor_id) else ""
+	panels.set_decor_ids(ids)
+	if keep == "":
+		view.decor_id = ""
+	else:
+		panels.choose_decor(keep)
 
 func undo() -> void:
 	_commit_pending()
@@ -215,8 +234,9 @@ func new_room(edge: String, id: String, area: String, size: Vector2i) -> void:
 	if err != "":
 		panels.set_status(err)
 		return
+	var beside := room_id
 	open_room(id)
-	panels.set_status("created %s beside %s" % [id, room_id])
+	panels.set_status("created %s beside %s" % [id, beside])
 
 func save() -> void:
 	_commit_pending()

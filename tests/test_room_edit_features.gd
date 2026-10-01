@@ -183,10 +183,10 @@ func test_delete_removes_a_feature_and_never_an_exit() -> void:
 	assert_eq(model.delete_selection(), "")
 	assert_eq(_features("C2").size(), n - 1)
 	assert_eq(model.rooms["C2"].exits, exits_before, "Delete on a feature leaves the exits alone")
-	model.select({"room": "C2", "kind": "decor", "index": 0})
+	model.select({"room": "C2", "kind": "teapot", "index": 0})  # not a kind (decor became one in P3)
 	assert_ne(model.delete_selection(), "", "an unknown kind is refused, never routed to an exit")
 	assert_eq(model.rooms["C2"].exits, exits_before)
-	model.select({"room": "C2", "kind": "decor", "index": 0})
+	model.select({"room": "C2", "kind": "teapot", "index": 0})
 	assert_false(model.begin_move(model.selection))
 
 func test_a_new_feature_is_lint_clean_and_undo_restores_the_room() -> void:
@@ -195,3 +195,102 @@ func test_a_new_feature_is_lint_clean_and_undo_restores_the_room() -> void:
 	assert_eq(RoomLint.text(RoomLint.check(model.rooms), RoomLint.RULES), "")
 	model.undo()
 	assert_true(RoomEditModel.same_room(before, model.rooms["C2"]))
+
+# --- decor ---
+
+func _decor(room: String) -> Array:
+	return model.rooms[room].decor
+
+func test_surface_above_is_the_underside_of_the_first_rock_and_null_in_rock_or_under_a_top_exit() -> void:
+	var r: RoomDef = model.rooms["C2"]
+	r.solids = [Rect2(200, 100, 100, 12)]
+	assert_eq(model.surface_above("C2", Vector2(250, 200)), 112.0, "the ledge's underside")
+	assert_eq(model.surface_above("C2", Vector2(50, 200)), 20.0, "the generated ceiling")
+	assert_null(model.surface_above("C2", Vector2(250, 105)), "inside rock")
+	var top: Dictionary = r.exits.filter(func(e): return e["edge"] == "top")[0]
+	var mid := (float(top["from"]) + float(top["to"])) / 2.0
+	assert_null(model.surface_above("C2", Vector2(mid, 200)), "under a top exit the ceiling is cut: nothing to hang from")
+
+func test_a_standing_piece_stands_on_the_surface_below_and_a_hanging_one_hangs_from_the_rock_above() -> void:
+	var r: RoomDef = model.rooms["C2"]
+	r.solids = [Rect2(200, 200, 100, 12)]
+	assert_eq(model.add_decor("C2", "crystal_teal", Vector2(240, 120)), "")
+	assert_eq(_decor("C2").back(), DecorLib.entry("crystal_teal", Vector2(240, 200)))
+	assert_eq(model.selection["kind"], "decor")
+	assert_eq(model.add_decor("C2", "vine", Vector2(240, 300)), "")
+	assert_eq(_decor("C2").back(), DecorLib.entry("vine", Vector2(240, 212)), "hangs from the ledge's underside")
+	assert_eq(model.undo_depth(), 2)
+
+func test_decor_placement_is_refused_with_no_surface_an_unknown_id_or_outside() -> void:
+	var r: RoomDef = model.rooms["C2"]
+	var top: Dictionary = r.exits.filter(func(e): return e["edge"] == "top")[0]
+	var mid := (float(top["from"]) + float(top["to"])) / 2.0
+	assert_ne(model.add_decor("C2", "vine", Vector2(mid, 200)), "", "a hanging piece under a top exit")
+	assert_ne(model.add_decor("C2", "no_such_sprite", Vector2(300, 200)), "", "an id outside the catalog")
+	assert_ne(model.add_decor("C2", "crystal_teal", Vector2(-50, 200)), "", "outside the room")
+	assert_eq(model.undo_depth(), 0)
+
+func test_decor_hits_its_ungrown_box_so_a_ledge_beside_it_is_still_the_first_hit() -> void:
+	var r: RoomDef = model.rooms["C2"]
+	r.spawns = []
+	r.features = []
+	r.solids = [Rect2(200, 200, 100, 12)]
+	r.decor = [DecorLib.entry("crystal_teal", Vector2(260, 200))]
+	var box := DecorLib.texture_box("crystal_teal")
+	var on_art := Vector2(260, 200) + box.position + box.size / 2.0
+	assert_eq(model.hit("C2", on_art, 8.0)["kind"], "decor", "on the crystal's art")
+	assert_eq(model.hit("C2", Vector2(210, 206), 8.0)["kind"], "solid", "on the ledge, away from the crystal")
+	assert_eq(model.hit("C2", Vector2(260, 206), 8.0)["kind"], "solid", "on the ledge under the crystal's foot: the box ends at the ledge's top")
+
+func test_decor_drags_along_a_ledge_keeps_sliding_when_the_pointer_dips_and_deletes() -> void:
+	var r: RoomDef = model.rooms["C2"]
+	r.solids = [Rect2(200, 200, 160, 12)]
+	r.decor = [DecorLib.entry("crystal_teal", Vector2(220, 200))]
+	var sel := {"room": "C2", "kind": "decor", "index": 0}
+	assert_true(model.begin_move(sel))
+	model.move_to(Vector2(60, 4))   # the pointer dips below the ledge top
+	assert_eq(r.decor[0]["pos"], Vector2(280, 200))
+	model.end_move()
+	model.select(sel)
+	assert_eq(model.delete_selection(), "")
+	assert_eq(r.decor.size(), 0)
+	model.undo()
+	assert_eq(model.rooms["C2"].decor.size(), 1, "undo swaps in a restored room object, so read it from the model")
+
+func test_an_unknown_decor_id_can_be_selected_and_deleted() -> void:
+	var r: RoomDef = model.rooms["C2"]
+	r.spawns = []
+	r.features = []
+	r.decor = [{"id": "no_such_sprite", "pos": Vector2(300, 300), "anchor": "top"}]
+	var box := DecorLib.box_of(r.decor[0])
+	var inside := Vector2(300, 300) + box.position + box.size / 2.0
+	assert_eq(model.hit("C2", inside, 0.0), {"room": "C2", "kind": "decor", "index": 0})
+	model.select(model.hit("C2", inside, 0.0))
+	assert_eq(model.delete_selection(), "")
+	assert_eq(r.decor, [])
+
+func test_a_closed_shortcut_gate_is_not_rock_to_hang_from() -> void:
+	var r: RoomDef = model.rooms["C1"]
+	var top: Dictionary = r.exits.filter(func(e): return e["edge"] == "top" and e.has("shortcut"))[0]
+	var mid := (float(top["from"]) + float(top["to"])) / 2.0
+	assert_null(model.surface_above("C1", Vector2(mid, 200)), "the gate vanishes when the shortcut opens")
+	assert_ne(model.add_decor("C1", "vine", Vector2(mid, 200)), "")
+
+func test_a_hand_edited_top_anchored_piece_is_boxed_below_its_position_and_drags_along_the_rock_above() -> void:
+	var r: RoomDef = model.rooms["C2"]
+	r.spawns = []
+	r.features = []
+	r.solids = [Rect2(200, 200, 160, 12)]
+	r.decor = [{"id": "no_such_sprite", "pos": Vector2(240, 212), "anchor": "top"}]
+	var below := Vector2(240, 212) + DecorLib.UNKNOWN_BOX.size / 2.0 * Vector2(0.0, 1.0)
+	assert_eq(model.hit("C2", below, 0.0), {"room": "C2", "kind": "decor", "index": 0}, "a hanging piece's box is under its position")
+	var sel := {"room": "C2", "kind": "decor", "index": 0}
+	assert_true(model.begin_move(sel))
+	model.move_to(Vector2(40, 0))
+	assert_eq(r.decor[0]["pos"], Vector2(280, 212), "it keeps hanging from the ledge's underside, not dropped onto a floor")
+
+func test_a_hand_edited_piece_without_an_anchor_stands_even_when_the_catalog_says_it_hangs() -> void:
+	var r: RoomDef = model.rooms["C2"]
+	r.solids = [Rect2(200, 200, 160, 12)]
+	r.decor = [{"id": "vine", "pos": Vector2(240, 200)}]   # RoomBuilder.build_decor reads the entry's anchor, default bottom
+	assert_eq(DecorLib.box_of(r.decor[0]).position.y, -float(Art.texture("vine").get_height()), "the box ends at the position")

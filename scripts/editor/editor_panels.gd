@@ -17,15 +17,18 @@ signal grow_requested(side: String)
 signal movement_toggled(on: bool)
 signal shortcuts_toggled(on: bool)
 signal feature_chosen(kind: String)
+signal decor_chosen(id: String)
 signal save_pressed
 signal play_pressed
 signal new_room_requested(edge: String, id: String, area: String, size: Vector2i)
 
 const FONT := 8
-const AREAS := ["cave", "grotto"]
+## The areas New room offers: every biome the terrain art supports.
+static func areas() -> Array:
+	return TerrainArt.biomes()
 const EDGES := ["left", "right", "top", "bottom"]
-## The tools in toolbar row one; Creature and Feature also show their palette at the left.
-const TOOLS := ["Select", "Solid", "Creature", "Feature", "Exit"]
+## The tools in toolbar row one; Creature, Feature and Decor also show their palette at the left.
+const TOOLS := ["Select", "Solid", "Creature", "Feature", "Decor", "Exit"]
 const GROW_SIDES := ["Left", "Right", "Top"]
 const TOGGLES := ["Wall Cling", "Open shortcuts"]
 const HOLE_NOTE := "A room above or below a neighbour cuts a hole in its ceiling or floor: it is connected but not walkable until you add ledges."
@@ -40,6 +43,7 @@ var _room_ids: Array = []
 var _buttons := {}                  # label -> Button
 var _palette := ItemList.new()
 var _feature_palette := ItemList.new()
+var _decor_palette := ItemList.new()
 var _status := Label.new()
 var _status_message := ""
 var _dialog := PanelContainer.new()
@@ -149,6 +153,18 @@ func _build_palette() -> void:
 	_feature_palette.select(RoomEditModel.FEATURE_KINDS.find("tablet"))  # the view's default kind
 	_feature_palette.item_selected.connect(func(i: int) -> void: feature_chosen.emit(_feature_palette.get_item_text(i)))
 	_root.add_child(_feature_palette)
+	_decor_palette.position = Vector2(0, 50)
+	_decor_palette.size = Vector2(92, 290)
+	_decor_palette.focus_mode = Control.FOCUS_NONE
+	_small(_decor_palette)
+	_decor_palette.item_selected.connect(func(i: int) -> void: decor_chosen.emit(_decor_palette.get_item_text(i)))
+	_root.add_child(_decor_palette)
+
+## The decor ids the Decor tool offers: RoomEditor passes the current room's biome's.
+func set_decor_ids(ids: Array) -> void:
+	_decor_palette.clear()
+	for id in ids:
+		_decor_palette.add_item(id)
 
 ## RoomEditor hands over its EditorSlot so Tab hides it with everything else.
 func add_slot(slot: Control) -> void:
@@ -184,7 +200,7 @@ func _build_dialog() -> void:
 	_new_id.custom_minimum_size = Vector2(120, 0)
 	_new_id.text_changed.connect(func(_t: String) -> void: _refresh_dialog())
 	box.add_child(_row("Area", _new_area))
-	for a in AREAS:
+	for a in areas():
 		_new_area.add_item(a)
 	_new_w.min_value = 1
 	_new_w.max_value = RoomEditModel.MAX_SCREENS
@@ -252,6 +268,7 @@ func set_tool(tool_name: String) -> void:
 		(_buttons[t] as Button).button_pressed = t.to_lower() == tool_name
 	_palette.visible = tool_name == "creature"
 	_feature_palette.visible = tool_name == "feature"
+	_decor_palette.visible = tool_name == "decor"
 
 func set_status(text: String) -> void:
 	_status_message = text
@@ -282,7 +299,7 @@ func open_new_room(edge: String) -> void:
 
 func set_new_room_fields(id: String, area: String, size: Vector2i) -> void:
 	_new_id.text = id
-	_new_area.select(maxi(0, AREAS.find(area)))
+	_new_area.select(maxi(0, areas().find(area)))
 	_new_w.value = size.x
 	_new_h.value = size.y
 	_refresh_dialog()
@@ -296,7 +313,7 @@ func confirm_new_room() -> void:
 		_new_error.text = err
 		return
 	_dialog.visible = false
-	new_room_requested.emit(EDGES[_new_edge.selected], _new_id.text, AREAS[_new_area.selected],
+	new_room_requested.emit(EDGES[_new_edge.selected], _new_id.text, areas()[_new_area.selected],
 		Vector2i(int(_new_w.value), int(_new_h.value)))
 
 func _refresh_dialog() -> void:
@@ -361,6 +378,21 @@ func palette_visible() -> bool:
 
 func feature_palette_visible() -> bool:
 	return _feature_palette.visible
+
+func decor_palette_visible() -> bool:
+	return _decor_palette.visible
+
+func decor_palette_ids() -> Array:
+	var out: Array = []
+	for i in _decor_palette.item_count:
+		out.append(_decor_palette.get_item_text(i))
+	return out
+
+func choose_decor(id: String) -> void:
+	for i in _decor_palette.item_count:
+		if _decor_palette.get_item_text(i) == id:
+			_decor_palette.select(i)
+	decor_chosen.emit(id)
 
 func status_text() -> String:
 	return _status.text

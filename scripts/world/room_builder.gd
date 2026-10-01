@@ -17,9 +17,11 @@ static func visual_kind(r: Rect2, room_width: float = 1600.0) -> String:
 ## "top" anchors hang from the ceiling; the default stands on the given point.
 static func build_decor(parent: Node, layout: Dictionary, light_energy := 1.0) -> void:
 	for d in layout.get("decor", []):
+		var tex := Art.texture(d["id"])
+		if tex == null:
+			continue  # an id with no sprite (a hand edit): RoomLint's decor_unknown reports it
 		var holder := Node2D.new()
 		holder.position = d["pos"]
-		var tex := Art.texture(d["id"])
 		var s := Art.sprite(d["id"], tex.get_height() if d.get("anchor", "bottom") == "top" else 0.0)
 		holder.add_child(s)
 		if d.has("light"):

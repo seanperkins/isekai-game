@@ -64,3 +64,7 @@ func test_a_left_click_event_reaches_click() -> void:
 	e.position = c2.get_center()
 	v._gui_input(e)
 	assert_eq(chosen, ["C2"])
+
+func test_every_biome_has_a_colour_on_the_overview() -> void:
+	for biome in TerrainArt.biomes():
+		assert_true(WorldView.AREA_FILL.has(biome), "%s needs an AREA_FILL entry" % biome)
