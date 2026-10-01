@@ -122,12 +122,41 @@ func test_over_hole_checks_dressing_too() -> void:
 	var over := _hole_room({"dressing": [{"piece": piece, "pos": Vector2(250, 300), "factor": 0.5}]})
 	assert_true(_rules(over).has("over_hole"))
 
-func test_over_hole_skips_an_exit_with_a_gate_or_a_shortcut() -> void:
-	for opts in [{"gate": "wall_cling"}, {"shortcut": "s1"}]:
-		var e := {"edge": "bottom", "from": 200.0, "to": 300.0, "room": "T2"}
-		e.merge(opts)
-		var r := _room("T1", {"exits": [e], "spawns": [{"id": "bat", "pos": Vector2(250, 280)}]})
-		assert_false(_rules(r).has("over_hole"), str(opts))
+func test_over_hole_skips_a_shortcut_exit_for_everything() -> void:
+	var e := {"edge": "bottom", "from": 200.0, "to": 300.0, "room": "T2", "shortcut": "s1"}
+	var piece: String = DressingLib.piece_names("cave")[0]
+	var r := _room("T1", {"exits": [e], "spawns": [{"id": "bat", "pos": Vector2(250, 280)}],
+		"decor": [DecorLib.entry("crystal_teal", Vector2(250, 300))],
+		"dressing": [{"piece": piece, "pos": Vector2(250, 300), "factor": 0.5}]})
+	assert_false(_rules(r).has("over_hole"))
+
+func test_over_hole_counts_a_gated_hole_for_creatures_and_decor_but_not_dressing() -> void:
+	var e := {"edge": "bottom", "from": 200.0, "to": 300.0, "room": "T2", "gate": "wall_cling"}
+	var spawn := _room("T1", {"exits": [e], "spawns": [{"id": "bat", "pos": Vector2(250, 280)}]})
+	assert_true(_rules(spawn).has("over_hole"), "only a shortcut closes a hole in play")
+	var decor := _room("T1", {"exits": [e], "decor": [DecorLib.entry("crystal_teal", Vector2(250, 300))]})
+	assert_true(_rules(decor).has("over_hole"))
+	var piece: String = DressingLib.piece_names("cave")[0]
+	var dressing := _room("T1", {"exits": [e], "dressing": [{"piece": piece, "pos": Vector2(250, 300), "factor": 0.5}]})
+	assert_false(_rules(dressing).has("over_hole"), "C3's stone arch: dressing over a gated hole stays allowed")
+
+func test_over_hole_measures_decor_by_its_texture_width() -> void:
+	var wide := DecorLib.texture_box("deep_bones").size.x
+	assert_gt(wide, 40.0, "the test needs a decor piece wider than the old fixed 24")
+	var r := _hole_room({"area": "deep", "decor": [DecorLib.entry("deep_bones", Vector2(300.0 + 20.0, 320))]})
+	assert_true(_rules(r).has("over_hole"), "its edge hangs over the hole although its centre is beside it")
+	var far := _hole_room({"area": "deep", "decor": [DecorLib.entry("deep_bones", Vector2(300.0 + wide, 320))]})
+	assert_false(_rules(far).has("over_hole"))
+
+func test_decor_unknown_flags_an_id_outside_the_catalog_with_a_decor_pick() -> void:
+	var bad := _room("T1", {"decor": [{"id": "no_such_sprite", "pos": Vector2(100, 320)}]})
+	var f: Dictionary = RoomLint.check_room(bad, {"T1": bad}).filter(func(x): return x["rule"] == "decor_unknown")[0]
+	assert_eq(f["pick"], {"room": "T1", "kind": "decor", "index": 0})
+	var ok := _room("T1", {"decor": [DecorLib.entry("crystal_teal", Vector2(100, 320))]})
+	assert_false(_rules(ok).has("decor_unknown"))
+
+func test_the_rule_list_has_thirteen_rules() -> void:
+	assert_eq(RoomLint.RULES.size(), 13)
 
 func _pool(id: String, area: String, pos: Vector2) -> Dictionary:
 	return {"kind": "rebirth_pool", "id": id, "area": area, "pos": pos, "kit": {}}

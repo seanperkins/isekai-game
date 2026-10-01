@@ -1210,6 +1210,21 @@ func test_the_selected_decor_outline_and_an_unknown_pieces_red_box() -> void:
 	view.refresh()
 	assert_gt(view.overlay.get_children().filter(func(n): return n is Line2D).size(), 0, "nothing is selected, so the lines are the unknown piece's red box")
 
+func test_an_unknown_decor_piece_can_be_reached_from_the_problems_list_and_deleted() -> void:
+	var ed := await _editor()
+	ed.model.rooms["C1"].decor.append({"id": "no_such_sprite", "pos": Vector2(300, 300), "anchor": "top"})
+	ed.model.serial += 1
+	ed.view.refresh()
+	ed.panels.press("Validate")
+	var at := ed.model.problems().find_custom(func(p): return p["pick"].get("kind", "") == "decor")
+	assert_gte(at, 0, "decor_unknown lists it")
+	ed.slot.click_problem(at)
+	assert_eq(ed.model.selection["kind"], "decor")
+	assert_ne(ed.view.selection_rect().size, Vector2.ZERO, "it has a box to centre on")
+	var n: int = ed.model.rooms["C1"].decor.size()
+	assert_eq(ed.model.delete_selection(), "")
+	assert_eq(ed.model.rooms["C1"].decor.size(), n - 1)
+
 func test_the_decor_palette_shows_for_the_decor_tool_and_follows_the_rooms_area() -> void:
 	var ed := await _editor()
 	ed.panels.press("Decor")

@@ -5,7 +5,7 @@ extends RefCounted
 ## validator (WorldValidator) is what the game needs to load and run; this is design.
 ##
 ## A finding is {room, rule, text, pick}: pick is a room-editor selection ({room, kind, index}) of an element that is a selection
-## kind (solid, spawn, exit, feature), else {}.
+## kind (solid, spawn, exit, feature, decor), else {}.
 
 ## The smallest exit span: the rigged body plus 8 on either axis (test_room_lint pins MIN_EXIT >= both).
 const MIN_EXIT := 36.0
@@ -28,7 +28,7 @@ const FEATURE_BOX := {
 }
 
 const RULES := ["solid_outside", "outside", "in_rock", "exit_blocked", "exit_narrow", "start_floor", "ledge_reach", "over_hole",
-	"pool_clearance", "feature_id", "shortcut_pair", "hint_unknown"]
+	"pool_clearance", "feature_id", "shortcut_pair", "hint_unknown", "decor_unknown"]
 
 static var _hintable: Array = []
 
@@ -60,6 +60,7 @@ static func check_room(r: RoomDef, rooms: Dictionary) -> Array:
 	out.append_array(_ledge_reach(r))
 	out.append_array(_over_hole(r))
 	out.append_array(_pool_clearance(r))
+	out.append_array(_decor_unknown(r))
 	out.append_array(_feature_id(r, rooms))
 	out.append_array(_shortcut_pair(r, rooms))
 	out.append_array(_hint_unknown(r))
@@ -206,24 +207,38 @@ static func _over(span: Vector2, floor_y: float, pos: Vector2, extent: Vector2) 
 	var x_overlap := pos.x + extent.x / 2.0 > span.x and pos.x - extent.x / 2.0 < span.y
 	return x_overlap and pos.y >= floor_y - 120.0
 
-## test_grotto_rooms: nothing spawns or stands over a bottom exit that has neither a gate nor a shortcut. A gated hole is open in
-## play (RoomBuilder.is_exit_open reads only the shortcut); counting it is P3's, with the gate field.
+## test_grotto_rooms: nothing spawns or stands over a bottom exit that has no shortcut. Only a shortcut closes a hole in play
+## (RoomBuilder.is_exit_open reads only the shortcut), so a gated hole counts for creatures and decor; dressing keeps the skip for a
+## gated hole (C3's stone arch). A decor piece is measured by its sprite's width.
 static func _over_hole(r: RoomDef) -> Array:
 	var out: Array = []
 	var floor_y := r.pixel_size().y - RoomDef.FLOOR
 	for e in r.exits:
-		if e["edge"] != "bottom" or e.has("gate") or e.has("shortcut"):
+		if e["edge"] != "bottom" or e.has("shortcut"):
 			continue
 		var span := Vector2(e["from"], e["to"])
 		for i in r.spawns.size():
 			if _over(span, floor_y, r.spawns[i]["pos"], Vector2(16, 12)):
 				out.append(_f(r, "over_hole", "spawn %s is over its floor hole" % r.spawns[i]["id"], "spawn", i))
-		for d in r.decor:
-			if _over(span, floor_y, d["pos"], Vector2(24, 24)):
-				out.append(_f(r, "over_hole", "decor %s is over its floor hole" % d["id"]))
+		for i in r.decor.size():
+			var d: Dictionary = r.decor[i]
+			var width := DecorLib.texture_box(str(d.get("id", ""))).size.x
+			if _over(span, floor_y, d["pos"], Vector2(width, 24)):
+				out.append(_f(r, "over_hole", "decor %s is over its floor hole" % d["id"], "decor", i))
+		if e.has("gate"):
+			continue
 		for p in r.dressing:
 			if _over(span, floor_y, p["pos"], DressingLib.size(r.area, p["piece"])):
 				out.append(_f(r, "over_hole", "dressing %s is over its floor hole" % p["piece"]))
+	return out
+
+## Every decor piece names a sprite the editor's catalog knows (and the art exists): a hand-edited id otherwise draws nothing.
+static func _decor_unknown(r: RoomDef) -> Array:
+	var out: Array = []
+	for i in r.decor.size():
+		var id := str(r.decor[i].get("id", ""))
+		if not DecorLib.CATALOG.has(id) or Art.texture(id) == null:
+			out.append(_f(r, "decor_unknown", "decor '%s' is not a known decor sprite" % id, "decor", i))
 	return out
 
 ## test_grotto_rooms: nothing spawns within 200 px of a rebirth pool (a new life stands on it). The default pool is exempt.
