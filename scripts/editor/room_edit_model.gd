@@ -761,6 +761,61 @@ func _clear_in_front(a: RoomDef, edge: String, from: float, to: float) -> bool:
 			return false
 	return true
 
+# --- growing a room ---
+
+## Grows a room by whole screens on its left, right or top. The bottom is anchored (the floor stays under floor-standing content).
+## Refused only when the result would overlap another room or exceed MAX_SCREENS. Growing left or top changes `cell` and shifts
+## every local position of this room so world positions never move; the start shifts only when this room is the start.
+func grow_room(room_id: String, side: String, screens := 1) -> String:
+	if not ["left", "right", "top"].has(side):
+		return "a room grows to the left, right or top: the bottom stays where the floor is"
+	if screens < 1:
+		return "grow by at least one screen"
+	var r: RoomDef = rooms[room_id]
+	var new_size := r.size
+	var new_cell := r.cell
+	var shift := Vector2.ZERO
+	match side:
+		"right":
+			new_size.x += screens
+		"left":
+			new_size.x += screens
+			new_cell.x -= screens
+			shift.x = screens * RoomDef.SCREEN.x
+		"top":
+			new_size.y += screens
+			new_cell.y -= screens
+			shift.y = screens * RoomDef.SCREEN.y
+	if new_size.x > MAX_SCREENS or new_size.y > MAX_SCREENS:
+		return "a room is at most %d screens each way" % MAX_SCREENS
+	var rect := Rect2(Vector2(new_cell) * RoomDef.SCREEN, Vector2(new_size) * RoomDef.SCREEN)
+	for id in rooms:
+		if id != room_id and (rooms[id] as RoomDef).world_rect().intersects(rect):
+			return "would overlap %s" % id
+	var before := _snap([room_id])
+	r.size = new_size
+	r.cell = new_cell
+	if shift != Vector2.ZERO:
+		_shift_content(r, shift)
+	_push(before)
+	return ""
+
+func _shift_content(r: RoomDef, d: Vector2) -> void:
+	for i in r.solids.size():
+		r.solids[i] = Rect2((r.solids[i] as Rect2).position + d, (r.solids[i] as Rect2).size)
+	for i in r.hard_ledges.size():
+		r.hard_ledges[i] = Rect2((r.hard_ledges[i] as Rect2).position + d, (r.hard_ledges[i] as Rect2).size)
+	for list in [r.spawns, r.features, r.decor, r.dressing]:
+		for e in list:
+			e["pos"] = (e["pos"] as Vector2) + d
+	if r.is_start():
+		r.start += d
+	for e in r.exits:
+		var along_x: bool = e["edge"] == "top" or e["edge"] == "bottom"
+		var amount := d.x if along_x else d.y
+		e["from"] = float(e["from"]) + amount
+		e["to"] = float(e["to"]) + amount
+
 # --- save ---
 
 ## Writes each dirty room to `<dir>/<id>.tres` with ResourceSaver (the call the generator used). Rooms save independently: a
