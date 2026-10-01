@@ -19,7 +19,7 @@ func test_events_cover_the_spec_vocabulary() -> void:
 	assert_eq(Events.INTERNAL, ["skill_unlocked", "skill_leveled"])
 
 func test_sources_essences_and_stat_keys() -> void:
-	assert_eq(Sources.ALL, ["bat", "toad", "lizard", "spider", "water_pool", "serpent", "spore_moth", "mushroom_crab", "vine_snake", "pale_moth", "glass_eel", "cave_crayfish", "drift_jelly", "bog_lizardman", "storm_eel"])
+	assert_eq(Sources.ALL, ["bat", "toad", "lizard", "spider", "water_pool", "serpent", "spore_moth", "mushroom_crab", "vine_snake", "pale_moth", "glass_eel", "cave_crayfish", "drift_jelly", "bog_lizardman", "storm_eel", "gloom_wolf", "armed_ant", "stone_drake"])
 	assert_eq(Essences.ALL, ["sound", "flight", "poison", "water", "armor", "earth", "thread", "spore", "shell", "shock"])
 	assert_eq(StatKeys.ALL, ["max_hp", "atk", "def", "spd", "jump_height", "slide_speed",
 		"predation_time", "regen_interval", "max_mp", "mp_regen", "swim_speed"])

@@ -6,7 +6,7 @@ const GROUPS := [["PROFICIENCY", "proficiency"], ["ESSENCE", "essence"], ["EVOLU
 const ACTIVE_LABEL := {"poison_breath": "Damage", "water_blade": "Damage",
 	"hydraulic_propulsion": "Distance %", "sticky_thread": "Hold tier",
 	"swing_thread": "Hold tier", "spore_cloud": "Radius", "binding_web": "Hold tier",
-	"miasma": "Damage", "venom_bolt": "Damage", "jolt": "Damage",
+	"miasma": "Damage", "venom_bolt": "Damage", "jolt": "Damage", "tremor": "Damage",
 	"healing_spores": "Radius", "puffball": "Radius"}
 const STAT_LABEL := {"max_hp": "Max HP", "atk": "ATK", "def": "DEF", "spd": "SPD",
 	"jump_height": "Jump height", "slide_speed": "Slide speed", "predation_time": "Eat time",

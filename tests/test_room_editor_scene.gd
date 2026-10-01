@@ -340,7 +340,7 @@ func test_the_pool_inspector_offers_level_and_the_kit_legal_skills() -> void:
 	var checks := slot.skill_checkboxes()
 	var legal := RebirthKit.skill_defs().filter(func(d): return d.source != "enemy_only" and d.source != "evolution")
 	assert_eq(checks.size(), legal.size(), "every skill a kit may name, none other")
-	assert_eq(checks.size(), 18, "31 skills less 5 enemy-only and 8 evolution")
+	assert_eq(checks.size(), 19, "32 skills less 5 enemy-only and 8 evolution")
 	var ids := checks.map(func(c): return c.get_meta("skill"))
 	assert_false(ids.has("flight"))
 	assert_true(slot.find_field("kit_level") is OptionButton)
