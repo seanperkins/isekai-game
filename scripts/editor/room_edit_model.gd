@@ -172,10 +172,43 @@ func add_solid(room_id: String, a: Vector2, b: Vector2) -> String:
 	var rect := drag_rect(a, b).intersection(bounds(r))
 	if rect.size.x < MIN_SOLID or rect.size.y < MIN_SOLID:
 		return "too small, or outside the room"
+	if _has_solid(r, rect):
+		return "an identical solid is already there"
 	var before := _snap([room_id])
 	r.solids.append(rect)
 	_push(before)
 	selection = _sel(room_id, "solid", r.solids.size() - 1)
+	return ""
+
+## True when another solid in the room has exactly this rect. hard_ledges holds rect values, so two equal rects would make a mark
+## ambiguous (a drag onto an identical marked solid would move the mark onto the wrong one).
+static func _has_solid(r: RoomDef, rect: Rect2, skip := -1) -> bool:
+	for i in r.solids.size():
+		if i != skip and r.solids[i] == rect:
+			return true
+	return false
+
+## The one writer for a solid's rect (a drag step, a typed number, the Rock-from-below toggle): refuses a rect smaller than
+## MIN_SOLID, not wholly inside the room, or identical to another solid; writes it; and keeps hard_ledges in step: a `marked` thin
+## rect is in the list (at the position its old rect had), anything else is not. Returns "" or the reason; a refusal writes nothing.
+func _put_solid(room_id: String, i: int, rect: Rect2, marked: bool) -> String:
+	var r: RoomDef = rooms[room_id]
+	if rect.size.x < MIN_SOLID or rect.size.y < MIN_SOLID:
+		return "too small: a solid is at least %d px each way" % int(MIN_SOLID)
+	if not bounds(r).encloses(rect):
+		return "outside the room"
+	if _has_solid(r, rect, i):
+		return "an identical solid is already there"
+	var was: Rect2 = r.solids[i]
+	r.solids[i] = rect
+	var keep := marked and rect.size.y <= 24.0 and rect.size.x > 24.0
+	var h := r.hard_ledges.find(was)
+	if h >= 0 and keep:
+		r.hard_ledges[h] = rect
+	elif h >= 0:
+		r.hard_ledges.remove_at(h)
+	elif keep:
+		r.hard_ledges.append(rect)
 	return ""
 
 func add_spawn(room_id: String, creature_id: String, pos: Vector2) -> String:
@@ -272,11 +305,7 @@ func move_to(delta: Vector2) -> void:
 			var moved := Rect2(orig.position + d, orig.size)
 			moved.position = moved.position.clamp(Vector2.ZERO, r.pixel_size() - moved.size)
 			var i: int = sel["index"]
-			var was: Rect2 = r.solids[i]
-			r.solids[i] = moved
-			var h := r.hard_ledges.find(was)
-			if h >= 0:
-				r.hard_ledges[h] = moved
+			_put_solid(sel["room"], i, moved, r.hard_ledges.has(r.solids[i]))  # a refused step keeps the last valid rect
 		"spawn":
 			var p: Vector2 = (_drag["orig"] as Vector2) + d
 			if bounds(r).has_point(p) and not _in_rock(sel["room"], p):

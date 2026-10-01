@@ -229,3 +229,44 @@ func test_the_generator_is_gone_and_no_code_refers_to_it() -> void:
 	for path in ["res://scripts/world/room_def.gd", "res://tools/prefabs.gd"]:
 		assert_false(FileAccess.get_file_as_string(path).contains("build_world"), path)
 	assert_true(FileAccess.file_exists("res://docs/rooms.md"), "the rationale the generator's comments held")
+
+# --- the one writer for a solid's rect ---
+
+func _two_ledges_one_marked() -> void:
+	var r: RoomDef = model.rooms["C2"]
+	r.solids = [Rect2(100, 200, 100, 12), Rect2(300, 200, 100, 12)]
+	r.hard_ledges = [Rect2(300, 200, 100, 12)]
+
+func test_add_solid_refuses_an_identical_solid() -> void:
+	_two_ledges_one_marked()
+	assert_eq(model.add_solid("C2", Vector2(100, 200), Vector2(200, 212)), "an identical solid is already there")
+	assert_eq(model.undo_depth(), 0)
+
+func test_dragging_a_solid_onto_an_identical_marked_one_keeps_both_marks() -> void:
+	_two_ledges_one_marked()
+	var r: RoomDef = model.rooms["C2"]
+	var sel := {"room": "C2", "kind": "solid", "index": 0}
+	assert_true(model.begin_move(sel))
+	model.move_to(Vector2(200, 0))
+	assert_eq(r.solids[0], Rect2(100, 200, 100, 12), "the identical step is refused: the solid stays where it last was valid")
+	model.move_to(Vector2(260, 0))
+	assert_eq(r.solids[0], Rect2(360, 200, 100, 12), "and sliding on works")
+	model.end_move()
+	assert_eq(r.hard_ledges, [Rect2(300, 200, 100, 12)], "B kept its mark; A never got it")
+
+func test_a_marked_solid_keeps_its_mark_and_its_list_position_while_it_moves() -> void:
+	var r: RoomDef = model.rooms["C2"]
+	r.solids = [Rect2(100, 200, 100, 12), Rect2(300, 200, 100, 12)]
+	r.hard_ledges = [Rect2(100, 200, 100, 12), Rect2(300, 200, 100, 12)]
+	assert_true(model.begin_move({"room": "C2", "kind": "solid", "index": 0}))
+	model.move_to(Vector2(40, 0))
+	model.end_move()
+	assert_eq(r.hard_ledges, [Rect2(140, 200, 100, 12), Rect2(300, 200, 100, 12)])
+
+func test_a_solid_dragged_against_a_wall_slides_instead_of_freezing() -> void:
+	var r: RoomDef = model.rooms["C2"]
+	r.solids = [Rect2(100, 200, 100, 12)]
+	assert_true(model.begin_move({"room": "C2", "kind": "solid", "index": 0}))
+	model.move_to(Vector2(-400, 0))
+	assert_eq(r.solids[0].position.x, 0.0, "clamped into the room, then written")
+	model.end_move()
