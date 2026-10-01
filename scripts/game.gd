@@ -8,8 +8,9 @@ const AMBIENT := Color(0.6, 0.6, 0.78)  # dim cave; lights bring colour back (fa
 const EDITOR_SCENE := "res://scenes/room_editor.tscn"
 
 ## Set by the room editor before it changes to main.tscn, consumed and cleared by _ready:
-## {"rooms": Dictionary, "room": String, "pos": Vector2} (the player's origin, room-local). Statics, not scene state, so both
-## scenes reach them.
+## {"rooms": Dictionary, "room": String, "pos": Vector2 (the player's origin, room-local), optional "kit": Dictionary (a rebirth
+## kit granted at the start, never touching the Compendium), optional "open_shortcuts": bool (every shortcut starts open)}.
+## Statics, not scene state, so both scenes reach them.
 static var play_request := {}
 ## What the editor gets back when Play ends: {"model": RoomEditModel, "room": String, "view": Dictionary}. Consumed by the
 ## editor's _ready.
@@ -52,6 +53,12 @@ func _ready() -> void:
 	var rooms: Dictionary = request["rooms"] if _editor_play else World.load_rooms(ROOMS_DIR)
 	# The editor's Play runs on a fresh in-memory progress, so nothing it visits or opens reaches the real profile.
 	var progress = WorldProgress.new() if _editor_play else Compendium.progress
+	if _editor_play and bool(request.get("open_shortcuts", false)):
+		# before the world builds its first room, so the entry room has neither the gate nor the switch
+		for id in rooms:
+			for e in (rooms[id] as RoomDef).exits:
+				if e.has("shortcut"):
+					progress.open_shortcut(str(e["shortcut"]))
 	if not _editor_play:
 		for e in WorldValidator.validate(rooms, _creatures.keys()):
 			push_error(e)
@@ -60,7 +67,7 @@ func _ready() -> void:
 	world.room_entered.connect(_on_room_entered)
 	var pools := RebirthChoice.pools(rooms)
 	progress.sanitize(pools.map(func(p: Dictionary) -> String: return p["id"]))
-	var start := {"default": false, "room": request["room"], "pos": request["pos"], "kit": {}} if _editor_play \
+	var start := {"default": false, "room": request["room"], "pos": request["pos"], "kit": request.get("kit", {})} if _editor_play \
 		else Game.resolve_start(pools, progress.take_pending(), progress.is_attuned)
 	if start["default"]:
 		world.enter_start()
@@ -97,7 +104,8 @@ func _ready() -> void:
 func begin_life(start: Dictionary) -> void:
 	SkillRules.start_run()
 	if not start["kit"].is_empty():
-		RebirthKit.apply(player, SkillRules, Compendium.model, start["kit"])
+		# an editor Play passes no compendium: the kit grant must not raise slots in the (persistent) profile
+		RebirthKit.apply(player, SkillRules, null if _editor_play else Compendium.model, start["kit"])
 
 ## A fresh creature (or water pool) for a room, wired to XP and the Bestiary.
 func _spawn(id: String, pos: Vector2) -> Node2D:

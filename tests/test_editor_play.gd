@@ -104,6 +104,59 @@ func test_f5_is_ignored_on_key_repeat_and_while_the_death_card_shows() -> void:
 	await wait_process_frames(3)
 	assert_false(get_tree().current_scene is RoomEditor, "F5 does nothing under the death card")
 
+# --- the kit and open shortcuts ---
+
+func _request(extra := {}) -> void:
+	Game.play_request = {"rooms": model.rooms, "room": "C6", "pos": Vector2(120, 250)}
+	for k in extra:
+		Game.play_request[k] = extra[k]
+	Game.editor_resume = {"model": model, "room": "C6", "view": {}}
+	game = load("res://scenes/main.tscn").instantiate()
+	add_child_autofree(game)
+
+func test_a_request_without_kit_or_open_shortcuts_still_plays() -> void:
+	_request()
+	await wait_physics_frames(3)
+	assert_eq(game.world.current_id, "C6")
+	assert_false(SkillRules.owned().has("wall_cling"))
+
+func test_a_kit_starts_the_player_with_the_skills_and_never_touches_the_compendium() -> void:
+	# the suite's profile persists between tests: start from slots that are really UNKNOWN, so a grant would show
+	var kept := {}
+	for id in ["leap", "wall_cling"]:
+		kept[id] = Compendium.model.state(id)
+		Compendium.model._states[id] = CompendiumModel.State.UNKNOWN
+	var leap_before := Compendium.model.state("leap")
+	var cling_before := Compendium.model.state("wall_cling")
+	_request({"kit": {"skills": ["leap", "wall_cling"]}})
+	await wait_physics_frames(3)
+	assert_true(SkillRules.owned().has("wall_cling"))
+	assert_true(SkillRules.owned().has("leap"))
+	assert_eq(Compendium.model.state("leap"), leap_before, "the kit grant raises no Compendium slot")
+	assert_eq(Compendium.model.state("wall_cling"), cling_before)
+	assert_eq([leap_before, cling_before], [CompendiumModel.State.UNKNOWN, CompendiumModel.State.UNKNOWN])
+	for id in kept:
+		Compendium.model._states[id] = kept[id]
+
+func test_without_open_shortcuts_the_entry_room_has_its_gate_and_its_switch() -> void:
+	_request()
+	await wait_physics_frames(3)
+	assert_eq(get_tree().get_nodes_in_group("gate_c6_drop").size(), 1)
+	assert_gt(get_tree().get_nodes_in_group("actors").filter(func(n): return n is ShortcutSwitch).size(), 0)
+
+func test_open_shortcuts_leaves_the_entry_room_with_neither_gate_nor_switch() -> void:
+	_request({"open_shortcuts": true})
+	await wait_physics_frames(3)
+	assert_eq(get_tree().get_nodes_in_group("gate_c6_drop").size(), 0)
+	assert_eq(get_tree().get_nodes_in_group("actors").filter(func(n): return n is ShortcutSwitch).size(), 0)
+	assert_true(game.world.ctx["progress"].is_open("c6_drop"))
+
+func test_open_shortcuts_never_reaches_the_real_progress() -> void:
+	var before: Array = Compendium.progress.shortcuts.duplicate()
+	_request({"open_shortcuts": true})
+	await wait_physics_frames(3)
+	assert_eq(Compendium.progress.shortcuts, before)
+
 # --- the sandbox check ---
 
 func after_all() -> void:
