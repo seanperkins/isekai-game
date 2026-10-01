@@ -12,8 +12,8 @@ const EDITOR_SCENE := "res://scenes/room_editor.tscn"
 ## kit granted at the start, never touching the Compendium), optional "open_shortcuts": bool (every shortcut starts open)}.
 ## Statics, not scene state, so both scenes reach them.
 static var play_request := {}
-## What the editor gets back when Play ends: {"model": RoomEditModel, "room": String, "view": Dictionary}. Consumed by the
-## editor's _ready.
+## What the editor gets back when Play ends: {"model": RoomEditModel, "room": String, "view": Dictionary, "play_options":
+## {"movement": bool, "shortcuts": bool}}. Consumed by the editor's _ready.
 static var editor_resume = null
 
 var player: Player

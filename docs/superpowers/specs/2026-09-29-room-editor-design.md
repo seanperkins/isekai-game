@@ -27,6 +27,8 @@ would condemn four of eleven of them); playing the room from the editor is the c
 | P2 (later spec) | Lint rules lifted out of the test suite into one shared `room_lint.gd` with click-to-select results; resize handles; the hard-ledge toggle and its sync; a decor palette and a Start tool; feature placement (glow pool, rebirth pool, tablet, switch); prefab stamps; jump ruler; play options (grant movement skills, shortcuts open); editing `dressing` |
 | P3 (later spec) | Physical reachability from one shared surface model promoted out of the tests, with per-room assumed abilities and `gate` awareness; World view; copy and paste; zoom; autosave; templates |
 
+P2 shipped as `docs/superpowers/specs/2026-09-30-room-editor-p2-design.md`: `room_lint.gd` and click-to-select problems, feature placement (glow pool, rebirth pool, tablet, switch), an inspector for exit shortcuts, tablet text and a pool's kit, Grow, the two play toggles (Wall Cling, Open shortcuts) and a read-only World view. **Moved to P3** (see that spec): the decor palette and `dressing`, the Start tool, the hard-ledge toggle, resize handles (Grow is the P2 form), prefab stamps and the jump ruler. The World view's moving of rooms, and the rest of the table above, stay later.
+
 ## Decisions (P1)
 
 | Topic | Decision |

@@ -18,16 +18,21 @@ and this file keeps the reasoning its comments carried, which the `.tres` files 
   solid is rock. To make a thin one rock from below on purpose, add its rect to the room's `hard_ledges` as well as `solids`.
   No shipped room uses `hard_ledges`.
 - Every exit is matched by an exit on the neighbour's opposite edge covering the same world span (the validator checks it),
-  with the same shortcut id. Keep 64 px in front of a door free of rock (`tests/test_prefabs.gd`).
+  with the same shortcut id. Keep 64 px in front of a door free of rock (`RoomLint`'s `exit_blocked`).
 - Keep every step at most 54 px (the slime's ledge limit) and gaps between floating solids at least 36 px so the 28 px body
   fits.
+
+The rules a room must meet that are not the world validator's (a spawn in rock, a ledge past the base jump, a start off the
+floor, a blocked or too narrow exit, a feature id used twice, a switch with no exit, ...) are in `scripts/world/room_lint.gd`.
+The editor's `Validate (N)` button lists them with the validator's findings, and the test suite runs the same functions on
+every room.
 
 ## Set dressing
 
 Scenery props behind the play plane. `factor` is a prop's depth: 0.1-0.3 far (arches, pillars, floating ledges, waterfalls),
 0.4-0.55 middle (crystals, mushroom groves, stalactites), 0.65-0.8 near (hanging roots at the edges). A prop appears at `pos`
 when the camera is as close to it as the room allows and drifts by depth from there (see `SetDressing`). The editor does not
-edit `dressing` (P2).
+edit `dressing` (P3: scenery).
 
 ## Load-bearing details
 

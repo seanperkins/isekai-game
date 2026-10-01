@@ -27,7 +27,7 @@ const NO_START := Vector2(-1, -1)
 @export var spawns: Array = []
 ## [{"edge", "from", "to", "room", optional "gate", optional "shortcut"}]
 @export var exits: Array = []
-## [{"kind": "glow_pool"|"tablet"|"switch", "id", "pos", ...}]
+## [{"kind": "glow_pool"|"rebirth_pool"|"tablet"|"switch", "id", "pos", ...}]; a `pos` is the feature's base, the top of the surface it stands on
 @export var features: Array = []
 
 func pixel_size() -> Vector2:

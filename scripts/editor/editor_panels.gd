@@ -24,6 +24,7 @@ signal new_room_requested(edge: String, id: String, area: String, size: Vector2i
 const FONT := 8
 const AREAS := ["cave", "grotto"]
 const EDGES := ["left", "right", "top", "bottom"]
+## The tools in toolbar row one; Creature and Feature also show their palette at the left.
 const TOOLS := ["Select", "Solid", "Creature", "Feature", "Exit"]
 const GROW_SIDES := ["Left", "Right", "Top"]
 const TOGGLES := ["Wall Cling", "Open shortcuts"]

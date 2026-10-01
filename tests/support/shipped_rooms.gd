@@ -1,7 +1,7 @@
 class_name ShippedRooms
 extends RefCounted
 ## The eleven rooms the game shipped with. Content pins (XP totals, supplies, dressing) are about these rooms; a room the editor
-## adds later is not part of them, while rule tests (spawn in rock, ledge reach, exits, one start) still run on every room.
+## adds later is not part of them, while the rules (RoomLint's twelve and the validator's) still run on every room.
 
 const IDS := ["C1", "C2", "C3", "C4", "C5", "C6", "G1", "G2", "G3", "G4", "G5"]
 

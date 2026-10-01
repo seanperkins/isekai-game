@@ -1,6 +1,6 @@
 class_name RoomFeatures
 extends RefCounted
-## Builds a room feature (Glow Pool, tablet, shortcut switch) from its data. Unknown kinds
+## Builds a room feature (Glow Pool, Rebirth Pool, tablet, shortcut switch) from its data. Unknown kinds
 ## return null.
 
 static func make(f: Dictionary, ctx: Dictionary) -> Node2D:
