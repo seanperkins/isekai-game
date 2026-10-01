@@ -2,8 +2,6 @@ extends GutTest
 ## The Grotto: the rooms validate, are two-way, are dressed, pay the planned XP, and nothing stands over a hole.
 
 const BODY := Vector2(28, 24)  # the 2x slime's body box
-const RISE := 55.0
-const GAP := 60.0
 
 var rooms := {}
 var creatures := {}
@@ -73,25 +71,7 @@ func test_a_g1_life_can_reach_the_cap_from_the_ungated_xp() -> void:
 # --- the holes ---
 
 func test_nothing_spawns_or_stands_over_a_floor_hole() -> void:
-	for id in rooms:
-		var r: RoomDef = rooms[id]
-		for e in r.exits:
-			if e["edge"] != "bottom" or e.has("gate") or e.has("shortcut"):
-				continue  # the Cave's chimney and shortcut holes are gated, and were dressed before this rule
-			var span := Vector2(e["from"], e["to"])
-			var floor_y := r.pixel_size().y - RoomDef.FLOOR
-			for s in r.spawns:
-				assert_false(_over(span, floor_y, s["pos"], Vector2(16, 12)), "%s spawn %s over its hole" % [id, s])
-			for d in r.decor:
-				assert_false(_over(span, floor_y, d["pos"], Vector2(24, 24)), "%s decor %s over its hole" % [id, d])
-			for p in r.dressing:
-				var size := DressingLib.size(r.area, p["piece"])
-				assert_false(_over(span, floor_y, p["pos"], size), "%s dressing %s over its hole" % [id, p])
-
-## `pos` with `extent` (centred in x) overlaps the span horizontally and sits within 120 px above the floor line or below it.
-func _over(span: Vector2, floor_y: float, pos: Vector2, extent: Vector2) -> bool:
-	var x_overlap := pos.x + extent.x / 2.0 > span.x and pos.x - extent.x / 2.0 < span.y
-	return x_overlap and pos.y >= floor_y - 120.0
+	assert_eq(RoomLint.text(RoomLint.check(rooms), ["over_hole"]), "")
 
 # --- the climb back (directed, with headroom) ---
 
@@ -126,16 +106,16 @@ func _sweep_clear(rock: Array, x: float, from_top: float, to_top: float, skip: A
 			return false
 	return true
 
-## True when a body standing on `p` can hop to `q`: rise within RISE, a take-off column with headroom that is
-## within GAP of q sideways.
+## True when a body standing on `p` can hop to `q`: rise within RoomLint.REACH_RISE, a take-off column with headroom that is
+## within RoomLint.REACH_GAP of q sideways.
 func _hop(rock: Array, p: Rect2, q: Rect2) -> bool:
 	var rise := p.position.y - q.position.y
-	if rise > RISE:
+	if rise > RoomLint.REACH_RISE:
 		return false
 	var x := p.position.x + BODY.x / 2.0
 	while x <= p.end.x - BODY.x / 2.0 + 0.01:
 		var gap := maxf(0.0, maxf(q.position.x - (x + BODY.x / 2.0), (x - BODY.x / 2.0) - q.end.x))
-		if gap <= GAP and (rise <= 0.0 or _sweep_clear(rock, x, p.position.y, q.position.y, [p])):
+		if gap <= RoomLint.REACH_GAP and (rise <= 0.0 or _sweep_clear(rock, x, p.position.y, q.position.y, [p])):
 			return true
 		x += 4.0
 	return false
@@ -280,11 +260,5 @@ func test_no_base_jump_path_reaches_the_g5_sill() -> void:
 
 
 func test_nothing_spawns_near_a_rebirth_pool() -> void:
-	# a new life starts standing on the pool: an enemy within 200 px (a moth's drift, a crab's chase) hurts it at once
-	for id in rooms:
-		var r: RoomDef = rooms[id]
-		for f in r.features:
-			if f.get("kind", "") != "rebirth_pool" or f.get("area", "") != "grotto":
-				continue  # the Cave mouth pool is older than this rule
-			for s in r.spawns:
-				assert_gt((s["pos"] as Vector2).distance_to(f["pos"]), 200.0, "%s: %s spawns %s px from the pool" % [id, s["id"], (s["pos"] as Vector2).distance_to(f["pos"])])
+	assert_eq(RoomLint.text(RoomLint.check(rooms), ["pool_clearance"]), "")
+

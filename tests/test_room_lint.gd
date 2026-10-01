@@ -91,3 +91,51 @@ func test_start_floor() -> void:
 	assert_false(_rules(good).has("start_floor"))
 	assert_true(_rules(_room("T1", {"start": Vector2(60, 200)})).has("start_floor"))
 	assert_false(_rules(_room("T1")).has("start_floor"), "a room that is not the start has nothing to check")
+
+func test_ledge_reach_from_the_floor_by_base_jumps() -> void:
+	# floor top 320; a ledge 50 up is reachable, one 130 up with nothing between is not
+	var reachable := _room("T1", {"solids": [Rect2(200, 270, 100, 12)]})
+	assert_false(_rules(reachable).has("ledge_reach"))
+	var too_high := _room("T1", {"solids": [Rect2(200, 190, 100, 12)]})
+	assert_true(_rules(too_high).has("ledge_reach"))
+	var stepped := _room("T1", {"solids": [Rect2(200, 270, 100, 12), Rect2(320, 220, 100, 12)]})
+	assert_false(_rules(stepped).has("ledge_reach"), "each hop within the budget")
+
+func test_the_reach_budget_constants_are_the_suites_numbers() -> void:
+	assert_eq([RoomLint.REACH_RISE, RoomLint.REACH_GAP, RoomLint.REACH_HOP], [55.0, 60.0, 80.0])
+
+func _hole_room(extra := {}) -> RoomDef:
+	var e := {"edge": "bottom", "from": 200.0, "to": 300.0, "room": "T2"}
+	var base := {"exits": [e]}
+	for k in extra:
+		base[k] = extra[k]
+	return _room("T1", base)
+
+func test_over_hole_flags_a_spawn_or_decor_above_an_open_bottom_exit() -> void:
+	assert_true(_rules(_hole_room({"spawns": [{"id": "bat", "pos": Vector2(250, 280)}]})).has("over_hole"))
+	assert_true(_rules(_hole_room({"decor": [{"id": "crystal_teal", "pos": Vector2(250, 300)}]})).has("over_hole"))
+	assert_false(_rules(_hole_room({"spawns": [{"id": "bat", "pos": Vector2(500, 280)}]})).has("over_hole"), "beside it")
+
+func test_over_hole_checks_dressing_too() -> void:
+	var piece: String = DressingLib.piece_names("cave")[0]
+	assert_true(DressingLib.has_piece("cave", piece), "the test needs a real cave piece")
+	var over := _hole_room({"dressing": [{"piece": piece, "pos": Vector2(250, 300), "factor": 0.5}]})
+	assert_true(_rules(over).has("over_hole"))
+
+func test_over_hole_skips_an_exit_with_a_gate_or_a_shortcut() -> void:
+	for opts in [{"gate": "wall_cling"}, {"shortcut": "s1"}]:
+		var e := {"edge": "bottom", "from": 200.0, "to": 300.0, "room": "T2"}
+		e.merge(opts)
+		var r := _room("T1", {"exits": [e], "spawns": [{"id": "bat", "pos": Vector2(250, 280)}]})
+		assert_false(_rules(r).has("over_hole"), str(opts))
+
+func _pool(id: String, area: String, pos: Vector2) -> Dictionary:
+	return {"kind": "rebirth_pool", "id": id, "area": area, "pos": pos, "kit": {}}
+
+func test_pool_clearance_applies_to_every_pool_but_the_default() -> void:
+	var near := _room("T1", {"features": [_pool("t1_pool_1", "cave", Vector2(300, 320))], "spawns": [{"id": "toad", "pos": Vector2(400, 300)}]})
+	assert_true(_rules(near).has("pool_clearance"), "a new cave pool is held to it too")
+	var far := _room("T1", {"features": [_pool("t1_pool_1", "cave", Vector2(100, 320))], "spawns": [{"id": "toad", "pos": Vector2(400, 300)}]})
+	assert_false(_rules(far).has("pool_clearance"))
+	var default := _room("T1", {"features": [_pool(WorldProgress.DEFAULT_POOL, "cave", Vector2(300, 320))], "spawns": [{"id": "toad", "pos": Vector2(400, 300)}]})
+	assert_false(_rules(default).has("pool_clearance"), "the default pool is older than the rule")

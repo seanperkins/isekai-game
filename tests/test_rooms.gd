@@ -30,25 +30,7 @@ func test_spawns_and_the_start_sit_inside_their_room_and_outside_rock() -> void:
 	assert_eq(RoomLint.text(RoomLint.check(rooms), ["outside", "in_rock"]), "")
 
 func test_every_ledge_is_reachable_from_its_floor_by_base_jumps() -> void:
-	# Base apex: v^2 / 2g = 330^2 / 1800 = 60.5 px; allow 55 px of rise and a 60 px gap per
-	# jump, or an 80 px gap when hopping across or down.
-	for r: RoomDef in rooms.values():
-		var ledges := r.solids.filter(func(s: Rect2) -> bool: return s.size.y <= 24.0 and s.size.x > 20.0)
-		var reached: Array = RoomBuilder.edge_walls(r.pixel_size(), r.exits) \
-			.filter(func(w: Dictionary) -> bool: return w["kind"] == "ground").map(func(w: Dictionary) -> Rect2: return w["rect"])
-		var frontier: Array = reached.duplicate()
-		while not frontier.is_empty():
-			var p: Rect2 = frontier.pop_back()
-			for q in ledges:
-				if reached.has(q):
-					continue
-				var rise: float = p.position.y - q.position.y
-				var gap: float = maxf(0.0, maxf(p.position.x - q.end.x, q.position.x - p.end.x))
-				if (rise > 0.0 and rise <= 55.0 and gap <= 60.0) or (rise <= 0.0 and gap <= 80.0):
-					reached.append(q)
-					frontier.append(q)
-		for q in ledges:
-			assert_true(reached.has(q), "%s ledge at %s" % [r.id, q])
+	assert_eq(RoomLint.text(RoomLint.check(rooms), ["ledge_reach"]), "")
 
 func test_the_main_route_needs_no_skills() -> void:
 	var open := WorldValidator.reachable(rooms, true)

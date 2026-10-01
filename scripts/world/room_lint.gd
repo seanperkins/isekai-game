@@ -47,6 +47,9 @@ static func check_room(r: RoomDef, _rooms: Dictionary) -> Array:
 	out.append_array(_exit_blocked(r))
 	out.append_array(_exit_narrow(r))
 	out.append_array(_start_floor(r))
+	out.append_array(_ledge_reach(r))
+	out.append_array(_over_hole(r))
+	out.append_array(_pool_clearance(r))
 	return out
 
 ## The findings of the named rules, one per line; "" when there are none.
@@ -155,3 +158,65 @@ static func _start_floor(r: RoomDef) -> Array:
 	if absf(r.start.y - want) > START_TOLERANCE:
 		return [_f(r, "start_floor", "the start's y is %s, the floor stand is %s" % [r.start.y, want])]
 	return []
+
+## test_rooms: every ledge (thin, wider than 20) reachable from the floor by hops within the base-jump budget.
+static func _ledge_reach(r: RoomDef) -> Array:
+	var out: Array = []
+	var ledges: Array = r.solids.filter(func(s: Rect2) -> bool: return s.size.y <= MASS and s.size.x > 20.0)
+	var reached: Array = []
+	for w in RoomBuilder.edge_walls(r.pixel_size(), r.exits):
+		if w["kind"] == "ground":
+			reached.append(w["rect"])
+	var frontier: Array = reached.duplicate()
+	while not frontier.is_empty():
+		var p: Rect2 = frontier.pop_back()
+		for q in ledges:
+			if reached.has(q):
+				continue
+			var rise: float = p.position.y - q.position.y
+			var gap: float = maxf(0.0, maxf(p.position.x - q.end.x, q.position.x - p.end.x))
+			if (rise > 0.0 and rise <= REACH_RISE and gap <= REACH_GAP) or (rise <= 0.0 and gap <= REACH_HOP):
+				reached.append(q)
+				frontier.append(q)
+	for i in r.solids.size():
+		var s: Rect2 = r.solids[i]
+		if ledges.has(s) and not reached.has(s):
+			out.append(_f(r, "ledge_reach", "the ledge at %s cannot be reached from the floor by the base jump" % s, "solid", i))
+	return out
+
+## `pos` with `extent` (centred in x) overlaps the span horizontally and sits within 120 px above the floor line or below it.
+static func _over(span: Vector2, floor_y: float, pos: Vector2, extent: Vector2) -> bool:
+	var x_overlap := pos.x + extent.x / 2.0 > span.x and pos.x - extent.x / 2.0 < span.y
+	return x_overlap and pos.y >= floor_y - 120.0
+
+## test_grotto_rooms: nothing spawns or stands over a bottom exit that has neither a gate nor a shortcut. A gated hole is open in
+## play (RoomBuilder.is_exit_open reads only the shortcut); counting it is P3's, with the gate field.
+static func _over_hole(r: RoomDef) -> Array:
+	var out: Array = []
+	var floor_y := r.pixel_size().y - RoomDef.FLOOR
+	for e in r.exits:
+		if e["edge"] != "bottom" or e.has("gate") or e.has("shortcut"):
+			continue
+		var span := Vector2(e["from"], e["to"])
+		for i in r.spawns.size():
+			if _over(span, floor_y, r.spawns[i]["pos"], Vector2(16, 12)):
+				out.append(_f(r, "over_hole", "spawn %s is over its floor hole" % r.spawns[i]["id"], "spawn", i))
+		for d in r.decor:
+			if _over(span, floor_y, d["pos"], Vector2(24, 24)):
+				out.append(_f(r, "over_hole", "decor %s is over its floor hole" % d["id"]))
+		for p in r.dressing:
+			if _over(span, floor_y, p["pos"], DressingLib.size(r.area, p["piece"])):
+				out.append(_f(r, "over_hole", "dressing %s is over its floor hole" % p["piece"]))
+	return out
+
+## test_grotto_rooms: nothing spawns within 200 px of a rebirth pool (a new life stands on it). The default pool is exempt.
+static func _pool_clearance(r: RoomDef) -> Array:
+	var out: Array = []
+	for f in r.features:
+		if f.get("kind", "") != "rebirth_pool" or f.get("id", "") == WorldProgress.DEFAULT_POOL:
+			continue
+		for i in r.spawns.size():
+			var d: float = (r.spawns[i]["pos"] as Vector2).distance_to(f["pos"])
+			if d <= POOL_CLEARANCE:
+				out.append(_f(r, "pool_clearance", "%s spawns %d px from the rebirth pool %s" % [r.spawns[i]["id"], int(d), f.get("id", "?")], "spawn", i))
+	return out
