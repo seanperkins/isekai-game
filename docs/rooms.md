@@ -110,3 +110,4 @@ These are the choices in the data that a test does not catch and a casual edit w
 | D3 the Sinkhole | 1x2, cell (20, 6) | a tall shaft climbed both ways: a ledge flush with the west wall at the door's floor height (y 320) and a chain of hops down to the floor; a Stone Drake on its shelf and three ants |
 | D4 the Den | 2x1, cell (21, 7) | four wolves and a drake under a stair of platforms: the pack is the room's danger |
 | D5 the Heart | 1x1, cell (23, 7) | the world's last room for now: a Glow Pool, the tablet (hint Tremor), a drake and two wolves |
+| D6 the Hollow | 1x1, cell (19, 5) | the rare room above D2's chimney (gate `wall_cling`: two walls hang from the ceiling to 80 px above D2's floor, an arch you walk under; the top exit between them is D6's floor hole); the Taratect hangs here; it never counts toward the pacing rule |
