@@ -1170,3 +1170,54 @@ func test_the_rock_from_below_checkbox_follows_the_height() -> void:
 	assert_false((ed.slot.find_field("hard") as CheckBox).visible, "typed thick: the checkbox hides")
 	(ed.slot.find_field("h") as SpinBox).value = 12.0
 	assert_true((ed.slot.find_field("hard") as CheckBox).visible, "typed thin again: it shows")
+
+# --- the Decor tool ---
+
+func test_the_decor_tool_places_a_piece_that_stands_on_the_surface() -> void:
+	view.tool = "decor"
+	view.decor_id = "crystal_teal"
+	view.handle_event(_press(Vector2(300, 100)))
+	view.handle_event(_release(Vector2(300, 100)))
+	var placed: Dictionary = model.rooms["C1"].decor.back()
+	assert_eq(placed["id"], "crystal_teal")
+	assert_eq(model.selection["kind"], "decor")
+	assert_eq(model.undo_depth(), 1)
+
+func test_the_decor_tool_without_a_choice_says_so_and_refuses_with_a_message() -> void:
+	view.tool = "decor"
+	view.decor_id = ""
+	var messages := []
+	view.message.connect(func(t: String) -> void: messages.append(t))
+	view.handle_event(_press(Vector2(300, 100)))
+	view.handle_event(_release(Vector2(300, 100)))
+	assert_eq(messages.size(), 1)
+	view.decor_id = "vine"
+	var top: Dictionary = model.rooms["C1"].exits.filter(func(e): return e["edge"] == "top")[0]
+	var mid := (float(top["from"]) + float(top["to"])) / 2.0
+	view.handle_event(_press(Vector2(mid, 200)))
+	view.handle_event(_release(Vector2(mid, 200)))
+	assert_eq(messages.size(), 2, "a hanging piece under a top exit has nothing to hang from")
+	assert_eq(model.undo_depth(), 0)
+
+func test_the_selected_decor_outline_and_an_unknown_pieces_red_box() -> void:
+	model.rooms["C1"].decor.append({"id": "no_such_sprite", "pos": Vector2(300, 300)})
+	view.show_room(model, "C1")
+	await wait_process_frames(1)
+	var i: int = model.rooms["C1"].decor.size() - 1
+	model.select({"room": "C1", "kind": "decor", "index": i})
+	assert_eq(view.selection_rect(), Rect2(Vector2(300, 300) + DecorLib.UNKNOWN_BOX.position, DecorLib.UNKNOWN_BOX.size))
+	model.select({})
+	view.refresh()
+	assert_gt(view.overlay.get_children().filter(func(n): return n is Line2D).size(), 0, "nothing is selected, so the lines are the unknown piece's red box")
+
+func test_the_decor_palette_shows_for_the_decor_tool_and_follows_the_rooms_area() -> void:
+	var ed := await _editor()
+	ed.panels.press("Decor")
+	assert_true(ed.panels.decor_palette_visible())
+	assert_false(ed.panels.palette_visible())
+	assert_eq(ed.panels.decor_palette_ids(), DecorLib.ids_for_biome("cave"))
+	ed.open_room("G1")
+	assert_eq(ed.panels.decor_palette_ids(), DecorLib.ids_for_biome("grotto"), "rebuilt for the new room's area")
+	ed.panels.choose_decor("grotto_flowers")
+	assert_eq(ed.view.decor_id, "grotto_flowers")
+	assert_eq(ed._free_rect().position.x, 92.0, "the palette is counted when fitting")

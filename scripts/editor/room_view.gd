@@ -13,10 +13,11 @@ signal changed
 signal message(text: String)
 signal selection_changed
 
-## "select", "solid", "creature", "exit" or "feature".
+## "select", "solid", "creature", "exit", "feature" or "decor".
 var tool := "select"
 var creature_id := ""
 var feature_kind := "tablet"  # what the Feature tool places
+var decor_id := ""            # what the Decor tool places
 var camera := Camera2D.new()
 var overlay := Node2D.new()
 var _model: RoomEditModel
@@ -255,6 +256,11 @@ func _release(p: Vector2) -> void:
 				_report(_model.add_spawn(_room_id, creature_id, p))
 		"feature":
 			_report(_model.add_feature(_room_id, feature_kind, p))
+		"decor":
+			if decor_id == "":
+				message.emit("choose a decor piece in the palette first")
+			else:
+				_report(_model.add_decor(_room_id, decor_id, p))
 		"exit":
 			_exit_live = Vector2(-1.0, -1.0)
 			_report(_model.add_exit(_room_id, _exit_edge, _along(_exit_edge, _press_room), _along(_exit_edge, p)))
@@ -335,6 +341,11 @@ func _redraw_overlay() -> void:
 		_marker(i, r.spawns[i])
 	for i in r.features.size():
 		_feature_marker(i, r.features[i])
+	for i in r.decor.size():
+		var did := str(r.decor[i].get("id", ""))
+		if not DecorLib.CATALOG.has(did) or Art.texture(did) == null:
+			var ubox := DecorLib.texture_box(did)
+			_box(Rect2(ubox.position + (r.decor[i]["pos"] as Vector2), ubox.size), COL_UNKNOWN, true)  # a hand-edited unknown piece
 	var sel := _model.selection
 	if not sel.is_empty() and sel["room"] == _room_id:
 		var outline := _selection_rect(r, sel)
@@ -361,6 +372,11 @@ func _selection_rect(r: RoomDef, sel: Dictionary) -> Rect2:
 				return Rect2()
 			var box: Rect2 = RoomLint.FEATURE_BOX.get(r.features[i].get("kind", ""), Rect2(-6, -12, 12, 12))
 			return Rect2(box.position + (r.features[i]["pos"] as Vector2), box.size)
+		"decor":
+			if i >= r.decor.size():
+				return Rect2()
+			var dbox := DecorLib.texture_box(str(r.decor[i].get("id", "")))
+			return Rect2(dbox.position + (r.decor[i]["pos"] as Vector2), dbox.size)
 		_:
 			return Rect2()
 

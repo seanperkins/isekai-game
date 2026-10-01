@@ -61,6 +61,8 @@ func _ready() -> void:
 	panels.tool_chosen.connect(func(t: String) -> void: view.tool = t)
 	panels.creature_chosen.connect(func(id: String) -> void: view.creature_id = id)
 	panels.feature_chosen.connect(func(kind: String) -> void: view.feature_kind = kind)
+	panels.decor_chosen.connect(func(id: String) -> void: view.decor_id = id)
+	_refresh_decor_palette()
 	panels.room_chosen.connect(open_room)
 	panels.undo_pressed.connect(undo)
 	panels.redo_pressed.connect(redo)
@@ -90,7 +92,7 @@ func _commit_pending() -> void:
 func _free_rect() -> Rect2:
 	if not panels.panels_visible():
 		return Rect2(0.0, 0.0, 640.0, 360.0)
-	var left := 92.0 if panels.palette_visible() or panels.feature_palette_visible() else 0.0
+	var left := 92.0 if panels.palette_visible() or panels.feature_palette_visible() or panels.decor_palette_visible() else 0.0
 	return Rect2(left, 48.0, 640.0 - left - 168.0, 296.0)
 
 func _refit() -> void:
@@ -189,8 +191,13 @@ func open_room(id: String) -> void:
 	room_id = id
 	model.select({})
 	view.show_room(model, id)
+	_refresh_decor_palette()
 	_refit()
 	_sync()
+
+## The Decor tool's palette is the current room's biome's decor.
+func _refresh_decor_palette() -> void:
+	panels.set_decor_ids(DecorLib.ids_for_biome(model.rooms[room_id].area))
 
 func undo() -> void:
 	_commit_pending()

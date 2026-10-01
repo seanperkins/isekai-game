@@ -17,6 +17,7 @@ signal grow_requested(side: String)
 signal movement_toggled(on: bool)
 signal shortcuts_toggled(on: bool)
 signal feature_chosen(kind: String)
+signal decor_chosen(id: String)
 signal save_pressed
 signal play_pressed
 signal new_room_requested(edge: String, id: String, area: String, size: Vector2i)
@@ -26,8 +27,8 @@ const FONT := 8
 static func areas() -> Array:
 	return TerrainArt.biomes()
 const EDGES := ["left", "right", "top", "bottom"]
-## The tools in toolbar row one; Creature and Feature also show their palette at the left.
-const TOOLS := ["Select", "Solid", "Creature", "Feature", "Exit"]
+## The tools in toolbar row one; Creature, Feature and Decor also show their palette at the left.
+const TOOLS := ["Select", "Solid", "Creature", "Feature", "Decor", "Exit"]
 const GROW_SIDES := ["Left", "Right", "Top"]
 const TOGGLES := ["Wall Cling", "Open shortcuts"]
 const HOLE_NOTE := "A room above or below a neighbour cuts a hole in its ceiling or floor: it is connected but not walkable until you add ledges."
@@ -42,6 +43,7 @@ var _room_ids: Array = []
 var _buttons := {}                  # label -> Button
 var _palette := ItemList.new()
 var _feature_palette := ItemList.new()
+var _decor_palette := ItemList.new()
 var _status := Label.new()
 var _status_message := ""
 var _dialog := PanelContainer.new()
@@ -151,6 +153,18 @@ func _build_palette() -> void:
 	_feature_palette.select(RoomEditModel.FEATURE_KINDS.find("tablet"))  # the view's default kind
 	_feature_palette.item_selected.connect(func(i: int) -> void: feature_chosen.emit(_feature_palette.get_item_text(i)))
 	_root.add_child(_feature_palette)
+	_decor_palette.position = Vector2(0, 50)
+	_decor_palette.size = Vector2(92, 290)
+	_decor_palette.focus_mode = Control.FOCUS_NONE
+	_small(_decor_palette)
+	_decor_palette.item_selected.connect(func(i: int) -> void: decor_chosen.emit(_decor_palette.get_item_text(i)))
+	_root.add_child(_decor_palette)
+
+## The decor ids the Decor tool offers: RoomEditor passes the current room's biome's.
+func set_decor_ids(ids: Array) -> void:
+	_decor_palette.clear()
+	for id in ids:
+		_decor_palette.add_item(id)
 
 ## RoomEditor hands over its EditorSlot so Tab hides it with everything else.
 func add_slot(slot: Control) -> void:
@@ -254,6 +268,7 @@ func set_tool(tool_name: String) -> void:
 		(_buttons[t] as Button).button_pressed = t.to_lower() == tool_name
 	_palette.visible = tool_name == "creature"
 	_feature_palette.visible = tool_name == "feature"
+	_decor_palette.visible = tool_name == "decor"
 
 func set_status(text: String) -> void:
 	_status_message = text
@@ -363,6 +378,21 @@ func palette_visible() -> bool:
 
 func feature_palette_visible() -> bool:
 	return _feature_palette.visible
+
+func decor_palette_visible() -> bool:
+	return _decor_palette.visible
+
+func decor_palette_ids() -> Array:
+	var out: Array = []
+	for i in _decor_palette.item_count:
+		out.append(_decor_palette.get_item_text(i))
+	return out
+
+func choose_decor(id: String) -> void:
+	for i in _decor_palette.item_count:
+		if _decor_palette.get_item_text(i) == id:
+			_decor_palette.select(i)
+	decor_chosen.emit(id)
 
 func status_text() -> String:
 	return _status.text
