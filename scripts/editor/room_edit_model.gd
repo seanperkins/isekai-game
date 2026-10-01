@@ -24,6 +24,8 @@ var _written := {}      # ids Save has written this session
 var _removed_on_save := {}  # rooms created and saved this session, then undone: their file goes on the next Save
 ## Counts every recorded edit, undo and redo, so a view can tell that the rooms changed without diffing them.
 var serial := 0
+var _problems_serial := -1  # the serial the cached problems() list was computed at
+var _problems_cache: Array = []
 
 func _init(source: Dictionary, p_creature_ids: Array = []) -> void:
 	creature_ids = p_creature_ids
@@ -522,6 +524,29 @@ func _set_feature_field(room_id: String, i: int, key: String, value) -> String:
 func validate() -> PackedStringArray:
 	return WorldValidator.validate(rooms, creature_ids)
 
+## Lint findings and validator strings as one list of {room, text, pick}. A validator string's room is the text before its first
+## ": " or " overlaps ", kept only when that is a room id. Recomputed when `serial` changes, never per mouse motion.
+func problems() -> Array:
+	if _problems_serial == serial:
+		return _problems_cache
+	var out: Array = []
+	for f in RoomLint.check(rooms):
+		out.append({"room": f["room"], "text": f["text"], "pick": f["pick"]})
+	for s in validate():
+		out.append({"room": _room_of(s), "text": s, "pick": {}})
+	_problems_cache = out
+	_problems_serial = serial
+	return out
+
+func _room_of(text: String) -> String:
+	var cut := text.length()
+	for sep in [": ", " overlaps "]:
+		var at := text.find(sep)
+		if at >= 0:
+			cut = mini(cut, at)
+	var head := text.substr(0, cut)
+	return head if rooms.has(head) else ""
+
 # --- exits ---
 
 static func _exit(edge: String, from: float, to: float, room: String, opts: Dictionary) -> Dictionary:
@@ -670,6 +695,8 @@ static func valid_id(id: String) -> bool:
 
 ## "" when `id` may name a new room; else why not. Ids are unique case-insensitively (the file system is).
 func id_error(id: String) -> String:
+	if id.to_lower() == "world":
+		return "'world' is reserved"
 	if not valid_id(id):
 		return "an id is letters, digits and underscore"
 	for k in rooms:
