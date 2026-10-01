@@ -16,6 +16,7 @@ const FIELDS := {
 	"rebirth_pool": [["kit_level", "Level", "level"], ["kit_skills", "Skills", "skills"]],
 	"glow_pool": [],
 	"solid": [["x", "X", "number"], ["y", "Y", "number"], ["w", "Width", "number"], ["h", "Height", "number"], ["hard", "Rock from below", "check"]],
+	"water": [["x", "X", "number"], ["y", "Y", "number"], ["w", "Width", "number"], ["h", "Height", "number"]],
 }
 
 var _model: RoomEditModel
@@ -60,6 +61,8 @@ func _kind() -> String:
 func _title(kind: String) -> String:
 	if kind == "solid":
 		return "Solid %d" % _sel["index"]
+	if kind == "water":
+		return "Water %d" % _sel["index"]
 	if kind == "exit":
 		var e: Dictionary = _model.rooms[_sel["room"]].exits[_sel["index"]]
 		return "Exit %s to %s" % [e["edge"], e["room"]]
@@ -112,18 +115,19 @@ func _number(key: String) -> SpinBox:
 ## The SpinBox range for a solid's number from the room it is in (a Grow changes it under an open selection).
 func _set_range(box: SpinBox, key: String) -> void:
 	var size: Vector2 = _model.rooms[_sel["room"]].pixel_size()
+	var least := RoomEditModel.MIN_WATER if _sel["kind"] == "water" else RoomEditModel.MIN_SOLID
 	match key:
 		"x":
 			box.min_value = 0.0
-			box.max_value = size.x - RoomEditModel.MIN_SOLID
+			box.max_value = size.x - least
 		"y":
 			box.min_value = 0.0
-			box.max_value = size.y - RoomEditModel.MIN_SOLID
+			box.max_value = size.y - least
 		"w":
-			box.min_value = RoomEditModel.MIN_SOLID
+			box.min_value = least
 			box.max_value = size.x
 		"h":
-			box.min_value = RoomEditModel.MIN_SOLID
+			box.min_value = least
 			box.max_value = size.y
 
 func _check(key: String) -> CheckBox:

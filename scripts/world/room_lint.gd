@@ -5,7 +5,7 @@ extends RefCounted
 ## validator (WorldValidator) is what the game needs to load and run; this is design.
 ##
 ## A finding is {room, rule, text, pick}: pick is a room-editor selection ({room, kind, index}) of an element that is a selection
-## kind (solid, spawn, exit, feature, decor), else {}.
+## kind (solid, water, spawn, exit, feature, decor), else {}.
 
 ## The smallest exit span: the rigged body plus 8 on either axis (test_room_lint pins MIN_EXIT >= both).
 const MIN_EXIT := 36.0
@@ -327,12 +327,12 @@ static func _water_rect(r: RoomDef) -> Array:
 	for i in r.water.size():
 		var w: Rect2 = r.water[i]
 		if not bounds.encloses(w):
-			out.append(_f(r, "water_rect", "the water at %s is outside the room" % _rect_text(w)))
+			out.append(_f(r, "water_rect", "the water at %s is outside the room" % _rect_text(w), "water", i))
 		elif w.size.x < WATER_MIN or w.size.y < WATER_MIN:
-			out.append(_f(r, "water_rect", "the water at %s is under %d px either way" % [_rect_text(w), int(WATER_MIN)]))
+			out.append(_f(r, "water_rect", "the water at %s is under %d px either way" % [_rect_text(w), int(WATER_MIN)], "water", i))
 		for j in range(i + 1, r.water.size()):
 			if w.intersects(r.water[j], true):
-				out.append(_f(r, "water_rect", "the water at %s overlaps or touches the water at %s" % [_rect_text(w), _rect_text(r.water[j])]))
+				out.append(_f(r, "water_rect", "the water at %s overlaps or touches the water at %s" % [_rect_text(w), _rect_text(r.water[j])], "water", i))
 	return out
 
 ## A swimmer spawn must be inside some water rect (outside, it idles: Enemy has no home water for it).
@@ -389,14 +389,14 @@ static func has_shore(r: RoomDef, rect: Rect2) -> bool:
 ## A swimmer must be able to leave each water rect of the room: it crosses an open exit span, or it has a shore.
 static func _water_exit(r: RoomDef) -> Array:
 	var out: Array = []
-	for w in r.water:
-		var rect: Rect2 = w
+	for i in r.water.size():
+		var rect: Rect2 = r.water[i]
 		var escapes := false
 		for e in r.exits:
 			if _open_for_swimmer(e) and reaches_edge(r, rect, e):
 				escapes = true
 		if not escapes and not has_shore(r, rect):
-			out.append(_f(r, "water_exit", "a swimmer in the water at %s cannot get out: no shore within reach of its surface and no open exit" % _rect_text(rect)))
+			out.append(_f(r, "water_exit", "a swimmer in the water at %s cannot get out: no shore within reach of its surface and no open exit" % _rect_text(rect), "water", i))
 	return out
 
 ## The authored-world check: water rects joined across open exit spans (a rect that reaches an exit's edge, and the partner

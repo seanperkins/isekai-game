@@ -7,13 +7,15 @@ const GRID := 4.0
 const UNDO_CAP := 200
 const FEATURE_KINDS := ["glow_pool", "tablet", "switch", "rebirth_pool"]
 const MIN_SOLID := 4.0
+## The smallest water rect either way (RoomLint.WATER_MIN: the largest swimmer's body fits).
+const MIN_WATER := 32.0
 
 static var _prop_names: Array = []
 
 var rooms := {}     # id -> RoomDef (working copies)
 var dirty := {}     # id -> true: rooms edited since the last successful save
 var creature_ids: Array = []
-## {} or {"room", "kind": "solid" | "spawn" | "exit" | "feature" | "decor", "index"}
+## {} or {"room", "kind": "solid" | "water" | "spawn" | "exit" | "feature" | "decor", "index"}
 var selection := {}
 var _undo: Array = []   # each: {id: RoomDef or null}, the state before a step
 var _redo: Array = []
@@ -211,6 +213,40 @@ func _put_solid(room_id: String, i: int, rect: Rect2, marked: bool) -> String:
 		r.hard_ledges.append(rect)
 	return ""
 
+## Why `rect` cannot be water `i` of the room ("" when it can): smaller than MIN_WATER, not wholly inside the room, or overlapping or
+## touching another water rect (a rect's top edge must be a real surface).
+func _water_error(r: RoomDef, rect: Rect2, skip := -1) -> String:
+	if rect.size.x < MIN_WATER or rect.size.y < MIN_WATER:
+		return "too small: water is at least %d px each way" % int(MIN_WATER)
+	if not bounds(r).encloses(rect):
+		return "outside the room"
+	for j in r.water.size():
+		if j != skip and rect.intersects(r.water[j], true):
+			return "overlaps or touches other water"
+	return ""
+
+## Draws a water rect from two corners (snapped, clipped to the room), selects it, one undo step. Returns "" or the reason.
+func add_water(room_id: String, a: Vector2, b: Vector2) -> String:
+	var r: RoomDef = rooms[room_id]
+	var rect := drag_rect(a, b).intersection(bounds(r))
+	var err := _water_error(r, rect)
+	if err != "":
+		return err
+	var before := _snap([room_id])
+	r.water.append(rect)
+	_push(before)
+	selection = _sel(room_id, "water", r.water.size() - 1)
+	return ""
+
+## The one writer for a water rect (a drag step or a typed number): refuses what _water_error refuses, writes nothing then.
+func _put_water(room_id: String, i: int, rect: Rect2) -> String:
+	var r: RoomDef = rooms[room_id]
+	var err := _water_error(r, rect, i)
+	if err != "":
+		return err
+	r.water[i] = rect
+	return ""
+
 func add_spawn(room_id: String, creature_id: String, pos: Vector2) -> String:
 	var r: RoomDef = rooms[room_id]
 	if not creature_ids.is_empty() and not creature_ids.has(creature_id):
@@ -263,6 +299,13 @@ func hit_all(room_id: String, p: Vector2, pick: float) -> Array:
 	under.sort_custom(func(a, b) -> bool: return a[0] < b[0] or (a[0] == b[0] and a[1] < b[1]))
 	for u in under:
 		out.append(_sel(room_id, "solid", u[1]))
+	var wet: Array = []
+	for i in r.water.size():
+		if (r.water[i] as Rect2).has_point(p):  # a volume, not a thing: anything in it is hit first, so it is un-grown and last
+			wet.append([(r.water[i] as Rect2).get_area(), i])
+	wet.sort_custom(func(a, b) -> bool: return a[0] < b[0] or (a[0] == b[0] and a[1] < b[1]))
+	for w in wet:
+		out.append(_sel(room_id, "water", w[1]))
 	return out
 
 ## The element under a room-local point: the first of hit_all, or {}.
@@ -282,6 +325,10 @@ func begin_move(sel: Dictionary) -> bool:
 			if i >= r.solids.size():
 				return false
 			_drag = {"sel": sel, "before": _snap([sel["room"]]), "orig": r.solids[i]}
+		"water":
+			if i >= r.water.size():
+				return false
+			_drag = {"sel": sel, "before": _snap([sel["room"]]), "orig": r.water[i]}
 		"spawn":
 			if i >= r.spawns.size():
 				return false
@@ -315,6 +362,11 @@ func move_to(delta: Vector2) -> void:
 			moved.position = moved.position.clamp(Vector2.ZERO, r.pixel_size() - moved.size)
 			var i: int = sel["index"]
 			_put_solid(sel["room"], i, moved, r.hard_ledges.has(r.solids[i]))  # a refused step keeps the last valid rect
+		"water":
+			var worig: Rect2 = _drag["orig"]
+			var wmoved := Rect2(worig.position + d, worig.size)
+			wmoved.position = wmoved.position.clamp(Vector2.ZERO, r.pixel_size() - wmoved.size)
+			_put_water(sel["room"], sel["index"], wmoved)  # a refused step keeps the last valid rect
 		"spawn":
 			var p: Vector2 = (_drag["orig"] as Vector2) + d
 			if bounds(r).has_point(p) and not _in_rock(sel["room"], p):
@@ -366,6 +418,12 @@ func delete_selection() -> String:
 			var h := r.hard_ledges.find(gone)
 			if h >= 0:
 				r.hard_ledges.remove_at(h)
+			_push(before)
+		"water":
+			if i >= r.water.size():
+				return "nothing selected"
+			var before := _snap([selection["room"]])
+			r.water.remove_at(i)
 			_push(before)
 		"spawn":
 			if i >= r.spawns.size():
@@ -535,6 +593,18 @@ func get_field(sel: Dictionary, key: String) -> Variant:
 					return int((f.get("kit", {}) as Dictionary).get("level", 0))
 				"kit_skills":
 					return ((f.get("kit", {}) as Dictionary).get("skills", []) as Array).duplicate()
+		"water":
+			if i < r.water.size():
+				var w: Rect2 = r.water[i]
+				match key:
+					"x":
+						return w.position.x
+					"y":
+						return w.position.y
+					"w":
+						return w.size.x
+					"h":
+						return w.size.y
 		"solid":
 			if i < r.solids.size():
 				var s: Rect2 = r.solids[i]
@@ -553,7 +623,7 @@ func get_field(sel: Dictionary, key: String) -> Variant:
 
 ## Sets one inspector field: exit "shortcut" and "gate" (both halves); tablet "title" (required), "text" and "hint"; switch "shortcut" (required);
 ## rebirth pool "kit_level" (0 unsets) and "kit_skills" (a list), merged into the kit so every other key (G1's affinity) is kept;
-## solid "x" "y" "w" "h" (exact numbers, never snapped) and "hard" (Rock from below: thin solids only).
+## solid "x" "y" "w" "h" (exact numbers, never snapped) and "hard" (Rock from below: thin solids only); water "x" "y" "w" "h" likewise.
 ## Optional keys are removed by "" or 0; required keys are never removed. A refusal returns the reason and changes nothing; a
 ## value equal to the stored one pushes nothing (_push declines an unchanged room).
 func set_field(sel: Dictionary, key: String, value) -> String:
@@ -584,7 +654,34 @@ func set_field(sel: Dictionary, key: String, value) -> String:
 			if i >= r.solids.size():
 				return "nothing selected"
 			return _set_solid_field(room_id, i, key, value)
+		"water":
+			if i >= r.water.size():
+				return "nothing selected"
+			return _set_water_field(room_id, i, key, value)
 	return "no such field"
+
+func _set_water_field(room_id: String, i: int, key: String, value) -> String:
+	var r: RoomDef = rooms[room_id]
+	var next: Rect2 = r.water[i]
+	match key:
+		"x":
+			next.position.x = float(value)
+		"y":
+			next.position.y = float(value)
+		"w":
+			next.size.x = float(value)
+		"h":
+			next.size.y = float(value)
+		_:
+			return "no such field"
+	if next == r.water[i]:
+		return ""
+	var before := _snap([room_id])
+	var err := _put_water(room_id, i, next)
+	if err != "":
+		return err
+	_push(before)
+	return ""
 
 func _set_solid_field(room_id: String, i: int, key: String, value) -> String:
 	var r: RoomDef = rooms[room_id]

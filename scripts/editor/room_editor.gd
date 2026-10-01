@@ -156,6 +156,8 @@ func _inspectable(sel: Dictionary) -> bool:
 			return sel["index"] < r.features.size()
 		"solid":
 			return sel["index"] < r.solids.size()
+		"water":
+			return sel["index"] < r.water.size()
 	return false
 
 ## Opens the problem's room, selects the element it points at and centres the view on it.

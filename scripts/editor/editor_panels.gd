@@ -28,7 +28,7 @@ static func areas() -> Array:
 	return TerrainArt.biomes()
 const EDGES := ["left", "right", "top", "bottom"]
 ## The tools in toolbar row one; Creature, Feature and Decor also show their palette at the left.
-const TOOLS := ["Select", "Solid", "Creature", "Feature", "Decor", "Exit"]
+const TOOLS := ["Select", "Solid", "Water", "Creature", "Feature", "Decor", "Exit"]
 const GROW_SIDES := ["Left", "Right", "Top"]
 const TOGGLES := ["Wall Cling", "Open shortcuts"]
 const HOLE_NOTE := "A room above or below a neighbour cuts a hole in its ceiling or floor: it is connected but not walkable until you add ledges."

@@ -44,7 +44,9 @@ rock above the click. An id outside the catalog is lint's `decor_unknown` and th
 builder adds one `DeepWater` node per rect (a translucent tint behind the solids and creatures). The player is "in water" while the
 centre of its body is inside a rect: without Swim it is slow and floaty and a Jump is a small bob; with Swim it swims 8-way and a Jump near
 the surface launches it out. Twenty seconds in water teach Swim (the `submerged` event), so water cannot trap anyone who lacks it.
-Shallow water is decor (`flooded_puddle_glow`, `flooded_flowers`).
+Shallow water is decor (`flooded_puddle_glow`, `flooded_flowers`). The editor's **Water** tool draws a rect as the Solid tool does (snapped, clipped
+to the room, at least 32 px), selects, moves and deletes it, and its inspector edits X, Y, Width and Height; water is hit last (anything in
+it first), and a water finding in the problems list selects the rect.
 
 Three lint rules guard it: `water_rect` (a rect outside the room, under 32 px, or overlapping or touching another), `swimmer_dry` (an
 eel or a jelly spawned outside every water rect idles) and `water_exit` (a swimmer must be able to leave: the rect crosses an open exit

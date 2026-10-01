@@ -1332,3 +1332,48 @@ func test_the_number_field_shows_the_new_text_after_a_refresh_not_only_the_new_v
 func test_the_decor_palette_never_takes_keyboard_focus() -> void:
 	var p := await _panels()
 	assert_eq(p._decor_palette.focus_mode, Control.FOCUS_NONE)
+
+# --- the Water tool (slice) ---
+
+func test_the_water_tool_is_on_the_toolbar_after_solid() -> void:
+	var p := await _panels()
+	assert_eq(p.TOOLS, ["Select", "Solid", "Water", "Creature", "Feature", "Decor", "Exit"])
+
+func test_the_water_tool_draws_a_rect_from_events_and_selects_it_with_its_numbers() -> void:
+	var ed := await _editor()
+	ed.panels.press("Water")
+	assert_eq(ed.view.tool, "water")
+	var a := ed.view.to_screen(Vector2(100, 100))
+	var b := ed.view.to_screen(Vector2(260, 200))
+	for ev in [_button_at(a, true), _motion_at(b), _button_at(b, false)]:
+		get_viewport().push_input(ev, true)
+	await wait_process_frames(2)
+	assert_eq(ed.model.rooms["C1"].water, [Rect2(100, 100, 160, 100)], "the drag reached the model through the viewport")
+	assert_eq(ed.model.selection["kind"], "water")
+	assert_eq(ed.slot.is_showing(), "inspector")
+	assert_eq((ed.slot.find_field("w") as SpinBox).value, 160.0)
+	assert_eq((ed.slot.find_field("h") as SpinBox).value, 100.0)
+	assert_eq((ed.slot.find_field("w") as SpinBox).min_value, RoomEditModel.MIN_WATER, "the water's own minimum")
+
+func test_a_water_rect_too_small_says_why_and_leaves_no_history() -> void:
+	var ed := await _editor()
+	var messages: Array = []
+	ed.view.message.connect(func(t: String) -> void: messages.append(t))
+	ed.panels.press("Water")
+	var a := ed.view.to_screen(Vector2(100, 100))
+	var b := ed.view.to_screen(Vector2(120, 120))
+	for ev in [_button_at(a, true), _motion_at(b), _button_at(b, false)]:
+		get_viewport().push_input(ev, true)
+	await wait_process_frames(2)
+	assert_eq(ed.model.undo_depth(), 0)
+	assert_eq(messages.size(), 1)
+	assert_string_contains(messages[0], "32")
+
+func test_a_water_findings_problem_lands_on_the_water() -> void:
+	var ed := await _editor()
+	ed.model.rooms["F5"].solids.pop_back()   # F5's eel pool loses its bank: no shore, no exit, so water_exit
+	ed.model.serial += 1  # a direct data edit: tell the problems cache
+	var problem: Dictionary = ed.model.problems().filter(func(p): return str(p["text"]).find("cannot get out") >= 0)[0]
+	ed.land_on(problem)
+	assert_eq(ed.model.selection, {"room": "F5", "kind": "water", "index": 0})
+	assert_eq(ed.slot.is_showing(), "inspector")

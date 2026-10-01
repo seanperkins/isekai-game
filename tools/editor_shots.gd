@@ -138,6 +138,11 @@ func _process(_delta: float) -> bool:
 			ed.open_room("F3")
 		116:
 			_shot("editor_water_f3")
+			ed.open_room("F5")
+			ed.model.select({"room": "F5", "kind": "water", "index": 0})  # the Water tool's inspector: its four numbers
+			ed.view.refresh()
+		118:
+			_shot("editor_water_inspector")
 			ed.open_room("C6")
 			ed.model.add_solid("C6", Vector2(200, 200), Vector2(280, 216))
 			ed.view.refresh()
