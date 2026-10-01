@@ -1,0 +1,52 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_frsly"]
+
+[resource]
+script = ExtResource("1_frsly")
+id = "D5"
+area = "deep"
+cell = Vector2i(23, 7)
+decor = [{
+"id": "deep_stalagmite",
+"pos": Vector2(120, 320)
+}, {
+"id": "deep_glow_fungus",
+"light": Color(0.5, 1, 0.6, 1),
+"pos": Vector2(200, 320)
+}, {
+"id": "deep_rubble",
+"pos": Vector2(400, 320)
+}, {
+"anchor": "top",
+"id": "deep_lichen_hang",
+"pos": Vector2(300, 20)
+}]
+spawns = [{
+"id": "stone_drake",
+"pos": Vector2(280, 308)
+}, {
+"id": "gloom_wolf",
+"pos": Vector2(160, 308)
+}, {
+"id": "gloom_wolf",
+"pos": Vector2(360, 308)
+}]
+exits = [{
+"edge": "left",
+"from": 240.0,
+"room": "D4",
+"to": 320.0
+}]
+features = [{
+"id": "d5_glow_pool_1",
+"kind": "glow_pool",
+"pos": Vector2(440, 320)
+}, {
+"hint": "tremor",
+"id": "d5_tablet_1",
+"kind": "tablet",
+"pos": Vector2(540, 320),
+"text": "The ground remembers everything that walks on it.",
+"title": "Cracked tablet"
+}]

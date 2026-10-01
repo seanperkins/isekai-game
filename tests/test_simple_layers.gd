@@ -3,7 +3,7 @@ extends GutTest
 ## tile) and the foreground (the painted terrain the player plays on). The parallax stack, the foreground
 ## frame, the motes and the set dressing stay in code behind RoomBuilder.simple_layers.
 
-const BIOMES := ["cave", "grotto", "flooded"]
+const BIOMES := ["cave", "grotto", "flooded", "deep"]
 const STACK := ["far_haze", "far_rock", "mid_rock", "foreground", "Motes", "Dressing"]
 
 func after_each() -> void:

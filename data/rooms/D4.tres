@@ -1,0 +1,60 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_ddfep"]
+
+[resource]
+script = ExtResource("1_ddfep")
+id = "D4"
+area = "deep"
+cell = Vector2i(21, 7)
+size = Vector2i(2, 1)
+solids = [Rect2(260, 268, 140, 12), Rect2(440, 268, 120, 12), Rect2(540, 216, 140, 12), Rect2(820, 268, 140, 12), Rect2(940, 216, 120, 12)]
+decor = [{
+"id": "deep_bones",
+"pos": Vector2(200, 320)
+}, {
+"id": "deep_rubble",
+"pos": Vector2(460, 320)
+}, {
+"id": "deep_stalagmite",
+"pos": Vector2(800, 320)
+}, {
+"id": "deep_glow_fungus",
+"light": Color(0.5, 1, 0.6, 1),
+"pos": Vector2(620, 216)
+}, {
+"anchor": "top",
+"id": "deep_root_hang",
+"pos": Vector2(400, 20)
+}, {
+"anchor": "top",
+"id": "deep_lichen_hang",
+"pos": Vector2(1000, 20)
+}]
+spawns = [{
+"id": "gloom_wolf",
+"pos": Vector2(380, 308)
+}, {
+"id": "gloom_wolf",
+"pos": Vector2(520, 308)
+}, {
+"id": "gloom_wolf",
+"pos": Vector2(700, 308)
+}, {
+"id": "gloom_wolf",
+"pos": Vector2(900, 308)
+}, {
+"id": "stone_drake",
+"pos": Vector2(1040, 308)
+}]
+exits = [{
+"edge": "left",
+"from": 240.0,
+"room": "D3",
+"to": 320.0
+}, {
+"edge": "right",
+"from": 240.0,
+"room": "D5",
+"to": 320.0
+}]
