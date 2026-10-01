@@ -802,14 +802,14 @@ func test_cmd_s_saves_even_while_a_field_has_focus() -> void:
 	DirAccess.remove_absolute(ProjectSettings.globalize_path("%s/C1.tres" % ed.save_dir))
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(ed.save_dir))
 
-func test_selecting_a_feature_shows_its_inspector_and_a_solid_hides_it() -> void:
+func test_selecting_a_feature_shows_its_inspector_and_a_creature_hides_it() -> void:
 	var ed := await _editor()
 	ed.model.add_feature("C1", "tablet", Vector2(300, 100))
 	ed.view.refresh()
 	assert_eq(ed.slot.is_showing(), "inspector")
-	ed.model.select({"room": "C1", "kind": "solid", "index": 0})
+	ed.model.select({"room": "C1", "kind": "spawn", "index": 0})
 	ed.view.refresh()
-	assert_eq(ed.slot.is_showing(), "")
+	assert_eq(ed.slot.is_showing(), "", "a solid now has a panel (a number each); a creature still has none")
 
 func test_delete_and_undo_still_work_after_ticking_a_kit_skill() -> void:
 	var ed := await _editor()
@@ -1063,3 +1063,62 @@ func test_a_drag_starts_after_three_screen_pixels_and_applies_from_the_press() -
 	view.handle_event(_release(view.to_room(far.position)))
 	var moved: Rect2 = model.rooms["L1"].solids[1]
 	assert_almost_eq(moved.position.x, 150.0 + view.to_room(far.position).x - at.x, 4.0, "the whole distance applied, no lag")
+
+# --- a solid's panel ---
+
+func test_a_selected_solid_shows_its_numbers() -> void:
+	var ed := await _editor()
+	ed.model.select({"room": "C1", "kind": "solid", "index": 1})
+	ed.view.refresh()
+	assert_eq(ed.slot.is_showing(), "inspector")
+	var x: SpinBox = ed.slot.find_field("x")
+	assert_eq([x.value, x.min_value, x.max_value], [420.0, 0.0, 1276.0], "a new SpinBox starts at 0..100: ranges first, then the value")
+	assert_eq((ed.slot.find_field("y") as SpinBox).value, 214.0)
+	assert_eq((ed.slot.find_field("w") as SpinBox).value, 100.0)
+	assert_eq((ed.slot.find_field("h") as SpinBox).value, 12.0)
+
+func test_typing_a_number_commits_it_once_and_never_while_building() -> void:
+	var ed := await _editor()
+	var depth_before: int = ed.model.undo_depth()
+	ed.model.select({"room": "C1", "kind": "solid", "index": 1})
+	ed.view.refresh()
+	assert_eq(ed.model.undo_depth(), depth_before, "building the panel commits nothing")
+	var x: SpinBox = ed.slot.find_field("x")
+	x.value = 440.0
+	assert_eq(ed.model.rooms["C1"].solids[1].position.x, 440.0)
+	assert_eq(ed.model.undo_depth(), depth_before + 1)
+
+func test_a_refused_number_shows_the_stored_value_again() -> void:
+	var ed := await _editor()
+	var errors := []
+	ed.slot.field_error.connect(func(t: String) -> void: errors.append(t))
+	ed.model.rooms["C1"].solids.append(Rect2(500, 100, 120, 12))
+	var i: int = ed.model.rooms["C1"].solids.size() - 1
+	ed.model.select({"room": "C1", "kind": "solid", "index": i})
+	ed.view.refresh()
+	(ed.slot.find_field("x") as SpinBox).value = 260.0
+	(ed.slot.find_field("y") as SpinBox).value = 266.0   # now identical to C1's first ledge
+	assert_eq(errors.size(), 1)
+	assert_eq((ed.slot.find_field("y") as SpinBox).value, 100.0, "back to the stored value")
+
+func test_rock_from_below_is_a_checkbox_that_hides_for_a_thick_solid() -> void:
+	var ed := await _editor()
+	ed.model.select({"room": "C1", "kind": "solid", "index": 1})
+	ed.view.refresh()
+	var box: CheckBox = ed.slot.find_field("hard")
+	assert_true(box.visible)
+	box.button_pressed = true
+	assert_true(ed.model.rooms["C1"].hard_ledges.has(Rect2(420, 214, 100, 12)))
+	ed.model.select({"room": "C1", "kind": "solid", "index": 5})
+	ed.view.refresh()
+	assert_false((ed.slot.find_field("hard") as CheckBox).visible, "a thick solid is rock anyway")
+
+func test_building_the_panel_for_a_solid_that_sticks_out_of_the_room_changes_nothing() -> void:
+	var ed := await _editor()
+	ed.model.rooms["C1"].solids.append(Rect2(100, 358, 8, 4))  # lint's solid_outside: y is past the control's maximum (356)
+	var i: int = ed.model.rooms["C1"].solids.size() - 1
+	var depth: int = ed.model.undo_depth()
+	ed.model.select({"room": "C1", "kind": "solid", "index": i})
+	ed.view.refresh()
+	assert_eq(ed.model.rooms["C1"].solids[i], Rect2(100, 358, 8, 4), "the control clamps what it shows; building commits nothing")
+	assert_eq(ed.model.undo_depth(), depth)

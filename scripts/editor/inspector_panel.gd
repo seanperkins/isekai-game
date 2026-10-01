@@ -1,6 +1,6 @@
 class_name InspectorPanel
 extends VBoxContainer
-## The controls for the selected exit or feature, from a per-kind field list. Every control is bound to the selection captured at
+## The controls for the selected exit, feature or solid, from a per-kind field list. Every control is bound to the selection captured at
 ## build, so a late commit (focus loss after the selection moved) lands on the element it was typed for. The model decides what a
 ## value may be: a refusal is reported and the control shows the stored value again.
 
@@ -15,6 +15,7 @@ const FIELDS := {
 	"switch": [["shortcut", "Shortcut", "line"]],
 	"rebirth_pool": [["kit_level", "Level", "level"], ["kit_skills", "Skills", "skills"]],
 	"glow_pool": [],
+	"solid": [["x", "X", "number"], ["y", "Y", "number"], ["w", "Width", "number"], ["h", "Height", "number"], ["hard", "Rock from below", "check"]],
 }
 
 var _model: RoomEditModel
@@ -56,6 +57,8 @@ func _kind() -> String:
 	return _sel["kind"]
 
 func _title(kind: String) -> String:
+	if kind == "solid":
+		return "Solid %d" % _sel["index"]
 	if kind == "exit":
 		var e: Dictionary = _model.rooms[_sel["room"]].exits[_sel["index"]]
 		return "Exit %s to %s" % [e["edge"], e["room"]]
@@ -75,6 +78,10 @@ func _make(key: String, control: String) -> Control:
 			return _level(key)
 		"skills":
 			return _skills(key)
+		"number":
+			return _number(key)
+		"check":
+			return _check(key)
 	return _line(key)
 
 func _line(key: String) -> LineEdit:
@@ -86,6 +93,50 @@ func _line(key: String) -> LineEdit:
 	line.text_submitted.connect(func(t: String) -> void: _commit(key, t))
 	line.focus_exited.connect(func() -> void: _commit(key, line.text))
 	return line
+
+func _number(key: String) -> SpinBox:
+	var box := SpinBox.new()
+	box.name = "field_" + key
+	box.custom_minimum_size = Vector2(150, 0)
+	box.step = 1.0
+	box.rounded = true
+	_set_range(box, key)                                   # ranges first: a new SpinBox is 0..100 and would clamp the value
+	box.value = float(_model.get_field(_sel, key))         # then the value
+	box.value_changed.connect(func(v: float) -> void: _commit(key, v))  # then connect, so building never commits
+	box.get_line_edit().add_theme_font_size_override("font_size", FONT)
+	return box
+
+## The SpinBox range for a solid's number from the room it is in (a Grow changes it under an open selection).
+func _set_range(box: SpinBox, key: String) -> void:
+	var size: Vector2 = _model.rooms[_sel["room"]].pixel_size()
+	match key:
+		"x":
+			box.min_value = 0.0
+			box.max_value = size.x - RoomEditModel.MIN_SOLID
+		"y":
+			box.min_value = 0.0
+			box.max_value = size.y - RoomEditModel.MIN_SOLID
+		"w":
+			box.min_value = RoomEditModel.MIN_SOLID
+			box.max_value = size.x
+		"h":
+			box.min_value = RoomEditModel.MIN_SOLID
+			box.max_value = size.y
+
+func _check(key: String) -> CheckBox:
+	var box := CheckBox.new()
+	box.name = "field_" + key
+	box.text = "Rock from below"
+	box.focus_mode = Control.FOCUS_NONE
+	box.add_theme_font_size_override("font_size", FONT)
+	box.button_pressed = bool(_model.get_field(_sel, key))
+	box.visible = _thin_solid()
+	box.toggled.connect(func(on: bool) -> void: _commit(key, on))
+	return box
+
+## Thin solids (a one-way ledge unless marked) are the only ones the mark means anything for.
+func _thin_solid() -> bool:
+	return float(_model.get_field(_sel, "h")) <= 24.0 and float(_model.get_field(_sel, "w")) > 24.0
 
 func _level(key: String) -> OptionButton:
 	var pick := OptionButton.new()
@@ -140,8 +191,16 @@ func _commit(key: String, value) -> void:
 func _show_stored(key: String) -> void:
 	var control: Control = _fields.get(key)
 	var stored = _model.get_field(_sel, key)
+	if stored == null:
+		return
 	if control is LineEdit:
 		(control as LineEdit).text = str(stored)
+	elif control is SpinBox:
+		_set_range(control as SpinBox, key)
+		(control as SpinBox).set_value_no_signal(float(stored))
+	elif control is CheckBox:
+		(control as CheckBox).set_pressed_no_signal(bool(stored))
+		control.visible = _thin_solid()
 	elif control is OptionButton:
 		(control as OptionButton).select(int(stored))
 	else:
