@@ -16,6 +16,7 @@ var view_state := {}
 var view: RoomView
 var panels: EditorPanels
 var slot: EditorSlot
+var world: WorldView
 ## The two Play toggles; they ride in Game.editor_resume so a Play round trip keeps them.
 var play_options := {"movement": false, "shortcuts": false}
 var save_dir := "res://data/rooms"
@@ -45,6 +46,11 @@ func _ready() -> void:
 	panels.setup(model)
 	slot = EditorSlot.new()
 	panels.add_slot(slot)
+	world = WorldView.new()  # added after the slot, so it covers the palettes and the slot while it shows
+	panels.add_slot(world)
+	world.room_chosen.connect(func(id: String) -> void:
+		world.visible = false
+		open_room(id))
 	panels.set_play_options(bool(play_options["movement"]), bool(play_options["shortcuts"]))
 	view.changed.connect(_sync)
 	view.selection_changed.connect(_sync)
@@ -61,6 +67,7 @@ func _ready() -> void:
 	panels.fit_pressed.connect(_refit)
 	panels.one_to_one_pressed.connect(view.one_to_one)
 	panels.validate_pressed.connect(_toggle_validation)
+	panels.world_pressed.connect(_toggle_world)
 	panels.grow_requested.connect(grow)
 	panels.movement_toggled.connect(func(on: bool) -> void: _set_play_option("movement", on))
 	panels.shortcuts_toggled.connect(func(on: bool) -> void: _set_play_option("shortcuts", on))
@@ -93,6 +100,14 @@ func _set_play_option(key: String, on: bool) -> void:
 	_commit_pending()
 	play_options[key] = on
 
+func _toggle_world() -> void:
+	_commit_pending()
+	if world.visible:
+		world.visible = false
+	else:
+		world.setup(model.rooms, room_id)
+		world.visible = true
+
 func _toggle_validation() -> void:
 	_commit_pending()
 	if slot.is_showing() == "problems":
@@ -107,6 +122,8 @@ func _sync() -> void:
 	panels.select_room(room_id)
 	panels.set_problem_count(model.problems().size())
 	_sync_slot()
+	if world.visible:
+		world.setup(model.rooms, room_id)
 	get_window().title = "Room editor - %s%s" % [room_id, " *" if model.dirty.has(room_id) else ""]
 
 ## The slot shows the problems list while it is open (refreshed on every edit), else the inspector for an exit or a feature, else
@@ -270,6 +287,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		return  # typing owns the keys, except that Cmd/Ctrl+S still saves
 	if key.keycode == KEY_TAB:
 		panels.toggle_panels()
+	elif key.keycode == KEY_ESCAPE and world.visible:
+		world.visible = false
 	elif cmd and key.keycode == KEY_Z:
 		if key.shift_pressed:
 			redo()

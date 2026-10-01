@@ -3,7 +3,7 @@ extends SceneTree
 ##   env HOME="$PWD/.tmp/editor-home" godot --path . -s res://tools/editor_shots.gd
 ## Writes .tmp/editor/*.png: C1 fitted, C2 edited (a solid, a toad) at 1:1, a Solid drag in progress with its live label, the
 ## Creature palette, the Validate list, a placed tablet with its inspector, the problems list with findings, G1's pool with the
-## kit checklist, and C6 played from the editor with Wall Cling granted and every shortcut open.
+## kit checklist, the World overview, and C6 played from the editor with Wall Cling granted and every shortcut open.
 
 const OUT := "res://.tmp/editor/"
 var ed
@@ -90,17 +90,21 @@ func _process(_delta: float) -> bool:
 			ed.view.refresh()
 		76:
 			_shot("editor_pool_kit")
+			ed.panels.press("World")
+		80:
+			_shot("editor_world")
+			ed.panels.press("World")  # close it
 			ed.open_room("C6")
 			ed.model.add_solid("C6", Vector2(200, 200), Vector2(280, 216))
 			ed.view.refresh()
 			ed.panels.press("Wall Cling")
 			ed.panels.press("Open shortcuts")
-		84:
+		90:
 			_shot("editor_c6_toggles")
 			ed.get_script().set("sandbox_root", OS.get_user_data_dir())  # naming RoomEditor here would compile it before the autoloads exist
 			ed.play(Vector2(120, 250))
 			ed.queue_free()
-		180:
+		190:
 			_shot("play_c6_cling")
 			quit()
 	return false

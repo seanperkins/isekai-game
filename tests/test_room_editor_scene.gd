@@ -851,3 +851,42 @@ func test_the_feature_palette_shows_for_the_feature_tool_and_chooses_the_kind() 
 	assert_eq(ed.view.tool, "feature")
 	ed.panels.choose_feature("switch")
 	assert_eq(ed.view.feature_kind, "switch")
+
+func test_the_world_button_shows_the_overview_and_choosing_a_room_opens_it() -> void:
+	var ed := await _editor()
+	ed.panels.press("World")
+	assert_true(ed.world.visible)
+	var c2: Rect2 = ed.world.layout_items().filter(func(i): return i["id"] == "C2")[0]["rect"]
+	ed.world.click(c2.get_center())
+	assert_false(ed.world.visible, "choosing a room closes the overview")
+	assert_eq(ed.room_id, "C2")
+	assert_eq(ed.view.room_id(), "C2")
+
+func test_pressing_world_again_or_escape_closes_it() -> void:
+	var ed := await _editor()
+	ed.panels.press("World")
+	ed.panels.press("World")
+	assert_false(ed.world.visible)
+	ed.panels.press("World")
+	var esc := InputEventKey.new()
+	esc.keycode = KEY_ESCAPE
+	esc.pressed = true
+	get_viewport().push_input(esc)
+	await wait_process_frames(1)
+	assert_false(ed.world.visible)
+	assert_eq(ed.room_id, "C1", "closing changes nothing")
+
+func test_the_overview_follows_the_model_while_it_is_open() -> void:
+	var ed := await _editor()
+	ed.open_room("C6")
+	ed.panels.press("World")
+	var c6w: int = ed.model.rooms["C6"].size.x
+	var ratio := func() -> float:
+		var items: Array = ed.world.layout_items()
+		var c6: Rect2 = items.filter(func(i): return i["id"] == "C6")[0]["rect"]
+		var c1: Rect2 = items.filter(func(i): return i["id"] == "C1")[0]["rect"]
+		return c6.size.x / c1.size.x
+	var before: float = ratio.call()
+	ed.grow("left")
+	assert_true(ed.world.visible)
+	assert_almost_eq(float(ratio.call()), before * float(c6w + 1) / float(c6w), 0.001, "the overview was laid out again with the grown room")
