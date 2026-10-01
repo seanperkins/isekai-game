@@ -195,35 +195,42 @@ func add_spawn(room_id: String, creature_id: String, pos: Vector2) -> String:
 
 # --- hit-testing ---
 
-## The element under a room-local point: the nearest creature within `pick`, else a feature's drawn box, else an exit's gap, else
-## the smallest solid.
-func hit(room_id: String, p: Vector2, pick: float) -> Dictionary:
+## Every element under a room-local point, in hit order: creatures within `pick`, nearest first; then features (their drawn box
+## grown by `pick`) and exits (their gap grown by `pick`) by index; then solids (grown by `pick`), smallest area first. Ties go by
+## index. `hit` is the first element, so a plain press is the same as it was before hit_all existed.
+func hit_all(room_id: String, p: Vector2, pick: float) -> Array:
 	var r: RoomDef = rooms[room_id]
-	var best := -1
-	var best_d := INF
+	var out: Array = []
+	var near: Array = []
 	for i in r.spawns.size():
 		var d := (r.spawns[i]["pos"] as Vector2).distance_to(p)
-		if d <= pick and d < best_d:
-			best = i
-			best_d = d
-	if best >= 0:
-		return _sel(room_id, "spawn", best)
+		if d <= pick:
+			near.append([d, i])
+	near.sort_custom(func(a, b) -> bool: return a[0] < b[0] or (a[0] == b[0] and a[1] < b[1]))
+	for n in near:
+		out.append(_sel(room_id, "spawn", n[1]))
 	for i in r.features.size():
 		var f: Dictionary = r.features[i]
 		var box: Rect2 = RoomLint.FEATURE_BOX.get(f.get("kind", ""), Rect2(-6, -12, 12, 12))
 		if Rect2(box.position + (f["pos"] as Vector2), box.size).grow(pick).has_point(p):
-			return _sel(room_id, "feature", i)
+			out.append(_sel(room_id, "feature", i))
 	for i in r.exits.size():
 		if RoomBuilder.gate_rect(r.pixel_size(), r.exits[i]).grow(pick).has_point(p):
-			return _sel(room_id, "exit", i)
-	var area := INF
-	best = -1
+			out.append(_sel(room_id, "exit", i))
+	var under: Array = []
 	for i in r.solids.size():
 		var s: Rect2 = r.solids[i]
-		if s.grow(pick).has_point(p) and s.get_area() < area:
-			area = s.get_area()
-			best = i
-	return _sel(room_id, "solid", best) if best >= 0 else {}
+		if s.grow(pick).has_point(p):
+			under.append([s.get_area(), i])
+	under.sort_custom(func(a, b) -> bool: return a[0] < b[0] or (a[0] == b[0] and a[1] < b[1]))
+	for u in under:
+		out.append(_sel(room_id, "solid", u[1]))
+	return out
+
+## The element under a room-local point: the first of hit_all, or {}.
+func hit(room_id: String, p: Vector2, pick: float) -> Dictionary:
+	var all := hit_all(room_id, p, pick)
+	return all[0] if not all.is_empty() else {}
 
 # --- moving ---
 
