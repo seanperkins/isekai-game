@@ -155,8 +155,8 @@ func test_decor_unknown_flags_an_id_outside_the_catalog_with_a_decor_pick() -> v
 	var ok := _room("T1", {"decor": [DecorLib.entry("crystal_teal", Vector2(100, 320))]})
 	assert_false(_rules(ok).has("decor_unknown"))
 
-func test_the_rule_list_has_thirteen_rules() -> void:
-	assert_eq(RoomLint.RULES.size(), 13)
+func test_the_rule_list_has_sixteen_rules() -> void:
+	assert_eq(RoomLint.RULES.size(), 16)
 
 func _pool(id: String, area: String, pos: Vector2) -> Dictionary:
 	return {"kind": "rebirth_pool", "id": id, "area": area, "pos": pos, "kit": {}}

@@ -19,7 +19,7 @@ and this file keeps the reasoning its comments carried, which the `.tres` files 
   No shipped room uses `hard_ledges`.
 - Every exit is matched by an exit on the neighbour's opposite edge covering the same world span (the validator checks it),
   with the same shortcut id. Keep 64 px in front of a door free of rock (`RoomLint`'s `exit_blocked`).
-- An exit's `gate` is a label from `WorldValidator.GATES` (today `wall_cling`) that must match on both halves; it does not stop the
+- An exit's `gate` is a label from `WorldValidator.GATES` (today `wall_cling` and `swim`) that must match on both halves; it does not stop the
   player in play, but a gated bottom exit still counts as a floor hole (only a `shortcut` closes one), so no creature or decor may stand over it (set dressing may).
 - Keep every step at most 54 px (the slime's ledge limit) and gaps between floating solids at least 36 px so the 28 px body
   fits.
