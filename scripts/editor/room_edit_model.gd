@@ -4,10 +4,7 @@ extends RefCounted
 ## save. Pure data, no nodes. It is the one place that knows the shape of a RoomDef's arrays.
 
 const GRID := 4.0
-const MIN_EXIT := 36.0
 const UNDO_CAP := 200
-## Depth of the rock-free strip kept in front of a new room's default door, in the neighbour.
-const KEEP_CLEAR := 64.0
 const MIN_SOLID := 4.0
 
 static var _prop_names: Array = []
@@ -367,8 +364,8 @@ func add_exit(a_id: String, edge: String, from: float, to: float, opts := {}) ->
 	var a: RoomDef = rooms[a_id]
 	var lo := snap(minf(from, to))
 	var hi := snap(maxf(from, to))
-	if hi - lo < MIN_EXIT:
-		return "too short: an exit is at least %d px" % int(MIN_EXIT)
+	if hi - lo < RoomLint.MIN_EXIT:
+		return "too short: an exit is at least %d px" % int(RoomLint.MIN_EXIT)
 	if not _within(a, edge, lo, hi):
 		return "outside what this edge allows"
 	if _overlaps(a, edge, lo, hi):
@@ -521,7 +518,7 @@ func new_room_beside(a_id: String, edge: String, new_id: String, area: String, s
 	return ""
 
 ## A door of DOOR px along the shared edge (a-local from and to, as a Vector2), inside both rooms' allowed range, clear of a's
-## exits, with KEEP_CLEAR px in front of it free of a's interior solids. Side edges try from the floor upward; top and bottom
+## exits, with RoomLint.CLEAR px in front of it (RoomLint.exit_zone) free of a's interior solids. Side edges try from the floor upward; top and bottom
 ## edges from the middle outward. (-1, -1) when nothing fits.
 func _default_door(a: RoomDef, b: RoomDef, edge: String) -> Vector2:
 	var opp: String = WorldValidator.OPPOSITE[edge]
@@ -557,15 +554,9 @@ func _default_door(a: RoomDef, b: RoomDef, edge: String) -> Vector2:
 	return Vector2(-1.0, -1.0)
 
 func _clear_in_front(a: RoomDef, edge: String, from: float, to: float) -> bool:
-	var size := a.pixel_size()
-	var strip: Rect2
-	match edge:
-		"right": strip = Rect2(size.x - KEEP_CLEAR, from, KEEP_CLEAR, to - from)
-		"left": strip = Rect2(0, from, KEEP_CLEAR, to - from)
-		"top": strip = Rect2(from, 0, to - from, KEEP_CLEAR)
-		_: strip = Rect2(from, size.y - KEEP_CLEAR, to - from, KEEP_CLEAR)
+	var zone := RoomLint.exit_zone(a.pixel_size(), {"edge": edge, "from": from, "to": to})
 	for s in a.solids:
-		if (s as Rect2).intersects(strip):
+		if (s as Rect2).intersects(zone):  # any solid, ledges too: stricter than exit_blocked, which counts mass only
 			return false
 	return true
 

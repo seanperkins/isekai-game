@@ -74,7 +74,7 @@ func test_a_room_on_a_bottom_edge_is_connected_but_the_hole_has_no_floor_below()
 	var h: float = model.rooms["C2"].pixel_size().y
 	assert_null(model.floor_spot("C2", Vector2(mid, h - 60.0)), "nothing below the hole: Play refuses")
 
-func test_the_default_door_keeps_64px_clear_of_rock_in_the_neighbour() -> void:
+func test_the_default_door_keeps_the_lint_zone_clear_of_rock_in_the_neighbour() -> void:
 	var checked := 0
 	for host in ["C1", "C2", "C3", "C6"]:
 		for edge in ["right", "left", "top", "bottom"]:
@@ -84,13 +84,7 @@ func test_the_default_door_keeps_64px_clear_of_rock_in_the_neighbour() -> void:
 			checked += 1
 			var a: RoomDef = m.rooms[host]
 			var e: Dictionary = a.exits.filter(func(x): return x["room"] == "Fresh")[0]
-			var size := a.pixel_size()
-			var strip: Rect2
-			match edge:
-				"right": strip = Rect2(size.x - RoomEditModel.KEEP_CLEAR, e["from"], RoomEditModel.KEEP_CLEAR, e["to"] - e["from"])
-				"left": strip = Rect2(0, e["from"], RoomEditModel.KEEP_CLEAR, e["to"] - e["from"])
-				"top": strip = Rect2(e["from"], 0, e["to"] - e["from"], RoomEditModel.KEEP_CLEAR)
-				_: strip = Rect2(e["from"], size.y - RoomEditModel.KEEP_CLEAR, e["to"] - e["from"], RoomEditModel.KEEP_CLEAR)
+			var strip := RoomLint.exit_zone(a.pixel_size(), e)
 			for s in a.solids:
 				assert_false((s as Rect2).intersects(strip), "%s %s: solid %s in the strip %s" % [host, edge, s, strip])
 	assert_gte(checked, 4, "several shipped edges take a new room")
@@ -109,3 +103,14 @@ func test_every_shipped_room_opens_in_the_model_and_round_trips_its_data() -> vo
 	var fresh := ShippedRooms.load_all()
 	for id in ShippedRooms.IDS:
 		assert_true(RoomEditModel.same_room(fresh[id], model.rooms[id]), id)
+
+func test_every_door_the_editor_makes_passes_exit_blocked() -> void:
+	var made := 0
+	for host in ["C1", "C2", "C3", "C6"]:
+		for edge in ["right", "left", "top", "bottom"]:
+			var m := RoomEditModel.new(ShippedRooms.load_all(), [])
+			if m.new_room_beside(host, edge, "Fresh", "cave", Vector2i(1, 1)) != "":
+				continue
+			made += 1
+			assert_eq(RoomLint.text(RoomLint.check_room(m.rooms[host], m.rooms), ["exit_blocked", "exit_narrow"]), "", "%s %s" % [host, edge])
+	assert_gte(made, 4)
