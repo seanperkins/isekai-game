@@ -920,6 +920,7 @@ static func water_groups(rooms: Dictionary) -> Array:
 		if not safe:
 			out.append({"rooms": groups[root].map(func(k): return nodes[k]["room"]), "text": "a swimmer in this connected water has no shore and no way out"})
 	return out
+```
 
 `world_validator.gd`: `const GATES := ["wall_cling", "swim"]`. `docs/rooms.md`: change "(today `wall_cling`)" to "(today `wall_cling` and `swim`)" and note that G4 is no longer the last room (the rest of that row is edited in Task 12); update `tests/test_room_lint.gd`'s rules-count pin from 13 to 16 and `tests/support/shipped_rooms.gd`'s docstring counts ("RoomLint's sixteen").
 
