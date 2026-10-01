@@ -54,33 +54,32 @@ func test_the_ungated_flooded_is_f1_and_f2_only() -> void:
 		assert_false(reach.has(id), "%s is behind the swim door" % id)
 
 func test_the_two_floor_holes_have_chains_back_up_standing_on_dry_floor() -> void:
-	# G4 -> F1 and F4 -> F5: the top ledge sits at local y 12-15 flush with the span's west edge, every hop at most 55 up
+	# G4 -> F1 and F4 -> F5: the top ledge sits at local y 12-15 flush with the span's west edge, every hop at most 55 up,
+	# the lowest ledge within 55 of the floor, and no ledge in water
 	for pair in [["G4", "F1"], ["F4", "F5"]]:
 		var upper: RoomDef = rooms[pair[0]]
 		var lower: RoomDef = rooms[pair[1]]
 		var hole: Dictionary = upper.exits.filter(func(e): return e["edge"] == "bottom" and e["room"] == pair[1])[0]
 		var span := WorldValidator.world_span(upper, hole)
 		var west := span.x - WorldValidator.edge_origin(lower, "top")
-		var tops: Array = lower.solids.map(func(s): return (s as Rect2).position.y)
-		tops.sort()
-		assert_between(tops[0], 12.0, 15.0, "%s: the top ledge" % pair[1])
-		var top_ledge: Rect2 = lower.solids.filter(func(s): return (s as Rect2).position.y == tops[0])[0]
-		assert_almost_eq(top_ledge.position.x, west, 1.0, "%s: flush with the span's west edge" % pair[1])
-		for i in range(1, tops.size()):
-			if tops[i] - tops[i - 1] > 55.0:
-				break
-			assert_lte(tops[i] - tops[i - 1], 55.0)
-		for w in lower.water:
-			for s in lower.solids:
-				if (s as Rect2).position.y > 100.0:
-					continue
+		var chain: Array = lower.solids.filter(func(s): return (s as Rect2).position.x >= west - 10.0 and (s as Rect2).end.x <= west + 250.0 and (s as Rect2).size.y <= 24.0)
+		chain.sort_custom(func(a, b): return (a as Rect2).position.y < (b as Rect2).position.y)
+		assert_gte(chain.size(), 5, "%s: a real climb" % pair[1])
+		assert_between((chain[0] as Rect2).position.y, 12.0, 15.0, "%s: the top ledge" % pair[1])
+		assert_almost_eq((chain[0] as Rect2).position.x, west, 1.0, "%s: flush with the span's west edge" % pair[1])
+		for i in range(1, chain.size()):
+			assert_lte((chain[i] as Rect2).position.y - (chain[i - 1] as Rect2).position.y, 55.0, "%s: hop %d" % [pair[1], i])
+		var floor_y: float = lower.pixel_size().y - RoomDef.FLOOR
+		assert_lte(floor_y - (chain.back() as Rect2).position.y, 55.0, "%s: the lowest ledge is a hop from the floor" % pair[1])
+		for s in chain:
+			for w in lower.water:
 				assert_false((s as Rect2).intersects(w), "%s: the chain stands outside every water rect" % pair[1])
 
 ## The Swim door of a room's top exit, in the three parts the Grotto's G5 test has.
 func _assert_door(room_id: String) -> void:
 	var r: RoomDef = rooms[room_id]
 	var top: Dictionary = r.exits.filter(func(e): return e["edge"] == "top" and e.get("gate", "") == "swim")[0]
-	var column: Rect2 = r.water.filter(func(w): return (w as Rect2).position.y <= RoomDef.WALL + 0.5 and (w as Rect2).end.x > float(top["from"]) and (w as Rect2).position.x < float(top["to"]))[0]
+	var column: Rect2 = r.water.filter(func(w): return (w as Rect2).position.y <= 0.5 and (w as Rect2).end.x > float(top["from"]) and (w as Rect2).position.x < float(top["to"]))[0]
 	# (a) the top exit's span lies inside the column's x-range and the column reaches the room's top edge
 	assert_true(column.position.x <= float(top["from"]) and column.end.x >= float(top["to"]), "%s (a) the span is inside the column" % room_id)
 	# (b) no solid inside the column, and the sill clears the true non-swimmer reach plus 3

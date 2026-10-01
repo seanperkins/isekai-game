@@ -7,6 +7,8 @@ const TINT := Color(0.25, 0.55, 0.85, 0.30)
 const SURFACE := Color(0.75, 0.92, 1.0, 0.75)
 const BUBBLE := Color(0.85, 0.95, 1.0, 0.6)
 
+## True when the rect reaches the room's top edge: its top is a door a swimmer may cross, not a surface it must stay under.
+var reaches_top := false
 var local_rect := Rect2()
 var _t := 0.0
 
@@ -14,6 +16,7 @@ static func make(rect: Rect2) -> DeepWater:
 	var w := DeepWater.new()
 	w.local_rect = Rect2(Vector2.ZERO, rect.size)
 	w.position = rect.position
+	w.reaches_top = rect.position.y <= 0.5
 	w.add_to_group("deep_water")
 	return w
 

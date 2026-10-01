@@ -92,11 +92,15 @@ func test_a_swimmer_launches_from_within_the_surface_reach_only() -> void:
 	water.step(get_tree(), Vector2(100, 100), 0.016)  # 100 below
 	assert_null(water.jump(Vector2.ZERO, false, true, 1.0, Vector2(100, 100)))
 
-func test_a_ballistic_launch_ignores_input_until_the_centre_leaves_the_rect() -> void:
+func test_a_ballistic_launch_ignores_input_and_gravity_until_the_centre_leaves_the_rect() -> void:
 	water.step(get_tree(), Vector2(100, 10), 0.016)
 	water.jump(Vector2.ZERO, false, true, 1.0, Vector2(100, 10))
-	var v := water.adjust(Vector2(0, -330), false, true, Vector2(1, 0), 150.0, 1.0, false, false, 1.0 / 60.0)
-	assert_eq(v, Vector2(0, -330), "the launch is not overwritten by the next frame's input")
+	# player.gd has already added the dry gravity (900 * delta) when adjust runs: the launch keeps its speed, as the spec says
+	var delta := 1.0 / 60.0
+	var v := water.adjust(Vector2(0, -330 + 900.0 * delta), false, true, Vector2(1, 0), 150.0, 1.0, false, false, delta)
+	assert_almost_eq(v.y, -330.0, 0.001, "no gravity inside the rect, and the next frame's input does not overwrite the launch")
+	assert_eq(v.x, 0.0)
+	assert_true(water.ballistic)
 	water.step(get_tree(), Vector2(100, -5), 0.016)  # out of the rect
 	assert_false(water.ballistic)
 
@@ -117,3 +121,30 @@ func test_a_room_change_does_not_fire_an_exit_and_enter_pair() -> void:
 func test_the_bob_apex_is_the_spec_number() -> void:
 	assert_almost_eq(PlayerWater.bob_apex(185.0), 75.2, 0.05)
 	assert_almost_eq(PlayerWater.bob_apex(155.0), 63.0, 0.05)
+
+func test_a_ballistic_launch_ends_when_it_stops_rising() -> void:
+	# blocked by a ceiling or an eel, or at its peak: the swimmer must get its swimming back, not stay a falling body in the water
+	water.step(get_tree(), Vector2(100, 10), 0.016)
+	water.jump(Vector2.ZERO, false, true, 1.0, Vector2(100, 10))
+	assert_true(water.ballistic)
+	var v := water.adjust(Vector2(0, 15), false, true, Vector2(1, 0), 150.0, 1.0, false, false, 1.0 / 60.0)
+	assert_false(water.ballistic, "a velocity that is no longer upward ends the launch")
+	assert_eq(v, Vector2(150, 0), "and the input steers again")
+
+func test_a_swimmer_holding_up_stops_at_the_surface_instead_of_leaving_it() -> void:
+	pool.free()
+	pool = DeepWater.make(Rect2(0, 50, 200, 150))   # a pool whose top is a surface in the room, not a door
+	add_child_autofree(pool)
+	water.step(get_tree(), Vector2(100, 51), 0.016)
+	assert_false(water.reaches_top)
+	var v := water.adjust(Vector2.ZERO, false, true, Vector2(0, -1), 120.0, 1.0, false, false, 1.0 / 60.0)
+	assert_eq(v.y, 0.0, "it cannot swim out through the surface (dry gravity would pull it back and loop it in and out)")
+	water.step(get_tree(), Vector2(100, 60), 0.016)
+	v = water.adjust(Vector2.ZERO, false, true, Vector2(0, -1), 120.0, 1.0, false, false, 1.0 / 60.0)
+	assert_eq(v.y, -120.0, "below the surface it swims up freely")
+
+func test_a_rect_that_reaches_the_room_top_is_a_door_the_swimmer_may_cross() -> void:
+	water.step(get_tree(), Vector2(100, 1), 0.016)   # the shared pool's top is y 0: a room-top edge
+	assert_true(water.reaches_top)
+	var v := water.adjust(Vector2.ZERO, false, true, Vector2(0, -1), 120.0, 1.0, false, false, 1.0 / 60.0)
+	assert_eq(v.y, -120.0, "not clamped: swimming out through the top is how it climbs F2's column")

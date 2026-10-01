@@ -82,7 +82,13 @@ func test_jolt_never_hurts_the_caster() -> void:
 
 func test_jolt_damage_follows_the_level() -> void:
 	var c := _caster()
-	var bat := _enemy("lizard", Vector2(10, 0))
-	var before: int = bat.health.hp
-	_jolt(c, 5).activate()
-	assert_gt(before - bat.health.hp, 0)
+	var low := _enemy("lizard", Vector2(10, 0))
+	var high := _enemy("lizard", Vector2(-10, 0))
+	_jolt(c, 1).activate()
+	var after_level_1: int = low.health.max_hp - low.health.hp
+	high.health.heal(99)  # level 1 hit both; reset the second so the level-5 hit is measured alone
+	var full: int = high.health.hp
+	_jolt(c, 5)._perform()
+	var after_level_5: int = full - high.health.hp
+	assert_gt(after_level_5, after_level_1, "level 5 hits harder than level 1")
+	assert_gt(after_level_1, 0)

@@ -222,3 +222,82 @@ func test_a_wall_clinging_swimmer_swims_down_a_wall_at_full_speed() -> void:
 	Input.action_release("aim_down")
 	assert_true(player.is_on_wall())
 	assert_gt(v.y, Player.WALL_SLIDE_SPEED, "the wall slide's cap does not apply to a swimmer in water")
+
+# --- the review fixes ---
+
+func test_a_blocked_surface_launch_gives_the_swimmer_back_its_control() -> void:
+	_give(["swim"])
+	_pool(Rect2(-300, 10, 600, 290))   # a surface at y 10 in the room (not a door)
+	var ledge := StaticBody2D.new()    # a ledge just over the surface: the launch hits it while the centre is still in the water
+	ledge.position = Vector2(0, -2)
+	var shape := CollisionShape2D.new()
+	var box := RectangleShape2D.new()
+	box.size = Vector2(200, 12)
+	shape.shape = box
+	ledge.add_child(shape)
+	add_child_autofree(ledge)
+	player.global_position = Vector2(0, 30)   # 20 below the surface: inside the surface reach
+	await wait_physics_frames(3)
+	player.do_jump()
+	assert_true(player._water.ballistic)
+	await wait_physics_frames(12)
+	assert_false(player._water.ballistic, "the launch stopped rising (it was blocked): the swimmer swims again")
+	Input.action_press("aim_down")
+	await wait_physics_frames(6)
+	var v := player.velocity
+	Input.action_release("aim_down")
+	assert_gt(v.y, 0.0, "it answers the stick instead of falling with dry gravity")
+	assert_true(player._water.in_water)
+
+func test_a_swimmer_holding_up_stays_in_the_water_at_the_surface() -> void:
+	_give(["swim"])
+	_pool(Rect2(-300, 50, 600, 250))
+	var exits := [0]
+	var f := func(n: String, _t: Dictionary) -> void:
+		if n == "water_exited":
+			exits[0] += 1
+	EventBus.world_event.connect(f)
+	player.global_position = Vector2(0, 150)
+	Input.action_press("aim_up")
+	await wait_physics_frames(120)
+	Input.action_release("aim_up")
+	EventBus.world_event.disconnect(f)
+	assert_eq(exits[0], 0, "it never crossed the surface: no splash loop")
+	assert_true(player._water.in_water)
+	assert_between(player.global_position.y, 50.0, 58.0, "held just under the surface")
+	player.do_jump()
+	assert_true(player._water.ballistic, "a Jump press there always finds the surface reach")
+
+func test_swim_unlocks_after_twenty_submerged_seconds_and_levels_from_more() -> void:
+	assert_false(player.skillset.has("swim"))
+	for i in 19:
+		player._emit.call(Events.SUBMERGED, {})
+	assert_false(player.skillset.has("swim"), "19 is not enough")
+	player._emit.call(Events.SUBMERGED, {})
+	assert_true(player.skillset.has("swim"))
+	assert_eq(rules.level_of("swim"), 1)
+	for i in 40:
+		player._emit.call(Events.SUBMERGED, {})
+	assert_eq(rules.level_of("swim"), 2, "forty more submerged seconds is a level")
+	assert_eq(player.stats.get_stat("swim_speed"), 150)
+
+func test_a_dry_jump_at_the_highest_jump_height_rises_no_more_than_the_bob_after_it_enters_the_water() -> void:
+	_floor()
+	_pool(Rect2(-100, -400, 300, 500))   # a column to the side of the start, its bottom on the floor
+	player.stats.set_modifiers("test_jump", [{"stat": "jump_height", "op": "add", "value": 85}])  # the stage-4 ceiling, 185
+	player.global_position = Vector2(-150, 88)
+	await wait_physics_frames(6)
+	assert_true(player.is_on_floor())
+	Input.action_press("move_right")
+	player.do_jump()
+	var entry_y := INF
+	var top_y := INF
+	for i in 120:
+		await wait_physics_frames(1)
+		if player._water.in_water and entry_y == INF:
+			entry_y = player.global_position.y
+		if entry_y != INF:
+			top_y = minf(top_y, player.global_position.y)
+	Input.action_release("move_right")
+	assert_ne(entry_y, INF, "it entered the water")
+	assert_lte(entry_y - top_y, PlayerWater.bob_apex(185.0) + 4.0, "no higher above the entry point than the bob can carry it")

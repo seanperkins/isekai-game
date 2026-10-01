@@ -354,16 +354,17 @@ static func _swimmer_dry(r: RoomDef) -> Array:
 static func _open_for_swimmer(e: Dictionary) -> bool:
 	return not e.has("shortcut") and (not e.has("gate") or e["gate"] == "swim")
 
-## True when `rect` reaches the room edge of exit `e` over the exit's span.
+## True when `rect` reaches the room's own edge (not the inside face of the wall: a swimmer leaving through a band of dry wall would
+## fall back) over exit `e`'s span.
 static func reaches_edge(r: RoomDef, rect: Rect2, e: Dictionary) -> bool:
 	var size := r.pixel_size()
 	var a := float(e["from"])
 	var b := float(e["to"])
 	match e["edge"]:
-		"top": return rect.position.y <= RoomDef.WALL + 0.5 and rect.end.x > a and rect.position.x < b
+		"top": return rect.position.y <= 0.5 and rect.end.x > a and rect.position.x < b
 		"bottom": return rect.end.y >= size.y - 0.5 and rect.end.x > a and rect.position.x < b
-		"left": return rect.position.x <= RoomDef.WALL + 0.5 and rect.end.y > a and rect.position.y < b
-		"right": return rect.end.x >= size.x - RoomDef.WALL - 0.5 and rect.end.y > a and rect.position.y < b
+		"left": return rect.position.x <= 0.5 and rect.end.y > a and rect.position.y < b
+		"right": return rect.end.x >= size.x - 0.5 and rect.end.y > a and rect.position.y < b
 	return false
 
 ## The standable tops of a room: its interior solids and its floor pieces (the generated floor, cut at every exit gap). The

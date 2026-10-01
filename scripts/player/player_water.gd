@@ -17,8 +17,11 @@ const DRAG := 600.0
 
 var in_water := false
 var rect := Rect2()
+## The rect reaches the room top: the swimmer may swim out through it (a door); otherwise it holds at the surface.
+var reaches_top := false
 var ballistic := false
 var _clock := 0.0
+var _centre := Vector2.ZERO
 
 ## The bob's apex in px for a jump height in percent (the gate test's B): the bob velocity boosted like a jump, rising at the
 ## water's gravity.
@@ -28,6 +31,7 @@ static func bob_apex(jump_height_pct: float) -> float:
 func reset() -> void:
 	in_water = false
 	rect = Rect2()
+	reaches_top = false
 	ballistic = false
 	_clock = 0.0
 
@@ -37,6 +41,8 @@ func step(tree: SceneTree, centre: Vector2, delta: float) -> Dictionary:
 	var was := in_water
 	in_water = node != null
 	rect = node.world_rect() if node != null else Rect2()
+	reaches_top = node.reaches_top if node != null else false
+	_centre = centre
 	var out := {"entered": in_water and not was, "exited": was and not in_water, "submerged": 0}
 	if not in_water:
 		ballistic = false
@@ -56,10 +62,18 @@ func adjust(velocity: Vector2, grounded: bool, swims: bool, dir: Vector2, swim_s
 		return velocity
 	if swims:
 		if ballistic:
-			return velocity
+			if velocity.y < 0.0:
+				# still rising: player.gd added the dry gravity this frame, the water has none until the centre leaves the rect
+				return Vector2(velocity.x, velocity.y - 900.0 * delta)
+			ballistic = false  # peaked, or blocked (a ceiling, a ledge, an eel): the swimmer swims again
 		if dashing:
 			return velocity.move_toward(Vector2.ZERO, DRAG * delta)
-		return dir * swim_speed
+		var v := dir * swim_speed
+		if v.y < 0.0 and not reaches_top:
+			# a surface, not a door: stop just under it. Out of the rect the dry gravity would pull the body back in and it
+			# would loop across the surface, splashing and dropping the jump presses meant for it
+			v.y = maxf(v.y, (rect.position.y + 1.0 - _centre.y) / maxf(delta, 0.0001))
+		return v
 	var v := velocity
 	if not dashing:
 		v.x *= WALK_SCALE

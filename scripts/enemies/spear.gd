@@ -21,11 +21,11 @@ func _hit(player: Node2D) -> void:
 func _look() -> void:
 	var shaft := ColorRect.new()
 	shaft.color = Color(0.62, 0.45, 0.25)
-	shaft.size = Vector2(14, 2)
-	shaft.position = Vector2(-7, -1)
+	shaft.size = Vector2(10, 2)
+	shaft.position = Vector2(-14, -1)  # the tip ends at the node's origin, which is the hit point
 	add_child(shaft)
 	var tip := ColorRect.new()
 	tip.color = Color(0.85, 0.88, 0.9)
 	tip.size = Vector2(4, 2)
-	tip.position = Vector2(7, -1)
+	tip.position = Vector2(-4, -1)
 	add_child(tip)

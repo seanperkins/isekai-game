@@ -80,7 +80,7 @@ func test_a_ledge_more_than_24_px_from_the_rect_is_no_shore() -> void:
 	assert_true(_rules(far).has("water_exit"))
 
 func test_the_ceiling_and_walls_are_not_a_shore() -> void:
-	var r := _room([Rect2(200, 20, 160, 300)])  # touches the ceiling band, no exit
+	var r := _room([Rect2(200, 0, 160, 320)])  # reaches the room top but has no exit, and the ceiling is not standable
 	assert_true(_rules(r).has("water_exit"), "the ceiling's top (y 0) is inside the band but nothing stands on it")
 
 func test_the_floor_is_a_shore_when_the_surface_is_at_the_floor() -> void:
@@ -89,11 +89,11 @@ func test_the_floor_is_a_shore_when_the_surface_is_at_the_floor() -> void:
 
 func test_an_open_exit_span_the_rect_reaches_is_a_way_out() -> void:
 	var top := {"edge": "top", "from": 200.0, "to": 360.0, "room": "W2"}
-	var r := _room([Rect2(200, 20, 160, 300)], [], [], [top])
+	var r := _room([Rect2(200, 0, 160, 320)], [], [], [top])
 	assert_false(_rules(r).has("water_exit"))
 
 func test_a_shortcut_or_wall_cling_gated_exit_is_not_a_way_out_but_swim_is() -> void:
-	var water := [Rect2(200, 20, 160, 300)]
+	var water := [Rect2(200, 0, 160, 320)]
 	var base := {"edge": "top", "from": 200.0, "to": 360.0, "room": "W2"}
 	var shortcut := base.duplicate()
 	shortcut["shortcut"] = "s1"
@@ -108,7 +108,7 @@ func test_a_shortcut_or_wall_cling_gated_exit_is_not_a_way_out_but_swim_is() -> 
 # --- the authored-world check ---
 
 func _pair(with_shore: bool) -> Dictionary:
-	var a := _room([Rect2(200, 20, 160, 300)], [], [], [{"edge": "top", "from": 200.0, "to": 360.0, "room": "W2"}])
+	var a := _room([Rect2(200, 0, 160, 320)], [], [], [{"edge": "top", "from": 200.0, "to": 360.0, "room": "W2"}])
 	a.cell = Vector2i(0, 1)
 	var b := RoomDef.new()
 	b.id = "W2"
@@ -126,7 +126,7 @@ func test_adjacent_rects_that_each_reach_a_shared_exit_still_need_a_shore_somewh
 	assert_eq(RoomLint.water_groups(_pair(true)).size(), 0)
 
 func test_a_rect_that_leaves_through_an_open_exit_into_dry_land_is_not_trapped() -> void:
-	var a := _room([Rect2(200, 20, 160, 300)], [], [], [{"edge": "top", "from": 200.0, "to": 360.0, "room": "W2"}])
+	var a := _room([Rect2(200, 0, 160, 320)], [], [], [{"edge": "top", "from": 200.0, "to": 360.0, "room": "W2"}])
 	a.cell = Vector2i(0, 1)
 	var b := RoomDef.new()
 	b.id = "W2"
@@ -142,3 +142,12 @@ func test_a_gated_wall_cling_exit_does_not_join_or_free_a_group() -> void:
 	rooms["W2"].exits[0]["gate"] = "wall_cling"
 	var groups := RoomLint.water_groups(rooms)
 	assert_eq(groups.size(), 2, "two separate groups, neither of which has a shore or an open exit")
+
+func test_a_rect_that_stops_short_of_the_edge_does_not_reach_the_exit() -> void:
+	# a swimmer leaving at the top would cross a dry band of the ceiling's thickness and fall back: the rect must reach the edge
+	var top := {"edge": "top", "from": 200.0, "to": 360.0, "room": "W2"}
+	var short := _room([Rect2(200, 20, 160, 300)], [], [], [top])
+	assert_true(_rules(short).has("water_exit"), "20 px short of the room top")
+	var side := {"edge": "right", "from": 200.0, "to": 320.0, "room": "W2"}
+	assert_true(_rules(_room([Rect2(400, 200, 220, 120)], [], [], [side])).has("water_exit"), "20 px short of the right wall")
+	assert_false(_rules(_room([Rect2(400, 200, 240, 120)], [], [], [side])).has("water_exit"), "to the room's own edge")

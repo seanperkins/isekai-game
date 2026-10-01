@@ -172,7 +172,8 @@ func _physics_process(delta: float) -> void:
 		_swing(dir, delta)
 	if _water.in_water:
 		velocity = _water.adjust(velocity, is_on_floor(), skillset.has("swim"),
-			Input.get_vector("move_left", "move_right", "aim_up", "aim_down"), float(stats.get_stat("swim_speed")),
+			Vector2.ZERO if predation.active() else Input.get_vector("move_left", "move_right", "aim_up", "aim_down"),
+			float(stats.get_stat("swim_speed")),
 			sqrt(stats.get_stat("jump_height") / 100.0), _dash > 0.0, wet["entered"], delta)
 	if skillset.has("wall_cling") and is_on_wall() and not is_on_floor() and velocity.y > 0.0 and not _water.in_water:
 		velocity.y = minf(velocity.y, WALL_SLIDE_SPEED * stats.get_stat("slide_speed") / 100.0)
