@@ -1001,6 +1001,8 @@ func _shift_content(r: RoomDef, d: Vector2) -> void:
 		r.solids[i] = Rect2((r.solids[i] as Rect2).position + d, (r.solids[i] as Rect2).size)
 	for i in r.hard_ledges.size():
 		r.hard_ledges[i] = Rect2((r.hard_ledges[i] as Rect2).position + d, (r.hard_ledges[i] as Rect2).size)
+	for i in r.water.size():
+		r.water[i] = Rect2((r.water[i] as Rect2).position + d, (r.water[i] as Rect2).size)
 	for list in [r.spawns, r.features, r.decor, r.dressing]:
 		for e in list:
 			e["pos"] = (e["pos"] as Vector2) + d
