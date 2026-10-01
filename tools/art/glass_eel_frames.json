@@ -7,7 +7,7 @@
   {"name": "swim_2", "width": 52, "refs": ["swim_1"], "prompt": "The same eel mid-glide, body nearly straight, fins relaxed."},
   {"name": "swim_3", "width": 52, "refs": ["swim_1"], "prompt": "The same eel mid-glide, S-curve the other way, tail swung high."},
   {"name": "warn", "width": 52, "refs": ["swim_1"], "prompt": "The same eel arching its body backward like a drawn bow, mouth open, the inner glow flaring bright, about to dart."},
-  {"name": "dart", "width": 60, "refs": ["swim_1", "warn"], "prompt": "The same eel darting forward at full speed: body stretched straight and thin, head thrust out, jaw open, a streak of glow behind.", "attack_from": 0.6},
+  {"name": "dart", "width": 60, "refs": ["swim_1", "warn"], "prompt": "The same eel darting forward at full speed: body stretched straight and thin, head thrust out, jaw open, a streak of glow behind.", "attack_from": 0.6, "outline_eps": 0.9},
   {"name": "stunned", "width": 52, "refs": ["swim_1"], "prompt": "The same eel dazed: body limp and sagging, eyes crossed, a few small sparks drifting around the head."},
   {"name": "hurt", "width": 52, "refs": ["swim_1"], "prompt": "The same eel flinching in pain, body kinked, eyes squeezed shut."},
   {"name": "downed", "width": 54, "refs": ["swim_1"], "prompt": "The same eel belly-up, body slack, fins drooping, the glow dim."}

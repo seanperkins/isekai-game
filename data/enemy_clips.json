@@ -66,5 +66,38 @@
     "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
     "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
     "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
+  },
+  "glass_eel": {
+    "swim": {"frames": ["swim_1", "swim_2", "swim_3", "swim_2"], "fps": 8.0, "loop": true},
+    "warn": {"frames": ["warn"], "fps": 1.0, "loop": false},
+    "dart": {"frames": ["dart"], "fps": 1.0, "loop": false},
+    "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
+    "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
+    "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
+  },
+  "drift_jelly": {
+    "drift": {"frames": ["drift_1", "drift_2", "drift_3", "drift_2"], "fps": 5.0, "loop": true},
+    "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
+    "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
+    "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
+  },
+  "cave_crayfish": {
+    "idle": {"frames": ["idle_1"], "fps": 1.0, "loop": true},
+    "walk": {"frames": ["walk_1", "walk_2", "walk_3", "walk_2"], "fps": 8.0, "loop": true},
+    "windup": {"frames": ["windup_1"], "fps": 1.0, "loop": false},
+    "charge": {"frames": ["charge_1", "charge_2"], "fps": 12.0, "loop": true},
+    "rest": {"frames": ["rest_1"], "fps": 1.0, "loop": true},
+    "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
+    "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
+    "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
+  },
+  "bog_lizardman": {
+    "idle": {"frames": ["idle_1"], "fps": 1.0, "loop": true},
+    "walk": {"frames": ["walk_1", "walk_2", "walk_3", "walk_2"], "fps": 8.0, "loop": true},
+    "puff": {"frames": ["windup_1"], "fps": 1.0, "loop": false},
+    "spit": {"frames": ["throw_1"], "fps": 1.0, "loop": false},
+    "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
+    "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
+    "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
   }
 }

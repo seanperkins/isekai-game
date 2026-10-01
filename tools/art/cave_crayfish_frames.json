@@ -10,9 +10,9 @@
   {"name": "windup_1", "width": 44, "refs": ["idle_1"], "prompt": "The same crayfish rearing up and back, pincers raised wide, tail tucked, about to lunge."},
   {"name": "charge_1", "width": 50, "refs": ["idle_1"], "prompt": "The same crayfish lunging hard: body low and stretched forward, pincers thrust out in front.", "attack_from": 0.55},
   {"name": "charge_2", "width": 50, "refs": ["idle_1", "charge_1"], "prompt": "The same crayfish lunging hard, a stride later, legs blurred, pincers snapping.", "attack_from": 0.55},
-  {"name": "rest_1", "width": 44, "refs": ["idle_1"], "prompt": "The same crayfish panting after a lunge: body sagging low, pincers drooping."},
+  {"name": "rest_1", "width": 44, "refs": ["idle_1"], "prompt": "The same crayfish panting after a lunge: body sagging low, pincers drooping.", "outline_eps": 0.9},
   {"name": "stunned", "width": 44, "refs": ["idle_1"], "prompt": "The same crayfish dazed: eyestalks drooping and crossed, pincers limp, a few stars above the carapace."},
-  {"name": "hurt", "width": 44, "refs": ["idle_1"], "prompt": "The same crayfish flinching in pain, eyestalks flattened, pincers clamped shut."},
+  {"name": "hurt", "width": 44, "refs": ["idle_1"], "prompt": "The same crayfish flinching in pain, eyestalks flattened, pincers clamped shut.", "outline_eps": 0.9},
   {"name": "downed", "width": 46, "refs": ["idle_1"], "prompt": "The same crayfish knocked onto its back, legs curled in the air, carapace to the ground."}
  ]
 }

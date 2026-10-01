@@ -730,7 +730,10 @@ func _load_sheet() -> void:
 	if _sheet == null:
 		return
 	_animator = SlimeAnimator.new(clips[def.id])
-	_animator.play("idle" if _animator.clips.has("idle") else ("fly" if _animator.clips.has("fly") else "hide"))
+	for first in ["idle", "fly", "swim", "drift", "hide"]:  # the clip a creature starts on: its resting loop
+		if _animator.clips.has(first):
+			_animator.play(first)
+			break
 	_shapes = SlimeShapes.new()
 	_shapes.position = Vector2(0.0, BODY_BOTTOM)
 	add_child(_shapes)
