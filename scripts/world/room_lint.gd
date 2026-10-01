@@ -30,6 +30,16 @@ const FEATURE_BOX := {
 const RULES := ["solid_outside", "outside", "in_rock", "exit_blocked", "exit_narrow", "start_floor", "ledge_reach", "over_hole",
 	"pool_clearance", "feature_id", "shortcut_pair", "hint_unknown"]
 
+static var _hintable: Array = []
+
+## Skill ids a tablet hint can name: CompendiumModel keeps no slot for an enemy_only skill, so raise() on one does nothing.
+static func hintable_skill_ids() -> Array:
+	if _hintable.is_empty():
+		for d in RebirthKit.skill_defs():
+			if d.source != "enemy_only":
+				_hintable.append(d.id)
+	return _hintable
+
 static func check(rooms: Dictionary) -> Array:
 	var out: Array = []
 	var ids := rooms.keys()
@@ -39,7 +49,7 @@ static func check(rooms: Dictionary) -> Array:
 	return out
 
 ## Every finding for one room; `rooms` is the whole world (exit partners, shortcuts and feature ids need it).
-static func check_room(r: RoomDef, _rooms: Dictionary) -> Array:
+static func check_room(r: RoomDef, rooms: Dictionary) -> Array:
 	var out: Array = []
 	out.append_array(_solid_outside(r))
 	out.append_array(_outside(r))
@@ -50,6 +60,9 @@ static func check_room(r: RoomDef, _rooms: Dictionary) -> Array:
 	out.append_array(_ledge_reach(r))
 	out.append_array(_over_hole(r))
 	out.append_array(_pool_clearance(r))
+	out.append_array(_feature_id(r, rooms))
+	out.append_array(_shortcut_pair(r, rooms))
+	out.append_array(_hint_unknown(r))
 	return out
 
 ## The findings of the named rules, one per line; "" when there are none.
@@ -219,4 +232,49 @@ static func _pool_clearance(r: RoomDef) -> Array:
 			var d: float = (r.spawns[i]["pos"] as Vector2).distance_to(f["pos"])
 			if d <= POOL_CLEARANCE:
 				out.append(_f(r, "pool_clearance", "%s spawns %d px from the rebirth pool %s" % [r.spawns[i]["id"], int(d), f.get("id", "?")], "spawn", i))
+	return out
+
+static func _feature_id(r: RoomDef, rooms: Dictionary) -> Array:
+	var counts := {}
+	for id in rooms:
+		for f in (rooms[id] as RoomDef).features:
+			counts[f.get("id", "")] = int(counts.get(f.get("id", ""), 0)) + 1
+	var out: Array = []
+	for i in r.features.size():
+		var fid: String = r.features[i].get("id", "")
+		if fid == "":
+			out.append(_f(r, "feature_id", "a %s has no id" % r.features[i].get("kind", "feature"), "feature", i))
+		elif int(counts[fid]) > 1:
+			out.append(_f(r, "feature_id", "the feature id '%s' is used %d times in the world" % [fid, counts[fid]], "feature", i))
+	return out
+
+## The world's switch shortcuts must equal its exits' shortcuts.
+static func _shortcut_pair(r: RoomDef, rooms: Dictionary) -> Array:
+	var switches := {}
+	var exits := {}
+	for id in rooms:
+		for f in (rooms[id] as RoomDef).features:
+			if f.get("kind", "") == "switch":
+				switches[f.get("shortcut", "")] = true
+		for e in (rooms[id] as RoomDef).exits:
+			if e.has("shortcut"):
+				exits[e["shortcut"]] = true
+	var out: Array = []
+	for i in r.features.size():
+		var f: Dictionary = r.features[i]
+		if f.get("kind", "") == "switch" and not exits.has(f.get("shortcut", "")):
+			out.append(_f(r, "shortcut_pair", "the switch %s opens '%s', which no exit uses" % [f.get("id", "?"), f.get("shortcut", "")], "feature", i))
+	for i in r.exits.size():
+		var e: Dictionary = r.exits[i]
+		if e.has("shortcut") and not switches.has(e["shortcut"]):
+			out.append(_f(r, "shortcut_pair", "the %s exit's shortcut '%s' has no switch: it can never open" % [e["edge"], e["shortcut"]], "exit", i))
+	return out
+
+static func _hint_unknown(r: RoomDef) -> Array:
+	var out: Array = []
+	for i in r.features.size():
+		var f: Dictionary = r.features[i]
+		var hint: String = f.get("hint", "")
+		if f.get("kind", "") == "tablet" and hint != "" and not hintable_skill_ids().has(hint):
+			out.append(_f(r, "hint_unknown", "the tablet %s hints '%s', which is not a skill the Compendium holds" % [f.get("id", "?"), hint], "feature", i))
 	return out

@@ -84,7 +84,7 @@ features = [{
 "kind": "glow_pool",
 "pos": Vector2(320, 320)
 }, {
-"hint": "spore shell",
+"hint": "spore_cloud",
 "id": "g4_tablet",
 "kind": "tablet",
 "pos": Vector2(500, 320),

@@ -139,3 +139,54 @@ func test_pool_clearance_applies_to_every_pool_but_the_default() -> void:
 	assert_false(_rules(far).has("pool_clearance"))
 	var default := _room("T1", {"features": [_pool(WorldProgress.DEFAULT_POOL, "cave", Vector2(300, 320))], "spawns": [{"id": "toad", "pos": Vector2(400, 300)}]})
 	assert_false(_rules(default).has("pool_clearance"), "the default pool is older than the rule")
+
+func _feat(kind: String, id: String, extra := {}) -> Dictionary:
+	var f := {"kind": kind, "id": id, "pos": Vector2(300, 320)}
+	for k in extra:
+		f[k] = extra[k]
+	return f
+
+func test_feature_id_flags_an_empty_or_duplicated_id_across_the_world() -> void:
+	var a := _room("T1", {"features": [_feat("tablet", "dup", {"title": "T"})]})
+	var b := _room("T2", {"cell": Vector2i(1, 0), "features": [_feat("glow_pool", "dup")]})
+	var world := {"T1": a, "T2": b}
+	assert_true(_rules(a, world).has("feature_id"))
+	assert_true(_rules(b, world).has("feature_id"))
+	var empty := _room("T1", {"features": [_feat("glow_pool", "")]})
+	assert_true(_rules(empty).has("feature_id"))
+	var ok := _room("T1", {"features": [_feat("glow_pool", "t1_glow_pool_1")]})
+	assert_false(_rules(ok).has("feature_id"))
+
+func test_shortcut_pair_in_both_directions() -> void:
+	var exit_s := {"edge": "right", "from": 200.0, "to": 320.0, "room": "T2", "shortcut": "s1"}
+	var lonely_exit := _room("T1", {"exits": [exit_s]})
+	assert_true(_rules(lonely_exit).has("shortcut_pair"), "an exit with a shortcut and no switch can never open")
+	var lonely_switch := _room("T1", {"features": [_feat("switch", "t1_switch_1", {"shortcut": "s1"})]})
+	assert_true(_rules(lonely_switch).has("shortcut_pair"), "a switch whose shortcut no exit uses opens nothing")
+	var paired := _room("T1", {"exits": [exit_s], "features": [_feat("switch", "t1_switch_1", {"shortcut": "s1"})]})
+	assert_false(_rules(paired).has("shortcut_pair"))
+	var across := {"T1": _room("T1", {"exits": [exit_s]}), "T2": _room("T2", {"cell": Vector2i(1, 0), "features": [_feat("switch", "t2_switch_1", {"shortcut": "s1"})]})}
+	assert_false(_rules(across["T1"], across).has("shortcut_pair"), "the pair is world-wide")
+	assert_false(_rules(across["T2"], across).has("shortcut_pair"))
+
+func test_hint_unknown_accepts_only_skills_the_compendium_has_a_slot_for() -> void:
+	var ok := _room("T1", {"features": [_feat("tablet", "t1_tablet_1", {"title": "T", "hint": "echolocation"})]})
+	assert_false(_rules(ok).has("hint_unknown"))
+	var none := _room("T1", {"features": [_feat("tablet", "t1_tablet_1", {"title": "T"})]})
+	assert_false(_rules(none).has("hint_unknown"), "a hint is optional")
+	var made_up := _room("T1", {"features": [_feat("tablet", "t1_tablet_1", {"title": "T", "hint": "spore shell"})]})
+	assert_true(_rules(made_up).has("hint_unknown"))
+	var enemy_only := _room("T1", {"features": [_feat("tablet", "t1_tablet_1", {"title": "T", "hint": "flight"})]})
+	assert_true(_rules(enemy_only).has("hint_unknown"), "flight is an enemy-only skill: the Compendium has no slot for it")
+
+func test_hintable_skill_ids_exclude_enemy_only_skills() -> void:
+	var ids := RoomLint.hintable_skill_ids()
+	assert_true(ids.has("echolocation"))
+	assert_true(ids.has("spore_cloud"))
+	assert_false(ids.has("flight"))
+	assert_false(ids.has("poison_spit"))
+
+func test_the_g4_tablet_hints_a_real_skill() -> void:
+	var g4: RoomDef = load("res://data/rooms/G4.tres")
+	var tablet: Dictionary = g4.features.filter(func(f): return f["kind"] == "tablet")[0]
+	assert_true(RoomLint.hintable_skill_ids().has(tablet["hint"]), "was 'spore shell', which hinted nothing")
