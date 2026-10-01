@@ -103,7 +103,7 @@ var _anim_t := 0.0
 var _alert := 0.0
 ## Which behaviour this creature has, resolved once in setup() from what its def and skills say (the precedence the
 ## old _act chain used): the vine snake by id, then a ceiling walker, a drifter, a flier or a swimmer (the eels are swoopers),
-## an armored charger, a spitter.
+## an armored charger or a `charges` creature, a spitter.
 enum Kind { WALKER, CHARGER, SPITTER, SWOOPER, DROPPER, DRIFTER, SNAKE }
 var kind := Kind.WALKER
 ## The one live behaviour state, its timer and its aim. Tokens per kind: swooper idle/hover/warn/dive/climb; charger and
@@ -162,7 +162,7 @@ func _resolve_kind() -> Kind:
 		return Kind.DRIFTER
 	if capabilities.has("flight") or def.swimmer:
 		return Kind.SWOOPER
-	if def.armored_charger:
+	if def.armored_charger or def.charges:
 		return Kind.CHARGER
 	if _spit_damage > 0 or def.projectile == "spear":
 		return Kind.SPITTER
