@@ -470,10 +470,25 @@ func get_field(sel: Dictionary, key: String) -> Variant:
 					return int((f.get("kit", {}) as Dictionary).get("level", 0))
 				"kit_skills":
 					return ((f.get("kit", {}) as Dictionary).get("skills", []) as Array).duplicate()
+		"solid":
+			if i < r.solids.size():
+				var s: Rect2 = r.solids[i]
+				match key:
+					"x":
+						return s.position.x
+					"y":
+						return s.position.y
+					"w":
+						return s.size.x
+					"h":
+						return s.size.y
+					"hard":
+						return r.hard_ledges.has(s)
 	return null
 
 ## Sets one inspector field: exit "shortcut" (both halves); tablet "title" (required) and "text"; switch "shortcut" (required);
-## rebirth pool "kit_level" (0 unsets) and "kit_skills" (a list), merged into the kit so every other key (G1's affinity) is kept.
+## rebirth pool "kit_level" (0 unsets) and "kit_skills" (a list), merged into the kit so every other key (G1's affinity) is kept;
+## solid "x" "y" "w" "h" (exact numbers, never snapped) and "hard" (Rock from below: thin solids only).
 ## Optional keys are removed by "" or 0; required keys are never removed. A refusal returns the reason and changes nothing; a
 ## value equal to the stored one pushes nothing (_push declines an unchanged room).
 func set_field(sel: Dictionary, key: String, value) -> String:
@@ -491,7 +506,38 @@ func set_field(sel: Dictionary, key: String, value) -> String:
 			if i >= r.features.size():
 				return "nothing selected"
 			return _set_feature_field(room_id, i, key, value)
+		"solid":
+			if i >= r.solids.size():
+				return "nothing selected"
+			return _set_solid_field(room_id, i, key, value)
 	return "no such field"
+
+func _set_solid_field(room_id: String, i: int, key: String, value) -> String:
+	var r: RoomDef = rooms[room_id]
+	var s: Rect2 = r.solids[i]
+	var next := s
+	var marked := r.hard_ledges.has(s)
+	match key:
+		"x":
+			next.position.x = float(value)
+		"y":
+			next.position.y = float(value)
+		"w":
+			next.size.x = float(value)
+		"h":
+			next.size.y = float(value)
+		"hard":
+			if bool(value) and not (s.size.y <= 24.0 and s.size.x > 24.0):
+				return "only a thin solid can be rock from below"
+			marked = bool(value)
+		_:
+			return "no such field"
+	var before := _snap([room_id])
+	var err := _put_solid(room_id, i, next, marked)
+	if err != "":
+		return err
+	_push(before)
+	return ""
 
 func _set_exit_shortcut(room_id: String, i: int, value: String) -> String:
 	if value != "" and not valid_id(value):
