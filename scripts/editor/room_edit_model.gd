@@ -13,7 +13,7 @@ static var _prop_names: Array = []
 var rooms := {}     # id -> RoomDef (working copies)
 var dirty := {}     # id -> true: rooms edited since the last successful save
 var creature_ids: Array = []
-## {} or {"room", "kind": "solid" | "spawn" | "exit" | "feature", "index"}
+## {} or {"room", "kind": "solid" | "spawn" | "exit" | "feature" | "decor", "index"}
 var selection := {}
 var _undo: Array = []   # each: {id: RoomDef or null}, the state before a step
 var _redo: Array = []
@@ -229,7 +229,7 @@ func add_spawn(room_id: String, creature_id: String, pos: Vector2) -> String:
 # --- hit-testing ---
 
 ## Every element under a room-local point, in hit order: creatures within `pick`, nearest first; then features (their drawn box
-## grown by `pick`) and exits (their gap grown by `pick`) by index; then solids (grown by `pick`), smallest area first. Ties go by
+## grown by `pick`), decor (its drawn box, not grown) and exits (their gap grown by `pick`) by index; then solids (grown by `pick`), smallest area first. Ties go by
 ## index. `hit` is the first element, so a plain press is the same as it was before hit_all existed.
 func hit_all(room_id: String, p: Vector2, pick: float) -> Array:
 	var r: RoomDef = rooms[room_id]
@@ -247,6 +247,11 @@ func hit_all(room_id: String, p: Vector2, pick: float) -> Array:
 		var box: Rect2 = RoomLint.FEATURE_BOX.get(f.get("kind", ""), Rect2(-6, -12, 12, 12))
 		if Rect2(box.position + (f["pos"] as Vector2), box.size).grow(pick).has_point(p):
 			out.append(_sel(room_id, "feature", i))
+	for i in r.decor.size():
+		var d: Dictionary = r.decor[i]
+		var dbox := DecorLib.texture_box(str(d.get("id", "")))
+		if Rect2(dbox.position + (d["pos"] as Vector2), dbox.size).has_point(p):  # un-grown: a grown box would cover the ledge it stands on
+			out.append(_sel(room_id, "decor", i))
 	for i in r.exits.size():
 		if RoomBuilder.gate_rect(r.pixel_size(), r.exits[i]).grow(pick).has_point(p):
 			out.append(_sel(room_id, "exit", i))
@@ -285,6 +290,10 @@ func begin_move(sel: Dictionary) -> bool:
 			if i >= r.features.size():
 				return false
 			_drag = {"sel": sel, "before": _snap([sel["room"]]), "orig": r.features[i]["pos"]}
+		"decor":
+			if i >= r.decor.size():
+				return false
+			_drag = {"sel": sel, "before": _snap([sel["room"]]), "orig": r.decor[i]["pos"]}
 		"exit":
 			return _begin_move_exit(sel)
 		_:
@@ -320,6 +329,14 @@ func move_to(delta: Vector2) -> void:
 				base = _feature_base(sel["room"], orig + Vector2(d.x, 0.0), kind)
 			if base is Vector2:
 				r.features[sel["index"]]["pos"] = base
+		"decor":
+			var dorig: Vector2 = _drag["orig"]
+			var did := str(r.decor[sel["index"]].get("id", ""))
+			var pos = _decor_base(sel["room"], dorig + d, did)
+			if pos is String and d.y != 0.0:
+				pos = _decor_base(sel["room"], dorig + Vector2(d.x, 0.0), did)  # a pointer that dips: keep sliding along the surface
+			if pos is Vector2:
+				r.decor[sel["index"]]["pos"] = pos
 		"exit":
 			_move_exit_to(d)
 		_:
@@ -361,6 +378,12 @@ func delete_selection() -> String:
 				return "nothing selected"
 			var before := _snap([selection["room"]])
 			r.features.remove_at(i)
+			_push(before)
+		"decor":
+			if i >= r.decor.size():
+				return "nothing selected"
+			var before := _snap([selection["room"]])
+			r.decor.remove_at(i)
 			_push(before)
 		"exit":
 			return _delete_exit()
@@ -445,6 +468,49 @@ func add_feature(room_id: String, kind: String, pos: Vector2) -> String:
 	r.features.append(f)
 	_push(before)
 	selection = _sel(room_id, "feature", r.features.size() - 1)
+	return ""
+
+# --- decor ---
+
+## The bottom edge of the first rock at or above `p`: null when `p` is outside the room, inside rock, or nothing is above it (under
+## a top exit the generated ceiling is cut). A closed shortcut gate is not rock here, as in surface_below's default.
+func surface_above(room_id: String, p: Vector2) -> Variant:
+	if not bounds(rooms[room_id]).has_point(p):
+		return null
+	var best := -INF
+	for rect in rock(room_id):
+		var q: Rect2 = rect
+		if q.has_point(p):
+			return null
+		if p.x >= q.position.x and p.x < q.end.x and q.end.y <= p.y and q.end.y > best:
+			best = q.end.y
+	return null if best == -INF else best
+
+## A decor piece's position for a candidate point: x snapped; y the surface it stands on (found from one pixel above the point, as
+## for features) or, for a top-anchored piece, hangs from (found from one pixel below). A Vector2, or the reason it is refused.
+func _decor_base(room_id: String, p: Vector2, id: String) -> Variant:
+	var q := Vector2(snap(p.x), p.y)
+	if not bounds(rooms[room_id]).has_point(q):
+		return "outside the room"
+	var top := str(DecorLib.CATALOG.get(id, {}).get("anchor", "bottom")) == "top"
+	var y = surface_above(room_id, q + Vector2(0.0, 1.0)) if top else surface_below(room_id, q - Vector2(0.0, 1.0))
+	if y == null:
+		if top:
+			return "nothing to hang from there: click under a ledge or the ceiling"
+		return "nothing to stand on there: click open space above a floor or a ledge"
+	return Vector2(q.x, float(y))
+
+func add_decor(room_id: String, id: String, pos: Vector2) -> String:
+	if not DecorLib.CATALOG.has(id):
+		return "unknown decor '%s'" % id
+	var base = _decor_base(room_id, pos, id)
+	if base is String:
+		return base
+	var r: RoomDef = rooms[room_id]
+	var before := _snap([room_id])
+	r.decor.append(DecorLib.entry(id, base))
+	_push(before)
+	selection = _sel(room_id, "decor", r.decor.size() - 1)
 	return ""
 
 # --- inspector fields ---
