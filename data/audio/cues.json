@@ -457,6 +457,8 @@
     "absorbed": "eat_absorb",
     "inspected": null,
     "_why:inspected": "the result has its own sound (tablet_read, pool_rested); a click here would double it",
+    "submerged": null,
+    "_why:submerged": "once a second while in water is not a sound; water_entered and water_exited carry the splash",
     "skill_used": {
       "by": "id",
       "sticky_thread": "skill_sticky_thread",
