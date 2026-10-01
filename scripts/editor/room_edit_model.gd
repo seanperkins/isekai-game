@@ -354,11 +354,12 @@ func floor_spot(room_id: String, p: Vector2, with_gates := true) -> Variant:
 # --- features ---
 
 ## A feature's base for a candidate point: x snapped, y the surface found from one pixel above the candidate (so a point exactly
-## on a surface top, as every drag step is, finds that surface instead of being "inside" it). A Vector2, or the reason it is
-## refused.
+## on a surface top, as every drag step is, finds that surface instead of being "inside" it). y is not snapped: it only picks the
+## surface, and a surface top need not be on the grid (C1's ledges are at 266, 214, ...), so snapping it would sink a feature that
+## stands on one into the ledge. A Vector2, or the reason it is refused.
 func _feature_base(room_id: String, p: Vector2, kind: String) -> Variant:
 	var r: RoomDef = rooms[room_id]
-	var q := Vector2(snap(p.x), snap(p.y))
+	var q := Vector2(snap(p.x), p.y)
 	if not bounds(r).has_point(q):
 		return "outside the room"
 	var y = surface_below(room_id, q - Vector2(0.0, 1.0))

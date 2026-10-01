@@ -130,6 +130,17 @@ func test_a_feature_drags_along_the_floor_and_between_coplanar_ledges() -> void:
 	assert_eq(r.features[sel["index"]]["pos"], Vector2(260, floor_y), "left of the ledges and below them: dropped to the floor")
 	model.end_move()
 
+func test_a_feature_on_a_ledge_whose_top_is_off_the_grid_still_drags() -> void:
+	var r: RoomDef = model.rooms["C2"]
+	r.solids = [Rect2(200, 266, 120, 12)]  # 266 is not a multiple of GRID: C1's ledges are like this
+	assert_eq(model.add_feature("C2", "tablet", Vector2(220, 100)), "")
+	var sel := {"room": "C2", "kind": "feature", "index": r.features.size() - 1}
+	assert_eq(r.features[sel["index"]]["pos"], Vector2(220, 266))
+	assert_true(model.begin_move(sel))
+	model.move_to(Vector2(60, 0))
+	assert_eq(r.features[sel["index"]]["pos"], Vector2(280, 266), "the base y is a surface top, never snapped into the ledge")
+	model.end_move()
+
 func test_a_drag_into_rock_stays_at_the_last_valid_spot() -> void:
 	var r: RoomDef = model.rooms["C2"]
 	r.solids = [Rect2(400, 100, 100, 220)]  # down to the floor

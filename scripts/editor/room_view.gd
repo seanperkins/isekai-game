@@ -12,9 +12,10 @@ signal changed
 signal message(text: String)
 signal selection_changed
 
-## "select", "solid", "creature" or "exit".
+## "select", "solid", "creature", "exit" or "feature".
 var tool := "select"
 var creature_id := ""
+var feature_kind := "tablet"  # what the Feature tool places
 var camera := Camera2D.new()
 var overlay := Node2D.new()
 var _model: RoomEditModel
@@ -174,7 +175,12 @@ func _motion(e: InputEventMouseMotion) -> bool:
 	_redraw_overlay()
 	return true
 
+## A click in the room is the end of any inspector edit: releasing focus commits a pending LineEdit before the room is rebuilt.
+func _commit_pending() -> void:
+	get_viewport().gui_release_focus()
+
 func _press(p: Vector2) -> void:
+	_commit_pending()
 	_pressed = true
 	_press_room = p
 	match tool:
@@ -191,6 +197,8 @@ func _press(p: Vector2) -> void:
 		"exit":
 			_exit_edge = _nearest_edge(p)
 			_exit_live = Vector2(_along(_exit_edge, p), _along(_exit_edge, p))
+		_:
+			pass  # "creature" and "feature" place on release
 	_redraw_overlay()
 
 func _release(p: Vector2) -> void:
@@ -213,6 +221,8 @@ func _release(p: Vector2) -> void:
 				message.emit("choose a creature in the palette first")
 			else:
 				_report(_model.add_spawn(_room_id, creature_id, p))
+		"feature":
+			_report(_model.add_feature(_room_id, feature_kind, p))
 		"exit":
 			_exit_live = Vector2(-1.0, -1.0)
 			_report(_model.add_exit(_room_id, _exit_edge, _along(_exit_edge, _press_room), _along(_exit_edge, p)))
@@ -291,6 +301,8 @@ func _redraw_overlay() -> void:
 		_box(band, COL_EXIT_GATED if (e.has("gate") or e.has("shortcut")) else COL_EXIT, false)
 	for i in r.spawns.size():
 		_marker(i, r.spawns[i])
+	for i in r.features.size():
+		_feature_marker(i, r.features[i])
 	var sel := _model.selection
 	if not sel.is_empty() and sel["room"] == _room_id:
 		var outline := _selection_rect(r, sel)
@@ -312,7 +324,13 @@ func _selection_rect(r: RoomDef, sel: Dictionary) -> Rect2:
 			return Rect2((r.spawns[i]["pos"] as Vector2) - Vector2(8, 16), Vector2(16, 20)) if i < r.spawns.size() else Rect2()
 		"exit":
 			return RoomBuilder.gate_rect(r.pixel_size(), r.exits[i]) if i < r.exits.size() else Rect2()
-	return Rect2()
+		"feature":
+			if i >= r.features.size():
+				return Rect2()
+			var box: Rect2 = RoomLint.FEATURE_BOX.get(r.features[i].get("kind", ""), Rect2(-6, -12, 12, 12))
+			return Rect2(box.position + (r.features[i]["pos"] as Vector2), box.size)
+		_:
+			return Rect2()
 
 func _box(rect: Rect2, color: Color, outline: bool) -> void:
 	if outline:
@@ -369,4 +387,27 @@ func _marker(index: int, spawn: Dictionary) -> void:
 		holder.add_child(l)
 		if not known:
 			holder.set_meta("unknown", true)
+	overlay.add_child(holder)
+
+const FEATURE_TINT := {
+	"tablet": Color(0.7, 0.7, 0.75, 0.35),
+	"switch": Color(0.65, 0.4, 0.2, 0.35),
+	"glow_pool": Color(0.3, 0.9, 0.8, 0.3),
+	"rebirth_pool": Color(0.8, 0.45, 1.0, 0.3),
+}
+
+## A translucent box over a feature, the size of its hit box (RoomLint.FEATURE_BOX), so the built art shows through and a click
+## on it selects the feature.
+func _feature_marker(index: int, f: Dictionary) -> void:
+	var holder := Node2D.new()
+	holder.position = f["pos"]
+	holder.add_to_group("editor_marker")
+	holder.set_meta("feature", index)
+	var box: Rect2 = RoomLint.FEATURE_BOX.get(f.get("kind", ""), Rect2(-6, -12, 12, 12))
+	var fill := ColorRect.new()
+	fill.color = FEATURE_TINT.get(f.get("kind", ""), Color(1.0, 1.0, 1.0, 0.3))
+	fill.position = box.position
+	fill.size = box.size
+	fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	holder.add_child(fill)
 	overlay.add_child(holder)

@@ -135,6 +135,50 @@ func test_the_creature_tool_without_a_choice_says_so() -> void:
 	assert_eq(messages.size(), 1)
 	assert_eq(model.undo_depth(), 0)
 
+func test_the_feature_tool_places_a_feature_on_the_surface_and_refuses_with_a_message() -> void:
+	view.tool = "feature"
+	view.feature_kind = "tablet"
+	var messages := []
+	view.message.connect(func(t: String) -> void: messages.append(t))
+	view.handle_event(_press(Vector2(300, 100)))
+	view.handle_event(_release(Vector2(300, 100)))
+	var t: Dictionary = model.rooms["C1"].features.back()
+	assert_eq(t["kind"], "tablet")
+	assert_eq(model.undo_depth(), 1)
+	var solid: Rect2 = model.rooms["C1"].solids[0]
+	view.handle_event(_press(solid.get_center()))
+	view.handle_event(_release(solid.get_center()))
+	assert_eq(messages.size(), 1)
+	assert_eq(model.undo_depth(), 1)
+
+func test_a_placed_feature_has_a_marker_and_an_outline_when_selected() -> void:
+	view.tool = "feature"
+	view.feature_kind = "glow_pool"
+	view.handle_event(_press(Vector2(300, 100)))
+	view.handle_event(_release(Vector2(300, 100)))
+	await wait_process_frames(1)
+	assert_gt(view.markers().filter(func(m): return m.has_meta("feature")).size(), 0)
+	assert_gt(view.overlay.get_children().filter(func(n): return n is Line2D).size(), 0, "the selection outline is drawn")
+
+func test_select_picks_a_feature_by_clicking_its_body_and_drags_it() -> void:
+	model.add_feature("C1", "tablet", Vector2(300, 100))
+	view.show_room(model, "C1")
+	view.tool = "select"
+	var base: Vector2 = model.rooms["C1"].features.back()["pos"]
+	view.handle_event(_press(base + Vector2(0, -10)))
+	view.handle_event(_motion(base + Vector2(60, -10)))
+	view.handle_event(_release(base + Vector2(60, -10)))
+	assert_eq(model.rooms["C1"].features.back()["pos"].x, base.x + 60.0)
+
+func test_a_press_releases_gui_focus_first() -> void:
+	var edit := LineEdit.new()
+	add_child_autofree(edit)
+	edit.grab_focus()
+	assert_true(edit.has_focus())
+	view.tool = "select"
+	view.handle_event(_press(Vector2(5, 5)))
+	assert_false(edit.has_focus(), "a click in the room commits and releases a pending field")
+
 func test_select_picks_drags_and_deletes_with_the_keyboard() -> void:
 	view.tool = "select"
 	model.rooms["C1"].solids = [Rect2(100, 200, 60, 20)]
@@ -210,7 +254,7 @@ func test_creature_markers_are_static_and_an_unknown_id_is_red() -> void:
 	model.rooms["C1"].spawns.append({"id": "gorgon", "pos": Vector2(300, 100)})
 	view.show_room(model, "C1")
 	await wait_process_frames(1)
-	var markers := view.markers()
+	var markers := view.markers().filter(func(m): return m.has_meta("index"))  # creature markers; features have their own
 	assert_eq(markers.size(), model.rooms["C1"].spawns.size(), "one marker per creature")
 	assert_eq(get_tree().get_nodes_in_group("actors").filter(func(n): return n is Enemy).size(), 0, "never a live Enemy")
 	assert_true(markers.any(func(m): return m.get_meta("unknown", false)), "the unknown id is marked")
