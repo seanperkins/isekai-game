@@ -476,6 +476,7 @@
       "hydraulic_propulsion": "skill_hydraulic",
       "tail_swipe": "skill_tail_swipe",
       "constrict": "skill_constrict",
+    "jolt": "skill_water_blade",
       "default": "skill_generic"
     },
     "mana_spent": null,

@@ -5,7 +5,9 @@ extends GutTest
 const KINDS := {"bat": Enemy.Kind.SWOOPER, "toad": Enemy.Kind.SPITTER, "lizard": Enemy.Kind.CHARGER,
 	"spider": Enemy.Kind.DROPPER, "water_pool": Enemy.Kind.WALKER, "serpent": Enemy.Kind.WALKER,
 	"spore_moth": Enemy.Kind.DRIFTER, "mushroom_crab": Enemy.Kind.CHARGER, "vine_snake": Enemy.Kind.SNAKE,
-	"pale_moth": Enemy.Kind.DRIFTER}
+	"pale_moth": Enemy.Kind.DRIFTER, "cave_crayfish": Enemy.Kind.CHARGER, "drift_jelly": Enemy.Kind.DRIFTER,
+	# the eel and the lizardman take their final kinds (SWOOPER, SPITTER) in the tasks that give them their behaviour
+	"glass_eel": Enemy.Kind.WALKER, "bog_lizardman": Enemy.Kind.WALKER}
 
 var creatures := {}
 var skills_by_id := {}
