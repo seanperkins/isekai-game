@@ -11,14 +11,6 @@ func before_all() -> void:
 	for c in DefLoader.load_dir("res://data/creatures"):
 		creatures[c.id] = c
 
-func _first_time(ids: Array) -> int:
-	var total := 0
-	for id in ids:
-		for s in (rooms[id] as RoomDef).spawns:
-			var c: CreatureDef = creatures[s["id"]]
-			total += c.xp * (1 if c.id == "water_pool" else 2)
-	return total
-
 func test_the_world_validates_and_lints_clean() -> void:
 	var ids: Array = creatures.keys()
 	assert_eq(WorldValidator.validate(rooms, ids), PackedStringArray())
@@ -42,7 +34,7 @@ func test_every_gated_exit_is_the_swim_door() -> void:
 	assert_eq(gated, ["F2:swim", "F3:swim", "F4:swim"], "F2's top exit, F3's floor hole and F4's top exit (the slice)")
 
 func test_the_pacing_rule() -> void:
-	var total := _first_time(ROOMS)
+	var total := ShippedRooms.first_time(rooms, creatures, ROOMS)
 	assert_gte(total, 150, "real payoff for a stage-1 life that just evolved")
 	assert_lt(total, Progression.stage_total(2), "stage 2's cap needs more than this area")
 
@@ -149,8 +141,8 @@ func test_f6_sits_above_f4_behind_a_gated_floor_hole_and_holds_one_storm_eel_in_
 	assert_true(wet)
 
 func test_f6_never_counts_toward_the_pacing_rule() -> void:
-	assert_eq(_first_time(["F1", "F2", "F3", "F4", "F5"]), 188)
-	var with_f6 := _first_time(["F1", "F2", "F3", "F4", "F5", "F6"])
+	assert_eq(ShippedRooms.first_time(rooms, creatures, ["F1", "F2", "F3", "F4", "F5"]), 188)
+	var with_f6 := ShippedRooms.first_time(rooms, creatures, ["F1", "F2", "F3", "F4", "F5", "F6"])
 	assert_eq(with_f6, 188 + 20, "the Storm Eel's first-time value is 20, and it is outside the rule")
 
 func test_f4s_column_does_not_overlap_its_platforms_or_hole() -> void:

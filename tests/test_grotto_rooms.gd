@@ -39,31 +39,22 @@ func test_c5_opens_into_g1_and_spawn_keys_are_unique() -> void:
 func _reach_ungated() -> Array:
 	return WorldValidator.reachable(rooms, true).filter(func(id): return ShippedRooms.IDS.has(id))
 
-## First-time XP of a pass through `room_ids`: each spawn pays its xp for the down and again for the eat.
-func _first_time(room_ids: Array) -> int:
-	var total := 0
-	for id in room_ids:
-		for s in (rooms[id] as RoomDef).spawns:
-			var c: CreatureDef = creatures[s["id"]]
-			total += c.xp * (1 if c.id == "water_pool" else 2)
-	return total
-
 func test_the_pacing_rule() -> void:
 	var open := _reach_ungated()
 	assert_true(open.has("G4"), "G4 is on the ungated route")
 	var cave := open.filter(func(id): return (rooms[id] as RoomDef).area == "cave")
-	assert_eq(_first_time(cave), 108, "the ungated Cave is worth 108 of its 124")
-	var through_g4 := _first_time(cave) + _first_time(["G1", "G2", "G3", "G4"])
-	var through_g3 := _first_time(cave) + _first_time(["G1", "G2", "G3"])
+	assert_eq(ShippedRooms.first_time(rooms, creatures, cave), 108, "the ungated Cave is worth 108 of its 124")
+	var through_g4 := ShippedRooms.first_time(rooms, creatures, cave) + ShippedRooms.first_time(rooms, creatures, ["G1", "G2", "G3", "G4"])
+	var through_g3 := ShippedRooms.first_time(rooms, creatures, cave) + ShippedRooms.first_time(rooms, creatures, ["G1", "G2", "G3"])
 	assert_gte(through_g4, Progression.stage_total(1), "Cave + G1..G4 reaches the cap (%d)" % through_g4)
 	assert_lt(through_g3, Progression.stage_total(1), "Cave + G1..G3 does not: the evolution lands in G4 (%d)" % through_g3)
 	var all_cave := ShippedRooms.only(rooms).keys().filter(func(id): return (rooms[id] as RoomDef).area == "cave")
-	assert_lt(_first_time(all_cave), Progression.stage_total(1), "the Cave alone stays under the cap")
+	assert_lt(ShippedRooms.first_time(rooms, creatures, all_cave), Progression.stage_total(1), "the Cave alone stays under the cap")
 
 func test_a_g1_life_can_reach_the_cap_from_the_ungated_xp() -> void:
 	var p := Progression.new()
 	p.start_at(3)
-	var pool := _first_time(_reach_ungated())
+	var pool := ShippedRooms.first_time(rooms, creatures, _reach_ungated())
 	assert_gte(pool, 245, "a level-3 start needs 245 XP")
 	p.add_xp(pool)
 	assert_true(p.at_cap())
@@ -190,7 +181,7 @@ func test_g5_holds_one_pale_moth_and_is_gated_off_the_ungated_route() -> void:
 	assert_eq(g5.spawns.map(func(s): return s["id"]), ["pale_moth"])
 	assert_true((rooms["G3"] as RoomDef).exits.any(func(e): return e["room"] == "G5" and e.get("gate", "") == "wall_cling"))
 	assert_false(_reach_ungated().has("G5"))
-	assert_eq(_first_time(["G5"]), 16, "the pale moth is worth 16 first time and never counts toward the pacing")
+	assert_eq(ShippedRooms.first_time(rooms, creatures, ["G5"]), 16, "the pale moth is worth 16 first time and never counts toward the pacing")
 
 ## The highest jump apex a body can reach from a stage-1 or stage-2 form: Leap at the stage's cap plus the best
 ## jump_height bonus among that stage's forms, from Player's own jump constants.
