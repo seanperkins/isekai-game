@@ -1,0 +1,15 @@
+The revision addresses the main round-one implementation concerns: spending is recorded in the ledger, the spider-family hint and validation paths are specified, the tree filters dangling edges, and input actions are placed in `controls.gd`. I found five issues to resolve:
+
+1. **Spec 1 changes an owner decision on prices.** It stores one price on the base power, forcing both branches to cost the same ([Spec 1](/Users/sean/sites/isekai-game/docs/superpowers/specs/2026-10-03-essence-overhaul-design.md:36)). The design document says *each evolution has its own price* ([design doc](/Users/sean/sites/isekai-game/docs/isekai-chronicles-design-doc.md:154)). This needs an explicit design decision, not an assumed simplification.
+
+2. **The calibration target cannot hold for every rebirth start.** Keeping Body Armor within one eat of its Cave unlock requires a low earth threshold. At F1, crayfish and lizardmen then supply enough earth to unlock it in the Flooded area, whereas today its armor source first appears in the Deep ([creature data](/Users/sean/sites/isekai-game/tools/build_content.gd:279), [calibration rule](/Users/sean/sites/isekai-game/docs/superpowers/specs/2026-10-03-essence-overhaul-design.md:35)). The spec permits deliberate moves but has not chosen which unlock timing takes priority.
+
+3. **The tree omits an available form.** Greater Slime is offered when fewer than two lineages are open, including when none are open ([FormOffers](/Users/sean/sites/isekai-game/scripts/forms/form_offers.gd:83)). Spec 2 shows a stage-2 form only when an opening power is visible or the form was reached ([Spec 2](/Users/sean/sites/isekai-game/docs/superpowers/specs/2026-10-03-skill-tree-screen-design.md:37)). Greater Slime has no opening power, so a new player’s only form offer has no tree node.
+
+4. **`form_card(def)` lacks state the existing card uses.** The Form tab hides grants whose skills have retired ([skill_screen.gd](/Users/sean/sites/isekai-game/scripts/ui/skill_screen.gd:714)); a function taking only the form definition cannot preserve that behavior ([Spec 2](/Users/sean/sites/isekai-game/docs/superpowers/specs/2026-10-03-skill-tree-screen-design.md:42)). Pass the rules state too, or define different card behavior deliberately.
+
+5. **The changed-test inventory is still inaccurate.** Spec 1 names only `test_evolution_trees` and `test_scripted_run` as real-definition `evolve()` tests needing essence payment ([Spec 1](/Users/sean/sites/isekai-game/docs/superpowers/specs/2026-10-03-essence-overhaul-design.md:119)). `test_evolution_screen` also evolves after receiving only four water, below the proposed price of six ([test](/Users/sean/sites/isekai-game/tests/test_evolution_screen.gd:34)); `test_levels` and `test_form_tab` call the real evolution too. The proposed grep pass should catch these, but the claimed verified list is false.
+
+I did not run the suite because its runner writes files and this review was read-only.
+
+**VERDICT: REVISE**

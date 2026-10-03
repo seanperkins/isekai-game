@@ -151,7 +151,7 @@ Powers can unlock in more than one way:
 - **Essence combinations:** the right mix of essences unlocks a power. Working recipes: lightning is fire and air, or light and air; ice is water and air; poison is water and dark; spore is air and dark, and maybe earth. Most powers need a single essence. A mix is for special powers: a few base powers, more powerful skills, and the occasional interesting branch of a power.
 - **Other requirements:** eat a particular creature (a spider, say), dodge a number of times, drop to 1 HP a number of times, and similar.
 
-Powers level up in the background from use. Essence is how powers evolve, and evolving spends it. Each evolution is authored with its own price in the element or elements that power runs on (Poison Breath evolves for a set amount of held poison; a mix power costs both elements). The price shows on the HUD prompt, which reads ready once you hold enough. The actual numbers are open and are tuned as data.
+Powers level up in the background from use. Essence is how powers evolve, and evolving spends it. Each power is authored with its own price in the element or elements it runs on, and its evolution branches share that price (Poison Breath evolves for a set amount of held water and dark, whichever branch is taken). The price shows on the HUD prompt, which reads ready once you hold enough. The actual numbers are open and are tuned as data.
 
 Evolving should be as frictionless as possible. Working idea: when you hit a threshold, the game tells you, and you press a button to evolve a power.
 
