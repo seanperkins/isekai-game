@@ -188,7 +188,7 @@
 <div class="cols">
 <div class="block doc">
 <h3>Doc direction</h3>
-<p>Essence is elemental, and essences are used to create powers. Working set of ten: fire, water, earth, air, poison, dark, light, physical/force, mind/psychic, blood. Lightning and ice are not base essences: they are powers made by combining essences (working recipes in section 6).</p>
+<p>Essence is elemental, and essences are used to create powers. Working set of ten: fire, water, earth, air, poison, dark, light, physical/force, mind/psychic, blood. Lightning and ice are not base essences: they come from combining the others (working recipes in section 6).</p>
 <p>An essence reads differently per species: dark makes a lich on a skeleton, an assassin on a goblin and a shadow-stalker on a spider.</p>
 </div>
 <div class="block game">
@@ -214,7 +214,7 @@
 <tr><td>spore</td><td>Spore Cloud · Toxic</td><td>Poison</td></tr>
 <tr><td>sound</td><td>Echolocation · Echo</td><td>Air</td></tr>
 <tr><td>flight</td><td>reserved · Echo</td><td>Air</td></tr>
-<tr><td>shock</td><td>Jolt · none</td><td>No essence of its own: lightning is a power made from fire or light plus air. Suggestion: the eels and jellies carry light and air, since they glow.</td></tr>
+<tr><td>shock</td><td>Jolt · none</td><td>No essence of its own: lightning comes from fire or light plus air. Suggestion: the eels and jellies carry light and air, since they glow.</td></tr>
 <tr><td>thread</td><td>Sticky Thread · Weaver</td><td>None: it is spider-specific</td></tr>
 <tr><td>none yet</td><td>no creature carries it</td><td>Fire, Dark, Light, Mind, Blood</td></tr>
 </tbody>
@@ -257,7 +257,7 @@
 <div class="block decide">
 <h3>Decision needed</h3>
 <p><strong>Powers.</strong> Most of your list already fits the engine. New code is needed for "dodge X times" (no dodge event exists, and "dodge" needs a definition) and "down to 1 HP". Alternative recipes, such as lightning from fire and air <em>or</em> light and air, also need a small engine change, because a power has one list of conditions that must all hold. Open: do the two lightning recipes give the same power, or two flavors of it?</p>
-<p><strong>Essence as upgrade fuel.</strong> This needs a rule for what essence is. Today it is a running total that unlocks things and never goes down. If essence also upgrades powers and shrines bank it into soul points, it has to be a stock you can spend. My suggestion is two numbers: <em>eaten</em> (the running total this life, which unlocks read, so spending can never undo a recipe) and <em>held</em> (the stock you spend on upgrades, evolutions and banking). A second rule keeps the growth systems apart: how a power unlocked decides how it grows. Powers unlocked by doing (jumping, wall touches) keep growing by doing; powers unlocked by essence grow by essence. If essence also pays for skill evolutions, EP becomes unnecessary, which is a bigger change because EP is built.</p>
+<p><strong>Essence as upgrade fuel.</strong> This needs a rule for what essence is. Today it is a running total that unlocks things and never goes down. If essence also upgrades powers and shrines bank it into soul points, it has to be a stock you can spend. My suggestion is two numbers: <em>eaten</em> (the running total this life, which unlocks read, so spending can never undo a recipe) and <em>held</em> (the stock you spend on upgrades, skill evolutions and banking). Body-form offers read <em>held</em>, which is your doc's "current essence": spending or banking before an evolution level shrinks the menu. The safe alternative is to read <em>eaten</em> for forms too. One option for keeping the growth systems apart: how a power unlocked decides how it grows. Powers unlocked by doing (jumping, wall touches) keep growing by doing; powers unlocked by essence grow by essence. If essence also pays for skill evolutions, EP becomes unnecessary, which is a bigger change because EP is built.</p>
 <p><strong>Evolution.</strong> Does the doc's "evolution" mean body forms, skill evolutions, or both? The doc's per-evolution rule generalizes what the game already does: today there is one global rule (affinity at least 0.6) and it applies only at stage 1 to 2. Your "toxic slime" is the existing Toxic form; "spiked slime" has no match, and Bulwark is the closest. My suggestion: let each form carry an optional unlock condition that defaults to today's behavior, and show every qualifying form instead of capping at three.</p>
 </div>
 </section>
