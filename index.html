@@ -11,7 +11,7 @@
 
 <h1>Isekai Chronicles — design review</h1>
 <p class="lede">Your design doc is the newer direction; the game is the foundation it builds on. For each topic this page shows what the doc says, what the game does today, and the one decision needed.</p>
-<p class="meta">Snapshot 2026-10-01 · design doc rev 28 (<code>docs/isekai-chronicles-design-doc.md</code>) · game at <code>main</code> c766820 · game facts come from <code>data/*.tres</code>, <code>scripts/</code> and <code>docs/rooms.md</code>; the dated specs are used only for the reasoning behind decisions, since several were overtaken by later work.</p>
+<p class="meta">Updated 2026-10-02 · design doc: <code>docs/isekai-chronicles-design-doc.md</code> (the source of truth; the claude.ai copy is secondary) · game at <code>main</code> c766820 · game facts come from <code>data/*.tres</code>, <code>scripts/</code> and <code>docs/rooms.md</code>; the dated specs are used only for the reasoning behind decisions, since several were overtaken by later work.</p>
 
 <div class="legend" aria-label="Status legend">
   <div><span class="chip built">Built</span><br>The game already does this.</div>
@@ -38,10 +38,10 @@
 <tbody>
 <tr data-status="built"><td><a href="#s-concept">1. Concept</a></td><td><span class="chip built">Built</span></td><td>Die, reincarnate, evolve by eating: running today, with the slime as the only playable species.</td></tr>
 <tr data-status="doconly"><td><a href="#s-opening">2. Opening</a></td><td><span class="chip doconly">Doc only</span></td><td>No truck and no goddess yet; a run starts in the first cave room and a narrator called "A voice" speaks.</td></tr>
-<tr data-status="partly"><td><a href="#s-creatures">3. Creature design</a></td><td><span class="chip partly">Partly built</span></td><td>Slime only. Spider ingredients exist as enemies and skills; goblin and undead do not exist.</td></tr>
+<tr data-status="partly"><td><a href="#s-creatures">3. Creature design</a></td><td><span class="chip partly">Partly built</span></td><td>Slime only; the spider is next. Its ingredients exist as enemies and skills; goblin and undead do not.</td></tr>
 <tr data-status="partly"><td><a href="#s-methods">4. Essence methods</a></td><td><span class="chip partly">Partly built</span></td><td>Only "devour" exists. Scavenge needs an item system the game does not have.</td></tr>
 <tr data-status="conflict"><td><a href="#s-essences">5. Essence types</a></td><td><span class="chip conflict">Conflicts</span></td><td>Ten trait essences in the game, ten elements in the doc; only water, earth and poison overlap.</td></tr>
-<tr data-status="partly"><td><a href="#s-evolution">6. Levels, skills, evolution</a></td><td><span class="chip partly">Partly built</span></td><td>Two evolution systems are built; the doc's per-evolution unlock rule generalizes one global rule.</td></tr>
+<tr data-status="partly"><td><a href="#s-evolution">6. Levels, skills, evolution</a></td><td><span class="chip partly">Partly built</span></td><td>Two evolution systems are built. The doc adds essence-combination unlocks for powers and may use essence to upgrade them.</td></tr>
 <tr data-status="partly"><td><a href="#s-soul">7. Reincarnation and soul</a></td><td><span class="chip partly">Partly built</span></td><td>Rebirth pools and head-start kits exist; soul points, perks and species unlocks do not.</td></tr>
 <tr data-status="conflict"><td><a href="#s-world">8. World and gates</a></td><td><span class="chip conflict">Conflicts</span></td><td>The game is one fixed hand-built map of 23 rooms; the doc wants procedural worlds with preset gates.</td></tr>
 <tr data-status="conflict"><td><a href="#s-ending">9. Ending a run, shrines</a></td><td><span class="chip conflict">Conflicts</span></td><td>Runs end only by death; no win condition is built, and the planned final boss differs from the doc's.</td></tr>
@@ -84,11 +84,12 @@
 <div class="block doc">
 <h3>Doc direction</h3>
 <ol>
-<li>An unavoidable truck death; dodging the trucks doubles as the movement tutorial.</li>
+<li>An unavoidable truck death. It plays the first time only: a joke for anyone who knows isekai, not a real introduction. Working idea: a JRPG-style turn-based fight where you try to dodge the trucks.</li>
 <li>A god or goddess apologizes: it was an accident.</li>
 <li>She offers reincarnation. At first the only option is slime.</li>
 </ol>
-<p>She recurs: she remembers every previous life, reacts to how you died, and her menu grows over the game.</p>
+<p>She recurs: she remembers every previous life, reacts to how you died, and her menu grows over the game. She seems a helpful ally until the reveal: she is using you to harvest souls from this world, and eventually becomes the antagonist.</p>
+<p>The voice that announces skills and evolutions might be the voice of the world.</p>
 </div>
 <div class="block game">
 <h3>In the game today</h3>
@@ -103,7 +104,7 @@
 </div>
 <div class="block decide">
 <h3>Decision needed</h3>
-<p>Is the goddess a new character beside "A voice", or does "A voice" become her? My suggestion: she owns the death and rebirth moment (it already has a card and a menu to hang on), and "A voice" keeps the skill announcements. Smaller question: does the truck scene play every life or only the first?</p>
+<p>Working direction: the goddess and "A voice" are separate characters. The voice is the voice of the world (it already announces skills and evolutions), and she owns the death and rebirth moment, which already has a card and a menu to hang on. Still open: the truck scene's beats (which menu choices exist, how long it runs, what it introduces) and what teaches movement now that the dodging is turn-based. The game has no turn-based UI, so a scripted one-off is cheap and a real battle system is not.</p>
 </div>
 </section>
 
@@ -115,8 +116,8 @@
 <h3>Doc direction</h3>
 <p>Every monster is a potential reincarnation, defined by two axes: how it moves, and how it gains essence. <strong>Every enemy is a potential you.</strong></p>
 <ul>
-<li>Movement archetypes with shared controllers: bouncer (slime), crawler (spider), biped (goblins, skeletons, maybe fey). Later: quadruped, burrower, maybe flier.</li>
-<li><strong>Spider:</strong> web-shooting (catch or slow at range, lay ground traps), wall and ceiling walking, poison, devours what it traps.</li>
+<li>Movement archetypes with shared controllers: bouncer (slime), crawler (spider), biped (goblins, skeletons, maybe fey). Later: quadruped. Burrower and flier are off the table for now.</li>
+<li><strong>Spider:</strong> web-shooting (catch or slow at range, lay ground traps), wall and ceiling walking, poison, devours what it traps. It is the next playable species, once the slime is in a good place.</li>
 <li><strong>Goblin:</strong> scavenges and crafts; power comes from inventory.</li>
 <li><strong>Undead:</strong> one branching tree: flesh, bone-ranged and bone-magic paths.</li>
 </ul>
@@ -140,7 +141,7 @@
 <tr><td>Black Spider, Taratect, Vine Snake</td><td>Hang from the ceiling, drop or lunge on a tether</td><td>Crawler</td></tr>
 <tr><td>Gloom Wolf, Stone Drake</td><td>Pack charger; slow stomper</td><td>Quadruped</td></tr>
 <tr><td>Armored Lizard, Bog Lizardman, Armed Ant</td><td>Ground walkers; one charges, one throws a spear</td><td>Biped</td></tr>
-<tr><td>Cave Bat, Spore Moth, Pale Moth</td><td>Fly or drift</td><td>Flier (the doc dropped it from the starting set)</td></tr>
+<tr><td>Cave Bat, Spore Moth, Pale Moth</td><td>Fly or drift</td><td>None: flier is off the table for now, so they stay enemies</td></tr>
 <tr><td>Glass Eel, Storm Eel, Drift Jelly</td><td>Swim in deep water</td><td>None in the doc. The game has Swim and three swimmers, so this may need a new archetype.</td></tr>
 <tr><td>Mushroom Crab, Cave Crayfish, Poison Toad</td><td>Armored chargers; a spitter</td><td>No clear fit</td></tr>
 </tbody>
@@ -148,7 +149,7 @@
 </div>
 <div class="block decide">
 <h3>Decision needed</h3>
-<p>Which species comes second? My suggestion is the spider. Its thread, wall and poison pieces exist, ceiling-walk AI exists, and two spider sheets (Black Spider, Taratect) are drawn. It would prove "every enemy is a potential you" before goblin and undead need an inventory system and new essences.</p>
+<p>Decided: the spider is next, once the slime is in a good place. Its thread, wall and poison pieces exist, ceiling-walk AI exists, and two spider sheets (Black Spider, Taratect) are drawn. Still open: what "a good place" means for the slime. Today 20 of 24 forms use the tinted slime art, there is no final fight, no shrine or soul loop and no goddess, and essences still use the old trait names. Pick which of these must be done before the spider starts.</p>
 </div>
 </section>
 
@@ -187,7 +188,7 @@
 <div class="cols">
 <div class="block doc">
 <h3>Doc direction</h3>
-<p>Essence types are elemental. Working set of ten: fire, water, earth, air, poison, dark, light, physical/force, mind/psychic, blood. Later: lightning, ice.</p>
+<p>Essence is elemental, and essences are used to create powers. Working set of ten: fire, water, earth, air, poison, dark, light, physical/force, mind/psychic, blood. Lightning and ice are not base essences: they are powers made by combining essences (working recipes in section 6).</p>
 <p>An essence reads differently per species: dark makes a lich on a skeleton, an assassin on a goblin and a shadow-stalker on a spider.</p>
 </div>
 <div class="block game">
@@ -213,7 +214,7 @@
 <tr><td>spore</td><td>Spore Cloud · Toxic</td><td>Poison</td></tr>
 <tr><td>sound</td><td>Echolocation · Echo</td><td>Air</td></tr>
 <tr><td>flight</td><td>reserved · Echo</td><td>Air</td></tr>
-<tr><td>shock</td><td>Jolt · none</td><td>Lightning (the doc lists it as a later addition)</td></tr>
+<tr><td>shock</td><td>Jolt · none</td><td>No essence of its own: lightning is a power made from fire or light plus air. Suggestion: the eels and jellies carry light and air, since they glow.</td></tr>
 <tr><td>thread</td><td>Sticky Thread · Weaver</td><td>None: it is spider-specific</td></tr>
 <tr><td>none yet</td><td>no creature carries it</td><td>Fire, Dark, Light, Mind, Blood</td></tr>
 </tbody>
@@ -221,7 +222,7 @@
 </div>
 <div class="block decide">
 <h3>Decision needed</h3>
-<p>Pick one vocabulary: keep the game's trait essences, switch to the doc's elements, or layer both. My lean is the elements. "One essence, a different result per species" only works if essences are species-neutral, and the trait names (thread, shell, spore) can survive as skill and form names. The cost is mostly data: creature, skill and form files, the <code>Essences</code> list, and the tests that pin essence totals. Five elements (fire, dark, light, mind, blood) would also need creatures that carry them.</p>
+<p>Direction from your notes: the elements are the essences, and they are simply called essence. To confirm: the game's trait essences (thread, shell, spore, sound, flight, armor, shock) get re-expressed as elements, and the trait names survive as skill and form names. The cost is mostly data: creature, skill and form files, the <code>Essences</code> list, and the tests that pin essence totals. Five elements (fire, dark, light, mind, blood) have no creatures yet, and "thread", the spider's signature, has no element.</p>
 </div>
 </section>
 
@@ -237,6 +238,8 @@
 <li>Each evolution sets its own rule on your essence mix (a threshold, a ratio, whatever fits).</li>
 <li>At an evolution level the player sees every evolution their current essence makes possible and picks one.</li>
 <li>Examples: stone/defense gives a spiked slime; poison gives a toxic slime.</li>
+<li><strong>A power is an ability or a passive.</strong> It can unlock through an essence combination (working recipes: lightning is fire and air, or light and air; ice is water and air) or through other requirements: eat a particular creature, dodge a number of times, drop to 1 HP a number of times.</li>
+<li>Working idea: essences are also how powers are upgraded and eventually evolved.</li>
 </ul>
 </div>
 <div class="block game">
@@ -245,14 +248,17 @@
 <ul>
 <li><strong>Body forms</strong> (<code>data/forms/</code>): four stages, 24 forms. Level cap 10 per stage (270, 403, 540 and 673 XP); the level resets to 1 on evolving. Stage 1 to 2 offers up to three lineages whose affinity (essence eaten divided by the lineage's supply) is at least 0.6, with Greater Slime as a fallback. Stage 2 to 3 offers the two children of your form; stage 3 to 4 is one Sovereign.</li>
 <li><strong>Skill evolutions</strong>: four base skills each branch into two exclusive evolutions for 1 EP, permanent for the life (8 in all; see the appendix).</li>
-<li>Skills level through use or hidden triggers; stats are HP, MP, ATK, DEF, SPD.</li>
+<li>Skills level through use or hidden triggers; stats are HP, MP, ATK, DEF, SPD. Essence does not upgrade anything today: it unlocks skills and steers body forms.</li>
+<li>The unlock engine already combines several conditions (all must hold) and can require eating a specific creature, so an essence mix and "eat a spider" are expressible as data. It has no "dodge" event and no "down to 1 HP" threshold (the low-HP event fires at 30%). Existing examples of "other requirements": Leap (jump 40 times), Wall Cling (touch walls 15 times), Pain Resistance (recover from low HP twice).</li>
 <li>Only 4 of the 24 forms have their own art (the Weaver line); the other 20 use the tinted slime sprite.</li>
 </ul>
 </div>
 </div>
 <div class="block decide">
 <h3>Decision needed</h3>
-<p>Does the doc's "evolution" mean body forms, skill evolutions, or both? The doc's per-evolution rule generalizes what the game already does: today there is one global rule (affinity at least 0.6) and it applies only at stage 1 to 2. Your "toxic slime" is the existing Toxic form; "spiked slime" has no match, and Bulwark is the closest. My suggestion: let each form carry an optional unlock condition that defaults to today's behavior, and show every qualifying form instead of capping at three.</p>
+<p><strong>Powers.</strong> Most of your list already fits the engine. New code is needed for "dodge X times" (no dodge event exists, and "dodge" needs a definition) and "down to 1 HP". Alternative recipes, such as lightning from fire and air <em>or</em> light and air, also need a small engine change, because a power has one list of conditions that must all hold. Open: do the two lightning recipes give the same power, or two flavors of it?</p>
+<p><strong>Essence as upgrade fuel.</strong> This needs a rule for what essence is. Today it is a running total that unlocks things and never goes down. If essence also upgrades powers and shrines bank it into soul points, it has to be a stock you can spend. My suggestion is two numbers: <em>eaten</em> (the running total this life, which unlocks read, so spending can never undo a recipe) and <em>held</em> (the stock you spend on upgrades, evolutions and banking). A second rule keeps the growth systems apart: how a power unlocked decides how it grows. Powers unlocked by doing (jumping, wall touches) keep growing by doing; powers unlocked by essence grow by essence. If essence also pays for skill evolutions, EP becomes unnecessary, which is a bigger change because EP is built.</p>
+<p><strong>Evolution.</strong> Does the doc's "evolution" mean body forms, skill evolutions, or both? The doc's per-evolution rule generalizes what the game already does: today there is one global rule (affinity at least 0.6) and it applies only at stage 1 to 2. Your "toxic slime" is the existing Toxic form; "spiked slime" has no match, and Bulwark is the closest. My suggestion: let each form carry an optional unlock condition that defaults to today's behavior, and show every qualifying form instead of capping at three.</p>
 </div>
 </section>
 
@@ -329,6 +335,7 @@
 <li>Shrines don't end a run; they bank essence into soul points.</li>
 <li><strong>Essence seed:</strong> when you die, what killed you leaves a small seed of its element and your next life starts with it.</li>
 <li>Open: whether a run can end any other way, and what else shrines do.</li>
+<li><strong>Story:</strong> the goddess seems a helpful ally until the reveal that she is using you to harvest souls from this world; she eventually becomes the antagonist.</li>
 </ul>
 </div>
 <div class="block game">
@@ -348,6 +355,7 @@
 <li><strong>The final fight.</strong> The game planned the Cave Serpent as the goal; your doc says the god of reincarnation. The serpent could become an area boss on the way to the god.</li>
 <li><strong>Shrines.</strong> Reuse rebirth pools: attune plus bank, so one object does both, and Glow Pools stay as plain rest.</li>
 <li><strong>Essence seed.</strong> Record which creature killed the player and seed that creature's own essence. The data already exists on every creature, so no new tagging scheme is needed.</li>
+<li><strong>The reveal.</strong> Soul points are the natural thing for her to harvest: every point you bank feeds her, which makes the shrine the story's central choice (spend essence on powers now, or bank it for permanent progress). Open: when the reveal happens, whether banking changes after it, and whether she is the god of reincarnation you beat to end a run.</li>
 </ul>
 </div>
 </section>
@@ -380,24 +388,28 @@
 <tbody>
 <tr><td>Which essences feed which evolution branches for each species</td><td>Five form lineages list their essences in <code>data/forms/</code>; only the slime has branches.</td></tr>
 <tr><td>Essence method for undead and future species</td><td>Only devour exists.</td></tr>
-<tr><td>Kits for the remaining bipeds, quadruped and burrower</td><td>No playable bodies; the enemy roster is a starting list (section 3).</td></tr>
+<tr><td>Kits for the remaining bipeds and the later quadruped</td><td>No playable bodies; the enemy roster is a starting list (section 3).</td></tr>
 <tr><td>How the goblin's crafting works</td><td>No inventory or crafting system.</td></tr>
 <tr><td>Each species' unlock condition</td><td>No species list. Rebirth pools are unlocked by attuning.</td></tr>
 <tr><td>Which permanent perks soul points buy</td><td>No soul points or perks.</td></tr>
 <tr><td>What shrines do besides banking essence</td><td>Glow Pools rest; tablets give lore and hints; rebirth pools attune.</td></tr>
 <tr><td>How a run can end besides death or beating the god</td><td>Death only.</td></tr>
+<tr><td>Which combinations of essences unlock which powers (lightning and ice are the first two)</td><td>No combinations today: essence skills unlock from the count of one essence. Several conditions can be combined as data; alternative recipes need a small engine change.</td></tr>
+<tr><td>Whether essences are also what upgrades and evolves powers</td><td>Powers level through use; skill evolutions cost EP, not essence.</td></tr>
+<tr><td>When the goddess's reveal happens, and what changes after it</td><td>No goddess in the game yet.</td></tr>
 </tbody>
 </table>
 </div>
 <p><strong>Raised by this review</strong></p>
 <ol>
-<li>Essence vocabulary: traits, elements or both (section 5).</li>
-<li>Which species is second, and is the spider the right one (section 3).</li>
-<li>Does the goddess replace or sit beside "A voice" (section 2).</li>
+<li>What "the slime is in a good place" means before the spider starts (section 3).</li>
+<li>The truck scene's beats, and what teaches movement now (section 2).</li>
+<li>Essence as a running total, a stock you spend, or both (section 6).</li>
+<li>Naming: power, ability, passive or skill (section 6).</li>
 <li>Does the game want an inventory system (section 4).</li>
 <li>Head start from the place, the soul or both (section 7).</li>
 <li>Fixed, procedural or hybrid world (section 8).</li>
-<li>What the god of reincarnation fight is, and what the Cave Serpent becomes (section 9).</li>
+<li>What the god of reincarnation fight is, when the reveal happens, and what the Cave Serpent becomes (section 9).</li>
 </ol>
 </div>
 
@@ -431,7 +443,7 @@
 </details>
 </div>
 
-<footer>Source of truth: the game is the repository; the design doc is the claude.ai Claude Docs page of the same name. This page is a snapshot and is not updated automatically.</footer>
+<footer>Source of truth: the game is the repository, and the design doc is <code>docs/isekai-chronicles-design-doc.md</code>. A copy of the doc on claude.ai is kept in sync but is secondary. This page is updated by hand whenever either changes.</footer>
 </div>
 
 <script>
