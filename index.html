@@ -41,7 +41,7 @@
 <tr data-status="partly"><td><a href="#s-creatures">3. Creature design</a></td><td><span class="chip partly">Partly built</span></td><td>Slime only; the spider is next. Its ingredients exist as enemies and skills; goblin and undead do not.</td></tr>
 <tr data-status="partly"><td><a href="#s-methods">4. Essence methods</a></td><td><span class="chip partly">Partly built</span></td><td>Only "devour" exists. Scavenge needs an item system the game does not have.</td></tr>
 <tr data-status="conflict"><td><a href="#s-essences">5. Essence types</a></td><td><span class="chip conflict">Conflicts</span></td><td>Ten trait essences in the game, ten elements in the doc; only water, earth and poison overlap.</td></tr>
-<tr data-status="partly"><td><a href="#s-evolution">6. Levels, skills, evolution</a></td><td><span class="chip partly">Partly built</span></td><td>Two evolution systems are built. The doc adds essence-combination unlocks for powers and may use essence to upgrade them.</td></tr>
+<tr data-status="partly"><td><a href="#s-evolution">6. Levels, skills, evolution</a></td><td><span class="chip partly">Partly built</span></td><td>Two evolution systems are built. The doc adds essence-combination unlocks for powers, background levelling from use, and essence (not EP) to evolve them.</td></tr>
 <tr data-status="partly"><td><a href="#s-soul">7. Reincarnation and soul</a></td><td><span class="chip partly">Partly built</span></td><td>Rebirth pools and head-start kits exist; soul points, perks and species unlocks do not.</td></tr>
 <tr data-status="conflict"><td><a href="#s-world">8. World and gates</a></td><td><span class="chip conflict">Conflicts</span></td><td>The game is one fixed hand-built map of 23 rooms; the doc wants procedural worlds with preset gates.</td></tr>
 <tr data-status="conflict"><td><a href="#s-ending">9. Ending a run, shrines</a></td><td><span class="chip conflict">Conflicts</span></td><td>Runs end only by death; no win condition is built, and the planned final boss differs from the doc's.</td></tr>
@@ -239,8 +239,8 @@
 <li>At an evolution level the player sees every evolution their current essence makes possible and picks one.</li>
 <li>Examples: stone/defense gives a spiked slime; poison gives a toxic slime.</li>
 <li><strong>A power is an ability or a passive.</strong> It can unlock through an essence combination (working recipes: lightning is fire and air, or light and air; ice is water and air) or through other requirements: eat a particular creature, dodge a number of times, drop to 1 HP a number of times.</li>
-<li>Working idea: essences are also how powers are upgraded and eventually evolved.</li>
-<li>Upgrading a power should be as frictionless as possible. Working idea: when you hit a threshold the game tells you, and you press a button to upgrade a power.</li>
+<li>Powers level up in the background from use. Essence is how powers evolve.</li>
+<li>Evolving should be as frictionless as possible. Working idea: when you hit a threshold the game tells you, and you press a button to evolve a power.</li>
 </ul>
 </div>
 <div class="block game">
@@ -249,9 +249,9 @@
 <ul>
 <li><strong>Body forms</strong> (<code>data/forms/</code>): four stages, 24 forms. Level cap 10 per stage (270, 403, 540 and 673 XP); the level resets to 1 on evolving. Stage 1 to 2 offers up to three lineages whose affinity (essence eaten divided by the lineage's supply) is at least 0.6, with Greater Slime as a fallback. Stage 2 to 3 offers the two children of your form; stage 3 to 4 is one Sovereign.</li>
 <li><strong>Skill evolutions</strong>: four base skills each branch into two exclusive evolutions for 1 EP, permanent for the life (8 in all; see the appendix).</li>
-<li>Skills level through use or hidden triggers; stats are HP, MP, ATK, DEF, SPD. Essence does not upgrade anything today: it unlocks skills and steers body forms.</li>
+<li>Skills level through use or hidden triggers; stats are HP, MP, ATK, DEF, SPD. Essence does not evolve skills today (that costs EP): it unlocks skills and steers body forms.</li>
 <li>The unlock engine already combines several conditions (all must hold) and can require eating a specific creature, so an essence mix and "eat a spider" are expressible as data. It has no "dodge" event and no "down to 1 HP" threshold (the low-HP event fires at 30%). Existing examples of "other requirements": Leap (jump 40 times), Wall Cling (touch walls 15 times), Pain Resistance (recover from low HP twice).</li>
-<li><strong>Upgrading today:</strong> skill levels apply automatically and a ticker says "Your skills grew". Skill evolutions are the exception: a pop-up says "Evolution available", then you open the menu, pick the Skills tab, select the row and press twice to confirm. On a controller every button is taken in play: A jump, X tackle, B eat, Y inspect, the shoulder buttons and triggers are the four skill slots, and the sticks and D-pad move and aim.</li>
+<li><strong>Levelling and evolving today:</strong> skill levels apply automatically and a ticker says "Your skills grew". Skill evolutions are the exception: a pop-up says "Evolution available", then you open the menu, pick the Skills tab, select the row and press twice to confirm. On a controller every button is taken in play: A jump, X tackle, B eat, Y inspect, the shoulder buttons and triggers are the four skill slots, and the sticks and D-pad move and aim.</li>
 <li>Only 4 of the 24 forms have their own art (the Weaver line); the other 20 use the tinted slime sprite.</li>
 </ul>
 </div>
@@ -259,8 +259,8 @@
 <div class="block decide">
 <h3>Decision needed</h3>
 <p><strong>Powers.</strong> Most of your list already fits the engine. New code is needed for "dodge X times" (no dodge event exists, and "dodge" needs a definition) and "down to 1 HP". Alternative recipes, such as lightning from fire and air <em>or</em> light and air, also need a small engine change, because a power has one list of conditions that must all hold. Open: do the two lightning recipes give the same power, or two flavors of it?</p>
-<p><strong>Essence as upgrade fuel.</strong> This needs a rule for what essence is. Today it is a running total that unlocks things and never goes down. If essence also upgrades powers and shrines bank it into soul points, it has to be a stock you can spend. My suggestion is two numbers: <em>eaten</em> (the running total this life, which unlocks read, so spending can never undo a recipe) and <em>held</em> (the stock you spend on upgrades, skill evolutions and banking). Body-form offers read <em>held</em>, which is your doc's "current essence": spending or banking before an evolution level shrinks the menu. The safe alternative is to read <em>eaten</em> for forms too. One option for keeping the growth systems apart: how a power unlocked decides how it grows. Powers unlocked by doing (jumping, wall touches) keep growing by doing; powers unlocked by essence grow by essence. If essence also pays for skill evolutions, EP becomes unnecessary, which is a bigger change because EP is built.</p>
-<p><strong>Friction.</strong> My suggestion is to ask only when there is a decision. A plain upgrade, where the power just gets stronger, should apply by itself and be announced, as skill levels do today. A button is for a real choice: which evolution branch, or whether to spend or bank essence. For those, a persistent glow on the power's HUD slot (the pop-up is gone after 2.5 seconds) and a one-press choice with no menu trip would remove most of today's steps. A controller has no free button, so the prompt likely borrows an existing one while it is showing, as "Y: attune" does at rebirth pools. Open: does pressing the button spend essence, or only confirm a power that has earned the upgrade?</p>
+<p><strong>Direction: levels from use, evolution with essence.</strong> Powers keep levelling in the background from use, as they do today. Evolving a power uses essence. That makes essence something you hold and can spend, so two numbers help: <em>eaten</em> (the running total this life, which recipes read, so spending never undoes an unlock) and <em>held</em> (what you can spend on evolutions and banking). Body-form offers read <em>held</em>, which is your doc's "current essence": spending or banking before an evolution level shrinks the menu. The safe alternative is to read <em>eaten</em> for forms too. If essence pays for evolutions, EP has no job left. It is built (levels give EP, skill evolutions cost it), so removing it is a cleanup and not a free change.</p>
+<p><strong>Friction.</strong> Levelling needs no button. Evolving is the one moment that does, because it is a real choice (which branch). My suggestion is to make it one press with no menu trip: a persistent glow on the power's HUD slot (the pop-up is gone after 2.5 seconds), then a one-press choice. A short hold can replace today's two-press confirm, since an evolution is permanent for the life. A controller has no free button, so the prompt likely borrows an existing one while it is showing, as "Y: attune" does at rebirth pools. Suggestion: give each branch its own essence recipe, so at the parent's evolve level you see the branches whose recipes you meet and pick one. That is the same rule your doc gives body forms. Open: how much essence an evolution takes, and whether it is spent or only a threshold.</p>
 <p><strong>Evolution.</strong> Does the doc's "evolution" mean body forms, skill evolutions, or both? The doc's per-evolution rule generalizes what the game already does: today there is one global rule (affinity at least 0.6) and it applies only at stage 1 to 2. Your "toxic slime" is the existing Toxic form; "spiked slime" has no match, and Bulwark is the closest. My suggestion: let each form carry an optional unlock condition that defaults to today's behavior, and show every qualifying form instead of capping at three.</p>
 </div>
 </section>
@@ -398,7 +398,7 @@
 <tr><td>What shrines do besides banking essence</td><td>Glow Pools rest; tablets give lore and hints; rebirth pools attune.</td></tr>
 <tr><td>How a run can end besides death or beating the god</td><td>Death only.</td></tr>
 <tr><td>Which combinations of essences unlock which powers (lightning and ice are the first two)</td><td>No combinations today: essence skills unlock from the count of one essence. Several conditions can be combined as data; alternative recipes need a small engine change.</td></tr>
-<tr><td>Whether essences are also what upgrades and evolves powers</td><td>Powers level through use; skill evolutions cost EP, not essence.</td></tr>
+<tr><td>How evolving a power uses essence: a threshold, a spend, or both</td><td>Powers level through use; skill evolutions cost EP, not essence.</td></tr>
 <tr><td>When the goddess's reveal happens, and what changes after it</td><td>No goddess in the game yet.</td></tr>
 </tbody>
 </table>
@@ -407,7 +407,7 @@
 <ol>
 <li>What "the slime is in a good place" means before the spider starts (section 3).</li>
 <li>The truck scene's beats, and what teaches movement now (section 2).</li>
-<li>Essence as a running total, a stock you spend, or both (section 6).</li>
+<li>How much essence an evolution takes, and whether it is spent or only a threshold (section 6).</li>
 <li>Naming: power, ability, passive or skill (section 6).</li>
 <li>Does the game want an inventory system (section 4).</li>
 <li>Head start from the place, the soul or both (section 7).</li>
