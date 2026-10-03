@@ -241,6 +241,7 @@
 <li><strong>A power is an ability or a passive.</strong> It can unlock through an essence combination (working recipes: lightning is fire and air, or light and air; ice is water and air) or through other requirements: eat a particular creature, dodge a number of times, drop to 1 HP a number of times.</li>
 <li>Powers level up in the background from use. Essence is how powers evolve.</li>
 <li>Evolving should be as frictionless as possible. Working idea: when you hit a threshold the game tells you, and you press a button to evolve a power.</li>
+<li>Working idea: the skill screen shows the skill tree and its branches, based on what you have unlocked with this species before.</li>
 </ul>
 </div>
 <div class="block game">
@@ -251,6 +252,7 @@
 <li><strong>Skill evolutions</strong>: four base skills each branch into two exclusive evolutions for 1 EP, permanent for the life (8 in all; see the appendix).</li>
 <li>Skills level through use or hidden triggers; stats are HP, MP, ATK, DEF, SPD. Essence does not evolve skills today (that costs EP): it unlocks skills and steers body forms.</li>
 <li>The unlock engine already combines several conditions (all must hold) and can require eating a specific creature, so an essence mix and "eat a spider" are expressible as data. It has no "dodge" event and no "down to 1 HP" threshold (the low-HP event fires at 30%). Existing examples of "other requirements": Leap (jump 40 times), Wall Cling (touch walls 15 times), Pain Resistance (recover from low HP twice).</li>
+<li><strong>Skill screen today:</strong> the Skills and Compendium tabs are grouped lists (Proficiency, Essence, Evolution), not a tree. The Compendium already remembers across lives how far you have discovered each skill (unknown, named, hinted, owned once). It is one global store and not per species, and the body form you reached is not saved after a run.</li>
 <li><strong>Levelling and evolving today:</strong> skill levels apply automatically and a ticker says "Your skills grew". Skill evolutions are the exception: a pop-up says "Evolution available", then you open the menu, pick the Skills tab, select the row and press twice to confirm. On a controller every button is taken in play: A jump, X tackle, B eat, Y inspect, the shoulder buttons and triggers are the four skill slots, and the sticks and D-pad move and aim.</li>
 <li>Only 4 of the 24 forms have their own art (the Weaver line); the other 20 use the tinted slime sprite.</li>
 </ul>
@@ -261,6 +263,7 @@
 <p><strong>Powers.</strong> Most of your list already fits the engine. New code is needed for "dodge X times" (no dodge event exists, and "dodge" needs a definition) and "down to 1 HP". Alternative recipes, such as lightning from fire and air <em>or</em> light and air, also need a small engine change, because a power has one list of conditions that must all hold. Open: do the two lightning recipes give the same power, or two flavors of it?</p>
 <p><strong>Direction: levels from use, evolution with essence.</strong> Powers keep levelling in the background from use, as they do today. Evolving a power uses essence. That makes essence something you hold and can spend, so two numbers help: <em>eaten</em> (the running total this life, which recipes read, so spending never undoes an unlock) and <em>held</em> (what you can spend on evolutions and banking). Body-form offers read <em>held</em>, which is your doc's "current essence": spending or banking before an evolution level shrinks the menu. The safe alternative is to read <em>eaten</em> for forms too. If essence pays for evolutions, EP has no job left. It is built (levels give EP, skill evolutions cost it), so removing it is a cleanup and not a free change.</p>
 <p><strong>Friction.</strong> Levelling needs no button. Evolving is the one moment that does, because it is a real choice (which branch). My suggestion is to make it one press with no menu trip: a persistent glow on the power's HUD slot (the pop-up is gone after 2.5 seconds), then a one-press choice. A short hold can replace today's two-press confirm, since an evolution is permanent for the life. A controller has no free button, so the prompt likely borrows an existing one while it is showing, as "Y: attune" does at rebirth pools. Suggestion: give each branch its own essence recipe, so at the parent's evolve level you see the branches whose recipes you meet and pick one. That is the same rule your doc gives body forms. Open: how much essence an evolution takes, and whether it is spent or only a threshold.</p>
+<p><strong>Skill tree view.</strong> The power trees can be drawn from data the game already has: an evolution names its parent, and each base power has two branches. "Owned once" in the Compendium marks the branch you took in a past life. What is missing: the knowledge is one global store, so a second species needs its own (or an explicit rule for skills both species share, such as Sticky Thread), and a form tree needs new persistence because the form you reached is not saved. Suggestion: start with power trees (a base power and its two branches per row, which fits the 640×360 screen), then add the form tree (stages across, lineages down). Suggested reveal rule: a node appears once you have discovered it, and a parent you own shows its branches as <em>???</em> stubs until they are named, so the tree grows as you play and never states a recipe before you have earned it. Open: should the tree show its whole shape from the start, or only what you have found?</p>
 <p><strong>Evolution.</strong> Does the doc's "evolution" mean body forms, skill evolutions, or both? The doc's per-evolution rule generalizes what the game already does: today there is one global rule (affinity at least 0.6) and it applies only at stage 1 to 2. Your "toxic slime" is the existing Toxic form; "spiked slime" has no match, and Bulwark is the closest. My suggestion: let each form carry an optional unlock condition that defaults to today's behavior, and show every qualifying form instead of capping at three.</p>
 </div>
 </section>
@@ -399,6 +402,7 @@
 <tr><td>How a run can end besides death or beating the god</td><td>Death only.</td></tr>
 <tr><td>Which combinations of essences unlock which powers (lightning and ice are the first two)</td><td>No combinations today: essence skills unlock from the count of one essence. Several conditions can be combined as data; alternative recipes need a small engine change.</td></tr>
 <tr><td>How evolving a power uses essence: a threshold, a spend, or both</td><td>Powers level through use; skill evolutions cost EP, not essence.</td></tr>
+<tr><td>How the skill screen shows the tree and branches, and what it reveals before you have unlocked them</td><td>Grouped lists today. The Compendium already stores discovery states across lives; the tree layout and a per-species store do not exist.</td></tr>
 <tr><td>When the goddess's reveal happens, and what changes after it</td><td>No goddess in the game yet.</td></tr>
 </tbody>
 </table>
@@ -408,6 +412,7 @@
 <li>What "the slime is in a good place" means before the spider starts (section 3).</li>
 <li>The truck scene's beats, and what teaches movement now (section 2).</li>
 <li>How much essence an evolution takes, and whether it is spent or only a threshold (section 6).</li>
+<li>Whether the skill tree shows its whole shape from the start or only what you have found, and whether knowledge is per species (section 6).</li>
 <li>Naming: power, ability, passive or skill (section 6).</li>
 <li>Does the game want an inventory system (section 4).</li>
 <li>Head start from the place, the soul or both (section 7).</li>
