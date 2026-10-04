@@ -371,3 +371,46 @@ func test_a_wall_bounce_shows_the_ball_not_the_tackle() -> void:
 			assert_ne(sb.state.verb, "tackle", "the bounce ended the tackle")
 	assert_gte(bounced, 0, "it tackled into the wall and bounced")
 	assert_true(ball_seen)
+
+func test_the_ball_lasts_the_whole_flight_and_ends_at_the_plain_landing() -> void:
+	sb.body.global_position = Vector2(300.0, -200.0)
+	var pressed := false
+	var launch_frame := -1
+	var flight := 0
+	var ball_frames := 0
+	var after := ""
+	for k in 220:
+		await get_tree().physics_frame
+		if not pressed and sb.body.velocity.y > 0.0 and sb.body.global_position.y > -42.0:
+			sb.scripted.jump_pressed = true
+			pressed = true
+		if launch_frame < 0 and sb.state.launched == "rebound":
+			launch_frame = k
+		if launch_frame >= 0 and k - launch_frame >= 2 and not sb.body.is_on_floor() and k - launch_frame < 100:
+			flight += 1
+			ball_frames += 1 if sb.clip() == "ball" else 0
+		if launch_frame >= 0 and k - launch_frame == 150:
+			after = sb.clip()
+	assert_gte(launch_frame, 0, "it rebounded")
+	assert_gte(flight, 15, "a real flight")
+	assert_eq(ball_frames, flight, "a ball for the whole flight, rising and falling, not just its start")
+	assert_eq(after, "idle", "a plain landing ends the ball")
+
+func test_a_tackle_in_mid_bounce_ends_the_ball() -> void:
+	sb.body.global_position = Vector2(300.0, -300.0)
+	sb.scripted.jump_held = true
+	var bounce_frame := -1
+	var verb_seen := false
+	var clip_after := ""
+	for k in 120:
+		await get_tree().physics_frame
+		if bounce_frame < 0 and sb.state.launched == "bounce":
+			bounce_frame = k
+		if bounce_frame >= 0 and k == bounce_frame + 8:
+			sb.scripted.signature_pressed = true
+		if bounce_frame >= 0 and sb.state.verb == "tackle":
+			verb_seen = true
+		if bounce_frame >= 0 and k == bounce_frame + 26:
+			clip_after = sb.clip()
+	assert_true(verb_seen, "it tackled in the air")
+	assert_true(clip_after == "rise" or clip_after == "fall", "after the tackle it is the slime again, not the ball: %s" % clip_after)

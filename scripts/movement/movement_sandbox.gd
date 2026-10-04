@@ -22,8 +22,7 @@ const VERB_TINT := Color(1.5, 1.3, 0.7)
 const BOOST_JUMP_HEIGHT := 1.85
 ## How long the slime's landing frame shows (the player's LAND_SQUASH_SECONDS).
 const LAND_SECONDS := 0.12
-## How long a bounce shows as a ball, how fast its eyes roll around it (rad/s), and how fast the crawl wobble eases in and out.
-const BALL_SECONDS := 0.3
+## How fast the ball's eyes roll around it (rad/s), and how fast the crawl wobble eases in and out.
 const BALL_ROLL := 10.0
 const CRAWL_EASE := 8.0
 
@@ -47,7 +46,7 @@ var _facing := 1
 var _land_timer := 0.0
 var _landing := false
 var _landing_speed := 0.0
-var _ball_time := 0.0
+var _ball := false
 var _ball_roll := 0.0
 var _crawl_phase := 0.0
 var _crawl_gain := 0.0
@@ -104,7 +103,7 @@ func set_profile(id: String) -> void:
 		return
 	profile = p
 	state = MoveState.new()  # no momentum or timers carry over a switch
-	_ball_time = 0.0
+	_ball = false
 	_ball_roll = 0.0
 	_landing = false
 	if body != null:
@@ -184,19 +183,22 @@ func _physics_process(delta: float) -> void:
 	_draw_body(delta)
 
 ## A bounce (timed rebound, hold bounce, wall bounce) is a ball, not a squash: it drops any squash a landing started and
-## shows the ball. Any other landing squashes and shows the landing frame, one tick after touching down.
+## stays a ball, eyes rolling, until it stops being one: a landing that does not bounce again (which squashes and shows the
+## landing frame, one tick after touching down), a Tackle, a wall grip or any other launch.
 func _judge_landing() -> void:
 	if state.launched == "rebound" or state.launched == "bounce" or state.wall_bounced:
-		_ball_time = BALL_SECONDS
+		_ball = true
 		_spring.calm()
 		_land_timer = 0.0
 		_landing = false
-	elif _landing:
+		return
+	if _landing:
 		_spring.land(_landing_speed)
 		_land_timer = LAND_SECONDS
-		_ball_time = 0.0
 		_landing = false
-	_ball_time = maxf(0.0, _ball_time - _dt)
+		_ball = false
+	if state.launched != "" or state.verb != "" or state.clinging:
+		_ball = false
 
 func _read_input() -> MoveInput:
 	var i := MoveInput.new()
@@ -238,7 +240,7 @@ func _apply_box() -> void:
 
 func _draw_body(delta: float) -> void:
 	if _sheet != null:
-		_clip = SpeciesLook.clip_for(profile.id, body.is_on_floor(), state.velocity.y, state.velocity.x, _land_timer, state.verb, VerbRunner.is_flat(state, profile), state.clinging, _ball_time > 0.0)
+		_clip = SpeciesLook.clip_for(profile.id, body.is_on_floor(), state.velocity.y, state.velocity.x, _land_timer, state.verb, VerbRunner.is_flat(state, profile), state.clinging, _ball)
 		_animator.play(_clip)
 		_animator.advance(delta)
 		var frame := _animator.frame()
