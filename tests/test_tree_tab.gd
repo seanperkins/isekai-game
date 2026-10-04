@@ -7,6 +7,8 @@ var compendium: CompendiumModel
 var skills: Array
 var player: Player
 var screen: SkillScreen
+var _gut_layer: CanvasLayer
+var _gut_layer_was_visible := true
 
 func before_each() -> void:
 	skills = DefLoader.load_dir("res://data/skills")
@@ -22,8 +24,16 @@ func before_each() -> void:
 	screen = SkillScreen.new()
 	add_child_autofree(screen)
 	screen.bind(player, rules, compendium, skills)
+	# GUT's own results panel is a full-screen Control on canvas layer 128, above the skill screen (layer 20): it would take every
+	# real mouse click before the screen saw it. Hide it while these tests click, and put it back after.
+	_gut_layer = get_tree().root.get_node_or_null("GutRunner/GutLayer")
+	if _gut_layer != null:
+		_gut_layer_was_visible = _gut_layer.visible
+		_gut_layer.visible = false
 
 func after_each() -> void:
+	if _gut_layer != null and is_instance_valid(_gut_layer):
+		_gut_layer.visible = _gut_layer_was_visible
 	PadInput.reset()
 	get_tree().paused = false
 
@@ -153,3 +163,49 @@ func test_the_tree_zoom_action_has_a_key_and_a_stick_click() -> void:
 	var evs := InputMap.action_get_events("tree_zoom")
 	assert_true(evs.any(func(e): return e is InputEventKey and e.physical_keycode == KEY_Z))
 	assert_true(evs.any(func(e): return e is InputEventJoypadButton and e.button_index == JOY_BUTTON_LEFT_STICK))
+
+# --- the mouse ---
+
+func _centre_of(id: String) -> Vector2:
+	return screen.tree_view().panel_for(id).get_global_rect().get_center()
+
+## A point inside the tree box that no panel covers (the gaps between columns are 14 px wide).
+func _empty_point() -> Vector2:
+	var box := SkillTreeView.BOX
+	for y in range(int(box.position.y) + 2, int(box.end.y) - 2, 2):
+		for x in range(int(box.position.x) + 2, int(box.end.x) - 2, 2):
+			var p := Vector2(x, y)
+			if not screen.tree_view().get_children().any(func(c): return c.get_global_rect().has_point(p)):
+				return p
+	return Vector2(-1, -1)
+
+func test_a_real_click_on_a_node_selects_it_while_the_tree_is_paused() -> void:
+	_discover_all()
+	_open_tree()
+	var target := SkillTreeModel.neighbor(screen.tree_model(), screen.selected_id(), Vector2i.RIGHT)
+	assert_ne(target, screen.selected_id())
+	assert_true(get_tree().paused, "the click must reach the view through PROCESS_MODE_ALWAYS")
+	PadInput.mouse_click(_centre_of(target))
+	await wait_process_frames(2)
+	assert_eq(screen.selected_id(), target, "if this is red, the click is not reaching the panel through the stretch")
+
+func test_the_wheel_flips_the_zoom() -> void:
+	_open_tree()
+	var centre := SkillTreeView.BOX.get_center()
+	PadInput.mouse_click(centre, MOUSE_BUTTON_WHEEL_DOWN)
+	await wait_process_frames(2)
+	assert_true(screen.tree_overview())
+	PadInput.mouse_click(centre, MOUSE_BUTTON_WHEEL_UP)
+	await wait_process_frames(2)
+	assert_false(screen.tree_overview())
+
+func test_a_click_on_empty_space_changes_nothing() -> void:
+	_discover_all()
+	_open_tree()
+	var empty := _empty_point()
+	assert_ne(empty, Vector2(-1, -1), "the box has a gap somewhere")
+	var sel := screen.selected_id()
+	PadInput.mouse_click(empty)
+	await wait_process_frames(2)
+	assert_eq(screen.selected_id(), sel)
+	assert_false(screen.tree_overview())

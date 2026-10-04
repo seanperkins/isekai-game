@@ -699,6 +699,9 @@ func _refresh_tree() -> void:
 	var view := SkillTreeView.new()
 	_list.add_child(view)
 	view.show_model(_tree_model, _tree_sel, _tree_overview)
+	# Deferred: both handlers rebuild this tab, which frees the view, and a view must not be freed inside its own emit.
+	view.node_clicked.connect(select_tree_node, CONNECT_DEFERRED)
+	view.zoom_requested.connect(set_tree_overview, CONNECT_DEFERRED)
 	_build_tree_card()
 
 ## The card beside the tree, from SkillScreenModel.tree_card. A stub shows the locked icon and no name.
