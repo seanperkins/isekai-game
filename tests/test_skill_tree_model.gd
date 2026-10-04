@@ -322,3 +322,124 @@ func test_a_power_with_no_unlock_condition_has_no_how_line() -> void:
 	var node: Dictionary = _build()["nodes"]["appraisal"]
 	var card := SkillScreenModel.tree_card(rules, node, by_id, {}, ActiveSlots.new())
 	assert_false(card["lines"].any(func(l): return String(l).begins_with("How:")), "the starting power has nothing to do to earn it: %s" % str(card["lines"]))
+
+# --- the forms band ---
+
+func _forms() -> Dictionary:
+	return FormLoader.load_all()
+
+func _assert_walk_reaches_everything(m: Dictionary) -> void:
+	var seen := _walk(m)
+	for id in m["nodes"]:
+		assert_true(seen.has(id), "%s is reachable from %s" % [id, SkillTreeModel.root(m)])
+
+func test_a_new_soul_sees_the_slime_and_the_greater_slime_on_offer() -> void:
+	var nodes: Dictionary = _build(_forms())["nodes"]
+	assert_eq(nodes["slime"]["state"], SkillTreeModel.CURRENT)
+	assert_eq(nodes["greater_slime"]["state"], SkillTreeModel.NAMED, "no lineage is open, so the Form tab would offer it")
+	for id in ["vast", "radiant"]:
+		assert_eq(nodes[id]["state"], SkillTreeModel.STUB, id)
+	assert_false(nodes.has("prime"), "a stage-4 form waits for a named parent")
+	for id in ["weaver", "tide", "toxic", "bulwark", "echo"]:
+		assert_false(nodes.has(id), id + ": no power that opens it is known")
+
+func test_an_open_lineage_names_its_stage_two_form_and_stubs_its_children() -> void:
+	assert_true(_forms()["weaver"].powers.has("sticky_thread"))
+	rules.grant("sticky_thread")  # level 1: the Weaver lineage is open this life
+	var m := _build(_forms())
+	var nodes: Dictionary = m["nodes"]
+	assert_eq(nodes["weaver"]["state"], SkillTreeModel.NAMED)
+	for id in ["arachne", "snare"]:
+		assert_eq(nodes[id]["state"], SkillTreeModel.STUB, id)
+	assert_false(nodes.has("silkbound"))
+	var opens: Array = m["edges"].filter(func(e): return e["kind"] == "opens" and e["to"] == "weaver")
+	assert_eq(opens.map(func(e): return e["from"]), ["sticky_thread"])
+
+func test_a_power_known_but_not_reached_this_life_shows_its_lineage_as_a_stub() -> void:
+	assert_true(_forms()["echo"].powers.has("echolocation"))
+	compendium.raise("echolocation", CompendiumModel.State.NAMED)
+	var nodes: Dictionary = _build(_forms())["nodes"]
+	assert_eq(nodes["echo"]["state"], SkillTreeModel.STUB)
+	assert_false(nodes.has("phantom"), "a stub's children stay hidden")
+
+func test_greater_slime_is_a_stub_once_two_lineages_open_unless_it_was_reached() -> void:
+	rules.grant("sticky_thread")
+	rules.grant("hydraulic_propulsion")
+	assert_eq(_build(_forms())["nodes"]["greater_slime"]["state"], SkillTreeModel.STUB)
+	assert_eq(_build(_forms(), ["greater_slime"])["nodes"]["greater_slime"]["state"], SkillTreeModel.REACHED)
+
+func test_forms_reached_in_earlier_lives_stay_on_the_tree() -> void:
+	var nodes: Dictionary = _build(_forms(), ["weaver", "snare"])["nodes"]
+	assert_eq(nodes["weaver"]["state"], SkillTreeModel.REACHED, "shown though no power that opens it is known this life")
+	assert_eq(nodes["snare"]["state"], SkillTreeModel.REACHED)
+	assert_eq(nodes["arachne"]["state"], SkillTreeModel.STUB)
+	assert_eq(nodes["silkbound"]["state"], SkillTreeModel.STUB, "a stage-4 stub once a parent is named")
+	assert_eq(nodes["slime"]["state"], SkillTreeModel.CURRENT)
+
+func test_the_current_form_is_current_and_the_slime_is_reached() -> void:
+	var nodes: Dictionary = _build(_forms(), ["weaver"], "weaver")["nodes"]
+	assert_eq(nodes["weaver"]["state"], SkillTreeModel.CURRENT)
+	assert_eq(nodes["slime"]["state"], SkillTreeModel.REACHED)
+
+func test_a_stale_reached_id_from_an_old_save_is_ignored() -> void:
+	var m := _build(_forms(), ["no_such_form", "weaver"])
+	assert_false(m["nodes"].has("no_such_form"))
+	assert_eq(m["nodes"]["weaver"]["state"], SkillTreeModel.REACHED)
+
+func test_fully_discovered_every_form_shows_with_its_edges() -> void:
+	_discover_all()
+	var all_forms := _forms()
+	var m := _build(all_forms, all_forms.keys())
+	var nodes: Dictionary = m["nodes"]
+	assert_eq(nodes["slime"]["kind"], "form")
+	for id in all_forms:
+		assert_eq(nodes[id]["kind"], "form", id)
+	assert_eq(nodes.size(), _player_skill_ids().size() + all_forms.size() + 1)
+	for f in FormLoader.stage2_forms(all_forms):
+		var opens: Array = m["edges"].filter(func(e): return e["kind"] == "opens" and e["to"] == f.id)
+		assert_eq(opens.size(), f.powers.size(), f.id + ": one opens edge per power it lists")
+		var from_slime: Array = m["edges"].filter(func(e): return e["from"] == "slime" and e["to"] == f.id)
+		assert_eq(from_slime.size(), 1, f.id)
+	for e in m["edges"]:
+		assert_true(nodes.has(e["from"]) and nodes.has(e["to"]), str(e))
+
+func test_discovering_a_form_never_moves_another_node() -> void:
+	rules.grant("sticky_thread")
+	var before := _rects(_build(_forms()))
+	_discover_all()
+	var after := _rects(_build(_forms(), _forms().keys()))
+	for id in before:
+		assert_eq(after[id], before[id], id)
+
+func test_the_full_tree_has_no_overlap_fits_its_labels_and_walks_from_the_root() -> void:
+	_discover_all()
+	var m := _build(_forms(), _forms().keys())
+	_assert_no_overlap(_rects(m))
+	var room := SkillTreeModel.NODE_SIZE.x - 2.0 * SkillTreeModel.LABEL_INSET
+	for id in m["nodes"]:
+		var w := ThemeDB.fallback_font.get_string_size(m["nodes"][id]["name"], HORIZONTAL_ALIGNMENT_LEFT, -1, SkillScreen.FONT_SMALL).x
+		assert_lte(w, room, m["nodes"][id]["name"])
+	_assert_walk_reaches_everything(m)
+
+func test_the_powers_that_open_a_lineage_are_rowed_in_lineage_order() -> void:
+	_discover_all()
+	var all_forms := _forms()
+	var nodes: Dictionary = _build(all_forms, all_forms.keys())["nodes"]
+	var order: Array = []
+	for lineage in FormOffers.LINEAGE_ORDER:
+		for f in FormLoader.stage2_forms(all_forms):
+			if f.lineage == lineage:
+				for p in f.powers:
+					if not order.has(p):
+						order.append(p)
+	assert_gt(order.size(), 1)
+	for i in range(1, order.size()):
+		var above: Vector2 = nodes[order[i - 1]]["pos"]
+		var below: Vector2 = nodes[order[i]]["pos"]
+		assert_lt(above.y, below.y, "%s above %s" % [order[i - 1], order[i]])
+		assert_eq(below.x, 0.0, order[i] + " is a row power, in column 0")
+
+func test_the_canvas_is_no_taller_than_two_boxes() -> void:
+	_discover_all()
+	var m := _build(_forms(), _forms().keys())
+	assert_lte(m["size"].y, 2.0 * SkillTreeView.BOX.size.y)

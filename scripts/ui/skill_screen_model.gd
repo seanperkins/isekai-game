@@ -159,6 +159,8 @@ const TREE_STATUS := {"owned": "Owned", "named": "Not yet learned", "retired": "
 static func tree_card(rules, node: Dictionary, defs: Dictionary, forms: Dictionary, slots: ActiveSlots, atk := 1) -> Dictionary:
 	if node["state"] == SkillTreeModel.STUB:
 		return {"title": "???", "status": TREE_STATUS[SkillTreeModel.STUB], "lines": []}
+	if node["kind"] == "form":
+		return _form_tree_card(rules, node, forms)
 	var d: SkillDef = defs[node["id"]]
 	var status: String = TREE_STATUS[node["state"]]
 	var lines: Array = []
@@ -179,6 +181,23 @@ static func tree_card(rules, node: Dictionary, defs: Dictionary, forms: Dictiona
 	if d.source == "evolution" and defs.has(d.replaces):
 		lines.append("Evolves from " + defs[d.replaces].display_name)
 	return {"title": d.display_name, "status": status, "lines": lines}
+
+## A shown form's status on the Tree tab.
+const FORM_STATUS := {"current": "Your body now", "reached": "Reached before", "named": "Not yet reached"}
+
+## The Tree tab's card for a shown form: form_card's stats, traits and grants, with its stage and whether it is the body now,
+## was reached before, or is not yet reached. The slime is not a FormDef.
+static func _form_tree_card(rules, node: Dictionary, forms: Dictionary) -> Dictionary:
+	var status: String = FORM_STATUS[node["state"]]
+	if not forms.has(node["id"]):
+		return {"title": node["name"], "status": "Stage 1  " + status, "lines": ["Every life begins as a slime."]}
+	var c := form_card(forms[node["id"]], rules)
+	var lines: Array = [c["blurb"]]
+	lines.append_array(c["stats"])
+	lines.append_array(c["traits"])
+	if c["grants"] != "":
+		lines.append(c["grants"])
+	return {"title": c["name"], "status": "Stage %d  %s" % [c["stage"], status], "lines": lines}
 
 ## A form's card, shared by the Form tab and the Tree tab: {"name", "stage", "blurb", "stats", "traits", "grants"}.
 ## "grants" lists only the grants the player can still receive: a grant whose skill has retired is hidden.

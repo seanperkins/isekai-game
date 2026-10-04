@@ -209,3 +209,27 @@ func test_a_click_on_empty_space_changes_nothing() -> void:
 	await wait_process_frames(2)
 	assert_eq(screen.selected_id(), sel)
 	assert_false(screen.tree_overview())
+
+# --- the forms band ---
+
+func test_the_tree_shows_the_forms_band_and_reads_reached_forms_from_the_progress() -> void:
+	var progress := WorldProgress.new()
+	progress.reach_form("weaver")
+	screen.bind_world(null, progress)
+	_open_tree()
+	var nodes: Dictionary = screen.tree_model()["nodes"]
+	assert_eq(nodes["slime"]["state"], SkillTreeModel.CURRENT)
+	assert_eq(nodes["weaver"]["state"], SkillTreeModel.REACHED)
+
+func test_a_form_card_shows_its_stage_blurb_and_grants_and_a_form_stub_shows_no_name() -> void:
+	_open_tree()
+	screen.select_tree_node("greater_slime")
+	var gs: FormDef = player.forms["greater_slime"]
+	var card := "\n".join(screen.detail_texts())
+	assert_string_contains(card, gs.display_name)
+	assert_string_contains(card, "Stage 2")
+	assert_string_contains(card, "Grants: " + rules.get_def("regeneration").display_name)
+	screen.select_tree_node("vast")
+	card = "\n".join(screen.detail_texts())
+	assert_string_contains(card, "???")
+	assert_false(card.contains(player.forms["vast"].display_name))

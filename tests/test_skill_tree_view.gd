@@ -117,3 +117,14 @@ func test_the_wheel_asks_for_a_zoom_and_a_click_on_empty_space_asks_for_nothing(
 	v.gui_input.emit(_button(MOUSE_BUTTON_LEFT))
 	await wait_process_frames(1)
 	assert_signal_not_emitted(v, "node_clicked")
+
+func test_with_the_forms_band_every_group_is_no_taller_than_the_box_and_shares_the_screen_when_it_fits() -> void:
+	var forms := FormLoader.load_all()
+	model = SkillTreeModel.build(rules, compendium, forms, forms.keys(), "slime")
+	for id in model["nodes"]:
+		var group := SkillTreeView.neighborhood(model, id)
+		assert_lte(group.size.y, _box().size.y, id + " and its neighbors stack within one box")
+		if group.size.x > _box().size.x:
+			continue  # a stage-2 or stage-3 form's neighbors span three columns: see the Self-Review
+		var cam := SkillTreeView.camera(model, id, false)
+		assert_true(_box().encloses(Rect2(cam["offset"] + group.position, group.size)), id)

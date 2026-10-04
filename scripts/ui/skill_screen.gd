@@ -688,7 +688,7 @@ func _build_map() -> void:
 func _refresh_tree() -> void:
 	_rows = []
 	_selectable = []
-	_tree_model = SkillTreeModel.build(_rules, _compendium, _player.forms, [], _player.form.form_id)
+	_tree_model = SkillTreeModel.build(_rules, _compendium, _player.forms, _reached_forms(), _player.form.form_id)
 	if not _tree_model["nodes"].has(_tree_sel):
 		_tree_sel = SkillTreeModel.root(_tree_model)
 	_hint.text = ("LB/RB Tabs    D-pad Move    L3 Zoom    B Back" if Controls.using_joypad
@@ -703,6 +703,10 @@ func _refresh_tree() -> void:
 	view.node_clicked.connect(select_tree_node, CONNECT_DEFERRED)
 	view.zoom_requested.connect(set_tree_overview, CONNECT_DEFERRED)
 	_build_tree_card()
+
+## Forms reached in any life, from the bound progress (none without one).
+func _reached_forms() -> Array:
+	return _progress.forms_reached if _progress != null else []
 
 ## The card beside the tree, from SkillScreenModel.tree_card. A stub shows the locked icon and no name.
 func _build_tree_card() -> void:

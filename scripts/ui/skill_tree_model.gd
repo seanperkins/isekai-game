@@ -20,9 +20,13 @@ const LABEL_INSET := 3.0
 const COL_PITCH := 118.0
 const ROW_PITCH := 14.0
 const GRID_COLS := 2
+## The lineage of Greater Slime, which no power opens.
+const GREATER := "greater"
+## Between the power band and the form band.
+const BAND_GAP := 16.0
 
 ## {"nodes": {id: node}, "edges": [{"from", "to", "kind", "known"}], "size": Vector2}. Every edge joins two nodes in "nodes";
-## each node's "pos" is its top-left corner on the canvas at the normal zoom.
+## each node's "pos" is its top-left corner on the canvas at the normal zoom. The power band sits above the form band.
 static func build(rules, compendium: CompendiumModel, forms: Dictionary, reached_forms: Array, current_form: String) -> Dictionary:
 	var defs := _skill_defs(rules, compendium)
 	var by_id := {}
@@ -33,11 +37,22 @@ static func build(rules, compendium: CompendiumModel, forms: Dictionary, reached
 		var n := _skill_node(rules, compendium, d, by_id)
 		if not n.is_empty():
 			nodes[d.id] = n
+	nodes.merge(_form_nodes(rules, forms, reached_forms, current_form, nodes))
 	var edges: Array = []
 	for d in defs:
 		if d.source == "evolution" and d.replaces != "":
 			edges.append({"from": d.replaces, "to": d.id, "kind": "evolves"})
-	var slots := _power_slots(defs, _row_powers(defs), nodes)
+	for id in _sorted_keys(forms):
+		var f: FormDef = forms[id]
+		for p in f.parents:
+			edges.append({"from": p, "to": id, "kind": "grows"})
+		if f.stage == 2:
+			for pw in f.powers:
+				edges.append({"from": pw, "to": id, "kind": "opens"})
+	var row_powers := _row_powers(defs, forms)
+	var slots := _power_slots(defs, row_powers, nodes)
+	if not forms.is_empty():
+		slots.merge(_form_slots(forms, _band_rows(defs, row_powers) * ROW_PITCH + BAND_GAP))
 	for id in nodes:
 		nodes[id]["pos"] = slots[id]
 	return {"nodes": nodes, "edges": _visible_edges(nodes, edges), "size": _canvas(slots)}
@@ -94,11 +109,21 @@ static func _visible_edges(nodes: Dictionary, edges: Array) -> Array:
 				"known": nodes[e["from"]]["state"] != STUB and nodes[e["to"]]["state"] != STUB})
 	return out
 
-## The powers drawn one per row, with their evolutions beside them: those that evolve, in id order.
-static func _row_powers(defs: Array) -> Array:
+## The powers drawn one per row, with their evolutions beside them. First come the powers that open a lineage, in
+## FormOffers.LINEAGE_ORDER and each stage-2 form's own order, so the "opens" edges run to adjacent rows instead of crossing.
+## Then any other power that evolves, in id order.
+static func _row_powers(defs: Array, forms: Dictionary) -> Array:
+	var known := defs.map(func(d): return d.id)
 	var out: Array = []
+	for lineage in FormOffers.LINEAGE_ORDER:
+		for f in FormLoader.stage2_forms(forms):
+			if f.lineage != lineage:
+				continue
+			for p in f.powers:
+				if known.has(p) and not out.has(p):
+					out.append(p)
 	for d in defs:
-		if d.source != "evolution" and not _evolutions_of(defs, d.id).is_empty():
+		if d.source != "evolution" and not out.has(d.id) and not _evolutions_of(defs, d.id).is_empty():
 			out.append(d.id)
 	return out
 
@@ -192,3 +217,68 @@ static func _nearest(nodes: Dictionary, from: Vector2, dir: Vector2i, ids: Array
 
 static func _centre(node: Dictionary) -> Vector2:
 	return node["pos"] + NODE_SIZE / 2.0
+
+## Rows the power band takes: the row powers' or the grid's, whichever is more. Every secret counts as a cell, owned or
+## not, so owning one never moves the form band.
+static func _band_rows(defs: Array, row_powers: Array) -> int:
+	var rows := 0
+	for id in row_powers:
+		rows += maxi(1, _evolutions_of(defs, id).size())
+	var cells := defs.filter(func(d): return d.source != "evolution" and not row_powers.has(d.id)).size()
+	return maxi(rows, ceili(cells / float(GRID_COLS)))
+
+## The form band's nodes, or {} without forms.
+## - The slime is always there: current, or reached by definition.
+## - A stage-2 form shows once a power that opens it shows, or once reached. It is named when reached or when its lineage
+##   is open this life (FormOffers.open_lineages, the same function that decides the Form tab's first offers).
+## - Greater Slime has no opening power. It is always there, named when reached or on offer (fewer than two lineages open).
+## - A stage-3 or stage-4 form is a stub once a parent is named, and named only when reached.
+static func _form_nodes(rules, forms: Dictionary, reached: Array, current: String, skill_nodes: Dictionary) -> Dictionary:
+	var out := {}
+	if forms.is_empty():
+		return out
+	out[Form.BASE] = {"id": Form.BASE, "kind": "form", "state": CURRENT if current == Form.BASE else REACHED, "name": "Slime"}
+	var open: Array = FormOffers.open_lineages(forms, rules)
+	for f in FormLoader.stage2_forms(forms):
+		var greater: bool = f.lineage == GREATER
+		var named: bool = reached.has(f.id) or f.id == current or (open.size() < 2 if greater else open.has(f.lineage))
+		if named or greater or f.powers.any(func(p): return skill_nodes.has(p)):
+			out[f.id] = _form_node(f, named, reached, current)
+	for stage in [3, 4]:
+		for id in _sorted_keys(forms):
+			var f: FormDef = forms[id]
+			if f.stage == stage and f.parents.any(func(p): return out.has(p) and out[p]["state"] != STUB):
+				out[id] = _form_node(f, reached.has(id) or id == current, reached, current)
+	return out
+
+static func _form_node(f: FormDef, named: bool, reached: Array, current: String) -> Dictionary:
+	if not named:
+		return {"id": f.id, "kind": "form", "state": STUB}
+	var state := CURRENT if f.id == current else (REACHED if reached.has(f.id) else NAMED)
+	return {"id": f.id, "kind": "form", "state": state, "name": f.display_name}
+
+## The form band from canvas y `top`: the stage across (the slime in column 0, then stages 2 to 4), two rows per lineage
+## down (FormOffers.LINEAGE_ORDER, then greater). The stage-3 pair fills the two rows, stages 2 and 4 sit between them,
+## and the slime sits level with the middle of the band. Every edge joins adjacent columns.
+static func _form_slots(forms: Dictionary, top: float) -> Dictionary:
+	var lineages: Array = FormOffers.LINEAGE_ORDER.duplicate()
+	lineages.append(GREATER)
+	var slots := {Form.BASE: Vector2(0, top + (lineages.size() - 0.5) * ROW_PITCH)}
+	for li in lineages.size():
+		var row := li * 2
+		var thirds := 0
+		for id in _sorted_keys(forms):
+			var f: FormDef = forms[id]
+			if f.lineage != lineages[li]:
+				continue
+			if f.stage == 3:
+				slots[id] = Vector2(2 * COL_PITCH, top + (row + thirds) * ROW_PITCH)
+				thirds += 1
+			else:
+				slots[id] = Vector2((f.stage - 1) * COL_PITCH, top + (row + 0.5) * ROW_PITCH)
+	return slots
+
+static func _sorted_keys(d: Dictionary) -> Array:
+	var ids := d.keys()
+	ids.sort()
+	return ids
