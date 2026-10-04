@@ -69,14 +69,14 @@ The base jump is the floor, so no room is blocked for any species; what verbs ch
 - **Crawl is separate.** The spider's surface walking is a `SurfaceModel` (a locomotion mode chosen by the profile), built after a throwaway spike. The spike answers corner latching and hysteresis, and what a crawler does with one-way ledges (above).
 - **Wiring note.** `player.gd`'s `_dash` writers (knockback, shock stun, `apply_impulse`, the wall jump, the rope, water's `dashing` flag) become the runner's single owner in the wiring plan; this spec only sets the priority table.
 
-## Build order (each step playable in the sandbox)
+## Build order (each step playable in the sandbox, each its own plan)
 
-0. Reach model scaffold: `ReachModel` with the base numbers, `RoomLint` taking one (default unchanged), the `species_reach` rule and the validator's per-species pass, covering the base and the slime's Wall Cling (the only verb that exists as a gate today).
-1. Sandbox with real animated sprites and species switching. No new scripts: replace the colour rect with a sprite driven by `SlimeAnimator` (it takes any clips), `SpriteSheet.load_set` and `SlimeState.pick` for the slime, a five-line state mapping each for the spider (hang, crawl, drop) and wolf (idle, walk, charge, windup), the colour rect kept as the labeled biped, a fourth key and `spider.tres`. A missing sheet falls back to the colour rect, so the sandbox test does not depend on import. The body box stays 28x24 for all four.
-2. Slime: Burst (Tackle and puddle slide), then sticky wall and wall jump.
-3. Spider: the crawl spike and surface model first (it is the species and the biggest risk), then web zip, then silk drop.
-4. Biped: roll or slide (a Burst row), mantle, wall jump.
-5. Wolf: pounce (a Burst row), vault, gears.
+1. **Sandbox with real animated sprites and species switching.** No new scripts beyond a small `SpeciesLook` (which sheet, which clips, which clip for the movement): a sprite driven by `SlimeAnimator` (it takes any clips) and `SpriteSheet.load_set` replaces the colour rect for the slime, spider (hang, crawl, drop) and wolf (idle, walk, charge, windup); the colour rect stays as the labeled biped; `spider.tres` and a fourth key. A missing sheet falls back to the colour rect, so the sandbox test does not depend on import. The body box stays 28x24 for all four.
+2. **Reach model scaffold:** `ReachModel` with the base numbers, `RoomLint` taking one (default unchanged), the `species_reach` rule and the validator's per-species pass, covering the base and the slime's Wall Cling (the only verb that exists as a gate today).
+3. **Slime:** the runner and exposed timers, Burst (Tackle and puddle slide), then sticky wall and wall jump (each with its reach entry).
+4. **Spider:** the crawl spike and surface model first (it is the species and the biggest risk), then web zip, then silk drop.
+5. **Biped:** roll or slide (a Burst row), mantle, wall jump.
+6. **Wolf:** pounce (a Burst row), vault, gears.
 
 A running verb shows its name in the sandbox HUD and tints the sprite; there is no placeholder-pose system.
 
