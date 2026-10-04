@@ -37,6 +37,15 @@ static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float, jump
 		return true
 	s.launched = ""
 	GroundAirStep.timers(s, i, p, dt)
+	var here := _support(i, s.surface_n, Vector2.ZERO)
+	if here != NONE:
+		s.surface_oneway = here == ONEWAY  # known even while standing still: a press of down on a ledge drops through it
+	if s.fall_through > 0.0 and s.surface_n == Vector2.UP and s.surface_oneway:
+		# a press of down on a one-way ledge: let go of it and fall (the ground step runs this tick), and do not grip it again
+		s.surface_n = Vector2.ZERO
+		s.surface_lock = s.fall_through
+		s.surface_event = "drop_through"
+		return false
 	if s.buffer > 0.0:
 		_hop(s, p, jump_boost)
 		return true
@@ -82,7 +91,7 @@ static func _hop(s: MoveState, p: MovementProfile, jump_boost: float) -> void:
 
 ## In the air: grip a floor the centre is over, or a hard wall or ceiling the stick presses toward. True on the tick it grips.
 static func _attach(s: MoveState, i: MoveInput) -> bool:
-	if s.surface_lock > 0.0:
+	if s.surface_lock > 0.0 or s.fall_through > 0.0:
 		return false
 	var stick := i.stick()
 	var n := Vector2.ZERO

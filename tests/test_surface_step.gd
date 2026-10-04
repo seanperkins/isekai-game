@@ -432,3 +432,32 @@ func test_gripping_a_wall_holding_down_and_toward_it_does_not_climb() -> void:
 	var y := w.pos.y
 	_run(w, s, stick, 12)
 	assert_gt(w.pos.y, y + 10.0, "the stick says down, so it goes down: an explicit vertical intent beats the climb latch")
+
+func test_the_spider_on_a_one_way_ledge_drops_through_it() -> void:
+	var a := _on(Vector2(900, -62), Vector2.UP)
+	var w: FakeSurfaceWorld = a[0]
+	var s: MoveState = a[1]
+	_tick(w, s, Vector2.ZERO)  # a tick on the ledge: it learns the surface is one-way
+	assert_true(s.surface_oneway)
+	s.fall_through = 0.2  # VerbRunner set it on a fresh press of down
+	_tick(w, s, Vector2.ZERO)
+	assert_eq(s.surface_n, Vector2.ZERO)
+	assert_eq(s.surface_event, "drop_through")
+	var hard := _on(Vector2(40, -12), Vector2.UP)
+	(hard[1] as MoveState).fall_through = 0.2
+	_tick(hard[0], hard[1], Vector2.ZERO)
+	assert_eq((hard[1] as MoveState).surface_n, Vector2.UP, "a hard floor is never dropped through")
+
+func test_it_does_not_grip_the_ledge_it_is_falling_through() -> void:
+	var w := FakeSurfaceWorld.build_spike_terrain()
+	w.pos = Vector2(900, -62)
+	var s := MoveState.new()
+	s.fall_through = 0.2
+	s.surface_lock = 0.2
+	var i := _make_input(w)
+	i.on_floor = true
+	assert_false(SurfaceStep.step(s, i, spider, DT), "no grip while it falls through")
+	assert_eq(s.surface_n, Vector2.ZERO)
+	s.fall_through = 0.0
+	s.surface_lock = 0.0
+	assert_true(SurfaceStep.step(s, i, spider, DT), "once it has run out the ledge is a floor again")
