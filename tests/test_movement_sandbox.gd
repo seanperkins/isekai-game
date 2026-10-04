@@ -539,3 +539,253 @@ func test_a_reversal_pivots() -> void:
 	assert_lt(narrowest, 0.7, "a quick squeeze as it turns")
 	await _frames(14)
 	assert_eq(_sprite().scale.x, 1.0)
+
+## The zip's thread line.
+func _thread() -> Line2D:
+	return sb.get_node("Thread") as Line2D
+
+func _fire_zip(aim: Vector2) -> void:
+	sb.scripted.aim = aim
+	sb.scripted.signature_pressed = true
+
+func test_a_zip_pulls_the_spider_to_a_wall_and_it_grips() -> void:
+	await _spider_at(Vector2(250.0, -12.0))
+	_fire_zip(Vector2.RIGHT)
+	var started := false
+	var gripped := false
+	var step_max := 0.0
+	var last_x := sb.body.global_position.x
+	for _k in 60:
+		await get_tree().physics_frame
+		started = started or sb.state.zip_event == "start"
+		var x := sb.body.global_position.x
+		if started and not gripped:
+			step_max = maxf(step_max, x - last_x)
+		last_x = x
+		if sb.state.zip_event == "grip":
+			gripped = true
+			break
+	assert_true(started and gripped, "fired and gripped")
+	assert_almost_eq(step_max, 400.0 / 60.0, 0.5, "pulled at about 400 px/s")
+	await _frames(2)
+	assert_eq(sb.state.surface_n, Vector2.LEFT)
+	assert_almost_eq(sb.body.global_position.x, 388.0, 2.5, "flush to the first ledge's left face")
+
+func test_a_zip_to_the_ceiling_grips_the_underside() -> void:
+	await _spider_at(Vector2(830.0, -12.0))
+	_fire_zip(Vector2.UP)
+	await _frames(40)
+	assert_eq(sb.state.surface_n, Vector2.DOWN)
+	assert_almost_eq(sb.body.global_position.y, -138.0, 2.0, "hanging from the slab")
+
+func test_nothing_in_range_leaves_the_spider_where_it_is() -> void:
+	await _spider_at(Vector2(100.0, -12.0))
+	_fire_zip(Vector2.UP)
+	var fizzled := false
+	for _k in 10:
+		await get_tree().physics_frame
+		fizzled = fizzled or sb.state.zip_event == "fizzle"
+	assert_true(fizzled)
+	assert_almost_eq(sb.body.global_position.x, 100.0, 0.5)
+	assert_almost_eq(sb.body.global_position.y, -12.0, 1.5)
+	assert_eq(sb.state.zip_cooldown, 0.0)
+
+func test_a_jump_cancels_the_zip_in_the_air_with_60_percent_speed() -> void:
+	await _spider_at(Vector2(250.0, -12.0))
+	_fire_zip(Vector2.RIGHT)
+	await _frames(8)
+	sb.scripted.jump_pressed = true
+	var speed := 0.0
+	for _k in 4:
+		await get_tree().physics_frame
+		if sb.state.zip_event == "cancel":
+			speed = sb.body.velocity.x
+			break
+	assert_almost_eq(speed, 240.0, 6.0)
+
+func test_the_thread_shows_while_it_zips_and_fades() -> void:
+	await _spider_at(Vector2(250.0, -12.0))
+	assert_false(_thread().visible)
+	_fire_zip(Vector2.RIGHT)
+	await _frames(5)
+	assert_true(_thread().visible, "a thread while it pulls")
+	assert_eq(_thread().points.size(), 2)
+	await _frames(60)
+	assert_false(_thread().visible, "gone a moment after it ends")
+
+func test_the_head_leads_the_zip() -> void:
+	await _spider_at(Vector2(830.0, -12.0))
+	_fire_zip(Vector2.UP)
+	await _frames(6)
+	assert_almost_eq(_sprite().rotation, -PI / 2.0, 0.3, "head up, toward the slab")
+
+func test_the_slime_still_tackles_on_the_same_button() -> void:
+	sb.set_profile("slime")
+	sb.body.global_position = Vector2(100.0, -12.0)
+	await _frames(4)
+	sb.scripted.dir = 1.0
+	sb.scripted.signature_pressed = true
+	await _frames(2)
+	assert_eq(sb.state.verb, "tackle")
+
+func test_a_diagonal_cast_down_past_a_ledge_ignores_its_side() -> void:
+	await _spider_at(Vector2(130.0, -77.0), Vector2.ZERO)
+	var hit: Dictionary = sb._cast(Vector2.ZERO, Vector2(1, 1).normalized() * 160.0, true)
+	assert_false(hit.is_empty())
+	assert_false(hit["oneway"], "not the one-way ledge's side")
+	assert_eq(hit["normal"], Vector2.UP)
+
+func test_hanging_from_the_slab_and_pressing_down_slides_to_the_floor() -> void:
+	await _spider_at(Vector2(830.0, -138.0), Vector2.DOWN)
+	sb.scripted.down = 1.0
+	var started := false
+	var landed := false
+	for _k in 200:
+		await get_tree().physics_frame
+		started = started or sb.state.drop_event == "start"
+		if sb.state.drop_event == "land":
+			landed = true
+			break
+	assert_true(started and landed, "it spun a thread and slid down it")
+	await _frames(2)
+	assert_eq(sb.state.surface_n, Vector2.UP)
+	assert_almost_eq(sb.body.global_position.y, -12.0, 2.0)
+
+func test_the_thread_runs_from_the_anchor_to_the_spider() -> void:
+	await _spider_at(Vector2(830.0, -138.0), Vector2.DOWN)
+	sb.scripted.down = 1.0
+	await _frames(20)
+	assert_true(_thread().visible)
+	assert_eq(_thread().points.size(), 2)
+	assert_almost_eq(_thread().points[1].y, -150.0, 2.0, "up at the slab's underside")
+	assert_almost_eq(_thread().points[0].y, sb.body.global_position.y, 14.0, "down at the spider")
+
+func test_up_climbs_back_toward_the_anchor_and_stops_there() -> void:
+	await _spider_at(Vector2(830.0, -138.0), Vector2.DOWN)
+	sb.scripted.down = 1.0
+	await _frames(20)
+	sb.scripted.down = 0.0
+	sb.scripted.up = 1.0
+	var highest := 0.0
+	for _k in 200:
+		await get_tree().physics_frame
+		highest = minf(highest, sb.body.global_position.y)
+	assert_almost_eq(sb.body.global_position.y, -138.0, 2.0, "back under the anchor")
+	assert_gte(highest, -140.0, "and never above it")
+
+func test_the_head_points_down_while_it_slides() -> void:
+	await _spider_at(Vector2(830.0, -138.0), Vector2.DOWN)
+	sb.scripted.down = 1.0
+	await _frames(12)
+	assert_almost_eq(absf(wrapf(_sprite().rotation, -PI, PI)), PI / 2.0, 0.3, "a quarter turn, whichever way it is mirrored")
+
+func test_a_jump_lets_go_and_it_lands_later() -> void:
+	await _spider_at(Vector2(830.0, -138.0), Vector2.DOWN)
+	sb.scripted.down = 1.0
+	await _frames(15)
+	sb.scripted.jump_pressed = true
+	var released := false
+	for _k in 6:
+		await get_tree().physics_frame
+		released = released or sb.state.drop_event == "release"
+	assert_true(released)
+	await _frames(150)
+	assert_eq(sb.state.surface_n, Vector2.UP, "it fell and gripped the floor")
+
+func test_the_slime_ignores_down_in_the_air() -> void:
+	sb.set_profile("slime")
+	sb.body.global_position = Vector2(830.0, -100.0)
+	sb.scripted.down = 1.0
+	await _frames(20)
+	assert_eq(sb.state.drop_event, "")
+	assert_eq(sb.state.drop_up, 0.0)
+
+func _hop_onto_the_pillar() -> void:
+	await _spider_at(Vector2(738.0, -12.0))
+	sb.scripted.dir = 1.0
+	sb.scripted.jump_pressed = true
+	await _frames(12)
+
+func test_hopping_onto_the_pillar_then_climbing_goes_over_the_top_left_corner() -> void:
+	await _hop_onto_the_pillar()
+	assert_eq(sb.state.surface_n, Vector2.LEFT, "gripped the wall")
+	sb.scripted.dir = 0.0
+	sb.scripted.up = 1.0
+	var over := false
+	for _k in 200:
+		await get_tree().physics_frame
+		if sb.state.surface_n == Vector2.UP and sb.body.global_position.y < -150.0:
+			over = true
+			break
+	assert_true(over, "over the corner onto the slab's top")
+	await _frames(3)
+	assert_almost_eq(sb.body.global_position.y, -192.0, 3.0)
+
+func test_after_a_hop_onto_a_wall_holding_toward_it_keeps_climbing() -> void:
+	await _hop_onto_the_pillar()
+	var y := sb.body.global_position.y
+	await _frames(30)
+	assert_lt(sb.body.global_position.y, y - 30.0, "holding right climbs, as walking into the wall does")
+
+## `id` standing on the one-way ledge (x 160 to 260, top y -50): the centre is 12 above it, at -62.
+func _on_the_ledge(id: String) -> void:
+	sb.scripted.down = 0.0
+	sb.set_profile(id)
+	sb.body.global_position = Vector2(200.0, -64.0)
+	await _frames(12)
+
+func test_every_species_drops_through_a_one_way_ledge_with_down() -> void:
+	for id in ["biped", "slime", "wolf", "spider"]:
+		await _on_the_ledge(id)
+		assert_almost_eq(sb.body.global_position.y, -62.0, 3.0, "%s stands on the ledge" % id)
+		sb.scripted.down = 1.0
+		await _frames(60)
+		assert_almost_eq(sb.body.global_position.y, -12.0, 2.0, "%s dropped through to the floor" % id)
+		if id == "spider":
+			assert_eq(sb.state.surface_n, Vector2.UP, "and the spider grips the floor below")
+
+func test_nobody_falls_through_a_hard_floor() -> void:
+	for id in ["biped", "slime", "wolf", "spider"]:
+		sb.scripted.down = 0.0
+		sb.set_profile(id)
+		sb.body.global_position = Vector2(100.0, -12.0)
+		await _frames(6)
+		sb.scripted.down = 1.0
+		await _frames(30)
+		assert_almost_eq(sb.body.global_position.y, -12.0, 1.5, "%s stays on the hard floor" % id)
+
+func test_down_already_held_does_not_drop_on_landing() -> void:
+	sb.scripted.down = 1.0
+	sb.set_profile("biped")
+	sb.body.global_position = Vector2(200.0, -110.0)
+	await _frames(60)
+	assert_almost_eq(sb.body.global_position.y, -62.0, 3.0, "it landed on the ledge with down held and stayed")
+	sb.scripted.down = 0.0
+	await _frames(3)
+	sb.scripted.down = 1.0
+	await _frames(60)
+	assert_almost_eq(sb.body.global_position.y, -12.0, 2.0, "a fresh press drops it")
+
+func test_a_jump_up_through_the_ledge_from_below_still_lands_on_it() -> void:
+	sb.scripted.down = 0.0
+	sb.set_profile("biped")
+	sb.body.global_position = Vector2(200.0, -12.0)
+	await _frames(6)
+	sb.scripted.jump_pressed = true
+	sb.scripted.jump_held = true
+	await _frames(30)
+	sb.scripted.jump_held = false
+	await _frames(90)
+	assert_almost_eq(sb.body.global_position.y, -62.0, 3.0, "up through it and onto its top")
+
+func test_a_body_standing_on_the_edge_of_a_ledge_still_drops_through() -> void:
+	for x in [156.0, 264.0]:  # the centre is 4 px past the ledge's end (x 160 to 260) and the 28 px box still rests on it
+		for id in ["biped", "slime", "wolf"]:
+			sb.scripted.down = 0.0
+			sb.set_profile(id)
+			sb.body.global_position = Vector2(x, -64.0)
+			await _frames(12)
+			assert_almost_eq(sb.body.global_position.y, -62.0, 3.0, "%s stands on the ledge's edge at x %s" % [id, x])
+			sb.scripted.down = 1.0
+			await _frames(60)
+			assert_almost_eq(sb.body.global_position.y, -12.0, 2.0, "%s dropped through from x %s" % [id, x])

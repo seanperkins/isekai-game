@@ -32,6 +32,7 @@ const BALL_ROLL := 10.0
 const CRAWL_EASE := 8.0
 ## The spider's sprite settles on a new surface in about 3 times this (the body changes surface in one tick), and a
 ## reversal pivots over PIVOT_SECONDS.
+const THREAD_FADE := 0.15
 const CORNER_EASE := 0.04
 const PIVOT_SECONDS := 0.10
 
@@ -59,6 +60,10 @@ var _ball := false
 var _ball_roll := 0.0
 var _crawl_phase := 0.0
 var _crawl_gain := 0.0
+var _thread: Line2D
+var _thread_anchor := Vector2.ZERO
+var _thread_dir := Vector2.RIGHT
+var _thread_alpha := 0.0
 var _angle := 0.0
 var _vis_off := Vector2.ZERO
 var _stride := 0.0
@@ -105,6 +110,12 @@ func _ready() -> void:
 	_sprite = Sprite2D.new()
 	_sprite.name = "Sprite"
 	add_child(_sprite)
+	_thread = Line2D.new()
+	_thread.name = "Thread"
+	_thread.width = 1.5
+	_thread.default_color = Color(0.92, 0.92, 0.97)
+	_thread.visible = false
+	add_child(_thread)
 	_cam = Camera2D.new()
 	_cam.name = "Camera"
 	_cam.position = Vector2(START.x, -130)
@@ -179,13 +190,19 @@ func _physics_process(delta: float) -> void:
 	i.clearance_above = _clearance()
 	i.wall_side = _wall_side(i.dir)
 	i.on_ceiling = body.is_on_ceiling()
+	i.on_oneway_floor = was_on_floor and _stands_on_oneway()
 	if profile.verbs.has("crawl"):
 		i.sweep = _sweep
 		i.ray = _ray
+	if profile.verbs.has("zip"):
+		i.cast = _cast
 	VerbRunner.step(state, i, profile, delta, 1.0, sqrt(BOOST_JUMP_HEIGHT) if boosted else 1.0)
+	body.set_collision_mask_value(2, state.fall_through <= 0.0)  # a press of down on a one-way ledge drops through it
+	_update_thread(delta)
 	if state.surface_n != Vector2.ZERO:
 		_crawl(delta)
 		return
+	body.global_position += state.surface_shift  # a zip pulls the body while it is on no surface
 	_apply_box()
 	_judge_landing()
 	if state.launched != "":
@@ -239,6 +256,7 @@ func _read_input() -> MoveInput:
 		i.jump_held = scripted.jump_held
 		i.down = scripted.down
 		i.up = scripted.up
+		i.aim = scripted.aim
 		i.signature_pressed = scripted.signature_pressed
 		scripted.jump_pressed = false
 		scripted.signature_pressed = false
@@ -248,6 +266,8 @@ func _read_input() -> MoveInput:
 	i.jump_held = Input.is_action_pressed("jump")
 	i.down = Input.get_action_strength("aim_down")
 	i.up = Input.get_action_strength("aim_up")
+	var raw := Input.get_vector("move_left", "move_right", "aim_up", "aim_down", 0.0)
+	i.aim = Vector2.from_angle(snappedf(raw.angle(), PI / 4.0)) if raw.length() >= 0.3 else Vector2.ZERO  # the cast aim, 8-way
 	i.signature_pressed = Input.is_action_just_pressed("tackle")
 	return i
 
@@ -265,6 +285,50 @@ func _crawl(delta: float) -> void:
 	_in_jump = false
 	_cam.position.x = clampf(body.position.x, 320.0, FLOOR.size.x - 320.0)
 	_draw_body(delta)
+
+## The zip's cast: the first hard solid along the segment (a one-way ledge's top only for a downward cast), relative to the body.
+## A ledge's side or underside is not an anchor: the ray looks past it.
+func _cast(from: Vector2, to: Vector2, include_oneway: bool) -> Dictionary:
+	var exclude: Array[RID] = [body.get_rid()]
+	for _k in 4:
+		var q := PhysicsRayQueryParameters2D.create(body.global_position + from, body.global_position + to, 3 if include_oneway else 1, exclude)
+		var hit := get_world_2d().direct_space_state.intersect_ray(q)
+		if hit.is_empty():
+			return {}
+		var collider := hit["collider"] as CollisionObject2D
+		var oneway := collider.collision_layer == 2
+		if oneway and (hit["normal"] as Vector2).dot(Vector2.UP) < 0.9:
+			exclude.append(collider.get_rid())
+			continue
+		return {"point": (hit["position"] as Vector2) - body.global_position, "normal": hit["normal"], "oneway": oneway}
+	return {}
+
+## The thread from behind the spider to its anchor while it pulls or it slides down it, and for a moment after.
+func _update_thread(delta: float) -> void:
+	if state.zip_event == "start":
+		_thread_anchor = body.global_position + state.zip_target
+		_thread_dir = state.zip_dir
+	if state.drop_event == "start":
+		_thread_anchor = body.global_position + state.drop_target
+		_thread_dir = Vector2.DOWN  # head down the thread: the rear, where the silk comes from, is up
+	if state.zip_dir != Vector2.ZERO or state.drop_up > 0.0:
+		_thread_alpha = 1.0
+	else:
+		_thread_alpha = maxf(0.0, _thread_alpha - delta / THREAD_FADE)
+	_thread.visible = _thread_alpha > 0.0
+	_thread.modulate.a = _thread_alpha
+	_thread.points = PackedVector2Array([body.global_position - _thread_dir * 8.0, _thread_anchor])
+
+## Whether the floor the body just slid on is a one-way ledge: its contacts, not a ray under the centre, so a body standing on a
+## ledge's edge (the centre past the end, the box still on it) counts.
+func _stands_on_oneway() -> bool:
+	if not body.is_on_floor():
+		return false
+	for k in body.get_slide_collision_count():
+		var col := body.get_slide_collision(k)
+		if col.get_normal().dot(Vector2.UP) > 0.7 and (col.get_collider() as CollisionObject2D).collision_layer == 2:
+			return true
+	return false
 
 ## The crawl's forward probe: how far the box can move along `motion` and what it meets.
 func _sweep(motion: Vector2) -> Dictionary:
@@ -328,7 +392,7 @@ func _draw_body(delta: float) -> void:
 	_sprite.modulate = tint
 	_rect.modulate = tint
 	var doing := state.verb if state.verb != "" else ("flat" if state.spread else ("wall" if state.clinging else ("crawl" if state.surface_n != Vector2.ZERO else "")))
-	_label.text = "%s%s   speed %d   boost %s   verb: %s   last jump: rise %.1f px, air %.2f s\n1 biped   2 slime   3 wolf   4 spider   B boost   J tackle   S down (flatten, slide)   at a wall: press into it to stick, jump to kick off, hold jump to bounce   spider: arrows crawl floors, walls and ceilings, jump hops off" % [
+	_label.text = "%s%s   speed %d   boost %s   verb: %s   last jump: rise %.1f px, air %.2f s\n1 biped   2 slime   3 wolf   4 spider   B boost   J tackle   S down (flatten, slide)   down on a one-way ledge drops through it   at a wall: press into it to stick, jump to kick off, hold jump to bounce   spider: arrows crawl floors, walls and ceilings, jump hops off, J zips (aim with the arrows, a thread pulls you to the first solid within 160 px; jump cancels), S in the air or hanging from a ceiling drops on a thread (down reels, up climbs, jump lets go)" % [
 		profile.id, " (placeholder, no art yet)" if _sheet == null else "", int(absf(body.velocity.x)), "on" if boosted else "off", doing, _last["rise"], _last["airtime"]]
 
 ## The spider, after how spiders move: the legs follow the distance travelled (so they freeze the instant it stops, on the
@@ -341,12 +405,22 @@ func _draw_spider(delta: float) -> void:
 	if corner:
 		_vis_off += _prev_pos - body.global_position
 	_vis_off = _vis_off.lerp(Vector2.ZERO, 1.0 - exp(-delta / CORNER_EASE))
+	var zipping := state.zip_dir != Vector2.ZERO
+	var dropping := state.drop_up > 0.0
 	var target := SpeciesLook.surface_angle(state.surface_n) if attached else 0.0
+	if dropping:
+		target = PI / 2.0 if _sense > 0.0 else -PI / 2.0  # head first down the thread (the sprite's right is its head)
+	if zipping:
+		if absf(state.zip_dir.x) > 0.01:
+			_sense = signf(state.zip_dir.x)
+		# head first along the thread: the sprite's right is its head, so a leftward zip is mirrored and turned the other way
+		target = state.zip_dir.angle() if _sense > 0.0 else wrapf(state.zip_dir.angle() + PI, -PI, PI)
 	_angle = lerp_angle(_angle, target, 1.0 - exp(-delta / CORNER_EASE))
-	if attached and not corner:
-		_stride = SpeciesLook.stride_advance(_stride, state.surface_shift.length())
-	_clip = "crawl_%d" % (SpeciesLook.stride_frame(_stride) + 1) if attached else "drop"
-	var sense := state.surface_sigma if attached else (signf(state.velocity.x) if absf(state.velocity.x) > 20.0 else _sense)
+	if (attached and not corner) or dropping:
+		_stride = SpeciesLook.stride_advance(_stride, state.surface_shift.length())  # legs follow the distance, reeling too
+	_clip = "crawl_%d" % (SpeciesLook.stride_frame(_stride) + 1) if (attached or dropping) and not zipping else "drop"
+	var vx := state.drop_vx if dropping else state.velocity.x
+	var sense := state.surface_sigma if attached else (signf(vx) if absf(vx) > 20.0 else _sense)
 	if sense != _sense:
 		_sense = sense
 		_pivot = PIVOT_SECONDS

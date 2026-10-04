@@ -280,3 +280,177 @@ func test_a_spider_without_probes_is_the_ground_step_as_before() -> void:
 	VerbRunner.step(s, i, spider, 1.0 / 60.0)
 	assert_eq(s.launched, "ground")
 	assert_eq(s.velocity.y, -330.0)
+
+func test_a_zip_owns_the_body_before_the_crawl_and_the_ground_step() -> void:
+	var w := FakeSurfaceWorld.build_spike_terrain()
+	w.pos = Vector2(120, -12)
+	var s := MoveState.new()
+	s.surface_n = Vector2.UP
+	var i := w.input()
+	i.aim = Vector2.RIGHT
+	i.signature_pressed = true
+	VerbRunner.step(s, i, spider, 1.0 / 60.0)
+	assert_eq(s.zip_event, "start")
+	assert_eq([s.surface_n, s.velocity], [Vector2.ZERO, Vector2.ZERO])
+	i.signature_pressed = false
+	VerbRunner.step(s, i, spider, 1.0 / 60.0)
+	assert_almost_eq(s.surface_shift.x, 400.0 / 60.0, 0.001, "pulled at 400 px/s, not crawled at 140")
+
+func test_one_air_zip_per_airtime() -> void:
+	var w := FakeSurfaceWorld.build_spike_terrain()
+	w.pos = Vector2(120, -60)
+	var s := MoveState.new()
+	s.air_verb_used = true  # it already used its air verb this airtime
+	var i := w.input()
+	i.on_floor = false
+	i.aim = Vector2.RIGHT
+	i.signature_pressed = true
+	VerbRunner.step(s, i, spider, 1.0 / 60.0)
+	assert_eq(s.zip_event, "", "refused in the air")
+	s.surface_n = Vector2.UP  # it gripped a surface: the air verb is back
+	s.zip_cooldown = 0.0
+	VerbRunner.step(s, i, spider, 1.0 / 60.0)
+	assert_false(s.air_verb_used)
+	assert_eq(s.zip_event, "start")
+
+func test_a_spider_without_the_zip_verb_ignores_the_button() -> void:
+	var bare := spider.duplicate() as MovementProfile
+	bare.verbs = PackedStringArray(["crawl"])
+	var w := FakeSurfaceWorld.build_spike_terrain()
+	w.pos = Vector2(120, -12)
+	var s := MoveState.new()
+	s.surface_n = Vector2.UP
+	var i := w.input()
+	i.aim = Vector2.RIGHT
+	i.signature_pressed = true
+	VerbRunner.step(s, i, bare, 1.0 / 60.0)
+	assert_eq(s.zip_event, "")
+	assert_eq(s.surface_n, Vector2.UP)
+
+func test_down_pressed_is_an_edge() -> void:
+	var s := MoveState.new()
+	var i := MoveInput.new()
+	i.down = 1.0
+	VerbRunner.step(s, i, biped, 1.0 / 60.0)
+	assert_true(s.down_pressed)
+	assert_eq(s.down_prev, 1.0)
+	VerbRunner.step(s, i, biped, 1.0 / 60.0)
+	assert_false(s.down_pressed, "held is not a press")
+	i.down = 0.0
+	VerbRunner.step(s, i, biped, 1.0 / 60.0)
+	i.down = 1.0
+	VerbRunner.step(s, i, biped, 1.0 / 60.0)
+	assert_true(s.down_pressed, "released and pressed again")
+	var light := MoveState.new()
+	var j := MoveInput.new()
+	j.down = 0.5
+	VerbRunner.step(light, j, biped, 1.0 / 60.0)
+	assert_false(light.down_pressed, "a light touch is under the 0.6 threshold")
+
+func test_a_drop_owns_the_body_after_the_zip_and_before_the_crawl() -> void:
+	var w := FakeSurfaceWorld.build_spike_terrain()
+	w.pos = Vector2(600, -100)
+	var s := MoveState.new()
+	var i := w.input()
+	i.on_floor = false
+	i.down = 1.0
+	VerbRunner.step(s, i, spider, 1.0 / 60.0)
+	assert_eq(s.drop_event, "start")
+	assert_eq(s.velocity, Vector2.ZERO)
+	var z := MoveState.new()
+	z.zip_dir = Vector2.RIGHT  # a zip in flight keeps the tick
+	z.zip_left = 50.0
+	VerbRunner.step(z, i, spider, 1.0 / 60.0)
+	assert_eq(z.drop_event, "")
+
+func test_the_air_verb_is_shared_by_the_zip_and_the_drop() -> void:
+	var w := FakeSurfaceWorld.build_spike_terrain()
+	w.pos = Vector2(600, -100)
+	var s := MoveState.new()
+	var i := w.input()
+	i.on_floor = false
+	i.down = 1.0
+	VerbRunner.step(s, i, spider, 1.0 / 60.0)  # a drop begins
+	i.down = 0.0
+	i.signature_pressed = true
+	i.aim = Vector2.LEFT
+	s.drop_up = 0.0  # it has let go
+	VerbRunner.step(s, i, spider, 1.0 / 60.0)
+	assert_eq(s.zip_event, "", "no zip in the same airtime")
+	s.surface_n = Vector2.UP  # it gripped a surface
+	s.zip_cooldown = 0.0
+	VerbRunner.step(s, i, spider, 1.0 / 60.0)
+	assert_eq(s.zip_event, "start", "the air verb is back after gripping a surface")
+
+func test_a_spider_without_the_drop_verb_ignores_down() -> void:
+	var bare := spider.duplicate() as MovementProfile
+	bare.verbs = PackedStringArray(["crawl"])
+	var w := FakeSurfaceWorld.build_spike_terrain()
+	w.pos = Vector2(600, -100)
+	var s := MoveState.new()
+	var i := w.input()
+	i.on_floor = false
+	i.down = 1.0
+	VerbRunner.step(s, i, bare, 1.0 / 60.0)
+	assert_eq(s.drop_event, "")
+
+## An input standing on a one-way ledge (or a hard floor) with `down` as given.
+func _ledge_input(down: float, oneway := true) -> MoveInput:
+	var i := MoveInput.new()
+	i.on_floor = true
+	i.on_oneway_floor = oneway
+	i.down = down
+	return i
+
+func test_a_press_of_down_on_a_one_way_ledge_starts_a_fall_through() -> void:
+	for id in MovementProfile.IDS:
+		var p := MovementProfile.of(id)
+		var s := MoveState.new()
+		VerbRunner.step(s, _ledge_input(1.0), p, 1.0 / 60.0)
+		assert_eq(s.fall_through, 0.2, id)
+		for _k in 13:
+			VerbRunner.step(s, _ledge_input(1.0), p, 1.0 / 60.0)
+		assert_lt(s.fall_through, 0.001, "%s: it runs out after 0.2 s" % id)
+
+func test_a_held_down_does_not_drop() -> void:
+	for id in MovementProfile.IDS:
+		var p := MovementProfile.of(id)
+		var s := MoveState.new()
+		s.down_prev = 1.0  # down was already held as it landed on the ledge
+		VerbRunner.step(s, _ledge_input(1.0), p, 1.0 / 60.0)
+		assert_eq(s.fall_through, 0.0, "%s: landing with down held" % id)
+		VerbRunner.step(s, _ledge_input(0.0), p, 1.0 / 60.0)
+		VerbRunner.step(s, _ledge_input(1.0), p, 1.0 / 60.0)
+		assert_eq(s.fall_through, 0.2, "%s: released and pressed again" % id)
+		for _k in 20:
+			VerbRunner.step(s, _ledge_input(1.0), p, 1.0 / 60.0)
+		assert_lt(s.fall_through, 0.001, "%s: and still held it does not start again" % id)
+
+func test_a_hard_floor_and_the_air_do_not_drop() -> void:
+	for id in MovementProfile.IDS:
+		var p := MovementProfile.of(id)
+		var hard := MoveState.new()
+		VerbRunner.step(hard, _ledge_input(1.0, false), p, 1.0 / 60.0)
+		assert_eq(hard.fall_through, 0.0, "%s on a hard floor" % id)
+		var air := MoveState.new()
+		var i := _ledge_input(1.0)
+		i.on_floor = false
+		i.on_oneway_floor = false
+		VerbRunner.step(air, i, p, 1.0 / 60.0)
+		assert_eq(air.fall_through, 0.0, "%s in the air" % id)
+
+func test_the_slime_does_not_spread_or_slide_on_the_dropping_press() -> void:
+	var s := MoveState.new()
+	s.velocity.x = 120.0
+	var i := _ledge_input(1.0)
+	i.dir = 1.0
+	VerbRunner.step(s, i, slime, 1.0 / 60.0)
+	assert_false(s.spread, "no flattening on the press that drops through")
+	assert_ne(s.verb, "puddle")
+	var hard := MoveState.new()
+	hard.velocity.x = 120.0
+	var j := _ledge_input(1.0, false)
+	j.dir = 1.0
+	VerbRunner.step(hard, j, slime, 1.0 / 60.0)
+	assert_true(hard.spread, "on a hard floor it spreads as before")
+	assert_eq(hard.verb, "puddle")

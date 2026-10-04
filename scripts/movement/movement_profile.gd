@@ -60,6 +60,21 @@ const IDS := ["biped", "slime", "wolf", "spider"]
 ## every few frames), and how long after a corner pressing back the way it came goes back round it.
 @export var corner_lock := 0.10
 @export var crawl_back_window := 0.6
+## Web zip: the farthest solid it will fire at (px), the pull speed (px/s), the fraction of that speed a jump cancel keeps, and
+## the seconds before the next zip (from the end of the last).
+@export var zip_range := 160.0
+@export var zip_speed := 400.0
+@export var zip_keep := 0.6
+@export var zip_cooldown := 0.4
+## Silk drop: the farthest solid above it will spin a thread from (px), how fast down reels and up climbs (px/s), and the
+## fraction of the usual air control it keeps while hanging.
+@export var drop_range := 200.0
+@export var drop_reel := 90.0
+@export var drop_climb := 60.0
+@export var drop_air := 0.5
+## How long (s) a press of down on a one-way ledge makes the caller ignore one-way ledges, so the body drops through: long
+## enough to clear the ledge's margin, short enough to land on the next floor.
+@export var fall_through := 0.2
 ## The extra verbs this species has ("ooze"), and its burst rows (BurstDef: Tackle, the puddle slide, later roll and pounce).
 @export var verbs := PackedStringArray()
 @export var bursts: Array = []

@@ -369,3 +369,95 @@ func test_a_wall_grip_needs_the_wall_within_what_the_support_probe_holds() -> vo
 	assert_false(events.has("convex_nothing"), "it climbs, it does not drop: %s" % [events])
 	assert_eq(ns.surface_n, Vector2.RIGHT)
 	assert_lt(near.pos.y, -75.0)
+
+func test_walking_off_a_sliver_of_a_ledge_drops_from_where_it_is() -> void:
+	var w := FakeSurfaceWorld.build_spike_terrain()
+	w.add_hard(Rect2(1300, -60, 100, 1))  # a hard ledge 1 px thick: no end face to turn onto
+	w.pos = Vector2(1380, -72)
+	var s := MoveState.new()
+	s.surface_n = Vector2.UP
+	var events := _until(w, s, Vector2.RIGHT, 100, func(): return s.surface_event == "convex_nothing")
+	assert_eq(events, ["convex_nothing"])
+	assert_eq(s.surface_n, Vector2.ZERO)
+	assert_lt(s.surface_shift.length(), 2.5, "it drops from the edge, it is not moved 19 px round a corner that is not there")
+
+func test_gripping_a_wall_from_the_air_keeps_climbing_while_the_stick_stays_on_it() -> void:
+	for side in [-1, 1]:
+		var w := FakeSurfaceWorld.build_spike_terrain()
+		# beside the block's right face (a wall on its left) and its left face (a wall on its right)
+		w.pos = Vector2(313, -60) if side == -1 else Vector2(187, -60)
+		var s := MoveState.new()
+		var stick := Vector2(float(side), 0.0)
+		var i := _make_input(w, stick)
+		i.wall_side = side
+		assert_true(SurfaceStep.step(s, i, spider, DT))
+		assert_eq(s.surface_event, "attach")
+		w.apply(s)
+		var y := w.pos.y
+		_run(w, s, stick, 12)
+		assert_lt(w.pos.y, y - 15.0, "holding toward the wall climbs it, as walking into it does (side %d)" % side)
+
+func test_gripping_a_wall_from_the_air_closes_the_gap_to_it() -> void:
+	for x in [314.0, 315.0]:  # 14 (touching, for the 28 wide standing box) and 15 px from the block's right face (x 300)
+		var w := FakeSurfaceWorld.build_spike_terrain()
+		w.pos = Vector2(x, -60)
+		var s := MoveState.new()
+		var i := _make_input(w, Vector2.LEFT)
+		i.wall_side = -1
+		SurfaceStep.step(s, i, spider, DT)
+		w.apply(s)
+		assert_almost_eq(w.pos.x, 312.0, 0.01, "flush: the wall box's half width, 12, from the face (from %s)" % x)
+
+func test_a_hop_onto_a_wall_then_up_goes_over_its_top_corner() -> void:
+	var w := FakeSurfaceWorld.build_spike_terrain()
+	w.pos = Vector2(315, -60)  # a hop that gripped the block's right face 15 px out
+	var s := MoveState.new()
+	var i := _make_input(w, Vector2.LEFT)
+	i.wall_side = -1
+	SurfaceStep.step(s, i, spider, DT)
+	w.apply(s)
+	var events := _until(w, s, Vector2.UP, 200, func(): return s.surface_n == Vector2.UP)
+	assert_eq(events, ["convex"], "over the corner onto the block's top, not a drop (convex_nothing)")
+	assert_almost_eq(w.pos.y, -112.0, 3.0)
+
+func test_gripping_a_wall_holding_down_and_toward_it_does_not_climb() -> void:
+	var w := FakeSurfaceWorld.build_spike_terrain()
+	w.pos = Vector2(315, -60)  # a hop that gripped the block's right face
+	var s := MoveState.new()
+	var stick := Vector2(-1.0, 1.0).normalized()  # toward the wall (left) and down
+	var i := _make_input(w, stick)
+	i.wall_side = -1
+	SurfaceStep.step(s, i, spider, DT)
+	w.apply(s)
+	var y := w.pos.y
+	_run(w, s, stick, 12)
+	assert_gt(w.pos.y, y + 10.0, "the stick says down, so it goes down: an explicit vertical intent beats the climb latch")
+
+func test_the_spider_on_a_one_way_ledge_drops_through_it() -> void:
+	var a := _on(Vector2(900, -62), Vector2.UP)
+	var w: FakeSurfaceWorld = a[0]
+	var s: MoveState = a[1]
+	_tick(w, s, Vector2.ZERO)  # a tick on the ledge: it learns the surface is one-way
+	assert_true(s.surface_oneway)
+	s.fall_through = 0.2  # VerbRunner set it on a fresh press of down
+	_tick(w, s, Vector2.ZERO)
+	assert_eq(s.surface_n, Vector2.ZERO)
+	assert_eq(s.surface_event, "drop_through")
+	var hard := _on(Vector2(40, -12), Vector2.UP)
+	(hard[1] as MoveState).fall_through = 0.2
+	_tick(hard[0], hard[1], Vector2.ZERO)
+	assert_eq((hard[1] as MoveState).surface_n, Vector2.UP, "a hard floor is never dropped through")
+
+func test_it_does_not_grip_the_ledge_it_is_falling_through() -> void:
+	var w := FakeSurfaceWorld.build_spike_terrain()
+	w.pos = Vector2(900, -62)
+	var s := MoveState.new()
+	s.fall_through = 0.2
+	s.surface_lock = 0.2
+	var i := _make_input(w)
+	i.on_floor = true
+	assert_false(SurfaceStep.step(s, i, spider, DT), "no grip while it falls through")
+	assert_eq(s.surface_n, Vector2.ZERO)
+	s.fall_through = 0.0
+	s.surface_lock = 0.0
+	assert_true(SurfaceStep.step(s, i, spider, DT), "once it has run out the ledge is a floor again")

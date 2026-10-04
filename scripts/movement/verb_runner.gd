@@ -1,7 +1,7 @@
 class_name VerbRunner
 extends RefCounted
 ## The species' verbs on top of the ground and air step: facing, Ooze (the flat slime), the bursts (Tackle, the puddle
-## slide) and the crawl (the spider's surfaces, handed to SurfaceStep while it is on one). Pure statics like GroundAirStep. A burst only owns horizontal velocity, so the step keeps
+## slide), the crawl (the spider's surfaces, handed to SurfaceStep while it is on one) its web zip (ZipStep, first) and its silk drop (DropStep, after it). Pure statics like GroundAirStep. A burst only owns horizontal velocity, so the step keeps
 ## running underneath it (gravity, jump, coyote and the jump buffer never stop), as Player._dash does today.
 
 ## The raw down input at which the slime flattens and holds flat.
@@ -12,11 +12,21 @@ const SPREAD_SPEED := 0.5
 const STAND_RISE := 14.0
 
 static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float, speed_scale := 1.0, jump_boost := 1.0) -> void:
+	s.down_pressed = i.down >= SPREAD_DOWN and s.down_prev < SPREAD_DOWN  # a press: the edge, not a held direction
+	s.down_prev = i.down
+	if s.down_pressed and (i.on_oneway_floor or (s.surface_n == Vector2.UP and s.surface_oneway)):
+		s.fall_through = p.fall_through  # down on a one-way ledge drops through it (every species)
+	else:
+		s.fall_through = maxf(0.0, s.fall_through - dt)
 	if i.dir != 0.0:
 		s.facing = 1 if i.dir > 0.0 else -1
 	_tick_cooldowns(s, dt)
-	if i.on_floor or (p.verbs.has("wall") and i.wall_side != 0):
+	if i.on_floor or (p.verbs.has("wall") and i.wall_side != 0) or s.surface_n != Vector2.ZERO:
 		s.air_verb_used = false  # landing, or touching a wall, gives the air verb back
+	if p.verbs.has("zip") and ZipStep.step(s, i, p, dt):
+		return  # a thread pulling the spider owns the body until it grips or cancels
+	if p.verbs.has("drop") and DropStep.step(s, i, p, dt):
+		return  # sliding down a thread owns the body until it lets go or lands
 	if p.verbs.has("crawl") and SurfaceStep.step(s, i, p, dt, jump_boost):
 		return  # on a surface the crawl owns the body (the caller moves it by surface_shift); in the air the ground step runs
 	_ooze(s, i, p)
@@ -41,7 +51,7 @@ static func is_flat(s: MoveState, p: MovementProfile) -> bool:
 static func _ooze(s: MoveState, i: MoveInput, p: MovementProfile) -> void:
 	if not p.verbs.has("ooze"):
 		return
-	var want := i.on_floor and i.down >= SPREAD_DOWN and not i.jump_pressed
+	var want := i.on_floor and i.down >= SPREAD_DOWN and not i.jump_pressed and s.fall_through <= 0.0
 	if want:
 		s.spread = true
 	elif s.spread and i.clearance_above >= STAND_RISE:
@@ -86,7 +96,7 @@ static func _can_begin(row: BurstDef, s: MoveState, i: MoveInput) -> bool:
 		"signature":
 			return i.signature_pressed
 		"down_run":
-			return i.on_floor and i.down >= SPREAD_DOWN and absf(s.velocity.x) >= row.min_start_speed
+			return i.on_floor and i.down >= SPREAD_DOWN and absf(s.velocity.x) >= row.min_start_speed and s.fall_through <= 0.0
 	return false
 
 static func _begin(row: BurstDef, s: MoveState, i: MoveInput) -> void:

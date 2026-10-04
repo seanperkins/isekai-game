@@ -37,6 +37,15 @@ static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float, jump
 		return true
 	s.launched = ""
 	GroundAirStep.timers(s, i, p, dt)
+	var here := _support(i, s.surface_n, Vector2.ZERO)
+	if here != NONE:
+		s.surface_oneway = here == ONEWAY  # known even while standing still: a press of down on a ledge drops through it
+	if s.fall_through > 0.0 and s.surface_n == Vector2.UP and s.surface_oneway:
+		# a press of down on a one-way ledge: let go of it and fall (the ground step runs this tick), and do not grip it again
+		s.surface_n = Vector2.ZERO
+		s.surface_lock = s.fall_through
+		s.surface_event = "drop_through"
+		return false
 	if s.buffer > 0.0:
 		_hop(s, p, jump_boost)
 		return true
@@ -50,7 +59,7 @@ static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float, jump
 	if s.surface_lock <= 0.0:
 		var hit: Dictionary = i.sweep.call(motion)
 		if not hit.is_empty():
-			var wall := _axis(hit["normal"])
+			var wall := axis(hit["normal"])
 			if wall.dot(s.surface_n) == 0.0 and wall.dot(dir) < -0.5:
 				s.surface_shift = (hit["travel"] as Vector2) + (s.surface_n + dir) * (HT - HN)
 				_corner(s, p, "concave", dir, wall, stick)
@@ -82,7 +91,7 @@ static func _hop(s: MoveState, p: MovementProfile, jump_boost: float) -> void:
 
 ## In the air: grip a floor the centre is over, or a hard wall or ceiling the stick presses toward. True on the tick it grips.
 static func _attach(s: MoveState, i: MoveInput) -> bool:
-	if s.surface_lock > 0.0:
+	if s.surface_lock > 0.0 or s.fall_through > 0.0:
 		return false
 	var stick := i.stick()
 	var n := Vector2.ZERO
@@ -107,7 +116,24 @@ static func _attach(s: MoveState, i: MoveInput) -> bool:
 	s.surface_latch = Vector2.ZERO
 	s.velocity = Vector2.ZERO
 	s.surface_event = "attach"
+	if n != Vector2.UP:
+		# Close the gap to the wall or ceiling (up to 3 px of the grip's reach): the turn round its far corner assumes the body
+		# is flush, and a hop that gripped 2 px out found no top surface there and dropped.
+		var toward := -n
+		var hit: Dictionary = i.sweep.call(toward * (HN + STICK + 2.0))
+		var travel := (hit["travel"] as Vector2) if not hit.is_empty() else Vector2.ZERO
+		if absf(n.x) > 0.5:
+			travel += toward * (HT - HN)  # the standing box is 28 wide, the wall box 24
+			grip_wall(s, n, stick)
+		s.surface_shift = travel
 	return true
+
+## A wall gripped with the stick toward it keeps climbing while the stick stays there, as walking into the wall does. A stick
+## that also points up or down (0.5 or more) says which way it wants to go, so it is screen-relative and nothing latches.
+static func grip_wall(s: MoveState, n: Vector2, stick: Vector2) -> void:
+	if absf(n.x) > 0.5 and stick.x * -n.x > 0.5 and absf(stick.y) < 0.5:
+		s.surface_latch = Vector2(signf(stick.x), 0.0)
+		s.surface_sigma = tangent(n).dot(Vector2.UP)
 
 ## The box for a surface with normal `n`: the body config's box on a floor or ceiling, turned on a wall.
 static func box_size(n: Vector2) -> Vector2:
@@ -116,7 +142,7 @@ static func box_size(n: Vector2) -> Vector2:
 
 ## The tangent of a surface: its normal turned a quarter clockwise, an exact axis.
 static func tangent(n: Vector2) -> Vector2:
-	return _axis(n.rotated(PI / 2.0))
+	return axis(n.rotated(PI / 2.0))
 
 ## The sign (1 or -1, 0 for none) of the way along the surface the stick asks for. A latch (the direction held at the last
 ## corner) keeps the rotational sense through a corner while the stick stays near it; releasing keeps it, a clearly
@@ -136,7 +162,7 @@ static func _intent(s: MoveState, stick: Vector2, t: Vector2, p: MovementProfile
 	if stick.length() > 0.5 and s.surface_since < p.crawl_back_window and stick.normalized().dot(s.surface_prev) < -0.5:
 		# nothing along this surface, and the stick is pressed back the way it came: back round the corner
 		s.surface_sigma = -s.surface_sigma
-		s.surface_latch = _axis(stick)
+		s.surface_latch = axis(stick)
 		s.surface_prev = -s.surface_prev
 		return s.surface_sigma
 	return 0.0
@@ -171,6 +197,7 @@ static func _wrap(s: MoveState, i: MoveInput, p: MovementProfile, motion: Vector
 	s.surface_shift = shift
 	if _support(i, dir, shift) == NONE:
 		s.surface_event = "convex_nothing"
+		s.surface_shift = motion * lo  # no corner to turn: it simply drops from the edge
 		s.surface_n = Vector2.ZERO
 		s.surface_lock = REATTACH_LOCK
 		return
@@ -183,9 +210,10 @@ static func _corner(s: MoveState, p: MovementProfile, event: String, dir: Vector
 	s.surface_n = new_n
 	s.surface_lock = p.corner_lock
 	s.surface_since = 0.0
-	s.surface_latch = _axis(stick) if stick.length() > 0.5 else Vector2.ZERO  # the axis it is mostly held along, so noise around it holds
+	s.surface_latch = axis(stick) if stick.length() > 0.5 else Vector2.ZERO  # the axis it is mostly held along, so noise around it holds
 
-static func _axis(v: Vector2) -> Vector2:
+## Snaps a vector to the nearest of the four axis directions (a tie goes to vertical).
+static func axis(v: Vector2) -> Vector2:
 	if absf(v.x) > absf(v.y):
 		return Vector2(signf(v.x), 0.0)
 	return Vector2(0.0, signf(v.y))

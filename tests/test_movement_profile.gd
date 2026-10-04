@@ -71,3 +71,30 @@ func test_copy_keeps_the_probes_and_up() -> void:
 	assert_eq(c.sweep, i.sweep)
 	assert_eq(c.ray, i.ray)
 	assert_eq([c.up, c.on_ceiling], [0.7, true])
+
+func test_the_spider_zips_with_the_spec_numbers() -> void:
+	var sp := MovementProfile.of("spider")
+	assert_true(sp.verbs.has("zip"))
+	assert_true(sp.verbs.has("crawl"))
+	assert_eq([sp.zip_range, sp.zip_speed, sp.zip_keep, sp.zip_cooldown], [160.0, 400.0, 0.6, 0.4])
+	for id in ["biped", "slime", "wolf"]:
+		assert_false(MovementProfile.of(id).verbs.has("zip"), id)
+
+func test_copy_keeps_aim_and_cast() -> void:
+	var i := MoveInput.new()
+	i.aim = Vector2(0.5, -1.0)
+	i.cast = func(_a: Vector2, _b: Vector2, _o: bool) -> Dictionary: return {}
+	var c := i.copy()
+	assert_eq(c.aim, i.aim)
+	assert_eq(c.cast, i.cast)
+
+func test_the_spider_drops_with_the_spec_numbers() -> void:
+	var sp := MovementProfile.of("spider")
+	assert_true(sp.verbs.has("drop"))
+	assert_eq([sp.drop_range, sp.drop_reel, sp.drop_climb, sp.drop_air], [200.0, 90.0, 60.0, 0.5])
+	for id in ["biped", "slime", "wolf"]:
+		assert_false(MovementProfile.of(id).verbs.has("drop"), id)
+
+func test_every_species_falls_through_for_a_fifth_of_a_second() -> void:
+	for id in MovementProfile.IDS:
+		assert_eq(MovementProfile.of(id).fall_through, 0.2, id)
