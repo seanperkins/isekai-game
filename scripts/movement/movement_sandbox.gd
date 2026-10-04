@@ -12,6 +12,8 @@ const WALLS := [Rect2(-40, -400, 40, 440), Rect2(1400, -400, 40, 440)]
 const START := Vector2(100, 0)
 ## The stage-4 jump_height (185%) as a launch boost: rise scales with it squared.
 const BOOST_JUMP_HEIGHT := 1.85
+## How long the slime's landing frame shows (the player's LAND_SQUASH_SECONDS).
+const LAND_SECONDS := 0.12
 
 ## When set, replaces the keyboard and pad. `jump_pressed` is consumed (cleared) by the next physics frame, so a test
 ## sets it once; `jump_held` stays until the test clears it.
@@ -23,6 +25,12 @@ var boosted := false
 
 var _spring := SquashSpring.new()
 var _rect: ColorRect
+var _sprite: Sprite2D
+var _sheet: SpriteSheet
+var _animator: SlimeAnimator
+var _clip := ""
+var _facing := 1
+var _land_timer := 0.0
 var _cam: Camera2D
 var _label: Label
 var _last := {"rise": 0.0, "airtime": 0.0}
@@ -52,6 +60,9 @@ func _ready() -> void:
 	_rect.pivot_offset = Vector2(_rect.size.x / 2.0, _rect.size.y)
 	_rect.color = Color(0.45, 0.85, 0.5)
 	add_child(_rect)
+	_sprite = Sprite2D.new()
+	_sprite.name = "Sprite"
+	add_child(_sprite)
 	_cam = Camera2D.new()
 	_cam.name = "Camera"
 	_cam.position = Vector2(START.x, -130)
@@ -61,6 +72,7 @@ func _ready() -> void:
 	_label.position = Vector2(8, 8)
 	layer.add_child(_label)
 	add_child(layer)
+	_set_look(profile.id)
 
 func set_profile(id: String) -> void:
 	var p := MovementProfile.of(id)
@@ -70,6 +82,27 @@ func set_profile(id: String) -> void:
 	state = MoveState.new()  # no momentum or timers carry over a switch
 	if body != null:
 		body.velocity = Vector2.ZERO
+	if _sprite != null:
+		_set_look(id)
+
+## The species id while its sprite shows, "placeholder" while the colour rect stands in (no art, or its sheet is missing).
+func look() -> String:
+	return profile.id if _sheet != null else "placeholder"
+
+## The clip playing, "" for the placeholder.
+func clip() -> String:
+	return _clip
+
+## A fresh animator and sheet for `id`, or the colour rect when it has none.
+func _set_look(id: String) -> void:
+	_sheet = SpeciesLook.sheet_for(id)
+	_animator = null
+	_clip = ""
+	if _sheet != null:
+		_animator = SlimeAnimator.new(SpeciesLook.clips_for(id))
+		_animator.play(SpeciesLook.clip_for(id, true, 0.0, 0.0, 0.0))
+	_sprite.visible = _sheet != null
+	_rect.visible = _sheet == null
 
 func set_boost(on: bool) -> void:
 	boosted = on
@@ -83,7 +116,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	if key == null or not key.pressed or key.echo:
 		return
 	match key.keycode:
-		KEY_1, KEY_2, KEY_3:
+		KEY_1, KEY_2, KEY_3, KEY_4:
 			set_profile(MovementProfile.IDS[key.keycode - KEY_1])
 		KEY_B:
 			set_boost(not boosted)
@@ -109,11 +142,15 @@ func _physics_process(delta: float) -> void:
 		if _air_ticks > 1 and body.is_on_floor():
 			_in_jump = false
 			_last = {"rise": _takeoff_y - _top_y, "airtime": _air_ticks * delta}
+	_land_timer = maxf(0.0, _land_timer - delta)
 	if not was_on_floor and body.is_on_floor():
 		_spring.land(fall_speed)
+		_land_timer = LAND_SECONDS
+	if absf(state.velocity.x) > 1.0:
+		_facing = 1 if state.velocity.x > 0.0 else -1
 	_spring.update(state.velocity.y, delta)
 	_cam.position.x = clampf(body.position.x, 320.0, FLOOR.size.x - 320.0)
-	_draw_body()
+	_draw_body(delta)
 
 func _read_input() -> MoveInput:
 	var i := MoveInput.new()
@@ -128,11 +165,21 @@ func _read_input() -> MoveInput:
 	i.jump_held = Input.is_action_pressed("jump")
 	return i
 
-func _draw_body() -> void:
-	_rect.scale = _spring.sprite_scale()
-	_rect.position = body.position + Vector2(-_rect.size.x / 2.0, BodyConfig.BOTTOM - _rect.size.y)
-	_label.text = "%s   speed %d   boost %s   last jump: rise %.1f px, air %.2f s\n1 biped   2 slime   3 wolf   B boost" % [
-		profile.id, int(absf(body.velocity.x)), "on" if boosted else "off", _last["rise"], _last["airtime"]]
+func _draw_body(delta: float) -> void:
+	if _sheet != null:
+		_clip = SpeciesLook.clip_for(profile.id, body.is_on_floor(), state.velocity.y, state.velocity.x, _land_timer)
+		_animator.play(_clip)
+		_animator.advance(delta)
+		var frame := _animator.frame()
+		_sprite.texture = _sheet.frame_texture(frame)
+		_sprite.scale = _spring.sprite_scale() if profile.id == "slime" else Vector2.ONE
+		_sprite.flip_h = _facing < 0
+		_sprite.position = body.position + Vector2(0.0, BodyConfig.BOTTOM - _sheet.frame_size(frame).y * _sprite.scale.y / 2.0)
+	else:
+		_rect.scale = Vector2.ONE
+		_rect.position = body.position + Vector2(-_rect.size.x / 2.0, BodyConfig.BOTTOM - _rect.size.y)
+	_label.text = "%s%s   speed %d   boost %s   last jump: rise %.1f px, air %.2f s\n1 biped   2 slime   3 wolf   4 spider   B boost" % [
+		profile.id, " (placeholder, no art yet)" if _sheet == null else "", int(absf(body.velocity.x)), "on" if boosted else "off", _last["rise"], _last["airtime"]]
 
 func _block(r: Rect2) -> void:
 	var b := StaticBody2D.new()
