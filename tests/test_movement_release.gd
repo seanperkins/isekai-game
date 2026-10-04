@@ -3,11 +3,13 @@ extends GutTest
 var biped: MovementProfile
 var slime: MovementProfile
 var wolf: MovementProfile
+var spider: MovementProfile
 
 func before_each() -> void:
 	biped = MovementProfile.of("biped")
 	slime = MovementProfile.of("slime")
 	wolf = MovementProfile.of("wolf")
+	spider = MovementProfile.of("spider")
 
 func test_cut_caps_the_rise_speed_once() -> void:
 	var sim := MovementSim.new(biped)
@@ -106,3 +108,6 @@ func test_air_time_and_the_rebound_come_from_a_real_flight() -> void:
 		if hop.state.launched != "":
 			break
 	assert_eq(hop.state.launched, "ground")
+
+func test_the_spider_has_no_variable_jump() -> void:
+	assert_almost_eq(MovementSim.flat_jump(spider, 1.0, 0.0)["rise"], MovementSim.flat_jump(spider)["rise"], 0.01)

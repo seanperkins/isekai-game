@@ -73,3 +73,49 @@ func test_the_camera_follows_the_body_along_the_floor() -> void:
 	await _frames(3)
 	var cam := sb.get_node("Camera") as Camera2D
 	assert_almost_eq(cam.global_position.x, 1000.0, 1.0)
+
+func _has_art(id: String) -> bool:
+	return SpeciesLook.has_look(id) and SpeciesLook.sheet_for(id) != null
+
+func test_each_species_with_art_shows_its_sprite_and_the_biped_a_placeholder() -> void:
+	for id in ["slime", "spider", "wolf"]:
+		sb.set_profile(id)
+		assert_eq(sb.look(), id if _has_art(id) else "placeholder", id)
+	sb.set_profile("biped")
+	assert_eq(sb.look(), "placeholder")
+	assert_eq(sb.clip(), "")
+
+func test_the_clip_follows_the_movement() -> void:
+	if not _has_art("wolf"):
+		pending("the wolf sheet is not imported")
+		return
+	sb.set_profile("wolf")
+	await _frames(3)
+	assert_eq(sb.clip(), "idle")
+	sb.scripted.dir = 1.0
+	await _frames(40)
+	assert_eq(sb.clip(), "charge")
+	sb.scripted.jump_pressed = true
+	sb.scripted.jump_held = true
+	await _frames(6)
+	assert_eq(sb.clip(), "windup")
+
+func test_the_feet_stay_on_the_floor_for_every_sheet_and_a_switch_mid_run_is_clean() -> void:
+	sb.scripted.dir = 1.0
+	for id in ["slime", "spider", "wolf", "biped", "spider"]:
+		sb.set_profile(id)  # switching while running
+		await _frames(30)
+		sb.scripted.dir = 0.0
+		await _frames(30)
+		if sb.look() != "placeholder":
+			var sprite := sb.get_node("Sprite") as Sprite2D
+			var half := sprite.texture.get_size().y * sprite.scale.y / 2.0
+			assert_almost_eq(sprite.global_position.y + half, sb.body.global_position.y + BodyConfig.BOTTOM, 1.0, id)
+		sb.scripted.dir = 1.0
+
+func test_key_four_picks_the_spider() -> void:
+	var ev := InputEventKey.new()
+	ev.keycode = KEY_4
+	ev.pressed = true
+	sb._unhandled_key_input(ev)
+	assert_eq(sb.profile.id, "spider")

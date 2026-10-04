@@ -3,11 +3,13 @@ extends GutTest
 var biped: MovementProfile
 var slime: MovementProfile
 var wolf: MovementProfile
+var spider: MovementProfile
 
 func before_each() -> void:
 	biped = MovementProfile.of("biped")
 	slime = MovementProfile.of("slime")
 	wolf = MovementProfile.of("wolf")
+	spider = MovementProfile.of("spider")
 
 func test_the_base_jump_is_what_the_sim_measures() -> void:
 	var b := MovementSim.flat_jump(MovementSim.base_profile())
@@ -17,7 +19,7 @@ func test_the_base_jump_is_what_the_sim_measures() -> void:
 
 func test_every_profile_keeps_the_base_rise() -> void:
 	var base := MovementSim.flat_jump(MovementSim.base_profile())
-	for p in [biped, slime, wolf]:
+	for p in [biped, slime, wolf, spider]:
 		var j := MovementSim.flat_jump(p)
 		assert_almost_eq(j["rise"], base["rise"], 1.0, p.id)
 		assert_gte(j["rise"], RoomLint.REACH_RISE, p.id)
@@ -35,12 +37,18 @@ func test_the_wolf_trades_airtime_for_travel() -> void:
 	assert_lt(w["airtime"], base["airtime"])
 	assert_gte(w["distance"], 1.2 * base["distance"])
 
-func test_biped_and_slime_keep_the_standstill_gap() -> void:
+func test_biped_slime_and_spider_keep_the_standstill_gap() -> void:
 	var base := MovementSim.flat_jump(MovementSim.base_profile())
-	for p in [biped, slime]:
+	for p in [biped, slime, spider]:
 		assert_gte(MovementSim.flat_jump(p, 1.0, 100.0, 0.0)["distance"], 0.9 * base["distance"], p.id)
 
 func test_the_jump_height_stat_still_scales_rise() -> void:
-	for p in [biped, slime, wolf]:
+	for p in [biped, slime, wolf, spider]:
 		var ratio: float = MovementSim.flat_jump(p, sqrt(1.85))["rise"] / MovementSim.flat_jump(p)["rise"]
 		assert_between(ratio, 1.7, 1.95, p.id)
+
+func test_the_spider_is_the_base_held_jump() -> void:
+	var base := MovementSim.flat_jump(MovementSim.base_profile())
+	var j := MovementSim.flat_jump(spider)
+	for key in base:
+		assert_almost_eq(j[key], base[key], 0.0001, key)
