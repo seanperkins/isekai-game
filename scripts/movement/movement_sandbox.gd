@@ -16,6 +16,9 @@ const SHAFT_WALL := Rect2(1260, -300, 40, 300)
 ## A pillar under a slab for the spider: one wall from the floor to the slab's top, the slab's underside to hang from.
 const CRAWL_PILLAR := Rect2(760, -150, 30, 150)
 const CRAWL_SLAB := Rect2(760, -180, 130, 30)
+## Slick solids (the spider cannot grip, crawl on or hang from them): a tall block with a top, and a slab above it.
+const SLICK_BLOCK := Rect2(300, -90, 60, 90)
+const SLICK_CEILING := Rect2(300, -220, 60, 20)
 ## A thin one-way ledge (a floor on its top only) a spider can hop up through and walk off the end of.
 const ONEWAY_LEDGE := Rect2(160, -50, 100, 6)
 ## How far from a wall (px) still counts as touching it for the wall verbs.
@@ -91,9 +94,11 @@ func _ready() -> void:
 	_block(CRAWL_PILLAR)
 	_block(CRAWL_SLAB)
 	_oneway(ONEWAY_LEDGE)
+	_slick(SLICK_BLOCK)
+	_slick(SLICK_CEILING)
 	body = CharacterBody2D.new()
 	body.name = "Body"
-	body.collision_mask = 3  # hard solids (layer 1) and one-way ledges (layer 2)
+	body.collision_mask = 7  # hard solids (layer 1), one-way ledges (layer 2) and slick solids (layer 3, value 4)
 	_shape = CollisionShape2D.new()
 	_shape.name = "Shape"
 	_box = RectangleShape2D.new()
@@ -291,7 +296,7 @@ func _crawl(delta: float) -> void:
 func _cast(from: Vector2, to: Vector2, include_oneway: bool) -> Dictionary:
 	var exclude: Array[RID] = [body.get_rid()]
 	for _k in 4:
-		var q := PhysicsRayQueryParameters2D.create(body.global_position + from, body.global_position + to, 3 if include_oneway else 1, exclude)
+		var q := PhysicsRayQueryParameters2D.create(body.global_position + from, body.global_position + to, 7 if include_oneway else 5, exclude)
 		var hit := get_world_2d().direct_space_state.intersect_ray(q)
 		if hit.is_empty():
 			return {}
@@ -300,7 +305,7 @@ func _cast(from: Vector2, to: Vector2, include_oneway: bool) -> Dictionary:
 		if oneway and (hit["normal"] as Vector2).dot(Vector2.UP) < 0.9:
 			exclude.append(collider.get_rid())
 			continue
-		return {"point": (hit["position"] as Vector2) - body.global_position, "normal": hit["normal"], "oneway": oneway}
+		return {"point": (hit["position"] as Vector2) - body.global_position, "normal": hit["normal"], "oneway": oneway, "slick": collider.collision_layer == 4}
 	return {}
 
 ## The thread from behind the spider to its anchor while it pulls or it slides down it, and for a moment after.
@@ -335,15 +340,16 @@ func _sweep(motion: Vector2) -> Dictionary:
 	var col := KinematicCollision2D.new()
 	if not body.test_move(body.global_transform, motion, col):
 		return {}
-	return {"travel": col.get_travel(), "normal": col.get_normal()}
+	return {"travel": col.get_travel(), "normal": col.get_normal(), "slick": (col.get_collider() as CollisionObject2D).collision_layer == 4}
 
 ## The crawl's ray probe, from the body's centre: what a one-way-aware ray meets (SurfaceStep.NONE, HARD or ONEWAY).
 func _ray(from: Vector2, to: Vector2, hard_only: bool) -> int:
-	var q := PhysicsRayQueryParameters2D.create(body.global_position + from, body.global_position + to, 1 if hard_only else 3, [body.get_rid()])
+	var q := PhysicsRayQueryParameters2D.create(body.global_position + from, body.global_position + to, 5 if hard_only else 7, [body.get_rid()])
 	var hit := get_world_2d().direct_space_state.intersect_ray(q)
 	if hit.is_empty():
 		return SurfaceStep.NONE
-	return SurfaceStep.ONEWAY if (hit["collider"] as CollisionObject2D).collision_layer == 2 else SurfaceStep.HARD
+	var layer := (hit["collider"] as CollisionObject2D).collision_layer
+	return SurfaceStep.SLICK if layer == 4 else (SurfaceStep.ONEWAY if layer == 2 else SurfaceStep.HARD)
 
 ## Which side a wall is on within WALL_RANGE (the side the input points to first), 0 for none or on the floor.
 func _wall_side(dir: float) -> int:
@@ -458,6 +464,22 @@ func _oneway(r: Rect2) -> void:
 	look.size = r.size
 	look.position = -r.size / 2.0
 	look.color = Color(0.55, 0.45, 0.25)
+	b.add_child(look)
+	add_child(b)
+
+func _slick(r: Rect2) -> void:
+	var b := StaticBody2D.new()
+	b.collision_layer = 4
+	b.position = r.position + r.size / 2.0
+	var shape := CollisionShape2D.new()
+	var box := RectangleShape2D.new()
+	box.size = r.size
+	shape.shape = box
+	b.add_child(shape)
+	var look := ColorRect.new()
+	look.size = r.size
+	look.position = -r.size / 2.0
+	look.color = Color(0.6, 0.82, 0.95)
 	b.add_child(look)
 	add_child(b)
 
