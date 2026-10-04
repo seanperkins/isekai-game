@@ -1,0 +1,684 @@
+<title>Evolution Trees</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout concept: a survey sheet. One wide map up top, then principle cards that each carry one small diagram, then engine gotchas, then the two new areas, then decisions. */
+:root {
+  --bg: #edf0f1; --surface: #ffffff; --surface2: #e2e8ea; --ink: #14202a; --muted: #52626c; --line: #c8d1d6;
+  --accent: #0b7a75; --accent-soft: #cfe9e7;
+  --cave: #dbb67b; --grotto: #8cc690; --flooded: #82b9db; --deep: #ab9fd8; --forest: #a6cf55; --volcano: #ee7a4a;
+  --on-area: #14202a;
+  --cling: #c98a00; --swim: #5aa9e6; --short: #2a9d4a; --heat: #d9432b;
+  --warn: #c24a1a; --good: #2a8a4c;
+  --display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
+  --body: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "DM Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1315; --surface: #171c1f; --surface2: #20272a; --ink: #e7eef1; --muted: #9aa9b2; --line: #2b353a;
+    --accent: #3cc4bb; --accent-soft: #14393a;
+    --cave: #86683a; --grotto: #447f4f; --flooded: #31708f; --deep: #66569f; --forest: #62881f; --volcano: #bd4a1f;
+    --on-area: #f2f6f7;
+    --cling: #f0b429; --swim: #5fb0f5; --short: #5bd37c; --heat: #ff7a5c;
+    --warn: #ff8a5c; --good: #5bd37c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1315; --surface: #171c1f; --surface2: #20272a; --ink: #e7eef1; --muted: #9aa9b2; --line: #2b353a;
+  --accent: #3cc4bb; --accent-soft: #14393a;
+  --cave: #86683a; --grotto: #447f4f; --flooded: #31708f; --deep: #66569f; --forest: #62881f; --volcano: #bd4a1f;
+  --on-area: #f2f6f7;
+  --cling: #f0b429; --swim: #5fb0f5; --short: #5bd37c; --heat: #ff7a5c;
+  --warn: #ff8a5c; --good: #5bd37c;
+  color-scheme: dark;
+}
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.55; padding-inline: 16px; padding-block: 0 56px; }
+.wrap { max-width: 1060px; margin-inline: auto; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-height: 1.08; }
+h1 { font-size: clamp(2rem, 5.2vw, 3.4rem); font-weight: 800; letter-spacing: -0.02em; }
+h2 { font-size: clamp(1.45rem, 3vw, 1.9rem); font-weight: 800; letter-spacing: -0.01em; }
+h3 { font-size: 1.12rem; font-weight: 600; }
+p { margin: 0; }
+.eyebrow { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.tag { font-family: var(--mono); font-size: 0.72rem; background: var(--surface2); color: var(--muted); border-radius: 4px; padding: 1px 6px; white-space: nowrap; }
+header.top { padding-block: 40px 22px; display: grid; gap: 14px; }
+header.top p.lede { max-width: 62ch; font-size: 1.08rem; color: var(--muted); }
+section { padding-block: 34px 6px; display: grid; gap: 16px; }
+section > header { display: grid; gap: 6px; }
+section > header p { max-width: 64ch; color: var(--muted); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+.scroll-x { overflow-x: auto; }
+.scroll-x > svg.worldmap { min-width: 640px; }
+.scroll-x > svg.sketch { min-width: 400px; max-width: 480px; }
+svg.mini { max-width: 460px; }
+svg { display: block; width: 100%; height: auto; }
+.grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); align-items: start; }
+.grid.two { grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); }
+.grid.six { grid-template-columns: repeat(6, minmax(0, 1fr)); align-items: stretch; }
+.grid.six > .s2 { grid-column: span 2; } .grid.six > .s3 { grid-column: span 3; } .grid.six > .s6 { grid-column: 1 / -1; }
+@media (max-width: 860px) { .grid.six { grid-template-columns: minmax(0, 1fr); } .grid.six > * { grid-column: 1 / -1 !important; } }
+.mxpair { display: flex; flex-wrap: wrap; gap: 18px; } .mxpair > div { flex: 1 1 320px; min-width: 0; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.card .head { display: flex; gap: 8px; align-items: baseline; justify-content: space-between; }
+.card p.rule { color: var(--muted); font-size: 0.93rem; }
+.card p.rule b { color: var(--ink); font-weight: 600; }
+.stats { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-bottom: 10px; }
+.stats div { display: grid; }
+.stats b { font-family: var(--display); font-size: 1.9rem; line-height: 1; font-weight: 800; }
+.stats span { font-size: 0.8rem; color: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.8rem; color: var(--muted); margin-top: 10px; }
+.legend i { display: inline-block; width: 11px; height: 11px; vertical-align: -1px; margin-right: 5px; border-radius: 50%; }
+.legend i.sq { border-radius: 2px; }
+.legend i.dia { border-radius: 2px; transform: rotate(45deg) scale(0.8); }
+.takeaway { margin-top: 12px; border-left: 3px solid var(--accent); padding: 4px 0 4px 12px; font-weight: 500; }
+
+/* shared svg classes */
+.s-line { stroke: var(--ink); stroke-width: 1.6; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.s-muted { stroke: var(--muted); stroke-width: 1.2; fill: none; }
+.s-dash { stroke: var(--muted); stroke-width: 1.3; fill: none; stroke-dasharray: 4 3; }
+.s-acc { stroke: var(--accent); stroke-width: 2.2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.f-surface { fill: var(--surface); } .f-surface2 { fill: var(--surface2); } .f-ink { fill: var(--ink); }
+.f-muted { fill: var(--muted); } .f-accent { fill: var(--accent); } .f-accent-soft { fill: var(--accent-soft); }
+.f-warn { fill: var(--warn); } .f-good { fill: var(--good); } .f-volcano { fill: var(--volcano); }
+.f-flooded { fill: var(--flooded); } .f-forest { fill: var(--forest); } .f-cave { fill: var(--cave); } .f-deep { fill: var(--deep); }
+.node { fill: var(--surface); stroke: var(--ink); stroke-width: 1.6; }
+.node.new { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2; }
+.t { font: 500 11px var(--body); fill: var(--ink); }
+.tm { font: 400 10px var(--mono); fill: var(--muted); }
+.tb { font: 600 11px var(--body); fill: var(--ink); }
+.ta { font: 500 10.5px var(--mono); fill: var(--accent); }
+
+/* world map */
+.worldmap .room { stroke: var(--bg); stroke-width: 1; }
+.worldmap .a-cave { fill: var(--cave); } .worldmap .a-grotto { fill: var(--grotto); }
+.worldmap .a-flooded { fill: var(--flooded); } .worldmap .a-deep { fill: var(--deep); }
+.worldmap .rl { font: 600 10px var(--mono); fill: var(--on-area); }
+.worldmap .an { font: 800 13px var(--display); letter-spacing: 0.12em; fill: var(--muted); }
+.worldmap .spine { fill: none; stroke: var(--ink); stroke-opacity: 0.32; stroke-width: 7; stroke-linejoin: round; stroke-linecap: round; }
+.worldmap .loop { fill: none; stroke: var(--accent); stroke-width: 2.6; stroke-dasharray: 6 4; stroke-linejoin: round; }
+.worldmap .gate.cling { fill: var(--cling); stroke: var(--bg); stroke-width: 1.5; }
+.worldmap .gate.swim { fill: var(--swim); stroke: var(--bg); stroke-width: 1.5; }
+.worldmap .gate.short { fill: var(--short); stroke: var(--bg); stroke-width: 1.5; }
+.worldmap .door { fill: var(--surface); stroke: var(--ink); stroke-width: 1; }
+.worldmap .altar { fill: var(--on-area); } .worldmap .pool { fill: none; stroke: var(--on-area); stroke-width: 1.5; }
+.worldmap .dead { fill: none; stroke: var(--warn); stroke-width: 1.6; stroke-dasharray: 3 2; }
+.worldmap .ghost { fill: none; stroke-width: 1.8; stroke-dasharray: 6 5; }
+.worldmap .ghost.forest { stroke: var(--forest); } .worldmap .ghost.volcano { stroke: var(--volcano); }
+.worldmap .gl { font: 500 10.5px var(--mono); }
+.worldmap .gl { fill: var(--muted); }
+.worldmap .stub { stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 3 3; }
+.lg-spine { background: var(--ink); opacity: 0.32; height: 4px !important; border-radius: 2px !important; width: 18px !important; }
+.lg-loop { background: transparent; border: 2px dashed var(--accent); border-radius: 2px !important; width: 18px !important; height: 0 !important; }
+.lg-dead { background: transparent; border: 1.5px dashed var(--warn); border-radius: 2px !important; }
+.lg-cling { background: var(--cling); } .lg-swim { background: var(--swim); } .lg-short { background: var(--short); }
+.lg-altar { background: var(--ink); } .lg-pool { background: transparent; border: 1.5px solid var(--ink); }
+
+/* matrices */
+.matrix { display: grid; grid-template-columns: 3.6rem repeat(6, minmax(0, 1fr)); gap: 3px; font-size: 0.7rem; }
+.matrix .h { font-family: var(--mono); color: var(--muted); text-align: center; padding-block: 2px; }
+.matrix .rowh { font-family: var(--mono); color: var(--muted); align-self: center; font-size: 0.68rem; }
+.matrix .c { min-height: 22px; border-radius: 4px; background: var(--surface2); display: grid; place-items: center; font-family: var(--mono); font-size: 0.64rem; color: var(--ink); }
+.matrix .c.cling { background: var(--cling); color: #14202a; } .matrix .c.swim { background: var(--swim); color: #14202a; }
+.matrix .c.lane { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent); }
+.matrix .c.off { background: transparent; border: 1px dashed var(--line); }
+.mx-title { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); margin-bottom: 4px; }
+
+/* flows */
+.flow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.chip { background: var(--surface2); border-radius: 6px; padding: 5px 9px; font-size: 0.85rem; }
+.chip.bad { background: color-mix(in srgb, var(--warn) 18%, var(--surface)); color: var(--warn); font-weight: 600; }
+.chip.ok { background: color-mix(in srgb, var(--good) 18%, var(--surface)); color: var(--good); font-weight: 600; }
+.chip.acc { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.arrow { color: var(--muted); font-family: var(--mono); }
+.bar { display: flex; height: 26px; border-radius: 6px; overflow: hidden; font-family: var(--mono); font-size: 0.7rem; }
+.bar div { display: grid; place-items: center; white-space: nowrap; }
+.bar .oneway { background: var(--surface2); color: var(--muted); }
+.bar .hard { background: var(--accent); color: var(--bg); padding-inline: 6px; }
+.zeros { display: flex; gap: 8px; flex-wrap: wrap; }
+.zeros div { flex: 1 1 120px; background: var(--surface2); border-radius: 6px; padding: 6px 9px; display: grid; }
+.zeros b { font-family: var(--display); font-size: 1.5rem; line-height: 1; color: var(--warn); }
+.zeros span { font-size: 0.75rem; color: var(--muted); }
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.steps div { background: var(--surface2); border-radius: 8px; padding: 9px 10px; display: grid; gap: 3px; font-size: 0.85rem; }
+.steps b { font-family: var(--display); font-size: 0.98rem; }
+.steps span { color: var(--muted); font-size: 0.8rem; }
+.steps div.gate { background: var(--accent-soft); }
+.dial { position: relative; height: 34px; border-radius: 8px; overflow: hidden; display: grid; grid-template-columns: 1fr 1.6fr 1fr; font-size: 0.72rem; font-family: var(--mono); }
+.dial div { display: grid; place-items: center; text-align: center; padding-inline: 4px; }
+.dial .k { background: color-mix(in srgb, var(--warn) 30%, var(--surface)); }
+.dial .m { background: color-mix(in srgb, var(--cling) 30%, var(--surface)); font-weight: 500; }
+.dial .h { background: var(--surface2); color: var(--muted); }
+.dial-notes { display: grid; grid-template-columns: 1fr 1.6fr 1fr; font-size: 0.78rem; color: var(--muted); gap: 4px; margin-top: 4px; }
+.lanes { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; }
+.lane { background: var(--surface2); border-radius: 8px; padding: 9px 11px; font-size: 0.86rem; display: grid; gap: 2px; }
+.lane b { font-family: var(--display); font-size: 0.98rem; }
+.lane span { color: var(--muted); font-size: 0.82rem; }
+.decide { display: grid; gap: 8px; }
+.opts { display: flex; flex-wrap: wrap; gap: 6px; }
+.opt { background: var(--surface2); border-radius: 6px; padding: 4px 9px; font-size: 0.84rem; }
+.opt.lean { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.note { font-size: 0.85rem; color: var(--muted); }
+footer.foot { margin-top: 34px; padding-top: 16px; border-top: 1px solid var(--line); display: grid; gap: 6px; font-size: 0.84rem; color: var(--muted); }
+code { font-family: var(--mono); font-size: 0.82em; background: var(--surface2); padding: 1px 5px; border-radius: 4px; }
+
+/* part 2 */
+svg.plan { min-width: 760px; }
+svg.plan .pe { stroke: var(--muted); stroke-width: 2; fill: none; } svg.plan .pe.dash { stroke-dasharray: 5 4; } svg.plan .pe.loop { stroke: var(--accent); }
+svg.plan .pn { stroke: var(--bg); stroke-width: 1; }
+svg.plan .pn.a-cave { fill: var(--cave); } svg.plan .pn.a-grotto { fill: var(--grotto); } svg.plan .pn.a-flooded { fill: var(--flooded); } svg.plan .pn.a-deep { fill: var(--deep); }
+svg.plan .pn.plan { fill: none; stroke-width: 1.8; stroke-dasharray: 6 4; }
+svg.plan .pn.plan.forest { stroke: var(--forest); } svg.plan .pn.plan.cluster { stroke: var(--deep); } svg.plan .pn.plan.demon { stroke: var(--heat); }
+svg.plan .pn.plan.volcano { stroke: var(--volcano); } svg.plan .pn.plan.last { stroke: var(--muted); }
+svg.plan .pt { font: 600 13px var(--display); fill: var(--on-area); } svg.plan .ps { font: 400 10px var(--mono); fill: var(--muted); }
+svg.plan .a-cave ~ .pt, svg.plan .pn[class*="a-"] + .pt + .ps { fill: var(--on-area); }
+svg.plan .contest { fill: none; stroke: var(--warn); stroke-width: 1.8; stroke-dasharray: 6 4; }
+.beam { fill: var(--cling); opacity: 0.28; } .win { fill: var(--deep); stroke: var(--ink); stroke-width: 1.2; }
+.mud { fill: color-mix(in srgb, var(--cave) 65%, var(--ink)); }
+.standing { display: grid; grid-template-columns: 6rem repeat(3, minmax(0, 1fr)); gap: 3px; font-size: 0.74rem; }
+.standing .sh { font-family: var(--mono); color: var(--muted); text-align: center; padding-block: 2px; font-size: 0.68rem; }
+.standing .sr { font-family: var(--mono); color: var(--muted); align-self: center; font-size: 0.68rem; }
+.standing .sc { border-radius: 4px; padding: 6px 4px; text-align: center; background: var(--surface2); }
+.standing .sc.safe { background: color-mix(in srgb, var(--good) 20%, var(--surface)); } .standing .sc.ok { background: var(--accent-soft); color: var(--accent); }
+.standing .sc.wary { background: color-mix(in srgb, var(--cling) 25%, var(--surface)); } .standing .sc.off { background: transparent; border: 1px dashed var(--line); color: var(--muted); }
+.opt.bad { background: color-mix(in srgb, var(--warn) 18%, var(--surface)); color: var(--warn); }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+
+/* species evolution report */
+:root { --slime: #4fc3a1; --spider: #a98ae0; --goblin: #7bbf5a; --undead: #9fb1c4; --wolf: #e0a43c; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --slime: #2f8a73; --spider: #6f55a8; --goblin: #4f8a35; --undead: #5d7189; --wolf: #a47619; } }
+:root[data-theme="dark"] { --slime: #2f8a73; --spider: #6f55a8; --goblin: #4f8a35; --undead: #5d7189; --wolf: #a47619; }
+svg.tree { min-width: 700px; }
+svg.tree .te { stroke: var(--muted); stroke-width: 1.6; fill: none; }
+svg.tree .te.join { stroke: var(--accent); stroke-width: 3; }
+svg.tree .te.dash { stroke-dasharray: 5 4; } svg.tree .te.dot { stroke-dasharray: 2 4; stroke: var(--muted); }
+svg.tree .tn { stroke: var(--bg); stroke-width: 1; fill: var(--sp); }
+svg.tree .tn.k-branch { opacity: 0.82; }
+svg.tree .tn.k-cap { stroke: var(--ink); stroke-width: 2.2; }
+svg.tree .tn.k-alt { fill: none; stroke: var(--sp); stroke-width: 2; stroke-dasharray: 6 4; }
+svg.tree .tn.k-secret { fill: none; stroke: var(--muted); stroke-width: 2; stroke-dasharray: 2 4; }
+svg.tree .tn.k-later { fill: none; stroke: var(--sp); stroke-width: 1.6; stroke-dasharray: 2 3; }
+svg.tree .tl { font: 600 12px var(--display); fill: var(--on-area); } svg.tree .ts { font: 400 9.5px var(--mono); fill: var(--on-area); opacity: 0.85; }
+svg.tree .tn.k-alt ~ .tl, svg.tree .th { fill: var(--ink); }
+svg.tree .th { font: 400 10px var(--mono); fill: var(--muted); }
+svg.tree .tl.out, svg.tree .ts.out { fill: var(--ink); }
+.slimetree .band { fill: var(--surface2); opacity: 0.5; }
+.slimetree .band.l-weaver { fill: color-mix(in srgb, var(--spider) 30%, var(--surface)); } .slimetree .band.l-tide { fill: color-mix(in srgb, var(--flooded) 30%, var(--surface)); }
+.slimetree .band.l-toxic { fill: color-mix(in srgb, var(--grotto) 30%, var(--surface)); } .slimetree .band.l-bulwark { fill: color-mix(in srgb, var(--cave) 30%, var(--surface)); }
+.slimetree .band.l-echo { fill: color-mix(in srgb, var(--undead) 30%, var(--surface)); } .slimetree .band.l-greater { fill: color-mix(in srgb, var(--slime) 25%, var(--surface)); }
+.slimetree .edge { fill: none; stroke: var(--muted); stroke-width: 1.5; }
+.slimetree .node { stroke: var(--bg); stroke-width: 1; fill: var(--slime); }
+.slimetree .node.root { fill: var(--ink); }
+.slimetree .nl { font: 600 11px var(--display); fill: var(--on-area); } .slimetree .node.root + .nl { fill: var(--bg); }
+.slimetree .tm { font: 400 9.5px var(--mono); fill: var(--muted); }
+.shape { display: grid; gap: 6px; align-content: start; }
+.shape svg { max-width: 170px; }
+.shape h3 { font-size: 0.98rem; }
+.shape p { font-size: 0.84rem; color: var(--muted); }
+.shapes { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+.shapes .shape { background: var(--surface2); border-radius: 10px; padding: 12px; }
+.shape .gn { fill: var(--surface); stroke: var(--ink); stroke-width: 1.5; } .shape .gn.hot { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2; }
+.shape .ge { stroke: var(--muted); stroke-width: 1.6; fill: none; } .shape .ge.hot { stroke: var(--accent); stroke-width: 2.4; } .shape .ge.dash { stroke-dasharray: 4 3; } .shape .ge.dot { stroke-dasharray: 2 3; }
+.shape .gt { font: 400 9px var(--mono); fill: var(--muted); }
+.egrid { display: grid; grid-template-columns: 4.6rem repeat(5, minmax(120px, 1fr)); gap: 3px; font-size: 0.78rem; min-width: 780px; }
+.egrid .h { font-family: var(--display); font-weight: 600; padding: 6px 8px; border-radius: 6px; color: var(--on-area); }
+.egrid .h.slime { background: var(--slime); } .egrid .h.spider { background: var(--spider); } .egrid .h.goblin { background: var(--goblin); } .egrid .h.undead { background: var(--undead); } .egrid .h.wolf { background: var(--wolf); }
+.egrid .r { font-family: var(--mono); color: var(--muted); align-self: center; font-size: 0.72rem; }
+.egrid .c { background: var(--surface2); border-radius: 6px; padding: 6px 8px; line-height: 1.3; }
+.egrid .c.later { border: 1px dashed var(--line); background: transparent; color: var(--muted); }
+.egrid .c.hurt { background: color-mix(in srgb, var(--warn) 20%, var(--surface)); }
+.recipe { display: grid; grid-template-columns: 3.4rem repeat(8, minmax(64px, 1fr)); gap: 3px; min-width: 640px; font-size: 0.68rem; }
+.recipe .h { font-family: var(--mono); text-align: center; color: var(--muted); align-self: center; padding: 2px; }
+.recipe .rh { font-family: var(--mono); color: var(--muted); align-self: center; }
+.recipe .x { min-height: 34px; border-radius: 6px; display: grid; place-items: center; text-align: center; padding: 2px; line-height: 1.15; font-family: var(--mono); }
+.recipe .x.none { background: transparent; }
+.recipe .x.exists { background: var(--accent); color: var(--bg); font-weight: 500; }
+.recipe .x.planned { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent); }
+.recipe .x.prop { background: var(--surface2); color: var(--ink); }
+.recipe .x.fizz { background: transparent; border: 1px dashed var(--line); color: var(--muted); }
+.glyphs { display: flex; flex-wrap: wrap; gap: 14px 22px; font-size: 0.82rem; }
+.glyphs span { display: inline-flex; align-items: center; gap: 7px; }
+.glyphs svg { width: 22px; height: 22px; }
+.glyphs .gs { fill: var(--surface2); stroke: var(--ink); stroke-width: 1.6; }
+.pairmap { display: grid; grid-template-columns: 1fr 24px 1fr; gap: 6px 4px; align-items: center; font-size: 0.84rem; }
+.pairmap .p { background: var(--surface2); border-radius: 6px; padding: 5px 9px; }
+.pairmap .p.c { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.pairmap .a { text-align: center; color: var(--muted); font-family: var(--mono); }
+</style>
+
+<div class="wrap">
+<header class="top">
+  <p class="eyebrow">Isekai Chronicles &middot; species evolution research</p>
+  <h1>Make every fork change something. Trees for five species.</h1>
+  <p class="lede">What close to 190 pages of evolution and skill-tree design say, checked against your 24 slime forms, then worked examples for the slime, spider, goblin, undead and wolf.</p>
+</header>
+
+<section>
+  <header>
+    <p class="eyebrow">Where the slime stands</p>
+    <h2>Good bones, two soft spots</h2>
+    <p>Six lineages, 24 forms, four stages. The stage-3 choice changes stats and a passive but leads to the same stage 4, and the evolved power does not decide which child you get.</p>
+  </header>
+  <div class="panel">
+    <div class="stats"><div><b>24</b><span>slime forms</span></div><div><b>6</b><span>lineages</span></div><div><b>8</b><span>evolved powers</span></div><div><b>1</b><span>species with a tree</span></div></div>
+    <div class="scroll-x"><svg class="slimetree" viewBox="0 0 900 482" role="img" aria-label="The slime evolution tree: six lineages, three further stages, final forms joining two parents">
+<text class="tm" x="14" y="16">stage 1</text>
+<text class="tm" x="206" y="16">stage 2: by powers owned</text>
+<text class="tm" x="408" y="16">stage 3: pick one of two</text>
+<text class="tm" x="640" y="16">stage 4: one Sovereign per lineage</text>
+<rect class="band l-weaver" x="2" y="32" width="896" height="70" rx="6"/>
+<rect class="band l-tide" x="2" y="106" width="896" height="70" rx="6"/>
+<rect class="band l-toxic" x="2" y="180" width="896" height="70" rx="6"/>
+<rect class="band l-bulwark" x="2" y="254" width="896" height="70" rx="6"/>
+<rect class="band l-echo" x="2" y="328" width="896" height="70" rx="6"/>
+<rect class="band l-greater" x="2" y="402" width="896" height="70" rx="6"/>
+<path class="edge" d="M356.0,207.0 C382.0,207.0 382.0,202.0 408.0,202.0"/>
+<path class="edge" d="M356.0,59.0 C382.0,59.0 382.0,54.0 408.0,54.0"/>
+<path class="edge" d="M356.0,207.0 C382.0,207.0 382.0,232.0 408.0,232.0"/>
+<path class="edge" d="M356.0,133.0 C382.0,133.0 382.0,128.0 408.0,128.0"/>
+<path class="edge" d="M124.0,252.0 C165.0,252.0 165.0,281.0 206.0,281.0"/>
+<path class="edge" d="M356.0,281.0 C382.0,281.0 382.0,276.0 408.0,276.0"/>
+<path class="edge" d="M124.0,252.0 C165.0,252.0 165.0,355.0 206.0,355.0"/>
+<path class="edge" d="M356.0,281.0 C382.0,281.0 382.0,306.0 408.0,306.0"/>
+<path class="edge" d="M124.0,252.0 C165.0,252.0 165.0,429.0 206.0,429.0"/>
+<path class="edge" d="M356.0,355.0 C382.0,355.0 382.0,350.0 408.0,350.0"/>
+<path class="edge" d="M558.0,454.0 C599.0,454.0 599.0,437.0 640.0,437.0"/>
+<path class="edge" d="M558.0,424.0 C599.0,424.0 599.0,437.0 640.0,437.0"/>
+<path class="edge" d="M356.0,429.0 C382.0,429.0 382.0,424.0 408.0,424.0"/>
+<path class="edge" d="M558.0,84.0 C599.0,84.0 599.0,67.0 640.0,67.0"/>
+<path class="edge" d="M558.0,54.0 C599.0,54.0 599.0,67.0 640.0,67.0"/>
+<path class="edge" d="M356.0,355.0 C382.0,355.0 382.0,380.0 408.0,380.0"/>
+<path class="edge" d="M356.0,59.0 C382.0,59.0 382.0,84.0 408.0,84.0"/>
+<path class="edge" d="M558.0,306.0 C599.0,306.0 599.0,289.0 640.0,289.0"/>
+<path class="edge" d="M558.0,276.0 C599.0,276.0 599.0,289.0 640.0,289.0"/>
+<path class="edge" d="M558.0,350.0 C599.0,350.0 599.0,363.0 640.0,363.0"/>
+<path class="edge" d="M558.0,380.0 C599.0,380.0 599.0,363.0 640.0,363.0"/>
+<path class="edge" d="M356.0,133.0 C382.0,133.0 382.0,158.0 408.0,158.0"/>
+<path class="edge" d="M558.0,128.0 C599.0,128.0 599.0,141.0 640.0,141.0"/>
+<path class="edge" d="M558.0,158.0 C599.0,158.0 599.0,141.0 640.0,141.0"/>
+<path class="edge" d="M124.0,252.0 C165.0,252.0 165.0,133.0 206.0,133.0"/>
+<path class="edge" d="M124.0,252.0 C165.0,252.0 165.0,207.0 206.0,207.0"/>
+<path class="edge" d="M356.0,429.0 C382.0,429.0 382.0,454.0 408.0,454.0"/>
+<path class="edge" d="M558.0,202.0 C599.0,202.0 599.0,215.0 640.0,215.0"/>
+<path class="edge" d="M558.0,232.0 C599.0,232.0 599.0,215.0 640.0,215.0"/>
+<path class="edge" d="M124.0,252.0 C165.0,252.0 165.0,59.0 206.0,59.0"/>
+<rect class="node root" x="14" y="239.0" width="110" height="26" rx="13"/><text class="nl" x="69.0" y="256.0" text-anchor="middle">Slime</text>
+<rect class="node" x="408" y="189.0" width="150" height="26" rx="13"/><text class="nl" x="483.0" y="206.0" text-anchor="middle">Acid</text>
+<rect class="node" x="408" y="41.0" width="150" height="26" rx="13"/><text class="nl" x="483.0" y="58.0" text-anchor="middle">Arachne</text>
+<rect class="node" x="408" y="219.0" width="150" height="26" rx="13"/><text class="nl" x="483.0" y="236.0" text-anchor="middle">Blight</text>
+<rect class="node" x="408" y="115.0" width="150" height="26" rx="13"/><text class="nl" x="483.0" y="132.0" text-anchor="middle">Brook</text>
+<rect class="node" x="206" y="268.0" width="150" height="26" rx="13"/><text class="nl" x="281.0" y="285.0" text-anchor="middle">Bulwark</text>
+<text class="tm" x="210" y="306.0">Armor + Shell + Tremor</text>
+<rect class="node" x="408" y="263.0" width="150" height="26" rx="13"/><text class="nl" x="483.0" y="280.0" text-anchor="middle">Crystal</text>
+<rect class="node" x="206" y="342.0" width="150" height="26" rx="13"/><text class="nl" x="281.0" y="359.0" text-anchor="middle">Echo</text>
+<text class="tm" x="210" y="380.0">Echolocation</text>
+<rect class="node" x="408" y="293.0" width="150" height="26" rx="13"/><text class="nl" x="483.0" y="310.0" text-anchor="middle">Golem</text>
+<rect class="node" x="206" y="416.0" width="150" height="26" rx="13"/><text class="nl" x="281.0" y="433.0" text-anchor="middle">Greater Slime</text>
+<text class="tm" x="210" y="454.0">no power: the fallback</text>
+<rect class="node" x="408" y="337.0" width="150" height="26" rx="13"/><text class="nl" x="483.0" y="354.0" text-anchor="middle">Phantom</text>
+<rect class="node" x="640" y="424.0" width="150" height="26" rx="13"/><text class="nl" x="715.0" y="441.0" text-anchor="middle">Prime Sovereign</text>
+<rect class="node" x="408" y="411.0" width="150" height="26" rx="13"/><text class="nl" x="483.0" y="428.0" text-anchor="middle">Radiant Slime</text>
+<rect class="node" x="640" y="54.0" width="150" height="26" rx="13"/><text class="nl" x="715.0" y="71.0" text-anchor="middle">Silkbound Sovereign</text>
+<rect class="node" x="408" y="367.0" width="150" height="26" rx="13"/><text class="nl" x="483.0" y="384.0" text-anchor="middle">Sky</text>
+<rect class="node" x="408" y="71.0" width="150" height="26" rx="13"/><text class="nl" x="483.0" y="88.0" text-anchor="middle">Snare</text>
+<rect class="node" x="640" y="276.0" width="150" height="26" rx="13"/><text class="nl" x="715.0" y="293.0" text-anchor="middle">Stone Sovereign</text>
+<rect class="node" x="640" y="350.0" width="150" height="26" rx="13"/><text class="nl" x="715.0" y="367.0" text-anchor="middle">Storm Sovereign</text>
+<rect class="node" x="408" y="145.0" width="150" height="26" rx="13"/><text class="nl" x="483.0" y="162.0" text-anchor="middle">Tempest</text>
+<rect class="node" x="640" y="128.0" width="150" height="26" rx="13"/><text class="nl" x="715.0" y="145.0" text-anchor="middle">Tidal Sovereign</text>
+<rect class="node" x="206" y="120.0" width="150" height="26" rx="13"/><text class="nl" x="281.0" y="137.0" text-anchor="middle">Tide</text>
+<text class="tm" x="210" y="158.0">Hydraulic Propulsion</text>
+<rect class="node" x="206" y="194.0" width="150" height="26" rx="13"/><text class="nl" x="281.0" y="211.0" text-anchor="middle">Toxic</text>
+<text class="tm" x="210" y="232.0">Poison Breath + Spore Cloud</text>
+<rect class="node" x="408" y="441.0" width="150" height="26" rx="13"/><text class="nl" x="483.0" y="458.0" text-anchor="middle">Vast Slime</text>
+<rect class="node" x="640" y="202.0" width="150" height="26" rx="13"/><text class="nl" x="715.0" y="219.0" text-anchor="middle">Venom Sovereign</text>
+<rect class="node" x="206" y="46.0" width="150" height="26" rx="13"/><text class="nl" x="281.0" y="63.0" text-anchor="middle">Weaver</text>
+<text class="tm" x="210" y="84.0">Sticky Thread</text>
+</svg></div>
+    <p class="takeaway">Fix it cheaply: let the power branch pick the stage-3 child, and let stage 4 keep one passive from the child you took. Then the stage-3 choice reaches the ending.</p>
+  </div>
+</section>
+
+<section>
+  <header>
+    <p class="eyebrow">What makes a choice good</p>
+    <h2>Six rules from the precedents</h2>
+  </header>
+  <div class="grid">
+    <article class="card"><div class="head"><h3>Trade, not upgrade</h3><span class="tag">Slay the Spire</span></div><p class="rule"><b>A branch gives something up.</b> Rest or Smith. Hollow Knight charms with limited notches. A fire-aligned spider loses Binding Web because fire burns webs.</p></article>
+    <article class="card"><div class="head"><h3>Two or three options</h3><span class="tag">Hades, PoE</span></div><p class="rule"><b>Never a long menu.</b> Three boons, three cards, three ascendancies per class. Eevee has eight, but each has a clearly different trigger. Five rows is your tree screen&#39;s limit.</p></article>
+    <article class="card"><div class="head"><h3>Joins have two parents</h3><span class="tag">Jogress, duo boons</span></div><p class="rule"><b>Exactly two named parents</b> in every convergence you can find: Digimon, Hades, Vampire Survivors, Shin Megami Tensei. Show the missing parent as a ???.</p></article>
+    <article class="card"><div class="head"><h3>Let place flavour the fork</h3><span class="tag">Eevee, Nocturne</span></div><p class="rule"><b>Moss rocks, ice rocks, time of day, the moon.</b> Your areas are the triggers: a cathedral, a swamp, a volcano.</p></article>
+    <article class="card"><div class="head"><h3>Preview before commit</h3><span class="tag">Nocturne</span></div><p class="rule"><b>Show the result first.</b> Nocturne previews a fusion; Vampire Survivors hints pairings; Biomorph lets you try a form where you killed it.</p></article>
+    <article class="card"><div class="head"><h3>Hide only secrets</h3><span class="tag">Tamagotchi</span></div><p class="rule"><b>Hidden conditions push players to wikis.</b> Hide the deepest secrets, show stubs one step ahead. Spore shows the cost of choices with no consequence.</p></article>
+  </div>
+  <div class="panel"><p class="note">One observation, not a reopening: after a Cave and Grotto clear almost every life is offered the same five lineages. By the sources' definitions that reads as an illusory choice. If you want weight there, three cheap levers exist: offer at most three lineages by diet share, tie an offer to the area where you hit the cap, or let a soul perk lock a form as a head start.</p></div>
+</section>
+
+<section>
+  <header>
+    <p class="eyebrow">A menu of shapes</p>
+    <h2>Eleven ways to shape a fork</h2>
+    <p>Pick the shape per choice, not per game. Each card names the example in this guide.</p>
+  </header>
+  <div class="panel"><div class="shapes"><div class="shape"><svg viewBox="0 0 170 78" role="img" aria-hidden="true"><line class="ge " x1="24" y1="39" x2="100" y2="20"/><line class="ge " x1="24" y1="39" x2="100" y2="58"/><circle class="gn" cx="24" cy="39" r="8"/><circle class="gn" cx="110" cy="20" r="8"/><circle class="gn" cx="110" cy="58" r="8"/><text class="gt" x="148" y="24" text-anchor="start">A</text><text class="gt" x="148" y="62" text-anchor="start">B</text></svg><h3>Binary branch</h3><p><span class="tag">exists</span> Two directions off one power. Spider: Web Shot to Snare Bolt or Weave Net.</p></div><div class="shape"><svg viewBox="0 0 170 78" role="img" aria-hidden="true"><line class="ge " x1="20" y1="39" x2="100" y2="12"/><line class="ge " x1="20" y1="39" x2="100" y2="39"/><line class="ge " x1="20" y1="39" x2="100" y2="66"/><circle class="gn" cx="20" cy="39" r="8"/><circle class="gn" cx="110" cy="12" r="8"/><circle class="gn" cx="110" cy="39" r="8"/><circle class="gn" cx="110" cy="66" r="8"/></svg><h3>Three-way fork</h3><p><span class="tag">norm of three</span> Undead off the skeleton; spider stage 3. Hades, Slay the Spire and Path of Exile all offer three.</p></div><div class="shape"><svg viewBox="0 0 170 78" role="img" aria-hidden="true"><line class="ge hot" x1="40" y1="16" x2="120" y2="39"/><line class="ge hot" x1="40" y1="62" x2="120" y2="39"/><circle class="gn" cx="30" cy="16" r="8"/><circle class="gn" cx="30" cy="62" r="8"/><circle class="gn hot" cx="130" cy="39" r="8"/><text class="gt" x="30" y="4" text-anchor="start">two parents</text></svg><h3>Convergence</h3><p><span class="tag">two parents</span> A Ghoul holding a bone-magic graft becomes a Death Knight. The slime stage 4 already joins two.</p></div><div class="shape"><svg viewBox="0 0 170 78" role="img" aria-hidden="true"><line class="ge " x1="20" y1="20" x2="70" y2="20"/><line class="ge " x1="20" y1="58" x2="70" y2="58"/><line class="ge hot" x1="76" y1="20" x2="140" y2="20"/><line class="ge hot" x1="76" y1="58" x2="140" y2="58"/><circle class="gn" cx="14" cy="20" r="8"/><circle class="gn" cx="14" cy="58" r="8"/><circle class="gn" cx="72" cy="20" r="8"/><circle class="gn" cx="72" cy="58" r="8"/><circle class="gn hot" cx="150" cy="20" r="8"/><circle class="gn hot" cx="150" cy="58" r="8"/><text class="gt" x="14" y="42" text-anchor="start">power branch</text><text class="gt" x="150" y="42" text-anchor="end">child</text></svg><h3>Branch decides child</h3><p><span class="tag">not built</span> Swing Thread leads to Arachne, Binding Web to Snare. The design doc wants it.</p></div><div class="shape"><svg viewBox="0 0 170 78" role="img" aria-hidden="true"><rect class="gn" x="8" y="14" width="64" height="10" rx="3"/><rect class="gn hot" x="8" y="14" width="40" height="10" rx="3"/><rect class="gn" x="8" y="34" width="64" height="10" rx="3"/><rect class="gn" x="8" y="34" width="14" height="10" rx="3"/><rect class="gn" x="8" y="54" width="64" height="10" rx="3"/><rect class="gn" x="8" y="54" width="24" height="10" rx="3"/><line class="ge hot" x1="80" y1="19" x2="128" y2="39"/><circle class="gn hot" cx="138" cy="39" r="8"/><text class="gt" x="138" y="66" text-anchor="middle">most eaten</text></svg><h3>Fork by diet</h3><p><span class="tag">goblin, wolf</span> Mostly beasts learned: Tamer. Mostly junk: Tinker. The dominant lesson picks the form.</p></div><div class="shape"><svg viewBox="0 0 170 78" role="img" aria-hidden="true"><line class="ge " x1="24" y1="39" x2="100" y2="39"/><circle class="gn" cx="24" cy="39" r="8"/><circle class="gn" cx="110" cy="39" r="8"/><path class="ge hot dash" d="M110 12 v18"/><rect class="gn" x="96" y="2" width="28" height="12" rx="3"/><text class="gt" x="110" y="11" text-anchor="middle">place</text><text class="gt" x="140" y="62" text-anchor="end">area sets offer</text></svg><h3>Environment-triggered</h3><p><span class="tag">Eevee, Lycanroc</span> Lava pool and fire essence offers Ember. The area you hit the cap in changes the menu.</p></div><div class="shape"><svg viewBox="0 0 170 78" role="img" aria-hidden="true"><line class="ge dot" x1="24" y1="39" x2="100" y2="39"/><circle class="gn" cx="24" cy="39" r="8"/><circle class="gn" cx="110" cy="39" r="12" style="stroke-dasharray:2 3"/><text class="gt" x="110" y="43" text-anchor="middle">???</text><text class="gt" x="70" y="62" text-anchor="middle">a deed reveals it</text></svg><h3>Hidden or secret</h3><p><span class="tag">stub</span> Eat five goblins as a spider: Lure. Eat a mimic three times: Mimic Slime.</p></div><div class="shape"><svg viewBox="0 0 170 78" role="img" aria-hidden="true"><circle class="gn" cx="24" cy="14" r="8"/><circle class="gn" cx="24" cy="62" r="8"/><line class="ge dash" x1="24" y1="22" x2="24" y2="54"/><path class="ge hot" d="M60 62 q30 -30 60 -24"/><text class="gt" x="100" y="14" text-anchor="middle">fed: back up</text><text class="gt" x="70" y="76" text-anchor="middle">starved: down</text></svg><h3>Regression</h3><p><span class="tag">temporary</span> A vampire starved of blood falls back to ghoul until fed. Never remove an earned form.</p></div><div class="shape"><svg viewBox="0 0 170 78" role="img" aria-hidden="true"><circle class="gn" cx="20" cy="20" r="8"/><circle class="gn" cx="20" cy="58" r="8"/><line class="ge dash" x1="28" y1="24" x2="70" y2="39"/><line class="ge dash" x1="28" y1="54" x2="70" y2="39"/><circle class="gn hot" cx="86" cy="39" r="12" style="stroke-dasharray:3 2"/><text class="gt" x="130" y="43" text-anchor="start">20 s</text></svg><h3>Temporary fusion</h3><p><span class="tag">20 s</span> Goblin plus a tamed companion fuse as a Rider. No regret, because it ends.</p></div><div class="shape"><svg viewBox="0 0 170 78" role="img" aria-hidden="true"><line class="ge " x1="20" y1="39" x2="80" y2="39"/><circle class="gn" cx="20" cy="39" r="8"/><rect class="gn hot" x="76" y="25" width="28" height="28" transform="rotate(45 90 39)"/><text class="gt" x="120" y="43" text-anchor="start">once</text><text class="gt" x="120" y="56" text-anchor="start">per life</text></svg><h3>One-time capstone</h3><p><span class="tag">once per life</span> Lich or Vampire at the crypt altar for most of your held dark or blood.</p></div><div class="shape"><svg viewBox="0 0 170 78" role="img" aria-hidden="true"><rect class="gn" x="10" y="22" width="40" height="34" rx="6"/><rect class="gn hot" x="44" y="14" width="22" height="16" rx="4"/><rect class="gn hot" x="44" y="40" width="22" height="16" rx="4"/><rect class="gn hot" x="2" y="32" width="14" height="14" rx="4"/><text class="gt" x="112" y="36" text-anchor="start">parts show</text><text class="gt" x="112" y="49" text-anchor="start">on the body</text></svg><h3>Modular body</h3><p><span class="tag">grafts, parts</span> Ribs, a bow-arm or a skull show on the undead; held parts sit inside the slime.</p></div></div></div>
+</section>
+
+<section>
+  <header>
+    <p class="eyebrow">One element, five readings</p>
+    <h2>Dark is a lich on a skeleton and an assassin on a goblin</h2>
+    <p>The design doc says an essence reads differently per species. This is a draft of the whole grid. Dashed cells wait on elements that arrive later.</p>
+  </header>
+  <div class="panel"><div class="scroll-x"><div class="egrid" role="table" aria-label="One element read by five species"><span></span><span class="h slime">Slime</span><span class="h spider">Spider</span><span class="h goblin">Goblin</span><span class="h undead">Undead</span><span class="h wolf">Wolf</span><span class="r">water</span><span class="c">tide: jets, blades, current</span><span class="c">poison base (with dark); dew-slick webs</span><span class="c">bog bombs, flood traps</span><span class="c">drowned regrowth in water</span><span class="c">river hunter, scent trails</span><span class="r">earth</span><span class="c">bulwark: shell, tremor</span><span class="c">brood cocoons, burrow lair</span><span class="c">tinker: rock craft, rigs</span><span class="c">zombie and ghoul tank</span><span class="c">dire: knockback-proof</span><span class="r">air</span><span class="c">echo: sense, long leap</span><span class="c">silk drift, longer zip</span><span class="c">skulker: smoke, sneak</span><span class="c">archer: returning bone throws</span><span class="c">howl, speed</span><span class="r">light</span><span class="c">lumen and mender: glow, heal</span><span class="c">sparkweaver (with air = lightning)</span><span class="c">paladin: redeemed upward</span><span class="c hurt">HURTS: holy weakness; a lich can ward</span><span class="c">grim: a guardian that wards the pack</span><span class="r">dark</span><span class="c">toxic and vicious: rot</span><span class="c">shadow-stalker: ceiling ambush</span><span class="c">assassin: shadowflame</span><span class="c">lich, vampire, ghoul feed</span><span class="c">barghest: silent stalker, fear howl</span><span class="r">fire (later)</span><span class="c later">ember: lava trail</span><span class="c later">burns webs (a trade-off)</span><span class="c later">tinker: explosives</span><span class="c later">burning skeleton</span><span class="c later">hellhound (with dark)</span><span class="r">mind (later)</span><span class="c later">sense, lumen</span><span class="c later">hive: a web network</span><span class="c later">tamer, shaman</span><span class="c later">lich: bone magic</span><span class="c later">pack bond</span><span class="r">blood (later)</span><span class="c later">none yet</span><span class="c later">none yet</span><span class="c later">redcap-style assassin</span><span class="c later">vampire</span><span class="c later">bleed, pack hunt</span></div></div></div>
+</section>
+
+<section>
+  <header>
+    <p class="eyebrow">Four new trees</p>
+    <h2>Spider, goblin, undead, wolf</h2>
+    <p>Solid boxes are the core path, bold outlines are capstones, dashed outlines need an area or element that arrives later, dotted outlines are secrets. Every name is a draft.</p>
+  </header>
+  <div class="grid two">
+    <article class="card" style="grid-column: 1 / -1">
+      <div class="head"><h3>Spider: control space, poison, cocoons</h3><span class="tag">section 6</span></div>
+      <div class="scroll-x"><svg class="tree" style="--sp: var(--spider)" viewBox="0 0 786 304" role="img" aria-label="Spider evolution tree: spiderling, hunter, four stage-3 forms, capstones and a secret Lure form">
+<text class="th" x="16" y="14">stage 1</text>
+<text class="th" x="218" y="14">stage 2</text>
+<text class="th" x="420" y="14">stage 3: fork</text>
+<text class="th" x="622" y="14">stage 4: capstone</text>
+<path class="te " d="M168.0,125.0 C193.0,125.0 193.0,125.0 218.0,125.0"/>
+<path class="te " d="M370.0,125.0 C395.0,125.0 395.0,44.0 420.0,44.0"/>
+<path class="te " d="M370.0,125.0 C395.0,125.0 395.0,98.0 420.0,98.0"/>
+<path class="te " d="M370.0,125.0 C395.0,125.0 395.0,152.0 420.0,152.0"/>
+<path class="te dash" d="M370.0,125.0 C395.0,125.0 395.0,206.0 420.0,206.0"/>
+<path class="te " d="M572.0,44.0 C597.0,44.0 597.0,44.0 622.0,44.0"/>
+<path class="te " d="M572.0,98.0 C597.0,98.0 597.0,98.0 622.0,98.0"/>
+<path class="te " d="M572.0,152.0 C597.0,152.0 597.0,152.0 622.0,152.0"/>
+<path class="te dash" d="M572.0,206.0 C597.0,206.0 597.0,206.0 622.0,206.0"/>
+<path class="te dot" d="M572.0,152.0 C597.0,152.0 597.0,260.0 622.0,260.0"/>
+<rect class="tn k-core" x="16" y="105.0" width="152" height="40" rx="8"/>
+<text class="tl" x="92.0" y="122.0" text-anchor="middle">Spiderling</text>
+<text class="ts" x="92.0" y="136.0" text-anchor="middle">zip, crawl, trap web</text>
+<rect class="tn k-core" x="218" y="105.0" width="152" height="40" rx="8"/>
+<text class="tl" x="294.0" y="122.0" text-anchor="middle">Hunter</text>
+<text class="ts" x="294.0" y="136.0" text-anchor="middle">stronger venom</text>
+<rect class="tn k-branch" x="420" y="24" width="152" height="40" rx="8"/>
+<text class="tl" x="496.0" y="41" text-anchor="middle">Shadow-stalker</text>
+<text class="ts" x="496.0" y="55" text-anchor="middle">dark + air</text>
+<rect class="tn k-branch" x="420" y="78" width="152" height="40" rx="8"/>
+<text class="tl" x="496.0" y="95" text-anchor="middle">Venomspinner</text>
+<text class="ts" x="496.0" y="109" text-anchor="middle">water + dark</text>
+<rect class="tn k-branch" x="420" y="132" width="152" height="40" rx="8"/>
+<text class="tl" x="496.0" y="149" text-anchor="middle">Broodmother</text>
+<text class="ts" x="496.0" y="163" text-anchor="middle">earth + dark</text>
+<rect class="tn k-alt" x="420" y="186" width="152" height="40" rx="8"/>
+<text class="tl out" x="496.0" y="203" text-anchor="middle">Sparkweaver</text>
+<text class="ts out" x="496.0" y="217" text-anchor="middle">light + air, cathedral</text>
+<rect class="tn k-cap" x="622" y="24" width="152" height="40" rx="8"/>
+<text class="tl" x="698.0" y="41" text-anchor="middle">Nightstalker</text>
+<text class="ts" x="698.0" y="55" text-anchor="middle">ceiling ambush</text>
+<rect class="tn k-cap" x="622" y="78" width="152" height="40" rx="8"/>
+<text class="tl" x="698.0" y="95" text-anchor="middle">Plaguemother</text>
+<text class="ts" x="698.0" y="109" text-anchor="middle">poison spreads</text>
+<rect class="tn k-cap" x="622" y="132" width="152" height="40" rx="8"/>
+<text class="tl" x="698.0" y="149" text-anchor="middle">Brood Queen</text>
+<text class="ts" x="698.0" y="163" text-anchor="middle">commands spiderlings</text>
+<rect class="tn k-cap" x="622" y="186" width="152" height="40" rx="8"/>
+<text class="tl" x="698.0" y="203" text-anchor="middle">Stormweaver</text>
+<text class="ts" x="698.0" y="217" text-anchor="middle">chain webs</text>
+<rect class="tn k-secret" x="622" y="240" width="152" height="40" rx="8"/>
+<text class="tl out" x="698.0" y="257" text-anchor="middle">Lure</text>
+<text class="ts out" x="698.0" y="271" text-anchor="middle">eat goblins</text>
+</svg></div>
+      <div class="lanes">
+        <div class="lane"><b>Powers</b><span>Web Shot to Snare Bolt or Weave Net. Ground Web to Tripline or Sticky Pit. Venom Fang to Neurotoxin or Necrotic Venom. Cocoon to Brood Sac or Larder.</span></div>
+        <div class="lane"><b>Trade-offs</b><span>Shadow-stalker is weak in lit rooms. Venomspinner hits softer. Broodmother is slow. Fire burns webs.</span></div>
+        <div class="lane"><b>Hosts</b><span>Crypt, swamp, forest, cathedral. Lure unlocks by eating goblins and passes as one in the village.</span></div>
+      </div>
+    </article>
+    <article class="card" style="grid-column: 1 / -1">
+      <div class="head"><h3>Goblin: improviser, tamer, tinker</h3><span class="tag">section 7</span></div>
+      <div class="scroll-x"><svg class="tree" style="--sp: var(--goblin)" viewBox="0 0 786 250" role="img" aria-label="Goblin evolution tree: scrapper, scavenger, three forks plus a light redemption, capstones">
+<text class="th" x="16" y="14">stage 1</text>
+<text class="th" x="218" y="14">stage 2</text>
+<text class="th" x="420" y="14">stage 3: fork</text>
+<text class="th" x="622" y="14">stage 4: capstone</text>
+<path class="te " d="M168.0,98.0 C193.0,98.0 193.0,98.0 218.0,98.0"/>
+<path class="te " d="M370.0,98.0 C395.0,98.0 395.0,44.0 420.0,44.0"/>
+<path class="te " d="M370.0,98.0 C395.0,98.0 395.0,98.0 420.0,98.0"/>
+<path class="te " d="M370.0,98.0 C395.0,98.0 395.0,152.0 420.0,152.0"/>
+<path class="te dash" d="M370.0,98.0 C395.0,98.0 395.0,206.0 420.0,206.0"/>
+<path class="te " d="M572.0,44.0 C597.0,44.0 597.0,44.0 622.0,44.0"/>
+<path class="te " d="M572.0,98.0 C597.0,98.0 597.0,98.0 622.0,98.0"/>
+<path class="te " d="M572.0,152.0 C597.0,152.0 597.0,152.0 622.0,152.0"/>
+<path class="te dash" d="M572.0,206.0 C597.0,206.0 597.0,206.0 622.0,206.0"/>
+<rect class="tn k-core" x="16" y="78" width="152" height="40" rx="8"/>
+<text class="tl" x="92.0" y="95" text-anchor="middle">Scrapper</text>
+<text class="ts" x="92.0" y="109" text-anchor="middle">rocks, roll</text>
+<rect class="tn k-core" x="218" y="78" width="152" height="40" rx="8"/>
+<text class="tl" x="294.0" y="95" text-anchor="middle">Scavenger</text>
+<text class="ts" x="294.0" y="109" text-anchor="middle">recipes, radial wheel</text>
+<rect class="tn k-branch" x="420" y="24" width="152" height="40" rx="8"/>
+<text class="tl" x="496.0" y="41" text-anchor="middle">Tamer</text>
+<text class="ts" x="496.0" y="55" text-anchor="middle">earth + air (mind later)</text>
+<rect class="tn k-branch" x="420" y="78" width="152" height="40" rx="8"/>
+<text class="tl" x="496.0" y="95" text-anchor="middle">Tinker</text>
+<text class="ts" x="496.0" y="109" text-anchor="middle">earth (fire later)</text>
+<rect class="tn k-branch" x="420" y="132" width="152" height="40" rx="8"/>
+<text class="tl" x="496.0" y="149" text-anchor="middle">Skulker</text>
+<text class="ts" x="496.0" y="163" text-anchor="middle">dark + air</text>
+<rect class="tn k-alt" x="420" y="186" width="152" height="40" rx="8"/>
+<text class="tl out" x="496.0" y="203" text-anchor="middle">Redeemed</text>
+<text class="ts out" x="496.0" y="217" text-anchor="middle">light, from any branch</text>
+<rect class="tn k-cap" x="622" y="24" width="152" height="40" rx="8"/>
+<text class="tl" x="698.0" y="41" text-anchor="middle">Beastmaster</text>
+<text class="ts" x="698.0" y="55" text-anchor="middle">companions, bond</text>
+<rect class="tn k-cap" x="622" y="78" width="152" height="40" rx="8"/>
+<text class="tl" x="698.0" y="95" text-anchor="middle">Engineer</text>
+<text class="ts" x="698.0" y="109" text-anchor="middle">explosives, rigs</text>
+<rect class="tn k-cap" x="622" y="132" width="152" height="40" rx="8"/>
+<text class="tl" x="698.0" y="149" text-anchor="middle">Assassin</text>
+<text class="ts" x="698.0" y="163" text-anchor="middle">sneak strike, smoke</text>
+<rect class="tn k-cap" x="622" y="186" width="152" height="40" rx="8"/>
+<text class="tl" x="698.0" y="203" text-anchor="middle">Paladin</text>
+<text class="ts" x="698.0" y="217" text-anchor="middle">blessed throws, shield</text>
+</svg></div>
+      <div class="lanes">
+        <div class="lane"><b>Earned by lessons</b><span>Beasts teach the Tamer, junk and fire creatures the Tinker, shadows the Skulker, priests the Paladin.</span></div>
+        <div class="lane"><b>Powers</b><span>Rock Throw to Sling or Scatter. Junk Trap to Spiked Pit or Net Snare. Offer to Bond or Whistle. Smoke Bomb to Blinding or Choking.</span></div>
+        <div class="lane"><b>Pattern</b><span>Terraria's goblin army shows one species can hold a full role roster, and its Tinkerer shows an enemy race becoming a friendly crafter.</span></div>
+      </div>
+    </article>
+    <article class="card" style="grid-column: 1 / -1">
+      <div class="head"><h3>Undead: three paths and one join</h3><span class="tag">section 8</span></div>
+      <div class="scroll-x"><svg class="tree" style="--sp: var(--undead)" viewBox="0 0 786 196" role="img" aria-label="Undead evolution tree: skeleton, three paths, and a Death Knight that joins flesh and bone magic">
+<text class="th" x="16" y="14">stage 1</text>
+<text class="th" x="218" y="14">stage 2</text>
+<text class="th" x="420" y="14">stage 3</text>
+<text class="th" x="622" y="14">stage 4</text>
+<path class="te " d="M168.0,98.0 C193.0,98.0 193.0,44.0 218.0,44.0"/>
+<path class="te " d="M168.0,98.0 C193.0,98.0 193.0,98.0 218.0,98.0"/>
+<path class="te " d="M168.0,98.0 C193.0,98.0 193.0,152.0 218.0,152.0"/>
+<path class="te " d="M370.0,44.0 C395.0,44.0 395.0,44.0 420.0,44.0"/>
+<path class="te dash" d="M370.0,98.0 C395.0,98.0 395.0,98.0 420.0,98.0"/>
+<path class="te " d="M370.0,152.0 C395.0,152.0 395.0,152.0 420.0,152.0"/>
+<path class="te dash" d="M572.0,44.0 C597.0,44.0 597.0,44.0 622.0,44.0"/>
+<path class="te join" d="M572.0,44.0 C597.0,44.0 597.0,98.0 622.0,98.0"/>
+<path class="te join" d="M572.0,152.0 C597.0,152.0 597.0,98.0 622.0,98.0"/>
+<path class="te dash" d="M572.0,152.0 C597.0,152.0 597.0,152.0 622.0,152.0"/>
+<rect class="tn k-core" x="16" y="78" width="152" height="40" rx="8"/>
+<text class="tl" x="92.0" y="95" text-anchor="middle">Skeleton</text>
+<text class="ts" x="92.0" y="109" text-anchor="middle">drains life force</text>
+<rect class="tn k-branch" x="218" y="24" width="152" height="40" rx="8"/>
+<text class="tl" x="294.0" y="41" text-anchor="middle">Zombie</text>
+<text class="ts" x="294.0" y="55" text-anchor="middle">earth + dark, ribs graft</text>
+<rect class="tn k-branch" x="218" y="78" width="152" height="40" rx="8"/>
+<text class="tl" x="294.0" y="95" text-anchor="middle">Skeletal Archer</text>
+<text class="ts" x="294.0" y="109" text-anchor="middle">air + dark, bow-arm</text>
+<rect class="tn k-branch" x="218" y="132" width="152" height="40" rx="8"/>
+<text class="tl" x="294.0" y="149" text-anchor="middle">Adept</text>
+<text class="ts" x="294.0" y="163" text-anchor="middle">dark, skull graft</text>
+<rect class="tn k-branch" x="420" y="24" width="152" height="40" rx="8"/>
+<text class="tl" x="496.0" y="41" text-anchor="middle">Ghoul</text>
+<text class="ts" x="496.0" y="55" text-anchor="middle">paralysing touch, stench</text>
+<rect class="tn k-alt" x="420" y="78" width="152" height="40" rx="8"/>
+<text class="tl out" x="496.0" y="95" text-anchor="middle">Deadeye</text>
+<text class="ts out" x="496.0" y="109" text-anchor="middle">drain arrows (optional)</text>
+<rect class="tn k-branch" x="420" y="132" width="152" height="40" rx="8"/>
+<text class="tl" x="496.0" y="149" text-anchor="middle">Lich</text>
+<text class="ts" x="496.0" y="163" text-anchor="middle">bone beams, blink</text>
+<rect class="tn k-later" x="622" y="24" width="152" height="40" rx="8"/>
+<text class="tl out" x="698.0" y="41" text-anchor="middle">Vampire</text>
+<text class="ts out" x="698.0" y="55" text-anchor="middle">dark + blood (later)</text>
+<rect class="tn k-cap" x="622" y="78" width="152" height="40" rx="8"/>
+<text class="tl" x="698.0" y="95" text-anchor="middle">Death Knight</text>
+<text class="ts" x="698.0" y="109" text-anchor="middle">Ghoul + bone magic</text>
+<rect class="tn k-alt" x="622" y="132" width="152" height="40" rx="8"/>
+<text class="tl out" x="698.0" y="149" text-anchor="middle">Skull</text>
+<text class="ts out" x="698.0" y="163" text-anchor="middle">demilich: frail, strong</text>
+</svg></div>
+      <div class="lanes">
+        <div class="lane"><b>Grafts steer</b><span>Ribs and flesh toward zombie and ghoul, a bow-arm toward archer, a skull or focus toward lich.</span></div>
+        <div class="lane"><b>Holy hurts</b><span>Revenants, wraiths and ghuls are all weak to holy in the sources. Hold undead unlocks in the crypt, cemetery and swamp; make the cathedral a challenge.</span></div>
+        <div class="lane"><b>Rank by drain</b><span>A wraith becomes a dread wraith by consuming life force. A lich that loses its soul cage becomes a skull.</span></div>
+      </div>
+    </article>
+    <article class="card" style="grid-column: 1 / -1">
+      <div class="head"><h3>Wolf: pack hunter, guardian, stalker</h3><span class="tag">section 9</span></div>
+      <div class="scroll-x"><svg class="tree" style="--sp: var(--wolf)" viewBox="0 0 786 304" role="img" aria-label="Wolf evolution tree: pup, hunter, four forks, capstones and a secret Moonbound form">
+<text class="th" x="16" y="14">stage 1</text>
+<text class="th" x="218" y="14">stage 2</text>
+<text class="th" x="420" y="14">stage 3: fork</text>
+<text class="th" x="622" y="14">stage 4: capstone</text>
+<path class="te " d="M168.0,125.0 C193.0,125.0 193.0,125.0 218.0,125.0"/>
+<path class="te " d="M370.0,125.0 C395.0,125.0 395.0,44.0 420.0,44.0"/>
+<path class="te " d="M370.0,125.0 C395.0,125.0 395.0,98.0 420.0,98.0"/>
+<path class="te " d="M370.0,125.0 C395.0,125.0 395.0,152.0 420.0,152.0"/>
+<path class="te dash" d="M370.0,125.0 C395.0,125.0 395.0,206.0 420.0,206.0"/>
+<path class="te dot" d="M370.0,125.0 C395.0,125.0 395.0,260.0 420.0,260.0"/>
+<path class="te " d="M572.0,44.0 C597.0,44.0 597.0,44.0 622.0,44.0"/>
+<path class="te " d="M572.0,98.0 C597.0,98.0 597.0,98.0 622.0,98.0"/>
+<path class="te " d="M572.0,152.0 C597.0,152.0 597.0,152.0 622.0,152.0"/>
+<path class="te dash" d="M572.0,206.0 C597.0,206.0 597.0,206.0 622.0,206.0"/>
+<rect class="tn k-core" x="16" y="105.0" width="152" height="40" rx="8"/>
+<text class="tl" x="92.0" y="122.0" text-anchor="middle">Pup</text>
+<text class="ts" x="92.0" y="136.0" text-anchor="middle">pounce, gallop</text>
+<rect class="tn k-core" x="218" y="105.0" width="152" height="40" rx="8"/>
+<text class="tl" x="294.0" y="122.0" text-anchor="middle">Hunter</text>
+<text class="ts" x="294.0" y="136.0" text-anchor="middle">strong pounce, packmate</text>
+<rect class="tn k-branch" x="420" y="24" width="152" height="40" rx="8"/>
+<text class="tl" x="496.0" y="41" text-anchor="middle">Dire</text>
+<text class="ts" x="496.0" y="55" text-anchor="middle">earth: tank</text>
+<rect class="tn k-branch" x="420" y="78" width="152" height="40" rx="8"/>
+<text class="tl" x="496.0" y="95" text-anchor="middle">Grim</text>
+<text class="ts" x="496.0" y="109" text-anchor="middle">light + air: ward</text>
+<rect class="tn k-branch" x="420" y="132" width="152" height="40" rx="8"/>
+<text class="tl" x="496.0" y="149" text-anchor="middle">Barghest</text>
+<text class="ts" x="496.0" y="163" text-anchor="middle">dark: fear howl</text>
+<rect class="tn k-later" x="420" y="186" width="152" height="40" rx="8"/>
+<text class="tl out" x="496.0" y="203" text-anchor="middle">Hellhound</text>
+<text class="ts out" x="496.0" y="217" text-anchor="middle">fire + dark (later)</text>
+<rect class="tn k-secret" x="420" y="240" width="152" height="40" rx="8"/>
+<text class="tl out" x="496.0" y="257" text-anchor="middle">Moonbound</text>
+<text class="ts out" x="496.0" y="271" text-anchor="middle">night-only, rare drop</text>
+<rect class="tn k-cap" x="622" y="24" width="152" height="40" rx="8"/>
+<text class="tl" x="698.0" y="41" text-anchor="middle">Greatwolf</text>
+<text class="ts" x="698.0" y="55" text-anchor="middle">breaks bound gates</text>
+<rect class="tn k-cap" x="622" y="78" width="152" height="40" rx="8"/>
+<text class="tl" x="698.0" y="95" text-anchor="middle">Warden</text>
+<text class="ts" x="698.0" y="109" text-anchor="middle">holds holy ground</text>
+<rect class="tn k-cap" x="622" y="132" width="152" height="40" rx="8"/>
+<text class="tl" x="698.0" y="149" text-anchor="middle">Omen</text>
+<text class="ts" x="698.0" y="163" text-anchor="middle">silent in the dark</text>
+<rect class="tn k-later" x="622" y="186" width="152" height="40" rx="8"/>
+<text class="tl out" x="698.0" y="203" text-anchor="middle">Pyre Hound</text>
+<text class="ts out" x="698.0" y="217" text-anchor="middle">fire and dark</text>
+</svg></div>
+      <div class="lanes">
+        <div class="lane"><b>Pack bond</b><span>One bonded packmate at a time, reusing the goblin's taming. Mightyena's Intimidate becomes a fear howl.</span></div>
+        <div class="lane"><b>Light reading</b><span>Church Grim is a black dog buried to guard sacred ground: the wolf that holds holy ground.</span></div>
+        <div class="lane"><b>Capstone</b><span>Fenrir grows until nothing holds it: a verb that breaks bound gates.</span></div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section>
+  <header>
+    <p class="eyebrow">Fix the slime first</p>
+    <h2>Four cheap changes and new lineage seeds</h2>
+  </header>
+  <div class="grid two">
+    <article class="card"><div class="head"><h3>Branch decides child</h3><span class="tag">design doc</span></div><div class="pairmap"><span class="p">Swing Thread</span><span class="a">&#8594;</span><span class="p c">Arachne</span><span class="p">Binding Web</span><span class="a">&#8594;</span><span class="p c">Snare</span><span class="p">Jet Dash</span><span class="a">&#8594;</span><span class="p c">Brook</span><span class="p">Water Blade</span><span class="a">&#8594;</span><span class="p c">Tempest</span><span class="p">Poison Breath family</span><span class="a">&#8594;</span><span class="p c">Acid</span><span class="p">Spore Cloud family</span><span class="a">&#8594;</span><span class="p c">Blight</span><span class="p">Tremor: Shatter or Aftershock</span><span class="a">&#8594;</span><span class="p c">Golem or Crystal</span><span class="p">Echolocation: Pulse Reveal or Sonic Lance</span><span class="a">&#8594;</span><span class="p c">Phantom or Sky</span></div><p class="rule"><b>Choose Toxic by family, not branch,</b> so four evolved powers map to two children. Bulwark and Echo need branching powers first.</p></article>
+    <article class="card"><div class="head"><h3>Stage 4 keeps one passive</h3><span class="tag">cheap</span></div><p class="rule"><b>No new art.</b> Stone from Golem keeps Toughness; Stone from Crystal keeps a reflect. The stage-3 choice is now felt at the end, and the screen can name which parent you came by.</p></article>
+    <article class="card"><div class="head"><h3>Give each stage-3 form a limit</h3><span class="tag">Dungeon Crawl</span></div><p class="rule"><b>Identity comes from restriction.</b> Golem: slower, cannot Leap. Crystal: brittle, cannot regenerate. Brook: cannot hold a heavy part.</p></article>
+    <article class="card"><div class="head"><h3>Preview before the first press</h3><span class="tag">Nocturne</span></div><p class="rule"><b>Show the two children, or stubs,</b> on the evolve card before the player commits.</p></article>
+  </div>
+  <div class="panel">
+    <p class="mx-title">new lineage seeds for the slime</p>
+    <div class="lanes">
+      <div class="lane"><b>Lumen</b><span>Opened by Jolt. Light + air. Flash (stuns, blinks) or Halo (healing aura). Host: cathedral font.</span></div>
+      <div class="lane"><b>Hoarder</b><span>Opened by Glutton. Earth + light. A translucent body shows held parts; Pack adds slots, Gizzard digests faster and spits a part as a shot. The gelatinous-cube pattern.</span></div>
+      <div class="lane"><b>Ember</b><span>Opened by a fire power, later. Fire + earth. Lava trail and immunity. Host: volcano.</span></div>
+      <div class="lane"><b>Mirror slime</b><span>A rare fleeing enemy that pays a large essence jackpot. The metal-slime pattern; it teaches chasing with the bouncer.</span></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <header>
+    <p class="eyebrow">Power trees</p>
+    <h2>Small, rich and species-flavoured</h2>
+    <p>Players take far less than the tree holds: about 45% of Skyrim's perks, well under 15% of Hollow Knight's charms. Aim for 20 to 40 nodes per species.</p>
+  </header>
+  <div class="panel" style="display:grid;gap:16px">
+    <div>
+      <p class="mx-title">node shapes (the overview zoom has no labels, so silhouette carries meaning)</p>
+      <div class="glyphs">
+        <span><svg viewBox="0 0 22 22"><circle class="gs" cx="11" cy="11" r="7"/></svg>seed: base power, 6 to 8</span>
+        <span><svg viewBox="0 0 22 22"><polygon class="gs" points="11,3 18,7 18,15 11,19 4,15 4,7"/></svg>fusion: a recipe, 4 to 6</span>
+        <span><svg viewBox="0 0 22 22"><circle class="gs" cx="11" cy="11" r="7" style="fill:var(--accent-soft)"/></svg>branch: exclusive pair</span>
+        <span><svg viewBox="0 0 22 22"><circle class="gs" cx="11" cy="11" r="3"/></svg>rider: a small shape on one active</span>
+        <span><svg viewBox="0 0 22 22"><rect class="gs" x="4" y="4" width="14" height="14"/></svg>keystone: a rule plus a cost</span>
+        <span><svg viewBox="0 0 22 22"><rect class="gs" x="5" y="5" width="12" height="12" transform="rotate(45 11 11)"/></svg>capstone: changes a verb</span>
+        <span><svg viewBox="0 0 22 22"><circle class="gs" cx="11" cy="11" r="7" style="stroke-dasharray:2 3"/></svg>stub: ???</span>
+      </div>
+    </div>
+    <div>
+      <p class="mx-title">the recipe board: 28 pairs, about 12 to 14 shipped</p>
+      <div class="scroll-x"><div class="recipe" role="table" aria-label="Recipe board: every pair of the eight elements"><span></span><span class="h">water</span><span class="h">earth</span><span class="h">air</span><span class="h">light</span><span class="h">dark</span><span class="h">fire</span><span class="h">mind</span><span class="h">blood</span><span class="rh">water</span><span class="x none"></span><span class="x prop" title="water + earth">Mire</span><span class="x planned" title="water + air">Frost</span><span class="x fizz" title="water + light: no reaction">fizzle</span><span class="x exists" title="water + dark">Poison</span><span class="x prop" title="water + fire">Scald</span><span class="x fizz" title="water + mind: no reaction">fizzle</span><span class="x fizz" title="water + blood: no reaction">fizzle</span><span class="rh">earth</span><span class="x none"></span><span class="x none"></span><span class="x prop" title="earth + air">Grit</span><span class="x fizz" title="earth + light: no reaction">fizzle</span><span class="x fizz" title="earth + dark: no reaction">fizzle</span><span class="x prop" title="earth + fire">Molten</span><span class="x fizz" title="earth + mind: no reaction">fizzle</span><span class="x prop" title="earth + blood">Marrow</span><span class="rh">air</span><span class="x none"></span><span class="x none"></span><span class="x none"></span><span class="x exists" title="air + light">Jolt</span><span class="x exists" title="air + dark">Spore</span><span class="x planned" title="air + fire">Storm</span><span class="x fizz" title="air + mind: no reaction">fizzle</span><span class="x fizz" title="air + blood: no reaction">fizzle</span><span class="rh">light</span><span class="x none"></span><span class="x none"></span><span class="x none"></span><span class="x none"></span><span class="x fizz" title="light + dark: no reaction">fizzle</span><span class="x prop" title="light + fire">Flare</span><span class="x prop" title="light + mind">Clarity</span><span class="x prop" title="light + blood">Transf.</span><span class="rh">dark</span><span class="x none"></span><span class="x none"></span><span class="x none"></span><span class="x none"></span><span class="x none"></span><span class="x prop" title="dark + fire">Smoke</span><span class="x prop" title="dark + mind">Dread</span><span class="x prop" title="dark + blood">Siphon</span><span class="rh">fire</span><span class="x none"></span><span class="x none"></span><span class="x none"></span><span class="x none"></span><span class="x none"></span><span class="x none"></span><span class="x fizz" title="fire + mind: no reaction">fizzle</span><span class="x prop" title="fire + blood">Bloodfire</span><span class="rh">mind</span><span class="x none"></span><span class="x none"></span><span class="x none"></span><span class="x none"></span><span class="x none"></span><span class="x none"></span><span class="x none"></span><span class="x prop" title="mind + blood">Thrall</span><span class="rh">blood</span><span class="x none"></span><span class="x none"></span><span class="x none"></span><span class="x none"></span><span class="x none"></span><span class="x none"></span><span class="x none"></span><span class="x none"></span></div></div>
+      <div class="glyphs" style="margin-top:8px"><span><span class="tag">solid</span>exists today</span><span><span class="tag">outlined</span>planned</span><span><span class="tag">grey</span>proposal</span><span><span class="tag">dashed</span>fizzle with a flavour line</span></div>
+      <p class="note" style="margin-top:8px">Mages of Mystralia cut 20 runes to 11 and admits its hard-coded combinations were a compromise. Collision to settle: lightning's planned light + air route is Jolt's existing recipe; fire + air, or Jolt at level 5 plus any fire, avoids it.</p>
+    </div>
+    <div class="grid two">
+      <article class="card"><div class="head"><h3>Level by effects landing</h3><span class="tag">Mount and Blade</span></div><p class="rule"><b>Never on a trigger the player can fire at will.</b> Final Fantasy II players attacked their own party; Skyrim had potion loops. Count effects landing and cap per encounter. Species proficiencies: spider Ceiling Crawl, wolf Pounce, goblin Craft, undead Drain, slime Bounce.</p></article>
+      <article class="card"><div class="head"><h3>A notch budget</h3><span class="tag">Hollow Knight</span></div><p class="rule"><b>Four active slots stay; add passive notches,</b> 3 at stage 1 to 7 at stage 4. Overfed: one extra notch, but a hit knocks out 25% of held essence. Riders and passives swap free at altars; evolutions are fixed for the life.</p></article>
+      <article class="card"><div class="head"><h3>Capstones change a verb</h3><span class="tag">PoE keystones</span></div><p class="rule"><b>Plague Bloom:</b> the Miasma cloud spreads to the next living thing. <b>Anchor Web:</b> one persistent anchor per room to teleport to. <b>Glutton&#39;s Debt:</b> hold 20 essence at most, every devour worth double.</p></article>
+      <article class="card"><div class="head"><h3>Price ladder</h3><span class="tag">Hades Mirror</span></div><p class="rule"><b>A branch costs the parent&#39;s price,</b> a rider 3 to 4 of a third element, a capstone twice the parent&#39;s split over two elements. Later bodies cost 1, 1.5, 2, 3 times, so evolving never becomes free.</p></article>
+    </div>
+  </div>
+</section>
+
+<section>
+  <header>
+    <p class="eyebrow">Over to you</p>
+    <h2>Decisions only you can make</h2>
+  </header>
+  <div class="grid two">
+    <article class="card decide"><h3>Fix the slime's stage 3?</h3><div class="opts"><span class="opt">Branch decides child</span><span class="opt">Stage 4 keeps a passive</span><span class="opt">Both</span><span class="opt">Neither</span></div><p class="note">The two cheapest ways to make the stage-3 choice matter.</p></article>
+    <article class="card decide"><h3>How many forms per new species?</h3><div class="opts"><span class="opt">8 to 12 hand-drawn</span><span class="opt">Fewer, with modular parts</span></div><p class="note">The slime has 24. Art cost decides; undead grafts are the cheap modular path.</p></article>
+    <article class="card decide"><h3>Species-specific unlocks?</h3><div class="opts"><span class="opt">Yes: Lure, Moonbound</span><span class="opt">No: menu forks only</span></div><p class="note">Lure comes from eating goblins as a spider; Moonbound from a night drop.</p></article>
+    <article class="card decide"><h3>Light for an undead player?</h3><div class="opts"><span class="opt">A light-aligned undead form</span><span class="opt">Light stays closed to them</span></div><p class="note">It hurts them in the cathedral. Is any light form possible for the skeleton line?</p></article>
+    <article class="card decide"><h3>Lightning versus Jolt</h3><div class="opts"><span class="opt">Fire + air, or Jolt L5 + fire</span><span class="opt">Retire light + air</span></div><p class="note">Lightning's planned second route is Jolt's recipe today.</p></article>
+    <article class="card decide"><h3>Which element arrives first?</h3><div class="opts"><span class="opt">Fire</span><span class="opt">Mind</span><span class="opt">Blood</span></div><p class="note">Tinker, Hellhound and Vampire wait on them. Also: adopt a passive notch budget and Overfed, or skip?</p></article>
+  </div>
+</section>
+
+<footer class="foot">
+  <p>Full guide with sources: <code>docs/research/species-evolution-guide.md</code>. Raw notes with every URL: <code>docs/research/species-evolution-notes/</code>. Sister report on areas, zones and traps: <code>docs/research/area-level-design-report.html</code>.</p>
+  <p>The web-search budget ran out before this research began, so every web claim comes from a page fetched by URL; Fandom wikis were blocked, so Tensura and Re:Monster mechanics rest on Wikipedia summaries. Names and numbers marked as drafts are mine and meant to be tuned.</p>
+</footer>
+</div>

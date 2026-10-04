@@ -1,0 +1,859 @@
+<title>Area Design Principles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout concept: a survey sheet. One wide map up top, then principle cards that each carry one small diagram, then engine gotchas, then the two new areas, then decisions. */
+:root {
+  --bg: #edf0f1; --surface: #ffffff; --surface2: #e2e8ea; --ink: #14202a; --muted: #52626c; --line: #c8d1d6;
+  --accent: #0b7a75; --accent-soft: #cfe9e7;
+  --cave: #dbb67b; --grotto: #8cc690; --flooded: #82b9db; --deep: #ab9fd8; --forest: #a6cf55; --volcano: #ee7a4a;
+  --on-area: #14202a;
+  --cling: #c98a00; --swim: #5aa9e6; --short: #2a9d4a; --heat: #d9432b;
+  --warn: #c24a1a; --good: #2a8a4c;
+  --display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
+  --body: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "DM Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1315; --surface: #171c1f; --surface2: #20272a; --ink: #e7eef1; --muted: #9aa9b2; --line: #2b353a;
+    --accent: #3cc4bb; --accent-soft: #14393a;
+    --cave: #86683a; --grotto: #447f4f; --flooded: #31708f; --deep: #66569f; --forest: #62881f; --volcano: #bd4a1f;
+    --on-area: #f2f6f7;
+    --cling: #f0b429; --swim: #5fb0f5; --short: #5bd37c; --heat: #ff7a5c;
+    --warn: #ff8a5c; --good: #5bd37c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1315; --surface: #171c1f; --surface2: #20272a; --ink: #e7eef1; --muted: #9aa9b2; --line: #2b353a;
+  --accent: #3cc4bb; --accent-soft: #14393a;
+  --cave: #86683a; --grotto: #447f4f; --flooded: #31708f; --deep: #66569f; --forest: #62881f; --volcano: #bd4a1f;
+  --on-area: #f2f6f7;
+  --cling: #f0b429; --swim: #5fb0f5; --short: #5bd37c; --heat: #ff7a5c;
+  --warn: #ff8a5c; --good: #5bd37c;
+  color-scheme: dark;
+}
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.55; padding-inline: 16px; padding-block: 0 56px; }
+.wrap { max-width: 1060px; margin-inline: auto; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-height: 1.08; }
+h1 { font-size: clamp(2rem, 5.2vw, 3.4rem); font-weight: 800; letter-spacing: -0.02em; }
+h2 { font-size: clamp(1.45rem, 3vw, 1.9rem); font-weight: 800; letter-spacing: -0.01em; }
+h3 { font-size: 1.12rem; font-weight: 600; }
+p { margin: 0; }
+.eyebrow { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.tag { font-family: var(--mono); font-size: 0.72rem; background: var(--surface2); color: var(--muted); border-radius: 4px; padding: 1px 6px; white-space: nowrap; }
+header.top { padding-block: 40px 22px; display: grid; gap: 14px; }
+header.top p.lede { max-width: 62ch; font-size: 1.08rem; color: var(--muted); }
+section { padding-block: 34px 6px; display: grid; gap: 16px; }
+section > header { display: grid; gap: 6px; }
+section > header p { max-width: 64ch; color: var(--muted); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+.scroll-x { overflow-x: auto; }
+.scroll-x > svg.worldmap { min-width: 640px; }
+.scroll-x > svg.sketch { min-width: 400px; max-width: 480px; }
+svg.mini { max-width: 460px; }
+svg { display: block; width: 100%; height: auto; }
+.grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); align-items: start; }
+.grid.two { grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); }
+.grid.six { grid-template-columns: repeat(6, minmax(0, 1fr)); align-items: stretch; }
+.grid.six > .s2 { grid-column: span 2; } .grid.six > .s3 { grid-column: span 3; } .grid.six > .s6 { grid-column: 1 / -1; }
+@media (max-width: 860px) { .grid.six { grid-template-columns: minmax(0, 1fr); } .grid.six > * { grid-column: 1 / -1 !important; } }
+.mxpair { display: flex; flex-wrap: wrap; gap: 18px; } .mxpair > div { flex: 1 1 320px; min-width: 0; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.card .head { display: flex; gap: 8px; align-items: baseline; justify-content: space-between; }
+.card p.rule { color: var(--muted); font-size: 0.93rem; }
+.card p.rule b { color: var(--ink); font-weight: 600; }
+.stats { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-bottom: 10px; }
+.stats div { display: grid; }
+.stats b { font-family: var(--display); font-size: 1.9rem; line-height: 1; font-weight: 800; }
+.stats span { font-size: 0.8rem; color: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.8rem; color: var(--muted); margin-top: 10px; }
+.legend i { display: inline-block; width: 11px; height: 11px; vertical-align: -1px; margin-right: 5px; border-radius: 50%; }
+.legend i.sq { border-radius: 2px; }
+.legend i.dia { border-radius: 2px; transform: rotate(45deg) scale(0.8); }
+.takeaway { margin-top: 12px; border-left: 3px solid var(--accent); padding: 4px 0 4px 12px; font-weight: 500; }
+
+/* shared svg classes */
+.s-line { stroke: var(--ink); stroke-width: 1.6; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.s-muted { stroke: var(--muted); stroke-width: 1.2; fill: none; }
+.s-dash { stroke: var(--muted); stroke-width: 1.3; fill: none; stroke-dasharray: 4 3; }
+.s-acc { stroke: var(--accent); stroke-width: 2.2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.f-surface { fill: var(--surface); } .f-surface2 { fill: var(--surface2); } .f-ink { fill: var(--ink); }
+.f-muted { fill: var(--muted); } .f-accent { fill: var(--accent); } .f-accent-soft { fill: var(--accent-soft); }
+.f-warn { fill: var(--warn); } .f-good { fill: var(--good); } .f-volcano { fill: var(--volcano); }
+.f-flooded { fill: var(--flooded); } .f-forest { fill: var(--forest); } .f-cave { fill: var(--cave); } .f-deep { fill: var(--deep); }
+.node { fill: var(--surface); stroke: var(--ink); stroke-width: 1.6; }
+.node.new { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2; }
+.t { font: 500 11px var(--body); fill: var(--ink); }
+.tm { font: 400 10px var(--mono); fill: var(--muted); }
+.tb { font: 600 11px var(--body); fill: var(--ink); }
+.ta { font: 500 10.5px var(--mono); fill: var(--accent); }
+
+/* world map */
+.worldmap .room { stroke: var(--bg); stroke-width: 1; }
+.worldmap .a-cave { fill: var(--cave); } .worldmap .a-grotto { fill: var(--grotto); }
+.worldmap .a-flooded { fill: var(--flooded); } .worldmap .a-deep { fill: var(--deep); }
+.worldmap .rl { font: 600 10px var(--mono); fill: var(--on-area); }
+.worldmap .an { font: 800 13px var(--display); letter-spacing: 0.12em; fill: var(--muted); }
+.worldmap .spine { fill: none; stroke: var(--ink); stroke-opacity: 0.32; stroke-width: 7; stroke-linejoin: round; stroke-linecap: round; }
+.worldmap .loop { fill: none; stroke: var(--accent); stroke-width: 2.6; stroke-dasharray: 6 4; stroke-linejoin: round; }
+.worldmap .gate.cling { fill: var(--cling); stroke: var(--bg); stroke-width: 1.5; }
+.worldmap .gate.swim { fill: var(--swim); stroke: var(--bg); stroke-width: 1.5; }
+.worldmap .gate.short { fill: var(--short); stroke: var(--bg); stroke-width: 1.5; }
+.worldmap .door { fill: var(--surface); stroke: var(--ink); stroke-width: 1; }
+.worldmap .altar { fill: var(--on-area); } .worldmap .pool { fill: none; stroke: var(--on-area); stroke-width: 1.5; }
+.worldmap .dead { fill: none; stroke: var(--warn); stroke-width: 1.6; stroke-dasharray: 3 2; }
+.worldmap .ghost { fill: none; stroke-width: 1.8; stroke-dasharray: 6 5; }
+.worldmap .ghost.forest { stroke: var(--forest); } .worldmap .ghost.volcano { stroke: var(--volcano); }
+.worldmap .gl { font: 500 10.5px var(--mono); }
+.worldmap .gl { fill: var(--muted); }
+.worldmap .stub { stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 3 3; }
+.lg-spine { background: var(--ink); opacity: 0.32; height: 4px !important; border-radius: 2px !important; width: 18px !important; }
+.lg-loop { background: transparent; border: 2px dashed var(--accent); border-radius: 2px !important; width: 18px !important; height: 0 !important; }
+.lg-dead { background: transparent; border: 1.5px dashed var(--warn); border-radius: 2px !important; }
+.lg-cling { background: var(--cling); } .lg-swim { background: var(--swim); } .lg-short { background: var(--short); }
+.lg-altar { background: var(--ink); } .lg-pool { background: transparent; border: 1.5px solid var(--ink); }
+
+/* matrices */
+.matrix { display: grid; grid-template-columns: 3.6rem repeat(6, minmax(0, 1fr)); gap: 3px; font-size: 0.7rem; }
+.matrix .h { font-family: var(--mono); color: var(--muted); text-align: center; padding-block: 2px; }
+.matrix .rowh { font-family: var(--mono); color: var(--muted); align-self: center; font-size: 0.68rem; }
+.matrix .c { min-height: 22px; border-radius: 4px; background: var(--surface2); display: grid; place-items: center; font-family: var(--mono); font-size: 0.64rem; color: var(--ink); }
+.matrix .c.cling { background: var(--cling); color: #14202a; } .matrix .c.swim { background: var(--swim); color: #14202a; }
+.matrix .c.lane { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent); }
+.matrix .c.off { background: transparent; border: 1px dashed var(--line); }
+.mx-title { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); margin-bottom: 4px; }
+
+/* flows */
+.flow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.chip { background: var(--surface2); border-radius: 6px; padding: 5px 9px; font-size: 0.85rem; }
+.chip.bad { background: color-mix(in srgb, var(--warn) 18%, var(--surface)); color: var(--warn); font-weight: 600; }
+.chip.ok { background: color-mix(in srgb, var(--good) 18%, var(--surface)); color: var(--good); font-weight: 600; }
+.chip.acc { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.arrow { color: var(--muted); font-family: var(--mono); }
+.bar { display: flex; height: 26px; border-radius: 6px; overflow: hidden; font-family: var(--mono); font-size: 0.7rem; }
+.bar div { display: grid; place-items: center; white-space: nowrap; }
+.bar .oneway { background: var(--surface2); color: var(--muted); }
+.bar .hard { background: var(--accent); color: var(--bg); padding-inline: 6px; }
+.zeros { display: flex; gap: 8px; flex-wrap: wrap; }
+.zeros div { flex: 1 1 120px; background: var(--surface2); border-radius: 6px; padding: 6px 9px; display: grid; }
+.zeros b { font-family: var(--display); font-size: 1.5rem; line-height: 1; color: var(--warn); }
+.zeros span { font-size: 0.75rem; color: var(--muted); }
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.steps div { background: var(--surface2); border-radius: 8px; padding: 9px 10px; display: grid; gap: 3px; font-size: 0.85rem; }
+.steps b { font-family: var(--display); font-size: 0.98rem; }
+.steps span { color: var(--muted); font-size: 0.8rem; }
+.steps div.gate { background: var(--accent-soft); }
+.dial { position: relative; height: 34px; border-radius: 8px; overflow: hidden; display: grid; grid-template-columns: 1fr 1.6fr 1fr; font-size: 0.72rem; font-family: var(--mono); }
+.dial div { display: grid; place-items: center; text-align: center; padding-inline: 4px; }
+.dial .k { background: color-mix(in srgb, var(--warn) 30%, var(--surface)); }
+.dial .m { background: color-mix(in srgb, var(--cling) 30%, var(--surface)); font-weight: 500; }
+.dial .h { background: var(--surface2); color: var(--muted); }
+.dial-notes { display: grid; grid-template-columns: 1fr 1.6fr 1fr; font-size: 0.78rem; color: var(--muted); gap: 4px; margin-top: 4px; }
+.lanes { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; }
+.lane { background: var(--surface2); border-radius: 8px; padding: 9px 11px; font-size: 0.86rem; display: grid; gap: 2px; }
+.lane b { font-family: var(--display); font-size: 0.98rem; }
+.lane span { color: var(--muted); font-size: 0.82rem; }
+.decide { display: grid; gap: 8px; }
+.opts { display: flex; flex-wrap: wrap; gap: 6px; }
+.opt { background: var(--surface2); border-radius: 6px; padding: 4px 9px; font-size: 0.84rem; }
+.opt.lean { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.note { font-size: 0.85rem; color: var(--muted); }
+footer.foot { margin-top: 34px; padding-top: 16px; border-top: 1px solid var(--line); display: grid; gap: 6px; font-size: 0.84rem; color: var(--muted); }
+code { font-family: var(--mono); font-size: 0.82em; background: var(--surface2); padding: 1px 5px; border-radius: 4px; }
+
+/* part 2 */
+svg.plan { min-width: 760px; }
+svg.plan .pe { stroke: var(--muted); stroke-width: 2; fill: none; } svg.plan .pe.dash { stroke-dasharray: 5 4; } svg.plan .pe.loop { stroke: var(--accent); }
+svg.plan .pn { stroke: var(--bg); stroke-width: 1; }
+svg.plan .pn.a-cave { fill: var(--cave); } svg.plan .pn.a-grotto { fill: var(--grotto); } svg.plan .pn.a-flooded { fill: var(--flooded); } svg.plan .pn.a-deep { fill: var(--deep); }
+svg.plan .pn.plan { fill: none; stroke-width: 1.8; stroke-dasharray: 6 4; }
+svg.plan .pn.plan.forest { stroke: var(--forest); } svg.plan .pn.plan.cluster { stroke: var(--deep); } svg.plan .pn.plan.demon { stroke: var(--heat); }
+svg.plan .pn.plan.volcano { stroke: var(--volcano); } svg.plan .pn.plan.last { stroke: var(--muted); }
+svg.plan .pt { font: 600 13px var(--display); fill: var(--on-area); } svg.plan .ps { font: 400 10px var(--mono); fill: var(--muted); }
+svg.plan .a-cave ~ .pt, svg.plan .pn[class*="a-"] + .pt + .ps { fill: var(--on-area); }
+svg.plan .contest { fill: none; stroke: var(--warn); stroke-width: 1.8; stroke-dasharray: 6 4; }
+.beam { fill: var(--cling); opacity: 0.28; } .win { fill: var(--deep); stroke: var(--ink); stroke-width: 1.2; }
+.mud { fill: color-mix(in srgb, var(--cave) 65%, var(--ink)); }
+.standing { display: grid; grid-template-columns: 6rem repeat(3, minmax(0, 1fr)); gap: 3px; font-size: 0.74rem; }
+.standing .sh { font-family: var(--mono); color: var(--muted); text-align: center; padding-block: 2px; font-size: 0.68rem; }
+.standing .sr { font-family: var(--mono); color: var(--muted); align-self: center; font-size: 0.68rem; }
+.standing .sc { border-radius: 4px; padding: 6px 4px; text-align: center; background: var(--surface2); }
+.standing .sc.safe { background: color-mix(in srgb, var(--good) 20%, var(--surface)); } .standing .sc.ok { background: var(--accent-soft); color: var(--accent); }
+.standing .sc.wary { background: color-mix(in srgb, var(--cling) 25%, var(--surface)); } .standing .sc.off { background: transparent; border: 1px dashed var(--line); color: var(--muted); }
+.opt.bad { background: color-mix(in srgb, var(--warn) 18%, var(--surface)); color: var(--warn); }
+
+/* size target */
+.bars { display: grid; gap: 7px; }
+.bars .b { display: grid; grid-template-columns: 10.5rem 1fr 5.6rem; gap: 10px; align-items: center; font-size: 0.82rem; }
+.bars .b .l { color: var(--muted); }
+.bars .b .tr { background: var(--surface2); border-radius: 5px; height: 18px; overflow: hidden; position: relative; }
+.bars .b .f { height: 100%; border-radius: 5px; background: var(--accent); }
+.bars .b .f.soft { background: var(--accent-soft); border: 1px solid var(--accent); }
+.bars .b .f.muted { background: var(--muted); opacity: 0.55; }
+.bars .b .v { font-family: var(--mono); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.budget { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 6px; }
+.budget div { background: var(--surface2); border-radius: 8px; padding: 7px 10px; display: flex; justify-content: space-between; gap: 8px; font-size: 0.84rem; }
+.budget div b { font-family: var(--mono); font-weight: 500; font-variant-numeric: tabular-nums; }
+.budget div.tot { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+<div class="wrap">
+<header class="top">
+  <p class="eyebrow">Isekai Chronicles &middot; area design research</p>
+  <h1>Your world is a corridor. Build the new areas as loops.</h1>
+  <p class="lede">Six principles from close to 190 pages of level-design sources, checked against your 23 rooms, then what they mean for the forest, the volcano and seven more areas and traps.</p>
+</header>
+
+<!-- 1. WORLD ------------------------------------------------------------>
+<section>
+  <header>
+    <p class="eyebrow">Where you stand</p>
+    <h2>23 rooms, 23 links, one loop</h2>
+    <p>This is your actual world, drawn from the room files. Take away the one Wall Cling link and it is a tree.</p>
+  </header>
+  <div class="panel">
+    <div class="stats">
+      <div><b>23</b><span>rooms, 45 screens</span></div>
+      <div><b>1</b><span>loop (needs Wall Cling)</span></div>
+      <div><b>5</b><span>dead ends</span></div>
+      <div><b>0</b><span>species-specific gates</span></div>
+    </div>
+    <div class="scroll-x"><svg class="worldmap" viewBox="0 0 870 439" role="img" aria-label="Map of the 23 rooms: a single chain of rooms with one loop in the cave">
+<rect class="ghost forest" x="47.6" y="10.2" width="156.4" height="57.8" rx="6"/>
+<text class="gl forest" x="57.6" y="32.2">FOREST? (surface, row -1 and up)</text>
+<rect class="ghost volcano" x="673.2" y="368.9" width="170.0" height="57.8" rx="6"/>
+<text class="gl volcano" x="683.2" y="390.9">VOLCANO? (below the Deep)</text>
+<line class="stub" x1="102.0" y1="78.2" x2="102.0" y2="68.0"/>
+<line class="stub" x1="816.0" y1="350.2" x2="816.0" y2="368.9"/>
+<rect class="room a-cave" x="18.0" y="147.2" width="66.0" height="32.0" rx="3"/>
+<rect class="room a-cave" x="86.0" y="147.2" width="66.0" height="32.0" rx="3"/>
+<rect class="room a-cave" x="86.0" y="79.2" width="32.0" height="66.0" rx="3"/>
+<rect class="room a-cave" x="154.0" y="147.2" width="32.0" height="32.0" rx="3"/>
+<rect class="room a-cave" x="188.0" y="147.2" width="32.0" height="100.0" rx="3"/>
+<rect class="room a-cave" x="52.0" y="113.2" width="32.0" height="32.0" rx="3"/>
+<rect class="room a-deep" x="596.0" y="283.2" width="32.0" height="32.0" rx="3"/>
+<rect class="room a-deep" x="630.0" y="283.2" width="66.0" height="32.0" rx="3"/>
+<rect class="room a-deep" x="698.0" y="283.2" width="32.0" height="66.0" rx="3"/>
+<rect class="room a-deep" x="732.0" y="317.2" width="66.0" height="32.0" rx="3"/>
+<rect class="room a-deep" x="800.0" y="317.2" width="32.0" height="32.0" rx="3"/>
+<rect class="room a-deep" x="664.0" y="249.2" width="32.0" height="32.0" rx="3"/>
+<rect class="room a-flooded" x="358.0" y="351.2" width="66.0" height="32.0" rx="3"/>
+<rect class="room a-flooded" x="426.0" y="317.2" width="32.0" height="66.0" rx="3"/>
+<rect class="room a-flooded" x="426.0" y="283.2" width="100.0" height="32.0" rx="3"/>
+<rect class="room a-flooded" x="528.0" y="283.2" width="66.0" height="32.0" rx="3"/>
+<rect class="room a-flooded" x="528.0" y="317.2" width="32.0" height="32.0" rx="3"/>
+<rect class="room a-flooded" x="528.0" y="249.2" width="32.0" height="32.0" rx="3"/>
+<rect class="room a-grotto" x="188.0" y="249.2" width="66.0" height="32.0" rx="3"/>
+<rect class="room a-grotto" x="256.0" y="249.2" width="100.0" height="66.0" rx="3"/>
+<rect class="room a-grotto" x="290.0" y="317.2" width="66.0" height="66.0" rx="3"/>
+<rect class="room a-grotto" x="358.0" y="317.2" width="32.0" height="32.0" rx="3"/>
+<rect class="room a-grotto" x="256.0" y="317.2" width="32.0" height="32.0" rx="3"/>
+<polyline class="spine" points="51.0,163.2 119.0,163.2 170.0,163.2 204.0,197.2 221.0,265.2 306.0,282.2 323.0,350.2 374.0,333.2 391.0,367.2 442.0,350.2 476.0,299.2 561.0,299.2 612.0,299.2 663.0,299.2 714.0,316.2 765.0,333.2 816.0,333.2"/>
+<polyline class="loop" points="51.0,163.2 119.0,163.2 102.0,112.2 68.0,129.2 51.0,163.2"/>
+<circle class="door" cx="85.0" cy="170.8" r="2.6"/>
+<rect class="gate short" x="58.2" y="141.2" width="10" height="10" transform="rotate(45 63.2 146.2)"/>
+<circle class="door" cx="153.0" cy="170.8" r="2.6"/>
+<circle class="gate cling" cx="103.1" cy="146.2" r="5.5"/>
+<circle class="door" cx="85.0" cy="136.8" r="2.6"/>
+<circle class="door" cx="187.0" cy="170.8" r="2.6"/>
+<circle class="door" cx="202.9" cy="248.2" r="2.6"/>
+<circle class="door" cx="595.0" cy="308.6" r="2.6"/>
+<circle class="door" cx="629.0" cy="308.6" r="2.6"/>
+<circle class="door" cx="697.0" cy="308.6" r="2.6"/>
+<circle class="gate cling" cx="680.0" cy="282.2" r="5.5"/>
+<circle class="door" cx="731.0" cy="342.6" r="2.6"/>
+<circle class="door" cx="799.0" cy="342.6" r="2.6"/>
+<circle class="door" cx="374.0" cy="350.2" r="2.6"/>
+<circle class="door" cx="425.0" cy="374.8" r="2.6"/>
+<circle class="gate swim" cx="442.0" cy="316.2" r="5.5"/>
+<circle class="door" cx="527.0" cy="306.8" r="2.6"/>
+<circle class="door" cx="542.9" cy="316.2" r="2.6"/>
+<circle class="gate swim" cx="554.6" cy="282.2" r="5.5"/>
+<circle class="door" cx="255.0" cy="272.8" r="2.6"/>
+<circle class="door" cx="301.8" cy="316.2" r="2.6"/>
+<circle class="door" cx="357.0" cy="340.8" r="2.6"/>
+<circle class="gate cling" cx="289.0" cy="340.8" r="5.5"/>
+<text class="rl" x="51.0" y="166.7" text-anchor="middle">C1</text>
+<path class="altar" d="M27.0,151.2 l4,4 l-4,4 l-4,-4 z"/>
+<text class="rl" x="119.0" y="166.7" text-anchor="middle">C2</text>
+<text class="rl" x="102.0" y="115.7" text-anchor="middle">C3</text>
+<text class="rl" x="170.0" y="166.7" text-anchor="middle">C4</text>
+<circle class="pool" cx="162.0" cy="155.2" r="3.2"/>
+<text class="rl" x="204.0" y="200.7" text-anchor="middle">C5</text>
+<text class="rl" x="68.0" y="132.7" text-anchor="middle">C6</text>
+<text class="rl" x="612.0" y="302.7" text-anchor="middle">D1</text>
+<path class="altar" d="M605.0,287.2 l4,4 l-4,4 l-4,-4 z"/>
+<text class="rl" x="663.0" y="302.7" text-anchor="middle">D2</text>
+<text class="rl" x="714.0" y="319.7" text-anchor="middle">D3</text>
+<text class="rl" x="765.0" y="336.7" text-anchor="middle">D4</text>
+<text class="rl" x="816.0" y="336.7" text-anchor="middle">D5</text>
+<circle class="pool" cx="808.0" cy="325.2" r="3.2"/>
+<rect class="dead" x="802.0" y="319.2" width="28.0" height="28.0" rx="2"/>
+<text class="rl" x="680.0" y="268.7" text-anchor="middle">D6</text>
+<rect class="dead" x="666.0" y="251.2" width="28.0" height="28.0" rx="2"/>
+<text class="rl" x="391.0" y="370.7" text-anchor="middle">F1</text>
+<path class="altar" d="M367.0,355.2 l4,4 l-4,4 l-4,-4 z"/>
+<text class="rl" x="442.0" y="353.7" text-anchor="middle">F2</text>
+<text class="rl" x="476.0" y="302.7" text-anchor="middle">F3</text>
+<text class="rl" x="561.0" y="302.7" text-anchor="middle">F4</text>
+<text class="rl" x="544.0" y="336.7" text-anchor="middle">F5</text>
+<circle class="pool" cx="536.0" cy="325.2" r="3.2"/>
+<rect class="dead" x="530.0" y="319.2" width="28.0" height="28.0" rx="2"/>
+<text class="rl" x="544.0" y="268.7" text-anchor="middle">F6</text>
+<rect class="dead" x="530.0" y="251.2" width="28.0" height="28.0" rx="2"/>
+<text class="rl" x="221.0" y="268.7" text-anchor="middle">G1</text>
+<path class="altar" d="M197.0,253.2 l4,4 l-4,4 l-4,-4 z"/>
+<text class="rl" x="306.0" y="285.7" text-anchor="middle">G2</text>
+<text class="rl" x="323.0" y="353.7" text-anchor="middle">G3</text>
+<text class="rl" x="374.0" y="336.7" text-anchor="middle">G4</text>
+<circle class="pool" cx="366.0" cy="325.2" r="3.2"/>
+<text class="rl" x="272.0" y="336.7" text-anchor="middle">G5</text>
+<rect class="dead" x="258.0" y="319.2" width="28.0" height="28.0" rx="2"/>
+<text class="an cave" x="18.7" y="202.3">CAVE</text>
+<text class="an grotto" x="255.0" y="238.0">GROTTO</text>
+<text class="an flooded" x="425.0" y="272.0">FLOODED</text>
+<text class="an deep" x="736.1" y="304.3">DEEP</text>
+</svg></div>
+    <div class="legend">
+      <span><i class="lg-spine"></i>main route</span>
+      <span><i class="lg-loop"></i>the only loop</span>
+      <span><i class="lg-cling"></i>Wall Cling gate</span>
+      <span><i class="lg-swim"></i>Swim gate</span>
+      <span><i class="lg-short sq dia"></i>switch shortcut</span>
+      <span><i class="lg-altar dia"></i>altar</span>
+      <span><i class="lg-pool"></i>rest pool</span>
+      <span><i class="lg-dead"></i>dead end</span>
+    </div>
+    <p class="takeaway">A death sends you to an altar you choose, so a species errand costs altar-to-gate walking. The number to watch is how far each species lane sits from an altar.</p>
+  </div>
+</section>
+
+<!-- 2. PRINCIPLES ------------------------------------------------------->
+<section>
+  <header>
+    <p class="eyebrow">The principles</p>
+    <h2>Six rules that carry into every new area</h2>
+    <p>Each card has the rule, the picture, and the research-doc ID so you can look up the sources.</p>
+  </header>
+  <div class="grid six">
+
+    <article class="card s2">
+      <div class="head"><h3>Loop it, don't append it</h3><span class="tag">A1</span></div>
+      <svg viewBox="0 0 300 130" role="img" aria-label="A new area bolted on the end of a chain is a dead end; a new area joined at two points makes a loop">
+        <text class="tm" x="8" y="14">appended: a dead end</text>
+        <line class="s-line" x1="30" y1="38" x2="150" y2="38"/><line class="s-dash" x1="150" y1="38" x2="190" y2="38"/>
+        <circle class="node" cx="30" cy="38" r="8"/><circle class="node" cx="70" cy="38" r="8"/><circle class="node" cx="110" cy="38" r="8"/><circle class="node" cx="150" cy="38" r="8"/>
+        <circle class="node new" cx="190" cy="38" r="8"/>
+        <text class="tm" x="8" y="72">inserted: a loop</text>
+        <line class="s-line" x1="30" y1="98" x2="150" y2="98"/>
+        <polyline class="s-acc" points="70,98 110,122 150,98"/>
+        <circle class="node" cx="30" cy="98" r="8"/><circle class="node" cx="70" cy="98" r="8"/><circle class="node" cx="110" cy="98" r="8"/><circle class="node" cx="150" cy="98" r="8"/>
+        <circle class="node new" cx="110" cy="122" r="8"/>
+        <text class="t" x="206" y="42">bolted on</text>
+        <text class="t" x="170" y="102">joins two rooms</text>
+      </svg>
+      <p class="rule"><b>Join the new area to the map at two points.</b> Unexplored inserts new sections into an existing cycle; Guacamelee's DLC reused a doorway that was blocked by a cave-in.</p>
+    </article>
+
+    <article class="card s2">
+      <div class="head"><h3>Show the lock before the key</h3><span class="tag">A3</span></div>
+      <svg viewBox="0 0 300 130" role="img" aria-label="A player walks past a window that shows a lit room they cannot reach yet">
+        <rect class="f-accent-soft" x="178" y="22" width="112" height="80" rx="3"/>
+        <rect class="f-ink" x="150" y="22" width="28" height="80"/>
+        <rect class="f-accent-soft" x="150" y="46" width="28" height="22"/>
+        <line class="s-line" x1="10" y1="102" x2="150" y2="102"/>
+        <circle class="f-ink" cx="52" cy="92" r="8"/>
+        <path class="s-line" d="M68 92 h40 m-8 -5 l8 5 l-8 5"/>
+        <text class="tb" x="10" y="16">1. you see it</text>
+        <text class="tb" x="184" y="16">2. out of reach</text>
+        <text class="tm" x="190" y="60">needs: spider zip</text>
+        <text class="tm" x="190" y="76">(a hole you saw</text>
+        <text class="tm" x="190" y="88">last life)</text>
+        <text class="t" x="10" y="122">3. you come back as the species that can</text>
+      </svg>
+      <p class="rule"><b>Put every gate on or one room off the main route.</b> Super Metroid's glass tunnel and Dead Cells' "hole in the ground you saw in your previous run" both work this way.</p>
+    </article>
+
+    
+
+    <article class="card s2">
+      <div class="head"><h3>Teach alone, then mix</h3><span class="tag">V6</span></div>
+      <svg viewBox="0 0 300 130" role="img" aria-label="Hazard timing: telegraph at least 21 frames, then the active window, then a safe window at least as long as the active one">
+        <text class="tb" x="8" y="14">one hazard type per room, introduced alone</text>
+        <g>
+          <rect class="f-warn" x="8" y="30" width="98" height="26" rx="3" opacity="0.35"/>
+          <rect class="f-warn" x="106" y="30" width="70" height="26" rx="3"/>
+          <rect class="f-good" x="176" y="30" width="96" height="26" rx="3" opacity="0.45"/>
+          <text class="t" x="14" y="47">telegraph</text>
+          <text class="t" x="116" y="47" style="fill:#fff">active</text>
+          <text class="t" x="184" y="47">safe window</text>
+        </g>
+        <text class="ta" x="8" y="74">&#8805; 340 ms = 21 frames at 60 fps</text>
+        <text class="tm" x="8" y="88">safe window &#8805; active window</text>
+        <text class="tm" x="8" y="100">aim 500-600 ms, visible and audible</text>
+        <text class="tm" x="8" y="118">order: alone &#8594; in a pair &#8594; mixed with others</text>
+      </svg>
+      <p class="rule"><b>Every timed hazard gets a floor of 21 frames of warning.</b> The 340 ms figure is Dark Souls 3's guaranteed attack signal; other timings are placeholders for you to tune.</p>
+    </article>
+
+    <article class="card s3">
+      <div class="head"><h3>Build rooms as rhythm</h3><span class="tag">section 4</span></div>
+      <svg class="mini" viewBox="0 0 300 130" role="img" aria-label="A room as rhythm groups of hops joined by rest platforms">
+        <line class="s-muted" x1="8" y1="96" x2="292" y2="96"/>
+        <path class="s-acc" d="M20 96 q9 -26 18 0 M44 96 q9 -26 18 0 M68 96 q9 -26 18 0"/>
+        <rect class="f-ink" x="94" y="92" width="34" height="5" rx="2"/>
+        <path class="s-acc" d="M136 96 q16 -42 32 0 M176 96 q16 -42 32 0"/>
+        <rect class="f-ink" x="216" y="92" width="34" height="5" rx="2"/>
+        <path class="s-acc" d="M258 96 q8 -20 16 0"/>
+        <text class="tb" x="8" y="16">rhythm group</text>
+        <text class="tm" x="8" y="30">short hops</text>
+        <text class="tb" x="136" y="16">next group</text>
+        <text class="tm" x="136" y="30">long hops</text>
+        <text class="tm" x="92" y="116">rest platform</text>
+        <text class="tm" x="206" y="116">rest platform</text>
+      </svg>
+      <p class="rule"><b>Describe a room as a beat, then test it per species.</b> Smith et al. use groups of 5, 10, 15 or 20 s, joined by a small rest platform. A wolf crosses the same room far faster than a slime.</p>
+    </article>
+
+    <article class="card s3">
+      <div class="head"><h3>Make danger the loudest thing</h3><span class="tag">V9 FO3</span></div>
+      <svg class="mini" viewBox="0 0 300 130" role="img" aria-label="Three contrast tiers: faded background, outlined mid-contrast platforms, peak-saturation hazard">
+        <g transform="scale(0.78)"><rect class="f-surface2" x="8" y="8" width="190" height="114" rx="4"/>
+        <rect class="f-muted" x="22" y="30" width="30" height="70" opacity="0.18"/>
+        <rect class="f-muted" x="64" y="22" width="24" height="80" opacity="0.18"/>
+        <rect class="f-muted" x="150" y="36" width="34" height="64" opacity="0.18"/>
+        <rect x="30" y="76" width="64" height="9" rx="1" style="fill:var(--cave);stroke:var(--ink);stroke-width:1.6"/>
+        <rect x="116" y="58" width="64" height="9" rx="1" style="fill:var(--cave);stroke:var(--ink);stroke-width:1.6"/>
+        <rect class="f-volcano" x="94" y="104" width="104" height="14" rx="2"/>
+        <rect x="94" y="104" width="104" height="3" rx="1" style="fill:#ffd36b"/>
+        </g>
+        <text class="tb" x="168" y="34">danger</text><text class="tm" x="168" y="47">peak saturation</text>
+        <text class="tb" x="168" y="70">platforms</text><text class="tm" x="168" y="83">outlined, mid</text>
+        <text class="tb" x="168" y="106">background</text><text class="tm" x="168" y="119">faded, low</text>
+      </svg>
+      <p class="rule"><b>Three tiers: background fades, platforms get an edge, hazards get the brightest colour.</b> Dead Cells and Celeste agree on value contrast plus an outlined walkable edge. They disagree on saturation, so don't rely on it.</p>
+    </article>
+
+    <article class="card s6">
+      <div class="head"><h3>One rebirth, several gates</h3><span class="tag">K2 K5</span></div>
+      <div class="mxpair"><div>
+        <p class="mx-title">today: skill gates only (W = Wall Cling, S = Swim), no species lanes</p>
+        <div class="matrix" aria-label="Lanes today">
+          <span></span><span class="h">Cav</span><span class="h">Gro</span><span class="h">Flo</span><span class="h">Dee</span><span class="h">For</span><span class="h">Vol</span>
+          <span class="rowh">skill gate</span><span class="c cling">W</span><span class="c cling">W</span><span class="c swim">S</span><span class="c cling">W</span><span class="c off"></span><span class="c off"></span>
+          <span class="rowh">slime</span><span class="c"></span><span class="c"></span><span class="c"></span><span class="c"></span><span class="c off"></span><span class="c off"></span>
+          <span class="rowh">spider</span><span class="c"></span><span class="c"></span><span class="c"></span><span class="c"></span><span class="c off"></span><span class="c off"></span>
+          <span class="rowh">wolf</span><span class="c"></span><span class="c"></span><span class="c"></span><span class="c"></span><span class="c off"></span><span class="c off"></span>
+          <span class="rowh">biped</span><span class="c"></span><span class="c"></span><span class="c"></span><span class="c"></span><span class="c off"></span><span class="c off"></span>
+        </div>
+        </div><div><p class="mx-title">target (illustrative): 2+ species lanes per area</p>
+        <div class="matrix" aria-label="Target lanes">
+          <span></span><span class="h">Cav</span><span class="h">Gro</span><span class="h">Flo</span><span class="h">Dee</span><span class="h">For</span><span class="h">Vol</span>
+          <span class="rowh">slime</span><span class="c lane">&#9679;</span><span class="c"></span><span class="c lane">&#9679;</span><span class="c"></span><span class="c lane">&#9679;</span><span class="c lane">&#9679;</span>
+          <span class="rowh">spider</span><span class="c"></span><span class="c lane">&#9679;</span><span class="c"></span><span class="c lane">&#9679;</span><span class="c lane">&#9679;</span><span class="c lane">&#9679;</span>
+          <span class="rowh">wolf</span><span class="c lane">&#9679;</span><span class="c"></span><span class="c"></span><span class="c lane">&#9679;</span><span class="c lane">&#9679;</span><span class="c lane">&#9679;</span>
+          <span class="rowh">biped</span><span class="c"></span><span class="c lane">&#9679;</span><span class="c lane">&#9679;</span><span class="c"></span><span class="c lane">&#9679;</span><span class="c lane">&#9679;</span>
+        </div>
+      </div></div>
+      <p class="rule"><b>Changing species costs a death, so make each rebirth pay.</b> Cluster 2+ gates per species near each other, and give every area lanes for at least two species, rotating which, so none is left out. Each lane gets one visible tile marker, like Dragon's Trap's mouse blocks.</p>
+    </article>
+  </div>
+</section>
+
+<!-- 3. ENGINE FACTS ----------------------------------------------------->
+<section>
+  <header>
+    <p class="eyebrow">What your engine decides</p>
+    <h2>Four facts that change the design</h2>
+    <p>These came from reading the repo, not the literature. Each one affects both new areas.</p>
+  </header>
+  <div class="grid two">
+
+    <article class="card">
+      <div class="head"><h3>The spider walks over every pit</h3><span class="tag">5.1</span></div>
+      <svg viewBox="0 0 300 130" role="img" aria-label="Cross-section of a room: a lava pit in the floor, with the spider crawling across the generated ceiling above it">
+        <rect class="f-ink" x="8" y="8" width="284" height="12"/>
+        <rect class="f-ink" x="8" y="108" width="100" height="14"/><rect class="f-ink" x="200" y="108" width="92" height="14"/>
+        <rect class="f-volcano" x="108" y="108" width="92" height="14"/>
+        <line class="s-dash" x1="40" y1="30" x2="262" y2="30" style="stroke:var(--accent);stroke-width:2"/>
+        <circle class="f-accent" cx="150" cy="29" r="6"/>
+        <text class="ta" x="166" y="52">spider lane</text>
+        <circle class="f-ink" cx="70" cy="98" r="7"/>
+        <path class="s-line" d="M78 92 q24 -34 40 0"/><text class="tb" x="104" y="82" style="fill:var(--warn)">&#10005;</text>
+        <text class="tm" x="172" y="84">slime, wolf, biped:</text><text class="tm" x="172" y="96">stopped by the pit</text>
+      </svg>
+      <p class="rule"><b>Every room has a generated 20 px ceiling.</b> A floor hazard is no gate for the spider unless the ceiling is tagged hot or slick, or missing. Decide the slick flag before the volcano.</p>
+    </article>
+
+    <article class="card">
+      <div class="head"><h3>Open sky removes the spider's lane</h3><span class="tag">5.2</span></div>
+      <svg viewBox="0 0 300 120" role="img" aria-label="Three room options: ceiling, open sky, canopy band">
+        <g>
+          <rect class="f-surface2" x="6" y="22" width="88" height="70" rx="3"/><rect class="f-ink" x="6" y="22" width="88" height="8"/><rect class="f-ink" x="6" y="88" width="88" height="6"/>
+          <line class="s-acc" x1="16" y1="38" x2="84" y2="38"/>
+          <text class="tb" x="6" y="14">ceiling</text><text class="tm" x="6" y="108">lane stays</text>
+        </g>
+        <g>
+          <rect class="f-accent-soft" x="106" y="22" width="88" height="70" rx="3" opacity="0.6"/><rect class="f-ink" x="106" y="88" width="88" height="6"/>
+          <text class="tb" x="106" y="14">open sky</text><text class="tm" x="106" y="108">no lane</text>
+        </g>
+        <g>
+          <rect class="f-accent-soft" x="206" y="22" width="88" height="70" rx="3" opacity="0.6"/><rect class="f-ink" x="206" y="88" width="88" height="6"/>
+          <rect class="f-forest" x="212" y="30" width="30" height="7" rx="2"/><rect class="f-forest" x="248" y="34" width="38" height="7" rx="2"/>
+          <line class="s-acc" x1="214" y1="44" x2="284" y2="44"/>
+          <text class="tb" x="206" y="14">canopy band</text><text class="tm" x="206" y="108">lane restored</text>
+        </g>
+      </svg>
+      <p class="rule"><b>Sky and the spider bypass are one decision.</b> The camera clamps to the room, so sky is art, not space. A canopy band of solids gives the forest a ceiling the spider can use.</p>
+    </article>
+
+    <article class="card">
+      <div class="head"><h3>A fire death can open a fire gate</h3><span class="tag">5.3</span></div>
+      <div class="flow"><span class="chip">Die in lava</span><span class="arrow">&#8594;</span><span class="chip">Fire seed starts next life</span><span class="arrow">&#8594;</span><span class="chip bad">Fire-keyed gate opens</span></div>
+      <div class="flow"><span class="chip acc">Fix</span><span class="chip ok">Gate on eaten essence</span><span class="chip ok">Seed = one-life grace</span></div>
+      <p class="rule"><b>Your death-seed rule hands over the key.</b> Gate <code>heat_resist</code> on permanent essence and make the seed a short, timed grace, like Terraria's stacked 7 s lava immunities.</p>
+    </article>
+
+    <article class="card">
+      <div class="head"><h3>Three verbs have nothing to act on</h3><span class="tag">5.4</span></div>
+      <div class="bar" role="img" aria-label="133 of 172 interior solids are one-way ledges"><div class="oneway" style="flex:133">133 one-way</div><div class="hard" style="flex:39">39 hard</div></div>
+      <div class="zeros">
+        <div><b>0</b><span>hard steps of 24 px or less (vault, mantle)</span></div>
+        <div><b>0</b><span>hard low ceilings (roll's duck)</span></div>
+      </div>
+      <p class="rule"><b>Today's rooms give mantle, vault and the roll's duck almost nothing.</b> New areas need hard ledges, short hard steps and low hard ceilings on purpose: thick branch lips, fallen logs, bramble lines, vent hoods.</p>
+    </article>
+  </div>
+</section>
+
+<!-- 4. FOREST ------------------------------------------------------------>
+<section>
+  <header>
+    <p class="eyebrow">Forest</p>
+    <h2>The surface works best as a hub, revealed slowly</h2>
+    <p>Super Metroid, Zero Mission, Hollow Knight and Dark Souls all start or return at a surface or shrine hub. Your first sight of daylight is the moment to stage.</p>
+  </header>
+  <div class="panel" style="display:grid;gap:14px">
+    <div>
+      <p class="mx-title">how to stage the reveal (FO1)</p>
+      <div class="steps">
+        <div><b>Tunnel first</b><span>A long climb sets the direction (Dead Cells).</span></div>
+        <div><b>Music holds</b><span>Cave track plays until the player is outside (Super Metroid).</span></div>
+        <div><b>Safe first room</b><span>No spawns: "clear skies and nothing to fight" (Zero Mission).</span></div>
+        <div><b>Palette shift</b><span>One gradient map recolours the biome (Dead Cells).</span></div>
+        <div class="gate"><b>Hub clearing</b><span>Rest pool and landmark tree; paths root out from it.</span></div>
+      </div>
+    </div>
+    <div>
+      <p class="mx-title">sketch: surface hub above the cave (7 to 8 rooms, 1 screen = 640x360)</p>
+      <div class="scroll-x"><svg class="sketch" viewBox="0 0 430 290" role="img" aria-label="Sketch of the forest: a trunk shaft up to a canopy walk, a clearing hub, a floor trail, and a one-way drop back to the cave start">
+        <text class="tm" x="0" y="192">from C3</text>
+        <g class="rooms">
+          <rect class="f-forest" x="88" y="22" width="132" height="44" rx="4" opacity="0.85"/><text class="tb" x="154" y="48" text-anchor="middle" style="fill:var(--on-area)">Canopy Walk 3x1</text>
+          <rect class="f-forest" x="246" y="22" width="44" height="44" rx="4" opacity="0.5" style="stroke:var(--forest);stroke-dasharray:4 3"/><text class="tm" x="268" y="48" text-anchor="middle">Nest</text>
+          <rect class="f-forest" x="88" y="66" width="44" height="132" rx="4" opacity="0.85"/><text class="tb" x="110" y="128" text-anchor="middle" style="fill:var(--on-area)">Trunk</text><text class="tm" x="110" y="142" text-anchor="middle" style="fill:var(--on-area)">1x3</text>
+          <rect class="f-forest" x="0" y="198" width="44" height="44" rx="4" opacity="0.85"/><text class="tb" x="22" y="224" text-anchor="middle" style="fill:var(--on-area)">Mouth</text>
+          <rect class="f-forest" x="44" y="198" width="88" height="44" rx="4" opacity="0.85"/><text class="tb" x="88" y="224" text-anchor="middle" style="fill:var(--on-area)">Treeline 2x1</text>
+          <rect class="f-forest" x="132" y="198" width="44" height="44" rx="4"/><text class="tb" x="154" y="219" text-anchor="middle" style="fill:var(--on-area)">Clearing</text><text class="tm" x="154" y="232" text-anchor="middle" style="fill:var(--on-area)">hub</text>
+          <rect class="f-forest" x="176" y="198" width="132" height="44" rx="4" opacity="0.85"/><text class="tb" x="242" y="224" text-anchor="middle" style="fill:var(--on-area)">Floor Trail 3x1</text>
+          <rect class="f-forest" x="334" y="198" width="44" height="44" rx="4" opacity="0.5" style="stroke:var(--forest);stroke-dasharray:4 3"/><text class="tm" x="356" y="224" text-anchor="middle">Den</text>
+          <rect class="f-forest" x="44" y="242" width="44" height="44" rx="4" opacity="0.85"/><text class="tb" x="66" y="268" text-anchor="middle" style="fill:var(--on-area)">Hollow</text>
+        </g>
+        <text class="ta" x="94" y="268">&#8592; one-way drop back to C1</text>
+        <text class="tm" x="223" y="40" style="fill:var(--accent)">zip</text>
+        <text class="tm" x="284" y="192" style="fill:var(--accent)">pounce gap</text>
+      </svg></div>
+    </div>
+    <div>
+      <p class="mx-title">each species gets its own lane (and the main route stays base-jump only)</p>
+      <div class="lanes">
+        <div class="lane"><b>Slime</b><span>Mushroom caps bounce; bark for a straight cling climb. Check pads against the reach model.</span></div>
+        <div class="lane"><b>Spider</b><span>Canopy band and branch undersides to crawl; zip across canopy gaps.</span></div>
+        <div class="lane"><b>Wolf</b><span>A 3x1 floor trail with wide gaps; logs under 24 px to vault.</span></div>
+        <div class="lane"><b>Biped</b><span>Wall jump up trunks; mantle thick branch lips; slide under bramble lines.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5. VOLCANO ----------------------------------------------------------->
+<section>
+  <header>
+    <p class="eyebrow">Volcano</p>
+    <h2>Heat is a soft gate, and lava should hurt, not reset you</h2>
+    <p>Super Metroid's Norfair, Metroid Prime and Dread all gate fire areas with heat you can feel before you can beat it.</p>
+  </header>
+  <div class="panel" style="display:grid;gap:16px">
+    <div>
+      <p class="mx-title">how Norfair stages a heat gate (V1, V11)</p>
+      <div class="steps">
+        <div><b>Confine</b><span>You can only explore a small hot area at first.</span></div>
+        <div><b>Foreshadow</b><span>Glow, ash and a heat tablet in the area before.</span></div>
+        <div><b>Warn</b><span>Colour, sound and HUD cue before any damage.</span></div>
+        <div class="gate"><b>Gate</b><span>Permanent resistance, a "radical change of pace".</span></div>
+      </div>
+    </div>
+    <div>
+      <p class="mx-title">how deadly is lava? (V3)</p>
+      <div class="dial" role="img" aria-label="Lava lethality scale: instant kill in rare rooms only, damage over time with knockback on main lanes, harmless as a rest area">
+        <div class="k">instant kill</div><div class="m">damage over time + knockback</div><div class="h">harmless</div>
+      </div>
+      <div class="dial-notes"><span>rare room only, never within a screen of the entry</span><span>main lanes: death restarts the world, so lava should cost health, not the run</span><span></span></div>
+    </div>
+    <div>
+      <p class="mx-title">the slime's lane: quench lava with held water essence (V5, species lanes)</p>
+      <svg class="mini" viewBox="0 0 300 84" role="img" aria-label="Lava, plus water essence, becomes an obsidian bridge for a limited time">
+        <rect class="f-volcano" x="8" y="48" width="84" height="22" rx="3"/><text class="tb" x="20" y="63" style="fill:#fff">lava</text>
+        <text class="arrow" x="106" y="63" style="font:500 16px var(--mono);fill:var(--muted)">+</text>
+        <path d="M137 30 q10 -16 10 0 q0 10 -10 10 q-10 0 -10 -10 q0 -4 10 -10z" class="f-flooded"/>
+        <rect class="f-flooded" x="116" y="48" width="42" height="22" rx="3" opacity="0.35"/><text class="tm" x="118" y="63">water</text>
+        <text class="arrow" x="168" y="63" style="font:500 16px var(--mono);fill:var(--muted)">&#8594;</text>
+        <rect x="194" y="48" width="96" height="22" rx="3" style="fill:var(--ink)"/><text class="tb" x="206" y="63" style="fill:var(--bg)">obsidian bridge</text>
+        <circle cx="268" cy="30" r="9" style="fill:none;stroke:var(--accent);stroke-width:2.5;stroke-dasharray:36 20"/><text class="tm" x="206" y="14">limited time</text>
+      </svg>
+    </div>
+    <div>
+      <p class="mx-title">sketch: a descent off the Deep (7 rooms)</p>
+      <div class="scroll-x"><svg class="sketch" viewBox="0 0 480 330" role="img" aria-label="Sketch of the volcano: ashfall landing, ember hall, chimney, forge row, magma chamber with altar, a rare heat-gated vault, and a one-way ash cut shortcut">
+        <rect x="0" y="0" width="60" height="60" rx="4" style="fill:var(--deep);opacity:0.5;stroke:var(--deep);stroke-dasharray:4 3"/><text class="tm" x="30" y="34" text-anchor="middle">Deep</text>
+        <rect class="f-volcano" x="0" y="60" width="60" height="60" rx="4" opacity="0.7"/><text class="tb" x="30" y="86" text-anchor="middle" style="fill:var(--on-area)">Ashfall</text><text class="tm" x="30" y="100" text-anchor="middle" style="fill:var(--on-area)">no heat</text>
+        <rect class="f-volcano" x="60" y="60" width="120" height="60" rx="4" opacity="0.85"/><text class="tb" x="120" y="86" text-anchor="middle" style="fill:var(--on-area)">Ember Hall</text><text class="tm" x="120" y="100" text-anchor="middle" style="fill:var(--on-area)">pool, mild heat</text>
+        <rect class="f-volcano" x="180" y="60" width="60" height="120" rx="4" opacity="0.85"/><text class="tb" x="210" y="116" text-anchor="middle" style="fill:var(--on-area)">Chimney</text><text class="tm" x="210" y="130" text-anchor="middle" style="fill:var(--on-area)">rockfall</text>
+        <rect class="f-volcano" x="120" y="180" width="120" height="60" rx="4"/><text class="tb" x="180" y="206" text-anchor="middle" style="fill:var(--on-area)">Forge Row</text><text class="tm" x="180" y="220" text-anchor="middle" style="fill:var(--on-area)">vents, fire</text>
+        <rect class="f-volcano" x="240" y="180" width="60" height="60" rx="4"/><text class="tb" x="270" y="206" text-anchor="middle" style="fill:var(--on-area)">Magma</text><text class="tm" x="270" y="220" text-anchor="middle" style="fill:var(--on-area)">altar</text>
+        <rect class="f-volcano" x="120" y="240" width="60" height="60" rx="4" opacity="0.5" style="stroke:var(--heat);stroke-width:2;stroke-dasharray:4 3"/><text class="tb" x="150" y="266" text-anchor="middle" style="fill:var(--on-area)">Vault</text><text class="tm" x="150" y="280" text-anchor="middle" style="fill:var(--on-area)">rare</text>
+        <rect class="f-volcano" x="60" y="180" width="60" height="60" rx="4" opacity="0.7"/><text class="tb" x="90" y="206" text-anchor="middle" style="fill:var(--on-area)">Ash Cut</text><text class="tm" x="90" y="220" text-anchor="middle" style="fill:var(--on-area)">shortcut</text>
+        <path class="s-acc" d="M90 180 v-54 l-7 7 m7 -7 l7 7"/><text class="ta" x="100" y="156">one-way up</text>
+        <text class="ta" x="312" y="204">zip or pounce</text><text class="ta" x="312" y="218">across the lava</text>
+        <text class="ta" x="190" y="274" style="fill:var(--heat)">heat_resist gate</text>
+        <text class="tm" x="0" y="322">main route: Ashfall to Magma on the base jump only</text>
+      </svg></div>
+    </div>
+    <div class="lanes">
+      <div class="lane"><b>Slime</b><span>Quench lava into obsidian with water essence; water rects are refuges.</span></div>
+      <div class="lane"><b>Spider</b><span>Zip across spans; crawls the ceiling unless it is hot or slick.</span></div>
+      <div class="lane"><b>Wolf</b><span>Gallop and pounce between eruption windows; vault low lava lips.</span></div>
+      <div class="lane"><b>Biped</b><span>Roll through a fire burst on its invulnerable frames; mantle over surging lava.</span></div>
+    </div>
+    <p class="takeaway">First fire essence must be reachable without killing a fire creature: a deliberate teaching death, or a creature-free ember vent near the first rest pool.</p>
+  </div>
+</section>
+
+<!-- 5b. MORE AREAS ------------------------------------------------------->
+<section>
+  <header>
+    <p class="eyebrow">Part 2: more areas and traps</p>
+    <h2>Seven additions, one rulebook</h2>
+    <p>Cathedral, cemetery, crypt, swamp, goblin village, demon area and traps all need the same missing piece: room data for zones and triggers. Build it once and every area below uses it.</p>
+  </header>
+
+  <div class="panel">
+    <p class="mx-title">the planning map: nothing is replaced, the Deep becomes a hub (proposed wiring)</p>
+    <div class="scroll-x"><svg class="plan" viewBox="0 0 1010 340" role="img" aria-label="Schematic of the proposed wiring: a surface spine of forest, swamp and village, the existing chain, and the Deep as a hub with a crypt cluster, a demon area, a volcano, the Serpent Lair and the last area, all added and none replaced">
+      <g>
+        <line class="pe" x1="150" y1="226" x2="200" y2="226"/><line class="pe" x1="320" y1="226" x2="370" y2="226"/><line class="pe" x1="490" y1="226" x2="540" y2="226"/>
+        <line class="pe dash" x1="90" y1="182" x2="90" y2="104"/>
+        <line class="pe dash" x1="150" y1="78" x2="200" y2="78"/><line class="pe dash" x1="320" y1="78" x2="370" y2="78"/>
+        <path class="pe dash" d="M260 104 C260 150 430 150 430 190"/>
+        <path class="pe dash loop" d="M430 52 C430 14 90 14 90 52"/>
+        <path class="pe dash" d="M660 210 C690 210 690 130 720 130"/>
+        <line class="pe dash" x1="660" y1="226" x2="720" y2="226"/>
+        <path class="pe" d="M660 242 C690 242 690 290 720 290"/>
+        <line class="pe dash" x1="860" y1="130" x2="890" y2="130"/>
+        <line class="pe" x1="860" y1="290" x2="890" y2="290"/>
+        <path class="pe dash loop" d="M790 150 C790 190 700 196 640 196 L640 190"/>
+      </g>
+      <g>
+        <rect class="pn a-cave" x="30" y="190" width="120" height="72" rx="8"/><text class="pt" x="90" y="222" text-anchor="middle">Cave</text><text class="ps" x="90" y="238" text-anchor="middle">6 rooms</text>
+        <rect class="pn a-grotto" x="200" y="190" width="120" height="72" rx="8"/><text class="pt" x="260" y="222" text-anchor="middle">Grotto</text><text class="ps" x="260" y="238" text-anchor="middle">5 rooms</text>
+        <rect class="pn a-flooded" x="370" y="190" width="120" height="72" rx="8"/><text class="pt" x="430" y="222" text-anchor="middle">Flooded</text><text class="ps" x="430" y="238" text-anchor="middle">6 rooms, swim gate</text>
+        <rect class="pn a-deep" x="540" y="190" width="120" height="72" rx="8"/><text class="pt" x="600" y="222" text-anchor="middle">Deep</text><text class="ps" x="600" y="238" text-anchor="middle">becomes a hub</text>
+      </g>
+      <g>
+        <rect class="pn plan forest" x="30" y="52" width="120" height="52" rx="8"/><text class="pt" x="90" y="75" text-anchor="middle">Forest</text><text class="ps" x="90" y="91" text-anchor="middle">surface hub</text>
+        <rect class="pn plan forest" x="200" y="52" width="120" height="52" rx="8"/><text class="pt" x="260" y="75" text-anchor="middle">Swamp</text><text class="ps" x="260" y="91" text-anchor="middle">bog mud</text>
+        <rect class="pn plan forest" x="370" y="52" width="120" height="52" rx="8"/><text class="pt" x="430" y="75" text-anchor="middle">Goblin village</text><text class="ps" x="430" y="91" text-anchor="middle">neutral altar gate</text>
+        <text class="ps" x="345" y="146" text-anchor="middle">sump link</text>
+        <text class="ps" x="262" y="22" text-anchor="middle">one-way drop closes the loop</text>
+        <text class="ps" x="96" y="150">base-jump entrance</text>
+        <rect class="pn plan cluster" x="720" y="100" width="140" height="60" rx="8"/><text class="pt" x="790" y="124" text-anchor="middle">Crypt cluster</text><text class="ps" x="790" y="140" text-anchor="middle">cathedral, cemetery</text>
+        <rect class="pn plan demon" x="890" y="100" width="110" height="60" rx="8"/><text class="pt" x="945" y="124" text-anchor="middle">Demon area</text><text class="ps" x="945" y="140" text-anchor="middle">sealed gates</text>
+        <rect class="pn plan volcano" x="720" y="196" width="140" height="60" rx="8"/><text class="pt" x="790" y="220" text-anchor="middle">Volcano</text><text class="ps" x="790" y="236" text-anchor="middle">heat gate</text>
+        <rect class="pn plan last" x="720" y="260" width="140" height="60" rx="8"/><text class="pt" x="790" y="284" text-anchor="middle">Serpent Lair</text><text class="ps" x="790" y="300" text-anchor="middle">design doc, unbuilt</text>
+        <rect class="pn plan last" x="890" y="260" width="110" height="60" rx="8"/><text class="pt" x="945" y="284" text-anchor="middle">Last area</text><text class="ps" x="945" y="300" text-anchor="middle">design doc</text>
+        <text class="ps" x="800" y="176">coffin slide loop</text>
+      </g>
+    </svg></div>
+    <p class="takeaway">Everything is added. The surface gets its own spine, and the Deep gets three exits: the crypt cluster (with the demon area beyond it), the volcano, and the Serpent Lair gate to the last area. The world roughly triples, so build one area at a time and plan region pages for the map tab.</p>
+  </div>
+
+  <div class="grid two">
+
+    <article class="card">
+      <div class="head"><h3>Holy zones: hard, never a lock</h3><span class="tag">SA1-SA4 Z1-Z4</span></div>
+      <svg class="mini" viewBox="0 0 300 140" role="img" aria-label="Cathedral cross-section: stained-glass windows throw holy beams, shade between beams is cover for undead">
+        <rect class="f-ink" x="8" y="8" width="284" height="12"/><rect class="f-ink" x="8" y="108" width="284" height="12"/>
+        <polygon class="beam" points="28,46 60,46 76,108 12,108"/><polygon class="beam" points="118,46 150,46 166,108 102,108"/><polygon class="beam" points="208,46 240,46 256,108 192,108"/>
+        <rect class="win" x="28" y="22" width="32" height="24" rx="12"/><rect class="win" x="118" y="22" width="32" height="24" rx="12"/><rect class="win" x="208" y="22" width="32" height="24" rx="12"/>
+        <rect class="f-muted" x="80" y="98" width="18" height="10" rx="2"/><rect class="f-muted" x="170" y="98" width="18" height="10" rx="2"/><rect class="f-muted" x="260" y="98" width="18" height="10" rx="2"/>
+        <path class="s-acc" d="M14 93 H100 M100 93 l-6 -5 m6 5 l-6 5" style="stroke-dasharray:4 3"/>
+        <circle class="f-accent" cx="40" cy="98" r="6"/>
+        <text class="tm" x="8" y="136">window = switch; beam = dot; shade = cover</text>
+      </svg>
+      <p class="rule"><b>Damage over time with a grace window, not instant death.</b> Every holy-zone precedent has a switch you can reach (NetHack's priest, Nioh's generator, Dark Souls' Undead Mage). V Rising gives "a few seconds" before sun damage and stops it in shade. Each undead form carries a <code>holy_resist</code>, so form changes exposure, not access.</p>
+    </article>
+
+    <article class="card">
+      <div class="head"><h3>A cemetery that is truly safe</h3><span class="tag">SA5 SA6</span></div>
+      <div class="flow"><span class="chip ok">no spawns</span><span class="chip ok">enemies turn back at the edge</span><span class="chip ok">no holy or taint effect</span></div>
+      <div class="flow"><span class="chip">warm lantern, not holy light</span><span class="chip">calm music, a touch of unease</span></div>
+      <div class="flow"><span class="chip acc">altar</span><span class="chip acc">pool</span><span class="chip acc">tablet</span><span class="chip acc">vista of the nave</span><span class="chip acc">one shortcut</span></div>
+      <p class="rule"><b>It is a truce, not a consecration.</b> A holy look would tell undead it hurts them. NetHack's sanctuary still lets ranged attackers fire in, so remove or wall off anything with a line of sight. Hollow Knight's Resting Grounds is quiet but holds enemies, so it is not the model.</p>
+    </article>
+
+    <article class="card">
+      <div class="head"><h3>Swamp: one rule, bog mud</h3><span class="tag">SW1-SW4</span></div>
+      <svg class="mini" viewBox="0 0 300 130" role="img" aria-label="Side view of a mud span: the body sinks 12 px and one jump press escapes to a ledge at most 43 px above the surface">
+        <rect class="f-ink" x="8" y="92" width="92" height="22"/><rect class="f-ink" x="200" y="92" width="92" height="22"/>
+        <rect class="mud" x="100" y="92" width="100" height="22"/>
+        <rect class="f-ink" x="232" y="52" width="50" height="7" rx="2"/>
+        <line class="s-dash" x1="226" y1="92" x2="226" y2="56"/><text class="ta" x="140" y="46">ledge at most 43 px up</text>
+        <circle class="f-accent" cx="150" cy="96" r="9"/>
+        <path class="s-acc" d="M160 88 q28 -42 66 -32 m0 0 l-7 1 m7 -1 l-3 6"/>
+        <text class="tm" x="104" y="126">sinks 12 px; one jump escapes</text>
+        <text class="tm" x="12" y="82">walk 60%</text>
+      </svg>
+      <p class="rule"><b>Template: Donkey Kong Country 2's Hornet Hole.</b> You cannot walk or attack while stuck, jumping is the only escape, it is taught early, and the spider-like buddy is immune. Maridia is the warning: escaping must never need tuned timing. Mud is a lane modifier, never a gate. Numbers are placeholders.</p>
+    </article>
+
+    <article class="card">
+      <div class="head"><h3>Goblin village: standing by species</h3><span class="tag">VI1-VI4</span></div>
+      <div class="standing" role="table" aria-label="Village standing by species and trust">
+        <span class="sh"></span><span class="sh">goblin</span><span class="sh">others</span><span class="sh">others, trusted</span>
+        <span class="sr">gatehouse altar</span><span class="sc safe">safe</span><span class="sc safe">safe</span><span class="sc safe">safe</span>
+        <span class="sr">village spine</span><span class="sc ok">walk</span><span class="sc wary">walk, wary</span><span class="sc ok">walk</span>
+        <span class="sr">crafting, taming</span><span class="sc ok">on</span><span class="sc off">off</span><span class="sc ok">on</span>
+        <span class="sr">rare room</span><span class="sc ok">open</span><span class="sc off">locked</span><span class="sc ok">open</span>
+      </div>
+      <p class="rule"><b>The altar sits outside the palisade.</b> Rebirth is at your chosen altar, so a non-goblin must never respawn inside a hostile village. Standing is derived from your species and a trust flag, never a one-way ratchet (Divinity Original Sin 2's guards "stay hostile no matter what you do"). Any species earns trust in a trial, as in Hollow Knight's Mantis Village.</p>
+    </article>
+
+    <article class="card">
+      <div class="head"><h3>Demon area: sealed gates</h3><span class="tag">DE1-DE5</span></div>
+      <div class="flow"><span class="chip">gate spawns finite waves</span><span class="arrow">&#8594;</span><span class="chip">one deliberate act seals it</span><span class="arrow">&#8594;</span><span class="chip acc">flag persists across lives</span><span class="arrow">&#8594;</span><span class="chip ok">shortcut or rare room opens</span></div>
+      <p class="mx-title">cheap</p>
+      <div class="opts"><span class="opt">destroyable gates</span><span class="opt">taint zone</span><span class="opt">pact altar</span><span class="opt">false wall, side rooms</span><span class="opt">overlay rooms</span></div>
+      <p class="mx-title">expensive or unfair</p>
+      <div class="opts"><span class="opt bad">flipped map</span><span class="opt bad">one-hit curse</span></div>
+      <p class="rule"><b>Lost Izalith is the warning:</b> a theme with no rule and no boss concept. Gauntlet's generators "can be destroyed" gives a rule. The boss door needs only the base-jump gate; verb gates open a shortcut or the rare room. Demon fire stays in the parallax so the volcano keeps fire.</p>
+    </article>
+
+    <article class="card">
+      <div class="head"><h3>Traps: a trigger plus a hazard</h3><span class="tag">TR1-TR9</span></div>
+      <div class="flow"><span class="chip">trigger: plate, tripwire, sight</span><span class="arrow">&#8594;</span><span class="chip acc">telegraph &#8805; 340 ms</span><span class="arrow">&#8594;</span><span class="chip">hazard: dart, blade, drop</span></div>
+      <div class="flow"><span class="chip bad">invisible trigger + invisible hazard = unfair</span></div>
+      <p class="mx-title">plate weight, by species</p>
+      <div class="opts"><span class="opt">light: slime, spider</span><span class="opt">medium: goblin, undead</span><span class="opt">heavy: wolf only</span></div>
+      <p class="mx-title">what a death seeds</p>
+      <div class="opts"><span class="opt">nothing: spike, saw, crush, pit</span><span class="opt">fire: jet</span><span class="opt">poison: gas, dart</span><span class="opt">water: drowning</span><span class="opt">the creature's element: mimic, ambush</span></div>
+      <p class="rule"><b>Traps need a rule for combo deaths:</b> knocked into spikes by a creature should seed the creature's element. Non-lethal traps cost at most 30% of max HP (Dead Cells' cap); lethal ones live in rare rooms. Disarmed traps stay disarmed on every life.</p>
+    </article>
+  </div>
+</section>
+
+<!-- SIZE TARGET -->
+<section>
+  <header>
+    <p class="eyebrow">Size target</p>
+    <h2>Super Metroid is 255 rooms and 1,274 screens</h2>
+    <p>You asked to be at least that big. I counted it from the Map Rando room data: each room's footprint on the map, summed. A room averages 4.9 screens (median 4), twice the size of yours.</p>
+  </header>
+  <div class="panel" style="display:grid;gap:18px">
+    <div><p class="mx-title">rooms</p><div class="bars"><div class="b"><span class="l">Super Metroid</span><span class="tr"><span class="f " style="display:block;width:98.1%"></span></span><span class="v">255</span></div><div class="b"><span class="l">Target</span><span class="tr"><span class="f soft" style="display:block;width:98.5%"></span></span><span class="v">256</span></div><div class="b"><span class="l">All planned areas</span><span class="tr"><span class="f muted" style="display:block;width:26.9%"></span></span><span class="v">about 70</span></div><div class="b"><span class="l">Today</span><span class="tr"><span class="f muted" style="display:block;width:8.8%"></span></span><span class="v">23</span></div></div></div>
+    <div><p class="mx-title">screens (a Super Metroid map tile versus our 640 by 360 screen; the gap shrinks to about 550 if you scale by body size)</p><div class="bars"><div class="b"><span class="l">Super Metroid, strict</span><span class="tr"><span class="f " style="display:block;width:100.0%"></span></span><span class="v">1,274</span></div><div class="b"><span class="l">Body-scaled yardstick</span><span class="tr"><span class="f soft" style="display:block;width:43.2%"></span></span><span class="v">about 550</span></div><div class="b"><span class="l">Target at today's room size</span><span class="tr"><span class="f soft" style="display:block;width:44.0%"></span></span><span class="v">about 560</span></div><div class="b"><span class="l">All planned areas</span><span class="tr"><span class="f muted" style="display:block;width:9.8%"></span></span><span class="v">about 125</span></div><div class="b"><span class="l">Today</span><span class="tr"><span class="f muted" style="display:block;width:3.5%"></span></span><span class="v">45</span></div></div></div>
+    <p class="takeaway">With every planned area the world reaches about 27% of Super Metroid's rooms and 10% of its screens. The realistic bar is 255 rooms at today's room size, about 560 screens: 3.7 times the planned content.</p>
+  </div>
+  <div class="panel" style="display:grid;gap:12px">
+    <p class="mx-title">room budget by area (suggested; Super Metroid's six areas run 16 to 76 rooms, mean 42)</p>
+    <div class="budget"><div><span>Cave</span><b>6 &#8594; 18</b></div><div><span>Fungal Grotto</span><b>5 &#8594; 20</b></div><div><span>Flooded Tunnels</span><b>6 &#8594; 20</b></div><div><span>The Deep (hub)</span><b>6 &#8594; 26</b></div><div><span>Forest</span><b>9 planned &#8594; 24</b></div><div><span>Swamp</span><b>6 planned &#8594; 20</b></div><div><span>Goblin village</span><b>5 planned &#8594; 18</b></div><div><span>Sacred cluster</span><b>12 planned &#8594; 40</b></div><div><span>Volcano</span><b>7 planned &#8594; 26</b></div><div><span>Demon area</span><b>7 planned &#8594; 26</b></div><div><span>Last area</span><b>not sketched &#8594; 16</b></div><div><span>Serpent Lair</span><b>1 planned &#8594; 2</b></div><div class="tot"><span>Total rooms</span><b>23 today &#8594; 256</b></div></div>
+  </div>
+  <div class="grid two">
+    <article class="card"><div class="head"><h3>Grow the four existing areas</h3><span class="tag">lever 1</span></div><p class="rule"><b>61 of the 233 rooms still to build</b> sit in areas you have already designed (23 now, 84 target). Their themes and creatures exist.</p></article>
+    <article class="card"><div class="head"><h3>Make rooms bigger</h3><span class="tag">lever 2</span></div><p class="rule"><b>Super Metroid's median room is 4 screens, yours is 2.</b> Three-by-one corridors, two-by-two chambers and one-by-three shafts add screens without adding rooms.</p></article>
+    <article class="card"><div class="head"><h3>Add areas</h3><span class="tag">lever 3</span></div><p class="rule"><b>Hollow Knight lists 19 locations; Silksong has 12 areas.</b> Two more areas of about 18 rooms close the gap without growing any other.</p></article>
+    <article class="card"><div class="head"><h3>Use cheap rooms</h3><span class="tag">lever 4</span></div><p class="rule"><b>A quarter of Super Metroid's rooms are a single screen:</b> connectors and item closets. Short rare rooms are the cheapest rooms to build.</p></article>
+  </div>
+  <div class="panel"><p class="note"><b>What this size changes:</b> one altar per area stops working at 40 to 60 screens per area, so add altars per sub-region or altar-to-altar warping; the map tab needs region pages or a zoom; and <code>tools/world_size.sh</code> prints the live numbers against this table from the room files. It is informational only: it never fails a build.</p></div>
+</section>
+
+<!-- 6. DECISIONS --------------------------------------------------------->
+<section>
+  <header>
+    <p class="eyebrow">Over to you</p>
+    <h2>Decisions only you can make</h2>
+    <p>Only the first has a suggested option (in teal), because the sources point one way. The other three are open.</p>
+  </header>
+  <div class="grid two">
+    <article class="card decide">
+      <h3>Where does each area attach?</h3>
+      <p class="note">Forest</p>
+      <div class="opts"><span class="opt lean">Surface hub above the cave</span><span class="opt">Between Cave and Grotto</span><span class="opt">Late reward past the Deep</span></div>
+      <p class="note">Volcano</p>
+      <div class="opts"><span class="opt lean">Descent off the Deep</span><span class="opt">Beside the Flooded Tunnels</span><span class="opt">Off the chain's midpoint</span></div>
+      <p class="note">Nothing is replaced: both sit beside the design doc's "last area past the Deep" and the unbuilt Serpent Lair. The map above shows the proposed wiring for all of them.</p>
+    </article>
+    <article class="card decide">
+      <h3>Open sky or a ceiling?</h3>
+      <div class="opts"><span class="opt">Ceiling everywhere</span><span class="opt">Canopy band</span><span class="opt">Real open sky</span></div>
+      <p class="note">Decides the spider's lanes in both new areas. Build the slick flag first, or choose which rooms are hot-ceiling.</p>
+    </article>
+    <article class="card decide">
+      <h3>Fast travel between altars?</h3>
+      <div class="opts"><span class="opt">Yes, after the third area</span><span class="opt">Defer</span><span class="opt">Never</span></div>
+      <p class="note">Every comparable game adds it as the map grows. It is a new system, not a layout rule.</p>
+    </article>
+    <article class="card decide">
+      <h3>How far apart are altars?</h3>
+      <div class="opts"><span class="opt">Cap at 7 screens</span><span class="opt">One per area</span></div>
+      <p class="note">Blasphemous keeps checkpoints within seven screens. Your areas run 9 to 14 screens each.</p>
+    </article>
+  </div>
+
+  <p class="mx-title" style="margin-top:6px">added by part 2</p>
+  <div class="grid two">
+    <article class="card decide">
+      <h3>Confirm the wiring</h3>
+      <div class="opts"><span class="opt">Deep as a hub, three exits</span><span class="opt">Demon area off the cluster</span><span class="opt">Demon area only after the reveal</span><span class="opt">Village drop to the forest</span><span class="opt">Village drop to the cave</span></div>
+      <p class="note">Nothing is replaced. The open choices are which Deep room each spoke leaves from, when the demon area opens, and where the village drop lands.</p>
+    </article>
+    <article class="card decide">
+      <h3>What counts as "as big as Super Metroid"?</h3>
+      <div class="opts"><span class="opt">255 rooms at today's room size (about 560 screens)</span><span class="opt">Strict: 1,274 screens</span><span class="opt">Rooms only</span></div>
+      <p class="note">Rooms and screens differ because their rooms average 4.9 screens and yours 2. The first is the realistic bar; the strict one needs rooms about 2.5 times bigger as well.</p>
+    </article>
+    <article class="card decide">
+      <h3>Undead rules in safe zones and next to bones</h3>
+      <div class="opts"><span class="opt">Safe zone has drainable fauna</span><span class="opt">Safe zone has none</span></div>
+      <div class="opts"><span class="opt">Bone creatures attack undead</span><span class="opt">Bone creatures are neutral</span></div>
+      <p class="note">Undead drain life from the living, and a safe zone has no hostile spawns. Bones are not living, so they cannot be drained. Do demons hate undead?</p>
+    </article>
+    <article class="card decide">
+      <h3>The goddess and a fifth altar perk</h3>
+      <p class="note">Which side is she on? It decides whether holy art signals safe or threat in the cathedral and demon area. Separately, all four altar perks are assigned: do new clusters share a perk or add a fifth?</p>
+    </article>
+    <article class="card decide">
+      <h3>Two designs of mine to confirm</h3>
+      <p class="note">Combo deaths: knocked into spikes by a creature seeds the creature's element. Village standing: derived from your species and a persistent trust flag, never a permanent ratchet. Neither has a source.</p>
+    </article>
+  </div>
+</section>
+
+<footer class="foot">
+  <p>Full write-up with sources and rule tables: <code>docs/research/area-level-design.md</code>. Raw notes with every URL: <code>docs/research/area-level-design-notes/</code>.</p>
+  <p>Evidence tags in the write-up: <span class="tag">repo</span> read in the code, <span class="tag">read</span> fetched page, <span class="tag">snippet</span> search text only, <span class="tag">inf</span> my inference, <span class="tag">gap</span> nothing found. Numbers marked placeholder are mine and meant to be tuned.</p>
+</footer>
+</div>
