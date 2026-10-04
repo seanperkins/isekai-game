@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Isekai Bestiary</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="page">
+
+<h1>Isekai Chronicles — the bestiary</h1>
+<p class="lede">Every creature at game scale, side by side, with the shapes the game uses for it. Sprites are the real sheet frames; the shapes are read from the same sheet data the game loads, so what you see here is what collides.</p>
+<p class="meta"><span id="built"></span> · <a href="../">design review</a> · data: <code>assets/sheets/*.json</code> via <code>tools/build_bestiary.py</code></p>
+
+<div class="legend" aria-label="What the shapes mean">
+  <div><span class="swatch body"></span><strong>Terrain body</strong> (dashed blue): the box that walks into walls and floors. Every enemy has the same 16×12 one, whatever it looks like.</div>
+  <div><span class="swatch player-body"></span><strong>Player body</strong> (dashed gold): 28×24, shared by every playable species and form.</div>
+  <div><span class="swatch hurt"></span><strong>Hurt shape</strong> (green): where it can be hit, and what hurts you on contact. Traced from the art, per frame.</div>
+  <div><span class="swatch attack"></span><strong>Attack shape</strong> (red): the part that hits during an attack frame (a tackle, a charge, a dive). Only some frames have one.</div>
+</div>
+
+<div class="controls" role="region" aria-label="Display options">
+  <span class="group-label" id="view-label">View</span>
+  <div class="seg" id="view" role="group" aria-labelledby="view-label">
+    <button type="button" data-view="overlay" aria-pressed="true">Overlay</button>
+    <button type="button" data-view="split" aria-pressed="false">Side by side</button>
+  </div>
+  <label>Zoom <select id="zoom">
+    <option value="2">2×</option><option value="3" selected>3×</option><option value="4">4×</option><option value="6">6×</option>
+  </select></label>
+  <label>Order <select id="sort">
+    <option value="height" selected>Smallest first</option><option value="name">Name</option><option value="group">Group</option>
+  </select></label>
+  <span class="group-label" id="show-label">Show</span>
+  <span class="checks" role="group" aria-labelledby="show-label">
+    <label><input type="checkbox" id="show-body" checked> Body</label>
+    <label><input type="checkbox" id="show-hurt" checked> Hurt</label>
+    <label><input type="checkbox" id="show-attack" checked> Attack</label>
+    <label><input type="checkbox" id="show-floor" checked> Floor</label>
+    <label><input type="checkbox" id="show-rulers" checked> Rulers</label>
+  </span>
+</div>
+
+<div class="filters">
+  <span class="group-label" id="group-label">Who</span>
+  <div class="chips" id="group" role="group" aria-labelledby="group-label">
+    <button type="button" data-group="all" aria-pressed="true">All</button>
+    <button type="button" data-group="enemy" aria-pressed="false">Enemies</button>
+    <button type="button" data-group="player" aria-pressed="false">Player</button>
+    <button type="button" data-group="form" aria-pressed="false">Player forms</button>
+  </div>
+</div>
+
+<h2>Everyone together</h2>
+<div class="canvas-wrap"><canvas id="lineup" role="img" aria-label="All creatures at game scale"></canvas></div>
+<p class="status" id="status" aria-live="polite">Hover a creature for its numbers; click it to jump to its card.</p>
+
+<h2>Each creature, frame by frame</h2>
+<div class="cards" id="cards"></div>
+
+<details open>
+  <summary>The numbers</summary>
+  <div class="table-scroll">
+    <table id="numbers">
+      <thead><tr><th>Creature</th><th>Who</th><th>Sprite (px)</th><th>Hurt shape</th><th>Body</th><th>HP / ATK / DEF / SPD</th><th>Frames</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</details>
+
+</div>
+<script src="bestiary-data.js"></script>
+<script src="bestiary.js"></script>
+</body>
+</html>
