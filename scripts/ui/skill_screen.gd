@@ -65,7 +65,7 @@ var _stats := Control.new()
 var _tab_labels: Array = []
 var _tab_strip := Control.new()
 var _hint := Label.new()
-var _nav_dir := 0
+var _nav_dir := Vector2i.ZERO
 var _world: World
 var _progress
 var _map_found := ""
@@ -222,17 +222,15 @@ func hint_text() -> String:
 func detail_texts() -> Array:
 	return _detail.find_children("*", "Label", true, false).map(func(l): return l.text)
 
-## Rows to move for a stick reading: an edge-triggered step, then slow repeats while held.
-## Stick motion arrives as a stream of events, so reading it per event skipped rows.
-func nav_step(stick_y: float, delta: float) -> int:
-	var dir := 0
-	if stick_y <= -NAV_THRESHOLD:
-		dir = -1
-	elif stick_y >= NAV_THRESHOLD:
-		dir = 1
-	if dir == 0:
-		_nav_dir = 0
-		return 0
+## The selection step for a stick reading: the dominant axis past NAV_THRESHOLD as a four-way direction (Vector2i.UP is up),
+## edge-triggered, then slow repeats while held. Stick motion arrives as a stream of events, so reading it per event skipped rows.
+func nav_step(stick: Vector2, delta: float) -> Vector2i:
+	var dir := Vector2i.ZERO
+	if maxf(absf(stick.x), absf(stick.y)) >= NAV_THRESHOLD:
+		dir = Vector2i(int(signf(stick.x)), 0) if absf(stick.x) > absf(stick.y) else Vector2i(0, int(signf(stick.y)))
+	if dir == Vector2i.ZERO:
+		_nav_dir = Vector2i.ZERO
+		return dir
 	if dir != _nav_dir:
 		_nav_dir = dir
 		_nav_timer = NAV_DELAY
@@ -241,19 +239,20 @@ func nav_step(stick_y: float, delta: float) -> int:
 	if _nav_timer <= 0.0:
 		_nav_timer = NAV_REPEAT
 		return dir
-	return 0
+	return Vector2i.ZERO
 
 func _process(delta: float) -> void:
 	if not visible:
-		_nav_dir = 0
+		_nav_dir = Vector2i.ZERO
 		return
-	var step := nav_step(Controls.last_stick.y, delta)
-	if step == 0:
+	# The lists read only the vertical part, so a diagonal push still moves a list.
+	var step := nav_step(Vector2(0.0, Controls.last_stick.y), delta)
+	if step.y == 0:
 		return
 	if settings_menu.is_open():
-		settings_menu.move(step)
+		settings_menu.move(step.y)
 	else:
-		move(step)
+		move(step.y)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if visible and settings_menu.is_open():
