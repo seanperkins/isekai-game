@@ -15,7 +15,7 @@ func before_all() -> void:
 func test_the_taratect_is_the_spiders_dropper_on_bigger_numbers() -> void:
 	var t: CreatureDef = creatures["taratect"]
 	assert_eq(t.xp, 12)
-	assert_eq(t.essences, {"thread": 3, "poison": 2})
+	assert_eq(t.essences, {"water": 2, "dark": 2})
 	assert_eq([t.stats["max_hp"], t.stats["atk"], t.stats["def"]], [24, 9, 2], "level 10: x1.72")
 	assert_eq(t.stats["spd"], 120)
 	var e := Enemy.new()

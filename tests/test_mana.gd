@@ -31,8 +31,7 @@ func _names() -> Array:
 	return events.map(func(e): return e[0])
 
 func _unlock_hydraulic() -> void:
-	for i in 4:
-		rules.handle_event("absorbed", {"essence": "water", "source": "water_pool"})
+	TestDefs.satisfy(rules, "hydraulic_propulsion")
 
 func _eat_downed(id: String) -> void:
 	var e := Enemy.new()

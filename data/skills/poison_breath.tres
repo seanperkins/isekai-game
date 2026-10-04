@@ -16,7 +16,14 @@ unlock = [{
 "kind": "counter",
 "n": 4,
 "tags": {
-"essence": "poison"
+"essence": "water"
+}
+}, {
+"event": "absorbed",
+"kind": "counter",
+"n": 4,
+"tags": {
+"essence": "dark"
 }
 }]
 levels_on = {

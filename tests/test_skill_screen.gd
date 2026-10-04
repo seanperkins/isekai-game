@@ -40,7 +40,7 @@ func test_level_progress_counts_toward_the_next_level() -> void:
 
 func test_skill_rows_group_owned_skills_and_tease_locked_ones() -> void:
 	_emit("jumped", {}, 40)
-	_emit("absorbed", {"essence": "water"}, 4)
+	TestDefs.satisfy(rules, "hydraulic_propulsion")
 	var rows := SkillScreenModel.skill_rows(rules, skills)
 	var texts := rows.map(func(r): return r.get("text", r.get("name", "???")))
 	assert_eq(texts[0], "PROFICIENCY")
@@ -67,12 +67,12 @@ func test_condition_text_is_readable() -> void:
 	for d in skills:
 		by_id[d.id] = d
 	assert_eq(SkillScreenModel.condition_text(by_id["leap"], by_id), "Jump ×40")
-	assert_eq(SkillScreenModel.condition_text(by_id["echolocation"], by_id), "Absorb sound essence ×3")
+	assert_eq(SkillScreenModel.condition_text(by_id["echolocation"], by_id), "Absorb air essence ×6")
 	assert_eq(SkillScreenModel.condition_text(by_id["glutton"], by_id), "Eat creatures in a row without taking damage ×5")
 	assert_eq(SkillScreenModel.condition_text(by_id["jet_dash"], by_id), "Hydraulic Propulsion Lv3")
 
 func test_detail_card_for_an_active() -> void:
-	_emit("absorbed", {"essence": "poison"}, 4)
+	TestDefs.satisfy(rules, "poison_breath")
 	_emit("skill_used", {"id": "poison_breath"}, 4)
 	var by_id := {}
 	for d in skills:
@@ -98,7 +98,7 @@ func test_the_damage_line_follows_atk_and_no_other_line_does() -> void:
 	assert_eq(card["lines"], ["Damage 4"])
 
 func test_the_open_screen_shows_the_players_atk_in_the_damage_line() -> void:
-	_emit("absorbed", {"essence": "poison"}, 4)
+	TestDefs.satisfy(rules, "poison_breath")
 	player.stats.set_modifiers("t", [{"stat": "atk", "op": "add", "value": 4}])
 	_screen()
 	screen.open()
@@ -137,8 +137,8 @@ func test_screen_opens_paused_and_closes() -> void:
 
 func test_screen_lists_navigates_and_assigns() -> void:
 	_emit("jumped", {}, 40)
-	_emit("absorbed", {"essence": "water"}, 4)
-	_emit("absorbed", {"essence": "poison"}, 4)
+	TestDefs.satisfy(rules, "hydraulic_propulsion")
+	TestDefs.satisfy(rules, "poison_breath")
 	_screen()
 	screen.open()
 	assert_true(screen.row_texts().any(func(t): return t.begins_with("Leap")))
@@ -221,7 +221,7 @@ func test_the_channel_skills_say_how_much_holding_costs() -> void:
 		assert_false(card["lines"].any(func(l): return String(l).begins_with("Hold: +")), id)
 
 func _select_hydraulic() -> void:
-	_emit("absorbed", {"essence": "water"}, 4)  # auto-slots into slot 1
+	TestDefs.satisfy(rules, "hydraulic_propulsion")  # auto-slots into slot 1
 	_screen()
 	screen.open()
 	var guard := 0
@@ -249,10 +249,10 @@ func test_swim_and_jolt_read_in_the_skill_screens_own_words() -> void:
 	assert_true(SkillScreenModel.effect_lines(by_id["swim"], 1).has("Swim speed 120 px/s"))
 	assert_eq(SkillScreenModel.effect_lines(by_id["jolt"], 1), ["Damage 3"], "ATK 1, power 3")
 	assert_eq(SkillScreenModel.condition_text(by_id["swim"], by_id), "Spend time underwater ×20")
-	assert_eq(SkillScreenModel.condition_text(by_id["jolt"], by_id), "Absorb shock essence ×4")
+	assert_eq(SkillScreenModel.condition_text(by_id["jolt"], by_id), "Absorb light essence ×4 and Absorb air essence ×4")
 
 func test_tremor_reads_as_damage_scaled_by_attack() -> void:
 	var tremor: SkillDef = DefLoader.load_dir("res://data/skills").filter(func(d): return d.id == "tremor")[0]
 	assert_eq(SkillScreenModel.effect_lines(tremor, 1), ["Damage 3"], "ATK 1: the table value")
 	assert_eq(SkillScreenModel.effect_lines(tremor, 1, 5), ["Damage 6"], "3 x 200 / 100")
-	assert_eq(SkillScreenModel.condition_text(tremor, {"tremor": tremor}), "Absorb earth essence ×24")
+	assert_eq(SkillScreenModel.condition_text(tremor, {"tremor": tremor}), "Absorb earth essence ×59")

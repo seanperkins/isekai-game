@@ -12,11 +12,11 @@ announce = "Analysis complete. Acquired [Sticky Thread]."
 source = "essence"
 hidden = false
 unlock = [{
-"event": "absorbed",
+"event": "predated",
 "kind": "counter",
 "n": 3,
 "tags": {
-"essence": "thread"
+"source": "spider"
 }
 }]
 levels_on = {

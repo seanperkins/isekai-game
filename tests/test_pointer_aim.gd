@@ -36,8 +36,7 @@ func _mouse_at(point: Vector2) -> void:
 	PadInput.mouse_move(Vector2(10, 0))  # the mouse is the aimer now
 
 func _hydraulic() -> void:
-	for i in 4:
-		rules.handle_event("absorbed", {"essence": "water", "source": "water_pool"})  # Hydraulic Propulsion in slot 0
+	TestDefs.satisfy(rules, "hydraulic_propulsion")  # Hydraulic Propulsion in slot 0
 	player.mana.mp = 20
 	player.mana.max_mp = 20
 

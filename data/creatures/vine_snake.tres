@@ -13,8 +13,8 @@ stats = {
 "spd": 150
 }
 essences = {
-"poison": 1,
-"thread": 1
+"dark": 1,
+"water": 1
 }
 skills = [{
 "id": "ceiling_walk",

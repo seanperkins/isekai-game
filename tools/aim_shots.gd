@@ -35,10 +35,10 @@ func _process(_delta: float) -> bool:
 	frame += 1
 	match frame:
 		20:
-			for i in 4:
+			for i in 8:
 				rules.handle_event("absorbed", {"essence": "water", "source": "shots"})  # Hydraulic Propulsion, slot 1
 			for i in 3:
-				rules.handle_event("absorbed", {"essence": "thread", "source": "shots"})
+				rules.handle_event("predated", {"source": "spider", "kind": "creature"})  # Sticky Thread
 			p.global_position = game.world.current_rect().position + Vector2(300, 300)
 			p.velocity = Vector2.ZERO
 			for n in root.get_tree().get_nodes_in_group("actors"):

@@ -22,8 +22,7 @@ func before_each() -> void:
 		rules.handle_event(n, t))
 	add_child_autofree(player)
 	rules.start_run()
-	for i in 4:
-		rules.handle_event("absorbed", {"essence": "water", "source": "water_pool"})  # Hydraulic Propulsion, slot 0
+	TestDefs.satisfy(rules, "hydraulic_propulsion")  # Hydraulic Propulsion, slot 0
 
 func after_each() -> void:
 	for a in ["active_1", "aim_up", "move_left", "move_right"]:

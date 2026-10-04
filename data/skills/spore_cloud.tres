@@ -14,9 +14,16 @@ hidden = false
 unlock = [{
 "event": "absorbed",
 "kind": "counter",
+"n": 8,
+"tags": {
+"essence": "air"
+}
+}, {
+"event": "absorbed",
+"kind": "counter",
 "n": 4,
 "tags": {
-"essence": "spore"
+"essence": "dark"
 }
 }]
 levels_on = {

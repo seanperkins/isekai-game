@@ -13,8 +13,7 @@ stats = {
 "spd": 80
 }
 essences = {
-"armor": 1,
-"earth": 1
+"earth": 2
 }
 skills = [{
 "id": "body_armor",

@@ -205,8 +205,7 @@ func test_adaptable_heals_more_from_every_eat() -> void:
 	assert_eq(_hurt_then_eat(), plain + FormEffects.ADAPTABLE_HEAL)
 
 func test_sonar_reads_echolocation_one_level_stronger() -> void:
-	for i in 3:
-		rules.handle_event("absorbed", {"essence": "sound", "source": "bat"})
+	TestDefs.satisfy(rules, "echolocation")
 	assert_true(rules.owned().has("echolocation"))
 	var plain := player.skillset.level("reveals_hidden")
 	assert_gt(plain, 0)

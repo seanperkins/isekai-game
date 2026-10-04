@@ -46,21 +46,21 @@ func test_a_full_run_then_death_then_second_run() -> void:
 	_emit("jumped", {"from": "ground"}, 40)             # Leap
 	_emit("wall_touched", {}, 15)                        # Wall Cling
 	for i in 3:
-		_eat("bat", {"sound": 1, "flight": 1})           # Echolocation on the 3rd bat
+		_eat("bat", {"air": 2})           # Echolocation (air 6) on the 3rd bat
 	_emit("damaged", {"damage_type": "poison"}, 6)       # Poison Resistance; also resets Glutton streak
-	for i in 2:
-		_eat("water_pool", {"water": 2}, "terrain")      # Hydraulic Propulsion (4 water)
+	for i in 4:
+		_eat("water_pool", {"water": 2}, "terrain")      # Hydraulic Propulsion (8 water)
 	_emit("skill_used", {"id": "hydraulic_propulsion"}, 12)  # Lv3 -> Water Blade and Jet Dash are ready
 	assert_true(rules.is_evolution_ready("water_blade"))
 	assert_true(rules.evolve("water_blade"))  # the player would spend 1 EP
 
 	# Glutton: 4 creature eats, a hit breaks the streak, then 5 clean eats.
 	for i in 4:
-		_eat("toad", {"poison": 1, "water": 1})
+		_eat("toad", {"water": 2, "dark": 1})
 	_emit("damaged", {"damage_type": "physical"})
 	assert_eq(rules.level_of("glutton"), 0)
 	for i in 5:
-		_eat("spider", {"thread": 1, "poison": 1})
+		_eat("spider", {"water": 1, "dark": 1})
 	assert_eq(rules.level_of("glutton"), 1)
 
 	for id in ["leap", "wall_cling", "echolocation", "poison_resistance",

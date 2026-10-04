@@ -148,8 +148,7 @@ func _real_player() -> void:
 		rules.handle_event(n, t))
 	add_child_autofree(player)
 	rules.start_run()
-	for i in 3:
-		rules.handle_event("absorbed", {"essence": "thread", "source": "spider"})  # Sticky Thread, slot 0
+	TestDefs.satisfy(rules, "sticky_thread")  # Sticky Thread, slot 0
 	player.global_position = Vector2.ZERO
 	player.set_physics_process(true)
 

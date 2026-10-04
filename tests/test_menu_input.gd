@@ -44,8 +44,7 @@ func test_b_closes_the_screen() -> void:
 func test_stick_motion_events_do_not_move_the_selection() -> void:
 	for i in 40:
 		rules.handle_event("jumped", {})
-	for i in 4:
-		rules.handle_event("absorbed", {"essence": "water"})
+	TestDefs.satisfy(rules, "hydraulic_propulsion")
 	screen.open()
 	var before := screen.selected_id()
 	screen.move(1)

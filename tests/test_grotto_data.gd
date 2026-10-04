@@ -11,16 +11,16 @@ func before_all() -> void:
 		skills[d.id] = d
 
 func test_new_essences_and_sources_are_registered() -> void:
-	assert_true(Essences.ALL.has("spore"))
-	assert_true(Essences.ALL.has("shell"))
+	assert_true(Essences.ALL.has("air"))
+	assert_true(Essences.ALL.has("dark"))
 	for id in ["spore_moth", "mushroom_crab", "vine_snake"]:
 		assert_true(Sources.ALL.has(id), id)
 		assert_true(creatures.has(id), id)
 
 func test_the_creatures_have_the_approved_numbers() -> void:
-	var want := {"spore_moth": [4, 1, 0, 90, 2, {"spore": 1, "flight": 1}],
-		"mushroom_crab": [10, 2, 2, 70, 4, {"shell": 2, "earth": 1}],
-		"vine_snake": [6, 4, 0, 150, 3, {"poison": 1, "thread": 1}]}
+	var want := {"spore_moth": [4, 1, 0, 90, 2, {"air": 2, "dark": 1}],
+		"mushroom_crab": [10, 2, 2, 70, 4, {"earth": 3}],
+		"vine_snake": [6, 4, 0, 150, 3, {"water": 1, "dark": 1}]}
 	for id in want:
 		var c: CreatureDef = creatures[id]
 		var w: Array = want[id]
@@ -35,11 +35,14 @@ func test_only_the_armored_creatures_charge_and_only_moths_and_the_jelly_drift()
 func test_the_two_skills_match_the_spec() -> void:
 	var sc: SkillDef = skills["spore_cloud"]
 	assert_eq([sc.source, sc.max_level, sc.level_curve, sc.mp_cost], ["essence", 8, 8, 4])
-	assert_eq(sc.unlock[0]["tags"], {"essence": "spore"})
-	assert_eq(sc.unlock[0]["n"], 4)
+	assert_eq(sc.unlock[0]["tags"], {"essence": "air"})
+	assert_eq(sc.unlock[0]["n"], 8)
+	assert_eq(sc.unlock[1]["tags"], {"essence": "dark"})
+	assert_eq(sc.unlock[1]["n"], 4)
 	var hs: SkillDef = skills["hardened_shell"]
 	assert_eq([hs.source, hs.max_level, hs.level_curve], ["essence", 8, 10])
-	assert_eq(hs.unlock[0]["tags"], {"essence": "shell"})
+	assert_eq(hs.unlock[0]["tags"], {"essence": "earth"})
+	assert_eq(hs.unlock[0]["n"], 14)
 	assert_eq(hs.effects[0]["stat"], "knockback_taken")
 	assert_eq(hs.effects[0]["values"], [-8, -16, -24, -32, -40, -48, -56, -64])
 

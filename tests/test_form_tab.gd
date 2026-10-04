@@ -36,6 +36,7 @@ func _eat_everything() -> void:
 	for id in rooms:
 		for s in (rooms[id] as RoomDef).spawns:
 			var c: CreatureDef = creatures[s["id"]]
+			rules.handle_event("predated", {"source": c.id, "kind": "creature"})
 			for e in c.essences:
 				for i in int(c.essences[e]):
 					rules.handle_event("absorbed", {"essence": e, "source": c.id})

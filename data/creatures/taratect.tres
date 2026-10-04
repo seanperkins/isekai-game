@@ -13,8 +13,8 @@ stats = {
 "spd": 120
 }
 essences = {
-"poison": 2,
-"thread": 3
+"dark": 2,
+"water": 2
 }
 skills = [{
 "id": "sticky_thread",

@@ -32,7 +32,7 @@ func _emit(ev: String, tags: Dictionary, n: int) -> void:
 		rules.handle_event(ev, tags)
 
 func _ready_both() -> void:
-	_emit("absorbed", {"essence": "water"}, 4)
+	TestDefs.satisfy(rules, "hydraulic_propulsion")
 	_emit("skill_used", {"id": "hydraulic_propulsion"}, 12)  # Lv3: Water Blade and Jet Dash together
 
 func _screen() -> SkillScreen:
@@ -169,7 +169,7 @@ func test_switching_tabs_disarms() -> void:
 
 func test_a_retired_parent_is_not_capped() -> void:
 	rules.set_stage_cap(3)
-	_emit("absorbed", {"essence": "water"}, 4)
+	TestDefs.satisfy(rules, "hydraulic_propulsion")
 	_emit("skill_used", {"id": "hydraulic_propulsion"}, 30)
 	assert_true(rules.is_capped("hydraulic_propulsion"))
 	rules.evolve("water_blade")

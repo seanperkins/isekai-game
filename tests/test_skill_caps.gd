@@ -125,7 +125,7 @@ func _defs() -> Dictionary:
 const TABLE := {
 	"leap": [10, 20], "wall_cling": [8, 12], "poison_resistance": [12, 6], "pain_resistance": [6, 2],
 	"toughness": [12, 20], "appraisal": [5, 2], "glutton": [8, 5], "mana_recovery": [8, 60],
-	"echolocation": [8, 3], "poison_breath": [15, 8], "body_armor": [8, 10], "sticky_thread": [15, 8],
+	"echolocation": [8, 9], "poison_breath": [15, 8], "body_armor": [8, 10], "sticky_thread": [15, 8],
 	"hydraulic_propulsion": [15, 6], "regeneration": [6, 8], "spore_cloud": [8, 8], "hardened_shell": [8, 10], "swim": [3, 40], "jolt": [5, 8], "tremor": [5, 8]}
 
 func test_every_levelling_skill_has_its_planned_maximum_and_curve() -> void:
@@ -176,7 +176,7 @@ func test_the_top_levels_are_reachable_against_what_their_sources_supply() -> vo
 	for c in DefLoader.load_dir("res://data/creatures"):
 		creatures[c.id] = c
 	# events one full pass of the Cave offers, by source
-	var sound := 0
+	var air := 0
 	var inspectable := 0
 	var seen := {}
 	for id in rooms:
@@ -184,15 +184,15 @@ func test_the_top_levels_are_reachable_against_what_their_sources_supply() -> vo
 			continue  # this is the Cave's supply; the Grotto adds creature types
 		for s in (rooms[id] as RoomDef).spawns:
 			var c: CreatureDef = creatures[s["id"]]
-			sound += int(c.essences.get("sound", 0))
+			air += int(c.essences.get("air", 0))
 			if c.appraisal_target and not seen.has(c.id):
 				seen[c.id] = true
 				inspectable += 1
 	var defs := _defs()
-	# Echolocation levels on absorbed sound: rooms respawn, so laps of the Cave farm it, but not in a handful
+	# Echolocation levels on absorbed air: rooms respawn, so laps of the Cave farm it, but not in a handful
 	var echo_needed: int = (defs["echolocation"].max_level - 1) * defs["echolocation"].level_curve
-	assert_lte(echo_needed, sound * 6, "Echolocation's top level (%d sound) is within six laps of the Cave (%d per lap)" % [echo_needed, sound])
-	assert_gt(echo_needed, sound, "and is more than a single lap, so it is not trivial")
+	assert_lte(echo_needed, air * 6, "Echolocation's top level (%d air) is within six laps of the Cave (%d per lap)" % [echo_needed, air])
+	assert_gt(echo_needed, air, "and is more than a single lap, so it is not trivial")
 	# Appraisal levels on the first inspection of each creature type: the Cave has few, the Grotto adds the rest
 	var appraisal_needed: int = (defs["appraisal"].max_level - 1) * defs["appraisal"].level_curve
 	assert_gt(appraisal_needed, inspectable, "the Cave alone cannot max Appraisal (%d needed, %d types)" % [appraisal_needed, inspectable])

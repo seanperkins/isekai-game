@@ -27,10 +27,12 @@ func _process(_delta: float) -> bool:
 	frame += 1
 	match frame:
 		30:
-			# eat a bit of everything so the offers include Weaver, Tide and Toxic
-			for e in ["thread", "water", "poison", "sound"]:
-				for i in 6:
+			# eat a bit of everything so the offers include every lineage
+			for e in ["water", "dark", "air", "earth"]:
+				for i in 14:
 					root.get_node("SkillRules").handle_event("absorbed", {"essence": e, "source": "shots"})
+			for i in 3:
+				root.get_node("SkillRules").handle_event("predated", {"source": "spider", "kind": "creature"})
 			_cap()
 		50:
 			_shot("hud_prompt")

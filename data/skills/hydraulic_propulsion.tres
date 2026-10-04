@@ -14,7 +14,7 @@ hidden = false
 unlock = [{
 "event": "absorbed",
 "kind": "counter",
-"n": 4,
+"n": 8,
 "tags": {
 "essence": "water"
 }

@@ -14,12 +14,12 @@ func test_the_new_ids_are_sources_and_have_defs() -> void:
 	for id in ["glass_eel", "cave_crayfish", "drift_jelly", "bog_lizardman"]:
 		assert_true(Sources.ALL.has(id), id)
 		assert_true(creatures.has(id), id)
-	assert_true(Essences.ALL.has(Essences.SHOCK))
+	assert_true(Essences.ALL.has(Essences.LIGHT))
 
 func test_creature_numbers_and_flags() -> void:
 	var eel: CreatureDef = creatures["glass_eel"]
 	assert_eq(eel.xp, 3)
-	assert_eq(eel.essences, {"shock": 1, "water": 1})
+	assert_eq(eel.essences, {"light": 1, "air": 1, "water": 1})
 	assert_true(eel.swimmer)
 	assert_eq(eel.contact_type, "shock")
 	assert_eq(eel.stats["spd"], 140)
@@ -27,12 +27,12 @@ func test_creature_numbers_and_flags() -> void:
 	assert_eq(crayfish.xp, 5)
 	assert_true(crayfish.armored_charger)
 	assert_eq(crayfish.contact_type, "physical")
-	assert_eq(crayfish.essences, {"shell": 1, "water": 1})
+	assert_eq(crayfish.essences, {"earth": 1, "water": 1})
 	var jelly: CreatureDef = creatures["drift_jelly"]
 	assert_eq(jelly.xp, 3)
 	assert_true(jelly.drifter and jelly.swimmer and jelly.untackleable)
 	assert_eq(jelly.contact_type, "shock")
-	assert_eq(jelly.essences, {"shock": 1, "water": 2})
+	assert_eq(jelly.essences, {"light": 1, "air": 1, "water": 2})
 	var lizardman: CreatureDef = creatures["bog_lizardman"]
 	assert_eq(lizardman.xp, 5)
 	assert_eq(lizardman.projectile, "spear")
@@ -65,7 +65,8 @@ func test_swim_and_jolt() -> void:
 	var jolt: SkillDef = skills["jolt"]
 	assert_eq(jolt.source, "essence")
 	assert_eq(jolt.mp_cost, 5)
-	assert_eq(jolt.unlock[0]["tags"], {"essence": "shock"})
+	assert_eq(jolt.unlock[0]["tags"], {"essence": "light"})
+	assert_eq(jolt.unlock[1]["tags"], {"essence": "air"})
 	assert_eq(jolt.max_level, 5)
 	assert_eq(jolt.effects[0]["values"], [3, 4, 5, 6, 7])
 
@@ -76,7 +77,7 @@ func test_the_storm_eel_is_the_eels_behaviour_on_bigger_numbers() -> void:
 	assert_true(storm.swimmer)
 	assert_eq(storm.contact_type, "shock")
 	assert_eq(storm.xp, 10)
-	assert_eq(storm.essences, {"shock": 3, "water": 2})
+	assert_eq(storm.essences, {"light": 3, "air": 3, "water": 2})
 	assert_eq(storm.stats["spd"], 160)
 	assert_gt(storm.stats["max_hp"], eel.stats["max_hp"])
 	assert_gt(storm.stats["atk"], eel.stats["atk"])

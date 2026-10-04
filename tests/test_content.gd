@@ -33,9 +33,11 @@ func test_spec_numbers_are_verbatim() -> void:
 		"tags": {"damage_type": "physical"}, "n": 20})
 	assert_eq(_skill("glutton").unlock[0]["kind"], "reset_counter")
 	assert_true(_skill("glutton").secret)
-	assert_eq(_skill("echolocation").unlock[0]["n"], 3)
+	assert_eq(_skill("echolocation").unlock[0], {"kind": "counter", "event": "absorbed", "tags": {"essence": "air"}, "n": 6})
+	assert_eq(_skill("poison_breath").unlock.size(), 2, "poison is water and dark")
 	assert_eq(_skill("poison_breath").unlock[0]["n"], 4)
-	assert_eq(_skill("hydraulic_propulsion").unlock[0]["n"], 4)
+	assert_eq(_skill("hydraulic_propulsion").unlock[0], {"kind": "counter", "event": "absorbed", "tags": {"essence": "water"}, "n": 8})
+	assert_eq(_skill("sticky_thread").unlock[0], {"kind": "counter", "event": "predated", "tags": {"source": "spider"}, "n": 3})
 	assert_eq(_skill("regeneration").unlock[0], {"kind": "counter", "event": "predated",
 		"tags": {"kind": "creature"}, "n": 10})
 	assert_eq(_skill("body_armor").max_level, 8)
@@ -44,7 +46,7 @@ func test_spec_numbers_are_verbatim() -> void:
 
 func test_creature_numbers_are_verbatim() -> void:
 	assert_eq(_creature("bat").stats, {"max_hp": 2, "atk": 3, "def": 0, "spd": 140})
-	assert_eq(_creature("toad").essences, {"poison": 1, "water": 1})
+	assert_eq(_creature("toad").essences, {"water": 2, "dark": 1})
 	assert_eq(_creature("lizard").eat_bonus, {"stat": "def", "amount": 1, "per": 3})
 	assert_eq(_creature("water_pool").essences, {"water": 2})
 	assert_false(_creature("serpent").predatable)
@@ -53,10 +55,10 @@ func test_creature_numbers_are_verbatim() -> void:
 
 func test_essence_minimums_satisfy_every_essence_skill() -> void:
 	# Placement minimums from the spec: 3 bats, 4 toads, 3 lizards, 3 spiders, 2 pools.
-	# The Grotto's creatures add spore and shell: 4 of each is 4 moths and 2 crabs. The Flooded adds shock: 4 is 4 eels. The Deep adds
-	# earth for Tremor (24): its census is 9 wolves, 9 ants and 3 drakes (27 units; the Cave and Grotto's minimums hold 5 more).
+	# The Grotto's creatures add air and dark (4 moths) and earth (2 crabs). The Flooded adds light (4 eels) and earth (5 crayfish
+	# and 6 lizardmen, a unit each). The Deep adds the rest of Tremor's earth: its census is 9 wolves, 9 ants and 3 drakes.
 	var minimums := {"bat": 3, "toad": 4, "lizard": 3, "spider": 3, "water_pool": 2, "spore_moth": 4, "mushroom_crab": 2, "glass_eel": 4,
-		"gloom_wolf": 9, "armed_ant": 9, "stone_drake": 3}
+		"cave_crayfish": 5, "bog_lizardman": 6, "gloom_wolf": 9, "armed_ant": 9, "stone_drake": 3}
 	var totals := {}
 	for sid in minimums:
 		var c := _creature(sid)
@@ -68,6 +70,8 @@ func test_essence_minimums_satisfy_every_essence_skill() -> void:
 		for cond in d.unlock:
 			if cond["event"] == "absorbed":
 				assert_gte(int(totals.get(cond["tags"]["essence"], 0)), int(cond["n"]), d.id)
+			elif cond["event"] == "predated" and cond.get("tags", {}).has("source"):
+				assert_gte(int(minimums.get(cond["tags"]["source"], 0)), int(cond["n"]), "%s: eats of %s" % [d.id, cond["tags"]["source"]])
 
 func test_every_parent_has_exactly_two_evolutions() -> void:
 	var counts := {}

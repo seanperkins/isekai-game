@@ -35,7 +35,7 @@ func test_toughness_raises_max_hp() -> void:
 	assert_eq(stats.get_stat("max_hp"), 33)
 
 func test_active_unlocks_fill_slots() -> void:
-	_emit("absorbed", {"essence": "water", "source": "water_pool"}, 4)
+	TestDefs.satisfy(rules, "hydraulic_propulsion")
 	assert_eq(set.slots.slots, ["hydraulic_propulsion", "", "", ""])
 
 func test_incoming_damage_mods() -> void:
@@ -53,7 +53,7 @@ func test_glutton_trigger_heals_on_creature_eats_only() -> void:
 
 func test_reset_clears_slots_flags_and_modifiers() -> void:
 	_emit("wall_touched", {}, 15)
-	_emit("absorbed", {"essence": "water"}, 4)
+	TestDefs.satisfy(rules, "hydraulic_propulsion")
 	rules.reset_run()
 	set.reset()
 	assert_false(set.has("wall_cling"))
