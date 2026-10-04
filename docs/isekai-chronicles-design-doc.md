@@ -21,6 +21,8 @@ The first time you play, the game opens with an unavoidable truck death, then a 
 3. After dying, the player meets a god or goddess who apologizes: the death was an accident.
 4. She offers to reincarnate them and presents the options. At first there is only one: slime.
 
+Built (2026-10-04): the truck scene is three trucks on a black screen with a small road and a menu of Dodge, Jump, Pray and Run; every choice fails with its own line, Enter moves on and nothing skips it. Then her usual menu opens with her first words, offering only the slime and the Cave mouth altar, and one confirm begins the first life. The copy (`data/opening/opening.tres`) and the art (drawn in code) are placeholders. It plays once, on a brand-new profile: a save from before the opening existed counts as seen, `-- --opening` replays it, and `-- --skip-opening` skips it (a headless run never plays it). The trucks are not a death, so the first real death is death 1.
+
 The goddess is a recurring character. She remembers every previous life, reacts to how you died, and her reincarnation menu grows over the course of the game.
 
 She seems a helpful ally, and stays that way until the reveal: she is using you to harvest souls from this world, and eventually becomes the antagonist. Decided (2026-10-04): the reveal comes late, before the last area, so she stays a helpful ally for almost the whole game.
@@ -247,4 +249,4 @@ The combination here is novel, but several games cover pieces of it — worth st
 - [x] After the reveal — held soul points are kept and spendable; her fight is fixed, not scaled by what you banked
 - [x] The route to confront her — a last area past the Deep, unlocked by the reveal
 - [ ] What the last area holds
-- [x] The opening truck scene — a short, rigged, turn-based dodge, three trucks, plays once
+- [x] The opening truck scene — a short, rigged, turn-based dodge, three trucks, plays once (built, with placeholder copy and art)
