@@ -256,3 +256,30 @@ func test_the_form_card_omits_grants_the_player_has_retired() -> void:
 	screen.switch_tab(5)
 	_select_form("tide")
 	assert_false("\n".join(screen.detail_texts()).contains("Grants:"), "the only grant is a retired parent")
+
+# --- form_card: the card the Form tab and the Tree tab share ---
+
+class FakeRules:
+	var retired: Array = []
+	var defs := {}
+
+	func is_retired(id: String) -> bool:
+		return retired.has(id)
+
+	func get_def(id: String) -> SkillDef:
+		return defs.get(id)
+
+func test_form_card_names_the_stats_traits_and_the_grants_still_receivable() -> void:
+	var tide: FormDef = player.forms["tide"]
+	var fake := FakeRules.new()
+	for d in skills:
+		fake.defs[d.id] = d
+	var card := SkillScreenModel.form_card(tide, fake)
+	assert_eq(card["name"], tide.display_name)
+	assert_eq(card["stage"], 2)
+	assert_eq(card["blurb"], tide.blurb)
+	assert_eq(card["stats"], FormEffects.stat_lines(tide))
+	assert_eq(card["traits"], tide.traits.map(func(t): return FormEffects.TRAITS.get(t, str(t))))
+	assert_eq(card["grants"], "Grants: Hydraulic Propulsion")
+	fake.retired = ["hydraulic_propulsion"]
+	assert_eq(SkillScreenModel.form_card(tide, fake)["grants"], "", "a retired grant is hidden")

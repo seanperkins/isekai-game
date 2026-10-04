@@ -809,24 +809,19 @@ func _build_form() -> void:
 	big.position = Vector2(DETAIL_X, 48)
 	big.size = Vector2(190, 70)
 	_detail.add_child(big)
-	_label(_detail, sel.display_name, Vector2(DETAIL_X, 122), Vector2(190, 16), FONT_BIG, Color.WHITE)
-	_label(_detail, "Stage %d" % sel.stage, Vector2(DETAIL_X, 138), Vector2(190, 12), FONT_SMALL, COL_TITLE)
-	_label(_detail, sel.blurb, Vector2(DETAIL_X, 152), Vector2(190, 34), FONT_SMALL, Color.WHITE, true)
+	var card := SkillScreenModel.form_card(sel, _rules)
+	_label(_detail, card["name"], Vector2(DETAIL_X, 122), Vector2(190, 16), FONT_BIG, Color.WHITE)
+	_label(_detail, "Stage %d" % card["stage"], Vector2(DETAIL_X, 138), Vector2(190, 12), FONT_SMALL, COL_TITLE)
+	_label(_detail, card["blurb"], Vector2(DETAIL_X, 152), Vector2(190, 34), FONT_SMALL, Color.WHITE, true)
 	var dy := 190.0
-	for line in FormEffects.stat_lines(sel):
+	for line in card["stats"]:
 		_label(_detail, line, Vector2(DETAIL_X, dy), Vector2(190, 12), FONT_SMALL, COL_DIM)
 		dy += 11.0
-	for t in sel.traits:
-		_label(_detail, FormEffects.TRAITS.get(t, str(t)), Vector2(DETAIL_X, dy), Vector2(190, 22), FONT_SMALL, COL_TITLE, true)
+	for t in card["traits"]:
+		_label(_detail, t, Vector2(DETAIL_X, dy), Vector2(190, 22), FONT_SMALL, COL_TITLE, true)
 		dy += 22.0
-	var names: Array = []
-	for g in sel.grants:
-		if _rules.is_retired(g):
-			continue  # the player evolved it: the form can no longer give it
-		var sd = _defs.get(g)
-		names.append(sd.display_name if sd != null else g)
-	if not names.is_empty():
-		_label(_detail, "Grants: " + ", ".join(names), Vector2(DETAIL_X, dy), Vector2(190, 24), FONT_SMALL, Color.WHITE, true)
+	if card["grants"] != "":
+		_label(_detail, card["grants"], Vector2(DETAIL_X, dy), Vector2(190, 24), FONT_SMALL, Color.WHITE, true)
 
 func _skill_name(id: String) -> String:
 	var sd = _defs.get(id)

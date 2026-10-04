@@ -180,6 +180,19 @@ static func tree_card(rules, node: Dictionary, defs: Dictionary, forms: Dictiona
 		lines.append("Evolves from " + defs[d.replaces].display_name)
 	return {"title": d.display_name, "status": status, "lines": lines}
 
+## A form's card, shared by the Form tab and the Tree tab: {"name", "stage", "blurb", "stats", "traits", "grants"}.
+## "grants" lists only the grants the player can still receive: a grant whose skill has retired is hidden.
+static func form_card(def: FormDef, rules) -> Dictionary:
+	var names: Array = []
+	for g in def.grants:
+		if rules.is_retired(g):
+			continue  # the player evolved it: the form can no longer give it
+		var sd = rules.get_def(g)
+		names.append(sd.display_name if sd != null else g)
+	return {"name": def.display_name, "stage": def.stage, "blurb": def.blurb, "stats": FormEffects.stat_lines(def),
+		"traits": def.traits.map(func(t): return FormEffects.TRAITS.get(t, str(t))),
+		"grants": "" if names.is_empty() else "Grants: " + ", ".join(names)}
+
 ## A price as text, in the canonical element order: "water 6, dark 10".
 static func price_text(price: Dictionary) -> String:
 	var parts: Array = []
