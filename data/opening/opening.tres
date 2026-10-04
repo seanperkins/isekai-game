@@ -1,0 +1,46 @@
+[gd_resource type="Resource" script_class="OpeningDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/soul/opening_def.gd" id="1_cx7k6"]
+
+[resource]
+script = ExtResource("1_cx7k6")
+choices = [{
+"id": "dodge",
+"label": "Dodge"
+}, {
+"id": "jump",
+"label": "Jump"
+}, {
+"id": "pray",
+"label": "Pray"
+}, {
+"id": "run",
+"label": "Run"
+}]
+trucks = [{
+"prompt": "A truck is coming.",
+"results": {
+"dodge": "You step aside. The truck steps with you.",
+"jump": "You jump. The truck is taller than you thought.",
+"pray": "You pray. The truck is not a religious truck.",
+"run": "You run. The truck is faster than your plans."
+}
+}, {
+"prompt": "Another truck is coming.",
+"results": {
+"dodge": "You dodge with real conviction. The truck finds you anyway.",
+"jump": "You jump higher. The truck was always going to be there when you landed.",
+"pray": "You pray harder. The truck arrives on time.",
+"run": "You run the other way. The road, it turns out, loops."
+}
+}, {
+"prompt": "Somehow, a third truck.",
+"results": {
+"dodge": "You dodge perfectly. It does not matter.",
+"jump": "You jump out of habit. The truck hits you out of habit too.",
+"pray": "You pray one last time. The truck is the answer.",
+"run": "You run, and you almost make it. Trucks do not respect almost."
+}
+}]
+fallback = "The truck does not care what you chose."
+goddess_line = "I am so sorry. That truck was never meant to be there. Come, let me make it up to you."

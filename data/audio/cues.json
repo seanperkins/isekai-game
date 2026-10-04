@@ -127,6 +127,15 @@
         "sfx/enemy_impact_3.ogg"
       ]
     },
+    "opening_impact": {
+      "bus": "UI",
+      "volume_db": -4,
+      "files": [
+        "sfx/enemy_impact_1.ogg",
+        "sfx/enemy_impact_2.ogg",
+        "sfx/enemy_impact_3.ogg"
+      ]
+    },
     "enemy_stun": {
       "bus": "SFX_Enemy",
       "volume_db": -7,
@@ -531,6 +540,7 @@
     "menu_closed": "ui_close",
     "menu_move": "ui_move",
     "menu_confirm": "ui_confirm",
+    "opening_hit": "opening_impact",
     "denied": "ui_denied",
     "ticker_shown": {
       "by": "kind",

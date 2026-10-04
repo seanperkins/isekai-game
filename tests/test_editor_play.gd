@@ -114,6 +114,12 @@ func _request(extra := {}) -> void:
 	game = load("res://scenes/main.tscn").instantiate()
 	add_child_autofree(game)
 
+func test_start_opening_refuses_in_an_editor_play() -> void:
+	_request()
+	await wait_physics_frames(3)
+	assert_false(game.start_opening(), "an editor Play never opens the opening")
+	assert_false(get_tree().paused)
+
 func test_a_request_without_kit_or_open_shortcuts_still_plays() -> void:
 	_request()
 	await wait_physics_frames(3)
