@@ -7,8 +7,8 @@
 script = ExtResource("2_bd")
 id = "tackle"
 trigger = "signature"
-speed = 260.0
-duration = 0.15
+speed = 340.0
+duration = 0.18
 
 [sub_resource type="Resource" id="Resource_puddle"]
 script = ExtResource("2_bd")
@@ -16,8 +16,8 @@ id = "puddle"
 trigger = "down_run"
 min_start_speed = 100.0
 duration = 0.5
-decel = 300.0
-min_speed = 40.0
+decel = 150.0
+min_speed = 70.0
 needs_down = true
 needs_floor = true
 flat = true
