@@ -392,7 +392,7 @@ func _build_stats() -> void:
 	_label(_stats, "Essences", Vector2(36, y + 6), Vector2(110, 10), FONT_SMALL, COL_TITLE)
 	y += 18.0
 	for ess in Essences.ALL:
-		var n: int = _rules.count(Events.ABSORBED, {"essence": ess})
+		var n: int = _rules.held(ess)
 		if n > 0 and y < 306.0:
 			_label(_stats, "%s  %d" % [ess, n], Vector2(40, y), Vector2(106, 10), FONT_SMALL, COL_DIM)
 			y += 11.0

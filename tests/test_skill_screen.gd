@@ -258,3 +258,13 @@ func test_tremor_reads_as_damage_scaled_by_attack() -> void:
 	assert_eq(SkillScreenModel.effect_lines(tremor, 1), ["Damage 3"], "ATK 1: the table value")
 	assert_eq(SkillScreenModel.effect_lines(tremor, 1, 5), ["Damage 6"], "3 x 200 / 100")
 	assert_eq(SkillScreenModel.condition_text(tremor, {"tremor": tremor}), "Absorb earth essence ×59")
+
+func test_the_stats_column_lists_held_essence() -> void:
+	TestDefs.satisfy(rules, "hydraulic_propulsion")  # water 8
+	_screen()
+	screen.open()
+	var texts: Array = []
+	for c in screen._stats.get_children():
+		if c is Label:
+			texts.append((c as Label).text)
+	assert_true(texts.has("water  8"), str(texts))

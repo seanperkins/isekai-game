@@ -228,11 +228,29 @@ func level_text() -> String:
 		return "Lv %d/%d  MAX" % [p.level, Progression.LEVEL_CAP]
 	return "Lv %d/%d  XP %d/%d" % [p.level, Progression.LEVEL_CAP, p.xp, Progression.xp_to_next(p.level, p.stage)]
 
-## "Your body can evolve" while the level cap is reached and there is a stage left.
+## The evolution prompts: "Your body can evolve" while the level cap is reached and there is a stage left, then one line for the
+## first power evolution that is ready and affordable. `_evolve` is recomputed every frame, so affordability is polled.
 func evolve_text() -> String:
-	if not _player.progression.can_evolve():
-		return ""
-	return "Your body can evolve  (%s, Form tab)" % ("Start" if Controls.using_joypad else "Esc")
+	var key := "Start" if Controls.using_joypad else "Esc"
+	var lines: Array = []
+	if _player.progression.can_evolve():
+		lines.append("Your body can evolve  (%s, Form tab)" % key)
+	var parent := _first_affordable_parent()
+	if parent != "":
+		lines.append("Evolve: %s  (%s, Skills tab)" % [_rules.get_def(parent).display_name, key])
+	return "\n".join(lines)
+
+## The base power of the first ready evolution whose price is held, asked once per parent (its branches share a price).
+func _first_affordable_parent() -> String:
+	var asked := {}
+	for id in _rules.ready_evolutions():
+		var parent: String = _rules.get_def(id).replaces
+		if asked.has(parent):
+			continue
+		asked[parent] = true
+		if _rules.can_afford(id):
+			return parent
+	return ""
 
 func menu_hint_text() -> String:
 	return "%s  Skills" % ("Start" if Controls.using_joypad else "Esc")

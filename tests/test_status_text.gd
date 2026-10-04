@@ -59,3 +59,11 @@ func test_slot_and_ticker_text() -> void:
 	assert_eq(StatusText.ticker_text({"kind": "level", "id": "hydraulic_propulsion", "level": 2}, rules), "Hydraulic Propulsion Lv2")
 	assert_eq(StatusText.ticker_text({"kind": "slot_replaced", "new_id": "water_blade", "old_id": "hydraulic_propulsion"}, rules),
 		"Water Blade replaced Hydraulic Propulsion")
+
+func test_the_essences_line_shows_what_is_held_after_paying_for_an_evolution() -> void:
+	TestDefs.satisfy(rules, "hydraulic_propulsion")  # water 8
+	for i in 12:
+		rules.handle_event("skill_used", {"id": "hydraulic_propulsion"})
+	assert_true(rules.evolve("water_blade"))  # pays water 6
+	var text := "\n".join(StatusText.self_lines(stats, health, rules, compendium, 1))
+	assert_string_contains(text, "water 2")

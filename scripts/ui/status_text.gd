@@ -23,7 +23,7 @@ static func self_lines(stats: Stats, health: Health, rules, compendium: Compendi
 		lines.append("  %s Lv%d" % [rules.get_def(id).display_name, rules.level_of(id)])
 	var essences: Array = []
 	for ess in Essences.ALL:
-		var n: int = rules.count(Events.ABSORBED, {"essence": ess})
+		var n: int = rules.held(ess)
 		if n > 0:
 			essences.append("%s %d" % [ess, n])
 	lines.append("Essences: " + (", ".join(essences) if not essences.is_empty() else "none"))
