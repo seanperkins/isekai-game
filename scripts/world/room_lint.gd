@@ -31,18 +31,18 @@ const FEATURE_BOX := {
 	"tablet": Rect2(-6, -18, 12, 18),
 	"switch": Rect2(-9, -22, 18, 22),
 	"glow_pool": Rect2(-19, -20, 38, 24),
-	"rebirth_pool": Rect2(-19, -20, 38, 24),
+	"altar": Rect2(-19, -20, 38, 24),
 }
 
 const RULES := ["solid_outside", "outside", "in_rock", "exit_blocked", "exit_narrow", "start_floor", "ledge_reach", "over_hole",
-	"pool_clearance", "feature_id", "shortcut_pair", "hint_unknown", "decor_unknown", "water_rect", "swimmer_dry", "water_exit"]
+	"altar_clearance", "feature_id", "shortcut_pair", "hint_unknown", "decor_unknown", "water_rect", "swimmer_dry", "water_exit"]
 
 static var _hintable: Array = []
 
 ## Skill ids a tablet hint can name: CompendiumModel keeps no slot for an enemy_only skill, so raise() on one does nothing.
 static func hintable_skill_ids() -> Array:
 	if _hintable.is_empty():
-		for d in RebirthKit.skill_defs():
+		for d in DefLoader.load_dir("res://data/skills"):
 			if d.source != "enemy_only":
 				_hintable.append(d.id)
 	return _hintable
@@ -66,7 +66,7 @@ static func check_room(r: RoomDef, rooms: Dictionary) -> Array:
 	out.append_array(_start_floor(r))
 	out.append_array(_ledge_reach(r))
 	out.append_array(_over_hole(r))
-	out.append_array(_pool_clearance(r))
+	out.append_array(_altar_clearance(r))
 	out.append_array(_decor_unknown(r))
 	out.append_array(_feature_id(r, rooms))
 	out.append_array(_shortcut_pair(r, rooms))
@@ -251,16 +251,16 @@ static func _decor_unknown(r: RoomDef) -> Array:
 			out.append(_f(r, "decor_unknown", "decor '%s' is not a known decor sprite" % id, "decor", i))
 	return out
 
-## test_grotto_rooms: nothing spawns within 200 px of a rebirth pool (a new life stands on it). The default pool is exempt.
-static func _pool_clearance(r: RoomDef) -> Array:
+## test_grotto_rooms: nothing spawns within 200 px of an altar (a new life stands on it). The default altar is exempt.
+static func _altar_clearance(r: RoomDef) -> Array:
 	var out: Array = []
 	for f in r.features:
-		if f.get("kind", "") != "rebirth_pool" or f.get("id", "") == WorldProgress.DEFAULT_POOL:
+		if f.get("kind", "") != "altar" or f.get("id", "") == WorldProgress.DEFAULT_ALTAR:
 			continue
 		for i in r.spawns.size():
 			var d: float = (r.spawns[i]["pos"] as Vector2).distance_to(f["pos"])
 			if d <= POOL_CLEARANCE:
-				out.append(_f(r, "pool_clearance", "%s spawns %d px from the rebirth pool %s" % [r.spawns[i]["id"], int(d), f.get("id", "?")], "spawn", i))
+				out.append(_f(r, "altar_clearance", "%s spawns %d px from the altar %s" % [r.spawns[i]["id"], int(d), f.get("id", "?")], "spawn", i))
 	return out
 
 static func _feature_id(r: RoomDef, rooms: Dictionary) -> Array:

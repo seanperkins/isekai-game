@@ -24,6 +24,8 @@ var run: Run
 ## The goddess's scene and menu. Null goddess in an editor Play: a death returns to the editor at once.
 var goddess: Goddess
 var goddess_menu: GoddessMenu
+## The in-world altar menu (null in an editor Play, where an altar just attunes).
+var altar_menu: AltarMenu
 var ambient: CanvasModulate
 var _skills_by_id := {}
 var _creatures := {}
@@ -63,15 +65,17 @@ func _ready() -> void:
 				if e.has("shortcut"):
 					progress.open_shortcut(str(e["shortcut"]))
 	if not _editor_play:
-		for e in WorldValidator.validate(rooms, _creatures.keys()):
+		for e in Game.world_errors(rooms, _creatures.keys()):
 			push_error(e)
-	world.setup(rooms, player, {"spawn": _spawn, "progress": progress,
-		"compendium": Compendium.model, "announce": Announcer.queue.push_unlock})
+	var world_ctx := {"spawn": _spawn, "progress": progress, "compendium": Compendium.model, "announce": Announcer.queue.push_unlock}
+	if not _editor_play:
+		world_ctx["altar_menu"] = _open_altar_menu  # the menu is built once the goddess exists, after the world
+	world.setup(rooms, player, world_ctx)
 	world.room_entered.connect(_on_room_entered)
-	var pools := RebirthChoice.pools(rooms)
-	progress.sanitize(pools.map(func(p: Dictionary) -> String: return p["id"]))
+	var altars := RebirthChoice.altars(rooms)
+	progress.sanitize(altars.map(func(p: Dictionary) -> String: return p["id"]))
 	var start := {"default": false, "room": request["room"], "pos": request["pos"], "kit": request.get("kit", {})} if _editor_play \
-		else Game.resolve_start(pools, progress.take_pending(), progress.is_attuned)
+		else Game.resolve_start(altars, progress.take_pending(), progress.is_attuned)
 	if start["default"]:
 		world.enter_start()
 	else:
@@ -92,12 +96,16 @@ func _ready() -> void:
 	add_child(run)
 	# Bound without progress in an editor Play: a death emits restart_requested at once and never opens the goddess's menu.
 	goddess = null if _editor_play else Goddess.load_default(Compendium.soul, Compendium.model, SkillRules.skill_defs)
-	run.bind(player, world, null if _editor_play else Compendium.progress, pools, goddess)
+	run.bind(player, world, null if _editor_play else Compendium.progress, altars, goddess)
 	run.restart_requested.connect(_restart)
 	goddess_menu = GoddessMenu.new()  # connected after the run is bound: a listener means the run waits for her choice
 	add_child(goddess_menu)
 	run.goddess_needed.connect(goddess_menu.open)
 	goddess_menu.confirmed.connect(run.accept)
+	if goddess != null:
+		altar_menu = AltarMenu.new()  # after the skill screen, so it sees input first
+		add_child(altar_menu)
+		altar_menu.bind(goddess, SkillRules, Compendium.progress, player)
 	if not _editor_play:
 		Compendium.soul.session_points = Game.soul_points_arg(OS.get_cmdline_user_args())  # set, not added: a reload refills it
 	begin_life(start)
@@ -108,13 +116,23 @@ func _ready() -> void:
 		back.game = self
 		add_child(back)
 
+## The world's validation errors, checked against the shipped perks (the world is validated before the goddess exists, so they are
+## loaded here rather than taken from her).
+static func world_errors(rooms: Dictionary, creature_ids: Array) -> PackedStringArray:
+	return WorldValidator.validate(rooms, creature_ids, DefLoader.load_dir("res://data/perks", "PerkDef"))
+
+## What an altar calls to open its menu: the world is built before the menu, so it is looked up when used.
+func _open_altar_menu(altar: Altar) -> void:
+	if altar_menu != null:
+		altar_menu.open_for(altar)
+
 ## Starts a life: the run's state is cleared, then the bought kit is given, then the perks. The kit comes second because
 ## start_run() clears everything a kit would set, and the perks last so the stats they raise are filled.
 func begin_life(start: Dictionary) -> void:
 	SkillRules.start_run()
 	if not start["kit"].is_empty():
 		# an editor Play passes no compendium: the kit grant must not raise slots in the (persistent) profile
-		RebirthKit.apply(player, SkillRules, null if _editor_play else Compendium.model, start["kit"])
+		HeadStart.apply(player, SkillRules, null if _editor_play else Compendium.model, start["kit"])
 	if goddess != null:
 		SoulPerks.apply(player, Compendium.soul, goddess.perks)
 
@@ -165,7 +183,7 @@ static func wants_evolve(args: Array) -> bool:
 ## Where the next life starts: the default (the start room) unless `pending` names an attuned pool the room data still holds,
 ## in which case its room and spot (standing on it). The kit and the species are what the goddess's menu gave, from `pending`
 ## (never the pool's own kit); a malformed kit or species falls back to `{}` and "slime", and a kit survives a place that is gone.
-static func resolve_start(pools: Array, pending: Dictionary, attuned: Callable) -> Dictionary:
+static func resolve_start(altars: Array, pending: Dictionary, attuned: Callable) -> Dictionary:
 	var kit = pending.get("kit", {})
 	if typeof(kit) != TYPE_DICTIONARY:
 		kit = {}
@@ -173,13 +191,13 @@ static func resolve_start(pools: Array, pending: Dictionary, attuned: Callable) 
 	if typeof(species) != TYPE_STRING:
 		species = WorldProgress.DEFAULT_SPECIES
 	var default := {"default": true, "kit": kit, "species": species}
-	var id = pending.get("pool", "")
-	if typeof(id) != TYPE_STRING or id == "" or id == WorldProgress.DEFAULT_POOL:
+	var id = pending.get("altar", "")
+	if typeof(id) != TYPE_STRING or id == "" or id == WorldProgress.DEFAULT_ALTAR:
 		return default
-	for p in pools:
+	for p in altars:
 		if p["id"] == id and attuned.call(id):
 			return {"default": false, "room": p["room"], "pos": p["pos"] + Vector2(0.0, -BodyConfig.BOTTOM),
-				"kit": kit, "pool": id, "species": species}
+				"kit": kit, "altar": id, "species": species}
 	return default
 
 ## `-- --soul=N` on the command line grants N soul points to spend this session: 0 to 9999, anything else reads 0.

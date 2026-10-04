@@ -82,3 +82,10 @@ func test_load_default_reads_the_shipped_data() -> void:
 	var g := Goddess.load_default(SoulProgress.new(), compendium, skills)
 	assert_true(g.perks.any(func(p: PerkDef) -> bool: return p.id == "stats"))
 	assert_ne(g.line_for_death("bat"), "")
+
+func test_perk_for_finds_a_perk_by_id_and_rules_is_public() -> void:
+	var g := Goddess.load_default(SoulProgress.new(), compendium, skills)
+	assert_eq(g.perk_for("stats").id, "stats")
+	assert_null(g.perk_for(""), "an altar with no perk yet")
+	assert_null(g.perk_for("nope"))
+	assert_eq(g.rules.bank_rate, 10)

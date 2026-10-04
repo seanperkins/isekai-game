@@ -56,9 +56,9 @@ func test_dying_buys_a_head_start_and_the_next_life_has_it() -> void:
 	_push(KEY_ENTER)
 	assert_eq(restarts[0], 1)
 	var pending: Dictionary = Compendium.progress.pending_start
-	assert_eq(pending, {"pool": "C1", "species": "slime", "kit": {"skills": ["leap"], "level": 3}})
+	assert_eq(pending, {"altar": "C1", "species": "slime", "kit": {"skills": ["leap"], "level": 3}})
 	assert_eq(goddess.soul.total_points(), 12, "20 minus 2, 3 and 3")
-	var pools := RebirthChoice.pools(game.world.rooms)
+	var pools := RebirthChoice.altars(game.world.rooms)
 	game.begin_life(Game.resolve_start(pools, pending, Compendium.progress.is_attuned))
 	assert_eq(game.player.progression.level, 3)
 	assert_true(SkillRules.owned().has("leap"))

@@ -250,6 +250,6 @@ func test_no_base_jump_path_reaches_the_g5_sill() -> void:
 	assert_false(reached.has(sill), "the opening is beyond every base jump")
 
 
-func test_nothing_spawns_near_a_rebirth_pool() -> void:
-	assert_eq(RoomLint.text(RoomLint.check(rooms), ["pool_clearance"]), "")
+func test_nothing_spawns_near_an_altar() -> void:
+	assert_eq(RoomLint.text(RoomLint.check(rooms), ["altar_clearance"]), "")
 

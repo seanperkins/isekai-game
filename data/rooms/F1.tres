@@ -60,11 +60,8 @@ exits = [{
 features = [{
 "area": "flooded",
 "id": "F1",
-"kind": "rebirth_pool",
-"kit": {
-"level": 4,
-"skills": ["leap", "wall_cling", "swim"]
-},
+"kind": "altar",
+"perk": "",
 "pos": Vector2(560, 320)
 }]
 water = [Rect2(820, 240, 260, 80)]

@@ -19,7 +19,7 @@ func _profile() -> Profile:
 
 func test_the_cave_mouth_is_always_attuned() -> void:
 	var w := WorldProgress.new(_profile())
-	assert_true(w.is_attuned(WorldProgress.DEFAULT_POOL))
+	assert_true(w.is_attuned(WorldProgress.DEFAULT_ALTAR))
 	assert_false(w.is_attuned("G1"))
 
 func test_attuning_persists_across_a_reload_and_stores_once() -> void:
@@ -79,8 +79,8 @@ func test_a_malformed_last_choice_falls_back() -> void:
 func test_take_pending_returns_it_once_and_clears_it() -> void:
 	var w := WorldProgress.new(_profile())
 	assert_eq(w.take_pending(), {})
-	w.pending_start = {"pool": "G1", "species": "slime"}
-	assert_eq(w.take_pending(), {"pool": "G1", "species": "slime"})
+	w.pending_start = {"altar": "G1", "species": "slime"}
+	assert_eq(w.take_pending(), {"altar": "G1", "species": "slime"})
 	assert_eq(w.take_pending(), {})
 
 func test_every_progress_section_survives_one_round_trip_together() -> void:

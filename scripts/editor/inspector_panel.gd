@@ -13,7 +13,7 @@ const FIELDS := {
 	"exit": [["shortcut", "Shortcut", "line"], ["gate", "Gate", "choice"]],
 	"tablet": [["title", "Title", "line"], ["text", "Text", "line"], ["hint", "Hint", "choice"]],
 	"switch": [["shortcut", "Shortcut", "line"]],
-	"rebirth_pool": [["kit_level", "Level", "level"], ["kit_skills", "Skills", "skills"]],
+	"altar": [["perk", "Perk", "choice"]],
 	"glow_pool": [],
 	"solid": [["x", "X", "number"], ["y", "Y", "number"], ["w", "Width", "number"], ["h", "Height", "number"], ["hard", "Rock from below", "check"]],
 	"water": [["x", "X", "number"], ["y", "Y", "number"], ["w", "Width", "number"], ["h", "Height", "number"]],
@@ -22,14 +22,12 @@ const FIELDS := {
 var _model: RoomEditModel
 var _sel := {}
 var _fields := {}    # key -> Control
-var _checks: Array = []
 
 func build(model: RoomEditModel, sel: Dictionary) -> void:
 	for c in get_children():
 		remove_child(c)
 		c.queue_free()
 	_fields.clear()
-	_checks.clear()
 	_model = model
 	_sel = sel.duplicate()
 	var kind := _kind()
@@ -46,9 +44,6 @@ func build(model: RoomEditModel, sel: Dictionary) -> void:
 
 func find_field(key: String) -> Control:
 	return _fields.get(key)
-
-func skill_checkboxes() -> Array:
-	return _checks
 
 func _kind() -> String:
 	if _sel.is_empty() or not _model.rooms.has(_sel["room"]):
@@ -78,10 +73,6 @@ func _label(text: String) -> Label:
 
 func _make(key: String, control: String) -> Control:
 	match control:
-		"level":
-			return _level(key)
-		"skills":
-			return _skills(key)
 		"number":
 			return _number(key)
 		"check":
@@ -152,7 +143,7 @@ func _choice(key: String) -> OptionButton:
 	pick.name = "field_" + key
 	pick.focus_mode = Control.FOCUS_NONE
 	pick.add_theme_font_size_override("font_size", FONT)
-	pick.set_meta("choice", true)  # selected by item text, unlike the index-based level choice
+	pick.set_meta("choice", true)  # selected by item text
 	pick.add_item("none")
 	for v in _choices(key):
 		pick.add_item(str(v))
@@ -161,7 +152,12 @@ func _choice(key: String) -> OptionButton:
 	return pick
 
 func _choices(key: String) -> Array:
-	return WorldValidator.GATES if key == "gate" else RoomLint.hintable_skill_ids()
+	match key:
+		"gate":
+			return WorldValidator.GATES
+		"perk":
+			return RoomEditModel.perk_ids()
+	return RoomLint.hintable_skill_ids()
 
 func _select_choice(pick: OptionButton, stored: String) -> void:
 	if stored == "":
@@ -173,43 +169,6 @@ func _select_choice(pick: OptionButton, stored: String) -> void:
 			return
 	pick.add_item(stored)
 	pick.select(pick.item_count - 1)
-
-func _level(key: String) -> OptionButton:
-	var pick := OptionButton.new()
-	pick.name = "field_" + key
-	pick.focus_mode = Control.FOCUS_NONE
-	pick.add_theme_font_size_override("font_size", FONT)
-	pick.add_item("none")
-	for lv in range(1, Progression.LEVEL_CAP + 1):
-		pick.add_item(str(lv))
-	pick.select(int(_model.get_field(_sel, key)))
-	pick.item_selected.connect(func(i: int) -> void: _commit(key, i))
-	return pick
-
-func _skills(key: String) -> VBoxContainer:
-	var box := VBoxContainer.new()
-	box.name = "field_" + key
-	var have: Array = _model.get_field(_sel, key)
-	for d in RebirthKit.skill_defs():
-		if d.source == "enemy_only" or d.source == "evolution":
-			continue  # RebirthKit.validate refuses both
-		var check := CheckBox.new()
-		check.text = d.id
-		check.focus_mode = Control.FOCUS_NONE
-		check.add_theme_font_size_override("font_size", FONT)
-		check.set_meta("skill", d.id)
-		check.button_pressed = have.has(d.id)
-		check.toggled.connect(func(_on: bool) -> void: _commit(key, _ticked()))
-		_checks.append(check)
-		box.add_child(check)
-	return box
-
-func _ticked() -> Array:
-	var ids: Array = []
-	for c in _checks:
-		if (c as CheckBox).button_pressed:
-			ids.append(c.get_meta("skill"))
-	return ids
 
 ## Writes one field through the model. A value equal to the stored one, or one for an element that no longer exists (a late
 ## focus loss), does nothing; a refusal reports the reason and puts the stored value back.
@@ -251,10 +210,4 @@ func _show_stored(key: String) -> void:
 		(control as CheckBox).set_pressed_no_signal(bool(stored))
 		control.visible = _thin_solid()
 	elif control is OptionButton:
-		if control.has_meta("choice"):
-			_select_choice(control as OptionButton, str(stored))
-		else:
-			(control as OptionButton).select(int(stored))
-	else:
-		for c in _checks:
-			(c as CheckBox).set_pressed_no_signal((stored as Array).has(c.get_meta("skill")))
+		_select_choice(control as OptionButton, str(stored))

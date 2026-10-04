@@ -40,9 +40,9 @@ func _ready() -> void:
 	_card.add_child(_card_label)
 	add_child(_card)
 
-func bind(player: Node, world: Node, progress = null, pools: Array = [], p_goddess: Goddess = null) -> void:
+func bind(player: Node, world: Node, progress = null, altars: Array = [], p_goddess: Goddess = null) -> void:
 	_progress = progress
-	_pools = pools
+	_pools = altars
 	goddess = p_goddess
 	_player = player
 	player.died.connect(_on_player_died)
@@ -102,17 +102,17 @@ func _last_attuned_choice() -> Dictionary:
 	var last: Dictionary = _progress.last_choice()
 	var altar := str(last["pool"])
 	if not _progress.is_attuned(altar):
-		altar = WorldProgress.DEFAULT_POOL
+		altar = WorldProgress.DEFAULT_ALTAR
 	return {"altar": altar, "species": str(last["species"]), "kit": {}, "cost": 0}
 
-## Spends the cost, records the start (the key stays `pool` until pools become altars) and asks for the restart.
+## Spends the cost, records the start (the saved choice keeps its `pool` key, which now holds an altar id) and asks for the restart.
 func _begin(result: Dictionary) -> void:
-	var altar := str(result.get("altar", WorldProgress.DEFAULT_POOL))
+	var altar := str(result.get("altar", WorldProgress.DEFAULT_ALTAR))
 	var species := str(result.get("species", WorldProgress.DEFAULT_SPECIES))
 	var kit: Dictionary = result["kit"] if typeof(result.get("kit")) == TYPE_DICTIONARY else {}
 	var cost := int(result.get("cost", 0))
 	if cost > 0 and (goddess == null or not goddess.soul.spend(cost)):
 		kit = {}  # a purchase that cannot be paid for is not given
-	_progress.pending_start = {"pool": altar, "species": species, "kit": kit}
+	_progress.pending_start = {"altar": altar, "species": species, "kit": kit}
 	_progress.set_last_choice(altar, species)
 	restart_requested.emit()

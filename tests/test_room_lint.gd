@@ -52,8 +52,8 @@ func test_a_feature_is_embedded_only_when_it_is_stuck() -> void:
 	assert_true(RoomLint.embedded(r, Vector2(250, 204)), "four pixels into the ledge")
 	assert_true(RoomLint.embedded(r, Vector2(12, 320)), "in the wall column")
 	assert_true(RoomLint.embedded(r, Vector2(630, 320)), "in the right wall column")
-	assert_true(RoomLint.embedded(r, Vector2(30, 320), "rebirth_pool"), "the pool's 38 px box reaches into the wall")
-	assert_false(RoomLint.embedded(r, Vector2(40, 320), "rebirth_pool"))
+	assert_true(RoomLint.embedded(r, Vector2(30, 320), "altar"), "the pool's 38 px box reaches into the wall")
+	assert_false(RoomLint.embedded(r, Vector2(40, 320), "altar"))
 	assert_true(RoomLint.embedded(r, Vector2(25, 320), "tablet"), "a 12 px tablet's box starts at x 19")
 	assert_false(RoomLint.embedded(r, Vector2(26, 320), "tablet"), "half-open: its box starts exactly at the wall face")
 
@@ -158,16 +158,16 @@ func test_decor_unknown_flags_an_id_outside_the_catalog_with_a_decor_pick() -> v
 func test_the_rule_list_has_sixteen_rules() -> void:
 	assert_eq(RoomLint.RULES.size(), 16)
 
-func _pool(id: String, area: String, pos: Vector2) -> Dictionary:
-	return {"kind": "rebirth_pool", "id": id, "area": area, "pos": pos, "kit": {}}
+func _altar(id: String, area: String, pos: Vector2) -> Dictionary:
+	return {"kind": "altar", "id": id, "area": area, "pos": pos, "perk": ""}
 
-func test_pool_clearance_applies_to_every_pool_but_the_default() -> void:
-	var near := _room("T1", {"features": [_pool("t1_pool_1", "cave", Vector2(300, 320))], "spawns": [{"id": "toad", "pos": Vector2(400, 300)}]})
-	assert_true(_rules(near).has("pool_clearance"), "a new cave pool is held to it too")
-	var far := _room("T1", {"features": [_pool("t1_pool_1", "cave", Vector2(100, 320))], "spawns": [{"id": "toad", "pos": Vector2(400, 300)}]})
-	assert_false(_rules(far).has("pool_clearance"))
-	var default := _room("T1", {"features": [_pool(WorldProgress.DEFAULT_POOL, "cave", Vector2(300, 320))], "spawns": [{"id": "toad", "pos": Vector2(400, 300)}]})
-	assert_false(_rules(default).has("pool_clearance"), "the default pool is older than the rule")
+func test_altar_clearance_applies_to_every_altar_but_the_default() -> void:
+	var near := _room("T1", {"features": [_altar("t1_pool_1", "cave", Vector2(300, 320))], "spawns": [{"id": "toad", "pos": Vector2(400, 300)}]})
+	assert_true(_rules(near).has("altar_clearance"), "a new cave pool is held to it too")
+	var far := _room("T1", {"features": [_altar("t1_pool_1", "cave", Vector2(100, 320))], "spawns": [{"id": "toad", "pos": Vector2(400, 300)}]})
+	assert_false(_rules(far).has("altar_clearance"))
+	var default := _room("T1", {"features": [_altar(WorldProgress.DEFAULT_ALTAR, "cave", Vector2(300, 320))], "spawns": [{"id": "toad", "pos": Vector2(400, 300)}]})
+	assert_false(_rules(default).has("altar_clearance"), "the default pool is older than the rule")
 
 func _feat(kind: String, id: String, extra := {}) -> Dictionary:
 	var f := {"kind": kind, "id": id, "pos": Vector2(300, 320)}

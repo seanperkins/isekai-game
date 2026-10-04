@@ -92,9 +92,9 @@ func test_the_census() -> void:
 			count[s["id"]] = int(count.get(s["id"], 0)) + 1
 	assert_eq(count, {"armed_ant": 9, "gloom_wolf": 9, "stone_drake": 3})
 
-func test_d1_holds_the_rebirth_pool_and_d5_the_glow_pool_and_the_tablet() -> void:
+func test_d1_holds_the_altar_and_d5_the_glow_pool_and_the_tablet() -> void:
 	var d1_kinds: Array = (rooms["D1"] as RoomDef).features.map(func(f): return f["kind"])
-	assert_true(d1_kinds.has("rebirth_pool"))
+	assert_true(d1_kinds.has("altar"))
 	var d5_kinds: Array = (rooms["D5"] as RoomDef).features.map(func(f): return f["kind"])
 	assert_true(d5_kinds.has("glow_pool"))
 	assert_true(d5_kinds.has("tablet"))

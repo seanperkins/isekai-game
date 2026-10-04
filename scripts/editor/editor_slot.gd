@@ -94,9 +94,6 @@ func problem_lines() -> Array:
 func find_field(key: String) -> Control:
 	return _inspector.find_field(key) if _inspector != null else null
 
-func skill_checkboxes() -> Array:
-	return _inspector.skill_checkboxes() if _inspector != null else []
-
 func _clear() -> void:
 	for c in _scroll.get_children():
 		_scroll.remove_child(c)

@@ -113,9 +113,9 @@ func test_every_swimmer_spawn_is_in_water_and_no_walker_needs_it() -> void:
 						wet = true
 				assert_true(wet, "%s %s" % [id, s["pos"]])
 
-func test_f1_holds_the_rebirth_pool_and_f5_the_tablet() -> void:
+func test_f1_holds_the_altar_and_f5_the_tablet() -> void:
 	var f1_kinds: Array = (rooms["F1"] as RoomDef).features.map(func(f): return f["kind"])
-	assert_true(f1_kinds.has("rebirth_pool"))
+	assert_true(f1_kinds.has("altar"))
 	var f5_kinds: Array = (rooms["F5"] as RoomDef).features.map(func(f): return f["kind"])
 	assert_true(f5_kinds.has("tablet"))
 	assert_true(f5_kinds.has("glow_pool"))

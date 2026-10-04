@@ -13,20 +13,12 @@ func test_the_model_edits_copies_never_the_loaded_rooms() -> void:
 	model.rooms["C1"].solids.append(Rect2(1, 2, 3, 4))
 	assert_false(source["C1"].solids.has(Rect2(1, 2, 3, 4)))
 
-func _kit_pool(rooms: Dictionary) -> Dictionary:
-	for id in rooms:
-		for f in (rooms[id] as RoomDef).features:
-			if f.get("kind", "") == "rebirth_pool" and (f["kit"] as Dictionary).has("skills"):
-				return {"room": id, "feature": f}
-	return {}
-
 func test_a_nested_value_is_copied_too() -> void:
-	var original := _kit_pool(source)
-	assert_false(original.is_empty(), "a shipped room has a rebirth pool whose kit lists skills")
-	var copy := _kit_pool(model.rooms)
-	var before: Array = original["feature"]["kit"]["skills"].duplicate()
-	copy["feature"]["kit"]["skills"].append("zzz")
-	assert_eq(original["feature"]["kit"]["skills"], before)
+	var original := RoomEditModel.copy_room(source["C1"])
+	original.features.append({"kind": "altar", "id": "N1", "area": "cave", "perk": "", "pos": Vector2(1, 1), "extra": {"list": ["a"]}})
+	var copy := RoomEditModel.copy_room(original)
+	(copy.features.back()["extra"]["list"] as Array).append("zzz")
+	assert_eq(original.features.back()["extra"]["list"], ["a"], "editing a feature's nested list leaves the original alone")
 
 func test_a_copy_equals_its_source_by_exported_properties() -> void:
 	for id in source:

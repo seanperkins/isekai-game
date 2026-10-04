@@ -6,8 +6,9 @@ extends RefCounted
 var soul: SoulProgress
 ## PerkDefs, applied to the body at the start of a life (SoulPerks).
 var perks: Array
+## The soul rules (bank rate, prices, how often she speaks of many deaths); the altar menus read the bank rate.
+var rules: SoulRules
 
-var _rules: SoulRules
 var _lines: GoddessLines
 var _catalog: Dictionary  # species id -> SpeciesDef
 var _compendium: CompendiumModel
@@ -16,7 +17,7 @@ var _skill_defs: Array
 func _init(p_soul: SoulProgress, p_rules: SoulRules, p_lines: GoddessLines, p_catalog: Dictionary, p_perks: Array,
 		p_compendium: CompendiumModel, p_skill_defs: Array) -> void:
 	soul = p_soul
-	_rules = p_rules
+	rules = p_rules
 	_lines = p_lines
 	_catalog = p_catalog
 	perks = p_perks
@@ -31,17 +32,17 @@ static func load_default(p_soul: SoulProgress, p_compendium: CompendiumModel, p_
 ## Counts this death, then her line for `cause` (a creature id, "spear", or a damage type). Call once per death.
 func line_for_death(cause: String) -> String:
 	soul.note_death()
-	return _lines.line_for(cause, soul.deaths, _rules.many_deaths)
+	return _lines.line_for(cause, soul.deaths, rules.many_deaths)
 
 ## The scene's state: the attuned places (the default when none), the species the Bestiary has unlocked, the powers worth a head
 ## start, and the last choice pre-selected.
-func model(progress: WorldProgress, pools: Array) -> GoddessModel:
+func model(progress: WorldProgress, altars: Array) -> GoddessModel:
 	var places: Array = []
-	for p in pools:
+	for p in altars:
 		if progress.is_attuned(str(p["id"])):
 			places.append({"id": str(p["id"]), "name": str(p["name"])})
 	if places.is_empty():
-		places.append({"id": WorldProgress.DEFAULT_POOL, "name": "Cave mouth"})
+		places.append({"id": WorldProgress.DEFAULT_ALTAR, "name": "Cave mouth"})
 	var records := {}
 	for id in _compendium.bestiary_ids():
 		records[id] = _compendium.creature_record(id)
@@ -51,4 +52,11 @@ func model(progress: WorldProgress, pools: Array) -> GoddessModel:
 	var powers: Array = []
 	for id in HeadStart.eligible_powers(_compendium, _skill_defs):
 		powers.append({"id": id, "name": _compendium.skill_name(id)})
-	return GoddessModel.new(places, species, powers, soul, _rules, progress.last_choice())
+	return GoddessModel.new(places, species, powers, soul, rules, progress.last_choice())
+
+## The perk with this id, or null for "" (an altar with no local perk yet) or an id the data does not hold.
+func perk_for(id: String) -> PerkDef:
+	for perk: PerkDef in perks:
+		if perk.id == id:
+			return perk
+	return null

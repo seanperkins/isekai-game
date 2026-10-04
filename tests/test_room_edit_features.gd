@@ -54,11 +54,22 @@ func test_each_kind_is_placed_on_the_surface_with_its_defaults_and_selected() ->
 	assert_eq(model.add_feature("C2", "switch", Vector2(600, 100)), "")
 	var s: Dictionary = _features("C2", "switch").back()
 	assert_eq(s["shortcut"], s["id"], "a switch starts with its own id as its shortcut")
-	assert_eq(model.add_feature("C2", "rebirth_pool", Vector2(700, 100)), "")
-	var p: Dictionary = _features("C2", "rebirth_pool").back()
-	assert_eq([p["area"], p["kit"]], ["cave", {}])
+	assert_eq(model.add_feature("C2", "altar", Vector2(700, 100)), "")
+	var p: Dictionary = _features("C2", "altar").back()
+	assert_eq([p["area"], p["perk"]], ["cave", ""], "an altar starts in its room's area with no perk")
+	assert_false(p.has("kit"))
 	assert_eq(model.add_feature("C2", "glow_pool", Vector2(800, 100)), "")
 	assert_eq(model.undo_depth(), 4)
+
+func test_an_altar_can_be_added_with_the_rooms_area_and_no_perk() -> void:
+	assert_eq(model.add_feature("G1", "altar", Vector2(300, 100)), "")
+	var a: Dictionary = _features("G1", "altar").back()
+	assert_eq([a["kind"], a["area"], a["perk"]], ["altar", model.rooms["G1"].area, ""])
+	assert_true(a["id"] is String and a["id"] != "", "it gets an id")
+	assert_eq(model.selection["kind"], "feature")
+	assert_eq(model.undo_depth(), 1)
+	model.undo()
+	assert_eq(_features("G1", "altar").size(), 1, "undo takes it away")
 
 func test_a_feature_on_a_ledge_stands_on_top_of_it() -> void:
 	var r: RoomDef = model.rooms["C2"]
