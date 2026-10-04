@@ -5,6 +5,8 @@ extends CharacterBody2D
 signal died
 signal inspect_report(lines: PackedStringArray)
 signal not_enough_mp(skill_id: String)
+## A body evolution succeeded (advance_form): the game records the form as reached.
+signal form_advanced(id: String)
 
 const SPEED := 140.0
 const JUMP_VELOCITY := -330.0
@@ -607,6 +609,7 @@ func advance_form(id: String, force := false) -> bool:
 	_sync_max_hp()
 	_begin_evolve_moment(def)
 	EventBus.world_event.emit("evolved_body", {"id": id, "stage": form.stage})
+	form_advanced.emit(id)
 	return true
 
 func evolving() -> bool:
