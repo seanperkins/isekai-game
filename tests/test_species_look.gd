@@ -90,3 +90,22 @@ func test_the_crawl_phase_follows_distance_travelled() -> void:
 	assert_almost_eq(SpeciesLook.crawl_advance(0.0, 70.0, 1.0), 70.0 * SpeciesLook.CRAWL_RATE, 0.0001)
 	assert_eq(SpeciesLook.crawl_advance(1.5, 0.0, 1.0), 1.5)
 	assert_eq(SpeciesLook.crawl_advance(0.0, -70.0, 1.0), SpeciesLook.crawl_advance(0.0, 70.0, 1.0))
+
+func test_the_stride_follows_distance_not_time() -> void:
+	assert_eq(SpeciesLook.stride_advance(0.0, SpeciesLook.STRIDE_PX), 1.0)
+	assert_eq(SpeciesLook.stride_advance(0.3, 0.0), 0.3, "no movement, no step")
+	assert_eq(SpeciesLook.stride_advance(0.0, -SpeciesLook.STRIDE_PX), 1.0, "the sign does not matter")
+
+func test_four_frames_to_a_stride() -> void:
+	assert_eq(SpeciesLook.stride_frame(0.0), 0)
+	assert_eq(SpeciesLook.stride_frame(0.26), 1)
+	assert_eq(SpeciesLook.stride_frame(0.5), 2)
+	assert_eq(SpeciesLook.stride_frame(0.76), 3)
+	assert_eq(SpeciesLook.stride_frame(1.0), 0, "it wraps")
+	assert_eq(SpeciesLook.stride_frame(1.26), 1)
+
+func test_the_sprite_turns_a_quarter_per_surface() -> void:
+	assert_almost_eq(SpeciesLook.surface_angle(Vector2.UP), 0.0, 0.0001)
+	assert_almost_eq(SpeciesLook.surface_angle(Vector2.RIGHT), PI / 2.0, 0.0001)
+	assert_almost_eq(absf(SpeciesLook.surface_angle(Vector2.DOWN)), PI, 0.0001)
+	assert_almost_eq(SpeciesLook.surface_angle(Vector2.LEFT), -PI / 2.0, 0.0001)

@@ -496,3 +496,46 @@ func test_every_species_still_jumps_its_own_height_on_the_new_terrain() -> void:
 		await _jump(30, 120)
 		var want: float = MovementSim.flat_jump(MovementProfile.of(id))["rise"]
 		assert_almost_eq(sb.last_jump()["rise"], want, 3.0, id)
+
+func test_the_spider_sprite_follows_the_surface_with_an_ease() -> void:
+	await _spider_at(Vector2(628.0, -60.0), Vector2.LEFT)
+	await _frames(1)
+	assert_lt(absf(_sprite().rotation), PI / 2.0 - 0.05, "it has not snapped")
+	await _frames(14)
+	assert_almost_eq(_sprite().rotation, -PI / 2.0, 0.05, "and has settled on the wall's angle")
+
+func test_legs_turn_with_distance_and_freeze_when_it_stops() -> void:
+	await _spider_at(Vector2(60.0, -12.0))
+	sb.scripted.dir = 1.0
+	var seen := {}
+	for _k in 30:
+		await get_tree().physics_frame
+		seen[sb.clip()] = true
+	assert_gte(seen.size(), 3, "the legs step as it goes: %s" % [seen.keys()])
+	sb.scripted.dir = 0.0
+	await _frames(3)
+	var held := sb.clip()
+	assert_true(held.begins_with("crawl_"), "it freezes on a stride frame, no idle animation: %s" % held)
+	for _k in 40:
+		await get_tree().physics_frame
+		assert_eq(sb.clip(), held)
+
+func test_the_spider_does_not_bob_or_squash() -> void:
+	await _spider_at(Vector2(60.0, -12.0))
+	sb.scripted.dir = 1.0
+	for _k in 30:
+		await get_tree().physics_frame
+		assert_eq(_sprite().scale, Vector2.ONE)
+
+func test_a_reversal_pivots() -> void:
+	await _spider_at(Vector2(60.0, -12.0))
+	sb.scripted.dir = 1.0
+	await _frames(20)
+	sb.scripted.dir = -1.0
+	var narrowest := 1.0
+	for _k in 8:
+		await get_tree().physics_frame
+		narrowest = minf(narrowest, _sprite().scale.x)
+	assert_lt(narrowest, 0.7, "a quick squeeze as it turns")
+	await _frames(14)
+	assert_eq(_sprite().scale.x, 1.0)

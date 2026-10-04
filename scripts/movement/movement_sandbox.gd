@@ -30,6 +30,10 @@ const LAND_SECONDS := 0.12
 ## How fast the ball's eyes roll around it (rad/s), and how fast the crawl wobble eases in and out.
 const BALL_ROLL := 10.0
 const CRAWL_EASE := 8.0
+## The spider's sprite settles on a new surface in about 3 times this (the body changes surface in one tick), and a
+## reversal pivots over PIVOT_SECONDS.
+const CORNER_EASE := 0.04
+const PIVOT_SECONDS := 0.10
 
 ## When set, replaces the keyboard and pad. `jump_pressed` is consumed (cleared) by the next physics frame, so a test
 ## sets it once; `jump_held` stays until the test clears it.
@@ -55,6 +59,12 @@ var _ball := false
 var _ball_roll := 0.0
 var _crawl_phase := 0.0
 var _crawl_gain := 0.0
+var _angle := 0.0
+var _vis_off := Vector2.ZERO
+var _stride := 0.0
+var _prev_pos := Vector2.ZERO
+var _sense := 1.0
+var _pivot := 0.0
 var _cam: Camera2D
 var _label: Label
 var _last := {"rise": 0.0, "airtime": 0.0}
@@ -115,6 +125,10 @@ func set_profile(id: String) -> void:
 	_ball = false
 	_ball_roll = 0.0
 	_landing = false
+	_angle = 0.0
+	_vis_off = Vector2.ZERO
+	_stride = 0.0
+	_pivot = 0.0
 	if body != null:
 		body.velocity = Vector2.ZERO
 	if _sprite != null:
@@ -133,6 +147,7 @@ func _set_look(id: String) -> void:
 	_sheet = SpeciesLook.sheet_for(id)
 	_animator = null
 	_clip = ""
+	_sprite.rotation = 0.0
 	if _sheet != null:
 		_animator = SlimeAnimator.new(SpeciesLook.clips_for(id))
 		_animator.play(SpeciesLook.clip_for(id, true, 0.0, 0.0, 0.0))
@@ -287,7 +302,9 @@ func _apply_box() -> void:
 	_shape.position.y = BodyConfig.BOTTOM - size.y / 2.0
 
 func _draw_body(delta: float) -> void:
-	if _sheet != null:
+	if _sheet != null and profile.id == "spider":
+		_draw_spider(delta)
+	elif _sheet != null:
 		_clip = SpeciesLook.clip_for(profile.id, body.is_on_floor(), state.velocity.y, state.velocity.x, _land_timer, state.verb, VerbRunner.is_flat(state, profile), state.clinging, _ball)
 		_animator.play(_clip)
 		_animator.advance(delta)
@@ -311,8 +328,37 @@ func _draw_body(delta: float) -> void:
 	_sprite.modulate = tint
 	_rect.modulate = tint
 	var doing := state.verb if state.verb != "" else ("flat" if state.spread else ("wall" if state.clinging else ("crawl" if state.surface_n != Vector2.ZERO else "")))
-	_label.text = "%s%s   speed %d   boost %s   verb: %s   last jump: rise %.1f px, air %.2f s\n1 biped   2 slime   3 wolf   4 spider   B boost   J tackle   S down (flatten, slide)   at a wall: press into it to stick, jump to kick off, hold jump to bounce" % [
+	_label.text = "%s%s   speed %d   boost %s   verb: %s   last jump: rise %.1f px, air %.2f s\n1 biped   2 slime   3 wolf   4 spider   B boost   J tackle   S down (flatten, slide)   at a wall: press into it to stick, jump to kick off, hold jump to bounce   spider: arrows crawl floors, walls and ceilings, jump hops off" % [
 		profile.id, " (placeholder, no art yet)" if _sheet == null else "", int(absf(body.velocity.x)), "on" if boosted else "off", doing, _last["rise"], _last["airtime"]]
+
+## The spider, after how spiders move: the legs follow the distance travelled (so they freeze the instant it stops, on the
+## frame they were on), the body is rigid (no bob, no squash), the sprite turns to the surface and eases through a corner (the
+## body changes surface in one tick; the sprite starts where it was and catches up), the head points the way it goes and a
+## reversal pivots (a quick squeeze). No silk: that waits for the zip and the silk drop.
+func _draw_spider(delta: float) -> void:
+	var attached := state.surface_n != Vector2.ZERO
+	var corner := state.surface_event == "concave" or state.surface_event == "convex"
+	if corner:
+		_vis_off += _prev_pos - body.global_position
+	_vis_off = _vis_off.lerp(Vector2.ZERO, 1.0 - exp(-delta / CORNER_EASE))
+	var target := SpeciesLook.surface_angle(state.surface_n) if attached else 0.0
+	_angle = lerp_angle(_angle, target, 1.0 - exp(-delta / CORNER_EASE))
+	if attached and not corner:
+		_stride = SpeciesLook.stride_advance(_stride, state.surface_shift.length())
+	_clip = "crawl_%d" % (SpeciesLook.stride_frame(_stride) + 1) if attached else "drop"
+	var sense := state.surface_sigma if attached else (signf(state.velocity.x) if absf(state.velocity.x) > 20.0 else _sense)
+	if sense != _sense:
+		_sense = sense
+		_pivot = PIVOT_SECONDS
+	_pivot = maxf(0.0, _pivot - delta)
+	var squeeze := 1.0 - 0.55 * sin(PI * (1.0 - _pivot / PIVOT_SECONDS)) if _pivot > 0.0 else 1.0
+	var size := _sheet.frame_size(_clip)
+	_sprite.texture = _sheet.frame_texture(_clip)
+	_sprite.rotation = _angle
+	_sprite.flip_h = _sense < 0.0  # the sprite's right is the clockwise tangent: against it, mirror
+	_sprite.scale = Vector2(squeeze, 1.0)
+	_sprite.position = body.position + _vis_off + Vector2.UP.rotated(_angle) * (size.y / 2.0 - SurfaceStep.HN)
+	_prev_pos = body.global_position
 
 ## The sprite's scale: the slime's spring, wobbling while it crawls flat. The ball is never squashed, stretched or wobbled.
 func _look_scale(delta: float) -> Vector2:

@@ -15,6 +15,9 @@ const GALLOP_SPEED := 150.0
 ## The flat slime's crawl wobble: how far it stretches (a fraction) and how fast the phase turns per px travelled (radians).
 const CRAWL_AMPLITUDE := 0.15
 const CRAWL_RATE := 0.2
+## Pixels the spider travels in one full 4-frame leg cycle: about 6 cycles a second at full speed, the stride rate of a
+## fast-running spider (docs/research/spider-locomotion.md). Legs follow distance, so feet never slide and stop when it stops.
+const STRIDE_PX := 24.0
 ## The slime's ball: a clip name for the animator (frame `fall`); the sandbox draws the ball itself with SlimeBall, since no
 ## sheet frame is round.
 const BALL_CLIP := {"frames": ["fall"], "fps": 1.0, "loop": false}
@@ -67,3 +70,15 @@ static func crawl_scale(phase: float) -> Vector2:
 ## The wobble's phase after `dt` seconds at horizontal speed `vx`: it turns with the distance crawled.
 static func crawl_advance(phase: float, vx: float, dt: float) -> float:
 	return phase + absf(vx) * dt * CRAWL_RATE
+
+## The leg cycle's phase (1.0 per cycle) after moving `moved` px.
+static func stride_advance(phase: float, moved: float) -> float:
+	return phase + absf(moved) / STRIDE_PX
+
+## Which of the 4 crawl frames (0 to 3) a phase shows.
+static func stride_frame(phase: float) -> int:
+	return int(floorf(fposmod(phase, 1.0) * 4.0)) % 4
+
+## The sprite's rotation for a surface with normal `n`: a quarter turn per face, 0 on a floor.
+static func surface_angle(n: Vector2) -> float:
+	return wrapf(n.angle() + PI / 2.0, -PI, PI)
