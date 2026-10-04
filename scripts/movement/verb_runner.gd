@@ -37,8 +37,8 @@ static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float, spee
 		input.jump_pressed = false
 	var scale := speed_scale * (SPREAD_SPEED if s.spread else 1.0)
 	GroundAirStep.step(s, input, p, dt, scale, jump_boost)
-	if p.verbs.has("vault"):
-		VaultStep.step(s, i, p)  # after the ground step, which resets `launched`: a jump press this tick is the jump
+	if p.verbs.has("vault") and s.verb == "":
+		VaultStep.step(s, i, p)  # after the ground step, which resets `launched` (a jump press this tick is the jump); a burst owns the velocity
 	if s.wall_bounced and s.verb != "":
 		_end(_row(p, s.verb), s)  # a wall bounce ends the burst: the slime leaves the wall bouncing, not tackling
 
@@ -78,11 +78,11 @@ static func _bursts(s: MoveState, i: MoveInput, p: MovementProfile, dt: float) -
 	if s.verb == "":
 		return
 	var row := _row(p, s.verb)
+	if row != null and row.aimed and i.touching_hostile:
+		s.pounce_hit = true  # before the end check: contact on the tick it expires still counts
 	if row == null or _ended(row, s, i):
 		_end(row, s)
 		return
-	if row.aimed and i.touching_hostile:
-		s.pounce_hit = true
 	s.verb_left -= dt
 	if row.decel > 0.0:
 		s.velocity.x = move_toward(s.velocity.x, 0.0, row.decel * dt)
@@ -111,6 +111,7 @@ static func _begin(row: BurstDef, s: MoveState, i: MoveInput) -> void:
 		var way := i.aim.normalized() if i.aim != Vector2.ZERO else Vector2(s.facing, 0.0)
 		s.verb_dir = signf(way.x)  # 0 for straight up or down: no wall is ahead
 		s.pounce_hit = false
+		s.jumping = false  # the leap replaces any jump, so a released one adds no extra gravity to it
 		s.velocity = way * (row.speed + row.run_fraction * absf(s.velocity.x))
 		return
 	s.verb_dir = float(s.facing) if row.speed > 0.0 else signf(s.velocity.x)

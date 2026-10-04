@@ -558,3 +558,53 @@ func test_touching_a_hostile_marks_the_pounce() -> void:
 	assert_false(s.pounce_hit)
 	VerbRunner.step(s, touch, wolf, 1.0 / 60.0)
 	assert_true(s.pounce_hit)
+
+# --- review fixes: pounce against the vault, a released jump, and the last tick ---
+
+func test_a_vault_never_overrides_a_pounce_begun_on_the_same_tick() -> void:
+	var wolf := MovementProfile.of("wolf")
+	var s := MoveState.new()
+	s.velocity.x = -200.0  # running left, a step ahead of it in that direction, and it pounces up and right
+	var i := _pounce_input(Vector2(1, -1).normalized())
+	i.step_ahead = 16.0
+	VerbRunner.step(s, i, wolf, 1.0 / 60.0)
+	assert_eq(s.verb, "pounce")
+	assert_eq(s.launched, "", "the vault did not launch")
+	assert_almost_eq(s.velocity.y, -282.84, 0.1, "the pounce's own velocity: 300 plus half of 200 along the aim")
+	assert_almost_eq(s.velocity.x, 282.84, 0.1)
+
+func test_no_vault_while_a_pounce_is_running() -> void:
+	var wolf := MovementProfile.of("wolf")
+	var s := MoveState.new()
+	VerbRunner.step(s, _pounce_input(Vector2.RIGHT), wolf, 1.0 / 60.0)
+	var i := MoveInput.new()
+	i.on_floor = true
+	i.step_ahead = 16.0
+	VerbRunner.step(s, i, wolf, 1.0 / 60.0)
+	assert_eq(s.launched, "")
+	assert_eq(s.velocity.y, 0.0)
+
+func test_an_air_pounce_after_a_released_jump_is_not_slowed_by_the_release() -> void:
+	var wolf := MovementProfile.of("wolf")
+	var s := MoveState.new()
+	s.jumping = true  # in a jump, button already up, still rising
+	s.velocity.y = -100.0
+	var i := _pounce_input(Vector2.UP, false)
+	VerbRunner.step(s, i, wolf, 1.0 / 60.0)
+	assert_almost_eq(s.velocity.y, -300.0 + 1344.0 / 60.0, 0.1, "plain gravity, not release_factor times it")
+
+func test_contact_on_the_tick_the_pounce_expires_still_marks_the_hit() -> void:
+	var wolf := MovementProfile.of("wolf")
+	var s := MoveState.new()
+	VerbRunner.step(s, _pounce_input(Vector2.RIGHT), wolf, 1.0 / 60.0)
+	var calm := MoveInput.new()
+	calm.on_floor = true
+	for _k in 20:
+		VerbRunner.step(s, calm, wolf, 1.0 / 60.0)
+	assert_eq(s.verb, "pounce", "still running one tick before it expires")
+	var touch := MoveInput.new()
+	touch.on_floor = true
+	touch.touching_hostile = true
+	VerbRunner.step(s, touch, wolf, 1.0 / 60.0)
+	assert_eq(s.verb, "", "this is the tick it ends")
+	assert_true(s.pounce_hit, "the contact on it was not dropped")
