@@ -120,6 +120,11 @@ func test_only_black_spiders_count_toward_sticky_thread() -> void:
 		CalibrationWalk.eat(rules, by_id["spider"])
 	assert_eq(rules.level_of("sticky_thread"), 1)
 
+func test_the_four_parents_carry_a_price_and_nothing_else_does() -> void:
+	var parents := {"sticky_thread": true, "hydraulic_propulsion": true, "poison_breath": true, "spore_cloud": true}
+	for d in skills:
+		assert_eq(not (d as SkillDef).evolution_price.is_empty(), parents.has(d.id), d.id)
+
 func test_every_parent_has_exactly_two_evolutions() -> void:
 	var counts := {}
 	for d in skills:

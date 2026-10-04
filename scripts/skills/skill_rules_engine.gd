@@ -20,6 +20,10 @@ const MAX_ITERATIONS := 64
 const APPRAISAL_ID := "appraisal"
 ## The highest level a skill may reach at the body's first stage; the body raises it on evolving.
 const BASE_STAGE_CAP := 5
+## One ledger entry per spent unit of essence, tagged {"essence": element}. Written straight to the ledger by evolve(): it is
+## deliberately not in Events.ALL (no skill may count it, and the audio and constants tests stay as they are) and not in
+## Events.INTERNAL (_drain skips recording those).
+const ESSENCE_SPENT := "essence_spent"
 
 var run_active := false
 ## Levels are capped by the body's stage (5, 8, 12, 15). A skill above the cap stops levelling but its
@@ -41,6 +45,8 @@ var _run_start := 0.0
 var _ready_evolutions := {}
 var _granted := {}     # id -> true: granted without its unlock, until its conditions are met
 var _children := {}    # parent id -> the evolution ids whose `replaces` is it
+var _afford_memo := {}       # evolution id -> bool, valid while the ledger holds _afford_memo_size entries
+var _afford_memo_size := -1
 
 func setup(defs: Array) -> void:
 	_defs.clear()
@@ -78,6 +84,8 @@ func reset_run() -> void:
 	_queue.clear()
 	_ready_evolutions.clear()
 	_granted.clear()
+	_afford_memo.clear()
+	_afford_memo_size = -1
 
 func handle_event(event_name: String, tags: Dictionary = {}) -> void:
 	if not run_active:
@@ -130,6 +138,35 @@ func ready_evolutions() -> Array:
 func evolution_cost(id: String) -> int:
 	var d: SkillDef = _defs.get(id)
 	return maxi(1, d.parent_ids().size()) if d != null else 0
+
+## Essence of one element still held: what was absorbed this life minus what evolutions have spent. Recipes read what was
+## absorbed, so spending never undoes an unlock.
+func held(element: String) -> int:
+	return _ledger.counter(Events.ABSORBED, {"essence": element}) - _ledger.counter(ESSENCE_SPENT, {"essence": element})
+
+## The price of evolving into `id`: its parent's evolution_price (empty for a skill that is not an evolution).
+func evolution_price(id: String) -> Dictionary:
+	var d: SkillDef = _defs.get(id)
+	if d == null or d.replaces == "":
+		return {}
+	var parent: SkillDef = _defs.get(d.replaces)
+	return parent.evolution_price if parent != null else {}
+
+## Every element of the price is held. Memoized on the ledger's size (the HUD asks every frame); reset_run() clears the memo
+## because the ledger restarts at size 0.
+func can_afford(id: String) -> bool:
+	if _afford_memo_size != _ledger.size():
+		_afford_memo.clear()
+		_afford_memo_size = _ledger.size()
+	if not _afford_memo.has(id):
+		var ok := true
+		var price := evolution_price(id)
+		for e in price:
+			if held(e) < int(price[e]):
+				ok = false
+				break
+		_afford_memo[id] = ok
+	return _afford_memo[id]
 
 ## Unlocks a ready evolution and closes its siblings. The caller has already paid its EP. The parent retires as the
 ## evolution enters `_owned`, so the siblings' ready flags are erased here and _evaluate keeps them from coming back.

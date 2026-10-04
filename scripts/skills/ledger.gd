@@ -30,6 +30,10 @@ func reset_counter(event_name: String, query: Dictionary, reset_on: String) -> i
 func clear() -> void:
 	_log.clear()
 
+## How many entries the log holds (a cheap fingerprint for memoizing answers that read the whole log).
+func size() -> int:
+	return _log.size()
+
 static func _matches(tags: Dictionary, query: Dictionary) -> bool:
 	for key in query:
 		if not tags.has(key) or tags[key] != query[key]:

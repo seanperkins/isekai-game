@@ -40,3 +40,7 @@ effects = [{
 "values": [24, 28, 32, 36, 40, 44, 48, 52]
 }]
 mp_cost = 4
+evolution_price = {
+"air": 6,
+"dark": 12
+}

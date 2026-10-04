@@ -151,7 +151,7 @@ func test_replaces_must_name_a_parent() -> void:
 func _with_parent() -> Array:
 	var s := _valid_skills()
 	s.append(TestDefs.skill("parent", {"source": "essence", "unlock": [TestDefs.counter("jumped", 1)],
-		"effects": [{"kind": "active", "scene": "res://scenes/abilities/water_blade.tscn"}], "mp_cost": 3}))
+		"effects": [{"kind": "active", "scene": "res://scenes/abilities/water_blade.tscn"}], "mp_cost": 3, "evolution_price": {"water": 3}}))
 	return s
 
 func _evo(id: String, extra := {}) -> SkillDef:
@@ -223,3 +223,22 @@ func test_an_unknown_element_in_an_unlock_is_rejected() -> void:
 	var s := [TestDefs.skill("s", {"unlock": [TestDefs.counter("absorbed", 3, {"essence": "poison"})]})]
 	var errs := DefValidator.validate(s, TestDefs.all_creatures())
 	assert_string_contains("\n".join(errs), "unknown essence 'poison'")
+
+func _parent_and_branch(price: Dictionary) -> Array:
+	var parent := TestDefs.skill("p", {"evolution_price": price})
+	var branch := TestDefs.skill("e", {"source": "evolution", "replaces": "p", "unlock": [TestDefs.level("p", 1)]})
+	return [parent, branch]
+
+func test_a_power_with_evolutions_needs_a_price() -> void:
+	var errs := DefValidator.validate(_parent_and_branch({}), TestDefs.all_creatures())
+	assert_string_contains("\n".join(errs), "a power with evolutions needs an evolution_price")
+
+func test_only_a_power_with_evolutions_carries_a_price() -> void:
+	var s := [TestDefs.skill("lonely", {"evolution_price": {"water": 3}})]
+	assert_string_contains("\n".join(DefValidator.validate(s, TestDefs.all_creatures())), "only a power with evolutions carries an evolution_price")
+
+func test_a_price_names_known_elements_with_positive_units() -> void:
+	var unknown := DefValidator.validate(_parent_and_branch({"poison": 3}), TestDefs.all_creatures())
+	assert_string_contains("\n".join(unknown), "unknown essence 'poison'")
+	var zero := DefValidator.validate(_parent_and_branch({"water": 0}), TestDefs.all_creatures())
+	assert_string_contains("\n".join(zero), "must be positive")
