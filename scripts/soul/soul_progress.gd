@@ -11,7 +11,11 @@ var deaths := 0
 ## Points granted by the `--soul=N` dev flag. Never saved; spent before the saved points.
 var session_points := 0
 
-## A malformed or negative saved value loads as zero; a perk the data no longer holds (not in `known_perks`) is dropped.
+var _unknown_perks := {}  # saved counts for perk ids the data does not hold; written back as they were
+
+## A malformed or negative saved value loads as zero. A perk the data does not hold (not in `known_perks`) is not counted, but
+## it stays in the saved section untouched: perk data that fails to load for a moment, or a perk renamed on another branch,
+## must not erase what the player bought.
 func _init(p_profile = null, known_perks: Array = []) -> void:
 	profile = p_profile
 	if profile == null:
@@ -23,8 +27,12 @@ func _init(p_profile = null, known_perks: Array = []) -> void:
 	if typeof(raw) == TYPE_DICTIONARY:
 		for id in raw:
 			var times := _count(raw[id])
-			if times > 0 and known_perks.has(str(id)):
+			if times <= 0:
+				continue
+			if known_perks.has(str(id)):
 				perks[str(id)] = times
+			else:
+				_unknown_perks[str(id)] = times
 
 func total_points() -> int:
 	return points + session_points
@@ -73,5 +81,7 @@ static func _count(value) -> int:
 func _save() -> void:
 	if profile == null:
 		return
-	profile.set_section("soul", {"points": points, "perks": perks.duplicate(), "deaths": deaths})
+	var saved_perks := _unknown_perks.duplicate()
+	saved_perks.merge(perks, true)
+	profile.set_section("soul", {"points": points, "perks": saved_perks, "deaths": deaths})
 	profile.save()

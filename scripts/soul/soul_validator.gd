@@ -53,7 +53,10 @@ static func _perk_errors(perks: Array) -> PackedStringArray:
 			out.append("perk '%s': price_base must be above 0" % p.id)
 		if p.price_step < 0:
 			out.append("perk '%s': price_step must not be negative" % p.id)
-		for effect: Dictionary in p.effects:
+		for effect in p.effects:
+			if typeof(effect) != TYPE_DICTIONARY:
+				out.append("perk '%s': effect is not a dictionary: %s" % [p.id, str(effect)])
+				continue
 			if not Stats.DEFAULTS.has(str(effect.get("stat", ""))):
 				out.append("perk '%s': effect names unknown stat '%s'" % [p.id, str(effect.get("stat", ""))])
 			if int(effect.get("amount", 0)) == 0:

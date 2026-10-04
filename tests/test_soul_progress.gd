@@ -96,5 +96,14 @@ func test_a_section_is_trimmed_to_known_perks_and_sane_numbers() -> void:
 	assert_eq(soul.deaths, 2)
 	assert_eq(soul.perks, {"stats": 1}, "an unknown perk and a negative count are dropped")
 
+func test_a_perk_the_data_does_not_hold_stays_in_the_file() -> void:
+	var profile := _profile()
+	profile.set_section("soul", {"points": 3, "deaths": 0, "perks": {"stats": 2, "retired": 4}})
+	var without := SoulProgress.new(profile, [])  # as if the perk data failed to load this time
+	assert_eq(without.perks, {}, "an unknown perk is not counted")
+	without.add(1)  # any change saves
+	var back := SoulProgress.new(_profile(), ["stats", "retired"])
+	assert_eq(back.perks, {"stats": 2, "retired": 4}, "a perk that was only briefly unknown loses nothing")
+
 func test_compendium_has_a_soul() -> void:
 	assert_not_null(Compendium.soul)

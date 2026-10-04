@@ -78,6 +78,13 @@ func test_perk_errors() -> void:
 	nothing.effects = [{"stat": "max_hp", "amount": 0}]
 	assert_true(_has(_check(null, [nothing]), "amount"))
 
+func test_a_malformed_effect_is_reported_not_crashed() -> void:
+	var junk := _perk()
+	junk.effects = ["max_hp", 3]
+	var errors := _check(null, [junk])
+	assert_true(_has(errors, "effect is not a dictionary"))
+	assert_eq(errors.size(), 2, "one error per bad entry, and the validator keeps going")
+
 func test_rules_errors() -> void:
 	var r := SoulRules.new()
 	r.bank_rate = 0

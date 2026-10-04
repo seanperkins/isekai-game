@@ -53,7 +53,7 @@ The chosen species is a string that rides `pending_start` and the saved choice, 
 
 ### Soul progress, banking, perks
 
-`SoulProgress` (`RefCounted`, built with the Profile like `WorldProgress`): `points: int`, `perks: Dictionary` (perk id to times bought), `deaths: int`, plus `session_points: int` (never saved; the `--soul=N` dev flag sets it and `spend` takes from it first). Saved as the Profile section `soul` = `{"points", "perks", "deaths"}`; a malformed or negative value loads as zero and unknown perk ids are dropped. Methods: `total_points()` (saved plus session), `add(n)`, `spend(n) -> bool` (false and nothing spent when short), `buy_perk(def) -> bool`, `perk_count(id)`, `note_death()`. Every method that changes saved data saves the Profile at once, as `WorldProgress._save` does.
+`SoulProgress` (`RefCounted`, built with the Profile like `WorldProgress`): `points: int`, `perks: Dictionary` (perk id to times bought), `deaths: int`, plus `session_points: int` (never saved; the `--soul=N` dev flag sets it and `spend` takes from it first). Saved as the Profile section `soul` = `{"points", "perks", "deaths"}`; a malformed or negative value loads as zero, and unknown perk ids are not counted but stay in the saved section untouched (perk data that fails to load for a moment must not erase purchases). Methods: `total_points()` (saved plus session), `add(n)`, `spend(n) -> bool` (false and nothing spent when short), `buy_perk(def) -> bool`, `perk_count(id)`, `note_death()`. Every method that changes saved data saves the Profile at once, as `WorldProgress._save` does.
 
 `session_points` stays in `SoulProgress` rather than being seeded into the saved points, so a dev run never writes invented points to a real profile.
 
