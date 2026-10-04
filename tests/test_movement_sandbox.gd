@@ -319,8 +319,31 @@ func test_a_biped_at_the_apex_beside_a_60_px_ledge_mantles_onto_it() -> void:
 	await _frames(10)
 	assert_true(sb.body.is_on_floor())
 
+func test_a_biped_that_hits_a_60_px_ledge_half_way_up_a_jump_mantles_it() -> void:
+	await _biped_at(Vector2(490.0, -12.0))  # 16 px from the ledge's face, on the floor
+	sb.scripted.dir = 1.0
+	sb.scripted.jump_pressed = true
+	sb.scripted.jump_held = true
+	var started_rising := false
+	var stood := false
+	for _k in 60:
+		await get_tree().physics_frame
+		if sb.state.mantle_event == "start":
+			started_rising = sb.body.global_position.y < -12.0 - 20.0
+		if sb.state.mantle_event == "stand":
+			stood = true
+			break
+	assert_true(started_rising, "it grabbed the face well above the floor, mid-jump")
+	assert_true(stood)
+	sb.scripted.dir = 0.0
+	sb.scripted.jump_held = false
+	await _frames(10)
+	assert_true(sb.body.is_on_floor())
+	assert_gt(sb.body.global_position.x, 520.0, "on the ledge")
+	assert_almost_eq(sb.body.global_position.y, -60.0 - 12.0, 2.0)
+
 func test_a_biped_too_far_below_the_lip_does_not_mantle() -> void:
-	await _biped_at(Vector2(504.0, -56.0), 0.0, 1.0)  # the feet 16 px under the top
+	await _biped_at(Vector2(504.0, -32.0), 0.0, 1.0)  # the feet 40 px under the top
 	var started := false
 	for _k in 5:
 		await get_tree().physics_frame

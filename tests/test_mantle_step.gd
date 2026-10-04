@@ -29,24 +29,24 @@ func test_it_starts_airborne_at_a_ledge_with_a_wall_ahead() -> void:
 	assert_true(s.air_verb_used)
 	assert_false(s.jumping)
 
-func test_the_feet_must_be_within_6_px_plus_the_fall_this_tick() -> void:
+func test_the_feet_must_be_within_32_px_plus_the_fall_this_tick() -> void:
 	var at_rest := func(rise: float, vy: float) -> bool:
 		var s := MoveState.new()
 		s.velocity.y = vy
 		return MantleStep.step(s, _ledge(rise), biped, DT)
-	assert_true(at_rest.call(6.0, 0.0))
-	assert_false(at_rest.call(7.0, 0.0))
-	assert_true(at_rest.call(7.9, 120.0), "falling 2 px a tick adds 2")
-	assert_false(at_rest.call(8.1, 120.0))
+	assert_true(at_rest.call(32.0, 0.0))
+	assert_false(at_rest.call(33.0, 0.0))
+	assert_true(at_rest.call(33.9, 120.0), "falling 2 px a tick adds 2")
+	assert_false(at_rest.call(34.1, 120.0))
 	assert_false(at_rest.call(0.0, 0.0), "no ledge above the feet")
 
-func test_it_does_not_start_rising_faster_than_40() -> void:
-	var rising := MoveState.new()
-	rising.velocity.y = -41.0
-	assert_false(MantleStep.step(rising, _ledge(), biped, DT))
-	var slow := MoveState.new()
-	slow.velocity.y = -40.0
-	assert_true(MantleStep.step(slow, _ledge(), biped, DT))
+func test_it_grabs_a_ledge_it_hits_half_way_up_a_jump_while_still_rising_fast() -> void:
+	var s := MoveState.new()
+	s.velocity.y = -300.0
+	s.jumping = true
+	assert_true(MantleStep.step(s, _ledge(20.0), biped, DT))
+	assert_eq(s.mantle_event, "start")
+	assert_eq(s.velocity, Vector2.ZERO, "the jump's speed goes into the grab")
 
 func test_it_needs_a_wall_in_the_held_or_facing_direction() -> void:
 	var away := MoveState.new()
@@ -77,7 +77,7 @@ func test_never_on_the_floor_or_with_no_probe_or_with_the_air_verb_spent() -> vo
 
 func test_the_pull_goes_up_then_over_and_sums_to_the_displacement() -> void:
 	var s := MoveState.new()
-	var i := _ledge(5.0)
+	var i := _ledge(20.0)
 	MantleStep.step(s, i, biped, DT)
 	var sum := Vector2.ZERO
 	var last_up := -1

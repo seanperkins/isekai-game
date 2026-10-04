@@ -18,7 +18,7 @@ static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float) -> b
 	return _pull(s, i, p, dt)
 
 static func _start(s: MoveState, i: MoveInput, p: MovementProfile, dt: float) -> bool:
-	if i.on_floor or i.mantle == Vector2.ZERO or s.air_verb_used or s.velocity.y < -p.mantle_max_rise:
+	if i.on_floor or i.mantle == Vector2.ZERO or s.air_verb_used:
 		return false
 	var rise := -i.mantle.y
 	if rise <= 0.0 or rise > p.mantle_reach + maxf(0.0, s.velocity.y * dt):
