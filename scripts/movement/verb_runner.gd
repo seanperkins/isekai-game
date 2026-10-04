@@ -15,8 +15,8 @@ static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float, spee
 	if i.dir != 0.0:
 		s.facing = 1 if i.dir > 0.0 else -1
 	_tick_cooldowns(s, dt)
-	if i.on_floor:
-		s.air_verb_used = false
+	if i.on_floor or (p.verbs.has("wall") and i.wall_side != 0):
+		s.air_verb_used = false  # landing, or touching a wall, gives the air verb back
 	_ooze(s, i, p)
 	_bursts(s, i, p, dt)
 	var input := i

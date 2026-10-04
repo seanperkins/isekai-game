@@ -210,3 +210,23 @@ func test_mashing_tackle_in_a_jump_adds_no_horizontal_reach_beyond_one_tackle() 
 		if sim.on_floor:
 			break
 	assert_lt(sim.pos.x, 175.0, "plain jump is 105 px; one air tackle adds about 50, five would add over 100")
+
+func test_wall_contact_refreshes_the_air_tackle() -> void:
+	var s := MoveState.new()
+	var air := _signature()
+	air.on_floor = false
+	VerbRunner.step(s, air, slime, 1.0 / 60.0)
+	for _k in 12:
+		VerbRunner.step(s, _in(0.0, false), slime, 1.0 / 60.0)
+	VerbRunner.step(s, air, slime, 1.0 / 60.0)
+	assert_eq(s.verb, "", "one air verb per airtime")
+	var wall := _in(1.0, false)
+	wall.wall_side = 1
+	VerbRunner.step(s, wall, slime, 1.0 / 60.0)
+	assert_false(s.air_verb_used, "a wall gives it back")
+	VerbRunner.step(s, air, slime, 1.0 / 60.0)
+	assert_eq(s.verb, "tackle")
+	var other := MoveState.new()
+	other.air_verb_used = true
+	VerbRunner.step(other, wall, biped, 1.0 / 60.0)
+	assert_true(other.air_verb_used, "only a species with the wall verb gets it")

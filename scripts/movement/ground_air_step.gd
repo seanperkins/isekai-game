@@ -2,7 +2,7 @@ class_name GroundAirStep
 extends RefCounted
 ## The ground and air movement model: pure statics over a MoveState and a MoveInput (the style of PlayerWater), so
 ## player.gd and the sandbox share it and tests drive it a tick at a time. The caller moves the body with the velocity
-## this leaves. Tick order: timers, horizontal control, gravity, jump, release.
+## this leaves. Tick order: timers, horizontal control, gravity, wall contact, jump, release.
 
 ## A jump that fires on the floor after at least this many seconds of air is a landing's rebound, not a step down's.
 const REBOUND_MIN_AIR := 0.12
@@ -10,20 +10,24 @@ const REBOUND_MIN_AIR := 0.12
 ## `speed_scale` is the speed stat as a fraction (spd / 100); `jump_boost` scales a launch (sqrt(jump_height / 100)).
 static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float, speed_scale := 1.0, jump_boost := 1.0) -> void:
 	s.launched = ""
+	s.wall_bounced = false
 	_timers(s, i, p, dt)
-	if s.verb == "":  # a burst owns the horizontal velocity
+	if s.verb == "" and s.lock <= 1e-6:  # a burst or a wall kick owns the horizontal velocity
 		_horizontal(s, i, p, dt, speed_scale)
 	_gravity(s, i, p, dt)
+	WallStep.contact(s, i, p, dt)
 	_jump(s, i, p, jump_boost)
 	_release(s, i, p)
 	s.air_time = 0.0 if i.on_floor else s.air_time + dt
 	s.last_vy = s.velocity.y
+	s.last_vx = s.velocity.x
 
 ## Every timer is decremented and clamped to zero first and tested `> 0.0` after, so floating-point residue is never
 ## treated as time left. The floor refills coyote time; a press fills the buffer.
 static func _timers(s: MoveState, i: MoveInput, p: MovementProfile, dt: float) -> void:
 	s.coyote = p.coyote if i.on_floor else maxf(0.0, s.coyote - dt)
 	s.buffer = p.buffer if i.jump_pressed else maxf(0.0, s.buffer - dt)
+	s.lock = maxf(0.0, s.lock - dt)
 	var grace := s.rebound_left > 0.0
 	s.rebound_left = maxf(0.0, s.rebound_left - dt)
 	if grace and (s.rebound_left <= 1e-6 or not i.on_floor):
