@@ -26,6 +26,7 @@ const BINDINGS := {
 	"fullscreen": [KEY_F11],
 	"menu_accept": [KEY_ENTER, KEY_KP_ENTER, KEY_SPACE],
 	"menu_back": [KEY_BACKSPACE],
+	"settings": [KEY_TAB],
 }
 
 const PAD_BUTTONS := {
@@ -45,6 +46,7 @@ const PAD_BUTTONS := {
 	"tab_next": [JOY_BUTTON_RIGHT_SHOULDER],
 	"menu_accept": [JOY_BUTTON_A],
 	"menu_back": [JOY_BUTTON_B],
+	"settings": [JOY_BUTTON_RIGHT_STICK],
 }
 
 ## Mouse buttons are skill aliases: left is slot 1, right is slot 2.

@@ -66,3 +66,9 @@ func test_one_stick_push_is_one_step_then_it_repeats_slowly() -> void:
 	assert_eq(screen.nav_step(0.9, 0.1), 1)
 	assert_eq(screen.nav_step(0.1, 0.016), 0)  # released
 	assert_eq(screen.nav_step(-0.7, 0.016), -1)
+
+func test_the_settings_action_has_a_key_and_a_stick_click() -> void:
+	Controls.ensure_actions()
+	var evs := InputMap.action_get_events("settings")
+	assert_true(evs.any(func(e): return e is InputEventKey and e.physical_keycode == KEY_TAB))
+	assert_true(evs.any(func(e): return e is InputEventJoypadButton and e.button_index == JOY_BUTTON_RIGHT_STICK))

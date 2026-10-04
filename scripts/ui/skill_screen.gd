@@ -1,7 +1,7 @@
 class_name SkillScreen
 extends CanvasLayer
 ## Great Sage skill window (Style D): Skills, Compendium, Bestiary, Map and Sound tabs, stats, grouped list and a
-## detail card. Esc / Start opens it and pauses the game; Q/E or LB/RB switch tabs;
+## detail card. Esc / Start opens it and pauses the game; Q/E or LB/RB switch tabs; Tab / R3 opens the Settings menu;
 ## Enter / A assigns an active to the U/O slots; Esc / B closes. Laid out for 640x360.
 
 ## The five base tabs. A sixth, "form", joins once the body has evolved or can (see tabs()).
@@ -71,6 +71,8 @@ var _progress
 var _map_found := ""
 var _map_rooms := 0
 var _nav_timer := 0.0
+## The Settings menu: a child drawn over the tabs (see open_settings()).
+var settings_menu := SettingsMenu.new()
 
 func bind(player: Player, rules, compendium: CompendiumModel, skill_defs: Array) -> void:
 	_player = player
@@ -85,6 +87,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	visible = false
 	_build_frame()
+	add_child(settings_menu)
 	Controls.scheme_changed.connect(_on_scheme_changed)
 
 ## Controls keeps seeing input while this screen pauses the tree, so the scheme (and the slot labels this screen caches)
@@ -92,6 +95,8 @@ func _ready() -> void:
 func _on_scheme_changed() -> void:
 	if visible:
 		_refresh()
+	if settings_menu.is_open():
+		settings_menu.redraw()
 
 func is_open() -> bool:
 	return visible
@@ -105,6 +110,7 @@ func open() -> void:
 	EventBus.world_event.emit("menu_opened", {})
 
 func close() -> void:
+	settings_menu.close()
 	_armed = ""
 	visible = false
 	get_tree().paused = false
@@ -115,6 +121,17 @@ func toggle() -> void:
 		close()
 	else:
 		open()
+
+## Opens the Settings menu over the tabs (only while the screen is open); closing it returns to the same tab.
+func open_settings() -> void:
+	if not visible or settings_menu.is_open():
+		return
+	settings_menu.open()
+	EventBus.world_event.emit("menu_move", {})
+
+## The Settings button's name for the scheme in use; every tab's hint line ends with it.
+func settings_hint() -> String:
+	return "R3 Settings" if Controls.using_joypad else "Tab Settings"
 
 ## The tabs showing now: the base five, plus Form once the body has evolved or can.
 func tabs() -> Array:
@@ -239,10 +256,19 @@ func _process(delta: float) -> void:
 		_nav_dir = 0
 		return
 	var step := nav_step(Controls.last_stick.y, delta)
-	if step != 0:
+	if step == 0:
+		return
+	if settings_menu.is_open():
+		settings_menu.move(step)
+	else:
 		move(step)
 
 func _unhandled_input(event: InputEvent) -> void:
+	if visible and settings_menu.is_open():
+		if not (event is InputEventJoypadMotion):  # the stick is read in _process
+			settings_menu.handle(event)
+		get_viewport().set_input_as_handled()
+		return
 	if event.is_action_pressed("menu"):
 		if not visible and _player != null and _player.health.is_dead():
 			return  # no menu over the death card: the restart would inherit the pause
@@ -262,6 +288,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		switch_tab(_tab - 1)
 	elif event.is_action_pressed("tab_next"):
 		switch_tab(_tab + 1)
+	elif event.is_action_pressed("settings"):
+		open_settings()
 	elif event.is_action_pressed("move_left") or event.is_action_pressed("ui_left"):
 		adjust(-1)
 	elif event.is_action_pressed("move_right") or event.is_action_pressed("ui_right"):
@@ -309,7 +337,13 @@ func _build_tabs() -> void:
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_tab_labels.append(tab_panel)
 
+## Rebuilds the open tab, then ends its hint line with the Settings button.
 func _refresh() -> void:
+	_refresh_tab()
+	if _player != null:
+		_hint.text += "    " + settings_hint()
+
+func _refresh_tab() -> void:
 	if _player == null:
 		return
 	if _tab_labels.size() != tabs().size():
