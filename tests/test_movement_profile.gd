@@ -87,3 +87,10 @@ func test_copy_keeps_aim_and_cast() -> void:
 	var c := i.copy()
 	assert_eq(c.aim, i.aim)
 	assert_eq(c.cast, i.cast)
+
+func test_the_spider_drops_with_the_spec_numbers() -> void:
+	var sp := MovementProfile.of("spider")
+	assert_true(sp.verbs.has("drop"))
+	assert_eq([sp.drop_range, sp.drop_reel, sp.drop_climb, sp.drop_air], [200.0, 90.0, 60.0, 0.5])
+	for id in ["biped", "slime", "wolf"]:
+		assert_false(MovementProfile.of(id).verbs.has("drop"), id)

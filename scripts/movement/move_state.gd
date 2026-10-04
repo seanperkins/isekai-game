@@ -67,3 +67,13 @@ var zip_left := 0.0
 var zip_cooldown := 0.0
 var zip_target := Vector2.ZERO
 var zip_event := ""
+## The silk drop (DropStep). `down_prev` is the raw down input last tick and `down_pressed` that it crossed 0.6 from below
+## this tick (VerbRunner sets both); `drop_up` is the px from the body's centre up to the anchor while a drop runs (0.0
+## when none), `drop_vx` the sideways speed, `drop_target` the anchor as an offset from the centre at the start (for the
+## caller's thread) and `drop_event` what happened this tick ("", "start", "fizzle", "land", "release").
+var down_prev := 0.0
+var down_pressed := false
+var drop_up := 0.0
+var drop_vx := 0.0
+var drop_target := Vector2.ZERO
+var drop_event := ""

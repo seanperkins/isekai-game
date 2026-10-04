@@ -12,6 +12,8 @@ const SPREAD_SPEED := 0.5
 const STAND_RISE := 14.0
 
 static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float, speed_scale := 1.0, jump_boost := 1.0) -> void:
+	s.down_pressed = i.down >= SPREAD_DOWN and s.down_prev < SPREAD_DOWN  # a press: the edge, not a held direction
+	s.down_prev = i.down
 	if i.dir != 0.0:
 		s.facing = 1 if i.dir > 0.0 else -1
 	_tick_cooldowns(s, dt)

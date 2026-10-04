@@ -326,3 +326,23 @@ func test_a_spider_without_the_zip_verb_ignores_the_button() -> void:
 	VerbRunner.step(s, i, bare, 1.0 / 60.0)
 	assert_eq(s.zip_event, "")
 	assert_eq(s.surface_n, Vector2.UP)
+
+func test_down_pressed_is_an_edge() -> void:
+	var s := MoveState.new()
+	var i := MoveInput.new()
+	i.down = 1.0
+	VerbRunner.step(s, i, biped, 1.0 / 60.0)
+	assert_true(s.down_pressed)
+	assert_eq(s.down_prev, 1.0)
+	VerbRunner.step(s, i, biped, 1.0 / 60.0)
+	assert_false(s.down_pressed, "held is not a press")
+	i.down = 0.0
+	VerbRunner.step(s, i, biped, 1.0 / 60.0)
+	i.down = 1.0
+	VerbRunner.step(s, i, biped, 1.0 / 60.0)
+	assert_true(s.down_pressed, "released and pressed again")
+	var light := MoveState.new()
+	var j := MoveInput.new()
+	j.down = 0.5
+	VerbRunner.step(light, j, biped, 1.0 / 60.0)
+	assert_false(light.down_pressed, "a light touch is under the 0.6 threshold")

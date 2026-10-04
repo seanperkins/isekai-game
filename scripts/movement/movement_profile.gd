@@ -66,6 +66,12 @@ const IDS := ["biped", "slime", "wolf", "spider"]
 @export var zip_speed := 400.0
 @export var zip_keep := 0.6
 @export var zip_cooldown := 0.4
+## Silk drop: the farthest solid above it will spin a thread from (px), how fast down reels and up climbs (px/s), and the
+## fraction of the usual air control it keeps while hanging.
+@export var drop_range := 200.0
+@export var drop_reel := 90.0
+@export var drop_climb := 60.0
+@export var drop_air := 0.5
 ## The extra verbs this species has ("ooze"), and its burst rows (BurstDef: Tackle, the puddle slide, later roll and pounce).
 @export var verbs := PackedStringArray()
 @export var bursts: Array = []
