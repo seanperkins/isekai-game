@@ -107,6 +107,19 @@ func test_echolocation_levels_from_air_so_the_grottos_moths_speed_it_up() -> voi
 		by_area.append(levels[a]["echolocation"])
 	assert_eq(by_area, [1, 4, 5, 5], "was 2, 2, 2, 5 on sound; a deliberate move recorded in docs/ledgers/essence-calibration.md")
 
+func test_only_black_spiders_count_toward_sticky_thread() -> void:
+	var by_id := _creature_map()
+	var rules: SkillRulesEngine = autofree(SkillRulesEngine.new())
+	rules.setup(skills)
+	rules.start_run()
+	for i in 6:
+		CalibrationWalk.eat(rules, by_id["taratect"])
+		CalibrationWalk.eat(rules, by_id["vine_snake"])
+	assert_eq(rules.level_of("sticky_thread"), 0, "a Taratect and a vine snake are not the spider the unlock names")
+	for i in 3:
+		CalibrationWalk.eat(rules, by_id["spider"])
+	assert_eq(rules.level_of("sticky_thread"), 1)
+
 func test_every_parent_has_exactly_two_evolutions() -> void:
 	var counts := {}
 	for d in skills:
