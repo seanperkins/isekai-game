@@ -96,6 +96,7 @@ func _init() -> void:
 		f.size = STAGE_SIZE[f.stage]
 		if f.stage == 2 and f.lineage != "greater":
 			f.essences = essences_of(f.lineage)
+			f.powers = powers_of(f.lineage)
 		var path := "res://data/forms/%s.tres" % id
 		var err := ResourceSaver.save(f, path)
 		if err != OK:
@@ -115,4 +116,18 @@ static func essences_of(lineage: String) -> Array:
 			return ["armor", "earth", "shell"]
 		"echo":
 			return ["sound", "flight"]
+	return []
+
+static func powers_of(lineage: String) -> Array:
+	match lineage:
+		"weaver":
+			return ["sticky_thread"]
+		"tide":
+			return ["hydraulic_propulsion"]
+		"toxic":
+			return ["poison_breath", "spore_cloud"]
+		"bulwark":
+			return ["body_armor", "hardened_shell", "tremor"]
+		"echo":
+			return ["echolocation"]
 	return []

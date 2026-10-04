@@ -14,6 +14,8 @@ extends Resource
 @export var parents: Array = []
 ## The essences that make this lineage's affinity (stage-2 forms only).
 @export var essences: Array = []
+## The skills that open this lineage (stage-2 lineage forms only): reaching any of them, or having evolved one, offers the lineage.
+@export var powers: Array = []
 ## stat id -> amount added (StatKeys)
 @export var stats := {}
 ## FormEffects.TRAITS ids

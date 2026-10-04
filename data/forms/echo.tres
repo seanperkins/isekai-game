@@ -9,6 +9,7 @@ display_name = "Echo"
 lineage = "echo"
 parents = ["slime"]
 essences = ["sound", "flight"]
+powers = ["echolocation"]
 stats = {
 "jump_height": 10,
 "max_hp": 5,

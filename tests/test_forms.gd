@@ -131,3 +131,34 @@ func test_no_form_grants_an_evolution() -> void:
 	for id in forms:
 		for g in (forms[id] as FormDef).grants:
 			assert_ne((by_id[g] as SkillDef).source, "evolution", "%s grants %s" % [id, g])
+
+func test_every_lineage_form_names_the_powers_that_open_it() -> void:
+	var expected := {
+		"weaver": ["sticky_thread"],
+		"tide": ["hydraulic_propulsion"],
+		"toxic": ["poison_breath", "spore_cloud"],
+		"bulwark": ["body_armor", "hardened_shell", "tremor"],
+		"echo": ["echolocation"],
+	}
+	for id in expected:
+		assert_eq((forms[id] as FormDef).powers, expected[id], id)
+	for id in forms:
+		if not expected.has(id):
+			assert_eq((forms[id] as FormDef).powers, [], "%s opens nothing" % id)
+
+func test_the_validator_rejects_an_unknown_power_and_a_power_on_a_later_stage() -> void:
+	var bad := forms.duplicate()
+	var weaver := (forms["weaver"] as FormDef).duplicate() as FormDef
+	weaver.powers = ["no_such_skill"]
+	bad["weaver"] = weaver
+	assert_string_contains("\n".join(FormValidator.validate(bad, skill_ids)), "no_such_skill")
+	var snare := (forms["snare"] as FormDef).duplicate() as FormDef
+	snare.powers = ["sticky_thread"]
+	bad = forms.duplicate()
+	bad["snare"] = snare
+	assert_string_contains("\n".join(FormValidator.validate(bad, skill_ids)), "only stage-2")
+	var empty := (forms["echo"] as FormDef).duplicate() as FormDef
+	empty.powers = []
+	bad = forms.duplicate()
+	bad["echo"] = empty
+	assert_string_contains("\n".join(FormValidator.validate(bad, skill_ids)), "opening power")

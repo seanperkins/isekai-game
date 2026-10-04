@@ -9,6 +9,7 @@ display_name = "Weaver"
 lineage = "weaver"
 parents = ["slime"]
 essences = ["thread"]
+powers = ["sticky_thread"]
 stats = {
 "max_hp": 5,
 "max_mp": 3,
