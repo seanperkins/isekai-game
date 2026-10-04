@@ -157,3 +157,70 @@ func test_ready_retired_and_closed_come_from_the_engine() -> void:
 	assert_eq(nodes["hydraulic_propulsion"]["state"], SkillTreeModel.RETIRED)
 	assert_eq(nodes["blade"]["state"], SkillTreeModel.OWNED)
 	assert_eq(nodes["dash"]["state"], SkillTreeModel.CLOSED)
+
+# --- layout ---
+
+func _rects(m: Dictionary) -> Dictionary:
+	var out := {}
+	for id in m["nodes"]:
+		out[id] = Rect2(m["nodes"][id]["pos"], SkillTreeModel.NODE_SIZE)
+	return out
+
+func _assert_no_overlap(rects: Dictionary) -> void:
+	var ids := rects.keys()
+	for i in ids.size():
+		for j in range(i + 1, ids.size()):
+			assert_false(rects[ids[i]].intersects(rects[ids[j]]), "%s overlaps %s" % [ids[i], ids[j]])
+
+func test_the_layout_is_deterministic_and_no_two_nodes_overlap() -> void:
+	_discover_all()
+	var a := _build()
+	var ra := _rects(a)
+	assert_eq(ra, _rects(_build()))
+	_assert_no_overlap(ra)
+	for id in ra:
+		assert_true(Rect2(Vector2.ZERO, a["size"]).encloses(ra[id]), id + " is inside the canvas")
+
+func test_discovering_a_node_never_moves_another() -> void:
+	compendium.raise("hydraulic_propulsion", CompendiumModel.State.OWNED_ONCE)
+	compendium.raise("leap", CompendiumModel.State.NAMED)
+	var before := _rects(_build())
+	_discover_all()
+	var after := _rects(_build())
+	for id in before:
+		assert_eq(after[id], before[id], id)
+
+func test_a_revealed_secret_takes_a_trailing_grid_cell_and_moves_nothing() -> void:
+	for id in compendium.states():
+		if id != "glutton":
+			compendium.raise(id, CompendiumModel.State.OWNED_ONCE)
+	var before := _rects(_build())
+	assert_false(before.has("glutton"))
+	compendium.raise("glutton", CompendiumModel.State.OWNED_ONCE)
+	var after := _rects(_build())
+	for id in before:
+		assert_eq(after[id], before[id], id)
+	var lowest := 0.0
+	for id in before:
+		if before[id].position.x >= 2.0 * SkillTreeModel.COL_PITCH:
+			lowest = maxf(lowest, before[id].position.y)
+	assert_gte(after["glutton"].position.y, lowest, "after every other grid power")
+
+func test_the_evolving_powers_are_drawn_as_three_node_trees() -> void:
+	_discover_all()
+	var nodes: Dictionary = _build()["nodes"]
+	for d in skills:
+		if d.source != "evolution":
+			continue
+		var base: Vector2 = nodes[d.replaces]["pos"]
+		var evo: Vector2 = nodes[d.id]["pos"]
+		assert_eq(evo.x, base.x + SkillTreeModel.COL_PITCH, d.id + " sits one column right of its base")
+		assert_true(evo.y >= base.y and evo.y <= base.y + SkillTreeModel.ROW_PITCH, d.id + " is level with its base or one row down")
+
+func test_every_label_fits_its_node() -> void:
+	_discover_all()
+	var nodes: Dictionary = _build()["nodes"]
+	var room := SkillTreeModel.NODE_SIZE.x - 2.0 * SkillTreeModel.LABEL_INSET
+	for id in nodes:
+		var w := ThemeDB.fallback_font.get_string_size(nodes[id]["name"], HORIZONTAL_ALIGNMENT_LEFT, -1, SkillScreen.FONT_SMALL).x
+		assert_lte(w, room, nodes[id]["name"])

@@ -13,7 +13,16 @@ const CURRENT := "current"
 const REACHED := "reached"
 const STUB := "stub"
 
-## {"nodes": {id: node}, "edges": [{"from", "to", "kind", "known"}]}. Every edge joins two nodes in "nodes".
+## Node size and spacing at the normal zoom, in canvas px. Every edge joins adjacent columns, so it runs in the gap between
+## them and never crosses a label.
+const NODE_SIZE := Vector2(104, 12)
+const LABEL_INSET := 3.0
+const COL_PITCH := 118.0
+const ROW_PITCH := 14.0
+const GRID_COLS := 2
+
+## {"nodes": {id: node}, "edges": [{"from", "to", "kind", "known"}], "size": Vector2}. Every edge joins two nodes in "nodes";
+## each node's "pos" is its top-left corner on the canvas at the normal zoom.
 static func build(rules, compendium: CompendiumModel, forms: Dictionary, reached_forms: Array, current_form: String) -> Dictionary:
 	var defs := _skill_defs(rules, compendium)
 	var by_id := {}
@@ -28,7 +37,10 @@ static func build(rules, compendium: CompendiumModel, forms: Dictionary, reached
 	for d in defs:
 		if d.source == "evolution" and d.replaces != "":
 			edges.append({"from": d.replaces, "to": d.id, "kind": "evolves"})
-	return {"nodes": nodes, "edges": _visible_edges(nodes, edges)}
+	var slots := _power_slots(defs, _row_powers(defs), nodes)
+	for id in nodes:
+		nodes[id]["pos"] = slots[id]
+	return {"nodes": nodes, "edges": _visible_edges(nodes, edges), "size": _canvas(slots)}
 
 ## Every non-enemy skill, in id order: the Compendium keeps one slot for each.
 static func _skill_defs(rules, compendium: CompendiumModel) -> Array:
@@ -78,4 +90,47 @@ static func _visible_edges(nodes: Dictionary, edges: Array) -> Array:
 		if nodes.has(e["from"]) and nodes.has(e["to"]):
 			out.append({"from": e["from"], "to": e["to"], "kind": e["kind"],
 				"known": nodes[e["from"]]["state"] != STUB and nodes[e["to"]]["state"] != STUB})
+	return out
+
+## The powers drawn one per row, with their evolutions beside them: those that evolve, in id order.
+static func _row_powers(defs: Array) -> Array:
+	var out: Array = []
+	for d in defs:
+		if d.source != "evolution" and not _evolutions_of(defs, d.id).is_empty():
+			out.append(d.id)
+	return out
+
+## The evolutions that replace `id`, in id order.
+static func _evolutions_of(defs: Array, id: String) -> Array:
+	var out: Array = []
+	for d in defs:
+		if d.source == "evolution" and d.replaces == id:
+			out.append(d.id)
+	return out
+
+## A slot for every skill that can show, shown or not, so discovering one never moves another. The row powers go down
+## column 0 with their evolutions in column 1; the other powers fill a GRID_COLS-wide grid from column 2, by name. A secret
+## takes a slot only once it is a node, after the rest of the grid, in id order: a reserved empty cell would give it away.
+static func _power_slots(defs: Array, row_powers: Array, nodes: Dictionary) -> Dictionary:
+	var slots := {}
+	var row := 0
+	for id in row_powers:
+		slots[id] = Vector2(0, row * ROW_PITCH)
+		var kids := _evolutions_of(defs, id)
+		for i in kids.size():
+			slots[kids[i]] = Vector2(COL_PITCH, (row + i) * ROW_PITCH)
+		row += maxi(1, kids.size())
+	var grid := defs.filter(func(d): return d.source != "evolution" and not row_powers.has(d.id) and not d.secret)
+	grid.sort_custom(func(a, b): return a.display_name < b.display_name)
+	var secrets := defs.filter(func(d): return d.source != "evolution" and not row_powers.has(d.id) and d.secret and nodes.has(d.id))
+	grid.append_array(secrets)  # defs are in id order already
+	for i in grid.size():
+		slots[grid[i].id] = Vector2((2 + i % GRID_COLS) * COL_PITCH, (i / GRID_COLS) * ROW_PITCH)
+	return slots
+
+## The canvas: just large enough for every slot.
+static func _canvas(slots: Dictionary) -> Vector2:
+	var out := Vector2.ZERO
+	for id in slots:
+		out = out.max(slots[id] + NODE_SIZE)
 	return out
