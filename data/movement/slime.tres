@@ -22,3 +22,4 @@ release_factor = 2.5
 coyote = 0.1
 buffer = 0.1
 rebound_rise = 0.15
+verbs = PackedStringArray("ooze")
