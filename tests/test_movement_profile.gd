@@ -44,3 +44,30 @@ func test_copy_keeps_the_wall_side() -> void:
 	var i := MoveInput.new()
 	i.wall_side = -1
 	assert_eq(i.copy().wall_side, -1)
+
+func test_the_spider_crawls_and_the_others_do_not() -> void:
+	var sp := MovementProfile.of("spider")
+	assert_true(sp.verbs.has("crawl"))
+	assert_eq([sp.corner_lock, sp.crawl_back_window], [0.10, 0.6])
+	for id in ["biped", "slime", "wolf"]:
+		assert_false(MovementProfile.of(id).verbs.has("crawl"), id)
+
+func test_stick_is_dir_and_down_minus_up() -> void:
+	var i := MoveInput.new()
+	i.dir = 1.0
+	i.up = 1.0
+	assert_eq(i.stick(), Vector2(1.0, -1.0))
+	i.up = 0.0
+	i.down = 0.5
+	assert_eq(i.stick(), Vector2(1.0, 0.5))
+
+func test_copy_keeps_the_probes_and_up() -> void:
+	var i := MoveInput.new()
+	i.sweep = func(_m: Vector2) -> Dictionary: return {}
+	i.ray = func(_a: Vector2, _b: Vector2, _h: bool) -> int: return 1
+	i.up = 0.7
+	i.on_ceiling = true
+	var c := i.copy()
+	assert_eq(c.sweep, i.sweep)
+	assert_eq(c.ray, i.ray)
+	assert_eq([c.up, c.on_ceiling], [0.7, true])

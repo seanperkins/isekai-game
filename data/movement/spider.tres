@@ -22,3 +22,4 @@ release_factor = 1.0
 coyote = 0.1
 buffer = 0.1
 rebound_rise = 0.0
+verbs = PackedStringArray("crawl")

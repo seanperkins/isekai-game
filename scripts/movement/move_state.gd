@@ -45,3 +45,17 @@ var wall_side := 0
 var clinging := false
 var wall_bounced := false
 var last_vx := 0.0
+## The crawl (SurfaceStep). `surface_n` is the outward normal of the surface under the feet, ZERO when not on one;
+## `surface_sigma` the sense along the clockwise tangent (1 or -1); `surface_latch` the direction held at the last corner
+## and `surface_prev` the way it was moving before it; `surface_since` the seconds since that corner; `surface_lock` the
+## corner lockout (and the re-attach lock after a hop) left; `surface_oneway` that the surface is a one-way ledge;
+## `surface_shift` the displacement the caller applies this tick; `surface_event` what happened.
+var surface_n := Vector2.ZERO
+var surface_sigma := 1.0
+var surface_latch := Vector2.ZERO
+var surface_prev := Vector2.ZERO
+var surface_since := 99.0
+var surface_lock := 0.0
+var surface_oneway := false
+var surface_shift := Vector2.ZERO
+var surface_event := ""

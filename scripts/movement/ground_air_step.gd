@@ -11,7 +11,7 @@ const REBOUND_MIN_AIR := 0.12
 static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float, speed_scale := 1.0, jump_boost := 1.0) -> void:
 	s.launched = ""
 	s.wall_bounced = false
-	_timers(s, i, p, dt)
+	timers(s, i, p, dt)
 	if s.verb == "" and s.lock <= 1e-6:  # a burst or a wall kick owns the horizontal velocity
 		_horizontal(s, i, p, dt, speed_scale)
 	_gravity(s, i, p, dt)
@@ -25,7 +25,7 @@ static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float, spee
 
 ## Every timer is decremented and clamped to zero first and tested `> 0.0` after, so floating-point residue is never
 ## treated as time left. The floor refills coyote time; a press fills the buffer.
-static func _timers(s: MoveState, i: MoveInput, p: MovementProfile, dt: float) -> void:
+static func timers(s: MoveState, i: MoveInput, p: MovementProfile, dt: float) -> void:
 	s.coyote = p.coyote if i.on_floor else maxf(0.0, s.coyote - dt)
 	s.buffer = p.buffer if i.jump_pressed else maxf(0.0, s.buffer - dt)
 	s.lock = maxf(0.0, s.lock - dt)

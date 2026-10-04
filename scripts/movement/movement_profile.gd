@@ -56,6 +56,10 @@ const IDS := ["biped", "slime", "wolf", "spider"]
 @export var wall_grace := 0.1
 @export var wall_bounce_keep := 0.0
 @export var wall_bounce_min := 100.0
+## Crawl: seconds after rounding a corner before another may start (a stick wiggled at a corner would otherwise round it
+## every few frames), and how long after a corner pressing back the way it came goes back round it.
+@export var corner_lock := 0.10
+@export var crawl_back_window := 0.6
 ## The extra verbs this species has ("ooze"), and its burst rows (BurstDef: Tackle, the puddle slide, later roll and pounce).
 @export var verbs := PackedStringArray()
 @export var bursts: Array = []
