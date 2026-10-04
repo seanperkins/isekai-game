@@ -98,3 +98,16 @@ func test_the_spider_drops_with_the_spec_numbers() -> void:
 func test_every_species_falls_through_for_a_fifth_of_a_second() -> void:
 	for id in MovementProfile.IDS:
 		assert_eq(MovementProfile.of(id).fall_through, 0.2, id)
+
+func test_the_wolf_pounces_with_the_spec_numbers() -> void:
+	var rows := MovementProfile.of("wolf").bursts.filter(func(r): return (r as BurstDef).id == "pounce")
+	assert_eq(rows.size(), 1)
+	if rows.is_empty():
+		return
+	var r := rows[0] as BurstDef
+	assert_eq([r.trigger, r.speed, r.run_fraction, r.duration, r.cooldown], ["signature", 300.0, 0.5, 0.35, 0.8])
+	assert_true(r.aimed)
+	assert_true(r.ends_at_wall)
+	for id in ["biped", "slime", "spider"]:
+		var others := MovementProfile.of(id).bursts.filter(func(b): return (b as BurstDef).id == "pounce")
+		assert_eq(others.size(), 0, id)

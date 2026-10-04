@@ -16,7 +16,7 @@ var on_floor := true
 func _init(p: MovementProfile) -> void:
 	profile = p
 
-func tick(dir := 0.0, pressed := false, held := false, boost := 1.0, down := 0.0, signature := false) -> void:
+func tick(dir := 0.0, pressed := false, held := false, boost := 1.0, down := 0.0, signature := false, aim := Vector2.ZERO) -> void:
 	var i := MoveInput.new()
 	i.dir = dir
 	i.on_floor = on_floor
@@ -24,6 +24,7 @@ func tick(dir := 0.0, pressed := false, held := false, boost := 1.0, down := 0.0
 	i.jump_held = held
 	i.down = down
 	i.signature_pressed = signature
+	i.aim = aim
 	VerbRunner.step(state, i, profile, DT, 1.0, boost)
 	pos += state.velocity * DT
 	if pos.y >= -LAND_EPS and state.velocity.y >= 0.0:

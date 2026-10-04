@@ -24,3 +24,9 @@ extends Resource
 @export var flat := false
 ## Seconds before it can start again.
 @export var cooldown := 0.0
+## An aimed burst (the wolf's pounce) goes along the aim, not just the facing: velocity is `aim * (speed + run_fraction * the
+## horizontal speed the body had)`, gravity keeps acting, and the stick does not steer it.
+@export var aimed := false
+@export var run_fraction := 0.0
+## It ends when the body meets a wall in the direction it is going (a straight-up aim goes toward no wall).
+@export var ends_at_wall := false

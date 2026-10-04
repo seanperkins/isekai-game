@@ -33,6 +33,8 @@ var verb_dir := 1.0
 var cooldowns := {}
 ## A burst has started in this airtime: no second one until the body lands (one air verb per airtime).
 var air_verb_used := false
+## An aimed burst (the pounce) has touched a hostile since it began: the caller marks the first one it hit.
+var pounce_hit := false
 ## Wall verbs. Steering is locked for `lock` seconds after a wall jump or bounce; `wall_touch` says the body touched a wall last
 ## tick; `wall_stick` is the sticky time left; `wall_grace` the time a wall jump still works after leaving; `wall_side` the last
 ## wall touched; `clinging` that it is stuck or sliding this tick; `wall_bounced` that it bounced this tick; `last_vx` the x

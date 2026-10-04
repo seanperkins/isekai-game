@@ -37,6 +37,8 @@ var cast := Callable()
 var aim := Vector2.ZERO
 ## Which side a wall is on within 6 px (-1 left, 1 right, 0 none): the caller probes it; the step ignores it on the floor.
 var wall_side := 0
+## The body overlaps a hostile this tick: the caller probes it; the wolf's pounce marks the contact (MoveState.pounce_hit).
+var touching_hostile := false
 
 func copy() -> MoveInput:
 	var c := MoveInput.new()
@@ -55,6 +57,7 @@ func copy() -> MoveInput:
 	c.ray = ray
 	c.cast = cast
 	c.aim = aim
+	c.touching_hostile = touching_hostile
 	return c
 
 ## The stick as a vector (x right, y down): `dir` across and `down` minus `up` along.

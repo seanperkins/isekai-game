@@ -454,3 +454,107 @@ func test_the_slime_does_not_spread_or_slide_on_the_dropping_press() -> void:
 	VerbRunner.step(hard, j, slime, 1.0 / 60.0)
 	assert_true(hard.spread, "on a hard floor it spreads as before")
 	assert_eq(hard.verb, "puddle")
+
+# --- the wolf's pounce ---
+
+func _pounce_input(aim := Vector2.ZERO, on_floor := true) -> MoveInput:
+	var i := MoveInput.new()
+	i.on_floor = on_floor
+	i.aim = aim
+	i.signature_pressed = true
+	return i
+
+func test_a_pounce_goes_along_the_aim_at_300_plus_half_the_run_speed() -> void:
+	var wolf := MovementProfile.of("wolf")
+	var s := MoveState.new()
+	VerbRunner.step(s, _pounce_input(Vector2(1, -1).normalized()), wolf, 1.0 / 60.0)
+	assert_eq(s.verb, "pounce")
+	assert_almost_eq(s.velocity.x, 212.13, 0.1)
+	assert_almost_eq(s.velocity.y, -212.13, 0.1)
+	var running := MoveState.new()
+	running.velocity.x = 200.0
+	VerbRunner.step(running, _pounce_input(Vector2(1, -1).normalized()), wolf, 1.0 / 60.0)
+	assert_almost_eq(running.velocity.length(), 400.0, 0.1, "300 plus half of 200")
+
+func test_with_no_aim_a_pounce_goes_along_the_facing() -> void:
+	var wolf := MovementProfile.of("wolf")
+	var s := MoveState.new()
+	s.facing = -1
+	VerbRunner.step(s, _pounce_input(), wolf, 1.0 / 60.0)
+	assert_eq(s.velocity, Vector2(-300.0, 0.0))
+
+func test_gravity_acts_during_a_pounce_and_straight_up_rises_less_than_the_base_jump() -> void:
+	var wolf := MovementProfile.of("wolf")
+	var sim := MovementSim.new(wolf)
+	sim.tick(-1.0, false, false, 1.0, 0.0, true, Vector2.UP)
+	var top := 0.0
+	for k in 120:
+		sim.tick(-1.0)  # the stick is held left the whole time
+		top = minf(top, sim.pos.y)
+		if k < 20:
+			assert_eq(sim.state.velocity.x, 0.0, "the stick does not steer a pounce")
+		if sim.on_floor:
+			break
+	assert_between(-top, 33.0, 37.0, "300 squared over twice 1344 is 33.5, plus 2.5 for the 60 Hz step")
+	assert_lt(-top, 63.25)
+
+func test_a_pounce_lasts_0_35_s_then_waits_0_8_s_from_its_end() -> void:
+	var wolf := MovementProfile.of("wolf")
+	var s := MoveState.new()
+	VerbRunner.step(s, _pounce_input(Vector2.RIGHT), wolf, 1.0 / 60.0)
+	var ticks := 1
+	while s.verb == "pounce" and ticks < 60:
+		VerbRunner.step(s, _pounce_input(Vector2.ZERO, true).copy(), wolf, 1.0 / 60.0)
+		ticks += 1
+	assert_between(ticks, 21, 23, "0.35 s")
+	var calm := MoveInput.new()
+	for _k in 41:
+		VerbRunner.step(s, calm, wolf, 1.0 / 60.0)
+	VerbRunner.step(s, _pounce_input(Vector2.RIGHT), wolf, 1.0 / 60.0)
+	assert_eq(s.verb, "", "0.7 s after the end it is cooling down")
+	for _k in 9:
+		VerbRunner.step(s, calm, wolf, 1.0 / 60.0)
+	VerbRunner.step(s, _pounce_input(Vector2.RIGHT), wolf, 1.0 / 60.0)
+	assert_eq(s.verb, "pounce", "0.8 s after the end it goes again")
+
+func test_a_pounce_ends_at_a_wall_it_is_moving_toward() -> void:
+	var wolf := MovementProfile.of("wolf")
+	var right := MoveState.new()
+	VerbRunner.step(right, _pounce_input(Vector2.RIGHT), wolf, 1.0 / 60.0)
+	var away := MoveInput.new()
+	away.wall_side = -1
+	VerbRunner.step(right, away, wolf, 1.0 / 60.0)
+	assert_eq(right.verb, "pounce", "a wall behind it does not end it")
+	var toward := MoveInput.new()
+	toward.wall_side = 1
+	VerbRunner.step(right, toward, wolf, 1.0 / 60.0)
+	assert_eq(right.verb, "", "a wall ahead does")
+	var up := MoveState.new()
+	VerbRunner.step(up, _pounce_input(Vector2.UP), wolf, 1.0 / 60.0)
+	VerbRunner.step(up, toward, wolf, 1.0 / 60.0)
+	assert_eq(up.verb, "pounce", "straight up is moving toward no wall")
+
+func test_one_pounce_per_airtime() -> void:
+	var wolf := MovementProfile.of("wolf")
+	var s := MoveState.new()
+	var air := MoveInput.new()
+	air.on_floor = false
+	VerbRunner.step(s, _pounce_input(Vector2.RIGHT, false), wolf, 1.0 / 60.0)
+	assert_eq(s.verb, "pounce")
+	for _k in 30:
+		VerbRunner.step(s, air, wolf, 1.0 / 60.0)
+	s.cooldowns.clear()
+	VerbRunner.step(s, _pounce_input(Vector2.RIGHT, false), wolf, 1.0 / 60.0)
+	assert_eq(s.verb, "", "the air verb is spent until it lands")
+
+func test_touching_a_hostile_marks_the_pounce() -> void:
+	var wolf := MovementProfile.of("wolf")
+	var s := MoveState.new()
+	var touch := MoveInput.new()
+	touch.touching_hostile = true
+	VerbRunner.step(s, touch, wolf, 1.0 / 60.0)
+	assert_false(s.pounce_hit, "contact outside a pounce is ignored")
+	VerbRunner.step(s, _pounce_input(Vector2.RIGHT), wolf, 1.0 / 60.0)
+	assert_false(s.pounce_hit)
+	VerbRunner.step(s, touch, wolf, 1.0 / 60.0)
+	assert_true(s.pounce_hit)

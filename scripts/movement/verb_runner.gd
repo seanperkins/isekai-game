@@ -79,6 +79,8 @@ static func _bursts(s: MoveState, i: MoveInput, p: MovementProfile, dt: float) -
 	if row == null or _ended(row, s, i):
 		_end(row, s)
 		return
+	if row.aimed and i.touching_hostile:
+		s.pounce_hit = true
 	s.verb_left -= dt
 	if row.decel > 0.0:
 		s.velocity.x = move_toward(s.velocity.x, 0.0, row.decel * dt)
@@ -103,12 +105,19 @@ static func _begin(row: BurstDef, s: MoveState, i: MoveInput) -> void:
 	s.air_verb_used = s.air_verb_used or not i.on_floor
 	s.verb = row.id
 	s.verb_left = row.duration
+	if row.aimed:
+		var way := i.aim.normalized() if i.aim != Vector2.ZERO else Vector2(s.facing, 0.0)
+		s.verb_dir = signf(way.x)  # 0 for straight up or down: no wall is ahead
+		s.pounce_hit = false
+		s.velocity = way * (row.speed + row.run_fraction * absf(s.velocity.x))
+		return
 	s.verb_dir = float(s.facing) if row.speed > 0.0 else signf(s.velocity.x)
 	s.velocity.x = s.verb_dir * (row.speed if row.speed > 0.0 else absf(s.velocity.x))
 
 static func _ended(row: BurstDef, s: MoveState, i: MoveInput) -> bool:
 	return s.verb_left <= 1e-6 \
 		or (row.needs_floor and not i.on_floor) \
+		or (row.ends_at_wall and i.wall_side != 0 and s.verb_dir * float(i.wall_side) > 0.0) \
 		or (row.needs_down and i.down < SPREAD_DOWN) \
 		or (row.min_speed > 0.0 and absf(s.velocity.x) < row.min_speed)
 
