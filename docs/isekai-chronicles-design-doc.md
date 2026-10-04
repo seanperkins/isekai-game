@@ -1,4 +1,4 @@
-<!-- Source of truth for the Isekai Chronicles design. The claude.ai Claude Docs copy is no longer kept in sync. Last updated 2026-10-03. -->
+<!-- Source of truth for the Isekai Chronicles design. The claude.ai Claude Docs copy is no longer kept in sync. Last updated 2026-10-04. -->
 
 # Isekai Chronicles — Design Doc
 
@@ -17,13 +17,13 @@ Isekai Chronicles is a side-scrolling platformer built in Godot where you die, r
 The first time you play, the game opens with an unavoidable truck death, then a goddess who reincarnates you as a slime. The truck scene never plays again: it is a joke for anyone who knows isekai, not a real introduction.
 
 1. The player is dropped into the world and a truck comes at them.
-2. Working idea: play it like a JRPG, a turn-based fight where you try to dodge the trucks. If they dodge it, another truck comes. And another. Death is inevitable.
+2. Decided (2026-10-04): a short, rigged, turn-based dodge. A tiny JRPG menu where you pick dodge, another truck comes, and another; three trucks, a few seconds each, and it plays once. Death is inevitable.
 3. After dying, the player meets a god or goddess who apologizes: the death was an accident.
 4. She offers to reincarnate them and presents the options. At first there is only one: slime.
 
 The goddess is a recurring character. She remembers every previous life, reacts to how you died, and her reincarnation menu grows over the course of the game.
 
-She seems a helpful ally, and stays that way until the reveal: she is using you to harvest souls from this world, and eventually becomes the antagonist.
+She seems a helpful ally, and stays that way until the reveal: she is using you to harvest souls from this world, and eventually becomes the antagonist. Decided (2026-10-04): the reveal comes late, before the last area, so she stays a helpful ally for almost the whole game.
 
 The voice that announces skills and evolutions might be the voice of the world.
 
@@ -39,7 +39,7 @@ Starting with three archetypes that give a wide spread of feel:
 
 - Bouncer (slime) — the current first form. It should feel like a slime from a fantasy game: squash and stretch, gooey physics and springiness, split by place. Tight on the ground, so walking and platforming stay precise; gooey in the air and on walls; springy landings.
 - Crawler (spider) — sticks to walls and ceilings
-- Biped (monster-people) — grounded but flexible; the bucket for goblins, skeletons and other undead, maybe elf-like fey
+- Biped (monster-people) — grounded but flexible; the bucket for goblins, skeletons and other undead. The elf-like fey was dropped for now (2026-10-04)
 
 The player is always a monster, never a human — more on-theme and it sidesteps the "am I the bad guy" problem. Biped species share the walk-run-jump controller but differ in essence method and skills (a goblin learns, a skeleton drains).
 
@@ -65,9 +65,9 @@ The improviser: weak alone, dangerous in how it scavenges and builds. Frantic an
 
 - **Scavenge and craft:** picks up junk, drops and gear, and turns them into makeshift weapons or thrown items. Its skill tree is about what it can build and how fast.
 - **Power from inventory:** its strength comes from what it carries, not its own body — a different progression texture.
-- **Two layers:** weak in melee, dangerous with what it carries. The active layer is improvised throwables and traps: pick up junk and combine items into one-shot consumables mid-fight. The passive layer is one weapon slot and one armor slot, filled from loot. It is the richest option and the biggest build; the open problem is the controller, which has no free button for a hotbar, a combine action and a gear swap (see the review page, section 6).
-- **Essence method:** it does not devour for essence. A goblin eats living things only to heal. It learns the nature of things instead, through combat, taming and interactions, and that learning is how it grows. How learning turns into essence is open.
-- **Taming:** a goblin tamer evolution is wanted. Taming is one of the ways a goblin learns, and it is a new system: how it works and what a tamed creature does are open.
+- **Two layers:** weak in melee, dangerous with what it carries. The active layer is improvised throwables and traps: pick up junk and combine items into one-shot consumables mid-fight. The passive layer is one weapon slot and one armor slot, filled from loot. It is the richest option and the biggest build. Decided (2026-10-04): the controller has no free button for a hotbar, a combine action and a gear swap, so a radial menu on a held modifier button opens a quick wheel for items, combine and gear, with time slowed. That keeps the face buttons free for movement and Tackle. Items combine by a fixed recipe table: two items make one throwable, and recipes are discovered through the goblin's lessons and interactions. The recipes themselves and what the gear slots hold are still open.
+- **Essence method:** it does not devour for essence. A goblin eats living things only to heal. It learns the nature of things instead, through combat, taming and interactions, and that learning is how it grows. Decided (2026-10-04): lessons per creature type. The first defeat, taming or interaction with each creature type teaches its elements and pays that essence once, and repeats pay a small trickle, so a goblin's learning follows the bestiary checklist.
+- **Taming:** a goblin tamer evolution is wanted. Taming is one of the ways a goblin learns, and it is a new system. Decided (2026-10-04): you offer a weakened creature a fitting item (food or a part) and it becomes a companion that follows and fights, one at a time. The companion fights beside you and is lost for good if it dies, and then you tame another; it grows stronger as your goblin learns its type. What each creature adds is still open.
 - **Items in every form:** all goblin evolutions can use items. Early on it throws what it finds, rocks first.
 
 ### Undead / skeleton (biped)
@@ -80,7 +80,7 @@ Undead is a branching evolution tree, not one creature. You start as a bare skel
 
 The skeleton forks before you ever reach flesh, so undead has a real branching tree from the very first form.
 
-**Essence and items depend on the type.** Undead drain life force from living creatures. The exceptions are the zombie and the vampire, which devour instead (flesh for the zombie, blood for the vampire). Skeleton types can graft: parts from kills attach to the body and show on the sprite, such as ribs and flesh toward zombie and ghoul, a bow-arm toward archer, a skull and focus toward lich. Vampires can use items. The vampire is a new undead form tied to blood essence, and where it sits on the tree is open. What a graft gives (a power, stats, a nudge toward a path) and how many parts a skeleton can wear are also open.
+**Essence and items depend on the type.** Undead drain life force from living creatures. The exceptions are the zombie and the vampire, which devour instead (flesh for the zombie, blood for the vampire). Skeleton types can graft: parts from kills attach to the body and show on the sprite, such as ribs and flesh toward zombie and ghoul, a bow-arm toward archer, a skull and focus toward lich. Vampires can use items. The vampire is a new undead form tied to blood essence. Decided (2026-10-04): it is the top of the flesh path (skeleton to zombie to ghoul to vampire), so blood essence arrives with it. A graft gives a passive tied to the part, as the slime's parts do, and also nudges the skeleton toward one of its paths. A part's shape steers the path: ribs and flesh toward zombie and ghoul, a bow-arm toward archer, a skull or focus toward lich. The full list of graftable parts is still open.
 
 **Essence-acquisition method** — varies by race group, so each form feels distinct while sharing one underlying system:
 
@@ -91,22 +91,22 @@ The skeleton forks before you ever reach flesh, so undead has a real branching t
 | Goblin | Biped | Eats living things only to heal; learns the nature of things through combat, taming and interactions; every form can use items |
 | Skeleton / undead | Biped | Drain life force from living creatures; zombie and vampire devour flesh and blood instead; skeleton types graft; vampires use items |
 
-Other possible methods: commune or bond for pack beasts (the goblin's taming may cover it).
+Decided (2026-10-04): future species may use two more methods: commune or bond with a pack (reusing the goblin's taming system), and steal essence from a living enemy without killing it. The wolf, the later quadruped, devours living things like the spider, with its pounce as the kill verb. The elf-like fey biped is dropped for now.
 
 ### Items
 
 Besides essence, the world holds items you can collect: plain materials (stones, moss, sticks) and monster parts (a scorpion's tail, dragon scales). The game gets one shared set of items, and each species handles them in its own way, so the same pickup means something different to each body. Working examples:
 
-- **Slime** devours items as well: everything gives it essence. A part it holds sits visibly inside the jelly and grants a passive tied to the part (a scorpion tail gives a sting, dragon scales give armor). Some items are too strong to digest, or take time to digest. Working reading, to confirm: a held part is a slot that grants its passive while it digests and then turns into essence, and a part too strong to digest stays as a lasting passive. A held part stays in the body until you die, and then goes into your remains. A body holds only a few parts, in visible slots that grow with evolution: about two at stage 1, rising to about five at stage 4 (working numbers). Parts compete for slots, and a higher form carries more.
-- **Spider** carries items in cocoons: it webs what it wants to keep and carries a couple at a time. Its own essence comes only from living things. Cocoons count as carried items, so they stay in your remains if you die. Whether a cocoon can also hold a living or dead creature for later is open.
+- **Slime** devours items as well: everything gives it essence. A part it holds sits visibly inside the jelly and grants a passive tied to the part (a scorpion tail gives a sting, dragon scales give armor). Some items are too strong to digest, or take time to digest. Decided (2026-10-04): a held part is a slot that grants its passive while it digests and then turns into essence, and a part too strong to digest stays as a lasting passive. A held part stays in the body until you die, and then goes into your remains. A body holds only a few parts, in visible slots that grow with evolution: about two at stage 1, rising to about five at stage 4 (working numbers). Parts compete for slots, and a higher form carries more. Decided (2026-10-04): slot counts are tuned per species rather than one shared curve (working direction: more for the undead, whose grafting is their identity, and fewer for the spider, whose cocoons are bulky); the numbers are open.
+- **Spider** carries items in cocoons: it webs what it wants to keep and carries a couple at a time. Its own essence comes only from living things. Cocoons count as carried items, so they stay in your remains if you die. Decided (2026-10-04): a cocoon can also hold living prey, webbed now and eaten later; a cocoon with prey is a carried item like any other.
 - **Goblin** carries and crafts: every goblin form can use items, and it throws what it finds (rocks first), builds throwables and wears gear. It eats living things only to heal; its strength comes from its inventory.
 - **Undead** depends on the type: skeleton types graft parts onto their bodies (a scorpion tail on a skeleton), and vampires use items. Zombies and vampires devour flesh and blood; the rest drain life force.
 
-**Parts come from corpses.** A kill leaves a corpse you can harvest a part from. Rare creatures and bosses leave a rare part on top. Plain materials (stones, moss, sticks) are simply lying in the world. Decided: the old "eat it or harvest it, not both" rule is species-specific. The slime devours corpses and items too, so for it a corpse is essence now or a part for a slot. The spider and the draining undead take essence from a creature while it is alive, so their choice comes at the kill: consume it alive for essence, or kill it and harvest a part. The goblin eats only to heal and learns by fighting, so a corpse is simply parts. Today a creature is eaten alive after a stun and leaves no corpse, which already matches the living-only eaters, so the new work is the corpse and the harvest. Eat-or-harvest also adds a second action at every kill on a controller with no free button, so it likely borrows a button while a corpse is in reach, as "Y: attune" does at rebirth pools.
+**Parts come from corpses.** A kill leaves a corpse you can harvest a part from. Rare creatures and bosses leave a rare part on top. Plain materials (stones, moss, sticks) are simply lying in the world. Decided: the old "eat it or harvest it, not both" rule is species-specific. The slime devours corpses and items too, so for it a corpse is essence now or a part for a slot. The spider and the draining undead take essence from a creature while it is alive, so their choice comes at the kill: consume it alive for essence, or kill it and harvest a part. The goblin eats only to heal and learns by fighting, so a corpse is simply parts. Today a creature is eaten alive after a stun and leaves no corpse, which already matches the living-only eaters, so the new work is the corpse and the harvest. Decided (2026-10-04): a kill has two outcomes. Stun and eat it alive as today, which gives essence and leaves no corpse; or kill it plainly, which leaves a corpse that can be harvested for a part (or, for the slime, devoured). Eat-or-harvest also adds a second action at every kill on a controller with no free button, so it likely borrows a button while a corpse is in reach, as "Y: attune" does at rebirth pools.
 
-**On death, items stay where you fell.** Your next life can go back for them as whatever species it is, using that species' own verb. The longer it takes to return, the more of them go missing, so a quick retrieval keeps everything and a long absence costs you. The clock runs only while you are playing your next life, not while paused or in menus. Soft items (moss, flesh, sticks) go first; hard ones (stones, scales, bone) go last. Only one remains pile exists: if you die again before returning, the old pile is replaced. Essence is different: it is lost, and only the seed carries over.
+**On death, items stay where you fell.** Your next life can go back for them as whatever species it is, using that species' own verb. The longer it takes to return, the more of them go missing, so a quick retrieval keeps everything and a long absence costs you. The clock runs only while you are playing your next life, not while paused or in menus. Soft items (moss, flesh, sticks) go first; hard ones (stones, scales, bone) go last. Decided (2026-10-04): the clock is tight: soft items start vanishing after about 2 minutes of your next life and hard items after about 8 (tuned as data), so a quick retrieval matters. Only one remains pile exists: if you die again before returning, the old pile is replaced. Essence is different: it is lost, and only the seed carries over.
 
-This is a new system: the game has no drops, pickups or inventory today. It is designed now and built after the spider and the essence overhaul: the first spider ships with plain devour, and the corpse system, harvesting, wrap and the other item verbs arrive together as one items milestone, built once for every species. Still open: the item list, how corpses and the stun-and-eat flow fit together, how fast the clock runs and exactly which items count as soft, and what each species' verb gives in practice.
+This is a new system: the game has no drops, pickups or inventory today. It is designed now and built after the spider and the essence overhaul: the first spider ships with plain devour, and the corpse system, harvesting, wrap and the other item verbs arrive together as one items milestone, built once for every species. Still open: the item list, exactly which items count as soft or hard, and what each species' verb gives in practice.
 
 ## Essence, levels, skills and evolution
 
@@ -157,18 +157,18 @@ Evolving should be as frictionless as possible. Working idea: when you hit a thr
 
 Working idea: the skill screen shows the skill tree and its branches, based on what you have unlocked with this species before. The tree grows as you find it: only discovered nodes show, plus ??? stubs for the branches of powers you own, and a recipe's exact ingredients appear only once earned.
 
-**Tree screen: one combined, zoomable graph.** Powers (with their evolution branches) and body forms appear as connected nodes in a single tree that can zoom in and out. If body forms are hard to show alongside powers, fall back to showing one form line at a time, plus where the next evolution is once the player has unlocked it. The first version is read-only, with one zoom toggle and no mouse; how a power two species share shows in each tree is open.
+**Tree screen: one combined, zoomable graph.** Powers (with their evolution branches) and body forms appear as connected nodes in a single tree that can zoom in and out. If body forms are hard to show alongside powers, fall back to showing one form line at a time, plus where the next evolution is once the player has unlocked it. The first version is read-only, with one zoom toggle; the mouse (click and wheel), the left stick and the D-pad move and select. Decided (2026-10-04): a power two species share shows in the tree of the species that has it innately; for any other species it is a ??? stub until that species earns it.
 
 ## Reincarnation and soul progression
 
 What you can reincarnate as reflects what your soul is capable of becoming, and that grows across runs.
 
-- **Species unlocks:** each species has its own unlock condition before it appears on the goddess's menu. The default rule is to eat or defeat N of that creature, so the bestiary doubles as the species checklist; a special species can swap in its own condition (the rare Taratect, say). N and the list of special cases are still open.
-- **Soul points:** earned on runs and kept between lives.
-- **Spending soul points:** both on unlocking new species and on permanent perks.
+- **Species unlocks:** each species has its own unlock condition before it appears on the goddess's menu. The default rule is to eat or defeat N of that creature, so the bestiary doubles as the species checklist. Decided (2026-10-04): N scales by rarity: about 10 for a common creature, 5 for an uncommon one and 1 to 3 for a rare one (tuned as data). A special species swaps in its own condition, and two kinds exist: defeat a rare creature or boss (the Taratect, the Cave Serpent), or eat the creature while in a given form (a bat eaten by a spider, say). The exact N per creature and which species take a special condition are still open.
+- **Soul points:** earned on runs, mostly by banking essence at an altar at a flat rate whatever its element (the amount is tuned as data), and kept between lives.
+- **Spending soul points:** both on unlocking new species and on permanent perks. Decided (2026-10-04): four perks, each bought several times at a rising price: an extra part slot, slower remains decay, a bigger death seed and stronger base stats. Each perk is sold at one fixed altar (see Altars).
 - **A stronger soul:** can unlock things earlier within a species, such as starting further along its evolution.
 - **Where and how far:** the head start has two parts and one currency. The altar you choose decides *where* you start; soul points, spent at the altar, buy *how far along* (a starting level, a power). There are no free kits: the rebirth pools and their kits are removed and the altars replace them. Whether a soul can start a life past stage 1 of the evolution tree is still open.
-- **Altars:** decided (2026-10-03): the **goddess's altars replace the rebirth pools**. At an altar you attune it (it becomes a place you respawn), bank essence into soul points, and meet the goddess, who offers your next body and head start. The pools are gone; Glow Pools (plain rest) are a separate object and are not decided here. How many altars there are, where they stand, and what the goddess's menu shows at each are still open.
+- **Altars:** decided (2026-10-03): the **goddess's altars replace the rebirth pools**. At an altar you attune it (it becomes a place you respawn), bank essence into soul points, and meet the goddess, who offers your next body and head start. The pools are gone; Glow Pools (plain rest) are a separate object and are not decided here. Decided (2026-10-04): there is one altar per area (Cave, Grotto, Flooded and Deep), replacing today's four pools, and the Cave mouth altar is the first. Every altar shows the same menu (the species you have unlocked and the soul-point head start) and also sells one local perk: the Cave altar base stats, the Grotto altar the extra part slot, the Flooded altar slower remains decay and the Deep altar the bigger death seed. The soul-point prices are still open.
 
 ## World structure and gates
 
@@ -183,9 +183,9 @@ One fixed, hand-built world, the same every life, with gates between sections th
 
 Working idea: a run ends when you die, or when you beat the god of reincarnation.
 
-**The god of reincarnation is the goddess**, the same character as the helpful ally, once the reveal turns her into the antagonist. Every soul point you bank at an altar feeds her, so banking is the story's central choice: spend essence on powers now, or bank it for permanent progress. The Cave Serpent, which the game had planned as its goal, becomes an area boss on the way to her.
+**The god of reincarnation is the goddess**, the same character as the helpful ally, once the reveal turns her into the antagonist. Every soul point you bank at an altar feeds her, so banking is the story's central choice: spend essence on powers now, or bank it for permanent progress. Decided (2026-10-04): the reveal comes late, before the last area, and after it banking stops: altars can no longer bank essence into soul points, perks are bought with essence directly, and a way to confront her opens: a last area past the Deep, unlocked by the reveal, ends in her fight. You keep the soul points you hold and can still spend them on species and head starts. Her fight is fixed: her strength does not depend on how much you banked, so banking is purely a progression choice. The Cave Serpent, which the game had planned as its goal, becomes an area boss on the way to her.
 
-Altars don't end a run; they let you bank essence into soul points and meet the goddess. Whether a run can end any other way is still open.
+Altars don't end a run; they let you bank essence into soul points and meet the goddess. Decided (2026-10-04): a run ends only by dying or by beating her; there is no other ending.
 
 **Essence seed (working direction):** when you die, you lose the essence you hold, but what killed you leaves a small essence seed of its element, and your next life starts with it — dying to fire starts you with a little fire essence. Any elemental death counts: a creature kill seeds that creature's strongest element, and a hazard seeds its own (poison water, drowning); a fall or a crush seeds nothing. The seed is a small fixed amount, independent of how much you held, so banking at a shrine and spending on evolutions stay the only ways to keep essence. The exact amount and whether the seed carries across species are still open.
 
@@ -209,27 +209,42 @@ The combination here is novel, but several games cover pieces of it — worth st
 - [ ] Which essences feed which evolution branches for each species
 - [x] Essence method for undead — drain life force; zombie and vampire devour; skeleton types graft; vampires use items
 - [x] Goblin essence — no devouring for essence; it learns through combat, taming and interactions
-- [ ] Essence method for any future species
-- [ ] How a goblin's learning becomes essence, and how taming works (what a tamed creature does)
-- [ ] Where the vampire sits on the undead tree
-- [ ] Which parts the undead can graft, how many it can wear, and which path each part pushes toward
-- [ ] Kits for the remaining bipeds (elf-like fey) and the later quadruped
+- [x] Essence method for future species — commune or bond with a pack, or steal without killing
+- [x] How a goblin's learning becomes essence (lessons per creature type) and how taming works (offer an item, the creature follows you)
+- [x] Companions fight beside you, one at a time, and are lost for good if they die
+- [ ] What each tamed creature adds
+- [x] Where the vampire sits on the undead tree — the top of the flesh path
+- [x] What a graft gives — a passive tied to the part, plus a nudge toward a path
+- [x] Which path a graft pushes toward — the part's shape (flesh to zombie, bow-arm to archer, skull or focus to lich)
+- [ ] The list of parts the undead can graft
+- [x] The later quadruped, the wolf — devours living things, pounce as its kill verb (verbs in the species movesets spec)
+- [x] The elf-like fey biped — dropped for now (2026-10-04)
 - [x] Items — collectable materials and monster parts, one shared set handled differently per species
-- [ ] Whether a spider's cocoon can hold a creature, and whether a slime's held part digests into essence
-- [ ] How the goblin's crafting works in practice (which items combine, what the gear slots hold) and how its hotbar, combine and gear swap fit a controller with no free button
-- [ ] The item list, how corpses fit the stun-and-eat flow, how fast remains lose items, and which items count as soft or hard
+- [x] Whether a spider's cocoon can hold a creature (living prey, eaten later) and whether a slime's held part digests into essence (yes, then a lasting passive for parts too strong)
+- [x] How the goblin's hotbar, combine and gear swap fit the controller — a radial menu on a held modifier, time slowed
+- [x] How the goblin's items combine — a fixed recipe table, recipes learned through lessons and interactions
+- [ ] The goblin's recipes, and what its gear slots hold
+- [x] How corpses fit the stun-and-eat flow (two outcomes) and how fast remains lose items (tight: about 2 and 8 minutes)
+- [ ] The item list, and which items count as soft or hard
 - [x] What the slime's absorb gives — a passive tied to the part
 - [x] What the spider's cocoon does — carries items, a couple at a time
-- [ ] What the undead's graft gives in practice, and how many slots the spider, goblin and undead bodies get
-- [ ] Each species' unlock condition
-- [ ] Which permanent perks soul points buy
+- [x] Slot counts — tuned per species, not one shared curve
+- [ ] The slot numbers for the slime, spider, goblin and undead (tuned as data)
+- [x] Species unlock rule — eat or defeat N, scaled by rarity; special cases are defeating a rare creature or boss, or eating it in a given form
+- [ ] The N for each creature, and which species take a special condition (tuned as data)
+- [x] Permanent perks soul points buy — extra part slot, slower remains decay, bigger death seed, stronger base stats, each bought several times
 - [x] Altars replace the rebirth pools: attune, bank essence, meet the goddess
-- [ ] How many altars, where they stand, what the goddess's menu offers at each, and the soul-point prices
-- [ ] How a run can end besides death or beating the god of reincarnation, if at all
+- [x] Altars — one per area, the same menu everywhere plus one fixed local perk each
+- [ ] The soul-point prices and the banking rate (tuned as data)
+- [x] How a run can end besides death or beating the god of reincarnation — it cannot
 - [ ] Which combinations of essences unlock which powers (lightning and ice are the first two)
 - [x] How an evolution's cost is set — per power, in its own element(s)
 - [ ] The actual essence amounts each evolution costs
 - [x] Skill tree layout — one combined zoomable graph, with a one-evolution-at-a-time fallback
 - [x] Tree controls — one zoom toggle; the mouse (click, wheel), the left stick and the D-pad move and select; read-only in v1
-- [ ] How a skill two species share shows in each tree
-- [ ] When the goddess's reveal happens, and what changes after it
+- [x] How a skill two species share shows in each tree — in the owning species' tree; a ??? stub for any other species until it earns the skill
+- [x] When the goddess's reveal happens, and what changes after it — late, before the last area; banking stops and a route to confront her opens
+- [x] After the reveal — held soul points are kept and spendable; her fight is fixed, not scaled by what you banked
+- [x] The route to confront her — a last area past the Deep, unlocked by the reveal
+- [ ] What the last area holds
+- [x] The opening truck scene — a short, rigged, turn-based dodge, three trucks, plays once
