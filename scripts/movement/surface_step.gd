@@ -15,6 +15,8 @@ const STICK := 3.0
 const NONE := 0
 const HARD := 1
 const ONEWAY := 2
+## A hard solid that refuses grip (a "slick" surface): it blocks the body but the spider never grips, crawls on or hangs from it.
+const SLICK := 3
 ## The stick must be this far along a surface to move, and a latch holds while the stick is within acos(LATCH_DOT) of it.
 const DEAD := 0.2
 const LATCH_DOT := 0.7

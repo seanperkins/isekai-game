@@ -24,7 +24,8 @@ var on_oneway_floor := false
 ## The crawl's two world probes, filled by the caller (the sandbox now, the player later), both measured from the body's
 ## centre with its current box. `sweep(motion: Vector2) -> Dictionary` is `{}` when the box can move that far, else
 ## `{"travel": Vector2, "normal": Vector2}` for the first hard solid it meets. `ray(from: Vector2, to: Vector2, hard_only:
-## bool) -> int` is 0 for nothing, 1 for a hard solid and 2 for a one-way ledge (offsets from the centre). Without them a
+## bool) -> int` is 0 for nothing, 1 for a hard solid, 2 for a one-way ledge and 3 for a slick one, a hard solid that refuses
+## grip (offsets from the centre). A sweep hit and a cast hit also carry `"slick": bool`. Without them a
 ## species that crawls is not on a surface and uses the ground step.
 var sweep := Callable()
 var ray := Callable()
