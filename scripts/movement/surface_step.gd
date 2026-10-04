@@ -31,7 +31,10 @@ static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float, jump
 	s.surface_since += dt
 	s.surface_lock = maxf(0.0, s.surface_lock - dt)
 	if s.surface_n == Vector2.ZERO:
-		return _attach(s, i)
+		if not _attach(s, i):
+			return false
+		GroundAirStep.timers(s, i, p, dt)  # a press on the tick it grips is buffered, and fires on the next
+		return true
 	s.launched = ""
 	GroundAirStep.timers(s, i, p, dt)
 	if s.buffer > 0.0:
@@ -70,6 +73,7 @@ static func _hop(s: MoveState, p: MovementProfile, jump_boost: float) -> void:
 	s.launched = "hop"
 	s.jumping = n == Vector2.UP
 	s.buffer = 0.0
+	s.coyote = 0.0  # the floor refilled it this tick; the hop is the jump, there is no second one in the air
 	s.surface_n = Vector2.ZERO
 	s.surface_lock = REATTACH_LOCK
 	s.surface_event = "hop"
@@ -88,7 +92,8 @@ static func _attach(s: MoveState, i: MoveInput) -> bool:
 		if kind != NONE:
 			n = Vector2.UP
 	if n == Vector2.ZERO and i.wall_side != 0 and stick.x * float(i.wall_side) > 0.5:
-		kind = i.ray.call(Vector2.ZERO, Vector2(float(i.wall_side) * (HT + 2.0 * STICK), 0.0), true)
+		# no further than the support probe holds (HN + STICK), or the first move up the wall finds no surface and drops
+		kind = i.ray.call(Vector2.ZERO, Vector2(float(i.wall_side) * (HN + STICK), 0.0), true)
 		if kind == HARD:
 			n = Vector2(-float(i.wall_side), 0.0)
 	if n == Vector2.ZERO and i.on_ceiling and stick.y < -0.5:

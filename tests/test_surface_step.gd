@@ -321,3 +321,51 @@ func test_no_probes_means_not_a_crawler() -> void:
 	i.on_floor = true
 	assert_false(SurfaceStep.step(s, i, spider, DT))
 	assert_eq([s.surface_shift, s.surface_event], [Vector2.ZERO, ""])
+
+func test_a_press_on_the_attach_tick_is_kept() -> void:
+	var w := FakeSurfaceWorld.build_spike_terrain()
+	w.pos = Vector2(100, -12)
+	var s := MoveState.new()
+	var i := _make_input(w)
+	i.on_floor = true
+	i.jump_pressed = true
+	i.jump_held = true
+	assert_true(SurfaceStep.step(s, i, spider, DT))
+	assert_eq(s.surface_event, "attach")
+	w.apply(s)
+	i.jump_pressed = false
+	assert_true(SurfaceStep.step(s, i, spider, DT))
+	assert_eq(s.launched, "hop", "the landing press fires one tick later")
+
+func test_a_floor_hop_leaves_no_second_jump() -> void:
+	var a := _on(Vector2(40, -12), Vector2.UP)
+	var w: FakeSurfaceWorld = a[0]
+	var s: MoveState = a[1]
+	_tick(w, s, Vector2.ZERO, true)
+	assert_eq(s.coyote, 0.0)
+	var air := MoveInput.new()
+	air.on_floor = false
+	air.jump_pressed = true
+	air.jump_held = true
+	GroundAirStep.step(s, air, spider, DT)
+	GroundAirStep.step(s, air, spider, DT)
+	assert_eq(s.launched, "", "no coyote jump a few ticks after the hop")
+
+func test_a_wall_grip_needs_the_wall_within_what_the_support_probe_holds() -> void:
+	var far := FakeSurfaceWorld.build_spike_terrain()
+	far.pos = Vector2(319, -60)  # 19 px from the block's right face: the support probe reaches 15
+	var fi := _make_input(far, Vector2.LEFT)
+	fi.wall_side = -1
+	var fs := MoveState.new()
+	assert_false(SurfaceStep.step(fs, fi, spider, DT), "too far to hold")
+	var near := FakeSurfaceWorld.build_spike_terrain()
+	near.pos = Vector2(313, -60)
+	var ni := _make_input(near, Vector2.LEFT)
+	ni.wall_side = -1
+	var ns := MoveState.new()
+	assert_true(SurfaceStep.step(ns, ni, spider, DT))
+	near.apply(ns)
+	var events := _run(near, ns, Vector2.UP, 12)
+	assert_false(events.has("convex_nothing"), "it climbs, it does not drop: %s" % [events])
+	assert_eq(ns.surface_n, Vector2.RIGHT)
+	assert_lt(near.pos.y, -75.0)
