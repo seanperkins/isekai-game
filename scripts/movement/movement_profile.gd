@@ -34,8 +34,14 @@ const IDS := ["biped", "slime", "wolf", "spider"]
 @export var release_factor := 0.35
 @export var coyote := 0.1
 @export var buffer := 0.1
-## A buffered jump that fires after at least 0.12 s of air launches this much higher (rise, so speed x sqrt(1 + it)).
+## A buffered jump that fires after at least 0.12 s of air (a timed rebound) launches this much higher per link of a chain
+## (rise, so speed x sqrt(1 + it)), up to rebound_cap in total (0 caps the chain at one link).
 @export var rebound_rise := 0.0
+@export var rebound_cap := 0.0
+## Hold bounce: landing with jump held and an impact of at least bounce_min_impact relaunches at bounce_keep times the
+## last launch speed (0 for none).
+@export var bounce_keep := 0.0
+@export var bounce_min_impact := 250.0
 ## The extra verbs this species has ("ooze"), and its burst rows (BurstDef: Tackle, the puddle slide, later roll and pounce).
 @export var verbs := PackedStringArray()
 @export var bursts: Array = []
