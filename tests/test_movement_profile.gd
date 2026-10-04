@@ -118,3 +118,22 @@ func test_the_wolf_vaults_with_the_spec_numbers_and_nobody_else_does() -> void:
 	assert_eq([wolf.vault_speed, wolf.vault_step, wolf.vault_margin], [150.0, 24.0, 6.0])
 	for id in ["biped", "slime", "spider"]:
 		assert_false(MovementProfile.of(id).verbs.has("vault"), id)
+
+func test_the_biped_rolls_and_slides_with_the_spec_numbers() -> void:
+	var rows := {}
+	for r in MovementProfile.of("biped").bursts:
+		rows[(r as BurstDef).id] = r
+	assert_eq(rows.keys().size(), 2)
+	if rows.size() != 2:
+		return
+	var roll := rows["roll"] as BurstDef
+	assert_eq([roll.trigger, roll.speed, roll.duration, roll.max_start_speed, roll.iframes, roll.cooldown], ["signature", 220.0, 0.35, 100.0, 0.2, 0.3])
+	assert_true(roll.flat and roll.needs_floor)
+	var slide := rows["slide"] as BurstDef
+	assert_eq([slide.trigger, slide.speed, slide.duration, slide.min_start_speed, slide.decel, slide.min_speed, slide.iframes, slide.cooldown], ["signature", 0.0, 0.4, 100.0, 350.0, 20.0, 0.2, 0.3])
+	assert_true(slide.flat and slide.needs_floor)
+	assert_eq(roll.cooldown_group, slide.cooldown_group)
+	assert_ne(roll.cooldown_group, "")
+	for id in ["slime", "spider", "wolf"]:
+		for r in MovementProfile.of(id).bursts:
+			assert_false((r as BurstDef).id in ["roll", "slide"], id)

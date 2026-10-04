@@ -116,9 +116,9 @@ func test_gravity_still_pulls_during_an_air_tackle() -> void:
 	assert_eq(s.velocity.x, 340.0)
 	assert_gt(s.velocity.y, 0.0)
 
-func test_species_without_a_tackle_row_ignore_the_button() -> void:
-	var s := MoveState.new()
-	VerbRunner.step(s, _signature(), biped, 1.0 / 60.0)
+func test_species_without_a_burst_row_ignore_the_button() -> void:
+	var s := MoveState.new()  # the biped has its roll now: the spider's button is the zip, which needs the caller's probes
+	VerbRunner.step(s, _signature(), spider, 1.0 / 60.0)
 	assert_eq(s.verb, "")
 	assert_eq(s.velocity.x, 0.0)
 
@@ -608,3 +608,149 @@ func test_contact_on_the_tick_the_pounce_expires_still_marks_the_hit() -> void:
 	VerbRunner.step(s, touch, wolf, 1.0 / 60.0)
 	assert_eq(s.verb, "", "this is the tick it ends")
 	assert_true(s.pounce_hit, "the contact on it was not dropped")
+
+# --- the biped's roll and slide ---
+
+func _tackle(on_floor := true, clearance := 1000.0) -> MoveInput:
+	var i := MoveInput.new()
+	i.on_floor = on_floor
+	i.signature_pressed = true
+	i.clearance_above = clearance
+	return i
+
+func _calm(on_floor := true, clearance := 1000.0) -> MoveInput:
+	var i := MoveInput.new()
+	i.on_floor = on_floor
+	i.clearance_above = clearance
+	return i
+
+## Ticks until the running verb ends (the begin tick counts), at most `limit`.
+func _until_verb_ends(s: MoveState, p: MovementProfile, i: MoveInput, limit := 80) -> int:
+	var ticks := 0
+	while s.verb != "" and ticks < limit:
+		VerbRunner.step(s, i, p, 1.0 / 60.0)
+		ticks += 1
+	return ticks
+
+func test_a_standing_biped_rolls_220_along_its_facing_for_035_s() -> void:
+	var biped := MovementProfile.of("biped")
+	for facing in [1, -1]:
+		var s := MoveState.new()
+		s.facing = facing
+		VerbRunner.step(s, _tackle(), biped, 1.0 / 60.0)
+		assert_eq(s.verb, "roll")
+		assert_eq(s.velocity.x, 220.0 * facing)
+		assert_true(VerbRunner.is_flat(s, biped), "it ducks")
+		var ticks := 1 + _until_verb_ends(s, biped, _calm())
+		assert_between(ticks, 21, 23, "0.35 s")
+
+func test_at_100_px_s_it_slides_and_at_99_9_it_rolls() -> void:
+	var biped := MovementProfile.of("biped")
+	var at_100 := MoveState.new()
+	at_100.velocity.x = 100.0
+	VerbRunner.step(at_100, _tackle(), biped, 1.0 / 60.0)
+	assert_eq(at_100.verb, "slide")
+	var at_99 := MoveState.new()
+	at_99.velocity.x = 99.9
+	VerbRunner.step(at_99, _tackle(), biped, 1.0 / 60.0)
+	assert_eq(at_99.verb, "roll")
+	var run := MoveState.new()
+	run.velocity.x = -140.0
+	VerbRunner.step(run, _tackle(), biped, 1.0 / 60.0)
+	assert_eq(run.verb, "slide")
+	assert_almost_eq(run.velocity.x, -140.0 + 350.0 / 60.0, 0.01, "it keeps the speed it had and bleeds 350 px/s per second")
+	var ticks := 1 + _until_verb_ends(run, biped, _calm())
+	assert_between(ticks, 20, 24, "under 20 px/s ends it, 0.4 s at most")
+
+func test_neither_starts_in_the_air_and_both_end_when_it_leaves_the_floor() -> void:
+	var biped := MovementProfile.of("biped")
+	var air := MoveState.new()
+	VerbRunner.step(air, _tackle(false), biped, 1.0 / 60.0)
+	assert_eq(air.verb, "")
+	var s := MoveState.new()
+	VerbRunner.step(s, _tackle(), biped, 1.0 / 60.0)
+	assert_eq(s.verb, "roll")
+	VerbRunner.step(s, _calm(false), biped, 1.0 / 60.0)
+	assert_eq(s.verb, "", "over a drop it ends")
+
+func test_a_roll_and_a_slide_share_one_cooldown_of_0_3_s_from_the_end() -> void:
+	var biped := MovementProfile.of("biped")
+	var s := MoveState.new()
+	VerbRunner.step(s, _tackle(), biped, 1.0 / 60.0)
+	_until_verb_ends(s, biped, _calm())
+	s.velocity.x = 150.0  # fast enough to slide
+	VerbRunner.step(s, _tackle(), biped, 1.0 / 60.0)
+	assert_eq(s.verb, "", "no slide straight after a roll")
+	for _k in 8:
+		VerbRunner.step(s, _calm(), biped, 1.0 / 60.0)
+	s.velocity.x = 0.0
+	VerbRunner.step(s, _tackle(), biped, 1.0 / 60.0)
+	assert_eq(s.verb, "", "still cooling down at about 0.17 s")
+	for _k in 12:
+		VerbRunner.step(s, _calm(), biped, 1.0 / 60.0)
+	s.velocity.x = 0.0
+	VerbRunner.step(s, _tackle(), biped, 1.0 / 60.0)
+	assert_eq(s.verb, "roll", "ready again after 0.3 s")
+
+func test_invulnerable_for_exactly_the_first_twelve_ticks_and_not_after() -> void:
+	var biped := MovementProfile.of("biped")
+	var s := MoveState.new()
+	assert_false(s.invulnerable)
+	var flags: Array = []
+	VerbRunner.step(s, _tackle(), biped, 1.0 / 60.0)
+	flags.append(s.invulnerable)
+	for _k in 24:
+		VerbRunner.step(s, _calm(), biped, 1.0 / 60.0)
+		flags.append(s.invulnerable)
+	assert_eq(flags.slice(0, 12), [true, true, true, true, true, true, true, true, true, true, true, true], "0.2 s")
+	assert_false(flags[12], "and not a tick more")
+	assert_eq(s.verb, "", "the roll is over by now")
+	assert_false(s.invulnerable)
+	var slide := MoveState.new()
+	slide.velocity.x = 140.0
+	VerbRunner.step(slide, _tackle(), biped, 1.0 / 60.0)
+	assert_true(slide.invulnerable, "a slide has the window too")
+
+func test_a_roll_that_ends_under_a_low_ceiling_stays_crouched() -> void:
+	var biped := MovementProfile.of("biped")
+	var s := MoveState.new()
+	VerbRunner.step(s, _tackle(true, 0.0), biped, 1.0 / 60.0)
+	_until_verb_ends(s, biped, _calm(true, 0.0))
+	assert_eq(s.verb, "")
+	assert_true(VerbRunner.is_flat(s, biped), "no room to stand")
+	var walk := _calm(true, 0.0)
+	walk.dir = 1.0
+	for _k in 6:
+		VerbRunner.step(s, walk, biped, 1.0 / 60.0)
+	assert_almost_eq(s.velocity.x, 70.0, 0.01, "it walks at half speed")
+	var jump := _calm(true, 0.0)
+	jump.jump_pressed = true
+	VerbRunner.step(s, jump, biped, 1.0 / 60.0)
+	assert_eq(s.launched, "", "it cannot jump into the ceiling")
+	VerbRunner.step(s, _calm(true, 1000.0), biped, 1.0 / 60.0)
+	assert_false(VerbRunner.is_flat(s, biped), "with room it stands")
+
+func test_a_jump_during_a_roll_fires_at_once_and_ends_it() -> void:
+	var biped := MovementProfile.of("biped")
+	var s := MoveState.new()
+	VerbRunner.step(s, _tackle(), biped, 1.0 / 60.0)
+	var jump := _calm()
+	jump.jump_pressed = true
+	VerbRunner.step(s, jump, biped, 1.0 / 60.0)
+	assert_eq(s.launched, "ground")
+	assert_almost_eq(s.velocity.y, -330.0, 0.01)
+	assert_eq(s.velocity.x, 220.0, "the roll's speed holds on the tick it jumps")
+	VerbRunner.step(s, _calm(false), biped, 1.0 / 60.0)
+	assert_eq(s.verb, "", "it left the floor")
+
+func test_the_slime_and_the_wolf_start_their_bursts_as_before() -> void:
+	var slime := MoveState.new()
+	VerbRunner.step(slime, _tackle(), MovementProfile.of("slime"), 1.0 / 60.0)
+	assert_eq(slime.verb, "tackle", "from a standstill")
+	var moving := MoveState.new()
+	moving.velocity.x = 140.0
+	VerbRunner.step(moving, _tackle(false), MovementProfile.of("slime"), 1.0 / 60.0)
+	assert_eq(moving.verb, "tackle", "in the air")
+	var wolf := MoveState.new()
+	VerbRunner.step(wolf, _tackle(false), MovementProfile.of("wolf"), 1.0 / 60.0)
+	assert_eq(wolf.verb, "pounce", "the pounce is an air verb")

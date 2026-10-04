@@ -37,6 +37,10 @@ var cooldowns := {}
 var air_verb_used := false
 ## An aimed burst (the pounce) has touched a hostile since it began: the caller marks the first one it hit.
 var pounce_hit := false
+## Inside a burst's window of invulnerability this tick (the roll and slide: the first 0.2 s); the caller's damage reads it.
+var invulnerable := false
+## A flat burst (roll, slide, puddle) has ended and there is not yet room to stand: the body stays low until there is.
+var crouched := false
 ## Wall verbs. Steering is locked for `lock` seconds after a wall jump or bounce; `wall_touch` says the body touched a wall last
 ## tick; `wall_stick` is the sticky time left; `wall_grace` the time a wall jump still works after leaving; `wall_side` the last
 ## wall touched; `clinging` that it is stuck or sliding this tick; `wall_bounced` that it bounced this tick; `last_vx` the x
