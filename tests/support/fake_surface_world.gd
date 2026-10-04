@@ -47,8 +47,7 @@ func input() -> MoveInput:
 ## Moves the body by what the step asked for and takes the surface it chose.
 func apply(s: MoveState) -> void:
 	pos += s.surface_shift
-	if s.surface_n != Vector2.ZERO:
-		n = s.surface_n
+	n = s.surface_n if s.surface_n != Vector2.ZERO else Vector2.UP  # in the air the box is the standing one
 
 func _sweep(motion: Vector2) -> Dictionary:
 	var best := 2.0

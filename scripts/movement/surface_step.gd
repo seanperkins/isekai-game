@@ -50,7 +50,7 @@ static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float, jump
 	if s.surface_lock <= 0.0:
 		var hit: Dictionary = i.sweep.call(motion)
 		if not hit.is_empty():
-			var wall := _axis(hit["normal"])
+			var wall := axis(hit["normal"])
 			if wall.dot(s.surface_n) == 0.0 and wall.dot(dir) < -0.5:
 				s.surface_shift = (hit["travel"] as Vector2) + (s.surface_n + dir) * (HT - HN)
 				_corner(s, p, "concave", dir, wall, stick)
@@ -116,7 +116,7 @@ static func box_size(n: Vector2) -> Vector2:
 
 ## The tangent of a surface: its normal turned a quarter clockwise, an exact axis.
 static func tangent(n: Vector2) -> Vector2:
-	return _axis(n.rotated(PI / 2.0))
+	return axis(n.rotated(PI / 2.0))
 
 ## The sign (1 or -1, 0 for none) of the way along the surface the stick asks for. A latch (the direction held at the last
 ## corner) keeps the rotational sense through a corner while the stick stays near it; releasing keeps it, a clearly
@@ -136,7 +136,7 @@ static func _intent(s: MoveState, stick: Vector2, t: Vector2, p: MovementProfile
 	if stick.length() > 0.5 and s.surface_since < p.crawl_back_window and stick.normalized().dot(s.surface_prev) < -0.5:
 		# nothing along this surface, and the stick is pressed back the way it came: back round the corner
 		s.surface_sigma = -s.surface_sigma
-		s.surface_latch = _axis(stick)
+		s.surface_latch = axis(stick)
 		s.surface_prev = -s.surface_prev
 		return s.surface_sigma
 	return 0.0
@@ -183,9 +183,10 @@ static func _corner(s: MoveState, p: MovementProfile, event: String, dir: Vector
 	s.surface_n = new_n
 	s.surface_lock = p.corner_lock
 	s.surface_since = 0.0
-	s.surface_latch = _axis(stick) if stick.length() > 0.5 else Vector2.ZERO  # the axis it is mostly held along, so noise around it holds
+	s.surface_latch = axis(stick) if stick.length() > 0.5 else Vector2.ZERO  # the axis it is mostly held along, so noise around it holds
 
-static func _axis(v: Vector2) -> Vector2:
+## Snaps a vector to the nearest of the four axis directions (a tie goes to vertical).
+static func axis(v: Vector2) -> Vector2:
 	if absf(v.x) > absf(v.y):
 		return Vector2(signf(v.x), 0.0)
 	return Vector2(0.0, signf(v.y))
