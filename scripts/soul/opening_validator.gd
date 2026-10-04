@@ -23,6 +23,8 @@ static func _choice_errors(choices: Array, out: PackedStringArray) -> Array:
 	if choices.is_empty():
 		out.append("opening: choices must be a non-empty list")
 		return ids
+	if choices.size() > OpeningDef.MAX_CHOICES:
+		out.append("opening: at most %d choices fit on the screen" % OpeningDef.MAX_CHOICES)
 	var labels: Array = []
 	for i in choices.size():
 		var c = choices[i]

@@ -4,7 +4,7 @@ extends Node2D
 ## and a small figure on the road. `approach` (0 to 1) is the truck's progress, `hit` hides the figure once the truck connects,
 ## and `flash` (1 down to 0) is a white flash over the screen. OpeningScene sets all three; this only draws them.
 
-const ROAD := Rect2(0, 190, 640, 64)
+const ROAD := Rect2(0, 84, 640, 64)  # high on the screen: the text, the choices and the footer fit below it
 const FIGURE_X := 470.0
 const TRUCK_FROM := -170.0
 const TRUCK_TO := 300.0  # the truck's left edge when it stops at the figure

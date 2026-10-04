@@ -162,3 +162,21 @@ func test_the_truck_slides_in_and_hits() -> void:
 	assert_eq(stage.flash, 0.0, "the flash is brief")
 	_press(KEY_ENTER)
 	assert_eq([stage.approach, stage.hit], [0.0, false], "the next truck starts from the left")
+
+func test_taking_a_choice_early_brings_the_truck_in() -> void:
+	scene.play(_def())
+	var stage := scene.get_node("Stage") as OpeningStage
+	assert_eq(stage.approach, 0.0)
+	_press(KEY_ENTER)  # confirm before the truck has arrived
+	assert_eq(stage.approach, 1.0, "the truck is on the figure when it hits, not stuck halfway down the road")
+	assert_true(stage.hit)
+
+func test_the_choices_and_the_footer_fit_the_screen() -> void:
+	var shipped := Game.load_opening()
+	assert_lte(shipped.choices.size(), OpeningDef.MAX_CHOICES)
+	assert_lte(OpeningScene.COLUMN_Y + OpeningDef.MAX_CHOICES * OpeningScene.ROW_HEIGHT, OpeningScene.FOOTER_Y, "the rows end above the footer")
+	assert_lte(OpeningScene.FOOTER_Y + OpeningScene.FOOTER_HEIGHT, 360.0, "and the footer is on the screen")
+	scene.play(shipped)
+	var column := scene.get_node("Choices") as VBoxContainer
+	assert_eq(column.position.y, OpeningScene.COLUMN_Y)
+	assert_eq(scene.get_node("Footer").position.y, OpeningScene.FOOTER_Y)

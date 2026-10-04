@@ -12,6 +12,13 @@ const APPROACH_SECONDS := 1.0
 const FLASH_SECONDS := 0.15
 const COL_TEXT := Color(0.75, 0.9, 1.0)
 const COL_DIM := Color(0.5, 0.5, 0.6)
+## The layout on the 640x360 screen, top to bottom: the road (OpeningStage), the text box, up to OpeningDef.MAX_CHOICES rows of
+## ROW_HEIGHT, then the footer. The rows end above the footer, and a test pins the arithmetic.
+const TEXT_Y := 160.0
+const COLUMN_Y := 206.0
+const ROW_HEIGHT := 18.0
+const FOOTER_Y := 324.0
+const FOOTER_HEIGHT := 18.0
 
 var _model: OpeningModel
 var _playing := false
@@ -33,17 +40,20 @@ func _ready() -> void:
 	add_child(shade)
 	_stage.name = "Stage"
 	add_child(_stage)
-	_text.position = Vector2(60, 268)
+	_text.position = Vector2(60, TEXT_Y)
 	_text.size = Vector2(520, 40)
 	_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_style(_text, COL_TEXT)
 	add_child(_text)
-	_column.position = Vector2(280, 306)
-	_column.size = Vector2(120, 48)
+	_column.name = "Choices"
+	_column.position = Vector2(270, COLUMN_Y)
+	_column.size = Vector2(100, OpeningDef.MAX_CHOICES * ROW_HEIGHT)
+	_column.add_theme_constant_override("separation", 0)
 	add_child(_column)
-	_footer.position = Vector2(40, 338)
-	_footer.size = Vector2(560, 18)
+	_footer.name = "Footer"
+	_footer.position = Vector2(40, FOOTER_Y)
+	_footer.size = Vector2(560, FOOTER_HEIGHT)
 	_footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_style(_footer, COL_DIM)
 	add_child(_footer)
@@ -96,6 +106,7 @@ func act() -> void:
 	var was := _model.phase
 	_model.act()
 	if was == OpeningModel.Phase.PROMPT:
+		_stage.approach = 1.0  # a choice taken early still meets the truck at the figure
 		_stage.hit = true
 		_stage.flash = 1.0
 		EventBus.world_event.emit("opening_hit", {})
@@ -156,6 +167,7 @@ func _redraw() -> void:
 	for i in rows.size():
 		var label := Label.new()
 		label.text = rows[i]
+		label.custom_minimum_size = Vector2(0, ROW_HEIGHT)
 		_style(label, COL_TEXT)
 		_column.add_child(label)
 	_footer.text = "Enter: choose" if _model.phase == OpeningModel.Phase.PROMPT else "Enter: continue"

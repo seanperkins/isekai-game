@@ -56,6 +56,16 @@ func test_each_mistake_is_named() -> void:
 	d.goddess_line = "   "
 	assert_string_contains(_errors(d), "opening: goddess_line is blank")
 
+func test_more_choices_than_fit_the_screen_are_named() -> void:
+	var d := _good()
+	d.choices = []
+	for i in OpeningDef.MAX_CHOICES + 1:
+		d.choices.append({"id": "c%d" % i, "label": "C%d" % i})
+	d.trucks = [{"prompt": "P", "results": {}}]
+	assert_string_contains(_errors(d), "opening: at most %d choices fit on the screen" % OpeningDef.MAX_CHOICES)
+	d.choices.pop_back()
+	assert_eq(_errors(d), "", "exactly the maximum is fine")
+
 func test_wrong_types_are_named_not_crashed() -> void:
 	var d := _good()
 	d.choices = [5]
