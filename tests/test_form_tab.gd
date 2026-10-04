@@ -95,6 +95,17 @@ func test_the_form_tab_lists_the_offers_the_offers_logic_gives() -> void:
 	assert_eq(seen, expected)
 	assert_eq(screen.selected_id(), expected[0])
 
+func test_five_open_lineages_are_five_selectable_rows_none_dropped() -> void:
+	_eat_everything()
+	_to_cap()
+	screen.open()
+	screen.switch_tab(5)
+	assert_eq(screen._selectable.size(), 5, "every open lineage is a row")
+	var seen: Array = []
+	for i in screen._selectable:
+		seen.append(screen._rows[i]["id"])
+	assert_eq(seen, ["weaver", "tide", "toxic", "bulwark", "echo"])
+
 func test_choosing_an_offer_evolves_the_body() -> void:
 	_eat_everything()
 	_to_cap()
