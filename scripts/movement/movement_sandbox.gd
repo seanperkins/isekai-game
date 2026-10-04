@@ -301,12 +301,15 @@ func _cast(from: Vector2, to: Vector2, include_oneway: bool) -> Dictionary:
 		return {"point": (hit["position"] as Vector2) - body.global_position, "normal": hit["normal"], "oneway": oneway}
 	return {}
 
-## The thread from behind the spider to its anchor while it pulls, and for a moment after.
+## The thread from behind the spider to its anchor while it pulls or it slides down it, and for a moment after.
 func _update_thread(delta: float) -> void:
 	if state.zip_event == "start":
 		_thread_anchor = body.global_position + state.zip_target
 		_thread_dir = state.zip_dir
-	if state.zip_dir != Vector2.ZERO:
+	if state.drop_event == "start":
+		_thread_anchor = body.global_position + state.drop_target
+		_thread_dir = Vector2.DOWN  # head down the thread: the rear, where the silk comes from, is up
+	if state.zip_dir != Vector2.ZERO or state.drop_up > 0.0:
 		_thread_alpha = 1.0
 	else:
 		_thread_alpha = maxf(0.0, _thread_alpha - delta / THREAD_FADE)
@@ -376,7 +379,7 @@ func _draw_body(delta: float) -> void:
 	_sprite.modulate = tint
 	_rect.modulate = tint
 	var doing := state.verb if state.verb != "" else ("flat" if state.spread else ("wall" if state.clinging else ("crawl" if state.surface_n != Vector2.ZERO else "")))
-	_label.text = "%s%s   speed %d   boost %s   verb: %s   last jump: rise %.1f px, air %.2f s\n1 biped   2 slime   3 wolf   4 spider   B boost   J tackle   S down (flatten, slide)   at a wall: press into it to stick, jump to kick off, hold jump to bounce   spider: arrows crawl floors, walls and ceilings, jump hops off, J zips (aim with the arrows, a thread pulls you to the first solid within 160 px; jump cancels)" % [
+	_label.text = "%s%s   speed %d   boost %s   verb: %s   last jump: rise %.1f px, air %.2f s\n1 biped   2 slime   3 wolf   4 spider   B boost   J tackle   S down (flatten, slide)   at a wall: press into it to stick, jump to kick off, hold jump to bounce   spider: arrows crawl floors, walls and ceilings, jump hops off, J zips (aim with the arrows, a thread pulls you to the first solid within 160 px; jump cancels), S in the air or hanging from a ceiling drops on a thread (down reels, up climbs, jump lets go)" % [
 		profile.id, " (placeholder, no art yet)" if _sheet == null else "", int(absf(body.velocity.x)), "on" if boosted else "off", doing, _last["rise"], _last["airtime"]]
 
 ## The spider, after how spiders move: the legs follow the distance travelled (so they freeze the instant it stops, on the
@@ -390,17 +393,21 @@ func _draw_spider(delta: float) -> void:
 		_vis_off += _prev_pos - body.global_position
 	_vis_off = _vis_off.lerp(Vector2.ZERO, 1.0 - exp(-delta / CORNER_EASE))
 	var zipping := state.zip_dir != Vector2.ZERO
+	var dropping := state.drop_up > 0.0
 	var target := SpeciesLook.surface_angle(state.surface_n) if attached else 0.0
+	if dropping:
+		target = PI / 2.0 if _sense > 0.0 else -PI / 2.0  # head first down the thread (the sprite's right is its head)
 	if zipping:
 		if absf(state.zip_dir.x) > 0.01:
 			_sense = signf(state.zip_dir.x)
 		# head first along the thread: the sprite's right is its head, so a leftward zip is mirrored and turned the other way
 		target = state.zip_dir.angle() if _sense > 0.0 else wrapf(state.zip_dir.angle() + PI, -PI, PI)
 	_angle = lerp_angle(_angle, target, 1.0 - exp(-delta / CORNER_EASE))
-	if attached and not corner:
-		_stride = SpeciesLook.stride_advance(_stride, state.surface_shift.length())
-	_clip = "crawl_%d" % (SpeciesLook.stride_frame(_stride) + 1) if attached and not zipping else "drop"
-	var sense := state.surface_sigma if attached else (signf(state.velocity.x) if absf(state.velocity.x) > 20.0 else _sense)
+	if (attached and not corner) or dropping:
+		_stride = SpeciesLook.stride_advance(_stride, state.surface_shift.length())  # legs follow the distance, reeling too
+	_clip = "crawl_%d" % (SpeciesLook.stride_frame(_stride) + 1) if (attached or dropping) and not zipping else "drop"
+	var vx := state.drop_vx if dropping else state.velocity.x
+	var sense := state.surface_sigma if attached else (signf(vx) if absf(vx) > 20.0 else _sense)
 	if sense != _sense:
 		_sense = sense
 		_pivot = PIVOT_SECONDS

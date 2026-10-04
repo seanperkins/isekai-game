@@ -634,3 +634,68 @@ func test_a_diagonal_cast_down_past_a_ledge_ignores_its_side() -> void:
 	assert_false(hit.is_empty())
 	assert_false(hit["oneway"], "not the one-way ledge's side")
 	assert_eq(hit["normal"], Vector2.UP)
+
+func test_hanging_from_the_slab_and_pressing_down_slides_to_the_floor() -> void:
+	await _spider_at(Vector2(830.0, -138.0), Vector2.DOWN)
+	sb.scripted.down = 1.0
+	var started := false
+	var landed := false
+	for _k in 200:
+		await get_tree().physics_frame
+		started = started or sb.state.drop_event == "start"
+		if sb.state.drop_event == "land":
+			landed = true
+			break
+	assert_true(started and landed, "it spun a thread and slid down it")
+	await _frames(2)
+	assert_eq(sb.state.surface_n, Vector2.UP)
+	assert_almost_eq(sb.body.global_position.y, -12.0, 2.0)
+
+func test_the_thread_runs_from_the_anchor_to_the_spider() -> void:
+	await _spider_at(Vector2(830.0, -138.0), Vector2.DOWN)
+	sb.scripted.down = 1.0
+	await _frames(20)
+	assert_true(_thread().visible)
+	assert_eq(_thread().points.size(), 2)
+	assert_almost_eq(_thread().points[1].y, -150.0, 2.0, "up at the slab's underside")
+	assert_almost_eq(_thread().points[0].y, sb.body.global_position.y, 14.0, "down at the spider")
+
+func test_up_climbs_back_toward_the_anchor_and_stops_there() -> void:
+	await _spider_at(Vector2(830.0, -138.0), Vector2.DOWN)
+	sb.scripted.down = 1.0
+	await _frames(20)
+	sb.scripted.down = 0.0
+	sb.scripted.up = 1.0
+	var highest := 0.0
+	for _k in 200:
+		await get_tree().physics_frame
+		highest = minf(highest, sb.body.global_position.y)
+	assert_almost_eq(sb.body.global_position.y, -138.0, 2.0, "back under the anchor")
+	assert_gte(highest, -140.0, "and never above it")
+
+func test_the_head_points_down_while_it_slides() -> void:
+	await _spider_at(Vector2(830.0, -138.0), Vector2.DOWN)
+	sb.scripted.down = 1.0
+	await _frames(12)
+	assert_almost_eq(absf(wrapf(_sprite().rotation, -PI, PI)), PI / 2.0, 0.3, "a quarter turn, whichever way it is mirrored")
+
+func test_a_jump_lets_go_and_it_lands_later() -> void:
+	await _spider_at(Vector2(830.0, -138.0), Vector2.DOWN)
+	sb.scripted.down = 1.0
+	await _frames(15)
+	sb.scripted.jump_pressed = true
+	var released := false
+	for _k in 6:
+		await get_tree().physics_frame
+		released = released or sb.state.drop_event == "release"
+	assert_true(released)
+	await _frames(150)
+	assert_eq(sb.state.surface_n, Vector2.UP, "it fell and gripped the floor")
+
+func test_the_slime_ignores_down_in_the_air() -> void:
+	sb.set_profile("slime")
+	sb.body.global_position = Vector2(830.0, -100.0)
+	sb.scripted.down = 1.0
+	await _frames(20)
+	assert_eq(sb.state.drop_event, "")
+	assert_eq(sb.state.drop_up, 0.0)
