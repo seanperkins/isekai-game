@@ -245,3 +245,4 @@ func test_a_tackle_into_a_wall_with_jump_held_reflects_it() -> void:
 	VerbRunner.step(s, hit, slime, 1.0 / 60.0)
 	assert_true(s.wall_bounced)
 	assert_lt(s.velocity.x, -280.0)
+	assert_eq(s.verb, "", "the bounce ends the tackle, so the slime is not still tackling as it leaves the wall")
