@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="MovementProfile" format=3]
+
+[ext_resource type="Script" path="res://scripts/movement/movement_profile.gd" id="1_mp"]
+
+[resource]
+script = ExtResource("1_mp")
+id = "slime"
+top_speed = 140.0
+ground_accel_time = 0.05
+ground_stop_time = 0.06
+ground_turn_time = 0.08
+air_accel_mult = 0.5
+air_stop_time = 0.35
+air_keeps_momentum = false
+jump_velocity = 328.5
+gravity = 900.0
+fall_mult = 1.53
+apex_band = 40.0
+apex_gravity_mult = 0.5
+release_style = 1
+release_factor = 2.5
+coyote = 0.1
+buffer = 0.1
+rebound_rise = 0.15
