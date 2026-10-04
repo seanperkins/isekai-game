@@ -7,8 +7,8 @@
 script = ExtResource("2_bd")
 id = "tackle"
 trigger = "signature"
-speed = 260.0
-duration = 0.15
+speed = 340.0
+duration = 0.18
 
 [sub_resource type="Resource" id="Resource_puddle"]
 script = ExtResource("2_bd")
@@ -16,8 +16,8 @@ id = "puddle"
 trigger = "down_run"
 min_start_speed = 100.0
 duration = 0.5
-decel = 300.0
-min_speed = 40.0
+decel = 150.0
+min_speed = 70.0
 needs_down = true
 needs_floor = true
 flat = true
@@ -41,6 +41,9 @@ release_style = 1
 release_factor = 2.5
 coyote = 0.1
 buffer = 0.1
-rebound_rise = 0.15
+rebound_rise = 0.3
+rebound_cap = 0.6
+bounce_keep = 0.85
+bounce_min_impact = 250.0
 verbs = PackedStringArray("ooze")
 bursts = [SubResource("Resource_tackle"), SubResource("Resource_puddle")]

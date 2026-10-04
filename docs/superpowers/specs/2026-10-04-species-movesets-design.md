@@ -24,10 +24,10 @@ Scope: movement verbs and how they tie into combat (dash, pounce, web pull). Ski
 Starting values, tuned by play in the sandbox. Speeds px/s, times s.
 
 **Slime (bouncer).** Signature: Tackle.
-- *Bounce chain.* A jump press at or before landing gives the +15% rebound with the landing squash. Built.
-- *Ooze.* Down on the floor spreads the body flat (28x10, half speed; exists in `Player`). New: while at 100 or more px/s, the raw down input at 0.6 or more starts a puddle slide (it does not need the 8-way aim snap to read exactly down). It keeps momentum (decel 300) and ends below 40 px/s, when down is released, or after 0.5 s.
+- *Bounce (hold and timed, built).* Landing after at least 0.12 s of air at an impact of 250 px/s or more (a drop of about 23 px) with jump held relaunches on its own at 85% of the last launch speed (capped at the base jump, so a hold bounce never rises above it), repeating until the impact falls under 250 (about four bounces from a long fall) or jump is released. A jump press in the 0.1 s before landing is a timed rebound: +30% height, chained presses up to +60% (the chain resets on a landing with no press), which beats the hold bounce when both apply. The landing squash fires on every landing.
+- *Ooze.* Down on the floor spreads the body flat (28x10, half speed; exists in `Player`). New: while at 100 or more px/s, the raw down input at 0.6 or more starts a puddle slide (it does not need the 8-way aim snap to read exactly down). It keeps momentum (decel 150) and ends below 70 px/s (the flat-walk speed), when down is released, on leaving the floor, or after 0.5 s.
 - *Sticky wall (earned: Wall Cling).* Stick 0.2 s at 15, then slide at 90; wall jump pushes off at 180 with the full jump speed upward, locks control 0.15, grace 0.1, range 6 px.
-- *Tackle.* The existing dash: 260 for 0.15 s with the tackle stun.
+- *Tackle.* The dash: 340 for 0.18 s (62 px; the player's today is 260 for 0.15 s), one per airtime, with the tackle stun when wired in.
 
 **Spider (crawler).** Signature: Web zip.
 - *Crawl.* Walks hard solid surfaces (all terrain sticky except a "slick" flag from the room editor), rounds corners, instant start and stop (0.03 and 0.02), 140. A one-way ledge is a floor on its top only: it cannot be clung to from below or the side. Input is screen-relative with a corner latch. Jump hops off along the surface normal at the base jump's strength.
@@ -48,7 +48,7 @@ Starting values, tuned by play in the sandbox. Speeds px/s, times s.
 
 - No verb locks control for more than 0.5 s (roll 0.35, mantle 0.25, pounce 0.35, zip at most 0.4, slide at most 0.5, Tackle 0.15). A verb starts only on a press or a held-direction trigger, except the passive assists: mantle, vault, and wall slide.
 - **The base jump (63 px rise at 60 Hz) is the floor for every species.** Verbs add reach, never replace it. **One air verb per airtime** (pounce, zip, roll, silk drop, mantle), reset on landing, wall contact or surface attach. Each verb's added reach is modelled (below) and has a ceiling pinned by a test; verbs may add horizontal reach freely.
-- **Priority.** Evolve and death cancel everything. Hurt or knockback cancels any verb except inside the roll's or slide's invulnerable window. Deep water ends zip, pounce and slide. A verb cannot begin while predating, evolving, roped or in deep water. Mantle beats a wall jump on the same press; a jump pressed during a verb is buffered and fires when control returns. A roll or slide that ends under a low ceiling stays crouched until it can stand. Silk drop ends when the thread's body touches the floor.
+- **Priority.** Evolve and death cancel everything. Hurt or knockback cancels any verb except inside the roll's or slide's invulnerable window. Deep water ends zip, pounce and slide. A verb cannot begin while predating, evolving, roped or in deep water. Mantle beats a wall jump on the same press; a jump pressed during a burst fires at once and keeps the burst's speed (a burst locks only the horizontal axis); a jump pressed during a verb that owns both axes is buffered and fires when control returns. A roll or slide that ends under a low ceiling stays crouched until it can stand. Silk drop ends when the thread's body touches the floor.
 
 ## Per-species room validation
 
@@ -82,7 +82,7 @@ A running verb shows its name in the sandbox HUD and tints the sprite; there is 
 
 ## Testing
 
-Pure tests per verb with hand-filled `MoveInput` (when it may start, duration, speeds, control returns within 0.5 s, a jump press during a verb fires when it ends, one air verb per airtime). The base-jump pin runs for all four species. A verb's **maximum reach** is pinned (pounce rise, zip range, mantle and wall-jump height) and equals its `ReachModel` entry. Every probe has a sandbox test on real collision, including one-way ledges and the 6 px margin. A start-from-real-input test per species drives the sandbox with `Input` actions, so a verb that real input cannot trigger fails (for example the puddle slide). Whether each verb feels right is Sean's call per species.
+Pure tests per verb with hand-filled `MoveInput` (when it may start, duration, speeds, control returns within 0.5 s, a jump press during a burst fires at once, one air verb per airtime). The base-jump pin runs for all four species. A verb's **maximum reach** is pinned (pounce rise, zip range, mantle and wall-jump height) and equals its `ReachModel` entry. Every probe has a sandbox test on real collision, including one-way ledges and the 6 px margin. A start-from-real-input test per species drives the sandbox with `Input` actions, so a verb that real input cannot trigger fails (for example the puddle slide). Whether each verb feels right is Sean's call per species.
 
 ## Constraints on the work
 
@@ -95,4 +95,5 @@ Slime: puddle slide, wall stick pose. Spider: wall and ceiling crawl, zip, idle,
 ## Known gaps and open
 
 - **Room content.** Today's 23 rooms contain no hard step of 24 px or less and no hard low ceiling, and 133 of 172 interior solids are one-way. Roll's duck, the puddle slide's tunnel, vault and mantle have little to act on until rooms are built or edited for them; the sandbox provides them for tuning.
-- From the movement-model spec, still open for the wiring plan: the slime rebound against the G5 chimney guard, the wolf's 46 px run-up audit of ledge approaches, pad-stick air momentum for the wolf, the 8 px corner correction, and the `slide_speed` stat scaling the wall slide.
+- The slime's timed rebound chain reaches about 1.6 times the base rise (about 100 px at +60%), and the hold bounce adds no reach beyond the fall it came from. The chain breaks the G5 chimney guard in `tests/test_grotto_rooms.gd` (a screen of about 97 px); the reach model and that test must account for it before it ships in the game.
+- From the movement-model spec, still open for the wiring plan: the wolf's 46 px run-up audit of ledge approaches, pad-stick air momentum for the wolf, the 8 px corner correction, and the `slide_speed` stat scaling the wall slide.
