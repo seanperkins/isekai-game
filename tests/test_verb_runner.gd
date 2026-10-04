@@ -280,3 +280,49 @@ func test_a_spider_without_probes_is_the_ground_step_as_before() -> void:
 	VerbRunner.step(s, i, spider, 1.0 / 60.0)
 	assert_eq(s.launched, "ground")
 	assert_eq(s.velocity.y, -330.0)
+
+func test_a_zip_owns_the_body_before_the_crawl_and_the_ground_step() -> void:
+	var w := FakeSurfaceWorld.build_spike_terrain()
+	w.pos = Vector2(120, -12)
+	var s := MoveState.new()
+	s.surface_n = Vector2.UP
+	var i := w.input()
+	i.aim = Vector2.RIGHT
+	i.signature_pressed = true
+	VerbRunner.step(s, i, spider, 1.0 / 60.0)
+	assert_eq(s.zip_event, "start")
+	assert_eq([s.surface_n, s.velocity], [Vector2.ZERO, Vector2.ZERO])
+	i.signature_pressed = false
+	VerbRunner.step(s, i, spider, 1.0 / 60.0)
+	assert_almost_eq(s.surface_shift.x, 400.0 / 60.0, 0.001, "pulled at 400 px/s, not crawled at 140")
+
+func test_one_air_zip_per_airtime() -> void:
+	var w := FakeSurfaceWorld.build_spike_terrain()
+	w.pos = Vector2(120, -60)
+	var s := MoveState.new()
+	s.air_verb_used = true  # it already used its air verb this airtime
+	var i := w.input()
+	i.on_floor = false
+	i.aim = Vector2.RIGHT
+	i.signature_pressed = true
+	VerbRunner.step(s, i, spider, 1.0 / 60.0)
+	assert_eq(s.zip_event, "", "refused in the air")
+	s.surface_n = Vector2.UP  # it gripped a surface: the air verb is back
+	s.zip_cooldown = 0.0
+	VerbRunner.step(s, i, spider, 1.0 / 60.0)
+	assert_false(s.air_verb_used)
+	assert_eq(s.zip_event, "start")
+
+func test_a_spider_without_the_zip_verb_ignores_the_button() -> void:
+	var bare := spider.duplicate() as MovementProfile
+	bare.verbs = PackedStringArray(["crawl"])
+	var w := FakeSurfaceWorld.build_spike_terrain()
+	w.pos = Vector2(120, -12)
+	var s := MoveState.new()
+	s.surface_n = Vector2.UP
+	var i := w.input()
+	i.aim = Vector2.RIGHT
+	i.signature_pressed = true
+	VerbRunner.step(s, i, bare, 1.0 / 60.0)
+	assert_eq(s.zip_event, "")
+	assert_eq(s.surface_n, Vector2.UP)
