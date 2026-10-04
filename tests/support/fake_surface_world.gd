@@ -100,7 +100,7 @@ static func _enter(p: Vector2, m: Vector2, e: Rect2) -> Dictionary:
 			var tmp := ta
 			ta = tb
 			tb = tmp
-		if ta > t0:
+		if ta >= t0:  # touching at the start (ta == 0) is a hit with this face's normal, so a body flush against a wall stays blocked
 			t0 = ta
 			normal = Vector2.ZERO
 			normal[axis] = face

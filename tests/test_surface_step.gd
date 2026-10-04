@@ -372,8 +372,8 @@ func test_a_wall_grip_needs_the_wall_within_what_the_support_probe_holds() -> vo
 
 func test_walking_off_a_sliver_of_a_ledge_drops_from_where_it_is() -> void:
 	var w := FakeSurfaceWorld.build_spike_terrain()
-	w.add_hard(Rect2(1300, -60, 100, 1))  # a hard ledge 1 px thick: no end face to turn onto
-	w.pos = Vector2(1380, -72)
+	w.add_hard(Rect2(1700, -60, 100, 1))  # a hard ledge 1 px thick: no end face to turn onto
+	w.pos = Vector2(1780, -72)
 	var s := MoveState.new()
 	s.surface_n = Vector2.UP
 	var events := _until(w, s, Vector2.RIGHT, 100, func(): return s.surface_event == "convex_nothing")
@@ -461,3 +461,69 @@ func test_it_does_not_grip_the_ledge_it_is_falling_through() -> void:
 	s.fall_through = 0.0
 	s.surface_lock = 0.0
 	assert_true(SurfaceStep.step(s, i, spider, DT), "once it has run out the ledge is a floor again")
+
+func test_a_slick_wall_ahead_stops_the_crawl_it_does_not_climb() -> void:
+	var a := _on(Vector2(1250, -12), Vector2.UP)
+	var w: FakeSurfaceWorld = a[0]
+	var s: MoveState = a[1]
+	var events := _run(w, s, Vector2.RIGHT, 60)
+	assert_eq(events, [], "no corner: slick is not climbed")
+	assert_eq(s.surface_n, Vector2.UP)
+	assert_almost_eq(w.pos.x, 1300.0 - 14.0, 1.5, "it stopped at the slick face")
+	var sticky := _on(Vector2(120, -12), Vector2.UP)
+	assert_eq(_run(sticky[0], sticky[1], Vector2.RIGHT, 40), ["concave"], "an ordinary block is still climbed")
+
+func test_it_does_not_grip_a_slick_floor_wall_or_ceiling() -> void:
+	var top := FakeSurfaceWorld.build_spike_terrain()
+	top.pos = Vector2(1330, -102)  # over the slick block's top
+	var s := MoveState.new()
+	var i := _make_input(top)
+	i.on_floor = true
+	assert_false(SurfaceStep.step(s, i, spider, DT), "a slick floor is walked on, not gripped")
+	var wall := FakeSurfaceWorld.build_spike_terrain()
+	wall.pos = Vector2(1285, -60)  # beside the slick block's left face
+	var ws := MoveState.new()
+	var wi := _make_input(wall, Vector2.RIGHT)
+	wi.wall_side = 1
+	assert_false(SurfaceStep.step(ws, wi, spider, DT))
+	var ceiling := FakeSurfaceWorld.build_spike_terrain()
+	ceiling.pos = Vector2(1450, -68)  # under the slick slab (underside y -80)
+	var cs := MoveState.new()
+	var ci := _make_input(ceiling, Vector2.UP)
+	ci.on_ceiling = true
+	assert_false(SurfaceStep.step(cs, ci, spider, DT))
+	# the sticky equivalents still grip
+	var ok_wall := FakeSurfaceWorld.build_spike_terrain()
+	ok_wall.pos = Vector2(185, -60)
+	var os := MoveState.new()
+	var oi := _make_input(ok_wall, Vector2.RIGHT)
+	oi.wall_side = 1
+	assert_true(SurfaceStep.step(os, oi, spider, DT))
+	var ok_ceiling := FakeSurfaceWorld.build_spike_terrain()
+	ok_ceiling.pos = Vector2(600, -148)
+	var ocs := MoveState.new()
+	var oci := _make_input(ok_ceiling, Vector2.UP)
+	oci.on_ceiling = true
+	assert_true(SurfaceStep.step(ocs, oci, spider, DT))
+
+func test_walking_from_a_sticky_floor_onto_a_slick_one_lets_go_of_the_surface() -> void:
+	var w := FakeSurfaceWorld.new()
+	w.add_hard(Rect2(0, 0, 1000, 40))
+	w.add_slick(Rect2(1000, 0, 500, 40))  # the floor turns slick at x 1000, level with it
+	w.pos = Vector2(980, -12)
+	var s := MoveState.new()
+	s.surface_n = Vector2.UP
+	var events := _until(w, s, Vector2.RIGHT, 100, func(): return s.surface_event == "slick")
+	assert_eq(events, ["slick"])
+	assert_eq(s.surface_n, Vector2.ZERO)
+
+func test_it_does_not_turn_round_a_corner_onto_a_slick_face() -> void:
+	var w := FakeSurfaceWorld.build_spike_terrain()
+	w.add_hard(Rect2(1600, -200, 100, 20))      # a sticky slab top...
+	w.add_slick(Rect2(1700, -200, 1, 20))      # ...whose end face is a slick sliver
+	w.pos = Vector2(1660, -212)
+	var s := MoveState.new()
+	s.surface_n = Vector2.UP
+	var events := _until(w, s, Vector2.RIGHT, 100, func(): return s.surface_event != "")
+	assert_ne(events, ["convex"], "a slick end face is not turned onto")
+	assert_eq(s.surface_n, Vector2.ZERO)
