@@ -224,3 +224,49 @@ func test_every_label_fits_its_node() -> void:
 	for id in nodes:
 		var w := ThemeDB.fallback_font.get_string_size(nodes[id]["name"], HORIZONTAL_ALIGNMENT_LEFT, -1, SkillScreen.FONT_SMALL).x
 		assert_lte(w, room, nodes[id]["name"])
+
+# --- navigation ---
+
+func _walk(m: Dictionary) -> Dictionary:
+	var start := SkillTreeModel.root(m)
+	var seen := {start: true}
+	var todo: Array = [start]
+	while not todo.is_empty():
+		var id: String = todo.pop_back()
+		for dir in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
+			var next := SkillTreeModel.neighbor(m, id, dir)
+			if not seen.has(next):
+				seen[next] = true
+				todo.append(next)
+	return seen
+
+func test_walking_neighbor_from_the_root_reaches_every_node() -> void:
+	var steps := [func(): pass,
+		func(): compendium.raise("hydraulic_propulsion", CompendiumModel.State.OWNED_ONCE),
+		func(): _discover_all()]
+	for step in steps:
+		step.call()
+		var m := _build()
+		var seen := _walk(m)
+		for id in m["nodes"]:
+			assert_true(seen.has(id), "%s is reachable from %s" % [id, SkillTreeModel.root(m)])
+
+func test_neighbor_prefers_an_edge_and_stays_put_at_the_border() -> void:
+	_discover_all()
+	var m := _build()
+	var right := SkillTreeModel.neighbor(m, "hydraulic_propulsion", Vector2i.RIGHT)
+	assert_true(["water_blade", "jet_dash"].has(right), "an evolution, joined by an edge, first: got " + right)
+	var top_left := SkillTreeModel.root(m)
+	assert_eq(SkillTreeModel.neighbor(m, top_left, Vector2i.UP), top_left, "nothing above the top row")
+	assert_eq(SkillTreeModel.neighbor(m, top_left, Vector2i.LEFT), top_left, "nothing left of column 0")
+	assert_eq(SkillTreeModel.neighbor(m, "no_such_node", Vector2i.DOWN), "no_such_node")
+
+func test_root_is_the_top_left_node() -> void:
+	_discover_all()
+	var m := _build()
+	var r := SkillTreeModel.root(m)
+	var rp: Vector2 = m["nodes"][r]["pos"]
+	for id in m["nodes"]:
+		var p: Vector2 = m["nodes"][id]["pos"]
+		assert_true(rp.y < p.y or (rp.y == p.y and rp.x <= p.x), id)
+	assert_eq(SkillTreeModel.root({"nodes": {}, "edges": [], "size": Vector2.ZERO}), "")

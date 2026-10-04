@@ -134,3 +134,59 @@ static func _canvas(slots: Dictionary) -> Vector2:
 	for id in slots:
 		out = out.max(slots[id] + NODE_SIZE)
 	return out
+
+## Where the selection starts: the top-left node ("" for an empty tree). Every node can be reached from it by neighbor().
+static func root(model: Dictionary) -> String:
+	var best := ""
+	for id in model["nodes"]:
+		if best == "" or _before(model["nodes"][id], model["nodes"][best], id, best):
+			best = id
+	return best
+
+static func _before(a: Dictionary, b: Dictionary, a_id: String, b_id: String) -> bool:
+	var pa: Vector2 = a["pos"]
+	var pb: Vector2 = b["pos"]
+	if pa.y != pb.y:
+		return pa.y < pb.y
+	if pa.x != pb.x:
+		return pa.x < pb.x
+	return a_id < b_id
+
+## The node a move in `dir` (Vector2i.UP is up) selects from `id`. It is the nearest node joined to `id` by an edge that lies
+## in that direction (within 45 degrees of it), else the nearest node in that open half-plane, ties broken by id; `id`
+## itself when nothing lies that way. The cone keeps a nearly sideways edge from beating the node straight below or above:
+## from a form whose children flank it, "down" must reach the form underneath.
+static func neighbor(model: Dictionary, id: String, dir: Vector2i) -> String:
+	var nodes: Dictionary = model["nodes"]
+	if not nodes.has(id):
+		return id
+	var from := _centre(nodes[id])
+	var joined: Array = []
+	for e in model["edges"]:
+		if e["from"] == id:
+			joined.append(e["to"])
+		elif e["to"] == id:
+			joined.append(e["from"])
+	var best := _nearest(nodes, from, dir, joined, true)
+	if best == "":
+		best = _nearest(nodes, from, dir, nodes.keys(), false)
+	return id if best == "" else best
+
+## The nearest of `ids` ahead of `from` in `dir`: in the open half-plane, or within the 45-degree cone when `cone`.
+static func _nearest(nodes: Dictionary, from: Vector2, dir: Vector2i, ids: Array, cone: bool) -> String:
+	var sorted := ids.duplicate()
+	sorted.sort()
+	var best := ""
+	var best_d := INF
+	for other in sorted:
+		var off := _centre(nodes[other]) - from
+		var along := off.dot(Vector2(dir))
+		if along <= 0.0 or (cone and absf(off.cross(Vector2(dir))) > along):
+			continue
+		if off.length() < best_d:
+			best_d = off.length()
+			best = other
+	return best
+
+static func _centre(node: Dictionary) -> Vector2:
+	return node["pos"] + NODE_SIZE / 2.0
