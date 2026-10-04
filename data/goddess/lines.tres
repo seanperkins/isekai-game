@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="GoddessLines" format=3]
+
+[ext_resource type="Script" path="res://scripts/soul/goddess_lines.gd" id="1_7f7wf"]
+
+[resource]
+script = ExtResource("1_7f7wf")
+by_cause = {
+"armed_ant": ["Outdone by an ant with a spear. I will not tell the others."],
+"bat": ["A bat. Of all the things."],
+"bog_lizardman": ["The lizardman did not even need the bog. Try the high ground."],
+"cave_crayfish": ["A crayfish. Mind the claws, dear."],
+"drift_jelly": ["You touched the jelly. Everyone touches the jelly."],
+"glass_eel": ["The eel was nearly invisible. That is a reason, not an excuse."],
+"gloom_wolf": ["A gloom wolf. Wolves do not forgive hesitation."],
+"lizard": ["A lizard. Small, quick, and entirely unimpressed with you."],
+"mushroom_crab": ["The crab, the caps, the whole sorry business."],
+"pale_moth": ["Dusted by a moth. Dignity is not what it used to be."],
+"poison": ["Poison is patient. You were not."],
+"serpent": ["The serpent. Do not look so surprised; it was long and it was hungry."],
+"spear": ["A spear, thrown by someone who meant it."],
+"spider": ["Eight legs, and you watched the wrong ones."],
+"spore_moth": ["Spores. You breathed them in and they did the rest."],
+"stone_drake": ["The drake fell on you. That is what drakes are for."],
+"storm_eel": ["A storm eel. Water and lightning: you knew better."],
+"taratect": ["The taratect. I will allow that no one is ready for the taratect."],
+"toad": ["A toad. I have decided not to ask."],
+"vine_snake": ["The vine was a snake. The snake was a vine. Look closer next time."]
+}
+many_deaths = ["That is another five. I count, so that you do not have to.", "You come back so often. I do not mind. Truly.", "Rest if you like. There is always another life."]
+fallback = "Back so soon. Come, there is still time."

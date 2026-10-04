@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="PerkDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/soul/perk_def.gd" id="1_nl57e"]
+
+[resource]
+script = ExtResource("1_nl57e")
+id = "stats"
+display_name = "Stronger base stats"
+description = "+2 max HP and +1 max MP for every purchase, from your next life."
+altar = "C1"
+price_base = 5
+price_step = 3
+effects = [{
+"amount": 2,
+"stat": "max_hp"
+}, {
+"amount": 1,
+"stat": "max_mp"
+}]
