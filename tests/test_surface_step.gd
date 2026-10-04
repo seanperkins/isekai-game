@@ -380,3 +380,42 @@ func test_walking_off_a_sliver_of_a_ledge_drops_from_where_it_is() -> void:
 	assert_eq(events, ["convex_nothing"])
 	assert_eq(s.surface_n, Vector2.ZERO)
 	assert_lt(s.surface_shift.length(), 2.5, "it drops from the edge, it is not moved 19 px round a corner that is not there")
+
+func test_gripping_a_wall_from_the_air_keeps_climbing_while_the_stick_stays_on_it() -> void:
+	for side in [-1, 1]:
+		var w := FakeSurfaceWorld.build_spike_terrain()
+		# beside the block's right face (a wall on its left) and its left face (a wall on its right)
+		w.pos = Vector2(313, -60) if side == -1 else Vector2(187, -60)
+		var s := MoveState.new()
+		var stick := Vector2(float(side), 0.0)
+		var i := _make_input(w, stick)
+		i.wall_side = side
+		assert_true(SurfaceStep.step(s, i, spider, DT))
+		assert_eq(s.surface_event, "attach")
+		w.apply(s)
+		var y := w.pos.y
+		_run(w, s, stick, 12)
+		assert_lt(w.pos.y, y - 15.0, "holding toward the wall climbs it, as walking into it does (side %d)" % side)
+
+func test_gripping_a_wall_from_the_air_closes_the_gap_to_it() -> void:
+	for x in [314.0, 315.0]:  # 14 (touching, for the 28 wide standing box) and 15 px from the block's right face (x 300)
+		var w := FakeSurfaceWorld.build_spike_terrain()
+		w.pos = Vector2(x, -60)
+		var s := MoveState.new()
+		var i := _make_input(w, Vector2.LEFT)
+		i.wall_side = -1
+		SurfaceStep.step(s, i, spider, DT)
+		w.apply(s)
+		assert_almost_eq(w.pos.x, 312.0, 0.01, "flush: the wall box's half width, 12, from the face (from %s)" % x)
+
+func test_a_hop_onto_a_wall_then_up_goes_over_its_top_corner() -> void:
+	var w := FakeSurfaceWorld.build_spike_terrain()
+	w.pos = Vector2(315, -60)  # a hop that gripped the block's right face 15 px out
+	var s := MoveState.new()
+	var i := _make_input(w, Vector2.LEFT)
+	i.wall_side = -1
+	SurfaceStep.step(s, i, spider, DT)
+	w.apply(s)
+	var events := _until(w, s, Vector2.UP, 200, func(): return s.surface_n == Vector2.UP)
+	assert_eq(events, ["convex"], "over the corner onto the block's top, not a drop (convex_nothing)")
+	assert_almost_eq(w.pos.y, -112.0, 3.0)

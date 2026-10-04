@@ -107,7 +107,23 @@ static func _attach(s: MoveState, i: MoveInput) -> bool:
 	s.surface_latch = Vector2.ZERO
 	s.velocity = Vector2.ZERO
 	s.surface_event = "attach"
+	if n != Vector2.UP:
+		# Close the gap to the wall or ceiling (up to 3 px of the grip's reach): the turn round its far corner assumes the body
+		# is flush, and a hop that gripped 2 px out found no top surface there and dropped.
+		var toward := -n
+		var hit: Dictionary = i.sweep.call(toward * (HN + STICK + 2.0))
+		var travel := (hit["travel"] as Vector2) if not hit.is_empty() else Vector2.ZERO
+		if absf(n.x) > 0.5:
+			travel += toward * (HT - HN)  # the standing box is 28 wide, the wall box 24
+			grip_wall(s, n, stick)
+		s.surface_shift = travel
 	return true
+
+## A wall gripped with the stick toward it keeps climbing while the stick stays there, as walking into the wall does.
+static func grip_wall(s: MoveState, n: Vector2, stick: Vector2) -> void:
+	if absf(n.x) > 0.5 and stick.x * -n.x > 0.5:
+		s.surface_latch = Vector2(signf(stick.x), 0.0)
+		s.surface_sigma = tangent(n).dot(Vector2.UP)
 
 ## The box for a surface with normal `n`: the body config's box on a floor or ceiling, turned on a wall.
 static func box_size(n: Vector2) -> Vector2:

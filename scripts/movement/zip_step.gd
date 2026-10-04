@@ -74,6 +74,7 @@ static func _pull(s: MoveState, i: MoveInput, p: MovementProfile, dt: float) -> 
 		s.surface_since = 99.0
 		s.surface_lock = 0.0
 		s.surface_latch = Vector2.ZERO
+		SurfaceStep.grip_wall(s, normal, i.stick())  # still holding toward the wall: keep climbing
 		s.air_verb_used = false
 		_end(s, p, "grip")
 		return true

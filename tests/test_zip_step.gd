@@ -158,3 +158,25 @@ func test_a_zip_starting_right_after_a_corner_does_not_carry_the_corner_event() 
 	assert_eq(s.surface_event, "", "the zip owns the tick, and the corner is over")
 	_tick(a[0], s, Vector2.RIGHT)
 	assert_eq(s.surface_event, "")
+
+func test_a_zip_onto_a_wall_keeps_climbing_while_the_stick_stays_toward_it() -> void:
+	var a := _at(Vector2(120, -12))
+	var w: FakeSurfaceWorld = a[0]
+	var s: MoveState = a[1]
+	var i := w.input()
+	i.aim = Vector2.RIGHT
+	i.dir = 1.0
+	i.signature_pressed = true
+	ZipStep.step(s, i, spider, DT)
+	i.signature_pressed = false
+	for _k in 40:
+		ZipStep.step(s, i, spider, DT)
+		w.apply(s)
+		if s.zip_event == "grip":
+			break
+	assert_eq(s.surface_n, Vector2.LEFT)
+	var y := w.pos.y
+	for _k in 12:
+		SurfaceStep.step(s, i, spider, DT)
+		w.apply(s)
+	assert_lt(w.pos.y, y - 15.0, "the stick is still toward the wall: it climbs")

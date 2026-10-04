@@ -699,3 +699,30 @@ func test_the_slime_ignores_down_in_the_air() -> void:
 	await _frames(20)
 	assert_eq(sb.state.drop_event, "")
 	assert_eq(sb.state.drop_up, 0.0)
+
+func _hop_onto_the_pillar() -> void:
+	await _spider_at(Vector2(738.0, -12.0))
+	sb.scripted.dir = 1.0
+	sb.scripted.jump_pressed = true
+	await _frames(12)
+
+func test_hopping_onto_the_pillar_then_climbing_goes_over_the_top_left_corner() -> void:
+	await _hop_onto_the_pillar()
+	assert_eq(sb.state.surface_n, Vector2.LEFT, "gripped the wall")
+	sb.scripted.dir = 0.0
+	sb.scripted.up = 1.0
+	var over := false
+	for _k in 200:
+		await get_tree().physics_frame
+		if sb.state.surface_n == Vector2.UP and sb.body.global_position.y < -150.0:
+			over = true
+			break
+	assert_true(over, "over the corner onto the slab's top")
+	await _frames(3)
+	assert_almost_eq(sb.body.global_position.y, -192.0, 3.0)
+
+func test_after_a_hop_onto_a_wall_holding_toward_it_keeps_climbing() -> void:
+	await _hop_onto_the_pillar()
+	var y := sb.body.global_position.y
+	await _frames(30)
+	assert_lt(sb.body.global_position.y, y - 30.0, "holding right climbs, as walking into the wall does")
