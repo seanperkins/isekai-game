@@ -157,7 +157,7 @@ func test_screen_lists_navigates_and_assigns() -> void:
 func test_compendium_tab_shows_unknown_slots() -> void:
 	_screen()
 	screen.open()
-	screen.switch_tab(1)
+	screen.switch_tab(2)
 	assert_eq(screen.tab(), "compendium")
 	assert_true(screen.row_texts().has("???"))
 
@@ -173,7 +173,7 @@ func test_bestiary_tab_lists_creatures_and_shows_a_card() -> void:
 	compendium.on_game_event(Events.PREDATED, {"source": "bat", "kind": "creature"})
 	_screen()
 	screen.open()
-	screen.switch_tab(2)
+	screen.switch_tab(3)
 	assert_eq(screen.tab(), "bestiary")
 	assert_true(screen.row_texts().has("Cave Bat"))
 	assert_true(screen.row_texts().has("???"))
@@ -191,14 +191,24 @@ func test_bestiary_tab_lists_creatures_and_shows_a_card() -> void:
 func test_tabs_cycle_through_all_five() -> void:
 	_screen()
 	screen.open()
-	screen.switch_tab(3)
-	assert_eq(screen.tab(), "map")
+	screen.switch_tab(1)
+	assert_eq(screen.tab(), "tree")
 	screen.switch_tab(4)
-	assert_eq(screen.tab(), "sound")
+	assert_eq(screen.tab(), "map")
 	screen.switch_tab(5)
 	assert_eq(screen.tab(), "skills")
 	screen.switch_tab(-1)
-	assert_eq(screen.tab(), "sound")
+	assert_eq(screen.tab(), "map")
+
+func test_the_tree_tab_is_second_and_accept_on_it_assigns_nothing() -> void:
+	_screen()
+	screen.open()
+	screen.switch_tab(1)
+	assert_eq(screen.tab(), "tree")
+	var slots_before: Array = player.skillset.slots.slots.duplicate()
+	screen.accept()
+	assert_eq(player.skillset.slots.slots, slots_before)
+	assert_true(screen.is_open())
 
 func test_sheet_only_creatures_have_a_bestiary_portrait() -> void:
 	for id in ["bat", "toad", "lizard", "spider", "serpent", "spore_moth", "mushroom_crab", "vine_snake",

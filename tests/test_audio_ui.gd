@@ -55,15 +55,13 @@ func test_moving_the_selection_emits_only_when_it_moves() -> void:
 	screen.move(-1)  # already at the top
 	assert_eq(seen, [])
 
-func test_there_are_five_tabs_and_the_wrap_includes_sound() -> void:
-	assert_eq(SkillScreen.TABS.size(), 5)
+func test_there_are_five_tabs_and_sound_is_not_one_of_them() -> void:
+	assert_eq(SkillScreen.TABS, ["skills", "tree", "compendium", "bestiary", "map"])
 	screen.open()
-	screen.switch_tab(4)
-	assert_eq(screen.tab(), "sound")
 	screen.switch_tab(5)
 	assert_eq(screen.tab(), "skills")
 	screen.switch_tab(-1)
-	assert_eq(screen.tab(), "sound")
+	assert_eq(screen.tab(), "map")
 
 func test_the_five_tabs_fit_the_screen_and_their_labels_fit_the_tabs() -> void:
 	screen.open()
@@ -79,11 +77,6 @@ func test_the_five_tabs_fit_the_screen_and_their_labels_fit_the_tabs() -> void:
 	assert_lt(last.position.x + last.size.x, 612.0)
 	for i in range(1, 5):
 		assert_gt(panels[i].position.x, panels[i - 1].position.x + panels[i - 1].size.x - 0.5, "no overlap")
-
-func test_adjust_does_nothing_off_the_sound_tab() -> void:
-	screen.open()
-	screen.adjust(1)
-	assert_almost_eq(Audio.settings.values["master"], 0.8, 0.0001)
 
 # --- the Settings menu (the sliders that were the Sound tab) ---
 

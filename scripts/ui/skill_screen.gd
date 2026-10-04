@@ -1,11 +1,11 @@
 class_name SkillScreen
 extends CanvasLayer
-## Great Sage skill window (Style D): Skills, Compendium, Bestiary, Map and Sound tabs, stats, grouped list and a
+## Great Sage skill window (Style D): Skills, Tree, Compendium, Bestiary and Map tabs, stats, grouped list and a
 ## detail card. Esc / Start opens it and pauses the game; Q/E or LB/RB switch tabs; Tab / R3 opens the Settings menu;
 ## Enter / A assigns an active to the U/O slots; Esc / B closes. Laid out for 640x360.
 
-## The five base tabs. A sixth, "form", joins once the body has evolved or can (see tabs()).
-const TABS := ["skills", "compendium", "bestiary", "map", "sound"]
+## The five base tabs. A sixth, "form", joins once the body has evolved or can (see tabs()). Sound lives in the Settings menu.
+const TABS := ["skills", "tree", "compendium", "bestiary", "map"]
 const FORM_TAB := "form"
 ## Five tabs share the top row: they end at x = 532 on the 640 px canvas; six are narrower.
 const TAB_X := 28.0
@@ -200,14 +200,6 @@ func accept() -> void:
 	EventBus.world_event.emit("menu_confirm", {})
 	_refresh()
 
-## Sound tab: changes the selected slider by one step (direction is -1 or +1).
-func adjust(direction: int) -> void:
-	if tab() != "sound" or _selectable.is_empty():
-		return
-	Audio.adjust_setting(str(_rows[_selectable[_sel]]["id"]), direction)
-	EventBus.world_event.emit("menu_move", {})
-	_refresh()
-
 func row_texts() -> Array:
 	var out: Array = []
 	for r in _rows:
@@ -290,10 +282,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		switch_tab(_tab + 1)
 	elif event.is_action_pressed("settings"):
 		open_settings()
-	elif event.is_action_pressed("move_left") or event.is_action_pressed("ui_left"):
-		adjust(-1)
-	elif event.is_action_pressed("move_right") or event.is_action_pressed("ui_right"):
-		adjust(1)
 	elif event.is_action_pressed("menu_accept") or event.is_action_pressed("ui_accept"):
 		accept()
 	elif event.is_action_pressed("menu_back") or event.is_action_pressed("ui_cancel"):
@@ -364,17 +352,14 @@ func _refresh_tab() -> void:
 	if tab() == FORM_TAB:
 		_refresh_form()
 		return
-	if tab() == "sound":
-		_rows = SkillScreenModel.sound_rows(Audio.settings)
+	if tab() == "tree":
+		_rows = []
 		_selectable = []
-		for i in _rows.size():
-			_selectable.append(i)
-		_sel = clampi(_sel, 0, _rows.size() - 1)
-		_hint.text = "LB/RB Tabs    Left/Right Adjust    B Back" if Controls.using_joypad else "Q/E Tabs    A/D Adjust    Esc Back"
+		_hint.text = "LB/RB Tabs    B Back" if Controls.using_joypad else "Q/E Tabs    Esc Back"
 		_build_stats()
 		_clear(_list)
 		_clear(_detail)
-		_build_sound()
+		_label(_list, "TREE", Vector2(LIST_X + 4, LIST_TOP + 2), Vector2(200, 12), FONT_SMALL, COL_TITLE)
 		return
 	match tab():
 		"skills":
@@ -637,18 +622,6 @@ func _build_map() -> void:
 		_list.add_child(stub)
 	_map_found = m["found"]
 	_label(_list, _map_found, Vector2(LIST_X + 4, MAP_BOX.end.y + 6), Vector2(220, 12), FONT_SMALL, COL_DIM)
-
-func _build_sound() -> void:
-	_label(_list, "SOUND", Vector2(LIST_X, LIST_TOP), Vector2(200, 14), FONT_BIG, COL_TITLE)
-	var y := LIST_TOP + 30.0
-	for i in _rows.size():
-		var r: Dictionary = _rows[i]
-		if i == _sel:
-			_panel(_list, Vector2(LIST_X - 4.0, y - 5.0), Vector2(454.0, 24.0), COL_SELECTED, 1)
-		_label(_list, r["name"], Vector2(LIST_X, y), Vector2(110, 14), FONT_MAIN, Color.WHITE)
-		_bar(_list, Vector2(LIST_X + 120.0, y + 3.0), Vector2(240, 8), r["value"], COL_PIP_ON)
-		_label(_list, "%d%%" % int(round(r["value"] * 100.0)), Vector2(LIST_X + 372.0, y), Vector2(60, 14), FONT_MAIN, COL_DIM)
-		y += 34.0
 
 # --- helpers --------------------------------------------------------------
 

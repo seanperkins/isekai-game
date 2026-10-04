@@ -52,7 +52,7 @@ func test_the_map_tab_draws_inside_the_screen() -> void:
 	screen.bind(player, rules, compendium, skills)
 	screen.bind_world(world, progress)
 	screen.open()
-	screen.switch_tab(3)
+	screen.switch_tab(4)
 	assert_eq(screen.tab(), "map")
 	assert_eq(screen.map_found_text(), "Rooms found 2/3")
 	assert_eq(screen.map_room_count(), 2)
@@ -72,6 +72,6 @@ func test_the_map_tab_without_a_world_says_so() -> void:
 	add_child_autofree(screen)
 	screen.bind(player, rules, CompendiumModel.new(skills, []), skills)
 	screen.open()
-	screen.switch_tab(3)
+	screen.switch_tab(4)
 	assert_eq(screen.map_room_count(), 0)
 	get_tree().paused = false
