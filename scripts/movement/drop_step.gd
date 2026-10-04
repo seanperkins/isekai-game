@@ -24,8 +24,8 @@ static func _start(s: MoveState, i: MoveInput, p: MovementProfile, dt: float) ->
 		return false  # from the air (once per airtime) or a ceiling; down on a wall is crawling down it
 	var hit: Dictionary = i.cast.call(Vector2.ZERO, Vector2(0.0, -p.drop_range), false)
 	var up := -(hit["point"] as Vector2).y if not hit.is_empty() else 0.0
-	if hit.is_empty() or up < SurfaceStep.HN - 0.5:
-		s.drop_event = "fizzle"  # nothing to hang from: it costs nothing
+	if hit.is_empty() or up < SurfaceStep.HN - 0.5 or hit.get("slick", false):
+		s.drop_event = "fizzle"  # nothing to hang from (a slick ceiling refuses a thread): it costs nothing
 		return false
 	var half := p.top_speed * p.drop_air
 	s.drop_up = maxf(up, SurfaceStep.HN)

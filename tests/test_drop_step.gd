@@ -166,3 +166,14 @@ func test_no_probes_and_a_zip_in_flight_do_nothing() -> void:
 	var a := _at(Vector2(600, -100))
 	(a[1] as MoveState).zip_dir = Vector2.RIGHT
 	assert_false(_tick(a[0], a[1], Vector2.ZERO, true), "a zip owns the tick")
+
+func test_a_thread_cannot_hang_from_a_slick_ceiling() -> void:
+	var a := _at(Vector2(1450, -40))  # under the slick slab (underside y -80)
+	assert_false(_tick(a[0], a[1], Vector2.ZERO, true))
+	assert_eq((a[1] as MoveState).drop_event, "fizzle")
+	assert_false((a[1] as MoveState).air_verb_used)
+
+func test_a_sticky_ceiling_still_takes_a_thread() -> void:
+	var a := _at(Vector2(600, -100))
+	_tick(a[0], a[1], Vector2.ZERO, true)
+	assert_eq((a[1] as MoveState).drop_event, "start")
