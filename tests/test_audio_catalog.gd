@@ -130,3 +130,10 @@ func test_no_audio_file_is_orphaned() -> void:
 		for f in DirAccess.get_files_at("res://assets/audio/" + sub):
 			if f.ends_with(".ogg"):
 				assert_true(used.has(sub + "/" + f), "orphan %s/%s" % [sub, f])
+
+func test_the_opening_hit_cue_is_on_the_ui_bus_and_not_positional() -> void:
+	var c := CueCatalog.load_file("res://data/audio/cues.json")
+	assert_eq(c.route("opening_hit", {}), {"cue": "opening_impact"})
+	var rule: Dictionary = c.cues["opening_impact"]
+	assert_eq(rule["bus"], "UI", "Audio keeps only UI voices alive while the tree is paused, and the opening pauses it")
+	assert_false(bool(rule.get("positional", false)))
