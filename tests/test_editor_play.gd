@@ -73,7 +73,7 @@ func test_a_death_returns_to_the_editor_without_the_menu_and_the_model_is_unchan
 	Compendium.progress.attune("G1")  # the real progress has a second pool: given to the Run it would open the menu
 	await _play("C2")
 	var menus := [0]
-	game.run.choice_needed.connect(func(_d: Dictionary) -> void: menus[0] += 1)
+	game.run.goddess_needed.connect(func(_model: GoddessModel, _line: String) -> void: menus[0] += 1)
 	var before := RoomEditModel.copy_room(model.rooms["C2"])
 	game.player.health.take_hit(999, "physical")
 	await wait_seconds(Run.DEATH_CARD_SECONDS + 0.6)

@@ -21,6 +21,9 @@ var hud: Hud
 var skill_screen: SkillScreen
 var world: World
 var run: Run
+## The goddess's scene and menu. Null goddess in an editor Play: a death returns to the editor at once.
+var goddess: Goddess
+var goddess_menu: GoddessMenu
 var ambient: CanvasModulate
 var _skills_by_id := {}
 var _creatures := {}
@@ -87,12 +90,16 @@ func _ready() -> void:
 	skill_screen.visibility_changed.connect(func() -> void: hud.visible = not skill_screen.visible)
 	run = Run.new()
 	add_child(run)
-	# Bound without progress in an editor Play: a death emits restart_requested at once and never opens the rebirth menu.
-	run.bind(player, world, null if _editor_play else Compendium.progress, pools)
+	# Bound without progress in an editor Play: a death emits restart_requested at once and never opens the goddess's menu.
+	goddess = null if _editor_play else Goddess.load_default(Compendium.soul, Compendium.model, SkillRules.skill_defs)
+	run.bind(player, world, null if _editor_play else Compendium.progress, pools, goddess)
 	run.restart_requested.connect(_restart)
-	var menu := ReincarnationMenu.new()  # bound after the run: a connected menu means the run waits for the choice
-	add_child(menu)
-	menu.bind(run)
+	goddess_menu = GoddessMenu.new()  # connected after the run is bound: a listener means the run waits for her choice
+	add_child(goddess_menu)
+	run.goddess_needed.connect(goddess_menu.open)
+	goddess_menu.confirmed.connect(run.accept)
+	if not _editor_play:
+		Compendium.soul.session_points = Game.soul_points_arg(OS.get_cmdline_user_args())  # set, not added: a reload refills it
 	begin_life(start)
 	if Game.wants_evolve(OS.get_cmdline_user_args()):
 		player.debug_grant_xp(Progression.stage_total(1))  # reach the first evolution without a grind
@@ -101,13 +108,15 @@ func _ready() -> void:
 		back.game = self
 		add_child(back)
 
-## Starts a life: the run's state is cleared, then the pool's kit is given. The kit comes second because
-## start_run() clears everything a kit would set.
+## Starts a life: the run's state is cleared, then the bought kit is given, then the perks. The kit comes second because
+## start_run() clears everything a kit would set, and the perks last so the stats they raise are filled.
 func begin_life(start: Dictionary) -> void:
 	SkillRules.start_run()
 	if not start["kit"].is_empty():
 		# an editor Play passes no compendium: the kit grant must not raise slots in the (persistent) profile
 		RebirthKit.apply(player, SkillRules, null if _editor_play else Compendium.model, start["kit"])
+	if goddess != null:
+		SoulPerks.apply(player, Compendium.soul, goddess.perks)
 
 ## A fresh creature (or water pool) for a room, wired to XP and the Bestiary.
 func _spawn(id: String, pos: Vector2) -> Node2D:
@@ -153,15 +162,31 @@ func _prepare_restart() -> void:
 static func wants_evolve(args: Array) -> bool:
 	return args.has("--evolve")
 
-## Where the next life starts: the default (the start room, no kit) unless `pending` names an attuned pool
-## the room data still holds, in which case its room, its spot (standing on it) and its kit.
+## Where the next life starts: the default (the start room) unless `pending` names an attuned pool the room data still holds,
+## in which case its room and spot (standing on it). The kit and the species are what the goddess's menu gave, from `pending`
+## (never the pool's own kit); a malformed kit or species falls back to `{}` and "slime", and a kit survives a place that is gone.
 static func resolve_start(pools: Array, pending: Dictionary, attuned: Callable) -> Dictionary:
-	var default := {"default": true, "kit": {}}
+	var kit = pending.get("kit", {})
+	if typeof(kit) != TYPE_DICTIONARY:
+		kit = {}
+	var species = pending.get("species", WorldProgress.DEFAULT_SPECIES)
+	if typeof(species) != TYPE_STRING:
+		species = WorldProgress.DEFAULT_SPECIES
+	var default := {"default": true, "kit": kit, "species": species}
 	var id = pending.get("pool", "")
 	if typeof(id) != TYPE_STRING or id == "" or id == WorldProgress.DEFAULT_POOL:
 		return default
 	for p in pools:
 		if p["id"] == id and attuned.call(id):
 			return {"default": false, "room": p["room"], "pos": p["pos"] + Vector2(0.0, -BodyConfig.BOTTOM),
-				"kit": p["kit"], "pool": id}
+				"kit": kit, "pool": id, "species": species}
 	return default
+
+## `-- --soul=N` on the command line grants N soul points to spend this session: 0 to 9999, anything else reads 0.
+static func soul_points_arg(args: Array) -> int:
+	for arg in args:
+		var text := str(arg)
+		if text.begins_with("--soul="):
+			var value := text.trim_prefix("--soul=")
+			return clampi(int(value), 0, 9999) if value.is_valid_int() else 0
+	return 0
