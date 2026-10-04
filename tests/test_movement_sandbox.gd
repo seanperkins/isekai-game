@@ -627,3 +627,10 @@ func test_the_slime_still_tackles_on_the_same_button() -> void:
 	sb.scripted.signature_pressed = true
 	await _frames(2)
 	assert_eq(sb.state.verb, "tackle")
+
+func test_a_diagonal_cast_down_past_a_ledge_ignores_its_side() -> void:
+	await _spider_at(Vector2(130.0, -77.0), Vector2.ZERO)
+	var hit: Dictionary = sb._cast(Vector2.ZERO, Vector2(1, 1).normalized() * 160.0, true)
+	assert_false(hit.is_empty())
+	assert_false(hit["oneway"], "not the one-way ledge's side")
+	assert_eq(hit["normal"], Vector2.UP)

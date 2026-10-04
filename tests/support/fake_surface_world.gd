@@ -154,7 +154,7 @@ func _cast(from: Vector2, to: Vector2, include_oneway: bool) -> Dictionary:
 	if include_oneway and to.y > from.y:
 		for r in _oneway:
 			var hit := _enter_segment(a, b, r)
-			if not hit.is_empty() and hit["t"] < best_t:
+			if not hit.is_empty() and hit["normal"] == Vector2.UP and hit["t"] < best_t:  # only a ledge's top is an anchor
 				best_t = hit["t"]
 				best = {"point": a + (b - a) * best_t - pos, "normal": hit["normal"], "oneway": true}
 	return best

@@ -12,6 +12,7 @@ const MIN_ANCHOR := 14.0
 ## Runs one tick. True while a zip runs or ended this tick (this step owns the body); false otherwise, and with no probes.
 static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float) -> bool:
 	s.zip_event = ""
+	s.surface_event = ""  # the crawl's last corner is over; this step may own the tick
 	s.surface_shift = Vector2.ZERO
 	if not i.sweep.is_valid() or not i.cast.is_valid():
 		return false

@@ -79,3 +79,13 @@ func test_cast_is_empty_in_open_air() -> void:
 	var w := _world()
 	w.pos = Vector2(600, -300)
 	assert_true((w.input().cast.call(Vector2.ZERO, Vector2(100, 0), true) as Dictionary).is_empty())
+
+func test_cast_down_a_diagonal_ignores_a_ledges_side_and_finds_what_is_beyond() -> void:
+	var w := _world()
+	w.pos = Vector2(130, -77)
+	var d := Vector2(1, 1).normalized() * 160.0
+	var hit: Dictionary = w.input().cast.call(Vector2.ZERO, d, true)
+	assert_false(hit.is_empty())
+	assert_false(hit["oneway"], "the ledge's left side at (160, -47) is not an anchor")
+	assert_almost_eq((hit["point"] as Vector2).x, 70.0, 0.5, "it reaches the block's face at (200, -7) instead")
+	assert_eq(hit["normal"], Vector2.LEFT)

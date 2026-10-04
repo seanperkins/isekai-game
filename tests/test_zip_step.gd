@@ -149,3 +149,12 @@ func test_no_probes_and_no_press_do_nothing() -> void:
 	var a := _at(Vector2(120, -12))
 	assert_false(_tick(a[0], a[1], Vector2.RIGHT, false), "no press, no zip")
 	assert_eq((a[1] as MoveState).zip_event, "")
+
+func test_a_zip_starting_right_after_a_corner_does_not_carry_the_corner_event() -> void:
+	var a := _at(Vector2(120, -12))
+	var s: MoveState = a[1]
+	s.surface_event = "convex"  # the crawl's last tick turned a corner
+	_tick(a[0], s, Vector2.RIGHT, true)
+	assert_eq(s.surface_event, "", "the zip owns the tick, and the corner is over")
+	_tick(a[0], s, Vector2.RIGHT)
+	assert_eq(s.surface_event, "")

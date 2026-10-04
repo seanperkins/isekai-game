@@ -285,12 +285,21 @@ func _crawl(delta: float) -> void:
 	_draw_body(delta)
 
 ## The zip's cast: the first hard solid along the segment (a one-way ledge's top only for a downward cast), relative to the body.
+## A ledge's side or underside is not an anchor: the ray looks past it.
 func _cast(from: Vector2, to: Vector2, include_oneway: bool) -> Dictionary:
-	var q := PhysicsRayQueryParameters2D.create(body.global_position + from, body.global_position + to, 3 if include_oneway else 1, [body.get_rid()])
-	var hit := get_world_2d().direct_space_state.intersect_ray(q)
-	if hit.is_empty():
-		return {}
-	return {"point": (hit["position"] as Vector2) - body.global_position, "normal": hit["normal"], "oneway": (hit["collider"] as CollisionObject2D).collision_layer == 2}
+	var exclude: Array[RID] = [body.get_rid()]
+	for _k in 4:
+		var q := PhysicsRayQueryParameters2D.create(body.global_position + from, body.global_position + to, 3 if include_oneway else 1, exclude)
+		var hit := get_world_2d().direct_space_state.intersect_ray(q)
+		if hit.is_empty():
+			return {}
+		var collider := hit["collider"] as CollisionObject2D
+		var oneway := collider.collision_layer == 2
+		if oneway and (hit["normal"] as Vector2).dot(Vector2.UP) < 0.9:
+			exclude.append(collider.get_rid())
+			continue
+		return {"point": (hit["position"] as Vector2) - body.global_position, "normal": hit["normal"], "oneway": oneway}
+	return {}
 
 ## The thread from behind the spider to its anchor while it pulls, and for a moment after.
 func _update_thread(delta: float) -> void:
