@@ -27,6 +27,11 @@ func update(vy: float, dt: float) -> void:
 func land(fall_speed: float) -> void:
 	_v += -clampf(fall_speed / 500.0, 0.0, 1.0) * LIMIT * 20.0
 
+## Drops any squash or stretch at once (a bounce that lands as a ball, not a squash).
+func calm() -> void:
+	_y = 0.0
+	_v = 0.0
+
 ## The sprite's scale, volume-preserving: taller is narrower.
 func sprite_scale() -> Vector2:
 	var s := clampf(_y, -LIMIT, LIMIT)
