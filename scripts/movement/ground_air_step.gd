@@ -4,6 +4,9 @@ extends RefCounted
 ## player.gd and the sandbox share it and tests drive it a tick at a time. The caller moves the body with the velocity
 ## this leaves. Tick order: timers, horizontal control, gravity, jump, release.
 
+## A jump that fires on the floor after at least this many seconds of air is a landing's rebound, not a step down's.
+const REBOUND_MIN_AIR := 0.12
+
 ## `speed_scale` is the speed stat as a fraction (spd / 100); `jump_boost` scales a launch (sqrt(jump_height / 100)).
 static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float, speed_scale := 1.0, jump_boost := 1.0) -> void:
 	s.launched = ""
@@ -11,6 +14,7 @@ static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float, spee
 	_horizontal(s, i, p, dt, speed_scale)
 	_gravity(s, i, p, dt)
 	_jump(s, i, p, jump_boost)
+	_release(s, i, p)
 	s.air_time = 0.0 if i.on_floor else s.air_time + dt
 
 ## Every timer is decremented and clamped to zero first and tested `> 0.0` after, so floating-point residue is never
@@ -43,7 +47,8 @@ static func _horizontal(s: MoveState, i: MoveInput, p: MovementProfile, dt: floa
 	s.velocity.x = move_toward(s.velocity.x, target, rate * dt)
 
 ## Airborne only. Starts from `gravity`; the apex float and the heavier fall both apply when both match (held with
-## 0 < vy < apex_band). A body on the floor has positive vy zeroed.
+## 0 < vy < apex_band), and a SOFT release multiplies it while rising with the button up. A body on the floor has
+## positive vy zeroed.
 static func _gravity(s: MoveState, i: MoveInput, p: MovementProfile, dt: float) -> void:
 	if i.on_floor:
 		s.velocity.y = minf(s.velocity.y, 0.0)
@@ -53,6 +58,8 @@ static func _gravity(s: MoveState, i: MoveInput, p: MovementProfile, dt: float) 
 		g *= p.apex_gravity_mult
 	if s.velocity.y > 0.0:
 		g *= p.fall_mult
+	elif s.jumping and not i.jump_held and p.release_style == MovementProfile.ReleaseStyle.SOFT:
+		g *= p.release_factor
 	s.velocity.y += g * dt
 
 ## A live buffer launches from the floor or inside the coyote window; one launch per press.
@@ -60,8 +67,22 @@ static func _jump(s: MoveState, i: MoveInput, p: MovementProfile, jump_boost: fl
 	if s.buffer <= 0.0 or not (i.on_floor or s.coyote > 0.0):
 		return
 	s.launch_speed = p.jump_velocity * jump_boost
+	s.launched = "ground" if i.on_floor else "coyote"
+	if i.on_floor and s.air_time >= REBOUND_MIN_AIR and p.rebound_rise > 0.0:
+		s.launch_speed *= sqrt(1.0 + p.rebound_rise)
+		s.launched = "rebound"
 	s.velocity.y = -s.launch_speed
 	s.jumping = true
-	s.launched = "ground" if i.on_floor else "coyote"
 	s.buffer = 0.0
 	s.coyote = 0.0
+
+## Jump released while rising from a jump (never on the launch tick). CUT caps the rise speed once and never raises it;
+## SOFT already did its work in the gravity step. The rise ends at the apex or on the floor.
+static func _release(s: MoveState, i: MoveInput, p: MovementProfile) -> void:
+	if not s.jumping or s.launched != "":
+		return
+	if i.on_floor or s.velocity.y >= 0.0:
+		s.jumping = false
+	elif not i.jump_held and p.release_style == MovementProfile.ReleaseStyle.CUT:
+		s.velocity.y = maxf(s.velocity.y, -s.launch_speed * p.release_factor)
+		s.jumping = false
