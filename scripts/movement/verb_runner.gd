@@ -15,6 +15,8 @@ static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float, spee
 	if i.dir != 0.0:
 		s.facing = 1 if i.dir > 0.0 else -1
 	_tick_cooldowns(s, dt)
+	if i.on_floor:
+		s.air_verb_used = false
 	_ooze(s, i, p)
 	_bursts(s, i, p, dt)
 	var input := i
@@ -55,7 +57,7 @@ static func _bursts(s: MoveState, i: MoveInput, p: MovementProfile, dt: float) -
 	if s.verb == "":
 		for row in p.bursts:
 			if _can_begin(row as BurstDef, s, i):
-				_begin(row as BurstDef, s)
+				_begin(row as BurstDef, s, i)
 				break
 	if s.verb == "":
 		return
@@ -74,7 +76,7 @@ static func _row(p: MovementProfile, id: String) -> BurstDef:
 	return null
 
 static func _can_begin(row: BurstDef, s: MoveState, i: MoveInput) -> bool:
-	if s.cooldowns.get(row.id, 0.0) > 0.0:
+	if s.cooldowns.get(row.id, 0.0) > 0.0 or (not i.on_floor and s.air_verb_used):
 		return false
 	match row.trigger:
 		"signature":
@@ -83,7 +85,8 @@ static func _can_begin(row: BurstDef, s: MoveState, i: MoveInput) -> bool:
 			return i.on_floor and i.down >= SPREAD_DOWN and absf(s.velocity.x) >= row.min_start_speed
 	return false
 
-static func _begin(row: BurstDef, s: MoveState) -> void:
+static func _begin(row: BurstDef, s: MoveState, i: MoveInput) -> void:
+	s.air_verb_used = s.air_verb_used or not i.on_floor
 	s.verb = row.id
 	s.verb_left = row.duration
 	s.verb_dir = float(s.facing) if row.speed > 0.0 else signf(s.velocity.x)

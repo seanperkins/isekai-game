@@ -185,3 +185,28 @@ func test_tackle_wins_when_both_would_start() -> void:
 	i.signature_pressed = true
 	VerbRunner.step(s, i, slime, 1.0 / 60.0)
 	assert_eq(s.verb, "tackle")
+
+func test_a_second_air_tackle_is_refused_until_the_slime_lands() -> void:
+	var s := MoveState.new()
+	var air := _signature()
+	air.on_floor = false
+	VerbRunner.step(s, air, slime, 1.0 / 60.0)
+	assert_eq(s.verb, "tackle")
+	for _k in 12:
+		VerbRunner.step(s, _in(0.0, false), slime, 1.0 / 60.0)
+	assert_eq(s.verb, "", "the first one ended")
+	VerbRunner.step(s, air, slime, 1.0 / 60.0)
+	assert_eq(s.verb, "", "one air verb per airtime")
+	VerbRunner.step(s, _in(), slime, 1.0 / 60.0)
+	VerbRunner.step(s, _signature(), slime, 1.0 / 60.0)
+	assert_eq(s.verb, "tackle", "landing gives it back")
+
+func test_mashing_tackle_in_a_jump_adds_no_horizontal_reach_beyond_one_tackle() -> void:
+	var sim := MovementSim.new(slime)
+	sim.state.velocity.x = slime.top_speed
+	sim.tick(1.0, true, true)
+	for k in 80:
+		sim.tick(1.0, false, true, 1.0, 0.0, true)  # J every tick
+		if sim.on_floor:
+			break
+	assert_lt(sim.pos.x, 150.0, "plain jump is 105 px; one air tackle adds about 40")

@@ -24,3 +24,5 @@ var verb := ""
 var verb_left := 0.0
 var verb_dir := 1.0
 var cooldowns := {}
+## A burst has started in this airtime: no second one until the body lands (one air verb per airtime).
+var air_verb_used := false
