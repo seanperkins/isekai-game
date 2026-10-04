@@ -25,3 +25,22 @@ func test_the_three_profiles_load_with_the_spec_values() -> void:
 
 func test_an_unknown_id_is_null() -> void:
 	assert_null(MovementProfile.of("dragon"))
+
+func test_the_slime_wall_numbers() -> void:
+	var s := MovementProfile.of("slime")
+	assert_true(s.verbs.has("ooze"))
+	assert_true(s.verbs.has("wall"))
+	assert_eq([s.wall_stick_time, s.wall_stick_speed, s.wall_slide_speed], [0.2, 15.0, 90.0])
+	assert_eq([s.wall_jump_push, s.wall_lock, s.wall_grace], [180.0, 0.15, 0.15])
+	assert_eq([s.wall_bounce_keep, s.wall_bounce_min], [0.85, 100.0])
+
+func test_the_other_species_have_no_wall_kit() -> void:
+	for id in ["biped", "wolf", "spider"]:
+		var p := MovementProfile.of(id)
+		assert_false(p.verbs.has("wall"), id)
+		assert_eq(p.wall_bounce_keep, 0.0, id)
+
+func test_copy_keeps_the_wall_side() -> void:
+	var i := MoveInput.new()
+	i.wall_side = -1
+	assert_eq(i.copy().wall_side, -1)

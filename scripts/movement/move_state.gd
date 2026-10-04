@@ -33,3 +33,15 @@ var verb_dir := 1.0
 var cooldowns := {}
 ## A burst has started in this airtime: no second one until the body lands (one air verb per airtime).
 var air_verb_used := false
+## Wall verbs. Steering is locked for `lock` seconds after a wall jump or bounce; `wall_touch` says the body touched a wall last
+## tick; `wall_stick` is the sticky time left; `wall_grace` the time a wall jump still works after leaving; `wall_side` the last
+## wall touched; `clinging` that it is stuck or sliding this tick; `wall_bounced` that it bounced this tick; `last_vx` the x
+## velocity the step handed the body last tick (a wall impact, since the physics zeroes the body's own).
+var lock := 0.0
+var wall_touch := false
+var wall_stick := 0.0
+var wall_grace := 0.0
+var wall_side := 0
+var clinging := false
+var wall_bounced := false
+var last_vx := 0.0

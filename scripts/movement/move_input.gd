@@ -15,6 +15,8 @@ var down := 0.0
 var signature_pressed := false
 ## Free pixels above a flat body: the caller probes it (a slime may only stand up with STAND_RISE free).
 var clearance_above := 1000.0
+## Which side a wall is on within 6 px (-1 left, 1 right, 0 none): the caller probes it; the step ignores it on the floor.
+var wall_side := 0
 
 func copy() -> MoveInput:
 	var c := MoveInput.new()
@@ -25,4 +27,5 @@ func copy() -> MoveInput:
 	c.down = down
 	c.signature_pressed = signature_pressed
 	c.clearance_above = clearance_above
+	c.wall_side = wall_side
 	return c
