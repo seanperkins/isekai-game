@@ -41,6 +41,12 @@ var pounce_hit := false
 var invulnerable := false
 ## A flat burst (roll, slide, puddle) has ended and there is not yet room to stand: the body stays low until there is.
 var crouched := false
+## The mantle (MantleStep): seconds of the pull left (0 when none), the displacement it started with, what happened this tick
+## ("", "start", "stand"), and a jump pressed while a verb owned both axes, which fires when control returns.
+var mantle_left := 0.0
+var mantle_total := Vector2.ZERO
+var mantle_event := ""
+var queued_jump := false
 ## Wall verbs. Steering is locked for `lock` seconds after a wall jump or bounce; `wall_touch` says the body touched a wall last
 ## tick; `wall_stick` is the sticky time left; `wall_grace` the time a wall jump still works after leaving; `wall_side` the last
 ## wall touched; `clinging` that it is stuck or sliding this tick; `wall_bounced` that it bounced this tick; `last_vx` the x

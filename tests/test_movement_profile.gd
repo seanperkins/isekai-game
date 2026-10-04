@@ -142,3 +142,11 @@ func test_the_biped_has_the_wall_verb_with_the_spec_numbers() -> void:
 	var biped := MovementProfile.of("biped")
 	assert_true(biped.verbs.has("wall"))
 	assert_eq([biped.wall_stick_time, biped.wall_slide_speed, biped.wall_jump_push, biped.wall_lock, biped.wall_grace, biped.wall_bounce_keep], [0.0, 90.0, 180.0, 0.15, 0.1, 0.0])
+
+func test_the_biped_mantles_with_the_spec_numbers_and_nobody_else_does() -> void:
+	var biped := MovementProfile.of("biped")
+	assert_true(biped.verbs.has("mantle"))
+	assert_true(biped.verbs.has("wall"))
+	assert_eq([biped.mantle_reach, biped.mantle_max_rise, biped.mantle_time], [6.0, 40.0, 0.25])
+	for id in ["slime", "spider", "wolf"]:
+		assert_false(MovementProfile.of(id).verbs.has("mantle"), id)

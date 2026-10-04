@@ -27,13 +27,19 @@ static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float, spee
 		return  # a thread pulling the spider owns the body until it grips or cancels
 	if p.verbs.has("drop") and DropStep.step(s, i, p, dt):
 		return  # sliding down a thread owns the body until it lets go or lands
+	if p.verbs.has("mantle") and MantleStep.step(s, i, p, dt):
+		return  # the pull onto a ledge owns the body (the caller moves it by surface_shift)
 	if p.verbs.has("crawl") and SurfaceStep.step(s, i, p, dt, jump_boost):
 		return  # on a surface the crawl owns the body (the caller moves it by surface_shift); in the air the ground step runs
 	_ooze(s, i, p)
 	_bursts(s, i, p, dt)
 	var input := i
-	if (s.spread or s.crouched) and i.jump_pressed and i.clearance_above < STAND_RISE:
-		input = i.copy()  # a flat body under a low ceiling cannot jump, and the press is not buffered
+	if s.queued_jump:
+		input = i.copy()
+		input.jump_pressed = true  # a press made while a verb owned both axes fires now
+		s.queued_jump = false
+	if (s.spread or s.crouched) and input.jump_pressed and i.clearance_above < STAND_RISE:
+		input = input.copy()  # a flat body under a low ceiling cannot jump, and the press is not buffered
 		input.jump_pressed = false
 	var scale := speed_scale * (SPREAD_SPEED if s.spread or s.crouched else 1.0)
 	GroundAirStep.step(s, input, p, dt, scale, jump_boost)

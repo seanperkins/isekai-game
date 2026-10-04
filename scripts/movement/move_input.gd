@@ -42,6 +42,9 @@ var touching_hostile := false
 ## The height (px) of a hard step in the direction of travel at the feet, 0 for none; a one-way ledge is never reported. The
 ## caller probes it; only the wolf's vault reads it.
 var step_ahead := 0.0
+## The biped's mantle: the displacement from the body's centre to where it would stand on the hard ledge ahead (`y` is minus the
+## px from the feet up to its top), ZERO for none. The caller probes it, only where the standing box fits.
+var mantle := Vector2.ZERO
 
 func copy() -> MoveInput:
 	var c := MoveInput.new()
@@ -62,6 +65,7 @@ func copy() -> MoveInput:
 	c.aim = aim
 	c.touching_hostile = touching_hostile
 	c.step_ahead = step_ahead
+	c.mantle = mantle
 	return c
 
 ## The stick as a vector (x right, y down): `dir` across and `down` minus `up` along.

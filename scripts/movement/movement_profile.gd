@@ -82,6 +82,11 @@ const IDS := ["biped", "slime", "wolf", "spider"]
 @export var vault_margin := 6.0
 ## The speed (px/s) from which reversing on the floor counts as a skid (a flag only: the brake is the turn time).
 @export var skid_speed := 150.0
+## Mantle (the biped): how far under a ledge's top (px) the feet may be and still grab it (plus the fall this tick), the fastest
+## upward speed (px/s) it still grabs at, and the seconds the pull takes.
+@export var mantle_reach := 6.0
+@export var mantle_max_rise := 40.0
+@export var mantle_time := 0.25
 ## The extra verbs this species has ("ooze"), and its burst rows (BurstDef: Tackle, the puddle slide, later roll and pounce).
 @export var verbs := PackedStringArray()
 @export var bursts: Array = []
