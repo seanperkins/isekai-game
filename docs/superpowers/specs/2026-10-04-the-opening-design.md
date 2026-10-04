@@ -20,11 +20,11 @@ Decided in the brainstorm (2026-10-04, Sean):
 3. After the third result it hides its layer (the tree stays paused, so the goddess's menu at layer 40 is not left behind its layer 45) and emits `finished`. `Game` answers with `run.open_first_meeting(def.goddess_line)`, which opens `GoddessMenu` with her first words even though there is nothing to choose, counts no death, and (when the player confirms) marks the opening seen and begins the life through the existing `_begin` and restart path: `pending_start` is `{altar: "C1", species: "slime", kit: {}}`. If `open_first_meeting` returns false, `Game` unpauses the tree and the player simply plays on, the opening still unseen: it must never leave the game paused with nothing to press.
 4. The scene reloads, `resolve_start` consumes the pending start, and the game plays as it does after any rebirth. The tree is unpaused by `Game._prepare_restart`, as for every restart.
 
-The truck's hit emits `world_event("opening_hit", {})`, routed in `data/audio/cues.json` to a new cue `opening_hit` that reuses the `enemy_impact` files on the `UI` bus, not positional: `Audio` keeps only `UI` voices alive while the tree is paused, and `enemy_impact` (bus `SFX_Enemy`, positional) would be silent under the opening. The approach is silent for now. No `player_died` event is emitted, so the death cue, `many_deaths` and the heartbeat are untouched.
+The truck's hit emits `world_event("opening_hit", {})`, routed in `data/audio/cues.json` to a new cue `opening_impact` (a gameplay script may not name a cue id, so it differs from the event's name) that reuses the `enemy_impact` files on the `UI` bus, not positional: `Audio` keeps only `UI` voices alive while the tree is paused, and `enemy_impact` (bus `SFX_Enemy`, positional) would be silent under the opening. The approach is silent for now. No `player_died` event is emitted, so the death cue, `many_deaths` and the heartbeat are untouched.
 
 ## Units
 
-**`OpeningDef`** (`scripts/soul/opening_def.gd`, a `Resource`; `data/opening/opening.tres`, written by a one-shot addition to `tools/build_soul.gd` and then edited freely):
+**`OpeningDef`** (`scripts/soul/opening_def.gd`, a `Resource`; `data/opening/opening.tres`, written by a one-shot `tools/build_opening.gd` and then edited freely; re-running `tools/build_soul.gd` would overwrite Sean's edited soul copy, so the opening has its own generator):
 - `choices: Array` of `{"id": String, "label": String}` (dodge, jump, pray, run).
 - `trucks: Array` of `{"prompt": String, "results": Dictionary}`, `results` mapping a choice id to its line.
 - `fallback: String`: the result line for a choice a truck has no entry for.
