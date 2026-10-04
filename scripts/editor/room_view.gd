@@ -450,7 +450,7 @@ const FEATURE_TINT := {
 	"tablet": Color(0.7, 0.7, 0.75, 0.35),
 	"switch": Color(0.65, 0.4, 0.2, 0.35),
 	"glow_pool": Color(0.3, 0.9, 0.8, 0.3),
-	"rebirth_pool": Color(0.8, 0.45, 1.0, 0.3),
+	"altar": Color(0.8, 0.45, 1.0, 0.3),
 }
 
 ## A translucent box over a feature, the size of its hit box (RoomLint.FEATURE_BOX), so the built art shows through and a click

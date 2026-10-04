@@ -5,7 +5,7 @@ extends RefCounted
 
 const GRID := 4.0
 const UNDO_CAP := 200
-const FEATURE_KINDS := ["glow_pool", "tablet", "switch", "rebirth_pool"]
+const FEATURE_KINDS := ["glow_pool", "tablet", "switch", "altar"]
 const MIN_SOLID := 4.0
 ## The smallest water rect either way (RoomLint.WATER_MIN: the largest swimmer's body fits).
 const MIN_WATER := 32.0
@@ -519,9 +519,9 @@ func add_feature(room_id: String, kind: String, pos: Vector2) -> String:
 			f["text"] = ""
 		"switch":
 			f["shortcut"] = id
-		"rebirth_pool":
+		"altar":
 			f["area"] = r.area
-			f["kit"] = {}
+			f["perk"] = ""
 	var before := _snap([room_id])
 	r.features.append(f)
 	_push(before)
@@ -589,10 +589,8 @@ func get_field(sel: Dictionary, key: String) -> Variant:
 			match key:
 				"title", "text", "shortcut", "hint":
 					return f.get(key, "")
-				"kit_level":
-					return int((f.get("kit", {}) as Dictionary).get("level", 0))
-				"kit_skills":
-					return ((f.get("kit", {}) as Dictionary).get("skills", []) as Array).duplicate()
+				"perk":
+					return str(f.get("perk", "")) if f.get("kind", "") == "altar" else null
 		"water":
 			if i < r.water.size():
 				var w: Rect2 = r.water[i]
@@ -622,7 +620,7 @@ func get_field(sel: Dictionary, key: String) -> Variant:
 	return null
 
 ## Sets one inspector field: exit "shortcut" and "gate" (both halves); tablet "title" (required), "text" and "hint"; switch "shortcut" (required);
-## rebirth pool "kit_level" (0 unsets) and "kit_skills" (a list), merged into the kit so every other key is kept;
+## altar "perk" ("" for none, else a perk id from the shipped perks);
 ## solid "x" "y" "w" "h" (exact numbers, never snapped) and "hard" (Rock from below: thin solids only); water "x" "y" "w" "h" likewise.
 ## Optional keys are removed by "" or 0; required keys are never removed. A refusal returns the reason and changes nothing; a
 ## value equal to the stored one pushes nothing (_push declines an unchanged room).
@@ -738,8 +736,8 @@ func _set_feature_field(room_id: String, i: int, key: String, value) -> String:
 		return "a %s has no %s" % [kind, key]
 	if key == "shortcut" and kind != "switch":
 		return "a %s has no shortcut" % kind
-	if (key == "kit_level" or key == "kit_skills") and kind != "rebirth_pool":
-		return "a %s has no kit" % kind
+	if key == "perk" and kind != "altar":
+		return "a %s has no perk" % kind
 	var next: Dictionary = f.duplicate(true)
 	match key:
 		"title":
@@ -762,33 +760,26 @@ func _set_feature_field(room_id: String, i: int, key: String, value) -> String:
 				return "'%s' is not a skill the Compendium holds" % str(value)
 			else:
 				next["hint"] = str(value)
-		"kit_level":
-			var kit: Dictionary = next.get("kit", {})
-			if int(value) == 0:
-				kit.erase("level")
-			else:
-				kit["level"] = int(value)
-			next["kit"] = kit
-		"kit_skills":
-			var kit: Dictionary = next.get("kit", {})
-			if (value as Array).is_empty():
-				kit.erase("skills")
-			else:
-				kit["skills"] = (value as Array).duplicate()
-			next["kit"] = kit
+		"perk":
+			if str(value) != "" and not perk_ids().has(str(value)):
+				return "'%s' is not a perk" % str(value)
+			next["perk"] = str(value)
 		_:
 			return "no such field"
-	if kind == "rebirth_pool":
-		var errs := RebirthKit.validate(next["kit"])
-		if not errs.is_empty():
-			return errs[0]
 	var before := _snap([room_id])
 	r.features[i] = next
 	_push(before)
 	return ""
 
+## The ids of the perks the game ships (an altar may sell one).
+static func perk_ids() -> Array:
+	return _perks().map(func(p: PerkDef) -> String: return p.id)
+
+static func _perks() -> Array:
+	return DefLoader.load_dir("res://data/perks", "PerkDef")
+
 func validate() -> PackedStringArray:
-	return WorldValidator.validate(rooms, creature_ids)
+	return WorldValidator.validate(rooms, creature_ids, _perks())
 
 ## Lint findings and validator strings as one list of {room, text, pick}. A validator string's room is the text before its first
 ## ": " or " overlaps ", kept only when that is a room id. Recomputed when `serial` changes, never per mouse motion.

@@ -68,32 +68,36 @@ func test_an_exits_shortcut_lands_on_both_halves_in_one_step() -> void:
 	assert_false(model.rooms["C2"].exits[partner["index"]].has("shortcut"))
 	assert_eq("\n".join(model.validate()), "", "the validator still pairs them")
 
-func test_a_pools_level_and_skills_merge_into_the_kit_and_keep_the_rest() -> void:
-	var sel := _feature_sel("G1", "rebirth_pool")
-	model.rooms["G1"].features[sel["index"]]["kit"]["note"] = "keep me"
-	assert_eq(model.set_field(sel, "kit_level", 5), "")
-	assert_eq(model.get_field(sel, "kit_level"), 5)
-	assert_eq(model.set_field(sel, "kit_skills", ["leap"]), "")
-	assert_eq(model.get_field(sel, "kit_skills"), ["leap"])
-	assert_eq(model.rooms["G1"].features[sel["index"]]["kit"].get("note", ""), "keep me", "another kit key survives every edit")
-	assert_eq(model.set_field(sel, "kit_level", 0), "", "0 unsets the level")
-	assert_false(model.rooms["G1"].features[sel["index"]]["kit"].has("level"))
+func test_the_perk_field_accepts_a_known_perk_and_clears_with_empty() -> void:
+	var sel := _feature_sel("C1", "altar")
+	assert_eq(model.get_field(sel, "perk"), "stats")
+	assert_eq(model.set_field(sel, "perk", ""), "")
+	assert_eq(model.get_field(sel, "perk"), "")
+	assert_true(model.rooms["C1"].features[sel["index"]].has("perk"), "an altar always carries its perk key, even empty")
+	assert_eq(model.undo_depth(), 1)
+	assert_eq(model.set_field(sel, "perk", "stats"), "")
+	assert_eq(model.get_field(sel, "perk"), "stats")
+	assert_eq(model.undo_depth(), 2)
+	assert_eq(model.set_field(sel, "perk", "stats"), "", "the stored value again")
+	assert_eq(model.undo_depth(), 2, "an unchanged value pushes nothing")
 
-func test_a_kit_the_validator_rejects_is_refused_and_changes_nothing() -> void:
-	var sel := _feature_sel("G1", "rebirth_pool")
+func test_the_perk_field_refuses_an_unknown_perk_and_a_non_altar() -> void:
+	var sel := _feature_sel("G1", "altar")
 	var before := RoomEditModel.copy_room(model.rooms["G1"])
-	assert_ne(model.set_field(sel, "kit_skills", ["not_a_skill"]), "")
-	assert_ne(model.set_field(sel, "kit_skills", ["poison_spit"]), "", "enemy-only")
-	assert_ne(model.set_field(sel, "kit_level", 11), "")
+	assert_eq(model.set_field(sel, "perk", "nope"), "'nope' is not a perk")
 	assert_true(RoomEditModel.same_room(before, model.rooms["G1"]))
-	assert_eq(model.undo_depth(), 0)
+	assert_eq(model.set_field(_feature_sel("C6", "tablet"), "perk", "stats"), "a tablet has no perk")
+	assert_null(model.get_field(_feature_sel("C6", "switch"), "perk"), "a switch has no perk to read")
+	assert_eq(model.undo_depth(), 0, "a refusal pushes nothing")
 
-func test_the_pool_area_and_kit_are_required_keys() -> void:
-	var sel := _feature_sel("G1", "rebirth_pool")
-	assert_eq(model.rooms["G1"].features[sel["index"]].has("area"), true)
-	assert_eq(model.rooms["G1"].features[sel["index"]].has("kit"), true)
-	model.set_field(sel, "kit_skills", [])
-	assert_true(model.rooms["G1"].features[sel["index"]].has("kit"), "an empty list unsets skills but the kit stays a Dictionary")
+func test_an_altars_area_and_perk_are_required_keys() -> void:
+	var sel := _feature_sel("G1", "altar")
+	var f: Dictionary = model.rooms["G1"].features[sel["index"]]
+	assert_true(f.has("area") and f.has("perk"))
+	assert_false(f.has("kit"), "an altar has no kit")
+
+func test_the_perk_ids_are_the_shipped_perks() -> void:
+	assert_true(RoomEditModel.perk_ids().has("stats"))
 
 # --- a solid's numbers ---
 

@@ -26,6 +26,14 @@ func test_a_validator_string_is_routed_by_its_head_and_has_no_pick() -> void:
 	assert_eq(routed[0]["room"], "C1")
 	assert_eq(routed[0]["pick"], {})
 
+func test_the_problems_list_names_an_altar_with_an_unknown_perk() -> void:
+	var f: Dictionary = model.rooms["C1"].features.filter(func(x): return x["kind"] == "altar")[0]
+	f["perk"] = "nope"
+	model.serial += 1
+	var named := model.problems().filter(func(p): return p["text"].contains("names perk 'nope'"))
+	assert_eq(named.size(), 1)
+	assert_eq(named[0]["room"], "C1")
+
 func test_overlap_strings_route_to_the_first_room_and_world_strings_to_none() -> void:
 	var a: RoomDef = model.rooms["C1"]
 	var dup := RoomEditModel.copy_room(a)

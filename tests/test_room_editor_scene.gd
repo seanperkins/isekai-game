@@ -333,43 +333,37 @@ func test_the_exit_inspector_sets_the_shortcut_on_both_halves() -> void:
 	assert_eq(model.rooms["C1"].exits[idx]["shortcut"], "front_door")
 	assert_eq(model.undo_depth(), 1)
 
-func test_the_pool_inspector_offers_level_and_the_kit_legal_skills() -> void:
-	var sel := {"room": "G1", "kind": "feature", "index": model.rooms["G1"].features.find_custom(func(f): return f["kind"] == "rebirth_pool")}
-	var slot := await _slot()
-	slot.show_inspector(model, sel)
-	var checks := slot.skill_checkboxes()
-	var legal := RebirthKit.skill_defs().filter(func(d): return d.source != "enemy_only" and d.source != "evolution")
-	assert_eq(checks.size(), legal.size(), "every skill a kit may name, none other")
-	assert_eq(checks.size(), 19, "32 skills less 5 enemy-only and 8 evolution")
-	var ids := checks.map(func(c): return c.get_meta("skill"))
-	assert_false(ids.has("flight"))
-	assert_true(slot.find_field("kit_level") is OptionButton)
-	for c in checks:
-		assert_eq(c.focus_mode, Control.FOCUS_NONE)
+func _altar_sel(room: String) -> Dictionary:
+	return {"room": room, "kind": "feature", "index": model.rooms[room].features.find_custom(func(f): return f["kind"] == "altar")}
 
-func test_ticking_a_skill_and_choosing_a_level_write_the_kit_and_keep_the_rest() -> void:
-	var idx: int = model.rooms["G1"].features.find_custom(func(f): return f["kind"] == "rebirth_pool")
-	var sel := {"room": "G1", "kind": "feature", "index": idx}
-	model.rooms["G1"].features[idx]["kit"]["note"] = "keep me"
-	var had: Array = model.get_field(sel, "kit_skills")
-	assert_false(had.is_empty(), "G1 ships skills in its kit")
+func test_the_inspector_offers_none_plus_the_perks_for_an_altar() -> void:
+	var slot := await _slot()
+	slot.show_inspector(model, _altar_sel("C1"))
+	var pick: OptionButton = slot.find_field("perk")
+	assert_true(pick is OptionButton)
+	var items: Array = []
+	for i in pick.item_count:
+		items.append(pick.get_item_text(i))
+	assert_eq(items, ["none"] + RoomEditModel.perk_ids())
+	assert_true(items.has("stats"))
+	assert_eq(pick.get_item_text(pick.selected), "stats", "C1's altar sells the stats perk")
+	assert_eq(pick.focus_mode, Control.FOCUS_NONE)
+
+func test_choosing_a_perk_or_none_writes_the_altar_and_keeps_the_rest() -> void:
+	var sel := _altar_sel("G1")
+	var idx: int = sel["index"]
+	model.rooms["G1"].features[idx]["note"] = "keep me"
 	var slot := await _slot()
 	slot.show_inspector(model, sel)
-	for c in slot.skill_checkboxes():
-		assert_eq(c.button_pressed, had.has(c.get_meta("skill")), "a box is ticked for each skill the kit holds")
-	var extra: CheckBox = slot.skill_checkboxes().filter(func(c): return not had.has(c.get_meta("skill")))[0]
-	extra.button_pressed = true
-	var now: Array = model.get_field(sel, "kit_skills")
-	assert_eq(now.size(), had.size() + 1)
-	assert_true(now.has(extra.get_meta("skill")))
-	for id in had:
-		assert_true(now.has(id), "the skills it had are kept")
-	var level: OptionButton = slot.find_field("kit_level")
-	level.item_selected.emit(4)
-	assert_eq(model.get_field(sel, "kit_level"), 4)
-	assert_eq(model.rooms["G1"].features[idx]["kit"].get("note", ""), "keep me")
-	extra.button_pressed = false
-	assert_eq(model.get_field(sel, "kit_skills").size(), had.size())
+	var pick: OptionButton = slot.find_field("perk")
+	assert_eq(pick.get_item_text(pick.selected), "none")
+	var stats := RoomEditModel.perk_ids().find("stats") + 1  # item 0 is "none"
+	pick.item_selected.emit(stats)
+	assert_eq(model.get_field(sel, "perk"), "stats")
+	pick.item_selected.emit(0)
+	assert_eq(model.get_field(sel, "perk"), "")
+	assert_eq(model.rooms["G1"].features[idx].get("note", ""), "keep me")
+	assert_eq(model.rooms["G1"].features[idx]["area"], model.rooms["G1"].area)
 
 func test_the_problems_list_lands_on_the_problem() -> void:
 	model.rooms["C2"].spawns.append({"id": "toad", "pos": Vector2(5, 100)})
@@ -811,17 +805,19 @@ func test_selecting_a_feature_shows_its_inspector_and_a_creature_hides_it() -> v
 	ed.view.refresh()
 	assert_eq(ed.slot.is_showing(), "", "a solid now has a panel (a number each); a creature still has none")
 
-func test_delete_and_undo_still_work_after_ticking_a_kit_skill() -> void:
+func test_delete_and_undo_still_work_after_choosing_a_perk() -> void:
 	var ed := await _editor()
-	ed.open_room("G1")
-	var idx: int = ed.model.rooms["G1"].features.find_custom(func(f): return f["kind"] == "rebirth_pool")
-	ed.model.select({"room": "G1", "kind": "feature", "index": idx})
+	ed.open_room("C1")
+	var idx: int = ed.model.rooms["C1"].features.find_custom(func(f): return f["kind"] == "altar")
+	var sel := {"room": "C1", "kind": "feature", "index": idx}
+	ed.model.select(sel)
 	ed.view.refresh()
 	assert_eq(ed.slot.is_showing(), "inspector")
-	var had: Array = ed.model.get_field(ed.model.selection, "kit_skills")
-	ed.slot.skill_checkboxes().filter(func(c): return not had.has(c.get_meta("skill")))[0].button_pressed = true
-	var box: CheckBox = ed.slot.skill_checkboxes()[0]
-	assert_eq(box.focus_mode, Control.FOCUS_NONE, "a click on the box cannot leave focus on it")
+	assert_eq(ed.model.get_field(sel, "perk"), "stats")
+	var pick: OptionButton = ed.slot.find_field("perk")
+	pick.item_selected.emit(0)
+	assert_eq(ed.model.get_field(sel, "perk"), "")
+	assert_eq(pick.focus_mode, Control.FOCUS_NONE, "a click on the choice cannot leave focus on it")
 	assert_false(ed.panels.typing())
 	var z := InputEventKey.new()
 	z.keycode = KEY_Z
@@ -829,7 +825,7 @@ func test_delete_and_undo_still_work_after_ticking_a_kit_skill() -> void:
 	z.ctrl_pressed = true
 	get_viewport().push_input(z)
 	await wait_process_frames(1)
-	assert_eq(ed.model.get_field({"room": "G1", "kind": "feature", "index": idx}, "kit_skills").size(), had.size())
+	assert_eq(ed.model.get_field(sel, "perk"), "stats", "undo restored the perk")
 
 func test_tab_hides_and_shows_every_panel() -> void:
 	var ed := await _editor()
@@ -913,18 +909,17 @@ func test_delete_and_backspace_inside_a_field_edit_the_text_and_never_delete_the
 	await wait_process_frames(1)
 	assert_eq(ed.model.rooms["C1"].features.size(), n, "keys typed in a field never reach the room")
 
-func test_delete_after_ticking_a_kit_skill_deletes_the_pool() -> void:
+func test_delete_after_choosing_a_perk_deletes_the_altar() -> void:
 	var ed := await _editor()
-	ed.open_room("G1")
-	var idx: int = ed.model.rooms["G1"].features.find_custom(func(f): return f["kind"] == "rebirth_pool")
-	ed.model.select({"room": "G1", "kind": "feature", "index": idx})
+	ed.open_room("C1")
+	var idx: int = ed.model.rooms["C1"].features.find_custom(func(f): return f["kind"] == "altar")
+	ed.model.select({"room": "C1", "kind": "feature", "index": idx})
 	ed.view.refresh()
-	var had: Array = ed.model.get_field(ed.model.selection, "kit_skills")
-	ed.slot.skill_checkboxes().filter(func(c): return not had.has(c.get_meta("skill")))[0].button_pressed = true
-	var n: int = ed.model.rooms["G1"].features.size()
+	ed.slot.find_field("perk").item_selected.emit(0)
+	var n: int = ed.model.rooms["C1"].features.size()
 	get_viewport().push_input(_key(KEY_DELETE))
 	await wait_process_frames(1)
-	assert_eq(ed.model.rooms["G1"].features.size(), n - 1, "a ticked box left no focus behind to swallow Delete")
+	assert_eq(ed.model.rooms["C1"].features.size(), n - 1, "a chosen perk left no focus behind to swallow Delete")
 
 func test_a_real_click_on_another_feature_commits_the_typed_text_to_the_first() -> void:
 	var ed := await _editor()

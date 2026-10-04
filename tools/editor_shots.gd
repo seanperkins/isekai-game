@@ -96,11 +96,11 @@ func _process(_delta: float) -> bool:
 			ed.panels.press("Validate")  # close it
 			ed.open_room("G1")
 			for i in ed.model.rooms["G1"].features.size():
-				if ed.model.rooms["G1"].features[i]["kind"] == "rebirth_pool":
+				if ed.model.rooms["G1"].features[i]["kind"] == "altar":
 					ed.model.select({"room": "G1", "kind": "feature", "index": i})
 			ed.view.refresh()
 		76:
-			_shot("editor_pool_kit")
+			_shot("editor_altar_perk")
 			ed.panels.press("World")
 		80:
 			_shot("editor_world")
