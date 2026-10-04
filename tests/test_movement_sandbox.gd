@@ -181,3 +181,52 @@ func test_holding_jump_after_a_long_fall_bounces_several_times() -> void:
 		if sb.state.launched == "bounce":
 			bounces += 1
 	assert_between(bounces, 3, 6)
+
+func test_a_falling_slime_sticks_then_slides_down_the_left_wall() -> void:
+	sb.body.global_position = Vector2(15.0, -250.0)
+	sb.scripted.dir = -1.0
+	await _frames(8)
+	assert_lte(sb.body.velocity.y, 16.0, "stuck")
+	assert_eq(sb.clip(), "wall")
+	assert_true((sb.get_node("Sprite") as Sprite2D).flip_h, "a wall on the left is gripped facing left")
+	await _frames(25)
+	assert_almost_eq(sb.body.velocity.y, 90.0, 1.0, "sliding")
+
+func test_a_jump_from_the_wall_kicks_off_and_up() -> void:
+	sb.body.global_position = Vector2(15.0, -250.0)
+	sb.scripted.dir = -1.0
+	await _frames(12)  # long enough for the coyote time the floor left behind to run out
+	sb.scripted.jump_pressed = true
+	var launched := false
+	var best_vx := 0.0
+	var best_vy := 0.0
+	for _k in 6:
+		await get_tree().physics_frame
+		launched = launched or sb.state.launched == "wall"
+		best_vx = maxf(best_vx, sb.body.velocity.x)
+		best_vy = minf(best_vy, sb.body.velocity.y)
+	assert_true(launched)
+	assert_gt(best_vx, 100.0)
+	assert_lt(best_vy, -300.0)
+
+func test_holding_jump_into_the_wall_bounces_off_it() -> void:
+	sb.body.global_position = Vector2(80.0, -350.0)
+	sb.state.velocity.x = -140.0
+	sb.scripted.dir = -1.0
+	sb.scripted.jump_held = true
+	var bounced := false
+	for _k in 80:
+		await get_tree().physics_frame
+		if sb.state.wall_bounced:
+			bounced = true
+			break
+	assert_true(bounced, "it bounced")
+	await _frames(2)
+	assert_gt(sb.body.velocity.x, 50.0)
+	assert_ne(sb.clip(), "wall")
+
+func test_the_shaft_wall_is_solid() -> void:
+	sb.body.global_position = Vector2(1230.0, -12.0)
+	sb.scripted.dir = 1.0
+	await _frames(60)
+	assert_lt(sb.body.global_position.x, 1247.0)

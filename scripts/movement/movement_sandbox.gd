@@ -11,6 +11,10 @@ const FLOOR := Rect2(0, 0, 1400, 40)
 const WALLS := [Rect2(-40, -400, 40, 440), Rect2(1400, -400, 40, 440)]
 ## A low tunnel: a 12 px gap above the floor, so only a flat slime fits.
 const TUNNEL := Rect2(900, -52, 240, 40)
+## A pillar 110 px from the right end wall: a shaft to climb by wall jumps.
+const SHAFT_WALL := Rect2(1260, -300, 40, 300)
+## How far from a wall (px) still counts as touching it for the wall verbs.
+const WALL_RANGE := 6.0
 const START := Vector2(100, 0)
 ## The sprite's tint while a verb runs.
 const VERB_TINT := Color(1.5, 1.3, 0.7)
@@ -54,6 +58,7 @@ func _ready() -> void:
 	for r in WALLS:
 		_block(r)
 	_block(TUNNEL)
+	_block(SHAFT_WALL)
 	body = CharacterBody2D.new()
 	body.name = "Body"
 	_shape = CollisionShape2D.new()
@@ -136,6 +141,7 @@ func _physics_process(delta: float) -> void:
 	var was_on_floor := body.is_on_floor()
 	i.on_floor = was_on_floor
 	i.clearance_above = _clearance()
+	i.wall_side = _wall_side(i.dir)
 	VerbRunner.step(state, i, profile, delta, 1.0, sqrt(BOOST_JUMP_HEIGHT) if boosted else 1.0)
 	_apply_box()
 	if state.launched != "":
@@ -181,6 +187,16 @@ func _read_input() -> MoveInput:
 	i.signature_pressed = Input.is_action_just_pressed("tackle")
 	return i
 
+## Which side a wall is on within WALL_RANGE (the side the input points to first), 0 for none or on the floor.
+func _wall_side(dir: float) -> int:
+	if body.is_on_floor():
+		return 0
+	var first := 1 if dir >= 0.0 else -1
+	for side in [first, -first]:
+		if body.test_move(body.global_transform, Vector2(side * WALL_RANGE, 0.0)):
+			return side
+	return 0
+
 ## Free px above the body: 0 when it could not rise STAND_RISE (a low ceiling), else plenty.
 func _clearance() -> float:
 	return 0.0 if body.test_move(body.global_transform, Vector2(0.0, -VerbRunner.STAND_RISE)) else 1000.0
@@ -193,13 +209,13 @@ func _apply_box() -> void:
 
 func _draw_body(delta: float) -> void:
 	if _sheet != null:
-		_clip = SpeciesLook.clip_for(profile.id, body.is_on_floor(), state.velocity.y, state.velocity.x, _land_timer, state.verb, VerbRunner.is_flat(state, profile))
+		_clip = SpeciesLook.clip_for(profile.id, body.is_on_floor(), state.velocity.y, state.velocity.x, _land_timer, state.verb, VerbRunner.is_flat(state, profile), state.clinging)
 		_animator.play(_clip)
 		_animator.advance(delta)
 		var frame := _animator.frame()
 		_sprite.texture = _sheet.frame_texture(frame)
 		_sprite.scale = _spring.sprite_scale() if profile.id == "slime" else Vector2.ONE
-		_sprite.flip_h = _facing < 0
+		_sprite.flip_h = state.wall_side < 0 if _clip == "wall" else _facing < 0  # a wall on the left is gripped facing left
 		_sprite.position = body.position + Vector2(0.0, BodyConfig.BOTTOM - _sheet.frame_size(frame).y * _sprite.scale.y / 2.0)
 	else:
 		_rect.scale = Vector2.ONE
@@ -207,8 +223,8 @@ func _draw_body(delta: float) -> void:
 	var tint := VERB_TINT if state.verb != "" else Color.WHITE
 	_sprite.modulate = tint
 	_rect.modulate = tint
-	var doing := state.verb if state.verb != "" else ("flat" if state.spread else "")
-	_label.text = "%s%s   speed %d   boost %s   verb: %s   last jump: rise %.1f px, air %.2f s\n1 biped   2 slime   3 wolf   4 spider   B boost   J tackle   S down (flatten, slide)" % [
+	var doing := state.verb if state.verb != "" else ("flat" if state.spread else ("wall" if state.clinging else ""))
+	_label.text = "%s%s   speed %d   boost %s   verb: %s   last jump: rise %.1f px, air %.2f s\n1 biped   2 slime   3 wolf   4 spider   B boost   J tackle   S down (flatten, slide)   at a wall: press into it to stick, jump to kick off, hold jump to bounce" % [
 		profile.id, " (placeholder, no art yet)" if _sheet == null else "", int(absf(body.velocity.x)), "on" if boosted else "off", doing, _last["rise"], _last["airtime"]]
 
 func _block(r: Rect2) -> void:
