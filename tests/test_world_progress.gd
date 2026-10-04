@@ -48,3 +48,44 @@ func test_progress_survives_a_reload() -> void:
 func test_the_autoload_owns_progress() -> void:
 	assert_true(Compendium.progress is WorldProgress)
 	assert_eq(Compendium.progress.profile, Compendium.profile)
+
+# --- reached forms ---
+
+func test_the_slime_is_reached_by_definition_and_never_stored() -> void:
+	var w := WorldProgress.new()
+	assert_true(w.is_form_reached("slime"))
+	w.reach_form("slime")
+	w.reach_form("")
+	assert_eq(w.forms_reached, [])
+
+func test_reached_forms_are_unique_and_survive_a_reload() -> void:
+	var w := WorldProgress.new(_profile())
+	w.reach_form("weaver")
+	w.reach_form("weaver")
+	w.reach_form("snare")
+	assert_eq(w.forms_reached, ["weaver", "snare"])
+	var again := WorldProgress.new(_profile())
+	assert_eq(again.forms_reached, ["weaver", "snare"])
+	assert_true(again.is_form_reached("snare"))
+	assert_false(again.is_form_reached("arachne"))
+
+func test_other_saves_keep_the_reached_forms() -> void:
+	var w := WorldProgress.new(_profile())
+	w.reach_form("tide")
+	w.visit("C2")
+	w.sanitize(["C1"])
+	assert_eq(WorldProgress.new(_profile()).forms_reached, ["tide"])
+
+func test_a_malformed_forms_section_is_dropped_with_a_warning() -> void:
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(dir))
+	var f := FileAccess.open(dir.path_join("profile.json"), FileAccess.WRITE)
+	f.store_string('{"version": 1, "forms_reached": ["weaver", 3], "map": ["C1"]}')
+	f.close()
+	var warnings: Array = []
+	var p := Profile.new(dir.path_join("profile.json"))
+	p.warn = func(msg: String) -> void: warnings.append(msg)
+	p.reload()
+	var w := WorldProgress.new(p)
+	assert_eq(w.forms_reached, [])
+	assert_eq(w.visited, ["C1"], "the other sections still load")
+	assert_eq(warnings.size(), 1)
