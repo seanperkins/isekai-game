@@ -24,9 +24,12 @@ static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float, spee
 	var scale := speed_scale * (SPREAD_SPEED if s.spread else 1.0)
 	GroundAirStep.step(s, input, p, dt, scale, jump_boost)
 
-## True while the body should use the flat collision box.
-static func is_flat(s: MoveState, _p: MovementProfile) -> bool:
-	return s.spread
+## True while the body should use the flat collision box: spread, or a flat burst (the puddle slide) running.
+static func is_flat(s: MoveState, p: MovementProfile) -> bool:
+	if s.spread:
+		return true
+	var row := _row(p, s.verb) if s.verb != "" else null
+	return row != null and row.flat
 
 ## Down on the floor flattens the slime; it stands again once down is released (or it jumps) with room above.
 static func _ooze(s: MoveState, i: MoveInput, p: MovementProfile) -> void:

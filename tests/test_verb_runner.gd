@@ -131,3 +131,57 @@ func test_a_tackle_mid_jump_adds_no_vertical_reach() -> void:
 		if sim.on_floor:
 			break
 	assert_almost_eq(rise, plain, 0.5)
+
+func _running(p: MovementProfile, vx: float) -> MoveState:
+	var s := MoveState.new()
+	s.velocity.x = vx
+	s.facing = 1 if vx >= 0.0 else -1
+	return s
+
+func test_down_at_run_speed_starts_a_puddle_slide_that_bleeds_and_ends() -> void:
+	var s := _running(slime, 140.0)
+	VerbRunner.step(s, _in(0.0, true, 1.0), slime, 1.0 / 60.0)
+	assert_eq(s.verb, "puddle")
+	assert_true(VerbRunner.is_flat(s, slime))
+	assert_almost_eq(s.velocity.x, 135.0, 0.001)
+	var ticks := 1
+	while s.verb != "" and ticks < 60:
+		VerbRunner.step(s, _in(0.0, true, 1.0), slime, 1.0 / 60.0)
+		ticks += 1
+	assert_between(ticks, 20, 23, "ends below 40 px/s")
+
+func test_a_slide_after_a_tackle_stops_at_the_half_second_cap() -> void:
+	var s := _running(slime, 260.0)
+	VerbRunner.step(s, _in(0.0, true, 1.0), slime, 1.0 / 60.0)
+	var ticks := 1
+	while s.verb != "" and ticks < 60:
+		VerbRunner.step(s, _in(0.0, true, 1.0), slime, 1.0 / 60.0)
+		ticks += 1
+	assert_between(ticks, 30, 32)
+
+func test_releasing_down_or_leaving_the_floor_ends_the_slide_at_once() -> void:
+	var s := _running(slime, 140.0)
+	_run(slime, s, _in(0.0, true, 1.0), 3)
+	assert_eq(s.verb, "puddle")
+	_run(slime, s, _in(0.0, true, 0.0), 1)
+	assert_eq(s.verb, "")
+	s = _running(slime, 140.0)
+	_run(slime, s, _in(0.0, true, 1.0), 2)
+	_run(slime, s, _in(0.0, false, 1.0), 1)
+	assert_eq(s.verb, "")
+
+func test_it_needs_run_speed_and_the_floor() -> void:
+	var slow := _running(slime, 99.0)
+	_run(slime, slow, _in(0.0, true, 1.0), 1)
+	assert_eq(slow.verb, "")
+	assert_true(slow.spread, "below 100 it is the ordinary flat walk")
+	var air := _running(slime, 140.0)
+	_run(slime, air, _in(0.0, false, 1.0), 1)
+	assert_eq(air.verb, "")
+
+func test_tackle_wins_when_both_would_start() -> void:
+	var s := _running(slime, 140.0)
+	var i := _in(0.0, true, 1.0)
+	i.signature_pressed = true
+	VerbRunner.step(s, i, slime, 1.0 / 60.0)
+	assert_eq(s.verb, "tackle")

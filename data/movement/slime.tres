@@ -10,6 +10,18 @@ trigger = "signature"
 speed = 260.0
 duration = 0.15
 
+[sub_resource type="Resource" id="Resource_puddle"]
+script = ExtResource("2_bd")
+id = "puddle"
+trigger = "down_run"
+min_start_speed = 100.0
+duration = 0.5
+decel = 300.0
+min_speed = 40.0
+needs_down = true
+needs_floor = true
+flat = true
+
 [resource]
 script = ExtResource("1_mp")
 id = "slime"
@@ -31,4 +43,4 @@ coyote = 0.1
 buffer = 0.1
 rebound_rise = 0.15
 verbs = PackedStringArray("ooze")
-bursts = [SubResource("Resource_tackle")]
+bursts = [SubResource("Resource_tackle"), SubResource("Resource_puddle")]
