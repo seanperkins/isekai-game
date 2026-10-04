@@ -69,6 +69,8 @@ static func _skill_node(rules, compendium: CompendiumModel, d: SkillDef, by_id: 
 		n["hint"] = d.hint
 	if st == CompendiumModel.State.OWNED_ONCE:
 		n["condition"] = SkillScreenModel.condition_text(d, by_id)
+	if n["state"] == READY:
+		n["affordable"] = rules.can_afford(d.id)
 	return n
 
 ## The state the engine gives a shown skill, read as the Skills tab reads it.

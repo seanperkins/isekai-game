@@ -132,6 +132,54 @@ static func detail(rules, d: SkillDef, slots: ActiveSlots, atk := 1) -> Dictiona
 static func capped_text() -> String:
 	return "Capped until you evolve"
 
+## A ready evolution's price and what you hold: "Evolve for water 6, dark 10 — you hold 8 water, 4 dark". The price text is the
+## essence overhaul's price_text(price), so the Skills tab and the Tree tab word a price the same way.
+static func price_line(rules, id: String) -> String:
+	var price: Dictionary = rules.evolution_price(id)
+	var held: Array = []
+	for e in Essences.ALL:
+		if price.has(e):
+			held.append("%d %s" % [int(rules.held(e)), e])
+	return "Evolve for %s — you hold %s" % [price_text(price), ", ".join(held)]
+
+## What a ready evolution still needs ("Needs 2 more dark"), or where to evolve it once nothing is short. The shortfall is the
+## essence overhaul's shortfall_text(rules, price), capitalised.
+static func short_line(rules, id: String) -> String:
+	var short := shortfall_text(rules, rules.evolution_price(id))
+	return "Evolve in the Skills tab" if short == "" else short.substr(0, 1).to_upper() + short.substr(1)
+
+## The Tree tab's status line per node state.
+const TREE_STATUS := {"owned": "Owned", "named": "Not yet learned", "retired": "Evolved",
+	"closed": "Closed: a sibling took the branch", "ready": "Ready to evolve", "current": "Your body now",
+	"reached": "Reached before", "stub": "Undiscovered"}
+
+## The Tree tab's card for a node: {"title", "status", "lines"}. A power held now reuses detail(). A ready evolution adds its
+## price, what you hold and what is short. The hint and the condition follow compendium_rows: the model only gives the
+## condition at Owned-once. A stub says nothing about itself.
+static func tree_card(rules, node: Dictionary, defs: Dictionary, forms: Dictionary, slots: ActiveSlots, atk := 1) -> Dictionary:
+	if node["state"] == SkillTreeModel.STUB:
+		return {"title": "???", "status": TREE_STATUS[SkillTreeModel.STUB], "lines": []}
+	var d: SkillDef = defs[node["id"]]
+	var status: String = TREE_STATUS[node["state"]]
+	var lines: Array = []
+	if node["state"] == SkillTreeModel.OWNED:
+		var c := detail(rules, d, slots, atk)
+		status = "Owned  Lv %d / %d" % [c["level"], c["max_level"]]
+		lines.append(c["description"])
+		lines.append_array(c["lines"])
+	elif node.has("condition") or [SkillTreeModel.READY, SkillTreeModel.RETIRED].has(node["state"]):
+		lines.append(d.description)
+	if node["state"] == SkillTreeModel.READY:
+		lines.append(price_line(rules, d.id))
+		lines.append(short_line(rules, d.id))
+	if node.has("hint"):
+		lines.append(node["hint"])
+	if node.has("condition"):
+		lines.append("How: " + node["condition"])
+	if d.source == "evolution" and defs.has(d.replaces):
+		lines.append("Evolves from " + defs[d.replaces].display_name)
+	return {"title": d.display_name, "status": status, "lines": lines}
+
 ## A price as text, in the canonical element order: "water 6, dark 10".
 static func price_text(price: Dictionary) -> String:
 	var parts: Array = []

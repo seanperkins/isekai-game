@@ -270,3 +270,50 @@ func test_root_is_the_top_left_node() -> void:
 		var p: Vector2 = m["nodes"][id]["pos"]
 		assert_true(rp.y < p.y or (rp.y == p.y and rp.x <= p.x), id)
 	assert_eq(SkillTreeModel.root({"nodes": {}, "edges": [], "size": Vector2.ZERO}), "")
+
+# --- the price and the card ---
+
+func test_a_ready_evolution_says_whether_it_is_affordable() -> void:
+	rules = _fixture_rules()
+	assert_false(_build()["nodes"]["blade"]["affordable"], "holds water 1, the price is water 2")
+	rules.handle_event("absorbed", {"essence": "water"})
+	assert_true(_build()["nodes"]["blade"]["affordable"])
+	assert_false(_build()["nodes"]["hydraulic_propulsion"].has("affordable"), "only a ready evolution carries it")
+
+func test_the_price_line_names_the_price_what_you_hold_and_what_is_short() -> void:
+	rules = _fixture_rules()
+	assert_eq(SkillScreenModel.price_line(rules, "blade"), "Evolve for water 2 — you hold 1 water")
+	assert_eq(SkillScreenModel.short_line(rules, "blade"), "Needs 1 more water")
+	rules.handle_event("absorbed", {"essence": "water"})
+	assert_eq(SkillScreenModel.short_line(rules, "blade"), "Evolve in the Skills tab")
+
+func test_the_card_for_a_held_power_reuses_the_skill_detail() -> void:
+	var card := SkillScreenModel.tree_card(rules, _build()["nodes"]["appraisal"], by_id, {}, ActiveSlots.new())
+	var d := SkillScreenModel.detail(rules, by_id["appraisal"], ActiveSlots.new())
+	assert_eq(card["title"], "Appraisal")
+	assert_eq(card["status"], "Owned  Lv %d / %d" % [d["level"], d["max_level"]])
+	assert_true(card["lines"].has(d["description"]))
+
+func test_the_card_for_a_stub_says_nothing_about_it() -> void:
+	compendium.raise("hydraulic_propulsion", CompendiumModel.State.OWNED_ONCE)
+	var card := SkillScreenModel.tree_card(rules, _build()["nodes"]["water_blade"], by_id, {}, ActiveSlots.new())
+	assert_eq(card, {"title": "???", "status": "Undiscovered", "lines": []})
+
+func test_a_named_card_shows_the_hint_and_only_owned_once_shows_how() -> void:
+	compendium.raise("leap", CompendiumModel.State.HINTED)
+	compendium.raise("wall_cling", CompendiumModel.State.OWNED_ONCE)
+	var nodes: Dictionary = _build()["nodes"]
+	var leap := SkillScreenModel.tree_card(rules, nodes["leap"], by_id, {}, ActiveSlots.new())
+	assert_eq(leap["status"], "Not yet learned")
+	assert_true(leap["lines"].has(by_id["leap"].hint))
+	assert_false(leap["lines"].any(func(l): return String(l).begins_with("How: ")))
+	var cling := SkillScreenModel.tree_card(rules, nodes["wall_cling"], by_id, {}, ActiveSlots.new())
+	assert_true(cling["lines"].has("How: " + SkillScreenModel.condition_text(by_id["wall_cling"], by_id)))
+
+func test_a_ready_card_names_the_price_what_is_short_and_its_base() -> void:
+	rules = _fixture_rules()
+	var card := SkillScreenModel.tree_card(rules, _build()["nodes"]["blade"], _fixture_defs(), {}, ActiveSlots.new())
+	assert_eq(card["status"], "Ready to evolve")
+	assert_true(card["lines"].has("Evolve for water 2 — you hold 1 water"))
+	assert_true(card["lines"].has("Needs 1 more water"))
+	assert_true(card["lines"].has("Evolves from Hydraulic Propulsion"))
