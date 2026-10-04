@@ -141,5 +141,15 @@
     "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
     "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
     "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
+  },
+  "goblin": {
+    "idle": {"frames": ["idle_1", "idle_2"], "fps": 2.0, "loop": true},
+    "run": {"frames": ["run_1", "run_2", "run_3", "run_4"], "fps": 10.0, "loop": true},
+    "rise": {"frames": ["rise"], "fps": 1.0, "loop": false},
+    "fall": {"frames": ["fall"], "fps": 1.0, "loop": false},
+    "roll": {"frames": ["roll_1", "roll_2"], "fps": 14.0, "loop": true},
+    "slide": {"frames": ["slide"], "fps": 1.0, "loop": false},
+    "mantle": {"frames": ["mantle_1", "mantle_2"], "fps": 8.0, "loop": false},
+    "wall": {"frames": ["wall"], "fps": 1.0, "loop": true}
   }
 }

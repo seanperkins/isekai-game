@@ -485,7 +485,7 @@ func _draw_body(delta: float) -> void:
 	if _sheet != null and profile.id == "spider":
 		_draw_spider(delta)
 	elif _sheet != null:
-		_clip = SpeciesLook.clip_for(profile.id, body.is_on_floor(), state.velocity.y, state.velocity.x, _land_timer, state.verb, VerbRunner.is_flat(state, profile), state.clinging, _ball)
+		_clip = SpeciesLook.clip_for(profile.id, body.is_on_floor(), state.velocity.y, state.velocity.x, _land_timer, _look_verb(), VerbRunner.is_flat(state, profile), state.clinging, _ball)
 		_animator.play(_clip)
 		_animator.advance(delta)
 		var frame := _animator.frame()
@@ -513,6 +513,12 @@ func _draw_body(delta: float) -> void:
 	var doing := state.verb if state.verb != "" else ("flat" if state.spread else ("wall" if state.clinging else ("crawl" if state.surface_n != Vector2.ZERO else "")))
 	_label.text = "%s%s   speed %d   boost %s   verb: %s   last jump: rise %.1f px, air %.2f s\n1 biped   2 slime   3 wolf   4 spider   B boost   J tackle   S down (flatten, slide)   down on a one-way ledge drops through it   at a wall: press into it to stick, jump to kick off, hold jump to bounce   biped: J rolls (slides when running), a jump that nearly clears a ledge mantles it by itself, walls slide and kick off   wolf: J pounces along the arrows (forward if none; one air pounce per jump), a gallop hops low steps by itself, reversing at speed skids   spider: arrows crawl floors, walls and ceilings, jump hops off, J zips (aim with the arrows, a thread pulls you to the first solid within 160 px; jump cancels), S in the air or hanging from a ceiling drops on a thread (down reels, up climbs, jump lets go)" % [
 		profile.id, " (placeholder, no art yet)" if _sheet == null else "", int(absf(body.velocity.x)), "on" if boosted else "off", doing, _last["rise"], _last["airtime"]]
+
+## The verb the look shows: the running burst, else the biped's mantle pull ("" for none).
+func _look_verb() -> String:
+	if state.verb != "":
+		return state.verb
+	return "mantle" if state.mantle_left > 0.0 or state.mantle_event == "stand" else ""
 
 ## The spider, after how spiders move: the legs follow the distance travelled (so they freeze the instant it stops, on the
 ## frame they were on), the body is rigid (no bob, no squash), the sprite turns to the surface and eases through a corner (the

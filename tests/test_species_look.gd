@@ -1,12 +1,25 @@
 extends GutTest
 
 func test_which_species_have_a_look() -> void:
-	assert_false(SpeciesLook.has_look("biped"))
-	for id in ["slime", "spider", "wolf"]:
+	for id in ["slime", "spider", "wolf", "biped"]:
 		assert_true(SpeciesLook.has_look(id), id)
-	assert_eq(SpeciesLook.clip_for("biped", true, 0.0, 0.0, 0.0), "")
-	assert_eq(SpeciesLook.clips_for("biped"), {})
-	assert_null(SpeciesLook.sheet_for("biped"))
+	assert_false(SpeciesLook.has_look("ghost"))
+	assert_eq(SpeciesLook.clip_for("ghost", true, 0.0, 0.0, 0.0), "")
+	assert_eq(SpeciesLook.clips_for("ghost"), {})
+	assert_null(SpeciesLook.sheet_for("ghost"))
+	assert_not_null(SpeciesLook.sheet_for("biped"), "the goblin's sheet is assembled and imported")
+
+func test_the_goblin_has_a_pose_for_each_movement() -> void:
+	assert_eq(SpeciesLook.clip_for("biped", true, 0.0, 0.0, 0.0), "idle")
+	assert_eq(SpeciesLook.clip_for("biped", true, 0.0, 100.0, 0.0), "run")
+	assert_eq(SpeciesLook.clip_for("biped", true, 0.0, -140.0, 0.0), "run")
+	assert_eq(SpeciesLook.clip_for("biped", false, -50.0, 0.0, 0.0), "rise")
+	assert_eq(SpeciesLook.clip_for("biped", false, 50.0, 0.0, 0.0), "fall")
+	assert_eq(SpeciesLook.clip_for("biped", true, 0.0, 220.0, 0.0, "roll", true), "roll")
+	assert_eq(SpeciesLook.clip_for("biped", true, 0.0, 120.0, 0.0, "slide", true), "slide")
+	assert_eq(SpeciesLook.clip_for("biped", false, 0.0, 0.0, 0.0, "mantle"), "mantle")
+	assert_eq(SpeciesLook.clip_for("biped", false, 90.0, 0.0, 0.0, "", false, true), "wall")
+	assert_eq(SpeciesLook.clip_for("biped", false, 90.0, 0.0, 0.0, "mantle", false, true), "mantle", "a verb beats the wall pose")
 
 func test_the_slime_uses_its_state_picker() -> void:
 	assert_eq(SpeciesLook.clip_for("slime", true, 0.0, 0.0, 0.0), "idle")
@@ -30,7 +43,7 @@ func test_the_wolf_has_two_gears_and_a_windup_in_the_air() -> void:
 	assert_eq(SpeciesLook.clip_for("wolf", false, -50.0, 230.0, 0.0), "windup")
 
 func test_every_clip_it_names_exists_in_the_data() -> void:
-	for id in ["slime", "spider", "wolf"]:
+	for id in ["slime", "spider", "wolf", "biped"]:
 		var clips := SpeciesLook.clips_for(id)
 		assert_false(clips.is_empty(), id)
 		for on_floor in [true, false]:

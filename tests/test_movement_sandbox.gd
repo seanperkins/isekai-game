@@ -77,13 +77,11 @@ func test_the_camera_follows_the_body_along_the_floor() -> void:
 func _has_art(id: String) -> bool:
 	return SpeciesLook.has_look(id) and SpeciesLook.sheet_for(id) != null
 
-func test_each_species_with_art_shows_its_sprite_and_the_biped_a_placeholder() -> void:
-	for id in ["slime", "spider", "wolf"]:
+func test_each_species_shows_its_sprite() -> void:
+	for id in ["slime", "spider", "wolf", "biped"]:
 		sb.set_profile(id)
 		assert_eq(sb.look(), id if _has_art(id) else "placeholder", id)
-	sb.set_profile("biped")
-	assert_eq(sb.look(), "placeholder")
-	assert_eq(sb.clip(), "")
+	assert_true(_has_art("biped"), "the goblin has its sheet")
 
 func test_the_clip_follows_the_movement() -> void:
 	if not _has_art("wolf"):
@@ -261,13 +259,13 @@ func test_a_standing_biped_rolls_on_the_tackle_button_and_a_running_one_slides()
 	assert_eq(sb.state.verb, "roll")
 	assert_gt(sb.body.velocity.x, 200.0)
 	assert_lte(_box_height(), BodyConfig.spread_size().y + 0.01, "the box ducks")
-	assert_lt(sb._rect.scale.y, 0.6, "and so does the placeholder")
-	assert_almost_eq(sb._rect.modulate.a, 0.6, 0.01, "flickering while invulnerable")
+	assert_eq(sb.clip(), "roll", "the goblin tucks into a roll")
+	assert_almost_eq(_sprite().modulate.a, 0.6, 0.01, "flickering while invulnerable")
 	await _frames(30)
 	assert_eq(sb.state.verb, "")
 	assert_almost_eq(sb.body.global_position.x - from_x, 77.0, 14.0)
 	assert_eq(_box_height(), BodyConfig.size().y, "stood back up")
-	assert_almost_eq(sb._rect.modulate.a, 1.0, 0.01)
+	assert_almost_eq(_sprite().modulate.a, 1.0, 0.01)
 	await _frames(20)
 	sb.scripted.dir = 1.0
 	await _frames(20)
@@ -275,6 +273,7 @@ func test_a_standing_biped_rolls_on_the_tackle_button_and_a_running_one_slides()
 	sb.scripted.signature_pressed = true
 	await _frames(2)
 	assert_eq(sb.state.verb, "slide")
+	assert_eq(sb.clip(), "slide")
 	var kept := sb.body.velocity.x
 	assert_gt(kept, 120.0, "it keeps the speed")
 	sb.scripted.dir = 0.0
@@ -313,6 +312,7 @@ func test_a_biped_at_the_apex_beside_a_60_px_ledge_mantles_onto_it() -> void:
 			break
 	assert_true(started)
 	assert_true(stood)
+	assert_eq(sb.clip(), "mantle", "the pull-up pose shows while it pulls")
 	assert_almost_eq(at_stand.x, 504.0 + 32.0, 4.0, "over the lip")
 	assert_almost_eq(at_stand.y, -60.0 - 12.0, 2.0, "feet on the ledge's top")
 	sb.scripted.dir = 0.0

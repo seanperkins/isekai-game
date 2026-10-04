@@ -1,13 +1,14 @@
 class_name SpeciesLook
 extends RefCounted
 ## How each species is drawn in the movement sandbox: which sheet, which clips, and which clip fits what the body is
-## doing. A species with no entry (the biped, which has no art yet) is drawn as a placeholder. Pure statics, so a test
+## doing. A species with no entry (or whose sheet is missing) is drawn as a placeholder. Pure statics, so a test
 ## can ask what a given movement looks like without a scene.
 
 const LOOKS := {
 	"slime": {"sheet": "slime", "clips": "res://data/slime_clips.json", "key": ""},
 	"spider": {"sheet": "spider", "clips": "res://data/enemy_clips.json", "key": "spider"},
 	"wolf": {"sheet": "gloom_wolf", "clips": "res://data/enemy_clips.json", "key": "gloom_wolf"},
+	"biped": {"sheet": "goblin", "clips": "res://data/enemy_clips.json", "key": "goblin"},
 }
 ## Horizontal speed (px/s) above which the spider crawls and the wolf walks, and from which the wolf gallops.
 const MOVING_SPEED := 8.0
@@ -43,8 +44,9 @@ static func clips_for(species: String) -> Dictionary:
 
 ## The clip for a body that is on the floor or not, moving at `vx` and falling at `vy`, `land_timer` seconds after
 ## landing, running burst `verb` ("tackle", "puddle"), `flat` (spread or sliding), clinging to a wall (`wall`) and bouncing
-## (`ball`, which only replaces the rise, fall and landing poses). Only the slime has poses for these so far, and the wolf
-## shows its leaping frame (`windup`) for a pounce. "" when the species has no look.
+## (`ball`, which only replaces the rise, fall and landing poses). The slime, the wolf (its leaping frame, `windup`, for a
+## pounce) and the goblin (roll, slide, mantle, wall) have poses for these. `verb` also carries "mantle" for the biped's pull-up.
+## "" when the species has no look.
 static func clip_for(species: String, on_floor: bool, vy: float, vx: float, land_timer: float, verb := "", flat := false, wall := false, ball := false) -> String:
 	match species:
 		"slime":
@@ -54,6 +56,14 @@ static func clip_for(species: String, on_floor: bool, vy: float, vx: float, land
 			if not on_floor:
 				return "drop"
 			return "crawl" if absf(vx) > MOVING_SPEED else "hang"
+		"biped":
+			if verb == "roll" or verb == "slide" or verb == "mantle":
+				return verb  # a verb beats the wall pose and the air poses
+			if wall:
+				return "wall"
+			if not on_floor:
+				return "rise" if vy < 0.0 else "fall"
+			return "run" if absf(vx) > MOVING_SPEED else "idle"
 		"wolf":
 			if verb == "pounce" or not on_floor:
 				return "windup"

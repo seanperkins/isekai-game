@@ -1,0 +1,122 @@
+{
+ "canonical": "assets/sprites/lizard_1.png",
+ "style": "Modern pixel art with soft lighting (Style D): a small wiry goblin acrobat with olive-green skin, long pointed ears, a big hooked nose, bright amber eyes and a sly grin, a ragged brown leather vest, a faded red cloth sash at the waist, wrapped cloth on the hands and bare clawed feet, a short dagger sheathed at the hip, a clean dark outline, chunky readable pixels, gentle highlights and shading. Match the palette, outline weight and rendering of the reference image (an armored lizard) but draw this goblin. Side view, the creature facing right. Draw only the creature: no ground, no wall, no ledge, no shadow, no effects.",
+ "frames": [
+  {
+   "name": "idle_1",
+   "width": 17,
+   "refs": [],
+   "prompt": "The goblin standing relaxed, weight on both feet, knees slightly bent, arms loose at its sides, ears pricked, a faint grin."
+  },
+  {
+   "name": "idle_2",
+   "width": 17,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same goblin breathing out: shoulders and chest very slightly lower, ears a touch relaxed. Almost identical to the reference pose."
+  },
+  {
+   "name": "run_1",
+   "width": 35,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same goblin mid-run, contact pose: the front foot planted forward, the back leg trailing, torso leaning forward, the near arm swung back and the far arm forward."
+  },
+  {
+   "name": "run_2",
+   "width": 29,
+   "refs": [
+    "idle_1",
+    "run_1"
+   ],
+   "prompt": "The same goblin mid-run, passing pose: legs crossing under the body, body low, arms mid-swing."
+  },
+  {
+   "name": "run_3",
+   "width": 33,
+   "refs": [
+    "idle_1",
+    "run_1"
+   ],
+   "prompt": "The same goblin mid-run, the opposite contact pose: the other foot planted forward, the near arm swung forward and the far arm back."
+  },
+  {
+   "name": "run_4",
+   "width": 25,
+   "refs": [
+    "idle_1",
+    "run_2"
+   ],
+   "prompt": "The same goblin mid-run, the opposite passing pose: body high at the top of the bounce, one knee driving up, arms mid-swing."
+  },
+  {
+   "name": "rise",
+   "width": 25,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same goblin springing upward in a jump: body stretched tall, legs tucked up slightly, arms thrown up and forward, ears flaring back."
+  },
+  {
+   "name": "fall",
+   "width": 31,
+   "refs": [
+    "idle_1",
+    "rise"
+   ],
+   "prompt": "The same goblin falling: legs dangling and slightly spread ready to land, arms out for balance, ears blown upward by the air."
+  },
+  {
+   "name": "roll_1",
+   "width": 15,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same goblin in a forward roll, curled into a tight low ball: head tucked, knees pulled to the chest, back arched, the ball low and compact. Seen from the side, rolling to the right."
+  },
+  {
+   "name": "roll_2",
+   "width": 21,
+   "refs": [
+    "idle_1",
+    "roll_1"
+   ],
+   "prompt": "The same goblin in a forward roll, a quarter-turn later: shoulders and back on top, feet beginning to uncurl behind, still a tight low ball."
+  },
+  {
+   "name": "slide",
+   "width": 28,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same goblin sliding along the ground feet-first to the right: body very low, leaning back and propped on one hand, legs stretched forward with the knees bent. Roughly twice as wide as tall."
+  },
+  {
+   "name": "mantle_1",
+   "width": 24,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same goblin hauling itself up onto a ledge that is out of frame to the right: both hands reaching up and forward gripping an unseen edge, elbows bent, body hanging below, legs dangling, face strained. Draw no ledge."
+  },
+  {
+   "name": "mantle_2",
+   "width": 18,
+   "refs": [
+    "idle_1",
+    "mantle_1"
+   ],
+   "prompt": "The same goblin mid pull-up onto an unseen ledge: one knee raised up to the edge, chest forward and arms pushing down, about to stand. Draw no ledge."
+  },
+  {
+   "name": "wall",
+   "width": 22,
+   "refs": [
+    "idle_1"
+   ],
+   "prompt": "The same goblin sliding down a vertical wall on its right side: chest and palms pressed toward the wall, arms reaching up and forward, feet braced against it, head turned to glance back over the shoulder. Draw no wall."
+  }
+ ]
+}
