@@ -78,3 +78,46 @@ func test_the_spider_skitters() -> void:
 	assert_eq(s.velocity.x, 140.0)
 	_run(spider, s, _in(), 2)
 	assert_eq(s.velocity.x, 0.0)
+
+func test_the_wolf_skids_when_it_reverses_at_a_gallop() -> void:
+	var s := _at(230.0)
+	var seen: Array = []
+	for _k in 6:
+		GroundAirStep.step(s, _in(-1.0), wolf, 1.0 / 60.0)
+		seen.append(s.skidding)
+	assert_eq(seen, [true, true, true, false, false, false], "230, 192, 153 px/s skid; 115 and under do not")
+	assert_almost_eq(s.velocity.x, 0.0, 0.01, "the brake is the tuned 0.1 s turn")
+	var left := _at(-230.0)
+	GroundAirStep.step(left, _in(1.0), wolf, 1.0 / 60.0)
+	assert_true(left.skidding, "to the left too")
+
+func test_no_skid_in_the_air_or_with_the_stick_released_or_below_150() -> void:
+	var air := _at(230.0)
+	GroundAirStep.step(air, _in(-1.0, false), wolf, 1.0 / 60.0)
+	assert_false(air.skidding, "in the air")
+	var released := _at(230.0)
+	GroundAirStep.step(released, _in(0.0), wolf, 1.0 / 60.0)
+	assert_false(released.skidding, "a plain stop is not a skid")
+	var same := _at(230.0)
+	GroundAirStep.step(same, _in(1.0), wolf, 1.0 / 60.0)
+	assert_false(same.skidding, "the stick with the motion")
+	var slow := _at(149.0)
+	GroundAirStep.step(slow, _in(-1.0), wolf, 1.0 / 60.0)
+	assert_false(slow.skidding, "under 150")
+	var edge := _at(150.0)
+	GroundAirStep.step(edge, _in(-1.0), wolf, 1.0 / 60.0)
+	assert_true(edge.skidding, "150 is the line")
+
+func test_the_skid_flag_does_not_stay_set_when_a_burst_owns_the_velocity() -> void:
+	var s := _at(230.0)
+	GroundAirStep.step(s, _in(-1.0), wolf, 1.0 / 60.0)
+	assert_true(s.skidding)
+	s.verb = "pounce"
+	GroundAirStep.step(s, _in(-1.0), wolf, 1.0 / 60.0)
+	assert_false(s.skidding)
+
+func test_a_slime_and_a_biped_do_not_skid_at_their_top_speeds() -> void:
+	for p in [slime, biped, spider]:
+		var s := _at(140.0)
+		GroundAirStep.step(s, _in(-1.0), p, 1.0 / 60.0)
+		assert_false(s.skidding, p.id)

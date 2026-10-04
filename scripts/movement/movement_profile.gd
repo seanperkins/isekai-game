@@ -80,6 +80,8 @@ const IDS := ["biped", "slime", "wolf", "spider"]
 @export var vault_speed := 150.0
 @export var vault_step := 24.0
 @export var vault_margin := 6.0
+## The speed (px/s) from which reversing on the floor counts as a skid (a flag only: the brake is the turn time).
+@export var skid_speed := 150.0
 ## The extra verbs this species has ("ooze"), and its burst rows (BurstDef: Tackle, the puddle slide, later roll and pounce).
 @export var verbs := PackedStringArray()
 @export var bursts: Array = []

@@ -15,6 +15,8 @@ var jumping := false
 var launch_speed := 0.0
 ## What the step launched this tick: "" (nothing), "ground", "coyote" or "rebound".
 var launched := ""
+## The stick opposes a gallop on the floor this tick (the wolf's skid): the caller draws the lean and the dust.
+var skidding := false
 ## The vertical velocity the step handed the body on the previous tick: a landing's impact speed (the caller's physics
 ## zeroes the body's own velocity on landing).
 var last_vy := 0.0

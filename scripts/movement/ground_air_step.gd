@@ -10,6 +10,7 @@ const REBOUND_MIN_AIR := 0.12
 ## `speed_scale` is the speed stat as a fraction (spd / 100); `jump_boost` scales a launch (sqrt(jump_height / 100)).
 static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float, speed_scale := 1.0, jump_boost := 1.0) -> void:
 	s.launched = ""
+	s.skidding = false
 	s.wall_bounced = false
 	timers(s, i, p, dt)
 	if s.verb == "" and s.lock <= 1e-6:  # a burst or a wall kick owns the horizontal velocity
@@ -50,6 +51,7 @@ static func _horizontal(s: MoveState, i: MoveInput, p: MovementProfile, dt: floa
 		elif s.velocity.x * i.dir < 0.0:
 			rate = top / p.ground_turn_time
 			target = 0.0
+			s.skidding = absf(s.velocity.x) >= p.skid_speed
 	elif i.dir == 0.0:
 		if p.air_keeps_momentum:
 			return
