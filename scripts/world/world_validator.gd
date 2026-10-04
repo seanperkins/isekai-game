@@ -7,14 +7,15 @@ extends RefCounted
 
 const OPPOSITE := {"left": "right", "right": "left", "top": "bottom", "bottom": "top"}
 
-const FEATURE_KINDS := ["glow_pool", "rebirth_pool", "tablet", "switch"]
+const FEATURE_KINDS := ["glow_pool", "altar", "tablet", "switch"]
 
 ## The labels an exit's `gate` may carry (a label for the validator and lint, not an obstacle in play); P4 gives them teeth.
 const GATES := ["wall_cling", "swim"]
 
 ## `creature_ids`, when given, is every creature id the game defines: spawns naming another are errors (a typo
-## must not silently drop a creature and its XP).
-static func validate(rooms: Dictionary, creature_ids: Array = []) -> PackedStringArray:
+## must not silently drop a creature and its XP). `perks`, when given, is every PerkDef: an altar's perk must be one of them
+## (null skips that check).
+static func validate(rooms: Dictionary, creature_ids: Array = [], perks = null) -> PackedStringArray:
 	var errors := PackedStringArray()
 	var starts := rooms.values().filter(func(r: RoomDef) -> bool: return r.is_start()).size()
 	if starts != 1:
@@ -32,7 +33,7 @@ static func validate(rooms: Dictionary, creature_ids: Array = []) -> PackedStrin
 		errors.append_array(_check_dressing(a))
 		errors.append_array(_check_hard_ledges(a))
 		errors.append_array(_check_content(a, creature_ids))
-	errors.append_array(_check_rebirth_pools(rooms))
+	errors.append_array(_check_altars(rooms, perks))
 	if starts == 1:
 		var reached := reachable(rooms)
 		for id in ids:
@@ -82,32 +83,52 @@ static func edge_origin(r: RoomDef, edge: String) -> float:
 static func _vertical_edge(edge: String) -> bool:
 	return edge == "left" or edge == "right"
 
-## Rebirth pools: each has an id, area and kit; ids are unique; kits are valid; and a world that has any
-## must hold the default pool (the Cave mouth's), so there is always somewhere to start.
-static func _check_rebirth_pools(rooms: Dictionary) -> PackedStringArray:
+## Altars: each has a string id and area, a string perk ("" for none yet) and a Vector2 pos; ids are unique; its area is its room's
+## and an area holds at most one altar; the default altar (the Cave mouth's) is in the start room, and a world that has any altar
+## must hold it, so there is always somewhere to start. When `perks` (an Array of PerkDef) is given, a non-empty perk must be one
+## the data holds, and it must belong to that altar. A world with no altar at all is fine: small test worlds have none.
+static func _check_altars(rooms: Dictionary, perks) -> PackedStringArray:
 	var out := PackedStringArray()
 	var seen := {}
+	var by_area := {}
 	var ids := rooms.keys()
 	ids.sort()
 	for room_id in ids:
-		for f in (rooms[room_id] as RoomDef).features:
-			if f.get("kind", "") != "rebirth_pool":
+		var room: RoomDef = rooms[room_id]
+		for f in room.features:
+			if f.get("kind", "") != "altar":
 				continue
 			if typeof(f.get("id")) != TYPE_STRING or typeof(f.get("area")) != TYPE_STRING \
-					or typeof(f.get("kit")) != TYPE_DICTIONARY or typeof(f.get("pos")) != TYPE_VECTOR2 or f.get("id") == "":
-				out.append("%s: a rebirth pool needs a string id and area, a kit dictionary and a Vector2 pos" % room_id)
+					or typeof(f.get("perk", "")) != TYPE_STRING or typeof(f.get("pos")) != TYPE_VECTOR2 or f.get("id") == "":
+				out.append("%s: an altar needs a string id, area and perk and a Vector2 pos" % room_id)
 				continue
-			var pid: String = f["id"]
-			if seen.has(pid):
-				out.append("%s: duplicate rebirth pool '%s'" % [room_id, pid])
-			seen[pid] = room_id
-			if pid == WorldProgress.DEFAULT_ALTAR and not (rooms[room_id] as RoomDef).is_start():
-				out.append("%s: the default rebirth pool '%s' must be in the start room" % [room_id, pid])
-			for e in RebirthKit.validate(f["kit"]):
-				out.append("%s: rebirth pool '%s': %s" % [room_id, pid, e])
+			var altar_id: String = f["id"]
+			if seen.has(altar_id):
+				out.append("%s: duplicate altar '%s'" % [room_id, altar_id])
+			seen[altar_id] = room_id
+			if f["area"] != room.area:
+				out.append("%s: altar '%s' says area '%s' in a '%s' room" % [room_id, altar_id, f["area"], room.area])
+			if by_area.has(f["area"]):
+				out.append("%s: area '%s' has two altars ('%s' and '%s')" % [room_id, f["area"], by_area[f["area"]], altar_id])
+			by_area[f["area"]] = altar_id
+			if altar_id == WorldProgress.DEFAULT_ALTAR and not room.is_start():
+				out.append("%s: the default altar '%s' must be in the start room" % [room_id, altar_id])
+			var perk_id: String = f.get("perk", "")
+			if perks != null and perk_id != "":
+				var perk := _perk_by_id(perks, perk_id)
+				if perk == null:
+					out.append("%s: altar '%s' names perk '%s', which the data does not hold" % [room_id, altar_id, perk_id])
+				elif perk.altar != altar_id:
+					out.append("%s: perk '%s' belongs to altar '%s', not '%s'" % [room_id, perk_id, perk.altar, altar_id])
 	if not seen.is_empty() and not seen.has(WorldProgress.DEFAULT_ALTAR):
-		out.append("world: the default rebirth pool '%s' is missing" % WorldProgress.DEFAULT_ALTAR)
+		out.append("world: the default altar '%s' is missing" % WorldProgress.DEFAULT_ALTAR)
 	return out
+
+static func _perk_by_id(perks: Array, id: String) -> PerkDef:
+	for perk: PerkDef in perks:
+		if perk.id == id:
+			return perk
+	return null
 
 ## Spawns name known creatures (when the ids are given) and features are kinds the builder makes.
 static func _check_content(r: RoomDef, creature_ids: Array) -> PackedStringArray:

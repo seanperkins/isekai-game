@@ -170,7 +170,7 @@ exits = [{
 features = [{
 "area": "cave",
 "id": "C1",
-"kind": "rebirth_pool",
-"kit": {},
+"kind": "altar",
+"perk": "stats",
 "pos": Vector2(140, 320)
 }]

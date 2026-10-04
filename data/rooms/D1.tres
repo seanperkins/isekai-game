@@ -47,10 +47,7 @@ exits = [{
 features = [{
 "area": "deep",
 "id": "D1",
-"kind": "rebirth_pool",
-"kit": {
-"level": 5,
-"skills": ["leap", "wall_cling", "swim", "tremor"]
-},
+"kind": "altar",
+"perk": "",
 "pos": Vector2(112, 320)
 }]

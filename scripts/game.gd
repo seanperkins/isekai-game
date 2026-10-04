@@ -65,7 +65,7 @@ func _ready() -> void:
 				if e.has("shortcut"):
 					progress.open_shortcut(str(e["shortcut"]))
 	if not _editor_play:
-		for e in WorldValidator.validate(rooms, _creatures.keys()):
+		for e in Game.world_errors(rooms, _creatures.keys()):
 			push_error(e)
 	var world_ctx := {"spawn": _spawn, "progress": progress, "compendium": Compendium.model, "announce": Announcer.queue.push_unlock}
 	if not _editor_play:
@@ -115,6 +115,11 @@ func _ready() -> void:
 		var back := EditorReturn.new()
 		back.game = self
 		add_child(back)
+
+## The world's validation errors, checked against the shipped perks (the world is validated before the goddess exists, so they are
+## loaded here rather than taken from her).
+static func world_errors(rooms: Dictionary, creature_ids: Array) -> PackedStringArray:
+	return WorldValidator.validate(rooms, creature_ids, DefLoader.load_dir("res://data/perks", "PerkDef"))
 
 ## What an altar calls to open its menu: the world is built before the menu, so it is looked up when used.
 func _open_altar_menu(altar: Altar) -> void:

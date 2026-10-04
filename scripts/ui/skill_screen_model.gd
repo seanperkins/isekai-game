@@ -306,8 +306,8 @@ static func map_view(rooms: Dictionary, progress, current_id: String) -> Diction
 		shown.append({"id": id, "rect": rect, "current": id == current_id,
 			"pool": r.features.any(func(f: Dictionary) -> bool: return f.get("kind", "") == "glow_pool"),
 			"tablet": r.features.any(func(f: Dictionary) -> bool: return f.get("kind", "") == "tablet"),
-			"rebirth": r.features.any(func(f: Dictionary) -> bool: return f.get("kind", "") == "rebirth_pool"),
-			"attuned": r.features.any(func(f: Dictionary) -> bool: return f.get("kind", "") == "rebirth_pool" and progress.is_attuned(f.get("id", "")))})
+			"rebirth": r.features.any(func(f: Dictionary) -> bool: return f.get("kind", "") == "altar"),
+			"attuned": r.features.any(func(f: Dictionary) -> bool: return f.get("kind", "") == "altar" and progress.is_attuned(f.get("id", "")))})
 		for e in r.exits:
 			if progress.is_visited(e["room"]):
 				continue

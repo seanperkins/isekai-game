@@ -8,17 +8,20 @@ func test_pools_come_from_the_room_data_with_the_default_first() -> void:
 	assert_eq(pools[0]["name"], "Cave mouth")
 	assert_eq(pools[0]["room"], "C1")
 	assert_true(pools[0]["pos"] is Vector2)
+	assert_eq(pools[0]["perk"], "stats", "the Cave's altar sells the stats perk")
+	assert_false(pools[0].has("kit"), "an altar carries a perk, not a kit")
+	assert_eq(pools.size(), 4)
 
 func test_pools_are_ordered_stably_default_first_then_by_id() -> void:
 	var a := RoomDef.new()
 	a.id = "Z9"
-	a.features = [{"kind": "rebirth_pool", "id": "Z9", "area": "zed", "kit": {}, "pos": Vector2(1, 1)}]
+	a.features = [{"kind": "altar", "id": "Z9", "area": "zed", "perk": "", "pos": Vector2(1, 1)}]
 	var b := RoomDef.new()
 	b.id = "A1"
-	b.features = [{"kind": "rebirth_pool", "id": "A1", "area": "alpha", "kit": {}, "pos": Vector2(1, 1)}]
+	b.features = [{"kind": "altar", "id": "A1", "area": "alpha", "perk": "", "pos": Vector2(1, 1)}]
 	var c := RoomDef.new()
 	c.id = "C1"
-	c.features = [{"kind": "rebirth_pool", "id": "C1", "area": "cave", "kit": {}, "pos": Vector2(1, 1)}]
+	c.features = [{"kind": "altar", "id": "C1", "area": "cave", "perk": "", "pos": Vector2(1, 1)}]
 	var ids := RebirthChoice.altars({"Z9": a, "A1": b, "C1": c}).map(func(p): return p["id"])
 	assert_eq(ids, ["C1", "A1", "Z9"])
 
