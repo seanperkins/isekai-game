@@ -101,3 +101,104 @@ func test_the_latch_survives_a_release_and_a_different_direction_drops_it() -> v
 	y = w.pos.y
 	_run(w, s, Vector2.RIGHT, 5)
 	assert_eq(w.pos.y, y, "and the latch is gone")
+
+## Ticks until `done` is true (at most `limit`), returning the events in order.
+func _until(w: FakeSurfaceWorld, s: MoveState, stick: Variant, limit: int, done: Callable) -> Array[String]:
+	var events: Array[String] = []
+	for k in limit:
+		_tick(w, s, stick.call(k) if stick is Callable else stick)
+		if s.surface_event != "":
+			events.append(s.surface_event)
+		if done.call():
+			break
+	return events
+
+func _on_floor_past(s: MoveState, w: FakeSurfaceWorld, x: float, right := true) -> bool:
+	return s.surface_n == Vector2.UP and (w.pos.x > x if right else w.pos.x < x) and w.pos.y > -20.0
+
+func test_one_held_direction_rounds_the_block_both_ways() -> void:
+	var a := _on(Vector2(120, -12), Vector2.UP)
+	var ev := _until(a[0], a[1], Vector2.RIGHT, 400, func(): return _on_floor_past(a[1], a[0], 330.0))
+	assert_eq(ev, ["concave", "convex", "convex", "concave"])
+	var b := _on(Vector2(420, -12), Vector2.UP, -1.0)
+	ev = _until(b[0], b[1], Vector2.LEFT, 400, func(): return _on_floor_past(b[1], b[0], 170.0, false))
+	assert_eq(ev, ["concave", "convex", "convex", "concave"])
+
+func test_one_held_direction_rounds_the_pillar_and_slab() -> void:
+	var a := _on(Vector2(400, -12), Vector2.UP)
+	var seen := {}
+	var ev := _until(a[0], a[1], Vector2.RIGHT, 600, func():
+		seen[a[1].surface_n] = true
+		return _on_floor_past(a[1], a[0], 520.0) and (a[1] as MoveState).surface_since > 0.0 and seen.size() == 4)
+	assert_eq(ev, ["concave", "convex", "convex", "convex", "concave", "concave"])
+	assert_eq(seen.size(), 4, "all four normals")
+	var b := _on(Vector2(540, -12), Vector2.UP, -1.0)
+	seen = {}
+	ev = _until(b[0], b[1], Vector2.LEFT, 600, func():
+		seen[b[1].surface_n] = true
+		return _on_floor_past(b[1], b[0], 420.0, false) and seen.size() == 4)
+	assert_eq(ev.size(), 6)
+	assert_eq(seen.size(), 4)
+
+func test_noisy_input_still_gets_round() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	var noisy := func(_k: int) -> Vector2:
+		var r := rng.randf()
+		if r < 0.05:
+			return Vector2.ZERO
+		if r < 0.10:
+			return Vector2(1.0, 0.5)
+		if r < 0.15:
+			return Vector2(1.0, -0.5)
+		return Vector2.RIGHT
+	var a := _on(Vector2(400, -12), Vector2.UP)
+	var ev := _until(a[0], a[1], noisy, 1000, func(): return _on_floor_past(a[1], a[0], 520.0) and (a[1] as MoveState).surface_since > 0.5)
+	assert_gte(ev.size(), 6)
+	assert_true(_on_floor_past(a[1], a[0], 520.0), "it got round")
+
+func test_pressing_back_just_after_a_corner_goes_back_round_it() -> void:
+	var a := _on(Vector2(188, -60), Vector2.LEFT)
+	var w: FakeSurfaceWorld = a[0]
+	var s: MoveState = a[1]
+	var ev := _until(w, s, Vector2.UP, 100, func(): return s.surface_event == "convex")
+	assert_eq(ev, ["convex"])
+	_run(w, s, Vector2.UP, 2)
+	ev = _until(w, s, Vector2.DOWN, 300, func(): return _on_floor_past(s, w, 190.0, false))
+	assert_eq(ev, ["convex", "concave"], "back round the corner, down the face, onto the floor")
+
+func test_a_corner_does_not_repeat_inside_the_lockout() -> void:
+	var flutter := func(k: int) -> Vector2: return Vector2.LEFT if (k / 4) % 2 == 0 else Vector2.RIGHT
+	var a := _on(Vector2(206, -112), Vector2.UP)
+	var ev := _until(a[0], a[1], flutter, 240, func(): return false)
+	assert_lte(ev.size(), 1, "corner_lock 0.10")
+	spider = spider.duplicate() as MovementProfile
+	spider.corner_lock = 0.06
+	var b := _on(Vector2(206, -112), Vector2.UP)
+	ev = _until(b[0], b[1], flutter, 240, func(): return false)
+	assert_gt(ev.size(), 20, "with 0.06 the same wiggle rounds it every few frames")
+
+func test_a_convex_corner_moves_the_centre_about_19_px_and_a_concave_one_under_5() -> void:
+	var a := _on(Vector2(120, -12), Vector2.UP)
+	var w: FakeSurfaceWorld = a[0]
+	var s: MoveState = a[1]
+	var convex := []
+	var concave := []
+	for _k in 400:
+		_tick(w, s, Vector2.RIGHT)
+		if _on_floor_past(s, w, 330.0):
+			break
+		if s.surface_event == "convex":
+			convex.append(s.surface_shift.length())
+		elif s.surface_event == "concave":
+			concave.append(s.surface_shift.length())
+	assert_eq(convex.size(), 2)
+	for d in convex:
+		assert_almost_eq(float(d), 19.5, 1.5)
+	for d in concave:
+		assert_lt(float(d), 5.0)
+
+func test_it_crosses_a_tile_seam_without_an_event() -> void:
+	var a := _on(Vector2(1040, -12), Vector2.UP)
+	var ev := _until(a[0], a[1], Vector2.RIGHT, 500, func(): return _on_floor_past(a[1], a[0], 1260.0))
+	assert_eq(ev, ["concave", "convex", "convex", "concave"], "four, none at the seam")
