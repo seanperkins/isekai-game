@@ -73,6 +73,40 @@ func test_essence_minimums_satisfy_every_essence_skill() -> void:
 			elif cond["event"] == "predated" and cond.get("tags", {}).has("source"):
 				assert_gte(int(minimums.get(cond["tags"]["source"], 0)), int(cond["n"]), "%s: eats of %s" % [d.id, cond["tags"]["source"]])
 
+func _creature_map() -> Dictionary:
+	var out := {}
+	for c in creatures:
+		out[c.id] = c
+	return out
+
+## The Cave-start unlock points before the element vocabulary: the eat, counting from 1, over every spawn of the shipped rooms
+## (area order cave, grotto, flooded, deep; room-id order within an area; the jelly, which a tackle cannot down, is skipped).
+## The calibration holds each within one eat. Spore Cloud was 28 (the fourth Grotto moth); the Cave's bats and toads now meet air 8
+## and dark 4 first, a deliberate move the design accepted, pinned below.
+const CAVE_START_BEFORE := {"body_armor": 13, "echolocation": 3, "hardened_shell": 27, "hydraulic_propulsion": 7, "jolt": 57,
+	"poison_breath": 7, "regeneration": 11, "sticky_thread": 14, "tremor": 73}
+const SPORE_CLOUD_NOW := 16
+
+func test_every_power_unlocks_within_one_eat_of_where_it_did_on_a_cave_start() -> void:
+	var points := CalibrationWalk.unlock_points(skills, _creature_map(), ShippedRooms.load_all(), "")
+	for id in CAVE_START_BEFORE:
+		assert_almost_eq(float(points.get(id, 0)), float(CAVE_START_BEFORE[id]), 1.0, id)
+	assert_eq(points["spore_cloud"], SPORE_CLOUD_NOW, "the one deliberate move: Spore Cloud is reachable in the Cave")
+
+func test_every_power_is_reachable_from_every_start_by_some_walk() -> void:
+	for start in ["", "grotto", "flooded", "deep"]:
+		var points := CalibrationWalk.unlock_points(skills, _creature_map(), ShippedRooms.load_all(), start)
+		for d in skills:
+			if d.source == "essence":
+				assert_gt(int(points.get(d.id, 0)), 0, "%s from the %s start" % [d.id, start if start != "" else "cave"])
+
+func test_echolocation_levels_from_air_so_the_grottos_moths_speed_it_up() -> void:
+	var levels := CalibrationWalk.levels_by_area(skills, _creature_map(), ShippedRooms.load_all())
+	var by_area: Array = []
+	for a in CalibrationWalk.AREAS:
+		by_area.append(levels[a]["echolocation"])
+	assert_eq(by_area, [1, 4, 5, 5], "was 2, 2, 2, 5 on sound; a deliberate move recorded in docs/ledgers/essence-calibration.md")
+
 func test_every_parent_has_exactly_two_evolutions() -> void:
 	var counts := {}
 	for d in skills:
