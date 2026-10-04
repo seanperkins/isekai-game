@@ -10,6 +10,10 @@ var perks := {}
 var deaths := 0
 ## Points granted by the `--soul=N` dev flag. Never saved; spent before the saved points.
 var session_points := 0
+## Whether the opening (the truck dodge and her first meeting) has been played. A saved boolean wins; with none saved it is true
+## when the profile already holds progress (a save from before the opening existed, which includes one migrated from the old
+## compendium file), so only a brand-new profile ever sees it.
+var opening_seen := false
 
 var _unknown_perks := {}  # saved counts for perk ids the data does not hold; written back as they were
 
@@ -21,6 +25,8 @@ func _init(p_profile = null, known_perks: Array = []) -> void:
 	if profile == null:
 		return
 	var saved: Dictionary = profile.dict_section("soul")
+	var flag = saved.get("opening_seen")
+	opening_seen = flag if typeof(flag) == TYPE_BOOL else _holds_progress(profile)
 	points = _count(saved.get("points"))
 	deaths = _count(saved.get("deaths"))
 	var raw = saved.get("perks")
@@ -65,6 +71,16 @@ func note_death() -> void:
 	deaths += 1
 	_save()
 
+## Writes the flag as it stands, so a profile that never finishes the opening holds an explicit false and replays it (without
+## the key, the map the first room saves would make it look like an old save).
+func begin_opening() -> void:
+	_save()
+
+## The opening is over: it is never played again.
+func finish_opening() -> void:
+	opening_seen = true
+	_save()
+
 func _take(n: int) -> bool:
 	if n < 0 or n > total_points():
 		return false
@@ -72,6 +88,10 @@ func _take(n: int) -> bool:
 	session_points -= from_session
 	points -= n - from_session
 	return true
+
+static func _holds_progress(p_profile) -> bool:
+	return not p_profile.list_section("map").is_empty() or not p_profile.dict_section("compendium").is_empty() \
+		or not p_profile.dict_section("bestiary").is_empty()
 
 static func _count(value) -> int:
 	if typeof(value) == TYPE_INT or typeof(value) == TYPE_FLOAT:
@@ -83,5 +103,5 @@ func _save() -> void:
 		return
 	var saved_perks := _unknown_perks.duplicate()
 	saved_perks.merge(perks, true)
-	profile.set_section("soul", {"points": points, "perks": saved_perks, "deaths": deaths})
+	profile.set_section("soul", {"points": points, "perks": saved_perks, "deaths": deaths, "opening_seen": opening_seen})
 	profile.save()
