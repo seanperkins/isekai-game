@@ -300,7 +300,7 @@
 </div>
 <div class="block decide">
 <h3>Decision needed</h3>
-<p><strong>Decided: both, with one currency.</strong> Pools stay as "where" you start and carry the kit; soul points buy "how far along" at the pool you choose (a higher kit level or an extra kit skill). Working direction: a rebirth pool is also the shrine, so one object attunes and banks (section 9). Species unlocks, decided: the default rule is to eat or defeat N of that creature (the Bestiary and Compendium already count both), with bespoke conditions for special species such as the rare Taratect. Still open: N, which species are special, whether a soul can start a life past stage 1 of the evolution tree (the game always starts at stage 1), and which perks soul points buy.</p>
+<p><strong>Decided: both, with one currency, and the pools are replaced by altars.</strong> The goddess's altars replace the rebirth pools: at an altar you attune it (it becomes a place you respawn), bank essence into soul points, and meet the goddess, who offers your next body and head start. The altar you choose decides "where" you start; soul points, spent at the altar, buy "how far along" (a starting level, a power); there are no free kits. The pools are built today and stay until the altar milestone (minus the seeded affinity); how many altars there are, where they stand and the soul-point prices are open. Species unlocks, decided: the default rule is to eat or defeat N of that creature (the Bestiary and Compendium already count both), with bespoke conditions for special species such as the rare Taratect. Still open: N, which species are special, whether a soul can start a life past stage 1 of the evolution tree (the game always starts at stage 1), and which perks soul points buy.</p>
 </div>
 </section>
 
@@ -363,7 +363,7 @@
 <p>Three small calls, with my suggestions:</p>
 <ul>
 <li><strong>The final fight. Decided:</strong> the god of reincarnation is the goddess. The Cave Serpent, which the game planned as its goal, becomes an area boss on the way to her.</li>
-<li><strong>Shrines. Working direction (with section 7):</strong> reuse rebirth pools, so one object attunes and banks, and Glow Pools stay as plain rest.</li>
+<li><strong>Shrines. Decided (with section 7):</strong> the goddess's altars replace the rebirth pools; one object attunes, banks essence and meets the goddess. Glow Pools (plain rest) are a separate object and are not decided here.</li>
 <li><strong>Essence seed. Decided:</strong> any elemental death leaves a small fixed seed: a creature kill seeds that creature's strongest element, a hazard seeds its own (poison water, drowning), and a fall or crush seeds nothing. The amount does not scale with what you held. Needs the death cause recorded on the player (today <code>receive_hit</code> ignores it) and a cause-to-element map for hazards. Open: the exact amount, and whether the seed carries across species.</li>
 <li><strong>The reveal. Decided:</strong> every soul point you bank feeds her, which makes the shrine the story's central choice (spend essence on powers now, or bank it for permanent progress), and she is the god of reincarnation you beat to end a run. Open: when the reveal happens and whether banking changes after it.</li>
 </ul>
@@ -402,7 +402,7 @@
 <tr><td>How the goblin's crafting works</td><td>Shape decided (throwables plus one weapon and one armor slot); no inventory or crafting system is built, and which items combine is open. The controller has no free button for a hotbar, combine and gear swap.</td></tr>
 <tr><td>Each species' unlock condition</td><td>Default decided (eat or defeat N of the creature, with bespoke twists for special species); N and the special cases are open. No species list is built; rebirth pools are unlocked by attuning.</td></tr>
 <tr><td>Which permanent perks soul points buy</td><td>No soul points or perks.</td></tr>
-<tr><td>What shrines do besides banking essence</td><td>Glow Pools rest; tablets give lore and hints; rebirth pools attune.</td></tr>
+<tr><td>What shrines do besides banking essence</td><td>Decided: the goddess's altars replace the rebirth pools (attune, bank, meet the goddess). Today Glow Pools rest, tablets give lore and hints, and rebirth pools attune.</td></tr>
 <tr><td>How a run can end besides death or beating the god</td><td>Death only.</td></tr>
 <tr><td>Which combinations of essences unlock which powers (lightning, ice, poison and spore so far)</td><td>Working recipes: lightning is fire + air or light + air; ice is water + air; poison is water + dark; spore is air + dark, maybe with earth. No combinations today: essence skills unlock from the count of one essence. Several conditions can be combined as data; alternative recipes need a small engine change.</td></tr>
 <tr><td>How much essence each evolution costs</td><td>Rule decided (a per-power price in that power's element or elements); the amounts are open. Skill evolutions cost 1 EP each today, not essence.</td></tr>

@@ -157,7 +157,7 @@ Evolving should be as frictionless as possible. Working idea: when you hit a thr
 
 Working idea: the skill screen shows the skill tree and its branches, based on what you have unlocked with this species before. The tree grows as you find it: only discovered nodes show, plus ??? stubs for the branches of powers you own, and a recipe's exact ingredients appear only once earned.
 
-**Tree screen: one combined, zoomable graph.** Powers and evolutions appear as connected nodes in a single tree that can zoom in and out. If evolutions are hard to show alongside powers, fall back to showing one evolution at a time, plus where the next evolution is once the player has unlocked it. Pan and zoom controls, and how a power two species share shows in each tree, are open.
+**Tree screen: one combined, zoomable graph.** Powers (with their evolution branches) and body forms appear as connected nodes in a single tree that can zoom in and out. If body forms are hard to show alongside powers, fall back to showing one form line at a time, plus where the next evolution is once the player has unlocked it. The first version is read-only, with one zoom toggle and no mouse; how a power two species share shows in each tree is open.
 
 ## Reincarnation and soul progression
 
@@ -167,8 +167,8 @@ What you can reincarnate as reflects what your soul is capable of becoming, and 
 - **Soul points:** earned on runs and kept between lives.
 - **Spending soul points:** both on unlocking new species and on permanent perks.
 - **A stronger soul:** can unlock things earlier within a species, such as starting further along its evolution.
-- **Where and how far:** the head start has two parts and one currency. The rebirth pool you choose decides *where* you start (and its kit); soul points buy *how far along* at that pool, such as a higher kit level or an extra kit skill. Whether a soul can start a life past stage 1 of the evolution tree is still open.
-- **Shrines:** working direction is that a rebirth pool is also the shrine: attune it and bank essence into soul points at the same object. Glow Pools stay plain rest.
+- **Where and how far:** the head start has two parts and one currency. The altar you choose decides *where* you start; soul points, spent at the altar, buy *how far along* (a starting level, a power). There are no free kits: the rebirth pools and their kits are removed and the altars replace them. Whether a soul can start a life past stage 1 of the evolution tree is still open.
+- **Altars:** decided (2026-10-03): the **goddess's altars replace the rebirth pools**. At an altar you attune it (it becomes a place you respawn), bank essence into soul points, and meet the goddess, who offers your next body and head start. The pools are gone; Glow Pools (plain rest) are a separate object and are not decided here. How many altars there are, where they stand, and what the goddess's menu shows at each are still open.
 
 ## World structure and gates
 
@@ -183,9 +183,9 @@ One fixed, hand-built world, the same every life, with gates between sections th
 
 Working idea: a run ends when you die, or when you beat the god of reincarnation.
 
-**The god of reincarnation is the goddess**, the same character as the helpful ally, once the reveal turns her into the antagonist. Every soul point you bank at a shrine feeds her, so banking is the story's central choice: spend essence on powers now, or bank it for permanent progress. The Cave Serpent, which the game had planned as its goal, becomes an area boss on the way to her.
+**The god of reincarnation is the goddess**, the same character as the helpful ally, once the reveal turns her into the antagonist. Every soul point you bank at an altar feeds her, so banking is the story's central choice: spend essence on powers now, or bank it for permanent progress. The Cave Serpent, which the game had planned as its goal, becomes an area boss on the way to her.
 
-Shrines don't end a run; they let you bank essence into soul points. Whether a run can end any other way, and what else shrines do, is still open.
+Altars don't end a run; they let you bank essence into soul points and meet the goddess. Whether a run can end any other way is still open.
 
 **Essence seed (working direction):** when you die, you lose the essence you hold, but what killed you leaves a small essence seed of its element, and your next life starts with it — dying to fire starts you with a little fire essence. Any elemental death counts: a creature kill seeds that creature's strongest element, and a hazard seeds its own (poison water, drowning); a fall or a crush seeds nothing. The seed is a small fixed amount, independent of how much you held, so banking at a shrine and spending on evolutions stay the only ways to keep essence. The exact amount and whether the seed carries across species are still open.
 
@@ -204,7 +204,7 @@ The combination here is novel, but several games cover pieces of it — worth st
 
 - [x] Starting movement archetypes — bouncer, crawler, biped
 - [x] Base essences — eight elements (poison is water and dark; earth replaces physical)
-- [ ] Spore's recipe: air and dark, and whether earth joins
+- [x] Spore's recipe — air and dark; earth does not join, so Spore Cloud is reachable in the Cave
 - [x] World structure — one fixed hand-built map, death is a new life in it
 - [ ] Which essences feed which evolution branches for each species
 - [x] Essence method for undead — drain life force; zombie and vampire devour; skeleton types graft; vampires use items
@@ -223,11 +223,13 @@ The combination here is novel, but several games cover pieces of it — worth st
 - [ ] What the undead's graft gives in practice, and how many slots the spider, goblin and undead bodies get
 - [ ] Each species' unlock condition
 - [ ] Which permanent perks soul points buy
-- [ ] What shrines do besides banking essence (save, talk to the goddess?)
+- [x] Altars replace the rebirth pools: attune, bank essence, meet the goddess
+- [ ] How many altars, where they stand, what the goddess's menu offers at each, and the soul-point prices
 - [ ] How a run can end besides death or beating the god of reincarnation, if at all
 - [ ] Which combinations of essences unlock which powers (lightning and ice are the first two)
 - [x] How an evolution's cost is set — per power, in its own element(s)
 - [ ] The actual essence amounts each evolution costs
 - [x] Skill tree layout — one combined zoomable graph, with a one-evolution-at-a-time fallback
-- [ ] Pan and zoom controls for the tree, and how a skill two species share shows in each tree
+- [x] Tree controls — one zoom toggle; the mouse (click, wheel), the left stick and the D-pad move and select; read-only in v1
+- [ ] How a skill two species share shows in each tree
 - [ ] When the goddess's reveal happens, and what changes after it
