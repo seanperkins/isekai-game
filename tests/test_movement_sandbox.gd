@@ -171,3 +171,13 @@ func test_real_input_starts_a_puddle_slide() -> void:
 	Input.action_press("aim_down")
 	await _frames(3)
 	assert_eq(sb.state.verb, "puddle")
+
+func test_holding_jump_after_a_long_fall_bounces_several_times() -> void:
+	sb.body.global_position = Vector2(680.0, -300.0)  # above the 100 px ledge
+	sb.scripted.jump_held = true
+	var bounces := 0
+	for _k in 300:
+		await get_tree().physics_frame
+		if sb.state.launched == "bounce":
+			bounces += 1
+	assert_between(bounces, 3, 6)
