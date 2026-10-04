@@ -163,6 +163,15 @@ func can_afford(id: String) -> bool:
 		_afford_memo[id] = ok
 	return _afford_memo[id]
 
+## Spends `units` of held essence of one element: one ledger entry per unit. False, and nothing written, when the run is not
+## active, `units` is not positive or less than that is held. Evolving and banking at an altar both spend through here.
+func spend_essence(element: String, units: int) -> bool:
+	if not run_active or units <= 0 or held(element) < units:
+		return false
+	for i in units:
+		_ledger.record(ESSENCE_SPENT, {"essence": element})
+	return true
+
 ## Pays a ready evolution's price in held essence (one ledger entry per unit), unlocks it and closes its siblings. False, and
 ## nothing is spent, when it is not ready or the price is not held. The parent retires as the evolution enters `_owned`, so the
 ## siblings' ready flags are erased here and _evaluate keeps them from coming back.
@@ -171,8 +180,7 @@ func evolve(id: String) -> bool:
 		return false
 	var price := evolution_price(id)
 	for e in price:
-		for i in int(price[e]):
-			_ledger.record(ESSENCE_SPENT, {"essence": e})
+		spend_essence(e, int(price[e]))
 	_ready_evolutions.erase(id)
 	for sib in siblings_of(id):
 		_ready_evolutions.erase(sib)
