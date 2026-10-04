@@ -120,6 +120,127 @@ func test_key_four_picks_the_spider() -> void:
 	sb._unhandled_key_input(ev)
 	assert_eq(sb.profile.id, "spider")
 
+# --- the wolf: pounce, vault, skid ---
+
+func _wolf_at(pos: Vector2, vx := 0.0, dir := 0.0) -> void:
+	sb.set_profile("wolf")
+	sb.body.global_position = pos
+	sb.state.velocity.x = vx
+	sb.scripted.dir = dir
+	await _frames(2)
+
+func _pounce(aim: Vector2) -> void:
+	sb.scripted.aim = aim
+	sb.scripted.signature_pressed = true
+
+func test_a_wolf_gallops_up_to_the_low_step_and_vaults_it() -> void:
+	await _wolf_at(Vector2(95.0, -12.0), -200.0, -1.0)
+	var vaulted_at := -1
+	var highest := 0.0
+	for k in 40:
+		await get_tree().physics_frame
+		if sb.state.launched == "vault" and vaulted_at < 0:
+			vaulted_at = k
+			assert_gte(absf(sb.state.velocity.x), 150.0, "the speed is kept through the hop")
+		highest = minf(highest, sb.body.global_position.y)
+	assert_gte(vaulted_at, 0, "it hopped with no jump press")
+	assert_lt(highest, -12.0 - 10.0, "the body rose over the 16 px step")
+	assert_lt(sb.body.global_position.x, 45.0, "and got past its near edge instead of stopping at it")
+
+func test_a_slow_wolf_stops_at_the_low_step_like_any_wall() -> void:
+	await _wolf_at(Vector2(95.0, -12.0), -100.0, -0.43)  # the stick scales the target: about 100 px/s
+	for _k in 40:
+		await get_tree().physics_frame
+		assert_ne(sb.state.launched, "vault")
+	assert_almost_eq(sb.body.global_position.x, 45.0 + 14.0, 3.0)
+
+func test_a_40_px_ledge_is_not_vaulted_at_any_speed() -> void:
+	await _wolf_at(Vector2(365.0, -12.0), 200.0, 1.0)
+	for _k in 50:
+		await get_tree().physics_frame
+		assert_ne(sb.state.launched, "vault")
+	assert_almost_eq(sb.body.global_position.x, 400.0 - 14.0, 3.0)
+
+func test_the_pounce_leaps_along_the_aim_and_lands() -> void:
+	await _wolf_at(Vector2(100.0, -12.0))
+	_pounce(Vector2(1.0, -1.0).normalized())
+	await _frames(1)
+	assert_eq(sb.state.verb, "pounce")
+	assert_almost_eq(sb.state.velocity.length(), 300.0, 5.0)
+	await _frames(2)
+	assert_false(sb.body.is_on_floor(), "it left the floor")
+	var end := 0
+	while sb.state.verb == "pounce" and end < 60:
+		await get_tree().physics_frame
+		end += 1
+	assert_between(end, 17, 21, "about 0.35 s")
+	var again := 0
+	while sb.state.verb != "pounce" and again < 80:
+		sb.scripted.aim = Vector2.RIGHT
+		sb.scripted.signature_pressed = true
+		await get_tree().physics_frame
+		again += 1
+	assert_between(again, 44, 52, "0.8 s after the end, not before")
+	assert_true(sb.body.is_on_floor() or sb.state.verb == "pounce")
+
+func test_the_pounce_marks_the_dummy() -> void:
+	await _wolf_at(Vector2(80.0, -12.0))
+	assert_false(sb.state.pounce_hit)
+	_pounce(Vector2.RIGHT)
+	await _frames(30)
+	assert_true(sb.state.pounce_hit, "the leap reached the dummy at x 120 to 140")
+
+func test_the_pounce_ends_at_a_wall() -> void:
+	await _wolf_at(Vector2(250.0, -12.0))
+	_pounce(Vector2.RIGHT)
+	var ticks := 0
+	for _k in 30:
+		await get_tree().physics_frame
+		if sb.state.verb == "pounce":
+			ticks += 1
+	assert_between(ticks, 3, 12, "it ended on the slick block's wall, not after 0.35 s")
+	assert_almost_eq(sb.body.global_position.x, 300.0 - 14.0, 4.0)
+
+func test_a_reversal_at_a_gallop_skids_with_dust_and_a_lean() -> void:
+	await _wolf_at(Vector2(100.0, -12.0), 0.0, 1.0)
+	await _frames(30)
+	assert_gt(sb.state.velocity.x, 200.0)
+	sb.scripted.dir = -1.0
+	var skid_frames := 0
+	var leaned := 0.0
+	for _k in 8:
+		await get_tree().physics_frame
+		if sb.state.skidding:
+			skid_frames += 1
+			leaned = minf(leaned, _sprite().rotation)
+	assert_gte(skid_frames, 2, "the reversal skids")
+	assert_lt(leaned, -0.05, "it leans back, nose up, going right")
+	assert_gt(get_tree().get_nodes_in_group("dust").size(), 0, "dust")
+	sb.scripted.dir = 0.0
+	await _frames(40)
+	assert_eq(get_tree().get_nodes_in_group("dust").size(), 0, "faded away")
+	assert_almost_eq(_sprite().rotation, 0.0, 0.05, "upright again")
+
+func test_the_pounce_pose_follows_the_leap() -> void:
+	if not _has_art("wolf"):
+		pending("the wolf sheet is not imported")
+		return
+	await _wolf_at(Vector2(100.0, -12.0))
+	_pounce(Vector2(1.0, -1.0).normalized())
+	await _frames(8)
+	assert_eq(sb.state.verb, "pounce")
+	var v := sb.state.velocity
+	assert_almost_eq(_sprite().rotation, atan2(v.y, absf(v.x)), 0.3, "nose along the velocity")
+	assert_false(_sprite().flip_h)
+	assert_eq(sb.clip(), "windup")
+	await _frames(100)  # lands, and the 0.8 s wait is over
+	_pounce(Vector2(-1.0, -1.0).normalized())
+	await _frames(8)
+	assert_eq(sb.state.verb, "pounce")
+	v = sb.state.velocity
+	assert_true(_sprite().flip_h, "mirrored going left")
+	assert_almost_eq(_sprite().rotation, -atan2(v.y, absf(v.x)), 0.3)
+
 func after_each() -> void:
 	for action in ["move_right", "aim_down", "tackle"]:
 		Input.action_release(action)

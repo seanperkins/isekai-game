@@ -109,3 +109,8 @@ func test_the_sprite_turns_a_quarter_per_surface() -> void:
 	assert_almost_eq(SpeciesLook.surface_angle(Vector2.RIGHT), PI / 2.0, 0.0001)
 	assert_almost_eq(absf(SpeciesLook.surface_angle(Vector2.DOWN)), PI, 0.0001)
 	assert_almost_eq(SpeciesLook.surface_angle(Vector2.LEFT), -PI / 2.0, 0.0001)
+
+func test_a_pouncing_wolf_shows_the_leaping_frame_even_on_the_floor() -> void:
+	assert_eq(SpeciesLook.clip_for("wolf", true, 0.0, 0.0, 0.0, "pounce"), "windup")
+	assert_eq(SpeciesLook.clip_for("wolf", false, -50.0, 230.0, 0.0, "pounce"), "windup")
+	assert_eq(SpeciesLook.clip_for("wolf", true, 0.0, 230.0, 0.0), "charge", "no verb, no leap")

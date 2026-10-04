@@ -43,8 +43,8 @@ static func clips_for(species: String) -> Dictionary:
 
 ## The clip for a body that is on the floor or not, moving at `vx` and falling at `vy`, `land_timer` seconds after
 ## landing, running burst `verb` ("tackle", "puddle"), `flat` (spread or sliding), clinging to a wall (`wall`) and bouncing
-## (`ball`, which only replaces the rise, fall and landing poses). Only the slime has poses for these so far. "" when the
-## species has no look.
+## (`ball`, which only replaces the rise, fall and landing poses). Only the slime has poses for these so far, and the wolf
+## shows its leaping frame (`windup`) for a pounce. "" when the species has no look.
 static func clip_for(species: String, on_floor: bool, vy: float, vx: float, land_timer: float, verb := "", flat := false, wall := false, ball := false) -> String:
 	match species:
 		"slime":
@@ -55,7 +55,7 @@ static func clip_for(species: String, on_floor: bool, vy: float, vx: float, land
 				return "drop"
 			return "crawl" if absf(vx) > MOVING_SPEED else "hang"
 		"wolf":
-			if not on_floor:
+			if verb == "pounce" or not on_floor:
 				return "windup"
 			if absf(vx) >= GALLOP_SPEED:
 				return "charge"

@@ -21,6 +21,10 @@ const SLICK_BLOCK := Rect2(300, -90, 60, 90)
 const SLICK_CEILING := Rect2(300, -220, 60, 20)
 ## A thin one-way ledge (a floor on its top only) a spider can hop up through and walk off the end of.
 const ONEWAY_LEDGE := Rect2(160, -50, 100, 6)
+## A 16 px hard step at the left end for the wolf to vault, and a hostile dummy to pounce on (an Area2D floating 10 px above the
+## floor: it marks contact, it does not block).
+const STEP_LOW := Rect2(20, -16, 25, 16)
+const DUMMY := Rect2(120, -50, 20, 40)
 ## How far from a wall (px) still counts as touching it for the wall verbs.
 const WALL_RANGE := 6.0
 const START := Vector2(100, 0)
@@ -38,6 +42,17 @@ const CRAWL_EASE := 8.0
 const THREAD_FADE := 0.15
 const CORNER_EASE := 0.04
 const PIVOT_SECONDS := 0.10
+## The wolf's vault probe looks this many seconds of travel ahead of its leading edge (never under VAULT_MIN_REACH px) so the hop
+## has the time to lift the feet over the step, and from VAULT_HEADROOM px above the tallest step it clears.
+const VAULT_LOOKAHEAD := 0.12
+const VAULT_MIN_REACH := 6.0
+const VAULT_HEADROOM := 20.0
+## The skid's dust puffs live this long (s); the wolf leans back this much (rad) in a skid, and its pose eases over LEAN_EASE;
+## the leaping pose is stretched along the velocity.
+const DUST_LIFE := 0.3
+const SKID_LEAN := 0.25
+const LEAN_EASE := 0.03
+const POUNCE_STRETCH := Vector2(1.2, 0.85)
 
 ## When set, replaces the keyboard and pad. `jump_pressed` is consumed (cleared) by the next physics frame, so a test
 ## sets it once; `jump_held` stays until the test clears it.
@@ -74,6 +89,7 @@ var _prev_pos := Vector2.ZERO
 var _sense := 1.0
 var _pivot := 0.0
 var _cam: Camera2D
+var _dummy: Area2D
 var _label: Label
 var _last := {"rise": 0.0, "airtime": 0.0}
 var _in_jump := false
@@ -96,6 +112,8 @@ func _ready() -> void:
 	_oneway(ONEWAY_LEDGE)
 	_slick(SLICK_BLOCK)
 	_slick(SLICK_CEILING)
+	_block(STEP_LOW)
+	_hostile(DUMMY)
 	body = CharacterBody2D.new()
 	body.name = "Body"
 	body.collision_mask = 7  # hard solids (layer 1), one-way ledges (layer 2) and slick solids (layer 3, value 4)
@@ -201,9 +219,14 @@ func _physics_process(delta: float) -> void:
 		i.ray = _ray
 	if profile.verbs.has("zip"):
 		i.cast = _cast
+	if profile.id == "wolf":
+		i.step_ahead = _step_ahead()
+		i.touching_hostile = _dummy.overlaps_body(body)
 	VerbRunner.step(state, i, profile, delta, 1.0, sqrt(BOOST_JUMP_HEIGHT) if boosted else 1.0)
 	body.set_collision_mask_value(2, state.fall_through <= 0.0)  # a press of down on a one-way ledge drops through it
 	_update_thread(delta)
+	if state.skidding:
+		_puff_dust()
 	if state.surface_n != Vector2.ZERO:
 		_crawl(delta)
 		return
@@ -351,15 +374,53 @@ func _ray(from: Vector2, to: Vector2, hard_only: bool) -> int:
 	var layer := (hit["collider"] as CollisionObject2D).collision_layer
 	return SurfaceStep.SLICK if layer == 4 else (SurfaceStep.ONEWAY if layer == 2 else SurfaceStep.HARD)
 
-## Which side a wall is on within WALL_RANGE (the side the input points to first), 0 for none or on the floor.
+## Which side a wall is on within WALL_RANGE (the side the input points to first), 0 for none or on the floor, except for a
+## species whose burst ends at a wall (the wolf's pounce runs along the floor into one).
 func _wall_side(dir: float) -> int:
-	if body.is_on_floor():
+	if body.is_on_floor() and not _walls_on_floor():
 		return 0
 	var first := 1 if dir >= 0.0 else -1
 	for side in [first, -first]:
 		if body.test_move(body.global_transform, Vector2(side * WALL_RANGE, 0.0)):
 			return side
 	return 0
+
+func _walls_on_floor() -> bool:
+	for row in profile.bursts:
+		if (row as BurstDef).ends_at_wall:
+			return true
+	return false
+
+## The wolf's vault probe: the height of the hard step (a hard or slick solid, never a one-way ledge) at the end of a ray down
+## from above the tallest step it clears, VAULT_LOOKAHEAD seconds of travel ahead of the leading edge. 0 for none, when
+## it is not running along the floor, or for a hit under 1 px (the floor itself). A wall taller than the ray starts inside
+## it, which the ray does not hit: that is a wall too.
+func _step_ahead() -> float:
+	var way := signf(state.velocity.x)
+	if way == 0.0 or not body.is_on_floor():
+		return 0.0
+	var x := body.global_position.x + way * (_box.size.x / 2.0 + maxf(VAULT_MIN_REACH, absf(state.velocity.x) * VAULT_LOOKAHEAD))
+	var feet := body.global_position.y + BodyConfig.BOTTOM
+	var q := PhysicsRayQueryParameters2D.create(Vector2(x, feet - profile.vault_step - VAULT_HEADROOM), Vector2(x, feet + 2.0), 5, [body.get_rid()])
+	var hit := get_world_2d().direct_space_state.intersect_ray(q)
+	if hit.is_empty():
+		return 0.0
+	var height := feet - (hit["position"] as Vector2).y
+	return height if height >= 1.0 else 0.0
+
+## A puff of dust at the paws, drifting up and fading (the skid's).
+func _puff_dust() -> void:
+	var puff := ColorRect.new()
+	puff.size = Vector2(4.0, 4.0)
+	puff.color = Color(0.82, 0.76, 0.64, 0.8)
+	puff.position = body.global_position + Vector2(signf(state.velocity.x) * 8.0 - 2.0, BodyConfig.BOTTOM - 4.0)
+	puff.add_to_group("dust")
+	add_child(puff)
+	var tween := puff.create_tween().set_parallel(true)
+	tween.set_process_mode(Tween.TWEEN_PROCESS_PHYSICS)
+	tween.tween_property(puff, "position:y", puff.position.y - 10.0, DUST_LIFE)
+	tween.tween_property(puff, "modulate:a", 0.0, DUST_LIFE)
+	tween.chain().tween_callback(puff.queue_free)
 
 ## Free px above the body: 0 when it could not rise STAND_RISE (a low ceiling), else plenty.
 func _clearance() -> float:
@@ -389,6 +450,7 @@ func _draw_body(delta: float) -> void:
 			_ball_roll = 0.0
 			_sprite.texture = _sheet.frame_texture(frame)
 		_sprite.scale = _look_scale(delta)
+		_sprite.rotation = _lean(delta)
 		_sprite.flip_h = state.wall_side < 0 if _clip == "wall" else _facing < 0  # a wall on the left is gripped facing left
 		_sprite.position = body.position + Vector2(0.0, BodyConfig.BOTTOM - size.y * _sprite.scale.y / 2.0)
 	else:
@@ -398,7 +460,7 @@ func _draw_body(delta: float) -> void:
 	_sprite.modulate = tint
 	_rect.modulate = tint
 	var doing := state.verb if state.verb != "" else ("flat" if state.spread else ("wall" if state.clinging else ("crawl" if state.surface_n != Vector2.ZERO else "")))
-	_label.text = "%s%s   speed %d   boost %s   verb: %s   last jump: rise %.1f px, air %.2f s\n1 biped   2 slime   3 wolf   4 spider   B boost   J tackle   S down (flatten, slide)   down on a one-way ledge drops through it   at a wall: press into it to stick, jump to kick off, hold jump to bounce   spider: arrows crawl floors, walls and ceilings, jump hops off, J zips (aim with the arrows, a thread pulls you to the first solid within 160 px; jump cancels), S in the air or hanging from a ceiling drops on a thread (down reels, up climbs, jump lets go)" % [
+	_label.text = "%s%s   speed %d   boost %s   verb: %s   last jump: rise %.1f px, air %.2f s\n1 biped   2 slime   3 wolf   4 spider   B boost   J tackle   S down (flatten, slide)   down on a one-way ledge drops through it   at a wall: press into it to stick, jump to kick off, hold jump to bounce   wolf: J pounces along the arrows (forward if none; one air pounce per jump), a gallop hops low steps by itself, reversing at speed skids   spider: arrows crawl floors, walls and ceilings, jump hops off, J zips (aim with the arrows, a thread pulls you to the first solid within 160 px; jump cancels), S in the air or hanging from a ceiling drops on a thread (down reels, up climbs, jump lets go)" % [
 		profile.id, " (placeholder, no art yet)" if _sheet == null else "", int(absf(body.velocity.x)), "on" if boosted else "off", doing, _last["rise"], _last["airtime"]]
 
 ## The spider, after how spiders move: the legs follow the distance travelled (so they freeze the instant it stops, on the
@@ -440,8 +502,23 @@ func _draw_spider(delta: float) -> void:
 	_sprite.position = body.position + _vis_off + Vector2.UP.rotated(_angle) * (size.y / 2.0 - SurfaceStep.HN)
 	_prev_pos = body.global_position
 
+## The wolf's turn: nose along its velocity in a pounce (the sprite faces right; mirrored going left), leaning back in a skid, else
+## upright. Eases, so it does not snap.
+func _lean(delta: float) -> float:
+	var target := 0.0
+	var way := 1.0 if _facing > 0 else -1.0
+	if profile.id == "wolf":
+		if state.verb == "pounce":
+			target = atan2(state.velocity.y, absf(state.velocity.x)) * way
+		elif state.skidding:
+			target = -SKID_LEAN * way
+	_angle = lerp_angle(_angle, target, 1.0 - exp(-delta / LEAN_EASE))
+	return _angle
+
 ## The sprite's scale: the slime's spring, wobbling while it crawls flat. The ball is never squashed, stretched or wobbled.
 func _look_scale(delta: float) -> Vector2:
+	if profile.id == "wolf" and state.verb == "pounce":
+		return POUNCE_STRETCH  # the sprite is turned along the velocity, so this stretches along the leap
 	if profile.id != "slime" or _clip == "ball":
 		return Vector2.ONE
 	var out := _spring.sprite_scale()
@@ -482,6 +559,23 @@ func _slick(r: Rect2) -> void:
 	look.color = Color(0.6, 0.82, 0.95)
 	b.add_child(look)
 	add_child(b)
+
+## A hostile that only marks contact (an Area2D the wolf's pounce reads), drawn as a red block.
+func _hostile(r: Rect2) -> void:
+	_dummy = Area2D.new()
+	_dummy.name = "Dummy"
+	_dummy.position = r.position + r.size / 2.0
+	var shape := CollisionShape2D.new()
+	var box := RectangleShape2D.new()
+	box.size = r.size
+	shape.shape = box
+	_dummy.add_child(shape)
+	var look := ColorRect.new()
+	look.size = r.size
+	look.position = -r.size / 2.0
+	look.color = Color(0.85, 0.25, 0.25, 0.7)
+	_dummy.add_child(look)
+	add_child(_dummy)
 
 func _block(r: Rect2) -> void:
 	var b := StaticBody2D.new()
