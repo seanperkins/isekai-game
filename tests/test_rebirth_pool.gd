@@ -98,7 +98,7 @@ func test_the_shipped_world_validates_and_c1_holds_the_default_pool() -> void:
 	for f in (rooms["C1"] as RoomDef).features:
 		if f.get("kind", "") == "rebirth_pool":
 			found = true
-			assert_eq(f["id"], WorldProgress.DEFAULT_POOL)
+			assert_eq(f["id"], WorldProgress.DEFAULT_ALTAR)
 			assert_eq(f["kit"], {}, "the Cave mouth's kit is nothing")
 	assert_true(found)
 

@@ -255,7 +255,7 @@ static func _decor_unknown(r: RoomDef) -> Array:
 static func _pool_clearance(r: RoomDef) -> Array:
 	var out: Array = []
 	for f in r.features:
-		if f.get("kind", "") != "rebirth_pool" or f.get("id", "") == WorldProgress.DEFAULT_POOL:
+		if f.get("kind", "") != "rebirth_pool" or f.get("id", "") == WorldProgress.DEFAULT_ALTAR:
 			continue
 		for i in r.spawns.size():
 			var d: float = (r.spawns[i]["pos"] as Vector2).distance_to(f["pos"])

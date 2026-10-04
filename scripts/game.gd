@@ -68,10 +68,10 @@ func _ready() -> void:
 	world.setup(rooms, player, {"spawn": _spawn, "progress": progress,
 		"compendium": Compendium.model, "announce": Announcer.queue.push_unlock})
 	world.room_entered.connect(_on_room_entered)
-	var pools := RebirthChoice.pools(rooms)
-	progress.sanitize(pools.map(func(p: Dictionary) -> String: return p["id"]))
+	var altars := RebirthChoice.altars(rooms)
+	progress.sanitize(altars.map(func(p: Dictionary) -> String: return p["id"]))
 	var start := {"default": false, "room": request["room"], "pos": request["pos"], "kit": request.get("kit", {})} if _editor_play \
-		else Game.resolve_start(pools, progress.take_pending(), progress.is_attuned)
+		else Game.resolve_start(altars, progress.take_pending(), progress.is_attuned)
 	if start["default"]:
 		world.enter_start()
 	else:
@@ -92,7 +92,7 @@ func _ready() -> void:
 	add_child(run)
 	# Bound without progress in an editor Play: a death emits restart_requested at once and never opens the goddess's menu.
 	goddess = null if _editor_play else Goddess.load_default(Compendium.soul, Compendium.model, SkillRules.skill_defs)
-	run.bind(player, world, null if _editor_play else Compendium.progress, pools, goddess)
+	run.bind(player, world, null if _editor_play else Compendium.progress, altars, goddess)
 	run.restart_requested.connect(_restart)
 	goddess_menu = GoddessMenu.new()  # connected after the run is bound: a listener means the run waits for her choice
 	add_child(goddess_menu)
@@ -165,7 +165,7 @@ static func wants_evolve(args: Array) -> bool:
 ## Where the next life starts: the default (the start room) unless `pending` names an attuned pool the room data still holds,
 ## in which case its room and spot (standing on it). The kit and the species are what the goddess's menu gave, from `pending`
 ## (never the pool's own kit); a malformed kit or species falls back to `{}` and "slime", and a kit survives a place that is gone.
-static func resolve_start(pools: Array, pending: Dictionary, attuned: Callable) -> Dictionary:
+static func resolve_start(altars: Array, pending: Dictionary, attuned: Callable) -> Dictionary:
 	var kit = pending.get("kit", {})
 	if typeof(kit) != TYPE_DICTIONARY:
 		kit = {}
@@ -173,13 +173,13 @@ static func resolve_start(pools: Array, pending: Dictionary, attuned: Callable) 
 	if typeof(species) != TYPE_STRING:
 		species = WorldProgress.DEFAULT_SPECIES
 	var default := {"default": true, "kit": kit, "species": species}
-	var id = pending.get("pool", "")
-	if typeof(id) != TYPE_STRING or id == "" or id == WorldProgress.DEFAULT_POOL:
+	var id = pending.get("altar", "")
+	if typeof(id) != TYPE_STRING or id == "" or id == WorldProgress.DEFAULT_ALTAR:
 		return default
-	for p in pools:
+	for p in altars:
 		if p["id"] == id and attuned.call(id):
 			return {"default": false, "room": p["room"], "pos": p["pos"] + Vector2(0.0, -BodyConfig.BOTTOM),
-				"kit": kit, "pool": id, "species": species}
+				"kit": kit, "altar": id, "species": species}
 	return default
 
 ## `-- --soul=N` on the command line grants N soul points to spend this session: 0 to 9999, anything else reads 0.

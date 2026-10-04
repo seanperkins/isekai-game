@@ -35,13 +35,13 @@ func line_for_death(cause: String) -> String:
 
 ## The scene's state: the attuned places (the default when none), the species the Bestiary has unlocked, the powers worth a head
 ## start, and the last choice pre-selected.
-func model(progress: WorldProgress, pools: Array) -> GoddessModel:
+func model(progress: WorldProgress, altars: Array) -> GoddessModel:
 	var places: Array = []
-	for p in pools:
+	for p in altars:
 		if progress.is_attuned(str(p["id"])):
 			places.append({"id": str(p["id"]), "name": str(p["name"])})
 	if places.is_empty():
-		places.append({"id": WorldProgress.DEFAULT_POOL, "name": "Cave mouth"})
+		places.append({"id": WorldProgress.DEFAULT_ALTAR, "name": "Cave mouth"})
 	var records := {}
 	for id in _compendium.bestiary_ids():
 		records[id] = _compendium.creature_record(id)

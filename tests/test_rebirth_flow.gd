@@ -64,7 +64,7 @@ func test_with_nothing_to_choose_death_restarts_directly_and_records_the_start()
 	await _await_card()
 	assert_eq(restarts[0], 1)
 	assert_eq(asked.size(), 0, "nothing to choose, so no menu")
-	assert_eq(progress.pending_start, {"pool": "C1", "species": "slime", "kit": {}})
+	assert_eq(progress.pending_start, {"altar": "C1", "species": "slime", "kit": {}})
 	assert_eq(progress.last_choice()["pool"], "C1")
 
 func test_the_card_shows_her_line_for_the_cause_and_counts_one_death() -> void:
@@ -92,7 +92,7 @@ func test_a_second_altar_asks_and_waits() -> void:
 	assert_eq(model.selected_place(), "G1", "the last choice is pre-selected")
 	pair[0].accept(model.confirm())
 	assert_eq(restarts[0], 1)
-	assert_eq(progress.pending_start["pool"], "G1")
+	assert_eq(progress.pending_start["altar"], "G1")
 	assert_eq(progress.last_choice()["pool"], "G1")
 
 func test_points_to_spend_open_the_menu_even_with_one_altar() -> void:
@@ -197,7 +197,7 @@ func test_without_a_goddess_the_last_attuned_choice_is_taken() -> void:
 	pair[1].died.emit()
 	await _await_card()
 	assert_eq(restarts[0], 1)
-	assert_eq(progress.pending_start, {"pool": "G1", "species": "slime", "kit": {}})
+	assert_eq(progress.pending_start, {"altar": "G1", "species": "slime", "kit": {}})
 
 func test_without_a_goddess_a_last_choice_that_is_not_attuned_falls_back_to_the_default() -> void:
 	var progress := WorldProgress.new()
@@ -205,7 +205,7 @@ func test_without_a_goddess_a_last_choice_that_is_not_attuned_falls_back_to_the_
 	var pair := _run(progress, _pools())
 	pair[1].died.emit()
 	await _await_card()
-	assert_eq(progress.pending_start["pool"], "C1")
+	assert_eq(progress.pending_start["altar"], "C1")
 
 func test_a_run_bound_without_progress_behaves_as_before() -> void:
 	var run := Run.new()
@@ -225,27 +225,27 @@ func test_a_run_bound_without_progress_behaves_as_before() -> void:
 func test_the_default_pool_starts_at_the_start_room_with_no_kit() -> void:
 	var attuned := func(id: String) -> bool: return id == "C1"
 	assert_eq(Game.resolve_start(_pools(), {}, attuned), {"default": true, "kit": {}, "species": "slime"})
-	assert_eq(Game.resolve_start(_pools(), {"pool": "C1", "species": "slime"}, attuned), {"default": true, "kit": {}, "species": "slime"})
+	assert_eq(Game.resolve_start(_pools(), {"altar": "C1", "species": "slime"}, attuned), {"default": true, "kit": {}, "species": "slime"})
 
 func test_an_attuned_pool_starts_in_its_room_at_its_spot_with_the_kit_and_species_from_pending() -> void:
 	var attuned := func(_id: String) -> bool: return true
-	var pending := {"pool": "G1", "species": "slime", "kit": {"level": 2}}
+	var pending := {"altar": "G1", "species": "slime", "kit": {"level": 2}}
 	var s := Game.resolve_start(_pools(), pending, attuned)
 	assert_false(s["default"])
 	assert_eq(s["room"], "C3")
 	assert_eq(s["pos"], Vector2(100, 300 - BodyConfig.BOTTOM), "standing on the pool, not inside it")
 	assert_eq(s["kit"], {"level": 2}, "the bought kit, never the pool's own")
 	assert_eq(s["species"], "slime")
-	assert_eq(s["pool"], "G1")
+	assert_eq(s["altar"], "G1")
 
 func test_an_unattuned_or_unknown_pool_falls_back_to_the_default_place_and_keeps_the_kit() -> void:
 	var only_default := func(id: String) -> bool: return id == "C1"
-	var pending := {"pool": "G1", "kit": {"level": 2}}
+	var pending := {"altar": "G1", "kit": {"level": 2}}
 	var s := Game.resolve_start(_pools(), pending, only_default)
 	assert_true(s["default"], "not attuned")
 	assert_eq(s["kit"], {"level": 2}, "what was paid for is still given")
-	assert_true(Game.resolve_start(_pools(), {"pool": "GONE"}, func(_id: String) -> bool: return true)["default"], "no such pool")
-	assert_true(Game.resolve_start(_pools(), {"pool": 7}, func(_id: String) -> bool: return true)["default"], "malformed")
+	assert_true(Game.resolve_start(_pools(), {"altar": "GONE"}, func(_id: String) -> bool: return true)["default"], "no such pool")
+	assert_true(Game.resolve_start(_pools(), {"altar": 7}, func(_id: String) -> bool: return true)["default"], "malformed")
 
 func test_a_malformed_kit_or_species_in_pending_falls_back() -> void:
 	var s := Game.resolve_start(_pools(), {"kit": "level 9", "species": 3}, func(_id: String) -> bool: return true)
@@ -264,7 +264,7 @@ func test_the_world_can_start_at_a_pool() -> void:
 	Announcer.queue.clear()
 
 func test_the_game_consumes_the_pending_start_so_a_later_reload_does_not_replay_it() -> void:
-	Compendium.progress.pending_start = {"pool": "C1", "species": "slime"}
+	Compendium.progress.pending_start = {"altar": "C1", "species": "slime"}
 	var game = load("res://scenes/main.tscn").instantiate()
 	add_child_autofree(game)
 	await wait_physics_frames(2)

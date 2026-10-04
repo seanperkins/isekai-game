@@ -6,7 +6,7 @@ extends RefCounted
 signal shortcut_opened(id: String)
 
 ## The Cave mouth's rebirth pool: always attuned, so the game always has somewhere to start.
-const DEFAULT_POOL := "C1"
+const DEFAULT_ALTAR := "C1"
 const DEFAULT_SPECIES := "slime"
 
 var profile  # Profile, or null
@@ -17,10 +17,10 @@ var tablets: Array = []
 var rebirths: Array = []
 ## Body forms reached in any life (the Tree tab keeps them). The base slime is reached by definition and never stored.
 var forms_reached: Array = []
-## Where the next run starts ({"pool", "species"}), set on death and consumed by the game on reload.
+## Where the next run starts ({"altar", "species", "kit"}), set on death and consumed by the game on reload.
 ## In memory only: the scene rebuilds on every death, so it cannot live on the Run node.
 var pending_start := {}
-var _last_pool := DEFAULT_POOL
+var _last_altar := DEFAULT_ALTAR
 var _species := DEFAULT_SPECIES
 
 func _init(p_profile = null) -> void:
@@ -33,7 +33,7 @@ func _init(p_profile = null) -> void:
 		forms_reached = profile.list_section("forms_reached")
 		var choice: Dictionary = profile.dict_section("rebirth_choice")
 		if typeof(choice.get("pool")) == TYPE_STRING:
-			_last_pool = choice["pool"]
+			_last_altar = choice["pool"]
 		if typeof(choice.get("species")) == TYPE_STRING:
 			_species = choice["species"]
 
@@ -70,7 +70,7 @@ func attune(id: String) -> void:
 	_save()
 
 func is_attuned(id: String) -> bool:
-	return id == DEFAULT_POOL or rebirths.has(id)
+	return id == DEFAULT_ALTAR or rebirths.has(id)
 
 ## Written by the game when Player.form_advanced fires.
 func reach_form(id: String) -> void:
@@ -82,11 +82,13 @@ func reach_form(id: String) -> void:
 func is_form_reached(id: String) -> bool:
 	return id == Form.BASE or forms_reached.has(id)
 
+## The last life's choice. Its `pool` key holds an altar id: a key the saved `rebirth_choice` section has always used, kept so
+## no save needs migrating.
 func last_choice() -> Dictionary:
-	return {"pool": _last_pool, "species": _species}
+	return {"pool": _last_altar, "species": _species}
 
-func set_last_choice(pool: String, species := DEFAULT_SPECIES) -> void:
-	_last_pool = pool
+func set_last_choice(altar: String, species := DEFAULT_SPECIES) -> void:
+	_last_altar = altar
 	_species = species
 	_save()
 
@@ -94,8 +96,8 @@ func set_last_choice(pool: String, species := DEFAULT_SPECIES) -> void:
 ## data): a stale save falls back to the default pool instead of crashing or starting nowhere.
 func sanitize(pool_ids: Array) -> void:
 	rebirths = rebirths.filter(func(id: String) -> bool: return pool_ids.has(id))
-	if _last_pool != DEFAULT_POOL and not pool_ids.has(_last_pool):
-		_last_pool = DEFAULT_POOL
+	if _last_altar != DEFAULT_ALTAR and not pool_ids.has(_last_altar):
+		_last_altar = DEFAULT_ALTAR
 	_save()
 
 ## The pending start, once: reading it clears it, so an unrelated reload never replays a kit.
@@ -112,5 +114,5 @@ func _save() -> void:
 	profile.set_section("tablets", tablets.duplicate())
 	profile.set_section("rebirths", rebirths.duplicate())
 	profile.set_section("forms_reached", forms_reached.duplicate())
-	profile.set_section("rebirth_choice", {"pool": _last_pool, "species": _species})
+	profile.set_section("rebirth_choice", {"pool": _last_altar, "species": _species})
 	profile.save()

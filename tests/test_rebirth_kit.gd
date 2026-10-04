@@ -164,7 +164,7 @@ func test_every_pool_kit_is_valid_and_grants_what_its_row_says() -> void:
 	for area in AREA_KITS:
 		var row: Dictionary = AREA_KITS[area]
 		var pool: Dictionary = {}
-		for p in RebirthChoice.pools(rooms):
+		for p in RebirthChoice.altars(rooms):
 			if p["room"] == row["rooms"][0]:
 				pool = p
 		assert_false(pool.is_empty(), "%s: a pool in %s" % [area, row["rooms"][0]])
@@ -181,8 +181,8 @@ func test_every_kits_xp_to_the_cap_is_within_the_first_evolution_areas_total() -
 		var r: RoomDef = rooms[id]
 		if FIRST_EVOLUTION_AREAS.has(r.area):
 			areas_total += ShippedRooms.first_time(rooms, creatures, [id])
-	for p in RebirthChoice.pools(rooms):
-		if p["id"] == WorldProgress.DEFAULT_POOL:
+	for p in RebirthChoice.altars(rooms):
+		if p["id"] == WorldProgress.DEFAULT_ALTAR:
 			continue
 		var need := 0
 		for l in range(int((p["kit"] as Dictionary).get("level", 1)), Progression.LEVEL_CAP):
@@ -206,7 +206,7 @@ func test_the_flooded_alone_does_not_fill_an_f1_lifes_first_stage() -> void:
 	for c in DefLoader.load_dir("res://data/creatures"):
 		creatures[c.id] = c
 	var kit_level := 0
-	for p in RebirthChoice.pools(rooms):
+	for p in RebirthChoice.altars(rooms):
 		if p["id"] == "F1":
 			kit_level = int((p["kit"] as Dictionary).get("level", 1))
 	var need := 0
@@ -224,5 +224,5 @@ func test_the_flooded_alone_does_not_fill_an_f1_lifes_first_stage() -> void:
 
 func test_no_shipped_pool_carries_a_seeded_affinity() -> void:
 	var rooms := World.load_rooms("res://data/rooms")
-	for p in RebirthChoice.pools(rooms):
+	for p in RebirthChoice.altars(rooms):
 		assert_false((p["kit"] as Dictionary).has("affinity"), "pool %s" % p["id"])

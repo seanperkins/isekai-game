@@ -166,7 +166,7 @@ func test_pool_clearance_applies_to_every_pool_but_the_default() -> void:
 	assert_true(_rules(near).has("pool_clearance"), "a new cave pool is held to it too")
 	var far := _room("T1", {"features": [_pool("t1_pool_1", "cave", Vector2(100, 320))], "spawns": [{"id": "toad", "pos": Vector2(400, 300)}]})
 	assert_false(_rules(far).has("pool_clearance"))
-	var default := _room("T1", {"features": [_pool(WorldProgress.DEFAULT_POOL, "cave", Vector2(300, 320))], "spawns": [{"id": "toad", "pos": Vector2(400, 300)}]})
+	var default := _room("T1", {"features": [_pool(WorldProgress.DEFAULT_ALTAR, "cave", Vector2(300, 320))], "spawns": [{"id": "toad", "pos": Vector2(400, 300)}]})
 	assert_false(_rules(default).has("pool_clearance"), "the default pool is older than the rule")
 
 func _feat(kind: String, id: String, extra := {}) -> Dictionary:

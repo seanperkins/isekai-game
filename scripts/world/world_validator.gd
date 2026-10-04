@@ -101,12 +101,12 @@ static func _check_rebirth_pools(rooms: Dictionary) -> PackedStringArray:
 			if seen.has(pid):
 				out.append("%s: duplicate rebirth pool '%s'" % [room_id, pid])
 			seen[pid] = room_id
-			if pid == WorldProgress.DEFAULT_POOL and not (rooms[room_id] as RoomDef).is_start():
+			if pid == WorldProgress.DEFAULT_ALTAR and not (rooms[room_id] as RoomDef).is_start():
 				out.append("%s: the default rebirth pool '%s' must be in the start room" % [room_id, pid])
 			for e in RebirthKit.validate(f["kit"]):
 				out.append("%s: rebirth pool '%s': %s" % [room_id, pid, e])
-	if not seen.is_empty() and not seen.has(WorldProgress.DEFAULT_POOL):
-		out.append("world: the default rebirth pool '%s' is missing" % WorldProgress.DEFAULT_POOL)
+	if not seen.is_empty() and not seen.has(WorldProgress.DEFAULT_ALTAR):
+		out.append("world: the default rebirth pool '%s' is missing" % WorldProgress.DEFAULT_ALTAR)
 	return out
 
 ## Spawns name known creatures (when the ids are given) and features are kinds the builder makes.
