@@ -100,15 +100,16 @@ func test_closing_disarms() -> void:
 	assert_eq(rules.level_of("water_blade"), 0, "the reopened screen needs a fresh first press")
 	s.close()
 
-func test_an_ep_short_press_never_evolves_and_the_card_says_how_to_earn_ep() -> void:
-	_ready_both()
+func test_a_short_press_never_evolves_and_the_card_says_what_is_short() -> void:
+	TestDefs.satisfy(rules, "poison_breath")  # water 4, dark 4
+	_emit("skill_used", {"id": "poison_breath"}, 24)  # Lv4: Miasma and Venom Bolt together
 	var s := _screen()
-	_select(s, "water_blade")
+	_select(s, "miasma")
 	s.accept()
 	s.accept()
-	assert_eq(rules.level_of("water_blade"), 0)
+	assert_eq(rules.level_of("miasma"), 0)
 	var text := _detail(s)
-	assert_string_contains(text, "Level up to earn EP")
+	assert_string_contains(text, "needs 2 more water, 6 more dark")
 	assert_false(text.contains("Press again to choose"))
 	s.close()
 

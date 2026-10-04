@@ -196,7 +196,7 @@ func _hud() -> Hud:
 
 func test_the_hud_shows_the_cap_and_the_evolution_prompt() -> void:
 	var h := _hud()
-	assert_eq(h.level_text(), "Lv 1/10  XP 0/10  EP 0")
+	assert_eq(h.level_text(), "Lv 1/10  XP 0/10")
 	assert_eq(h.evolve_text(), "")
 	_to_cap()
 	assert_true(h.level_text().contains("MAX"), h.level_text())

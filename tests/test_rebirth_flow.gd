@@ -183,7 +183,7 @@ func test_the_game_gives_a_kit_after_start_run_so_the_new_life_keeps_it() -> voi
 	game.player.debug_grant_xp(30)  # some leftover state from the previous life
 	game.begin_life({"default": false, "kit": {"skills": ["leap"], "level": 3}})
 	assert_eq(game.player.progression.level, 3)
-	assert_eq(game.player.progression.xp, 0, "no EP from a starting level")
+	assert_eq(game.player.progression.xp, 0, "a starting level banks no XP")
 	assert_true(SkillRules.owned().has("leap"), "the granted skill survived start_run")
 	assert_eq(SkillRules.level_of("leap"), 1)
 	game.begin_life({"default": true, "kit": {}})

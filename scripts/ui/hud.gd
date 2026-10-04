@@ -225,8 +225,8 @@ static func _num(x: float) -> String:
 func level_text() -> String:
 	var p := _player.progression
 	if p.at_cap():
-		return "Lv %d/%d  MAX  EP %d" % [p.level, Progression.LEVEL_CAP, p.ep]
-	return "Lv %d/%d  XP %d/%d  EP %d" % [p.level, Progression.LEVEL_CAP, p.xp, Progression.xp_to_next(p.level, p.stage), p.ep]
+		return "Lv %d/%d  MAX" % [p.level, Progression.LEVEL_CAP]
+	return "Lv %d/%d  XP %d/%d" % [p.level, Progression.LEVEL_CAP, p.xp, Progression.xp_to_next(p.level, p.stage)]
 
 ## "Your body can evolve" while the level cap is reached and there is a stage left.
 func evolve_text() -> String:

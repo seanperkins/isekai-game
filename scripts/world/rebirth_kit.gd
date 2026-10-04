@@ -35,7 +35,7 @@ static func validate(kit: Dictionary, defs: Array = []) -> PackedStringArray:
 
 ## Gives the kit to a player at the start of a life, AFTER SkillRules.start_run() (which clears everything
 ## first). Skills are granted quietly, so the skill set is refreshed, actives are slotted and the Compendium
-## raised to NAMED here; a starting level gives its bonuses but no EP.
+## raised to NAMED here; a starting level gives its bonuses.
 static func apply(player: Player, rules: SkillRulesEngine, compendium: CompendiumModel, kit: Dictionary) -> void:
 	var granted: Array = []
 	for id in kit.get("skills", []):

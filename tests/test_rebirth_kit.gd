@@ -1,5 +1,5 @@
 extends GutTest
-## A rebirth pool's head start: granted skills that count as known but not discovered, and a starting level without EP.
+## A rebirth pool's head start: granted skills that count as known but not discovered, and a starting level.
 
 var rules: SkillRulesEngine
 var compendium: CompendiumModel
@@ -100,11 +100,10 @@ func test_a_granted_skills_modifiers_apply() -> void:
 	RebirthKit.apply(player, rules, compendium, {"skills": ["leap"]})
 	assert_gt(player.stats.get_stat("jump_height"), before)
 
-func test_a_starting_level_gives_the_stat_bonuses_and_no_ep() -> void:
+func test_a_starting_level_gives_the_stat_bonuses() -> void:
 	var hp := player.stats.get_stat("max_hp")
 	RebirthKit.apply(player, rules, compendium, {"level": 3})
 	assert_eq(player.progression.level, 3)
-	assert_eq(player.progression.ep, 0, "EP is earned, not given")
 	assert_eq(player.progression.stage, 1)
 	assert_eq(player.stats.get_stat("max_hp"), hp + 2 * Player.LEVEL_UP_BONUS["max_hp"])
 	assert_eq(player.stats.get_stat("max_mp"), player.stats.base("max_mp") + 2 * Player.LEVEL_UP_BONUS["max_mp"])

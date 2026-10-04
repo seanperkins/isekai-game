@@ -66,7 +66,7 @@ func test_evolution_unlocks_from_parent_level_and_parent_is_announced_first() ->
 		engine.handle_event("absorbed", {"essence": "water", "source": "water_pool"})
 	for i in 6:
 		engine.handle_event("skill_used", {"id": "hydraulic_propulsion"})
-	# Evolutions become ready rather than unlocking; the player spends EP to evolve.
+	# Evolutions become ready rather than unlocking; the player pays essence to evolve.
 	assert_eq(log, ["unlock:hydraulic_propulsion", "level:hydraulic_propulsion:2"])
 	assert_true(engine.is_evolution_ready("water_blade"))
 	engine.evolve("water_blade")

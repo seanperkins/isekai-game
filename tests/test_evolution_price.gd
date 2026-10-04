@@ -48,3 +48,43 @@ func test_can_afford_does_not_survive_a_new_life_at_the_same_ledger_size() -> vo
 	rules.start_run()
 	_absorb("earth", 8)  # the same ledger size, none of the essence
 	assert_false(rules.can_afford("water_blade"))
+
+func _ready_poison_breath() -> void:
+	TestDefs.satisfy(rules, "poison_breath")  # water 4, dark 4
+	for i in 24:
+		rules.handle_event("skill_used", {"id": "poison_breath"})  # Lv4: Miasma and Venom Bolt are ready together
+
+func test_evolve_pays_exactly_the_price_and_leaves_the_recipe_counted() -> void:
+	_ready_poison_breath()
+	_absorb("water", 2)
+	_absorb("dark", 6)
+	var eaten_water := rules.count("absorbed", {"essence": "water"})
+	assert_true(rules.can_afford("miasma"))
+	assert_true(rules.evolve("miasma"))
+	assert_eq(rules.held("water"), 0)
+	assert_eq(rules.held("dark"), 0)
+	assert_eq(rules.count("absorbed", {"essence": "water"}), eaten_water, "spending never undoes what was eaten")
+	assert_gt(rules.level_of("poison_breath"), 0, "the parent keeps the level it reached")
+
+func test_evolve_refuses_when_the_price_is_not_held_and_spends_nothing() -> void:
+	_ready_poison_breath()
+	assert_true(rules.is_evolution_ready("miasma"))
+	assert_false(rules.can_afford("miasma"))
+	assert_false(rules.evolve("miasma"))
+	assert_eq(rules.held("water"), 4)
+	assert_eq(rules.held("dark"), 4)
+	assert_true(rules.is_evolution_ready("miasma"), "still ready, just not affordable")
+
+func test_taking_one_branch_pays_once_and_closes_the_other() -> void:
+	TestDefs.satisfy(rules, "hydraulic_propulsion")  # water 8
+	for i in 12:
+		rules.handle_event("skill_used", {"id": "hydraulic_propulsion"})
+	assert_true(rules.evolve("water_blade"))
+	assert_eq(rules.held("water"), 2, "8 absorbed, 6 paid")
+	assert_false(rules.evolve("jet_dash"), "closed: its sibling was taken")
+	assert_eq(rules.held("water"), 2, "a refused evolve spends nothing")
+
+func test_a_new_life_holds_nothing() -> void:
+	_absorb("water", 8)
+	rules.start_run()
+	assert_eq(rules.held("water"), 0)

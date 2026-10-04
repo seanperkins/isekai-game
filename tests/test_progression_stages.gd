@@ -37,23 +37,21 @@ func test_the_body_can_evolve_at_the_cap_until_the_last_stage() -> void:
 	p.stage = 4
 	assert_false(p.can_evolve(), "stage 4 is the last")
 
-func test_evolving_resets_the_level_but_keeps_the_ep() -> void:
+func test_evolving_resets_the_level() -> void:
 	var p := Progression.new()
 	p.add_xp(Progression.stage_total(1))
-	var ep := p.ep
-	assert_eq(ep, 9)
 	p.evolve_stage()
 	assert_eq(p.stage, 2)
 	assert_eq(p.level, 1)
 	assert_eq(p.xp, 0)
-	assert_eq(p.ep, ep, "EP persists")
 	p.add_xp(Progression.stage_total(2))
 	assert_eq(p.level, Progression.LEVEL_CAP, "stage 2 has its own, longer curve")
 
-func test_leveling_gives_ep_only_below_the_cap() -> void:
+func test_xp_stops_at_the_cap() -> void:
 	var p := Progression.new()
 	p.add_xp(Progression.stage_total(1) + 200)
-	assert_eq(p.ep, 9, "nine level-ups, then nothing more")
+	assert_eq(p.level, Progression.LEVEL_CAP)
+	assert_eq(p.xp, 0, "nothing banks past the cap")
 
 func test_a_spawn_pays_in_full_once_for_the_down_and_once_for_the_eat_then_a_quarter() -> void:
 	var p := Progression.new()

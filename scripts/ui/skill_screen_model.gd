@@ -40,7 +40,7 @@ static func skill_rows(rules, all_defs: Array) -> Array:
 			for id in rules.ready_evolutions():
 				var d = _find(all_defs, id)
 				if d != null:
-					rows.append({"kind": "ready", "id": id, "name": d.display_name, "cost": rules.evolution_cost(id)})
+					rows.append({"kind": "ready", "id": id, "name": d.display_name, "price": rules.evolution_price(id), "affordable": rules.can_afford(id)})
 		if locked:
 			rows.append({"kind": "locked"})
 	return rows
@@ -131,6 +131,24 @@ static func detail(rules, d: SkillDef, slots: ActiveSlots, atk := 1) -> Dictiona
 ## What a skill sitting at the body's stage cap says.
 static func capped_text() -> String:
 	return "Capped until you evolve"
+
+## A price as text, in the canonical element order: "water 6, dark 10".
+static func price_text(price: Dictionary) -> String:
+	var parts: Array = []
+	for e in Essences.ALL:
+		if price.has(e):
+			parts.append("%s %d" % [e, int(price[e])])
+	return ", ".join(parts)
+
+## What is short of a price: "needs 2 more water, 6 more dark"; empty when every element is held.
+static func shortfall_text(rules, price: Dictionary) -> String:
+	var parts: Array = []
+	for e in Essences.ALL:
+		if price.has(e):
+			var short: int = int(price[e]) - rules.held(e)
+			if short > 0:
+				parts.append("%d more %s" % [short, e])
+	return "needs " + ", ".join(parts) if not parts.is_empty() else ""
 
 static func effect_lines(d: SkillDef, level: int, atk := 1) -> Array:
 	var lines: Array = []

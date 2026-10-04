@@ -1,6 +1,5 @@
 extends GutTest
-## Character levels: XP from downing and eating, level-ups grant EP and stats, and
-## evolutions wait for the player to spend EP.
+## Character levels: XP from downing and eating, level-ups grant stats, and evolutions wait for the player to pay their essence price.
 
 var rules: SkillRulesEngine
 var compendium: CompendiumModel
@@ -46,17 +45,14 @@ func _downed(id: String) -> Enemy:
 	e.finish_dying()
 	return e
 
-func test_progression_curve_and_ep() -> void:
+func test_progression_curve() -> void:
 	var p := Progression.new()
 	p.add_xp(9)
-	assert_eq([p.level, p.xp, p.ep], [1, 9, 0])
+	assert_eq([p.level, p.xp], [1, 9])
 	p.add_xp(1)
-	assert_eq([p.level, p.xp, p.ep], [2, 0, 1])
+	assert_eq([p.level, p.xp], [2, 0])
 	p.add_xp(40)  # 15 to reach Lv3, then 20 to reach Lv4
-	assert_eq([p.level, p.xp, p.ep], [4, 5, 3])
-	assert_true(p.spend_ep(2))
-	assert_eq(p.ep, 1)
-	assert_false(p.spend_ep(5))
+	assert_eq([p.level, p.xp], [4, 5])
 	assert_eq(Progression.xp_to_next(1), 10)
 	assert_eq(Progression.xp_to_next(3), 20)
 
@@ -72,10 +68,9 @@ func test_downing_then_eating_awards_xp_twice() -> void:
 	player.process_predate(1.0)
 	assert_eq(player.progression.xp, 4)
 
-func test_level_up_grants_ep_and_stats() -> void:
+func test_level_up_grants_stats() -> void:
 	player.award_xp(10)
 	assert_eq(player.progression.level, 2)
-	assert_eq(player.progression.ep, 1)
 	assert_eq(player.health.max_hp, 32)
 	assert_eq(player.mana.max_mp, 21)
 	assert_eq(player.stats.level_bonus("max_hp"), 2)
@@ -90,33 +85,34 @@ func test_stats_level_bonus_survives_skill_refresh_and_resets_per_run() -> void:
 	s.reset_run()
 	assert_eq(s.get_stat("max_hp"), 30)
 
-func test_evolution_waits_until_ep_is_spent() -> void:
+func test_evolution_waits_until_it_is_paid_for() -> void:
 	var ready: Array = []
 	rules.evolution_ready.connect(func(id: String) -> void: ready.append(id))
-	TestDefs.satisfy(rules, "hydraulic_propulsion")
+	TestDefs.satisfy(rules, "hydraulic_propulsion")  # water 8
 	_emit("skill_used", {"id": "hydraulic_propulsion"}, 12)  # Lv3: both branches open together
 	assert_eq(rules.level_of("water_blade"), 0)
 	assert_true(rules.is_evolution_ready("water_blade") and rules.is_evolution_ready("jet_dash"))
 	assert_eq(ready.size(), 2)
 	_emit("skill_used", {"id": "hydraulic_propulsion"}, 6)
 	assert_eq(ready.size(), 2)  # announced once each
-	assert_eq(rules.evolution_cost("water_blade"), 1)
-	assert_eq(rules.evolution_cost("jet_dash"), 1)
+	assert_eq(rules.evolution_price("water_blade"), {"water": 6})
+	assert_eq(rules.evolution_price("jet_dash"), {"water": 6})
 	assert_true(rules.evolve("water_blade"))
+	assert_eq(rules.held("water"), 2, "the price was paid in essence")
 	assert_eq(rules.level_of("water_blade"), 1)
 	assert_false(rules.evolve("water_blade"))
 	assert_false(rules.evolve("jet_dash"))  # closed: its sibling was taken
 	assert_true(rules.is_closed("jet_dash"))
 
-func test_player_evolves_only_with_enough_ep() -> void:
-	TestDefs.satisfy(rules, "hydraulic_propulsion")
-	_emit("skill_used", {"id": "hydraulic_propulsion"}, 12)
-	assert_false(player.try_evolve("water_blade"))
-	player.award_xp(10)
-	assert_true(player.try_evolve("water_blade"))
-	assert_eq(player.progression.ep, 0)
-	assert_eq(rules.level_of("water_blade"), 1)
-	assert_true(player.skillset.slots.slots.has("water_blade"))
+func test_player_evolves_only_when_the_price_is_held() -> void:
+	TestDefs.satisfy(rules, "poison_breath")  # water 4, dark 4
+	_emit("skill_used", {"id": "poison_breath"}, 24)  # Lv4: Miasma and Venom Bolt are ready
+	assert_false(player.try_evolve("miasma"), "water 4 of 6, dark 4 of 10")
+	_emit("absorbed", {"essence": "water"}, 2)
+	_emit("absorbed", {"essence": "dark"}, 6)
+	assert_true(player.try_evolve("miasma"))
+	assert_eq(rules.level_of("miasma"), 1)
+	assert_true(player.skillset.slots.slots.has("miasma"))
 
 func test_ready_evolution_is_announced_and_named_in_the_compendium() -> void:
 	TestDefs.satisfy(rules, "hydraulic_propulsion")
@@ -133,7 +129,7 @@ func test_skill_screen_lists_ready_evolutions_and_evolves_on_accept() -> void:
 	add_child_autofree(screen)
 	screen.bind(player, rules, compendium, skills_by_id.values())
 	screen.open()
-	assert_true(screen.row_texts().has("Water Blade  EVOLVE 1 EP"))
+	assert_true(screen.row_texts().has("Water Blade  EVOLVE"))
 	var guard := 0
 	while screen.selected_id() != "water_blade" and guard < 60:
 		screen.move(1)
@@ -147,11 +143,11 @@ func test_skill_screen_lists_ready_evolutions_and_evolves_on_accept() -> void:
 	assert_eq(rules.level_of("water_blade"), 1)
 	screen.close()
 
-func test_hud_shows_level_xp_and_ep_and_enemies_award_xp_in_game() -> void:
+func test_hud_shows_level_and_xp_and_enemies_award_xp_in_game() -> void:
 	var game = load("res://scenes/main.tscn").instantiate()
 	add_child_autofree(game)
 	await wait_physics_frames(1)
-	assert_eq(game.hud.level_text(), "Lv 1/10  XP 0/10  EP 0")
+	assert_eq(game.hud.level_text(), "Lv 1/10  XP 0/10")
 	var bat: Enemy = get_tree().get_nodes_in_group("actors").filter(func(n): return n is Enemy and n.def.id == "bat")[0]
 	bat.receive_hit(99, "physical")
 	bat.finish_dying()

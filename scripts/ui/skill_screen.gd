@@ -155,8 +155,8 @@ func selected_id() -> String:
 		return ""
 	return _rows[_selectable[_sel]].get("id", "")
 
-## A ready evolution is permanent for the life, so it takes two presses: the first arms it, the second evolves (spending
-## EP). Otherwise moves the selected active to the next slot (U → O → H → L → U).
+## A ready evolution is permanent for the life, so it takes two presses: the first arms it, the second evolves (paying its
+## essence price). Otherwise moves the selected active to the next slot (U → O → H → L → U).
 func accept() -> void:
 	var id := selected_id()
 	if tab() == FORM_TAB:
@@ -169,7 +169,7 @@ func accept() -> void:
 		return
 	if id != "" and _rows[_selectable[_sel]]["kind"] == "ready":
 		if _armed != id:
-			if _player.progression.ep >= _rules.evolution_cost(id):
+			if _rules.can_afford(id):
 				_armed = id
 		elif _player.try_evolve(id):
 			_armed = ""
@@ -202,7 +202,7 @@ func row_texts() -> Array:
 			"locked":
 				out.append("???")
 			"ready":
-				out.append("%s  EVOLVE %d EP" % [r["name"], r["cost"]])
+				out.append("%s  EVOLVE" % r["name"])
 			"slot", "creature":
 				out.append(r["name"])
 	return out
@@ -379,7 +379,7 @@ func _build_stats() -> void:
 	var h := _player.health
 	var m := _player.mana
 	var p := _player.progression
-	_label(_stats, "Lv %d    EP %d" % [p.level, p.ep], Vector2(36, 92), Vector2(110, 12), FONT_MAIN, Color(1.0, 0.85, 0.45))
+	_label(_stats, "Lv %d" % p.level, Vector2(36, 92), Vector2(110, 12), FONT_MAIN, Color(1.0, 0.85, 0.45))
 	_bar(_stats, Vector2(36, 106), Vector2(108, 4), float(p.xp) / Progression.xp_to_next(p.level, p.stage), Color(1.0, 0.8, 0.3))
 	_label(_stats, "HP  %d/%d" % [h.hp, h.max_hp], Vector2(36, 114), Vector2(110, 12), FONT_MAIN, Color.WHITE)
 	_bar(_stats, Vector2(36, 128), Vector2(108, 6), float(h.hp) / h.max_hp, Color(0.85, 0.25, 0.3))
@@ -436,7 +436,7 @@ func _build_row(r: Dictionary, y: float, selected: bool) -> void:
 		_label(_list, "Lv%d" % r["level"], Vector2(LIST_X + 156, y + 4), Vector2(28, 12), FONT_MAIN, COL_CAPPED if r.get("capped", false) else Color.WHITE)
 		_bar(_list, Vector2(LIST_X + 186, y + 9), Vector2(50, 4), float(r["level"]) / maxf(1.0, float(r["max_level"])), COL_CAPPED if r.get("capped", false) else COL_PIP_ON)
 	elif r["kind"] == "ready":
-		_label(_list, "EVOLVE %d EP" % r["cost"], Vector2(LIST_X + 170, y + 5), Vector2(70, 10), FONT_SMALL, Color(1.0, 0.85, 0.45))
+		_label(_list, "EVOLVE", Vector2(LIST_X + 170, y + 5), Vector2(70, 10), FONT_SMALL, Color(1.0, 0.85, 0.45) if r["affordable"] else COL_DIM)
 	elif r["kind"] == "slot":
 		var state_text: String = ["", "known", "hinted", "found"][r["state"]]
 		_label(_list, state_text, Vector2(LIST_X + 186, y + 5), Vector2(54, 10), FONT_SMALL, COL_DIM)
@@ -465,7 +465,7 @@ func _build_detail() -> void:
 			_label(_detail, "How: " + r["condition"], Vector2(DETAIL_X, y), Vector2(190, 46), FONT_SMALL, COL_DIM, true)
 		return
 	if _rows[_selectable[_sel]]["kind"] == "ready":
-		var cost: int = _rules.evolution_cost(id)
+		var price: Dictionary = _rules.evolution_price(id)
 		_icon(_detail, "icon_" + id, Vector2(DETAIL_X, 50), 40)
 		_label(_detail, d.display_name, Vector2(DETAIL_X + 46, 50), Vector2(146, 16), FONT_BIG, Color.WHITE)
 		_label(_detail, "Ready to evolve", Vector2(DETAIL_X + 46, 68), Vector2(146, 12), FONT_MAIN, Color(1.0, 0.85, 0.45))
@@ -474,12 +474,12 @@ func _build_detail() -> void:
 		var closes: Array = _rules.siblings_of(id).map(func(sid: String) -> String: return _skill_name(sid))
 		if not closes.is_empty():
 			_label(_detail, "Closes: " + ", ".join(closes), Vector2(DETAIL_X, 142), Vector2(190, 22), FONT_SMALL, COL_DIM, true)
-		_label(_detail, "Costs %d EP  (you have %d)" % [cost, _player.progression.ep], Vector2(DETAIL_X, 166), Vector2(190, 12), FONT_MAIN, COL_TITLE)
-		var can := _player.progression.ep >= cost
-		var action := "Level up to earn EP"
+		_label(_detail, "Costs " + SkillScreenModel.price_text(price), Vector2(DETAIL_X, 166), Vector2(190, 12), FONT_MAIN, COL_TITLE)
+		var can: bool = _rules.can_afford(id)
+		var action := SkillScreenModel.shortfall_text(_rules, price)
 		if can:
 			action = "Press again to choose" if _armed == id else "[%s] Evolve" % ("A" if Controls.using_joypad else "Enter")
-		_label(_detail, action, Vector2(DETAIL_X, 182), Vector2(190, 12), FONT_MAIN, Color.WHITE if can else COL_DIM)
+		_label(_detail, action, Vector2(DETAIL_X, 182), Vector2(190, 24), FONT_MAIN, Color.WHITE if can else COL_DIM, true)
 		return
 	var card := SkillScreenModel.detail(_rules, d, _player.skillset.slots, int(_player.stats.get_stat("atk")))
 	_icon(_detail, "icon_" + id, Vector2(DETAIL_X, 50), 40)

@@ -52,7 +52,7 @@ func test_a_full_run_then_death_then_second_run() -> void:
 		_eat("water_pool", {"water": 2}, "terrain")      # Hydraulic Propulsion (8 water)
 	_emit("skill_used", {"id": "hydraulic_propulsion"}, 12)  # Lv3 -> Water Blade and Jet Dash are ready
 	assert_true(rules.is_evolution_ready("water_blade"))
-	assert_true(rules.evolve("water_blade"))  # the player would spend 1 EP
+	assert_true(rules.evolve("water_blade"))  # the price is held: four water pools gave water 8 against 6
 
 	# Glutton: 4 creature eats, a hit breaks the streak, then 5 clean eats.
 	for i in 4:

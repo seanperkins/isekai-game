@@ -9,7 +9,7 @@ signal skill_unlocked(id: String)
 signal skill_leveled(id: String, level: int)
 signal run_started
 signal inspect_processed(tags: Dictionary, appraisal_level: int)
-## An evolution's conditions are met; it unlocks only when the player spends EP (evolve()).
+## An evolution's conditions are met; it unlocks only when the player pays its price (evolve()).
 signal evolution_ready(id: String)
 ## recheck_levels() finished; `levels_gained` counts the levels it added across all skills.
 signal rechecked(levels_gained: int)
@@ -134,11 +134,6 @@ func is_evolution_ready(id: String) -> bool:
 func ready_evolutions() -> Array:
 	return _ready_evolutions.keys()
 
-## EP cost to evolve: one per parent skill, which is always one (an evolution's unlock is its parent alone).
-func evolution_cost(id: String) -> int:
-	var d: SkillDef = _defs.get(id)
-	return maxi(1, d.parent_ids().size()) if d != null else 0
-
 ## Essence of one element still held: what was absorbed this life minus what evolutions have spent. Recipes read what was
 ## absorbed, so spending never undoes an unlock.
 func held(element: String) -> int:
@@ -168,11 +163,16 @@ func can_afford(id: String) -> bool:
 		_afford_memo[id] = ok
 	return _afford_memo[id]
 
-## Unlocks a ready evolution and closes its siblings. The caller has already paid its EP. The parent retires as the
-## evolution enters `_owned`, so the siblings' ready flags are erased here and _evaluate keeps them from coming back.
+## Pays a ready evolution's price in held essence (one ledger entry per unit), unlocks it and closes its siblings. False, and
+## nothing is spent, when it is not ready or the price is not held. The parent retires as the evolution enters `_owned`, so the
+## siblings' ready flags are erased here and _evaluate keeps them from coming back.
 func evolve(id: String) -> bool:
-	if not run_active or not _ready_evolutions.has(id) or _owned.has(id):
+	if not run_active or not _ready_evolutions.has(id) or _owned.has(id) or not can_afford(id):
 		return false
+	var price := evolution_price(id)
+	for e in price:
+		for i in int(price[e]):
+			_ledger.record(ESSENCE_SPENT, {"essence": e})
 	_ready_evolutions.erase(id)
 	for sib in siblings_of(id):
 		_ready_evolutions.erase(sib)
