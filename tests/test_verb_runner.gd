@@ -230,7 +230,7 @@ func test_wall_contact_refreshes_the_air_tackle() -> void:
 	assert_eq(s.verb, "tackle")
 	var other := MoveState.new()
 	other.air_verb_used = true
-	VerbRunner.step(other, wall, biped, 1.0 / 60.0)
+	VerbRunner.step(other, wall, MovementProfile.of("wolf"), 1.0 / 60.0)  # the biped has the wall verb now
 	assert_true(other.air_verb_used, "only a species with the wall verb gets it")
 
 func test_a_tackle_into_a_wall_with_jump_held_reflects_it() -> void:
