@@ -17,7 +17,12 @@ rm -f "$xml"
 args=(-s addons/gut/gut_cmdln.gd -gdir=res://tests -gprefix=test_ -gexit "-gjunit_xml_file=res://$xml")
 if [ "$#" -gt 0 ]; then args+=("-gselect=$1"); fi
 
-gtimeout -k 5 "${TEST_TIMEOUT:-480}" env HOME="$PWD/.tmp/gdhome" godot --headless "${args[@]}" >"$log" 2>&1
+# --fixed-fps runs every physics frame as fast as the machine can instead of waiting 1/60 s of real time for each, so the
+# suite takes about half a minute instead of ten (every test still sees 60 Hz time). FIXED_FPS=0 turns it off.
+fps_args=()
+if [ "${FIXED_FPS:-60}" != "0" ]; then fps_args=(--fixed-fps "${FIXED_FPS:-60}"); fi
+
+gtimeout -k 5 "${TEST_TIMEOUT:-480}" env HOME="$PWD/.tmp/gdhome" godot --headless "${fps_args[@]}" "${args[@]}" >"$log" 2>&1
 code=$?
 
 if grep -qE 'SCRIPT ERROR|Parse Error|Nothing was run' "$log"; then
