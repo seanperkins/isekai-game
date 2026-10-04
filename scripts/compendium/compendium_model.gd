@@ -161,9 +161,8 @@ func creature_report(source: String, level: int, apply: bool = false) -> Diction
 				var d: SkillDef = _defs[id]
 				if d.source != "essence":
 					continue
-				for ess in d.essences_used():
-					if c.essences.has(ess):
-						raise(id, State.NAMED)
+				if _hints(d, c):
+					raise(id, State.NAMED)
 	if level >= 3:
 		r["skills"] = c.skills.duplicate(true)
 		if apply:
@@ -172,6 +171,19 @@ func creature_report(source: String, level: int, apply: bool = false) -> Diction
 				if d != null and not d.secret:
 					raise(d.id, State.NAMED)
 	return r
+
+## A creature hints a power when it carries EVERY element of the power's recipe, or is the creature the unlock says to eat. (With
+## shared elements, "any one element" would name almost every power from almost every creature.)
+static func _hints(d: SkillDef, c: CreatureDef) -> bool:
+	if d.sources_used().has(c.id):
+		return true
+	var needed := d.essences_used()
+	if needed.is_empty():
+		return false
+	for ess in needed:
+		if not c.essences.has(ess):
+			return false
+	return true
 
 func _sorted_ids() -> Array:
 	var ids := _defs.keys()

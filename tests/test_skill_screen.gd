@@ -68,6 +68,8 @@ func test_condition_text_is_readable() -> void:
 		by_id[d.id] = d
 	assert_eq(SkillScreenModel.condition_text(by_id["leap"], by_id), "Jump ×40")
 	assert_eq(SkillScreenModel.condition_text(by_id["echolocation"], by_id), "Absorb air essence ×6")
+	assert_eq(SkillScreenModel.condition_text(by_id["poison_breath"], by_id), "Absorb water essence ×4 and Absorb dark essence ×4")
+	assert_eq(SkillScreenModel.condition_text(by_id["sticky_thread"], by_id), "Eat a Spider ×3")
 	assert_eq(SkillScreenModel.condition_text(by_id["glutton"], by_id), "Eat creatures in a row without taking damage ×5")
 	assert_eq(SkillScreenModel.condition_text(by_id["jet_dash"], by_id), "Hydraulic Propulsion Lv3")
 

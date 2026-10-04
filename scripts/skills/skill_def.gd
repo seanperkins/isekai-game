@@ -55,6 +55,14 @@ func essences_used() -> Array:
 			_add(out, c["tags"]["essence"])
 	return out
 
+## Creature ids named by `predated` counters in the unlock ("eat a spider"), for the Compendium hint and the unlock wording.
+func sources_used() -> Array:
+	var out: Array = []
+	for c in unlock:
+		if c.get("event", "") == Events.PREDATED and c.get("tags", {}).has("source"):
+			_add(out, c["tags"]["source"])
+	return out
+
 static func _add(list: Array, value: String) -> void:
 	if value != "" and not list.has(value):
 		list.append(value)

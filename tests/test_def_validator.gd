@@ -213,3 +213,13 @@ func test_a_creatures_contact_type_and_projectile_must_be_known() -> void:
 	assert_string_contains(_errors_with(_valid_skills(), creatures), "projectile 'rock'")
 	creatures[1].projectile = "spear"
 	assert_eq(DefValidator.validate(_valid_skills(), creatures).size(), 0)
+
+func test_an_unknown_source_in_an_unlock_is_rejected() -> void:
+	var s := [TestDefs.skill("s", {"unlock": [TestDefs.counter("predated", 3, {"source": "spidr"})]})]
+	var errs := DefValidator.validate(s, TestDefs.all_creatures())
+	assert_string_contains("\n".join(errs), "unknown source 'spidr'")
+
+func test_an_unknown_element_in_an_unlock_is_rejected() -> void:
+	var s := [TestDefs.skill("s", {"unlock": [TestDefs.counter("absorbed", 3, {"essence": "poison"})]})]
+	var errs := DefValidator.validate(s, TestDefs.all_creatures())
+	assert_string_contains("\n".join(errs), "unknown essence 'poison'")

@@ -178,6 +178,9 @@ static func _event_text(event: String, tags: Dictionary) -> String:
 	match event:
 		"absorbed":
 			return "Absorb %s essence" % tags.get("essence", "")
+		"predated":
+			if tags.has("source"):
+				return "Eat a %s" % str(tags["source"]).capitalize()
 		"damaged":
 			return "Take %s hits" % tags.get("damage_type", "any") if tags.has("damage_type") else "Take hits"
 	return EVENT_TEXT.get(event, event)
