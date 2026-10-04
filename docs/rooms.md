@@ -94,18 +94,18 @@ These are the choices in the data that a test does not catch and a casual edit w
 | C4 Glow Pool | 1x1 | rest here |
 | C5 Drop Shaft | 1x3 | a zigzag of ledges down to the floor, which opens into the Grotto (G1) at x 220-380 |
 | C6 nook | 1x1 | a quiet crystal cavern with a tablet and the switch that opens the floor down into C1 for good |
-| G1 Grotto Mouth | 2x1, cell (5, 5) | the landing under C5's floor; a ledge chain under the hole climbs back up to C5; the Grotto's rebirth pool stands a little way in (its old kit was replaced by the head start bought in the goddess's menu) |
+| G1 Grotto Mouth | 2x1, cell (5, 5) | the landing under C5's floor; a ledge chain under the hole climbs back up to C5; the Grotto's altar stands a little way in (its old kit was replaced by the head start bought in the goddess's menu; it sells no perk yet) |
 | G2 Spore Hall | 3x2, cell (7, 5) | the hub: two levels, the lower floor (with the hole down to G3) and an upper walkway that meets G1, with two shafts of ledges between them |
 | G3 Vine Maze | 2x2, cell (8, 7) | snakes under overhangs, crabs below; a chain under the hole up to G2's floor, and a climb to the upper level and the exit to G4 |
 | G4 Glow Pool | 1x1, cell (10, 7) | a rest with a tablet, and the way down into the Flooded Tunnels: its floor opens into F1 at x 240-400 |
 | G5 Pale Moth | 1x1, cell (7, 7) | the rare room, reached only by wall cling up the chimney in G3; the Pale Moth drifts here |
-| F1 Seep Mouth | 2x1, cell (10, 8) | the landing under G4's drop with a chain up to it; the Flooded's rebirth pool; crayfish; the learning pool (a deep pool with a far bank) with two jellies |
+| F1 Seep Mouth | 2x1, cell (10, 8) | the landing under G4's drop with a chain up to it; the Flooded's altar; crayfish; the learning pool (a deep pool with a far bank) with two jellies |
 | F2 Sump | 1x2, cell (12, 7) | the Swim door: a water column from the floor to the top exit (gate `swim`), two eels, no solid inside it |
 | F3 Eel Run | 3x1, cell (12, 6) | a long flooded corridor: eels and jellies, stair-ledges climbing out of the water, the floor hole where F2's column arrives |
 | F4 Marsh Hall | 2x1, cell (15, 6) | dry platforms and the lizardmen's posts, crayfish; a floor hole with a chain down to F5; a second water column (x 430-610) up to F6 (gate `swim`); a floor-height doorway in its east wall into the Deep (D1) |
 | F5 Quiet Pool | 1x1, cell (15, 7) | a rest nook off F4: a Glow Pool, the tablet, a small eel pool and two lizardmen; the chain up to F4 |
 | F6 Storm Pocket | 1x1, cell (15, 5) | the rare room above F4's column (gate `swim`): a pool with stair-ledges and the Storm Eel; it never counts toward the pacing rule |
-| D1 Gloom Gate | 1x1, cell (17, 6) | the landing east of F4's marsh hall (a floor-height doorway at y 240-320); the Deep's rebirth pool (kit: Leap, Wall Cling, Swim and Tremor at level 5) and three Armed Ants |
+| D1 Gloom Gate | 1x1, cell (17, 6) | the landing east of F4's marsh hall (a floor-height doorway at y 240-320); the Deep's altar (no kit any more, and no perk yet) and three Armed Ants |
 | D2 Wolf Run | 2x1, cell (18, 6) | a long hall of three Gloom Wolves and three ants; low ledges to jump a charge |
 | D3 the Sinkhole | 1x2, cell (20, 6) | a tall shaft climbed both ways: a ledge flush with the west wall at the door's floor height (y 320) and a chain of hops down to the floor; a Stone Drake on its shelf and three ants |
 | D4 the Den | 2x1, cell (21, 7) | four wolves and a drake under a stair of platforms: the pack is the room's danger |
