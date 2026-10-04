@@ -1,7 +1,7 @@
 class_name HeadStart
 extends RefCounted
 ## The head start bought with soul points in the goddess's menu: starting levels and powers the Compendium has seen owned.
-## The cart is {"levels": int, "powers": Array of skill ids}; its kit is what RebirthKit.apply gives at the start of a life.
+## The cart is {"levels": int, "powers": Array of skill ids}; its kit is what HeadStart.apply gives at the start of a life.
 
 ## Ids of the base powers that can be taken: Owned-once in the Compendium, and never an evolution, an enemy-only skill or the
 ## starting skill. Sorted by display name.
@@ -44,3 +44,23 @@ static func cheapest(rules: SoulRules, power_count: int) -> int:
 	if power_count > 0 and (best < 0 or rules.power_price < best):
 		best = rules.power_price
 	return best
+
+## Gives the kit to a player at the start of a life, AFTER SkillRules.start_run() (which clears everything first). Skills are
+## granted quietly, so the skill set is refreshed, actives are slotted and the Compendium raised to NAMED here; a starting level
+## gives its bonuses. The kit is {"skills": [ids], "level": int}; both keys are optional.
+static func apply(player: Player, rules: SkillRulesEngine, compendium: CompendiumModel, kit: Dictionary) -> void:
+	var granted: Array = []
+	for id in kit.get("skills", []):
+		if rules.grant(id, false):
+			granted.append(id)
+			if compendium != null:
+				compendium.raise(id, CompendiumModel.State.NAMED)
+	player.skillset.refresh()
+	for id in granted:
+		var d: SkillDef = rules.get_def(id)
+		if d != null and SkillEffects.active_scene(d) != "":
+			player.skillset.slots.add(id)
+	if kit.has("level"):
+		player.start_at_level(int(kit["level"]))
+	player.refresh_stats()
+	player.fill_vitals()

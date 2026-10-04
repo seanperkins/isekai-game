@@ -40,8 +40,6 @@ func test_kit_has_only_the_keys_in_use() -> void:
 	assert_eq(HeadStart.kit(_cart(2)), {"level": 3})
 	assert_eq(HeadStart.kit(_cart(0, ["leap"])), {"skills": ["leap"]})
 	assert_eq(HeadStart.kit(_cart(2, ["leap"])), {"skills": ["leap"], "level": 3})
-	for kit in [HeadStart.kit(_cart(0)), HeadStart.kit(_cart(2, ["leap"]))]:
-		assert_eq(RebirthKit.validate(kit), PackedStringArray(), "the rebirth kit applier accepts it")
 
 func test_cheapest_is_the_least_for_sale() -> void:
 	assert_eq(HeadStart.cheapest(rules, 0), 2, "the first level")

@@ -711,8 +711,14 @@ func test_the_toggles_reach_the_play_request() -> void:
 	Game.play_request = {}
 	Game.editor_resume = null
 
-func test_the_movement_kit_is_a_kit_the_validator_accepts() -> void:
-	assert_eq(RebirthKit.validate(RoomEditor.CAVE_MOVEMENT_KIT), PackedStringArray())
+func test_the_movement_kit_names_only_skills_a_start_may_grant() -> void:
+	var by_id := {}
+	for d in DefLoader.load_dir("res://data/skills"):
+		by_id[d.id] = d
+	for id in RoomEditor.CAVE_MOVEMENT_KIT["skills"]:
+		assert_true(by_id.has(id), "%s is a known skill" % id)
+		assert_ne(by_id[id].source, "evolution", id)
+		assert_ne(by_id[id].source, "enemy_only", id)
 
 func test_play_options_survive_the_round_trip_and_set_the_buttons() -> void:
 	Game.editor_resume = {"model": model, "room": "C1", "view": {}, "play_options": {"movement": true, "shortcuts": false}}

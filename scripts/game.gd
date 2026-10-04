@@ -132,7 +132,7 @@ func begin_life(start: Dictionary) -> void:
 	SkillRules.start_run()
 	if not start["kit"].is_empty():
 		# an editor Play passes no compendium: the kit grant must not raise slots in the (persistent) profile
-		RebirthKit.apply(player, SkillRules, null if _editor_play else Compendium.model, start["kit"])
+		HeadStart.apply(player, SkillRules, null if _editor_play else Compendium.model, start["kit"])
 	if goddess != null:
 		SoulPerks.apply(player, Compendium.soul, goddess.perks)
 

@@ -42,7 +42,7 @@ static var _hintable: Array = []
 ## Skill ids a tablet hint can name: CompendiumModel keeps no slot for an enemy_only skill, so raise() on one does nothing.
 static func hintable_skill_ids() -> Array:
 	if _hintable.is_empty():
-		for d in RebirthKit.skill_defs():
+		for d in DefLoader.load_dir("res://data/skills"):
 			if d.source != "enemy_only":
 				_hintable.append(d.id)
 	return _hintable

@@ -42,7 +42,7 @@ func _names() -> Array:
 
 ## Grants skills the way a rebirth kit does: quietly, after start_run.
 func _give(skill_ids: Array) -> void:
-	RebirthKit.apply(player, rules, compendium, {"skills": skill_ids})
+	HeadStart.apply(player, rules, compendium, {"skills": skill_ids})
 
 func test_submerged_is_emitted_once_a_second_and_only_in_water() -> void:
 	_floor()
