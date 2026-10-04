@@ -171,6 +171,7 @@ static func _wrap(s: MoveState, i: MoveInput, p: MovementProfile, motion: Vector
 	s.surface_shift = shift
 	if _support(i, dir, shift) == NONE:
 		s.surface_event = "convex_nothing"
+		s.surface_shift = motion * lo  # no corner to turn: it simply drops from the edge
 		s.surface_n = Vector2.ZERO
 		s.surface_lock = REATTACH_LOCK
 		return

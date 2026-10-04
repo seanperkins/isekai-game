@@ -369,3 +369,14 @@ func test_a_wall_grip_needs_the_wall_within_what_the_support_probe_holds() -> vo
 	assert_false(events.has("convex_nothing"), "it climbs, it does not drop: %s" % [events])
 	assert_eq(ns.surface_n, Vector2.RIGHT)
 	assert_lt(near.pos.y, -75.0)
+
+func test_walking_off_a_sliver_of_a_ledge_drops_from_where_it_is() -> void:
+	var w := FakeSurfaceWorld.build_spike_terrain()
+	w.add_hard(Rect2(1300, -60, 100, 1))  # a hard ledge 1 px thick: no end face to turn onto
+	w.pos = Vector2(1380, -72)
+	var s := MoveState.new()
+	s.surface_n = Vector2.UP
+	var events := _until(w, s, Vector2.RIGHT, 100, func(): return s.surface_event == "convex_nothing")
+	assert_eq(events, ["convex_nothing"])
+	assert_eq(s.surface_n, Vector2.ZERO)
+	assert_lt(s.surface_shift.length(), 2.5, "it drops from the edge, it is not moved 19 px round a corner that is not there")

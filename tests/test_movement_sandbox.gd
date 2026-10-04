@@ -539,3 +539,91 @@ func test_a_reversal_pivots() -> void:
 	assert_lt(narrowest, 0.7, "a quick squeeze as it turns")
 	await _frames(14)
 	assert_eq(_sprite().scale.x, 1.0)
+
+## The zip's thread line.
+func _thread() -> Line2D:
+	return sb.get_node("Thread") as Line2D
+
+func _fire_zip(aim: Vector2) -> void:
+	sb.scripted.aim = aim
+	sb.scripted.signature_pressed = true
+
+func test_a_zip_pulls_the_spider_to_a_wall_and_it_grips() -> void:
+	await _spider_at(Vector2(250.0, -12.0))
+	_fire_zip(Vector2.RIGHT)
+	var started := false
+	var gripped := false
+	var step_max := 0.0
+	var last_x := sb.body.global_position.x
+	for _k in 60:
+		await get_tree().physics_frame
+		started = started or sb.state.zip_event == "start"
+		var x := sb.body.global_position.x
+		if started and not gripped:
+			step_max = maxf(step_max, x - last_x)
+		last_x = x
+		if sb.state.zip_event == "grip":
+			gripped = true
+			break
+	assert_true(started and gripped, "fired and gripped")
+	assert_almost_eq(step_max, 400.0 / 60.0, 0.5, "pulled at about 400 px/s")
+	await _frames(2)
+	assert_eq(sb.state.surface_n, Vector2.LEFT)
+	assert_almost_eq(sb.body.global_position.x, 388.0, 2.5, "flush to the first ledge's left face")
+
+func test_a_zip_to_the_ceiling_grips_the_underside() -> void:
+	await _spider_at(Vector2(830.0, -12.0))
+	_fire_zip(Vector2.UP)
+	await _frames(40)
+	assert_eq(sb.state.surface_n, Vector2.DOWN)
+	assert_almost_eq(sb.body.global_position.y, -138.0, 2.0, "hanging from the slab")
+
+func test_nothing_in_range_leaves_the_spider_where_it_is() -> void:
+	await _spider_at(Vector2(100.0, -12.0))
+	_fire_zip(Vector2.UP)
+	var fizzled := false
+	for _k in 10:
+		await get_tree().physics_frame
+		fizzled = fizzled or sb.state.zip_event == "fizzle"
+	assert_true(fizzled)
+	assert_almost_eq(sb.body.global_position.x, 100.0, 0.5)
+	assert_almost_eq(sb.body.global_position.y, -12.0, 1.5)
+	assert_eq(sb.state.zip_cooldown, 0.0)
+
+func test_a_jump_cancels_the_zip_in_the_air_with_60_percent_speed() -> void:
+	await _spider_at(Vector2(250.0, -12.0))
+	_fire_zip(Vector2.RIGHT)
+	await _frames(8)
+	sb.scripted.jump_pressed = true
+	var speed := 0.0
+	for _k in 4:
+		await get_tree().physics_frame
+		if sb.state.zip_event == "cancel":
+			speed = sb.body.velocity.x
+			break
+	assert_almost_eq(speed, 240.0, 6.0)
+
+func test_the_thread_shows_while_it_zips_and_fades() -> void:
+	await _spider_at(Vector2(250.0, -12.0))
+	assert_false(_thread().visible)
+	_fire_zip(Vector2.RIGHT)
+	await _frames(5)
+	assert_true(_thread().visible, "a thread while it pulls")
+	assert_eq(_thread().points.size(), 2)
+	await _frames(60)
+	assert_false(_thread().visible, "gone a moment after it ends")
+
+func test_the_head_leads_the_zip() -> void:
+	await _spider_at(Vector2(830.0, -12.0))
+	_fire_zip(Vector2.UP)
+	await _frames(6)
+	assert_almost_eq(_sprite().rotation, -PI / 2.0, 0.3, "head up, toward the slab")
+
+func test_the_slime_still_tackles_on_the_same_button() -> void:
+	sb.set_profile("slime")
+	sb.body.global_position = Vector2(100.0, -12.0)
+	await _frames(4)
+	sb.scripted.dir = 1.0
+	sb.scripted.signature_pressed = true
+	await _frames(2)
+	assert_eq(sb.state.verb, "tackle")
