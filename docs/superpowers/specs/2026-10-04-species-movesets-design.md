@@ -11,6 +11,7 @@ Scope: movement verbs and how they tie into combat (dash, pounce, web pull). Ski
 ## Decisions (Sean, 2026-10-04)
 
 - **Playable, with real sprites:** the sandbox shows the slime's own clips, the spider and gloom wolf sheets, and the goblin sheet for the biped (generated 2026-10-04 after Sean saw a box: 14 frames, see Art needs).
+- **Scale (Sean, 2026-10-04): every monster must feel a good size next to the others; the player's body boxes and reach are tuned to fit that, not the other way round.** The ladder is pinned in `tests/test_creature_scale.gd` (ledger: `docs/ledgers/creature-scale-ledger.md`). The shared 28x24 body box stays until the per-species boxes and reach model land.
 - **Three verbs each, one design for all four,** built in order slime, spider, biped, wolf.
 - **One signature button, the rest contextual:** the existing Tackle button fires each species' signature; every other verb is automatic or triggered by a held direction or a timed press. No new buttons.
 - **Innate, except the slime's Wall Cling,** which stays earned because rooms gate on it today (as a label).

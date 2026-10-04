@@ -25,13 +25,15 @@ func test_the_def_has_the_approved_numbers() -> void:
 	assert_true(c.drifter)
 	assert_true(Sources.ALL.has("pale_moth"))
 
-func test_its_sheet_has_the_moths_frames_at_least_1_3_times_as_wide() -> void:
+## Sean, 2026-10-04 (the size ladder): the Pale Moth was 1.4 times the Spore Moth and nearly as tall as the lizardman, so it
+## was scaled to 0.8; it is still the larger moth, now by about a seventh.
+func test_its_sheet_has_the_moths_frames_at_least_1_1_times_as_wide() -> void:
 	var moth := SpriteSheet.load_set("spore_moth")
 	var pale := SpriteSheet.load_set("pale_moth")
 	assert_eq(pale.frame_names().size(), moth.frame_names().size())
 	for n in moth.frame_names():
 		assert_true(pale.has_frame(n), n)
-		assert_gte(pale.frame_size(n).x, moth.frame_size(n).x * 1.3, n)
+		assert_gte(pale.frame_size(n).x, moth.frame_size(n).x * 1.1, n)
 
 func test_its_clips_match_the_moths_and_pick_returns_fly() -> void:
 	var clips := SlimeAnimator.load_clips(Enemy.CLIPS)

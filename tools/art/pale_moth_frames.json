@@ -11,37 +11,37 @@
  "frames": [
   {
    "name": "fly_1",
-   "width": 42,
+   "width": 34,
    "refs": []
   },
   {
    "name": "fly_2",
-   "width": 50,
+   "width": 40,
    "refs": []
   },
   {
    "name": "fly_3",
-   "width": 42,
+   "width": 34,
    "refs": []
   },
   {
    "name": "fly_4",
-   "width": 39,
+   "width": 31,
    "refs": []
   },
   {
    "name": "stunned",
-   "width": 39,
+   "width": 31,
    "refs": []
   },
   {
    "name": "hurt",
-   "width": 42,
+   "width": 34,
    "refs": []
   },
   {
    "name": "downed",
-   "width": 45,
+   "width": 36,
    "refs": []
   }
  ]
