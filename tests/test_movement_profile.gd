@@ -111,3 +111,10 @@ func test_the_wolf_pounces_with_the_spec_numbers() -> void:
 	for id in ["biped", "slime", "spider"]:
 		var others := MovementProfile.of(id).bursts.filter(func(b): return (b as BurstDef).id == "pounce")
 		assert_eq(others.size(), 0, id)
+
+func test_the_wolf_vaults_with_the_spec_numbers_and_nobody_else_does() -> void:
+	var wolf := MovementProfile.of("wolf")
+	assert_true(wolf.verbs.has("vault"))
+	assert_eq([wolf.vault_speed, wolf.vault_step, wolf.vault_margin], [150.0, 24.0, 6.0])
+	for id in ["biped", "slime", "spider"]:
+		assert_false(MovementProfile.of(id).verbs.has("vault"), id)

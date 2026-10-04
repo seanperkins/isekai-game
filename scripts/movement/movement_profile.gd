@@ -75,6 +75,11 @@ const IDS := ["biped", "slime", "wolf", "spider"]
 ## How long (s) a press of down on a one-way ledge makes the caller ignore one-way ledges, so the body drops through: long
 ## enough to clear the ledge's margin, short enough to land on the next floor.
 @export var fall_through := 0.2
+## Vault (the wolf): the horizontal speed it needs to hop a step on its own, the tallest step it clears (px), and how far above
+## the step the feet end up (px).
+@export var vault_speed := 150.0
+@export var vault_step := 24.0
+@export var vault_margin := 6.0
 ## The extra verbs this species has ("ooze"), and its burst rows (BurstDef: Tackle, the puddle slide, later roll and pounce).
 @export var verbs := PackedStringArray()
 @export var bursts: Array = []

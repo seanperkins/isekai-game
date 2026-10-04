@@ -39,6 +39,9 @@ var aim := Vector2.ZERO
 var wall_side := 0
 ## The body overlaps a hostile this tick: the caller probes it; the wolf's pounce marks the contact (MoveState.pounce_hit).
 var touching_hostile := false
+## The height (px) of a hard step in the direction of travel at the feet, 0 for none; a one-way ledge is never reported. The
+## caller probes it; only the wolf's vault reads it.
+var step_ahead := 0.0
 
 func copy() -> MoveInput:
 	var c := MoveInput.new()
@@ -58,6 +61,7 @@ func copy() -> MoveInput:
 	c.cast = cast
 	c.aim = aim
 	c.touching_hostile = touching_hostile
+	c.step_ahead = step_ahead
 	return c
 
 ## The stick as a vector (x right, y down): `dir` across and `down` minus `up` along.
