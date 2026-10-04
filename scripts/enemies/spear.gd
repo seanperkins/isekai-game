@@ -16,7 +16,7 @@ func launch(from: Vector2, to: Vector2, damage: int, tick: int, seconds: float) 
 	add_to_group("hazards")
 
 func _hit(player: Node2D) -> void:
-	player.receive_hit(_damage, "physical", global_position)
+	player.receive_hit(_damage, "physical", global_position, "spear")
 
 func _look() -> void:
 	var shaft := ColorRect.new()

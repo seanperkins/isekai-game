@@ -60,6 +60,8 @@ const EVOLVE_SWELL := 0.35
 
 var team := "player"
 var facing := 1
+## What dealt the last blow that landed: a creature id, "spear", or the damage type. Set before `died` can fire; the goddess reads it.
+var last_hit_cause := ""
 var stats: Stats
 var health: Health
 var mana: Mana
@@ -740,9 +742,10 @@ func can_cast() -> bool:
 	return not (health.is_dead() or predation.active() or _channel != null or evolving())
 
 ## `from` is the attacker's position for contact hits; the slime is knocked away from it.
-func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, _cause: String = "") -> void:
+func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, cause: String = "") -> void:
 	if _invuln > 0.0 or health.is_dead():
 		return
+	last_hit_cause = cause if cause != "" else damage_type  # before take_hit: a lethal hit fires `died`
 	end_channel()  # a hit ends any channel, including a poison hit that carries no `from`
 	var m := skillset.incoming(damage_type, health.hp, health.max_hp)
 	health.take_hit(Damage.hit(raw, damage_type, stats.get_stat("def"), m["percent_off"], m["flat_off"]), damage_type)

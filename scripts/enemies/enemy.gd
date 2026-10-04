@@ -326,7 +326,7 @@ func _physics_process(delta: float) -> void:
 	if def.swimmer and _home_water != null:
 		_confine()
 	if active and player != null and is_touching(player):
-		player.receive_hit(stats.get_stat("atk"), def.contact_type, global_position)
+		player.receive_hit(stats.get_stat("atk"), def.contact_type, global_position, def.id)
 	_hurt_t = maxf(0.0, _hurt_t - delta)
 	_update_visual(delta)
 
@@ -615,7 +615,7 @@ func _charger_act(player: Node2D, to_player: Vector2, delta: float) -> bool:
 func _slam(player: Node2D) -> void:
 	var d := player.global_position - global_position
 	if absf(d.x) <= STOMP_RANGE and absf(d.y) <= STOMP_LEVEL and player.has_method("is_on_floor") and player.is_on_floor():
-		player.receive_hit(stats.get_stat("atk"), "physical", global_position)
+		player.receive_hit(stats.get_stat("atk"), "physical", global_position, def.id)
 
 ## A slow side-to-side loop about its home; drops a spore puff every PUFF_INTERVAL while the player is near.
 func _drift_act(player: Node2D, to_player: Vector2, delta: float) -> void:
