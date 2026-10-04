@@ -7,7 +7,7 @@ extends Resource
 
 enum ReleaseStyle { CUT, SOFT }
 
-const IDS := ["biped", "slime", "wolf"]
+const IDS := ["biped", "slime", "wolf", "spider"]
 
 @export var id := ""
 @export var top_speed := 140.0

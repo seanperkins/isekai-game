@@ -1,7 +1,7 @@
 extends GutTest
 
 func test_the_three_profiles_load_with_the_spec_values() -> void:
-	assert_eq(MovementProfile.IDS, ["biped", "slime", "wolf"])
+	assert_eq(MovementProfile.IDS, ["biped", "slime", "wolf", "spider"])
 	for id in MovementProfile.IDS:
 		var p := MovementProfile.of(id)
 		assert_not_null(p, id)
@@ -17,6 +17,10 @@ func test_the_three_profiles_load_with_the_spec_values() -> void:
 	var w := MovementProfile.of("wolf")
 	assert_eq([w.top_speed, w.ground_accel_time, w.ground_turn_time, w.jump_velocity, w.gravity], [230.0, 0.4, 0.1, 403.0, 1344.0])
 	assert_true(w.air_keeps_momentum)
+	var sp := MovementProfile.of("spider")
+	assert_eq([sp.top_speed, sp.ground_accel_time, sp.ground_stop_time, sp.ground_turn_time, sp.jump_velocity, sp.gravity, sp.fall_mult], [140.0, 0.03, 0.02, 0.02, 330.0, 900.0, 1.0])
+	assert_eq(sp.release_style, MovementProfile.ReleaseStyle.CUT)
+	assert_eq(sp.release_factor, 1.0)
 
 func test_an_unknown_id_is_null() -> void:
 	assert_null(MovementProfile.of("dragon"))

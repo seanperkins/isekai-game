@@ -3,11 +3,13 @@ extends GutTest
 var biped: MovementProfile
 var slime: MovementProfile
 var wolf: MovementProfile
+var spider: MovementProfile
 
 func before_each() -> void:
 	biped = MovementProfile.of("biped")
 	slime = MovementProfile.of("slime")
 	wolf = MovementProfile.of("wolf")
+	spider = MovementProfile.of("spider")
 
 func _run(p: MovementProfile, s: MoveState, i: MoveInput, ticks: int) -> void:
 	for _k in ticks:
@@ -69,3 +71,10 @@ func test_analog_input_and_a_zero_speed_stat() -> void:
 	s = _at(100.0)
 	GroundAirStep.step(s, _in(0.5), biped, 1.0 / 60.0, 0.0)
 	assert_eq(s.velocity.x, 0.0, "speed_scale 0 roots the body")
+
+func test_the_spider_skitters() -> void:
+	var s := MoveState.new()
+	_run(spider, s, _in(1.0), 2)
+	assert_eq(s.velocity.x, 140.0)
+	_run(spider, s, _in(), 2)
+	assert_eq(s.velocity.x, 0.0)
