@@ -26,3 +26,20 @@ static func contact(s: MoveState, i: MoveInput, p: MovementProfile, dt: float) -
 		cap = p.wall_stick_speed
 		s.wall_stick -= dt
 	s.velocity.y = minf(s.velocity.y, cap)
+
+## Called after the ground jump: a live buffered press inside the wall grace (touching, or just off a wall) kicks away from
+## the last wall at `wall_jump_push` with the full jump speed upward, and locks steering for `wall_lock`. The floor and coyote
+## jumps have already had their chance this tick.
+static func jump(s: MoveState, i: MoveInput, p: MovementProfile, jump_boost: float) -> void:
+	if s.launched != "" or i.on_floor or not p.verbs.has("wall") or s.buffer <= 0.0 or s.wall_grace <= 0.0:
+		return
+	s.launch_speed = p.jump_velocity * jump_boost
+	s.launched = "wall"
+	s.velocity = Vector2(-s.wall_side * p.wall_jump_push, -s.launch_speed)
+	s.jumping = true
+	s.buffer = 0.0
+	s.coyote = 0.0
+	s.wall_grace = 0.0
+	s.clinging = false
+	s.wall_bounced = false
+	s.lock = p.wall_lock

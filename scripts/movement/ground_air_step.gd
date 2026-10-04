@@ -2,7 +2,7 @@ class_name GroundAirStep
 extends RefCounted
 ## The ground and air movement model: pure statics over a MoveState and a MoveInput (the style of PlayerWater), so
 ## player.gd and the sandbox share it and tests drive it a tick at a time. The caller moves the body with the velocity
-## this leaves. Tick order: timers, horizontal control, gravity, wall contact, jump, release.
+## this leaves. Tick order: timers, horizontal control, gravity, wall contact, jump, wall jump, release.
 
 ## A jump that fires on the floor after at least this many seconds of air is a landing's rebound, not a step down's.
 const REBOUND_MIN_AIR := 0.12
@@ -17,6 +17,7 @@ static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float, spee
 	_gravity(s, i, p, dt)
 	WallStep.contact(s, i, p, dt)
 	_jump(s, i, p, jump_boost)
+	WallStep.jump(s, i, p, jump_boost)
 	_release(s, i, p)
 	s.air_time = 0.0 if i.on_floor else s.air_time + dt
 	s.last_vy = s.velocity.y
