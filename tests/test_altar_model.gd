@@ -135,3 +135,7 @@ func test_move_clamps() -> void:
 	var plain := _model("C1", false)
 	plain.move(99)
 	assert_eq(plain.row(), 5, "without a perk the last row is Dark")
+
+func test_points_reads_the_souls_total() -> void:
+	soul.add(7)
+	assert_eq(_model().points(), 7)

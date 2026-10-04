@@ -106,3 +106,7 @@ func _element_at(row: int) -> String:
 
 func _units_of(element: String) -> int:
 	return clampi(int(_units.get(element, 0)), 0, Banking.max_units(_rules, _engine, element))
+
+## The soul points the player holds (saved plus session), for the menu's footer.
+func points() -> int:
+	return _soul.total_points()

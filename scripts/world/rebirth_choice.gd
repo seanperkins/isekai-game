@@ -12,15 +12,16 @@ static func altars(rooms: Dictionary) -> Array:
 		for f in (rooms[room_id] as RoomDef).features:
 			if f.get("kind", "") == "rebirth_pool":
 				out.append({"id": str(f.get("id", "")), "area": str(f.get("area", "")), "room": room_id,
-					"pos": f.get("pos", Vector2.ZERO), "kit": f.get("kit", {}), "name": _name(f)})
+					"pos": f.get("pos", Vector2.ZERO), "kit": f.get("kit", {}), "name": altar_name(f)})
 	out.sort_custom(func(a, b):
 		if a["id"] == WorldProgress.DEFAULT_ALTAR or b["id"] == WorldProgress.DEFAULT_ALTAR:
 			return a["id"] == WorldProgress.DEFAULT_ALTAR and b["id"] != WorldProgress.DEFAULT_ALTAR
 		return a["id"] < b["id"])
 	return out
 
-static func _name(f: Dictionary) -> String:
+## "Cave mouth" for the default altar, else "<Area> altar" (the id when it has no area).
+static func altar_name(f: Dictionary) -> String:
 	if f.get("id", "") == WorldProgress.DEFAULT_ALTAR:
 		return "Cave mouth"
 	var area := str(f.get("area", "")).capitalize()
-	return "%s rebirth pool" % area if area != "" else str(f.get("id", ""))
+	return "%s altar" % area if area != "" else str(f.get("id", ""))

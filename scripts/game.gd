@@ -24,6 +24,8 @@ var run: Run
 ## The goddess's scene and menu. Null goddess in an editor Play: a death returns to the editor at once.
 var goddess: Goddess
 var goddess_menu: GoddessMenu
+## The in-world altar menu (null in an editor Play, where an altar just attunes).
+var altar_menu: AltarMenu
 var ambient: CanvasModulate
 var _skills_by_id := {}
 var _creatures := {}
@@ -65,8 +67,10 @@ func _ready() -> void:
 	if not _editor_play:
 		for e in WorldValidator.validate(rooms, _creatures.keys()):
 			push_error(e)
-	world.setup(rooms, player, {"spawn": _spawn, "progress": progress,
-		"compendium": Compendium.model, "announce": Announcer.queue.push_unlock})
+	var world_ctx := {"spawn": _spawn, "progress": progress, "compendium": Compendium.model, "announce": Announcer.queue.push_unlock}
+	if not _editor_play:
+		world_ctx["altar_menu"] = _open_altar_menu  # the menu is built once the goddess exists, after the world
+	world.setup(rooms, player, world_ctx)
 	world.room_entered.connect(_on_room_entered)
 	var altars := RebirthChoice.altars(rooms)
 	progress.sanitize(altars.map(func(p: Dictionary) -> String: return p["id"]))
@@ -98,6 +102,10 @@ func _ready() -> void:
 	add_child(goddess_menu)
 	run.goddess_needed.connect(goddess_menu.open)
 	goddess_menu.confirmed.connect(run.accept)
+	if goddess != null:
+		altar_menu = AltarMenu.new()  # after the skill screen, so it sees input first
+		add_child(altar_menu)
+		altar_menu.bind(goddess, SkillRules, Compendium.progress, player)
 	if not _editor_play:
 		Compendium.soul.session_points = Game.soul_points_arg(OS.get_cmdline_user_args())  # set, not added: a reload refills it
 	begin_life(start)
@@ -107,6 +115,11 @@ func _ready() -> void:
 		var back := EditorReturn.new()
 		back.game = self
 		add_child(back)
+
+## What an altar calls to open its menu: the world is built before the menu, so it is looked up when used.
+func _open_altar_menu(altar: Altar) -> void:
+	if altar_menu != null:
+		altar_menu.open_for(altar)
 
 ## Starts a life: the run's state is cleared, then the bought kit is given, then the perks. The kit comes second because
 ## start_run() clears everything a kit would set, and the perks last so the stats they raise are filled.

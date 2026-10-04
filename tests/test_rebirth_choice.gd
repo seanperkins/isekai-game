@@ -21,3 +21,8 @@ func test_pools_are_ordered_stably_default_first_then_by_id() -> void:
 	c.features = [{"kind": "rebirth_pool", "id": "C1", "area": "cave", "kit": {}, "pos": Vector2(1, 1)}]
 	var ids := RebirthChoice.altars({"Z9": a, "A1": b, "C1": c}).map(func(p): return p["id"])
 	assert_eq(ids, ["C1", "A1", "Z9"])
+
+func test_an_altar_is_named_by_its_area_and_the_cave_mouth_by_its_place() -> void:
+	assert_eq(RebirthChoice.altar_name({"id": "C1", "area": "cave"}), "Cave mouth")
+	assert_eq(RebirthChoice.altar_name({"id": "G1", "area": "grotto"}), "Grotto altar")
+	assert_eq(RebirthChoice.altar_name({"id": "X9", "area": ""}), "X9")
