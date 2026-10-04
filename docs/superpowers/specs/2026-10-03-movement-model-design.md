@@ -32,7 +32,7 @@ Pure statics over a `MoveState` and a `MoveInput` (the style of `PlayerWater` an
 - **Ground.** Toward `dir * top` at `top / ground_accel_time`; with no input, to rest at `top / ground_stop_time`; with input opposing the velocity, brake to rest at `top / ground_turn_time` first (it accelerates from rest on the next tick). `top = top_speed * speed_scale`; a zero scale roots the body.
 - **Air.** Toward `dir * top` at the ground accel times `air_accel_mult`. With no input the speed bleeds to rest over `air_stop_time`, unless `air_keeps_momentum` (the wolf).
 - **Gravity** applies only when airborne and starts from `gravity`. It is multiplied by `apex_gravity_mult` while jump is held and `|vy| < apex_band`, **and** by `fall_mult` while `vy > 0` (when both apply, both multiply), **and** by the soft-release factor while rising with jump released. A body on the floor has positive `vy` zeroed.
-- **Jump.** Fires when the buffer (`buffer` seconds after a press) is live and the body is on the floor or within `coyote` seconds of leaving it; sets `vy = -jump_velocity * jump_boost`. A jump that fires on the first floor tick after at least 0.12 s of air (a press made at or before the landing tick) gets the **rebound**: launch speed times `sqrt(1 + rebound_rise)`. A button held through landing does nothing, and the bonus never compounds. One launch per press: firing clears buffer and coyote. `state.launched` says what happened this tick: `""`, `"ground"`, `"coyote"` or `"rebound"`.
+- **Jump.** Fires when the buffer (`buffer` seconds after a press) is live and the body is on the floor or within `coyote` seconds of leaving it; sets `vy = -jump_velocity * jump_boost`. A jump that fires on the first floor tick after at least 0.12 s of air (a press made at or before the landing tick, or within the profile's `rebound_grace` after it) gets the **rebound**: launch speed times `sqrt(1 + rebound_rise)`. A button held through landing does nothing, and the bonus never compounds. One launch per press: firing clears buffer and coyote. `state.launched` says what happened this tick: `""`, `"ground"`, `"coyote"` or `"rebound"`.
 - **Release** (jump released while rising from a jump, never on the launch tick): `CUT` caps `vy` at `-launch_speed * release_factor` once and never raises speed; `SOFT` multiplies gravity by `release_factor` until the apex.
 
 ## Profiles (starting values, tuned by play; pinned by the envelope tests)
@@ -45,10 +45,11 @@ Pure statics over a `MoveState` and a `MoveInput` (the style of `PlayerWater` an
 | `jump_velocity` / `gravity` / `fall_mult` | 330 / 900 / 1.0 | 328.5 / 900 / 1.53 | 403 / 1344 / 1.3 |
 | `apex_band` / `apex_gravity_mult` | 0 / 0.5 | 40 / 0.5 | 0 / 0.5 |
 | `release_style` / `release_factor` | CUT / 0.35 | SOFT / 2.5 | SOFT / 2.0 |
-| `coyote` / `buffer` | 0.10 / 0.10 | 0.10 / 0.10 | 0.10 / 0.10 |
+| `coyote` / `buffer` | 0.10 / 0.10 | 0.10 / 0.15 | 0.10 / 0.10 |
 | `rebound_rise` | 0 | 0.15 | 0 |
+| `rebound_grace` | 0 | 0.08 | 0 |
 
-The wolf's long run-up (0.4 s) and short brake (0.1 s) are the point: slow to start, fast to stop and turn. The wall fields (slide 90 px/s, stick 15 px/s for 0.2 s on the slime, grace 0.10 s, push 180, lock 0.15 s) join the profile with the walls.
+The wolf's long run-up (0.4 s) and short brake (0.1 s) are the point: slow to start, fast to stop and turn. The wall fields (slide 90 px/s, stick 15 px/s for 0.2 s on the slime, grace 0.15 s, push 180, lock 0.15 s, bounce 85% from 100 px/s) are on the profile now.
 
 ## The slime's visual spring (cosmetic)
 
