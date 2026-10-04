@@ -414,3 +414,85 @@ func test_a_tackle_in_mid_bounce_ends_the_ball() -> void:
 			clip_after = sb.clip()
 	assert_true(verb_seen, "it tackled in the air")
 	assert_true(clip_after == "rise" or clip_after == "fall", "after the tackle it is the slime again, not the ball: %s" % clip_after)
+
+## The sandbox's spider at `pos`, gripping the floor under it, or the surface `n` it is placed on (no time to fall first).
+func _spider_at(pos: Vector2, n := Vector2.ZERO) -> void:
+	sb.set_profile("spider")
+	sb.body.global_position = pos
+	sb.state.surface_n = n
+	await _frames(4)
+
+func _normals_seen(frames: int, until: Callable) -> Dictionary:
+	var seen := {}
+	for _k in frames:
+		await get_tree().physics_frame
+		seen[sb.state.surface_n] = true
+		if until.call():
+			break
+	return seen
+
+func test_the_spider_goes_over_a_ledge_block_with_one_held_direction() -> void:
+	await _spider_at(Vector2(490.0, -12.0))
+	assert_eq(sb.state.surface_n, Vector2.UP, "it grips the floor")
+	sb.scripted.dir = 1.0
+	var seen := await _normals_seen(600, func(): return sb.state.surface_n == Vector2.UP and sb.body.global_position.x > 606.0 and sb.body.global_position.y > -20.0)
+	assert_true(seen.has(Vector2.LEFT) and seen.has(Vector2.RIGHT), "up the left face, down the right")
+	assert_gt(sb.body.global_position.x, 606.0)
+	assert_almost_eq(sb.body.global_position.y, -12.0, 1.5, "back on the floor")
+
+func test_the_spider_rounds_the_pillar_and_slab() -> void:
+	_visited = {}
+	await _spider_at(Vector2(740.0, -12.0))
+	sb.scripted.dir = 1.0
+	var seen := await _normals_seen(1200, func(): return seen_all(sb) and sb.state.surface_n == Vector2.UP and sb.body.global_position.x > 810.0 and sb.body.global_position.y > -20.0)
+	assert_eq(seen.size(), 4, "floor, wall, ceiling and wall again")
+	assert_gt(sb.body.global_position.x, 810.0)
+
+var _visited := {}
+
+func seen_all(box: MovementSandbox) -> bool:
+	_visited[box.state.surface_n] = true
+	return _visited.size() >= 4
+
+func test_the_spider_hangs_from_the_slab_without_falling() -> void:
+	await _spider_at(Vector2(800.0, -138.0), Vector2.DOWN)
+	sb.scripted.dir = 1.0
+	await _frames(25)
+	assert_almost_eq(sb.body.global_position.y, -138.0, 1.5, "it hangs")
+	assert_gt(sb.body.global_position.x, 840.0, "and crawls along the underside")
+
+func test_a_hop_off_a_wall_lands_back_on_the_floor() -> void:
+	await _spider_at(Vector2(628.0, -60.0), Vector2.LEFT)
+	sb.scripted.jump_pressed = true
+	await _frames(150)
+	assert_eq(sb.state.surface_n, Vector2.UP, "it grips the floor again")
+	assert_lt(sb.body.global_position.x, 626.0, "out along the normal, away from the wall")
+	assert_almost_eq(sb.body.global_position.y, -12.0, 1.5)
+
+func test_the_one_way_ledge_carries_the_spider_from_above_and_drops_it_at_the_end() -> void:
+	await _spider_at(Vector2(200.0, -12.0))
+	sb.scripted.jump_pressed = true
+	await _frames(70)
+	assert_eq(sb.state.surface_n, Vector2.UP)
+	assert_almost_eq(sb.body.global_position.y, -62.0, 1.5, "on the ledge's top, hopped through it from below")
+	assert_true(sb.state.surface_oneway)
+	sb.scripted.dir = 1.0
+	var dropped := false
+	for _k in 120:
+		await get_tree().physics_frame
+		if sb.state.surface_event == "ledge_fall":
+			dropped = true
+			break
+	assert_true(dropped, "its end drops the spider")
+	await _frames(40)
+	assert_eq(sb.state.surface_n, Vector2.UP, "it lands and grips the floor")
+	assert_almost_eq(sb.body.global_position.y, -12.0, 1.5, "on the floor")
+
+func test_every_species_still_jumps_its_own_height_on_the_new_terrain() -> void:
+	for id in ["biped", "slime", "wolf"]:
+		sb.set_profile(id)
+		sb.body.global_position = Vector2(100.0, -12.0)
+		await _frames(4)
+		await _jump(30, 120)
+		var want: float = MovementSim.flat_jump(MovementProfile.of(id))["rise"]
+		assert_almost_eq(sb.last_jump()["rise"], want, 3.0, id)

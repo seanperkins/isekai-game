@@ -13,6 +13,11 @@ const WALLS := [Rect2(-40, -400, 40, 440), Rect2(1400, -400, 40, 440)]
 const TUNNEL := Rect2(900, -52, 240, 40)
 ## A pillar 110 px from the right end wall: a shaft to climb by wall jumps.
 const SHAFT_WALL := Rect2(1260, -300, 40, 300)
+## A pillar under a slab for the spider: one wall from the floor to the slab's top, the slab's underside to hang from.
+const CRAWL_PILLAR := Rect2(760, -150, 30, 150)
+const CRAWL_SLAB := Rect2(760, -180, 130, 30)
+## A thin one-way ledge (a floor on its top only) a spider can hop up through and walk off the end of.
+const ONEWAY_LEDGE := Rect2(160, -50, 100, 6)
 ## How far from a wall (px) still counts as touching it for the wall verbs.
 const WALL_RANGE := 6.0
 const START := Vector2(100, 0)
@@ -68,8 +73,12 @@ func _ready() -> void:
 		_block(r)
 	_block(TUNNEL)
 	_block(SHAFT_WALL)
+	_block(CRAWL_PILLAR)
+	_block(CRAWL_SLAB)
+	_oneway(ONEWAY_LEDGE)
 	body = CharacterBody2D.new()
 	body.name = "Body"
+	body.collision_mask = 3  # hard solids (layer 1) and one-way ledges (layer 2)
 	_shape = CollisionShape2D.new()
 	_shape.name = "Shape"
 	_box = RectangleShape2D.new()
@@ -154,7 +163,14 @@ func _physics_process(delta: float) -> void:
 	i.on_floor = was_on_floor
 	i.clearance_above = _clearance()
 	i.wall_side = _wall_side(i.dir)
+	i.on_ceiling = body.is_on_ceiling()
+	if profile.verbs.has("crawl"):
+		i.sweep = _sweep
+		i.ray = _ray
 	VerbRunner.step(state, i, profile, delta, 1.0, sqrt(BOOST_JUMP_HEIGHT) if boosted else 1.0)
+	if state.surface_n != Vector2.ZERO:
+		_crawl(delta)
+		return
 	_apply_box()
 	_judge_landing()
 	if state.launched != "":
@@ -207,6 +223,7 @@ func _read_input() -> MoveInput:
 		i.jump_pressed = scripted.jump_pressed
 		i.jump_held = scripted.jump_held
 		i.down = scripted.down
+		i.up = scripted.up
 		i.signature_pressed = scripted.signature_pressed
 		scripted.jump_pressed = false
 		scripted.signature_pressed = false
@@ -215,8 +232,39 @@ func _read_input() -> MoveInput:
 	i.jump_pressed = Input.is_action_just_pressed("jump")
 	i.jump_held = Input.is_action_pressed("jump")
 	i.down = Input.get_action_strength("aim_down")
+	i.up = Input.get_action_strength("aim_up")
 	i.signature_pressed = Input.is_action_just_pressed("tackle")
 	return i
+
+## The spider on a surface: the step says how far to move and which way is up; this moves the body by it, shapes the box to the
+## surface (24 wide on a wall) and lets physics push it out of any overlap the box swap leaves.
+func _crawl(delta: float) -> void:
+	body.global_position += state.surface_shift
+	_box.size = SurfaceStep.box_size(state.surface_n)
+	_shape.position = Vector2.ZERO
+	body.move_and_collide(Vector2.ZERO)
+	body.velocity = Vector2.ZERO
+	state.velocity = Vector2.ZERO
+	_landing = false
+	_land_timer = 0.0
+	_in_jump = false
+	_cam.position.x = clampf(body.position.x, 320.0, FLOOR.size.x - 320.0)
+	_draw_body(delta)
+
+## The crawl's forward probe: how far the box can move along `motion` and what it meets.
+func _sweep(motion: Vector2) -> Dictionary:
+	var col := KinematicCollision2D.new()
+	if not body.test_move(body.global_transform, motion, col):
+		return {}
+	return {"travel": col.get_travel(), "normal": col.get_normal()}
+
+## The crawl's ray probe, from the body's centre: what a one-way-aware ray meets (SurfaceStep.NONE, HARD or ONEWAY).
+func _ray(from: Vector2, to: Vector2, hard_only: bool) -> int:
+	var q := PhysicsRayQueryParameters2D.create(body.global_position + from, body.global_position + to, 1 if hard_only else 3, [body.get_rid()])
+	var hit := get_world_2d().direct_space_state.intersect_ray(q)
+	if hit.is_empty():
+		return SurfaceStep.NONE
+	return SurfaceStep.ONEWAY if (hit["collider"] as CollisionObject2D).collision_layer == 2 else SurfaceStep.HARD
 
 ## Which side a wall is on within WALL_RANGE (the side the input points to first), 0 for none or on the floor.
 func _wall_side(dir: float) -> int:
@@ -262,7 +310,7 @@ func _draw_body(delta: float) -> void:
 	var tint := VERB_TINT if state.verb != "" else Color.WHITE
 	_sprite.modulate = tint
 	_rect.modulate = tint
-	var doing := state.verb if state.verb != "" else ("flat" if state.spread else ("wall" if state.clinging else ""))
+	var doing := state.verb if state.verb != "" else ("flat" if state.spread else ("wall" if state.clinging else ("crawl" if state.surface_n != Vector2.ZERO else "")))
 	_label.text = "%s%s   speed %d   boost %s   verb: %s   last jump: rise %.1f px, air %.2f s\n1 biped   2 slime   3 wolf   4 spider   B boost   J tackle   S down (flatten, slide)   at a wall: press into it to stick, jump to kick off, hold jump to bounce" % [
 		profile.id, " (placeholder, no art yet)" if _sheet == null else "", int(absf(body.velocity.x)), "on" if boosted else "off", doing, _last["rise"], _last["airtime"]]
 
@@ -275,6 +323,23 @@ func _look_scale(delta: float) -> Vector2:
 	_crawl_phase = SpeciesLook.crawl_advance(_crawl_phase, state.velocity.x if crawling else 0.0, delta)
 	_crawl_gain = move_toward(_crawl_gain, 1.0 if crawling else 0.0, delta * CRAWL_EASE)
 	return out * Vector2.ONE.lerp(SpeciesLook.crawl_scale(_crawl_phase), _crawl_gain)
+
+func _oneway(r: Rect2) -> void:
+	var b := StaticBody2D.new()
+	b.collision_layer = 2
+	b.position = r.position + r.size / 2.0
+	var shape := CollisionShape2D.new()
+	var box := RectangleShape2D.new()
+	box.size = r.size
+	shape.shape = box
+	shape.one_way_collision = true
+	b.add_child(shape)
+	var look := ColorRect.new()
+	look.size = r.size
+	look.position = -r.size / 2.0
+	look.color = Color(0.55, 0.45, 0.25)
+	b.add_child(look)
+	add_child(b)
 
 func _block(r: Rect2) -> void:
 	var b := StaticBody2D.new()
