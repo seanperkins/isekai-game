@@ -202,3 +202,122 @@ func test_it_crosses_a_tile_seam_without_an_event() -> void:
 	var a := _on(Vector2(1040, -12), Vector2.UP)
 	var ev := _until(a[0], a[1], Vector2.RIGHT, 500, func(): return _on_floor_past(a[1], a[0], 1260.0))
 	assert_eq(ev, ["concave", "convex", "convex", "concave"], "four, none at the seam")
+
+## An input from the world with the stick and contact flags set, for attach tests that call the step by hand.
+func _make_input(w: FakeSurfaceWorld, stick := Vector2.ZERO) -> MoveInput:
+	var i := w.input()
+	i.dir = stick.x
+	i.down = maxf(stick.y, 0.0)
+	i.up = maxf(-stick.y, 0.0)
+	return i
+
+func test_a_one_way_ledge_end_drops_the_spider() -> void:
+	var a := _on(Vector2(900, -62), Vector2.UP)
+	var w: FakeSurfaceWorld = a[0]
+	var s: MoveState = a[1]
+	var ev := _until(w, s, Vector2.RIGHT, 200, func(): return s.surface_event == "ledge_fall")
+	assert_eq(ev, ["ledge_fall"], "never a convex wrap on a one-way ledge")
+	assert_eq(s.surface_n, Vector2.ZERO)
+	assert_almost_eq(s.velocity.x, 70.0, 0.01)
+	assert_false(_tick(w, s, Vector2.RIGHT), "in the air the ground step takes over")
+
+func test_a_hard_ledge_end_wraps_where_a_one_way_one_falls() -> void:
+	var a := _on(Vector2(1160, -72), Vector2.UP)
+	var ev := _until(a[0], a[1], Vector2.RIGHT, 100, func(): return (a[1] as MoveState).surface_event == "convex")
+	assert_eq(ev, ["convex"])
+	assert_eq((a[1] as MoveState).surface_n, Vector2.RIGHT)
+
+func test_a_hop_goes_along_the_normal_at_the_base_jump_speed() -> void:
+	var f := _on(Vector2(40, -12), Vector2.UP)
+	assert_true(_tick(f[0], f[1], Vector2.ZERO, true), "the hop tick belongs to this step")
+	var s: MoveState = f[1]
+	assert_eq(s.velocity, Vector2(0, -330))
+	assert_eq(s.launched, "hop")
+	assert_eq(s.surface_n, Vector2.ZERO)
+	assert_eq(s.lock, 0.0, "off a floor it steers at once")
+	var wall := _on(Vector2(188, -60), Vector2.LEFT)
+	_tick(wall[0], wall[1], Vector2.ZERO, true)
+	assert_eq((wall[1] as MoveState).velocity, Vector2(-330, 0))
+	assert_eq((wall[1] as MoveState).lock, spider.wall_lock)
+	var ceiling := _on(Vector2(600, -148), Vector2.DOWN)
+	_tick(ceiling[0], ceiling[1], Vector2.ZERO, true)
+	assert_eq((ceiling[1] as MoveState).velocity, Vector2(0, 330))
+	var boosted := _on(Vector2(40, -12), Vector2.UP)
+	_tick(boosted[0], boosted[1], Vector2.ZERO, true, 1.5)
+	assert_eq((boosted[1] as MoveState).velocity, Vector2(0, -330 * 1.5))
+
+func test_a_buffered_press_hops_one_tick_after_attaching() -> void:
+	var w := FakeSurfaceWorld.build_spike_terrain()
+	w.pos = Vector2(100, -12)
+	var s := MoveState.new()
+	s.buffer = 0.1
+	var i := _make_input(w)
+	i.on_floor = true
+	assert_true(SurfaceStep.step(s, i, spider, DT))
+	assert_eq(s.surface_event, "attach")
+	w.apply(s)
+	assert_true(SurfaceStep.step(s, i, spider, DT))
+	assert_eq(s.launched, "hop")
+
+func test_it_lands_on_a_floor_and_attaches_only_if_the_centre_is_over_it() -> void:
+	var w := FakeSurfaceWorld.build_spike_terrain()
+	w.pos = Vector2(100, -12)
+	var s := MoveState.new()
+	var i := _make_input(w)
+	i.on_floor = true
+	assert_true(SurfaceStep.step(s, i, spider, DT))
+	assert_eq([s.surface_event, s.surface_n, s.velocity], ["attach", Vector2.UP, Vector2.ZERO])
+	var edge := FakeSurfaceWorld.build_spike_terrain()
+	edge.pos = Vector2(980, -62)  # 10 px past the one-way ledge's end: its rim would catch the box
+	var air := MoveState.new()
+	var j := _make_input(edge)
+	j.on_floor = true
+	assert_false(SurfaceStep.step(air, j, spider, DT))
+	assert_eq(air.surface_n, Vector2.ZERO)
+
+func test_it_attaches_to_a_wall_or_ceiling_only_when_pressing_toward_it() -> void:
+	var w := FakeSurfaceWorld.build_spike_terrain()
+	w.pos = Vector2(312, -60)  # beside the block's right face
+	var i := _make_input(w, Vector2.LEFT)
+	i.wall_side = -1
+	var s := MoveState.new()
+	assert_true(SurfaceStep.step(s, i, spider, DT))
+	assert_eq(s.surface_n, Vector2.RIGHT)
+	var idle := MoveState.new()
+	var k := _make_input(w, Vector2.ZERO)
+	k.wall_side = -1
+	assert_false(SurfaceStep.step(idle, k, spider, DT), "no stick, no grip")
+	var c := FakeSurfaceWorld.build_spike_terrain()
+	c.pos = Vector2(600, -148)
+	var cs := MoveState.new()
+	var ci := _make_input(c, Vector2.UP)
+	ci.on_ceiling = true
+	assert_true(SurfaceStep.step(cs, ci, spider, DT))
+	assert_eq(cs.surface_n, Vector2.DOWN)
+	var o := FakeSurfaceWorld.build_spike_terrain()
+	o.pos = Vector2(840, -47)  # beside the one-way ledge's left end
+	var os := MoveState.new()
+	var oi := _make_input(o, Vector2.RIGHT)
+	oi.wall_side = 1
+	assert_false(SurfaceStep.step(os, oi, spider, DT), "never to a one-way ledge's side")
+
+func test_it_does_not_re_attach_the_instant_after_a_hop() -> void:
+	var a := _on(Vector2(40, -12), Vector2.UP)
+	var w: FakeSurfaceWorld = a[0]
+	var s: MoveState = a[1]
+	_tick(w, s, Vector2.ZERO, true)
+	var i := _make_input(w)
+	i.on_floor = true  # the body has not left the floor yet
+	assert_false(SurfaceStep.step(s, i, spider, DT))
+	assert_eq(s.surface_n, Vector2.ZERO)
+	for _k in 8:
+		SurfaceStep.step(s, i, spider, DT)
+	assert_ne(s.surface_n, Vector2.ZERO, "after the lock it grips the floor again")
+
+func test_no_probes_means_not_a_crawler() -> void:
+	var s := MoveState.new()
+	s.surface_n = Vector2.UP
+	var i := MoveInput.new()
+	i.on_floor = true
+	assert_false(SurfaceStep.step(s, i, spider, DT))
+	assert_eq([s.surface_shift, s.surface_event], [Vector2.ZERO, ""])

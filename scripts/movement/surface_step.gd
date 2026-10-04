@@ -18,16 +18,25 @@ const ONEWAY := 2
 ## The stick must be this far along a surface to move, and a latch holds while the stick is within acos(LATCH_DOT) of it.
 const DEAD := 0.2
 const LATCH_DOT := 0.7
+## Seconds after a hop before it may grip a surface again.
+const REATTACH_LOCK := 0.1
 
 ## Runs one tick. True while this step owns the body (it is on a surface, or has just left one with its own velocity); false
 ## in the air or with no probes, when the caller runs the ground and air step.
-static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float, _jump_boost := 1.0) -> bool:
+static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float, jump_boost := 1.0) -> bool:
 	s.surface_shift = Vector2.ZERO
 	s.surface_event = ""
-	if not i.sweep.is_valid() or not i.ray.is_valid() or s.surface_n == Vector2.ZERO:
+	if not i.sweep.is_valid() or not i.ray.is_valid():
 		return false
 	s.surface_since += dt
 	s.surface_lock = maxf(0.0, s.surface_lock - dt)
+	if s.surface_n == Vector2.ZERO:
+		return _attach(s, i)
+	s.launched = ""
+	GroundAirStep.timers(s, i, p, dt)
+	if s.buffer > 0.0:
+		_hop(s, p, jump_boost)
+		return true
 	var stick := i.stick()
 	var t := tangent(s.surface_n)
 	var sense := _intent(s, stick, t, p)
@@ -50,6 +59,49 @@ static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float, _jum
 		return true  # inside the lockout it waits at the edge
 	s.surface_oneway = support == ONEWAY
 	s.surface_shift = motion
+	return true
+
+## A press while on a surface: off along the normal at the base jump, with steering locked off a wall or ceiling and no
+## re-attaching for a moment (the body is still touching what it left).
+static func _hop(s: MoveState, p: MovementProfile, jump_boost: float) -> void:
+	var n := s.surface_n
+	s.launch_speed = p.jump_velocity * jump_boost
+	s.velocity = n * s.launch_speed
+	s.launched = "hop"
+	s.jumping = n == Vector2.UP
+	s.buffer = 0.0
+	s.surface_n = Vector2.ZERO
+	s.surface_lock = REATTACH_LOCK
+	s.surface_event = "hop"
+	if n != Vector2.UP:
+		s.lock = p.wall_lock
+
+## In the air: grip a floor the centre is over, or a hard wall or ceiling the stick presses toward. True on the tick it grips.
+static func _attach(s: MoveState, i: MoveInput) -> bool:
+	if s.surface_lock > 0.0:
+		return false
+	var stick := i.stick()
+	var n := Vector2.ZERO
+	var kind := NONE
+	if i.on_floor:
+		kind = i.ray.call(Vector2.ZERO, Vector2(0.0, HN + STICK), false)
+		if kind != NONE:
+			n = Vector2.UP
+	if n == Vector2.ZERO and i.wall_side != 0 and stick.x * float(i.wall_side) > 0.5:
+		kind = i.ray.call(Vector2.ZERO, Vector2(float(i.wall_side) * (HT + 2.0 * STICK), 0.0), true)
+		if kind == HARD:
+			n = Vector2(-float(i.wall_side), 0.0)
+	if n == Vector2.ZERO and i.on_ceiling and stick.y < -0.5:
+		kind = i.ray.call(Vector2.ZERO, Vector2(0.0, -(HN + STICK)), true)
+		if kind == HARD:
+			n = Vector2.DOWN
+	if n == Vector2.ZERO:
+		return false
+	s.surface_n = n
+	s.surface_oneway = kind == ONEWAY
+	s.surface_latch = Vector2.ZERO
+	s.velocity = Vector2.ZERO
+	s.surface_event = "attach"
 	return true
 
 ## The box for a surface with normal `n`: the body config's box on a floor or ceiling, turned on a wall.
@@ -101,12 +153,21 @@ static func _wrap(s: MoveState, i: MoveInput, p: MovementProfile, motion: Vector
 			hi = mid
 		else:
 			lo = mid
+	if s.surface_oneway:
+		# a one-way ledge is a floor on its top only: no end face to turn onto, so the spider drops off its end
+		s.surface_shift = motion * lo
+		s.surface_event = "ledge_fall"
+		s.surface_n = Vector2.ZERO
+		s.surface_lock = REATTACH_LOCK  # it is still over the ledge by a hair: let it move off before it can grip again
+		s.velocity = dir * p.top_speed * 0.5
+		return
 	var edge := dir.dot(motion * hi)
 	var shift := s.surface_n * (-HN - 2.0) + dir * (edge + HN)
 	s.surface_shift = shift
 	if _support(i, dir, shift) == NONE:
 		s.surface_event = "convex_nothing"
 		s.surface_n = Vector2.ZERO
+		s.surface_lock = REATTACH_LOCK
 		return
 	_corner(s, p, "convex", dir, dir, stick)
 
