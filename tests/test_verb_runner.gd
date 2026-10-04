@@ -230,3 +230,18 @@ func test_wall_contact_refreshes_the_air_tackle() -> void:
 	other.air_verb_used = true
 	VerbRunner.step(other, wall, biped, 1.0 / 60.0)
 	assert_true(other.air_verb_used, "only a species with the wall verb gets it")
+
+func test_a_tackle_into_a_wall_with_jump_held_reflects_it() -> void:
+	var s := MoveState.new()
+	var air := _signature()
+	air.on_floor = false
+	air.jump_held = true
+	VerbRunner.step(s, air, slime, 1.0 / 60.0)
+	VerbRunner.step(s, _in(0.0, false), slime, 1.0 / 60.0)
+	assert_eq(s.verb, "tackle")
+	var hit := _in(1.0, false)
+	hit.jump_held = true
+	hit.wall_side = 1
+	VerbRunner.step(s, hit, slime, 1.0 / 60.0)
+	assert_true(s.wall_bounced)
+	assert_lt(s.velocity.x, -280.0)
