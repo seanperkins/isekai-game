@@ -352,6 +352,42 @@ func test_a_biped_slides_a_wall_without_sticking_and_jumps_off_it() -> void:
 	assert_gt(best_vx, 100.0)
 	assert_lt(best_vy, -300.0)
 
+func _slab(r: Rect2) -> StaticBody2D:
+	var b := StaticBody2D.new()
+	b.position = r.position + r.size / 2.0
+	var shape := CollisionShape2D.new()
+	var box := RectangleShape2D.new()
+	box.size = r.size
+	shape.shape = box
+	b.add_child(shape)
+	sb.add_child(b)
+	return b
+
+func test_a_crouched_biped_does_not_mantle_where_the_standing_box_does_not_fit() -> void:
+	_slab(Rect2(530.0, -84.0, 70.0, 7.0))  # 17 px of headroom over the ledge's top (clear of the probe's ray): a flat box fits, a standing one does not
+	await _biped_at(Vector2(504.0, -69.0), 0.0, 1.0)
+	sb.set_profile("biped")
+	sb.body.global_position = Vector2(504.0, -69.0)
+	sb.state.crouched = true
+	sb._apply_box()  # the flat box the probe would otherwise measure with
+	var started := false
+	for _k in 4:
+		await get_tree().physics_frame
+		started = started or sb.state.mantle_event == "start"
+	assert_false(started)
+
+func test_a_mantle_into_a_ceiling_on_the_way_up_is_stopped() -> void:
+	_slab(Rect2(470.0, -90.0, 49.0, 8.0))  # just over the biped's head, left of the ledge's face
+	await _biped_at(Vector2(504.0, -69.0), 0.0, 1.0)
+	sb.set_profile("biped")
+	sb.body.global_position = Vector2(504.0, -69.0)
+	var blocked := false
+	for _k in 30:
+		await get_tree().physics_frame
+		blocked = blocked or sb.state.mantle_event == "blocked"
+	assert_true(blocked, "the pull saw the ceiling")
+	assert_lt(sb.body.global_position.x, 520.0, "and never got through it onto the ledge")
+
 func after_each() -> void:
 	for action in ["move_right", "aim_down", "tackle"]:
 		Input.action_release(action)

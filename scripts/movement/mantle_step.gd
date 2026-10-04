@@ -33,6 +33,8 @@ static func _start(s: MoveState, i: MoveInput, p: MovementProfile, dt: float) ->
 	s.air_verb_used = true
 	s.jumping = false
 	s.clinging = false
+	s.wall_grace = 0.0  # a press queued during the pull must not kick off the wall it left
+	s.launched = ""
 	if i.jump_pressed:
 		s.queued_jump = true
 	return true

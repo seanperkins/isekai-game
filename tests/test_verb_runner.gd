@@ -754,3 +754,59 @@ func test_the_slime_and_the_wolf_start_their_bursts_as_before() -> void:
 	var wolf := MoveState.new()
 	VerbRunner.step(wolf, _tackle(false), MovementProfile.of("wolf"), 1.0 / 60.0)
 	assert_eq(wolf.verb, "pounce", "the pounce is an air verb")
+
+# --- review fixes: the mantle taking over a roll, a stale wall grace, and a puddle ending with room ---
+
+func test_a_mantle_taking_the_body_ends_a_running_roll_and_its_invulnerability() -> void:
+	var biped := MovementProfile.of("biped")
+	var s := MoveState.new()
+	VerbRunner.step(s, _tackle(), biped, 1.0 / 60.0)
+	assert_true(s.invulnerable)
+	var off_the_edge := MoveInput.new()  # rolled off a floor beside a ledge it nearly clears
+	off_the_edge.on_floor = false
+	off_the_edge.wall_side = 1
+	off_the_edge.dir = 1.0
+	off_the_edge.mantle = Vector2(32.0, -4.0)
+	VerbRunner.step(s, off_the_edge, biped, 1.0 / 60.0)
+	assert_eq(s.mantle_event, "start")
+	assert_eq(s.verb, "", "the roll ended when the mantle took the body")
+	assert_false(s.invulnerable)
+	assert_false(s.crouched, "the mantle is made for the standing box")
+
+func test_a_queued_jump_after_a_mantle_is_never_a_wall_jump() -> void:
+	var biped := MovementProfile.of("biped")
+	var s := MoveState.new()
+	s.wall_grace = 0.1  # left over from touching the wall before the mantle
+	var start := MoveInput.new()
+	start.on_floor = false
+	start.wall_side = 1
+	start.dir = 1.0
+	start.mantle = Vector2(32.0, -4.0)
+	start.jump_pressed = true
+	VerbRunner.step(s, start, biped, 1.0 / 60.0)
+	assert_eq(s.mantle_event, "start", "the mantle began")
+	var calm := MoveInput.new()
+	calm.on_floor = false
+	var guard := 0
+	while s.mantle_event != "stand" and guard < 40:
+		VerbRunner.step(s, calm, biped, 1.0 / 60.0)
+		guard += 1
+	var not_yet_grounded := MoveInput.new()  # the first tick back: the caller has not seen the floor yet
+	not_yet_grounded.on_floor = false
+	VerbRunner.step(s, not_yet_grounded, biped, 1.0 / 60.0)
+	assert_ne(s.launched, "wall", "the press waits for the floor; it does not kick off a wall it left")
+
+func test_a_puddle_that_ends_with_room_to_stand_does_not_slow_that_tick() -> void:
+	var slime := MovementProfile.of("slime")
+	var s := MoveState.new()
+	s.velocity.x = 140.0
+	var down := _calm()
+	down.down = 1.0
+	VerbRunner.step(s, down, slime, 1.0 / 60.0)
+	assert_eq(s.verb, "puddle")
+	var released := _calm()
+	released.dir = 1.0
+	VerbRunner.step(s, released, slime, 1.0 / 60.0)
+	assert_eq(s.verb, "", "down released ends it")
+	assert_false(s.crouched, "there is room above, so it stands at once")
+	assert_false(VerbRunner.is_flat(s, slime))

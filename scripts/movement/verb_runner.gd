@@ -28,6 +28,7 @@ static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float, spee
 	if p.verbs.has("drop") and DropStep.step(s, i, p, dt):
 		return  # sliding down a thread owns the body until it lets go or lands
 	if p.verbs.has("mantle") and MantleStep.step(s, i, p, dt):
+		_hand_over(s, p)
 		return  # the pull onto a ledge owns the body (the caller moves it by surface_shift)
 	if p.verbs.has("crawl") and SurfaceStep.step(s, i, p, dt, jump_boost):
 		return  # on a surface the crawl owns the body (the caller moves it by surface_shift); in the air the ground step runs
@@ -47,6 +48,13 @@ static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float, spee
 		VaultStep.step(s, i, p)  # after the ground step, which resets `launched` (a jump press this tick is the jump); a burst owns the velocity
 	if s.wall_bounced and s.verb != "":
 		_end(_row(p, s.verb), s)  # a wall bounce ends the burst: the slime leaves the wall bouncing, not tackling
+
+## A verb that owns the whole body (the mantle) ends any burst that was running, and its invulnerability and crouch with it.
+static func _hand_over(s: MoveState, p: MovementProfile) -> void:
+	if s.verb != "":
+		_end(_row(p, s.verb), s)
+	s.invulnerable = false
+	s.crouched = false
 
 ## True while the body should use the flat collision box: spread, or a flat burst (the puddle slide) running.
 static func is_flat(s: MoveState, p: MovementProfile) -> bool:
@@ -91,6 +99,8 @@ static func _bursts(s: MoveState, i: MoveInput, p: MovementProfile, dt: float) -
 		s.pounce_hit = true  # before the end check: contact on the tick it expires still counts
 	if row == null or _ended(row, s, i):
 		_end(row, s)
+		if i.clearance_above >= STAND_RISE:
+			s.crouched = false  # room above: a flat burst that ends stands at once
 		return
 	s.invulnerable = row.iframes > 0.0 and row.duration - s.verb_left < row.iframes - 1e-6
 	s.verb_left -= dt

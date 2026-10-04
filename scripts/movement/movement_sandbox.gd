@@ -58,6 +58,8 @@ const POUNCE_STRETCH := Vector2(1.2, 0.85)
 const MANTLE_INSET := 4.0
 const MANTLE_HEADROOM := 40.0
 const MANTLE_ROOM_SHRINK := 2.0
+## The mantle's pull is swept with the box lifted this much (px), so sliding flush along a ledge's top is not a collision.
+const MANTLE_LIFT := 1.0
 ## The placeholder's alpha while the body is invulnerable (the roll and slide's first 0.2 s).
 const INVULNERABLE_ALPHA := 0.6
 
@@ -239,7 +241,12 @@ func _physics_process(delta: float) -> void:
 	if state.surface_n != Vector2.ZERO:
 		_crawl(delta)
 		return
-	body.global_position += state.surface_shift  # a zip pulls the body while it is on no surface
+	if profile.verbs.has("mantle") and state.surface_shift != Vector2.ZERO \
+			and body.test_move(body.global_transform.translated(Vector2(0.0, -MANTLE_LIFT)), state.surface_shift):
+		state.surface_shift = Vector2.ZERO  # something is in the way of the pull (a ceiling over the approach): it stops
+		state.mantle_left = 0.0
+		state.mantle_event = "blocked"
+	body.global_position += state.surface_shift  # a zip or a mantle pulls the body while it is on no surface
 	_apply_box()
 	_judge_landing()
 	if state.launched != "":
@@ -440,7 +447,7 @@ func _mantle(side: int) -> Vector2:
 		return Vector2.ZERO
 	var target := Vector2(side * (gap + 2.0 * half + 2.0), -rise)
 	var room := RectangleShape2D.new()
-	room.size = _box.size - Vector2(MANTLE_ROOM_SHRINK, MANTLE_ROOM_SHRINK)
+	room.size = BodyConfig.size() - Vector2(MANTLE_ROOM_SHRINK, MANTLE_ROOM_SHRINK)  # the standing box, whatever the pose now
 	var shape_q := PhysicsShapeQueryParameters2D.new()
 	shape_q.shape = room
 	shape_q.transform = Transform2D(0.0, body.global_position + target)
