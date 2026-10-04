@@ -146,3 +146,15 @@ func test_a_stick_push_navigates_through_process_and_the_event_alone_moves_nothi
 	assert_almost_eq(Controls.last_stick.y, 0.9, 0.001, "Controls records the stick in its own _input, before the menu")
 	menu._process(0.016)
 	assert_eq(menu.panel_rows(P.WHERE)[1], "> Grotto", "the next _process moves one row")
+
+func test_the_menu_works_over_a_paused_tree() -> void:
+	assert_eq(menu.process_mode, Node.PROCESS_MODE_ALWAYS)
+	menu.open(_model(0, 1), "her first words")
+	var ev := InputEventKey.new()
+	ev.keycode = KEY_ENTER
+	ev.physical_keycode = KEY_ENTER
+	ev.pressed = true
+	get_tree().paused = true  # the opening leaves the tree paused when it hands over
+	get_viewport().push_input(ev)
+	get_tree().paused = false
+	assert_eq(confirmed.size(), 1, "Enter reached the menu through a paused tree")

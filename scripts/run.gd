@@ -22,6 +22,7 @@ var _pools: Array = []
 var _player: Node
 var _model: GoddessModel
 var _line := ""
+var _opening := false  # the pending choice is her first meeting: accepting it ends the opening for good
 
 func _ready() -> void:
 	_card.layer = 30
@@ -90,6 +91,26 @@ func _resolve() -> void:
 	_model = model
 	goddess_needed.emit(model, _line)
 
+## Her first meeting, after the opening's trucks: the menu opens with her first words `line` even though there is nothing to choose,
+## no death is counted, and accepting it marks the opening seen and begins the Cave altar life. False, and nothing happens, with no
+## goddess or progress (an editor Play), while a choice is pending or a death is under way, or when the menu could never be confirmed
+## (no species loaded). With no menu listening it begins the pre-selected start, as _resolve does, so the game never hangs.
+func open_first_meeting(line: String) -> bool:
+	if _progress == null or goddess == null or _model != null or _ending:
+		return false
+	var model := goddess.model(_progress, _pools)
+	var result := model.confirm()
+	if result.is_empty():
+		return false
+	_opening = true
+	_line = line
+	if get_signal_connection_list("goddess_needed").is_empty():
+		_begin(result)
+		return true
+	_model = model
+	goddess_needed.emit(model, line)
+	return true
+
 ## The menu's answer. Only a result exactly equal to what the pending model would give now counts, once: a forged, negative,
 ## underreported or stale kit and cost are ignored, and the menu stays open.
 func accept(result: Dictionary) -> void:
@@ -115,4 +136,7 @@ func _begin(result: Dictionary) -> void:
 		kit = {}  # a purchase that cannot be paid for is not given
 	_progress.pending_start = {"altar": altar, "species": species, "kit": kit}
 	_progress.set_last_choice(altar, species)
+	if _opening:
+		_opening = false
+		goddess.soul.finish_opening()
 	restart_requested.emit()

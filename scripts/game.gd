@@ -15,6 +15,12 @@ static var play_request := {}
 ## What the editor gets back when Play ends: {"model": RoomEditModel, "room": String, "view": Dictionary, "play_options":
 ## {"movement": bool, "shortcuts": bool}}. Consumed by the editor's _ready.
 static var editor_resume = null
+## Where the opening's data lives.
+const OPENING_PATH := "res://data/opening/opening.tres"
+## Tests set `args` and/or `headless` here to run the real launch decision as a windowed launch would; `_ready` clears it at once.
+static var launch_override := {}
+## `-- --opening` is honored once per process: the restart after her menu reloads the scene and would otherwise replay it forever.
+static var opening_flag_used := false
 
 var player: Player
 var hud: Hud
@@ -26,6 +32,9 @@ var goddess: Goddess
 var goddess_menu: GoddessMenu
 ## The in-world altar menu (null in an editor Play, where an altar just attunes).
 var altar_menu: AltarMenu
+## The opening's truck dodge (always built, so tests and the hand-off can reach it; it plays only when wanted).
+var opening: OpeningScene
+var _opening_def: OpeningDef
 var ambient: CanvasModulate
 var _skills_by_id := {}
 var _creatures := {}
@@ -55,6 +64,22 @@ func _ready() -> void:
 	var request := Game.play_request
 	Game.play_request = {}
 	_editor_play = not request.is_empty()
+	# The opening is decided before the world is set up: entering the first room saves the map.
+	var launch := Game.launch_override
+	Game.launch_override = {}
+	var args := Array(launch.get("args", OS.get_cmdline_user_args()))
+	var headless: bool = launch.get("headless", DisplayServer.get_name() == "headless")
+	var wanted := Game.wants_opening(Compendium.soul, args, headless, _editor_play, Game.opening_flag_used)
+	if wanted and args.has("--opening"):
+		Game.opening_flag_used = true
+	var opening_def: OpeningDef = null
+	if not _editor_play and (wanted or not Compendium.soul.opening_seen):
+		opening_def = Game.load_opening()
+		if opening_def != null and not Compendium.soul.opening_seen:
+			# An explicit "unseen" reaches the disk before the first map write, wanted or not: without it the map the first room
+			# saves would make a profile that never played the opening (a headless or skipped first launch, a crash) look like
+			# an old save, and it would never see it.
+			Compendium.soul.begin_opening()
 	var rooms: Dictionary = request["rooms"] if _editor_play else World.load_rooms(ROOMS_DIR)
 	# The editor's Play runs on a fresh in-memory progress, so nothing it visits or opens reaches the real profile.
 	var progress = WorldProgress.new() if _editor_play else Compendium.progress
@@ -106,6 +131,9 @@ func _ready() -> void:
 		altar_menu = AltarMenu.new()  # after the skill screen, so it sees input first
 		add_child(altar_menu)
 		altar_menu.bind(goddess, SkillRules, Compendium.progress, player)
+	opening = OpeningScene.new()  # last of the screens, so it sees input first
+	add_child(opening)
+	opening.finished.connect(_on_opening_finished)
 	if not _editor_play:
 		Compendium.soul.session_points = Game.soul_points_arg(OS.get_cmdline_user_args())  # set, not added: a reload refills it
 	begin_life(start)
@@ -115,11 +143,30 @@ func _ready() -> void:
 		var back := EditorReturn.new()
 		back.game = self
 		add_child(back)
+	if wanted and opening_def != null:
+		start_opening(opening_def)
 
 ## The world's validation errors, checked against the shipped perks (the world is validated before the goddess exists, so they are
 ## loaded here rather than taken from her).
 static func world_errors(rooms: Dictionary, creature_ids: Array) -> PackedStringArray:
 	return WorldValidator.validate(rooms, creature_ids, DefLoader.load_dir("res://data/perks", "PerkDef"))
+
+## Plays the opening's truck dodge (loading the shipped data when no `def` is given). False, and nothing starts, in an editor Play,
+## when the data does not load, or when the game is already paused or playing it. It saves nothing: `_ready` decides and saves.
+func start_opening(def: OpeningDef = null) -> bool:
+	if _editor_play:
+		return false
+	var data := def if def != null else Game.load_opening()
+	if data == null:
+		return false
+	_opening_def = data
+	return opening.play(data)
+
+## The last truck is done: her first meeting opens over the paused tree. If it cannot, the player plays on rather than sit paused
+## with nothing to press.
+func _on_opening_finished() -> void:
+	if not run.open_first_meeting(_opening_def.goddess_line):
+		get_tree().paused = false
 
 ## What an altar calls to open its menu: the world is built before the menu, so it is looked up when used.
 func _open_altar_menu(altar: Altar) -> void:
@@ -175,6 +222,32 @@ func _prepare_restart() -> void:
 	get_tree().paused = false
 	SkillRules.reset_run()
 	Announcer.queue.clear()
+
+## Whether this launch plays the opening. In this order: never in an editor Play; `-- --skip-opening` never; never headless (nobody
+## could advance it, so even `--opening` cannot start one); `-- --opening` always, once per process (`flag_used`); else exactly
+## when the profile has not seen it.
+static func wants_opening(soul: SoulProgress, args: Array, headless: bool, editor_play: bool, flag_used := false) -> bool:
+	if editor_play or args.has("--skip-opening") or headless:
+		return false
+	if args.has("--opening") and not flag_used:
+		return true
+	return not soul.opening_seen
+
+## The opening's data, checked. Null after a push_error naming the file and the reason when it is missing, is not an OpeningDef
+## or fails the validator, so the game plays on without an opening instead of crashing.
+static func load_opening(path := OPENING_PATH) -> OpeningDef:
+	if not ResourceLoader.exists(path):
+		push_error("opening: %s was not found" % path)
+		return null
+	var res = load(path)
+	if not res is OpeningDef:
+		push_error("opening: %s is not an OpeningDef" % path)
+		return null
+	var errors := OpeningValidator.validate(res)
+	if not errors.is_empty():
+		push_error("opening: %s is malformed: %s" % [path, "; ".join(errors)])
+		return null
+	return res
 
 ## `-- --evolve` on the command line starts the run at the first body evolution.
 static func wants_evolve(args: Array) -> bool:

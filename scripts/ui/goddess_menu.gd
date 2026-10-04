@@ -27,6 +27,7 @@ var _footer := Label.new()
 func _init() -> void:
 	layer = 40
 	visible = false
+	process_mode = Node.PROCESS_MODE_ALWAYS  # the opening hands over with the tree still paused; a death leaves it unpaused, so nothing else changes
 
 func _ready() -> void:
 	var shade := ColorRect.new()
