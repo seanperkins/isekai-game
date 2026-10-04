@@ -48,6 +48,11 @@ static func mouse_button(index: int, pressed := true) -> void:
 ## transform, so this applies that transform first, as mouse_move does for a relative motion.
 static func mouse_click(game_pos: Vector2, index := MOUSE_BUTTON_LEFT) -> void:
 	var at := (Engine.get_main_loop() as SceneTree).root.get_final_transform() * game_pos
+	# A real pointer arrives before it clicks: move it there first (no travel, so the control scheme does not change).
+	var m := InputEventMouseMotion.new()
+	m.position = at
+	m.global_position = at
+	_send(m)
 	for pressed in [true, false]:
 		var b := InputEventMouseButton.new()
 		b.button_index = index as MouseButton
