@@ -419,3 +419,16 @@ func test_a_hop_onto_a_wall_then_up_goes_over_its_top_corner() -> void:
 	var events := _until(w, s, Vector2.UP, 200, func(): return s.surface_n == Vector2.UP)
 	assert_eq(events, ["convex"], "over the corner onto the block's top, not a drop (convex_nothing)")
 	assert_almost_eq(w.pos.y, -112.0, 3.0)
+
+func test_gripping_a_wall_holding_down_and_toward_it_does_not_climb() -> void:
+	var w := FakeSurfaceWorld.build_spike_terrain()
+	w.pos = Vector2(315, -60)  # a hop that gripped the block's right face
+	var s := MoveState.new()
+	var stick := Vector2(-1.0, 1.0).normalized()  # toward the wall (left) and down
+	var i := _make_input(w, stick)
+	i.wall_side = -1
+	SurfaceStep.step(s, i, spider, DT)
+	w.apply(s)
+	var y := w.pos.y
+	_run(w, s, stick, 12)
+	assert_gt(w.pos.y, y + 10.0, "the stick says down, so it goes down: an explicit vertical intent beats the climb latch")

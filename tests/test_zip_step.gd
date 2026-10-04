@@ -180,3 +180,25 @@ func test_a_zip_onto_a_wall_keeps_climbing_while_the_stick_stays_toward_it() -> 
 		SurfaceStep.step(s, i, spider, DT)
 		w.apply(s)
 	assert_lt(w.pos.y, y - 15.0, "the stick is still toward the wall: it climbs")
+
+func test_a_zip_onto_a_wall_holding_down_and_toward_it_does_not_climb() -> void:
+	var a := _at(Vector2(120, -12))
+	var w: FakeSurfaceWorld = a[0]
+	var s: MoveState = a[1]
+	var i := w.input()
+	i.aim = Vector2.RIGHT
+	i.dir = 1.0
+	i.down = 1.0
+	i.signature_pressed = true
+	ZipStep.step(s, i, spider, DT)
+	i.signature_pressed = false
+	for _k in 40:
+		ZipStep.step(s, i, spider, DT)
+		w.apply(s)
+		if s.zip_event == "grip":
+			break
+	var y := w.pos.y
+	for _k in 12:
+		SurfaceStep.step(s, i, spider, DT)
+		w.apply(s)
+	assert_gt(w.pos.y, y + 10.0, "right and down goes down the wall, not up it")

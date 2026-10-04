@@ -119,9 +119,10 @@ static func _attach(s: MoveState, i: MoveInput) -> bool:
 		s.surface_shift = travel
 	return true
 
-## A wall gripped with the stick toward it keeps climbing while the stick stays there, as walking into the wall does.
+## A wall gripped with the stick toward it keeps climbing while the stick stays there, as walking into the wall does. A stick
+## that also points up or down (0.5 or more) says which way it wants to go, so it is screen-relative and nothing latches.
 static func grip_wall(s: MoveState, n: Vector2, stick: Vector2) -> void:
-	if absf(n.x) > 0.5 and stick.x * -n.x > 0.5:
+	if absf(n.x) > 0.5 and stick.x * -n.x > 0.5 and absf(stick.y) < 0.5:
 		s.surface_latch = Vector2(signf(stick.x), 0.0)
 		s.surface_sigma = tangent(n).dot(Vector2.UP)
 
