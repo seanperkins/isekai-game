@@ -346,3 +346,50 @@ func test_down_pressed_is_an_edge() -> void:
 	j.down = 0.5
 	VerbRunner.step(light, j, biped, 1.0 / 60.0)
 	assert_false(light.down_pressed, "a light touch is under the 0.6 threshold")
+
+func test_a_drop_owns_the_body_after_the_zip_and_before_the_crawl() -> void:
+	var w := FakeSurfaceWorld.build_spike_terrain()
+	w.pos = Vector2(600, -100)
+	var s := MoveState.new()
+	var i := w.input()
+	i.on_floor = false
+	i.down = 1.0
+	VerbRunner.step(s, i, spider, 1.0 / 60.0)
+	assert_eq(s.drop_event, "start")
+	assert_eq(s.velocity, Vector2.ZERO)
+	var z := MoveState.new()
+	z.zip_dir = Vector2.RIGHT  # a zip in flight keeps the tick
+	z.zip_left = 50.0
+	VerbRunner.step(z, i, spider, 1.0 / 60.0)
+	assert_eq(z.drop_event, "")
+
+func test_the_air_verb_is_shared_by_the_zip_and_the_drop() -> void:
+	var w := FakeSurfaceWorld.build_spike_terrain()
+	w.pos = Vector2(600, -100)
+	var s := MoveState.new()
+	var i := w.input()
+	i.on_floor = false
+	i.down = 1.0
+	VerbRunner.step(s, i, spider, 1.0 / 60.0)  # a drop begins
+	i.down = 0.0
+	i.signature_pressed = true
+	i.aim = Vector2.LEFT
+	s.drop_up = 0.0  # it has let go
+	VerbRunner.step(s, i, spider, 1.0 / 60.0)
+	assert_eq(s.zip_event, "", "no zip in the same airtime")
+	s.surface_n = Vector2.UP  # it gripped a surface
+	s.zip_cooldown = 0.0
+	VerbRunner.step(s, i, spider, 1.0 / 60.0)
+	assert_eq(s.zip_event, "start", "the air verb is back after gripping a surface")
+
+func test_a_spider_without_the_drop_verb_ignores_down() -> void:
+	var bare := spider.duplicate() as MovementProfile
+	bare.verbs = PackedStringArray(["crawl"])
+	var w := FakeSurfaceWorld.build_spike_terrain()
+	w.pos = Vector2(600, -100)
+	var s := MoveState.new()
+	var i := w.input()
+	i.on_floor = false
+	i.down = 1.0
+	VerbRunner.step(s, i, bare, 1.0 / 60.0)
+	assert_eq(s.drop_event, "")
