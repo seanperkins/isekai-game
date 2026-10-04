@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Isekai Chronicles guides</title>
+<style>
+:root { --bg: #edf0f1; --surface: #ffffff; --ink: #14202a; --muted: #52626c; --line: #c8d1d6; --accent: #0b7a75; color-scheme: light dark; }
+@media (prefers-color-scheme: dark) { :root { --bg: #0f1315; --surface: #171c1f; --ink: #e7eef1; --muted: #9aa9b2; --line: #2b353a; --accent: #3cc4bb; } }
+body { margin: 0; padding: 40px 16px 56px; background: var(--bg); color: var(--ink); font: 15px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 760px; margin: 0 auto; display: grid; gap: 14px; }
+h1 { margin: 0; font-size: clamp(1.7rem, 4vw, 2.4rem); line-height: 1.1; }
+p { margin: 0; color: var(--muted); }
+a.card { display: grid; gap: 4px; padding: 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: inherit; text-decoration: none; }
+a.card:hover, a.card:focus-visible { border-color: var(--accent); }
+a.card b { font-size: 1.1rem; color: var(--accent); }
+a.card span { color: var(--muted); font-size: 0.92rem; }
+footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+<h1>Isekai Chronicles guides</h1>
+<p>Research summaries for the next areas and the species trees. They are working documents: what we have put together, not a plan.</p>
+<a class="card" href="area-design.html"><b>Area Design Principles</b><span>Level-design principles checked against the 23 rooms, then the forest, volcano, cathedral, cemetery, crypt, swamp, goblin village, demon area and traps, the proposed wiring of every area, the Super Metroid size target and the decisions still open.</span></a>
+<a class="card" href="species-evolution.html"><b>Evolution Trees</b><span>Evolution and skill-tree design for the slime, spider, goblin, undead and wolf: where the slime tree stands, shapes of a good fork, one element read five ways, four new trees, recipes and decisions.</span></a>
+<footer><a href="../">Design review</a></footer>
+</main>
+</body>
+</html>
