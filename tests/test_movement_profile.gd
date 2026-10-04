@@ -94,3 +94,7 @@ func test_the_spider_drops_with_the_spec_numbers() -> void:
 	assert_eq([sp.drop_range, sp.drop_reel, sp.drop_climb, sp.drop_air], [200.0, 90.0, 60.0, 0.5])
 	for id in ["biped", "slime", "wolf"]:
 		assert_false(MovementProfile.of(id).verbs.has("drop"), id)
+
+func test_every_species_falls_through_for_a_fifth_of_a_second() -> void:
+	for id in MovementProfile.IDS:
+		assert_eq(MovementProfile.of(id).fall_through, 0.2, id)

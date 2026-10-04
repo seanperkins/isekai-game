@@ -19,6 +19,8 @@ var clearance_above := 1000.0
 var up := 0.0
 ## The body touches a ceiling.
 var on_ceiling := false
+## The floor it stands on is a one-way ledge (a down press then drops through it).
+var on_oneway_floor := false
 ## The crawl's two world probes, filled by the caller (the sandbox now, the player later), both measured from the body's
 ## centre with its current box. `sweep(motion: Vector2) -> Dictionary` is `{}` when the box can move that far, else
 ## `{"travel": Vector2, "normal": Vector2}` for the first hard solid it meets. `ray(from: Vector2, to: Vector2, hard_only:
@@ -47,6 +49,7 @@ func copy() -> MoveInput:
 	c.wall_side = wall_side
 	c.up = up
 	c.on_ceiling = on_ceiling
+	c.on_oneway_floor = on_oneway_floor
 	c.sweep = sweep
 	c.ray = ray
 	c.cast = cast

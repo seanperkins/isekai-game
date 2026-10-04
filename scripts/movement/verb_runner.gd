@@ -14,6 +14,10 @@ const STAND_RISE := 14.0
 static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float, speed_scale := 1.0, jump_boost := 1.0) -> void:
 	s.down_pressed = i.down >= SPREAD_DOWN and s.down_prev < SPREAD_DOWN  # a press: the edge, not a held direction
 	s.down_prev = i.down
+	if s.down_pressed and (i.on_oneway_floor or (s.surface_n == Vector2.UP and s.surface_oneway)):
+		s.fall_through = p.fall_through  # down on a one-way ledge drops through it (every species)
+	else:
+		s.fall_through = maxf(0.0, s.fall_through - dt)
 	if i.dir != 0.0:
 		s.facing = 1 if i.dir > 0.0 else -1
 	_tick_cooldowns(s, dt)
@@ -47,7 +51,7 @@ static func is_flat(s: MoveState, p: MovementProfile) -> bool:
 static func _ooze(s: MoveState, i: MoveInput, p: MovementProfile) -> void:
 	if not p.verbs.has("ooze"):
 		return
-	var want := i.on_floor and i.down >= SPREAD_DOWN and not i.jump_pressed
+	var want := i.on_floor and i.down >= SPREAD_DOWN and not i.jump_pressed and s.fall_through <= 0.0
 	if want:
 		s.spread = true
 	elif s.spread and i.clearance_above >= STAND_RISE:
@@ -92,7 +96,7 @@ static func _can_begin(row: BurstDef, s: MoveState, i: MoveInput) -> bool:
 		"signature":
 			return i.signature_pressed
 		"down_run":
-			return i.on_floor and i.down >= SPREAD_DOWN and absf(s.velocity.x) >= row.min_start_speed
+			return i.on_floor and i.down >= SPREAD_DOWN and absf(s.velocity.x) >= row.min_start_speed and s.fall_through <= 0.0
 	return false
 
 static func _begin(row: BurstDef, s: MoveState, i: MoveInput) -> void:

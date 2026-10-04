@@ -72,6 +72,9 @@ const IDS := ["biped", "slime", "wolf", "spider"]
 @export var drop_reel := 90.0
 @export var drop_climb := 60.0
 @export var drop_air := 0.5
+## How long (s) a press of down on a one-way ledge makes the caller ignore one-way ledges, so the body drops through: long
+## enough to clear the ledge's margin, short enough to land on the next floor.
+@export var fall_through := 0.2
 ## The extra verbs this species has ("ooze"), and its burst rows (BurstDef: Tackle, the puddle slide, later roll and pounce).
 @export var verbs := PackedStringArray()
 @export var bursts: Array = []

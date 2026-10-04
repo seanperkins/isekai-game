@@ -393,3 +393,64 @@ func test_a_spider_without_the_drop_verb_ignores_down() -> void:
 	i.down = 1.0
 	VerbRunner.step(s, i, bare, 1.0 / 60.0)
 	assert_eq(s.drop_event, "")
+
+## An input standing on a one-way ledge (or a hard floor) with `down` as given.
+func _ledge_input(down: float, oneway := true) -> MoveInput:
+	var i := MoveInput.new()
+	i.on_floor = true
+	i.on_oneway_floor = oneway
+	i.down = down
+	return i
+
+func test_a_press_of_down_on_a_one_way_ledge_starts_a_fall_through() -> void:
+	for id in MovementProfile.IDS:
+		var p := MovementProfile.of(id)
+		var s := MoveState.new()
+		VerbRunner.step(s, _ledge_input(1.0), p, 1.0 / 60.0)
+		assert_eq(s.fall_through, 0.2, id)
+		for _k in 13:
+			VerbRunner.step(s, _ledge_input(1.0), p, 1.0 / 60.0)
+		assert_lt(s.fall_through, 0.001, "%s: it runs out after 0.2 s" % id)
+
+func test_a_held_down_does_not_drop() -> void:
+	for id in MovementProfile.IDS:
+		var p := MovementProfile.of(id)
+		var s := MoveState.new()
+		s.down_prev = 1.0  # down was already held as it landed on the ledge
+		VerbRunner.step(s, _ledge_input(1.0), p, 1.0 / 60.0)
+		assert_eq(s.fall_through, 0.0, "%s: landing with down held" % id)
+		VerbRunner.step(s, _ledge_input(0.0), p, 1.0 / 60.0)
+		VerbRunner.step(s, _ledge_input(1.0), p, 1.0 / 60.0)
+		assert_eq(s.fall_through, 0.2, "%s: released and pressed again" % id)
+		for _k in 20:
+			VerbRunner.step(s, _ledge_input(1.0), p, 1.0 / 60.0)
+		assert_lt(s.fall_through, 0.001, "%s: and still held it does not start again" % id)
+
+func test_a_hard_floor_and_the_air_do_not_drop() -> void:
+	for id in MovementProfile.IDS:
+		var p := MovementProfile.of(id)
+		var hard := MoveState.new()
+		VerbRunner.step(hard, _ledge_input(1.0, false), p, 1.0 / 60.0)
+		assert_eq(hard.fall_through, 0.0, "%s on a hard floor" % id)
+		var air := MoveState.new()
+		var i := _ledge_input(1.0)
+		i.on_floor = false
+		i.on_oneway_floor = false
+		VerbRunner.step(air, i, p, 1.0 / 60.0)
+		assert_eq(air.fall_through, 0.0, "%s in the air" % id)
+
+func test_the_slime_does_not_spread_or_slide_on_the_dropping_press() -> void:
+	var s := MoveState.new()
+	s.velocity.x = 120.0
+	var i := _ledge_input(1.0)
+	i.dir = 1.0
+	VerbRunner.step(s, i, slime, 1.0 / 60.0)
+	assert_false(s.spread, "no flattening on the press that drops through")
+	assert_ne(s.verb, "puddle")
+	var hard := MoveState.new()
+	hard.velocity.x = 120.0
+	var j := _ledge_input(1.0, false)
+	j.dir = 1.0
+	VerbRunner.step(hard, j, slime, 1.0 / 60.0)
+	assert_true(hard.spread, "on a hard floor it spreads as before")
+	assert_eq(hard.verb, "puddle")

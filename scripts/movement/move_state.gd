@@ -77,3 +77,5 @@ var drop_up := 0.0
 var drop_vx := 0.0
 var drop_target := Vector2.ZERO
 var drop_event := ""
+## Seconds left in which the caller ignores one-way ledges: a press of down on one starts it (VerbRunner), every species.
+var fall_through := 0.0
