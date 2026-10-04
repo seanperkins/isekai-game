@@ -9,7 +9,11 @@ const LEDGES := [Rect2(400, -40, 80, 40), Rect2(520, -60, 80, 60), Rect2(640, -1
 const FLOOR := Rect2(0, 0, 1400, 40)
 ## Walls at both ends, so holding a direction stops at the end of the floor instead of running off it.
 const WALLS := [Rect2(-40, -400, 40, 440), Rect2(1400, -400, 40, 440)]
+## A low tunnel: a 12 px gap above the floor, so only a flat slime fits.
+const TUNNEL := Rect2(900, -52, 240, 40)
 const START := Vector2(100, 0)
+## The sprite's tint while a verb runs.
+const VERB_TINT := Color(1.5, 1.3, 0.7)
 ## The stage-4 jump_height (185%) as a launch boost: rise scales with it squared.
 const BOOST_JUMP_HEIGHT := 1.85
 ## How long the slime's landing frame shows (the player's LAND_SQUASH_SECONDS).
@@ -25,6 +29,8 @@ var boosted := false
 
 var _spring := SquashSpring.new()
 var _rect: ColorRect
+var _shape: CollisionShape2D
+var _box: RectangleShape2D
 var _sprite: Sprite2D
 var _sheet: SpriteSheet
 var _animator: SlimeAnimator
@@ -47,12 +53,15 @@ func _ready() -> void:
 		_block(r)
 	for r in WALLS:
 		_block(r)
+	_block(TUNNEL)
 	body = CharacterBody2D.new()
-	var shape := CollisionShape2D.new()
-	var box := RectangleShape2D.new()
-	box.size = BodyConfig.size()
-	shape.shape = box
-	body.add_child(shape)
+	body.name = "Body"
+	_shape = CollisionShape2D.new()
+	_shape.name = "Shape"
+	_box = RectangleShape2D.new()
+	_box.size = BodyConfig.size()
+	_shape.shape = _box
+	body.add_child(_shape)
 	body.position = START + Vector2(0, -BodyConfig.BOTTOM)
 	add_child(body)
 	_rect = ColorRect.new()
@@ -126,7 +135,9 @@ func _physics_process(delta: float) -> void:
 	var i := _read_input()
 	var was_on_floor := body.is_on_floor()
 	i.on_floor = was_on_floor
-	GroundAirStep.step(state, i, profile, delta, 1.0, sqrt(BOOST_JUMP_HEIGHT) if boosted else 1.0)
+	i.clearance_above = _clearance()
+	VerbRunner.step(state, i, profile, delta, 1.0, sqrt(BOOST_JUMP_HEIGHT) if boosted else 1.0)
+	_apply_box()
 	if state.launched != "":
 		_in_jump = true  # the take-off height is the position before this frame's move, as MovementSim measures it
 		_takeoff_y = body.global_position.y
@@ -158,16 +169,31 @@ func _read_input() -> MoveInput:
 		i.dir = scripted.dir
 		i.jump_pressed = scripted.jump_pressed
 		i.jump_held = scripted.jump_held
+		i.down = scripted.down
+		i.signature_pressed = scripted.signature_pressed
 		scripted.jump_pressed = false
+		scripted.signature_pressed = false
 		return i
 	i.dir = Input.get_axis("move_left", "move_right")
 	i.jump_pressed = Input.is_action_just_pressed("jump")
 	i.jump_held = Input.is_action_pressed("jump")
+	i.down = Input.get_action_strength("aim_down")
+	i.signature_pressed = Input.is_action_just_pressed("tackle")
 	return i
+
+## Free px above the body: 0 when it could not rise STAND_RISE (a low ceiling), else plenty.
+func _clearance() -> float:
+	return 0.0 if body.test_move(body.global_transform, Vector2(0.0, -VerbRunner.STAND_RISE)) else 1000.0
+
+## The collision box: flat while spread or sliding, its bottom always on the floor.
+func _apply_box() -> void:
+	var size := BodyConfig.spread_size() if VerbRunner.is_flat(state, profile) else BodyConfig.size()
+	_box.size = size
+	_shape.position.y = BodyConfig.BOTTOM - size.y / 2.0
 
 func _draw_body(delta: float) -> void:
 	if _sheet != null:
-		_clip = SpeciesLook.clip_for(profile.id, body.is_on_floor(), state.velocity.y, state.velocity.x, _land_timer)
+		_clip = SpeciesLook.clip_for(profile.id, body.is_on_floor(), state.velocity.y, state.velocity.x, _land_timer, state.verb, VerbRunner.is_flat(state, profile))
 		_animator.play(_clip)
 		_animator.advance(delta)
 		var frame := _animator.frame()
@@ -178,8 +204,12 @@ func _draw_body(delta: float) -> void:
 	else:
 		_rect.scale = Vector2.ONE
 		_rect.position = body.position + Vector2(-_rect.size.x / 2.0, BodyConfig.BOTTOM - _rect.size.y)
-	_label.text = "%s%s   speed %d   boost %s   last jump: rise %.1f px, air %.2f s\n1 biped   2 slime   3 wolf   4 spider   B boost" % [
-		profile.id, " (placeholder, no art yet)" if _sheet == null else "", int(absf(body.velocity.x)), "on" if boosted else "off", _last["rise"], _last["airtime"]]
+	var tint := VERB_TINT if state.verb != "" else Color.WHITE
+	_sprite.modulate = tint
+	_rect.modulate = tint
+	var doing := state.verb if state.verb != "" else ("flat" if state.spread else "")
+	_label.text = "%s%s   speed %d   boost %s   verb: %s   last jump: rise %.1f px, air %.2f s\n1 biped   2 slime   3 wolf   4 spider   B boost   J tackle   S down (flatten, slide)" % [
+		profile.id, " (placeholder, no art yet)" if _sheet == null else "", int(absf(body.velocity.x)), "on" if boosted else "off", doing, _last["rise"], _last["airtime"]]
 
 func _block(r: Rect2) -> void:
 	var b := StaticBody2D.new()
