@@ -31,11 +31,12 @@ static func clips_for(species: String) -> Dictionary:
 	return all if key == "" else all.get(key, {})
 
 ## The clip for a body that is on the floor or not, moving at `vx` and falling at `vy`, `land_timer` seconds after
-## landing. "" when the species has no look.
-static func clip_for(species: String, on_floor: bool, vy: float, vx: float, land_timer: float) -> String:
+## landing, running burst `verb` ("tackle", "puddle") and `flat` (spread or sliding). Only the slime has poses for the
+## verbs so far. "" when the species has no look.
+static func clip_for(species: String, on_floor: bool, vy: float, vx: float, land_timer: float, verb := "", flat := false) -> String:
 	match species:
 		"slime":
-			return SlimeState.pick(false, false, false, false, false, false, on_floor, vy, land_timer, vx)
+			return SlimeState.pick(false, false, false, false, verb == "tackle", flat, on_floor, vy, land_timer, vx)
 		"spider":
 			if not on_floor:
 				return "drop"

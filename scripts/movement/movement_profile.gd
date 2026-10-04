@@ -36,6 +36,9 @@ const IDS := ["biped", "slime", "wolf", "spider"]
 @export var buffer := 0.1
 ## A buffered jump that fires after at least 0.12 s of air launches this much higher (rise, so speed x sqrt(1 + it)).
 @export var rebound_rise := 0.0
+## The extra verbs this species has ("ooze"), and its burst rows (BurstDef: Tackle, the puddle slide, later roll and pounce).
+@export var verbs := PackedStringArray()
+@export var bursts: Array = []
 
 ## The profile with this id, or null for an unknown one (never loads a path that does not exist).
 static func of(profile_id: String) -> MovementProfile:

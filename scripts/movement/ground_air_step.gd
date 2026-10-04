@@ -11,7 +11,8 @@ const REBOUND_MIN_AIR := 0.12
 static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float, speed_scale := 1.0, jump_boost := 1.0) -> void:
 	s.launched = ""
 	_timers(s, i, p, dt)
-	_horizontal(s, i, p, dt, speed_scale)
+	if s.verb == "":  # a burst owns the horizontal velocity
+		_horizontal(s, i, p, dt, speed_scale)
 	_gravity(s, i, p, dt)
 	_jump(s, i, p, jump_boost)
 	_release(s, i, p)

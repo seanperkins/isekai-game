@@ -39,3 +39,8 @@ func test_every_clip_it_names_exists_in_the_data() -> void:
 					for land in [0.0, 0.1]:
 						var clip := SpeciesLook.clip_for(id, on_floor, vy, vx, land)
 						assert_true(clips.has(clip), "%s %s" % [id, clip])
+
+func test_the_slime_shows_its_tackle_and_flat_poses_and_others_ignore_them() -> void:
+	assert_eq(SpeciesLook.clip_for("slime", true, 0.0, 100.0, 0.0, "tackle", false), "tackle")
+	assert_eq(SpeciesLook.clip_for("slime", true, 0.0, 0.0, 0.0, "", true), "spread")
+	assert_eq(SpeciesLook.clip_for("spider", true, 0.0, 0.0, 0.0, "tackle", true), "hang")
