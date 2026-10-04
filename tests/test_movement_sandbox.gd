@@ -55,3 +55,21 @@ func test_the_wolf_outruns_the_biped() -> void:
 		await get_tree().physics_frame
 		top = maxf(top, absf(sb.body.velocity.x))
 	assert_lt(top, 140.5)
+
+func test_the_body_cannot_run_off_either_end_of_the_floor() -> void:
+	sb.scripted.dir = -1.0
+	sb.set_profile("wolf")
+	await _frames(150)
+	assert_true(sb.body.is_on_floor(), "stopped by the left wall")
+	assert_gte(sb.body.global_position.x, 0.0)
+	sb.body.global_position = Vector2(1350.0, -12.0)
+	sb.scripted.dir = 1.0
+	await _frames(150)
+	assert_true(sb.body.is_on_floor(), "stopped by the right wall")
+	assert_lte(sb.body.global_position.x, 1400.0)
+
+func test_the_camera_follows_the_body_along_the_floor() -> void:
+	sb.body.global_position = Vector2(1000.0, -12.0)
+	await _frames(3)
+	var cam := sb.get_node("Camera") as Camera2D
+	assert_almost_eq(cam.global_position.x, 1000.0, 1.0)

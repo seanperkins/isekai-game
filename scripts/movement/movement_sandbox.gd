@@ -7,6 +7,8 @@ extends Node2D
 
 const LEDGES := [Rect2(400, -40, 80, 40), Rect2(520, -60, 80, 60), Rect2(640, -100, 80, 100)]
 const FLOOR := Rect2(0, 0, 1400, 40)
+## Walls at both ends, so holding a direction stops at the end of the floor instead of running off it.
+const WALLS := [Rect2(-40, -400, 40, 440), Rect2(1400, -400, 40, 440)]
 const START := Vector2(100, 0)
 ## The stage-4 jump_height (185%) as a launch boost: rise scales with it squared.
 const BOOST_JUMP_HEIGHT := 1.85
@@ -21,6 +23,7 @@ var boosted := false
 
 var _spring := SquashSpring.new()
 var _rect: ColorRect
+var _cam: Camera2D
 var _label: Label
 var _last := {"rise": 0.0, "airtime": 0.0}
 var _in_jump := false
@@ -33,6 +36,8 @@ func _ready() -> void:
 	set_profile("slime")
 	_block(FLOOR)
 	for r in LEDGES:
+		_block(r)
+	for r in WALLS:
 		_block(r)
 	body = CharacterBody2D.new()
 	var shape := CollisionShape2D.new()
@@ -47,9 +52,10 @@ func _ready() -> void:
 	_rect.pivot_offset = Vector2(_rect.size.x / 2.0, _rect.size.y)
 	_rect.color = Color(0.45, 0.85, 0.5)
 	add_child(_rect)
-	var cam := Camera2D.new()
-	cam.position = Vector2(360, -130)
-	add_child(cam)
+	_cam = Camera2D.new()
+	_cam.name = "Camera"
+	_cam.position = Vector2(START.x, -130)
+	add_child(_cam)
 	var layer := CanvasLayer.new()
 	_label = Label.new()
 	_label.position = Vector2(8, 8)
@@ -106,6 +112,7 @@ func _physics_process(delta: float) -> void:
 	if not was_on_floor and body.is_on_floor():
 		_spring.land(fall_speed)
 	_spring.update(state.velocity.y, delta)
+	_cam.position.x = clampf(body.position.x, 320.0, FLOOR.size.x - 320.0)
 	_draw_body()
 
 func _read_input() -> MoveInput:
