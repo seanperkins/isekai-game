@@ -52,8 +52,11 @@ func test_timed_rebounds_chain_thirty_then_sixty_percent_and_a_landing_without_a
 		GroundAirStep.step(s, MoveInput.new(), slime, 1.0 / 60.0)
 		assert_almost_eq(s.launch_speed, 328.5 * expect, 0.01)
 		assert_eq(s.launched, "rebound")
-	s.air_time = 0.5  # a landing with no press
+	s.air_time = 0.5  # a landing with no press: the chain holds through the rebound grace, then resets
 	GroundAirStep.step(s, MoveInput.new(), slime, 1.0 / 60.0)
+	assert_eq(s.chain, 3, "still inside the grace")
+	for _k in 6:
+		GroundAirStep.step(s, MoveInput.new(), slime, 1.0 / 60.0)
 	assert_eq(s.chain, 0)
 	s.air_time = 0.5
 	s.buffer = 0.05

@@ -20,6 +20,8 @@ var launched := ""
 var last_vy := 0.0
 ## Consecutive timed rebounds (a press at landing); a landing without one resets it.
 var chain := 0
+## Seconds left in which a floor press still counts as the last hard landing's timed rebound.
+var rebound_left := 0.0
 ## The way the body faces (1 right, -1 left): the last direction pressed.
 var facing := 1
 ## The slime is flat (Ooze): half speed, the low box.

@@ -24,6 +24,11 @@ static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float, spee
 static func _timers(s: MoveState, i: MoveInput, p: MovementProfile, dt: float) -> void:
 	s.coyote = p.coyote if i.on_floor else maxf(0.0, s.coyote - dt)
 	s.buffer = p.buffer if i.jump_pressed else maxf(0.0, s.buffer - dt)
+	var grace := s.rebound_left > 0.0
+	s.rebound_left = maxf(0.0, s.rebound_left - dt)
+	if grace and (s.rebound_left <= 1e-6 or not i.on_floor):
+		s.rebound_left = 0.0
+		s.chain = 0  # the grace ran out, or the body left the floor, with no timed rebound
 
 ## Toward `dir * top`, braking or bleeding to rest when there is no input or it opposes the velocity (accelerating the
 ## other way then starts from rest on the next tick). A zero speed stat roots the body.
@@ -64,11 +69,15 @@ static func _gravity(s: MoveState, i: MoveInput, p: MovementProfile, dt: float) 
 		g *= p.release_factor
 	s.velocity.y += g * dt
 
-## A live buffer launches from the floor or inside the coyote window; one launch per press. On a landing (the floor after
-## at least REBOUND_MIN_AIR of air) a press is a timed rebound, which chains; with no press, a hard enough landing with jump
-## held bounces instead. A landing that is not a timed rebound ends the chain.
+## A live buffer launches from the floor or inside the coyote window; one launch per press. A press on a landing (the floor
+## after at least REBOUND_MIN_AIR of air) or inside the profile's rebound grace after one is a timed rebound, which chains;
+## with no press, a hard enough landing with jump held bounces instead. The chain ends when a landing, or its grace, passes
+## with no timed rebound.
 static func _jump(s: MoveState, i: MoveInput, p: MovementProfile, jump_boost: float) -> void:
-	var landing := i.on_floor and s.air_time >= REBOUND_MIN_AIR
+	var fresh := i.on_floor and s.air_time >= REBOUND_MIN_AIR
+	if fresh and p.rebound_rise > 0.0:
+		s.rebound_left = p.rebound_grace
+	var landing := fresh or (i.on_floor and s.rebound_left > 0.0)
 	if s.buffer > 0.0 and (i.on_floor or s.coyote > 0.0):
 		s.launch_speed = p.jump_velocity * jump_boost
 		s.launched = "ground" if i.on_floor else "coyote"
@@ -81,7 +90,8 @@ static func _jump(s: MoveState, i: MoveInput, p: MovementProfile, jump_boost: fl
 		s.jumping = true
 		s.buffer = 0.0
 		s.coyote = 0.0
-	elif landing and p.bounce_keep > 0.0 and i.jump_held and s.last_vy >= p.bounce_min_impact:
+		s.rebound_left = 0.0
+	elif fresh and p.bounce_keep > 0.0 and i.jump_held and s.last_vy >= p.bounce_min_impact:
 		# The slime falls with fall_mult times gravity, so its impact speed is sqrt(fall_mult) above the speed it launched
 		# at; dividing it out makes each bounce 0.85 times the last launch speed, never more than the base jump.
 		s.launch_speed = minf(s.last_vy * p.bounce_keep / sqrt(p.fall_mult), p.jump_velocity * jump_boost)
@@ -90,7 +100,8 @@ static func _jump(s: MoveState, i: MoveInput, p: MovementProfile, jump_boost: fl
 		s.jumping = true
 		s.buffer = 0.0
 		s.coyote = 0.0  # the floor tick just refilled it; a bounce must not leave a free mid-air jump behind
-	if i.on_floor and s.air_time > 0.0 and s.launched != "rebound":
+		s.rebound_left = 0.0
+	if i.on_floor and s.air_time > 0.0 and s.launched != "rebound" and s.rebound_left <= 0.0:
 		s.chain = 0  # any landing without a timed rebound ends the chain, including a flight too short to qualify
 
 ## Jump released while rising from a jump (never on the launch tick). CUT caps the rise speed once and never raises it;

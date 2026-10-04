@@ -38,6 +38,8 @@ const IDS := ["biped", "slime", "wolf", "spider"]
 ## (rise, so speed x sqrt(1 + it)), up to rebound_cap in total (0 caps the chain at one link).
 @export var rebound_rise := 0.0
 @export var rebound_cap := 0.0
+## A press this many seconds after a hard landing still counts as that landing's timed rebound (0 for none).
+@export var rebound_grace := 0.0
 ## Hold bounce: landing with jump held and an impact of at least bounce_min_impact relaunches at bounce_keep times the
 ## last launch speed (0 for none).
 @export var bounce_keep := 0.0
