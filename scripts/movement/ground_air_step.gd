@@ -90,8 +90,8 @@ static func _jump(s: MoveState, i: MoveInput, p: MovementProfile, jump_boost: fl
 		s.jumping = true
 		s.buffer = 0.0
 		s.coyote = 0.0  # the floor tick just refilled it; a bounce must not leave a free mid-air jump behind
-	if landing and s.launched != "rebound":
-		s.chain = 0
+	if i.on_floor and s.air_time > 0.0 and s.launched != "rebound":
+		s.chain = 0  # any landing without a timed rebound ends the chain, including a flight too short to qualify
 
 ## Jump released while rising from a jump (never on the launch tick). CUT caps the rise speed once and never raises it;
 ## SOFT already did its work in the gravity step. The rise ends at the apex or on the floor.

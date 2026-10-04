@@ -118,3 +118,14 @@ func test_air_time_and_the_rebound_come_from_a_real_flight() -> void:
 
 func test_the_spider_has_no_variable_jump() -> void:
 	assert_almost_eq(MovementSim.flat_jump(spider, 1.0, 0.0)["rise"], MovementSim.flat_jump(spider)["rise"], 0.01)
+
+func test_a_short_landing_without_a_press_still_resets_the_chain() -> void:
+	var s := MoveState.new()
+	s.chain = 1
+	s.air_time = 0.1  # a flight under the 0.12 s rebound minimum
+	GroundAirStep.step(s, MoveInput.new(), slime, 1.0 / 60.0)
+	assert_eq(s.chain, 0)
+	s.air_time = 0.5
+	s.buffer = 0.05
+	GroundAirStep.step(s, MoveInput.new(), slime, 1.0 / 60.0)
+	assert_almost_eq(s.launch_speed, 328.5 * sqrt(1.3), 0.01, "the next timed rebound starts the chain over")
