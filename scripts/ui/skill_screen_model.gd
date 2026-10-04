@@ -174,7 +174,7 @@ static func tree_card(rules, node: Dictionary, defs: Dictionary, forms: Dictiona
 		lines.append(short_line(rules, d.id))
 	if node.has("hint"):
 		lines.append(node["hint"])
-	if node.has("condition"):
+	if node.get("condition", "") != "":
 		lines.append("How: " + node["condition"])
 	if d.source == "evolution" and defs.has(d.replaces):
 		lines.append("Evolves from " + defs[d.replaces].display_name)

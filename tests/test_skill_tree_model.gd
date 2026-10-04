@@ -317,3 +317,8 @@ func test_a_ready_card_names_the_price_what_is_short_and_its_base() -> void:
 	assert_true(card["lines"].has("Evolve for water 2 — you hold 1 water"))
 	assert_true(card["lines"].has("Needs 1 more water"))
 	assert_true(card["lines"].has("Evolves from Hydraulic Propulsion"))
+
+func test_a_power_with_no_unlock_condition_has_no_how_line() -> void:
+	var node: Dictionary = _build()["nodes"]["appraisal"]
+	var card := SkillScreenModel.tree_card(rules, node, by_id, {}, ActiveSlots.new())
+	assert_false(card["lines"].any(func(l): return String(l).begins_with("How:")), "the starting power has nothing to do to earn it: %s" % str(card["lines"]))
