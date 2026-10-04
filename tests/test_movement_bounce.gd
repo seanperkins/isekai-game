@@ -73,3 +73,20 @@ func test_the_timed_chain_tops_out_near_one_point_six_times_the_base_rise() -> v
 		if sim.on_floor:
 			break
 	assert_between(rise / base, 1.5, 1.7)
+
+func test_a_jump_pressed_just_after_a_bounce_is_not_a_free_mid_air_jump() -> void:
+	for delay in [1, 3, 6]:
+		var sim := MovementSim.new(slime)
+		sim.pos.y = -300.0
+		sim.on_floor = false
+		var bounced := false
+		for _k in 200:
+			sim.tick(0.0, false, true)
+			if sim.state.launched == "bounce":
+				bounced = true
+				break
+		assert_true(bounced, "it bounced")
+		for _k in delay:
+			sim.tick(0.0, false, true)
+		sim.tick(0.0, true, true)
+		assert_ne(sim.state.launched, "coyote", "a press %d ticks after the bounce" % delay)

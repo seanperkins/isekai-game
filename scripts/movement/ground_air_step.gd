@@ -88,6 +88,8 @@ static func _jump(s: MoveState, i: MoveInput, p: MovementProfile, jump_boost: fl
 		s.launched = "bounce"
 		s.velocity.y = -s.launch_speed
 		s.jumping = true
+		s.buffer = 0.0
+		s.coyote = 0.0  # the floor tick just refilled it; a bounce must not leave a free mid-air jump behind
 	if landing and s.launched != "rebound":
 		s.chain = 0
 
