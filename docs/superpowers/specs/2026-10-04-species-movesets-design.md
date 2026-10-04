@@ -16,6 +16,8 @@ Scope: movement verbs and how they tie into combat (dash, pounce, web pull). Ski
 - **Innate, except the slime's Wall Cling,** which stays earned because rooms gate on it today (as a label).
 - **Biped is the acrobat:** roll and slide are one verb in two contexts; mantle and wall jump complete it.
 - **Structure A:** verb states over the shared step, simplified per the review (below).
+- **Per-species room validation now:** the room validator and lint learn each species' kit before its verbs ship, so every verb comes with its reach model entry and lint coverage (section below).
+- **No new stuns:** this spec adds none. Non-slime species stun and eat once the items milestone exists; the pounce and zip are movement, and whether either damages is decided when they are wired into combat.
 
 ## The movesets
 
@@ -29,7 +31,7 @@ Starting values, tuned by play in the sandbox. Speeds px/s, times s.
 
 **Spider (crawler).** Signature: Web zip.
 - *Crawl.* Walks hard solid surfaces (all terrain sticky except a "slick" flag from the room editor), rounds corners, instant start and stop (0.03 and 0.02), 140. A one-way ledge is a floor on its top only: it cannot be clung to from below or the side. Input is screen-relative with a corner latch. Jump hops off along the surface normal at the base jump's strength.
-- *Web zip.* Aim as the player's cast aim (pointer, then the left stick 8-way, then facing; the right stick and Tackle share a thumb on a pad). A ray goes to the first hard solid within 160 px, or the top face of a one-way ledge when travelling down (slick surfaces refuse it). It pulls at 400; jump cancels and keeps 60% of the speed; with no solid in range it fails and costs nothing; the 0.4 cooldown runs from the end of the zip; no MP cost (the thread skills that hold enemies stay separate). Zipping to an enemy stuns it on arrival, like a tackle.
+- *Web zip.* Aim as the player's cast aim (pointer, then the left stick 8-way, then facing; the right stick and Tackle share a thumb on a pad). A ray goes to the first hard solid within 160 px, or the top face of a one-way ledge when travelling down (slick surfaces refuse it). It pulls at 400; jump cancels and keeps 60% of the speed; with no solid in range it fails and costs nothing; the 0.4 cooldown runs from the end of the zip; no MP cost (the thread skills that hold enemies stay separate). A zip anchors to terrain only.
 - *Silk drop* (built last in the spider step). A press of down in the air, with a hard solid within 200 px above, spins a thread from the first one: the fall stops, down reels at 90, up climbs at 60 (never above the anchor), air control at half; jump lets go with the current velocity and no extra impulse. One per airtime.
 
 **Biped (goblin acrobat).** Signature: Roll or slide.
@@ -39,14 +41,23 @@ Starting values, tuned by play in the sandbox. Speeds px/s, times s.
 
 **Wolf (quadruped).** Signature: Pounce.
 - *Gallop and skid turn.* The tuned profile: 0.4 to 230, brake 0.1, so a reversal is a skid then straight back up. Two gears for animation and footsteps: walk (under 150) and gallop (the sheet has no trot).
-- *Pounce.* A leap along the cast aim at 300 plus half the run speed for 0.35, **with gravity on** (so an upward pounce rises at most about 33 px, never more than the base jump), then ballistic with weak air control. A per-tick contact check along the leap bites (stuns, as a tackle) the first hostile it touches; it ends at a wall; cooldown 0.8 from the end.
+- *Pounce.* A leap along the cast aim at 300 plus half the run speed for 0.35, **with gravity on** (so an upward pounce rises at most about 33 px, never more than the base jump), then ballistic with weak air control. A per-tick contact check along the leap marks the first hostile it touches (what that does is decided at combat wiring); it ends at a wall; cooldown 0.8 from the end.
 - *Vault (automatic).* At 150 or more px/s, a hard step of 24 px or less ahead is hopped without a jump press (an impulse of `-sqrt(2 g (step + margin))` on one tick, about 0.2 s), keeping speed.
 
 ## Rules across all four
 
 - No verb locks control for more than 0.5 s (roll 0.35, mantle 0.25, pounce 0.35, zip at most 0.4, slide at most 0.5, Tackle 0.15). A verb starts only on a press or a held-direction trigger, except the passive assists: mantle, vault, and wall slide.
-- **The base jump (63 px rise at 60 Hz) is the floor for every species.** Verbs add reach, never replace it. **One air verb per airtime** (pounce, zip, roll, silk drop, mantle), reset on landing, wall contact or surface attach. Each verb's added reach has a ceiling pinned by a test; verbs may add horizontal reach freely.
+- **The base jump (63 px rise at 60 Hz) is the floor for every species.** Verbs add reach, never replace it. **One air verb per airtime** (pounce, zip, roll, silk drop, mantle), reset on landing, wall contact or surface attach. Each verb's added reach is modelled (below) and has a ceiling pinned by a test; verbs may add horizontal reach freely.
 - **Priority.** Evolve and death cancel everything. Hurt or knockback cancels any verb except inside the roll's or slide's invulnerable window. Deep water ends zip, pounce and slide. A verb cannot begin while predating, evolving, roped or in deep water. Mantle beats a wall jump on the same press; a jump pressed during a verb is buffered and fires when control returns. A roll or slide that ends under a low ceiling stays crouched until it can stand. Silk drop ends when the thread's body touches the floor.
+
+## Per-species room validation
+
+The base jump is the floor, so no room is blocked for any species; what verbs change is what is *reachable beyond the base*. The lint and validator learn that, per species, before the verbs ship.
+
+- **`ReachModel`** (a `RefCounted`, built from a species' profile and its enabled verbs): the base numbers `RoomLint` uses today (`REACH_RISE 55`, `REACH_GAP 60`, `REACH_HOP 80`) plus what the kit adds: wall-jump shaft climbing (slime with Wall Cling, biped), crawlable hard surfaces (spider), zip range (spider), mantle's 6 px (biped), and the pounce's and gallop's extra gap (wolf). Each verb contributes one entry and a test that pins it.
+- **Lint.** `RoomLint`'s reach rules take a `ReachModel` (the base one by default, so today's findings do not change). A new rule, `species_reach`, lists, per species, the ledges and exits that only its verbs reach, labeled by species, so the room editor's problems list shows what each kit opens up.
+- **Validator.** `WorldValidator` gains a per-species reachability pass: every required route (the start to the exits the main path needs) must be passable by the base reach alone; a room feature or exit reachable only through a species' verbs must carry an explicit species mark, or it is a finding. The `wall_cling` exits stay labels, now backed by the slime's model.
+- **Scope rule:** a verb is not done until its `ReachModel` entry and its lint coverage exist.
 
 ## Structure
 
@@ -60,6 +71,7 @@ Starting values, tuned by play in the sandbox. Speeds px/s, times s.
 
 ## Build order (each step playable in the sandbox)
 
+0. Reach model scaffold: `ReachModel` with the base numbers, `RoomLint` taking one (default unchanged), the `species_reach` rule and the validator's per-species pass, covering the base and the slime's Wall Cling (the only verb that exists as a gate today).
 1. Sandbox with real animated sprites and species switching. No new scripts: replace the colour rect with a sprite driven by `SlimeAnimator` (it takes any clips), `SpriteSheet.load_set` and `SlimeState.pick` for the slime, a five-line state mapping each for the spider (hang, crawl, drop) and wolf (idle, walk, charge, windup), the colour rect kept as the labeled biped, a fourth key and `spider.tres`. A missing sheet falls back to the colour rect, so the sandbox test does not depend on import. The body box stays 28x24 for all four.
 2. Slime: Burst (Tackle and puddle slide), then sticky wall and wall jump.
 3. Spider: the crawl spike and surface model first (it is the species and the biggest risk), then web zip, then silk drop.
@@ -70,7 +82,7 @@ A running verb shows its name in the sandbox HUD and tints the sprite; there is 
 
 ## Testing
 
-Pure tests per verb with hand-filled `MoveInput` (when it may start, duration, speeds, control returns within 0.5 s, a jump press during a verb fires when it ends, one air verb per airtime). The base-jump pin runs for all four species. A verb's **maximum reach** is pinned (pounce rise, zip range, mantle and wall-jump height). Every probe has a sandbox test on real collision, including one-way ledges and the 6 px margin. A start-from-real-input test per species drives the sandbox with `Input` actions, so a verb that real input cannot trigger fails (for example the puddle slide). Whether each verb feels right is Sean's call per species.
+Pure tests per verb with hand-filled `MoveInput` (when it may start, duration, speeds, control returns within 0.5 s, a jump press during a verb fires when it ends, one air verb per airtime). The base-jump pin runs for all four species. A verb's **maximum reach** is pinned (pounce rise, zip range, mantle and wall-jump height) and equals its `ReachModel` entry. Every probe has a sandbox test on real collision, including one-way ledges and the 6 px margin. A start-from-real-input test per species drives the sandbox with `Input` actions, so a verb that real input cannot trigger fails (for example the puddle slide). Whether each verb feels right is Sean's call per species.
 
 ## Constraints on the work
 
@@ -83,6 +95,4 @@ Slime: puddle slide, wall stick pose. Spider: wall and ceiling crawl, zip, idle,
 ## Known gaps and open
 
 - **Room content.** Today's 23 rooms contain no hard step of 24 px or less and no hard low ceiling, and 133 of 172 interior solids are one-way. Roll's duck, the puddle slide's tunnel, vault and mantle have little to act on until rooms are built or edited for them; the sandbox provides them for tuning.
-- **Species reach and gates.** The `wall_cling` exits are labels in the validator, not obstacles; the biped's wall jump, the spider's crawl and zip, and the pounce all reach more than the base jump, by design (the design doc's "species as runes"). Whether the validator and lint learn each species' kit is open, for the wiring plan.
-- **Stun.** Every non-slime species stuns only through its signature (pounce bite, zip-to-enemy); a roll does not. The goblin's stun for eating and fighting arrives with the items milestone. Open: what a reborn biped hits with until then.
 - From the movement-model spec, still open for the wiring plan: the slime rebound against the G5 chimney guard, the wolf's 46 px run-up audit of ledge approaches, pad-stick air momentum for the wolf, the 8 px corner correction, and the `slide_speed` stat scaling the wall slide.
