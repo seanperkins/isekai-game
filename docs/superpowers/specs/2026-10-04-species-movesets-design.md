@@ -28,7 +28,7 @@ Starting values, tuned by play in the sandbox. Speeds px/s, times s.
 - *Ooze.* Down on the floor spreads the body flat (28x10, half speed; exists in `Player`). New: while at 100 or more px/s, the raw down input at 0.6 or more starts a puddle slide (it does not need the 8-way aim snap to read exactly down). It keeps momentum (decel 150) and ends below 70 px/s (the flat-walk speed), when down is released, on leaving the floor, or after 0.5 s.
 - *Sticky wall (earned: Wall Cling, built).* Pressing into a wall while falling sticks 0.2 s at 15, then slides at 90; wall jump pushes off at 180 with the full jump speed upward (its rise equals the base jump's, pinned by a test, so the reach model reads one number), locks steering 0.15, grace 0.15 (a press up to 0.15 s before touching also counts), range 6 px. Touching a wall gives the air verb back.
 - *Wall bounce (built).* Holding jump into a wall at 100 px/s or more reflects the speed at 85%, once per contact, x only: it never launches, so it cannot climb, and it needs no Wall Cling. A press at the moment of contact is a wall jump instead.
-- *Ball and crawl (built, stand-ins).* A timed rebound, hold bounce or wall bounce shows the slime as a spinning ball for 0.3 s and drops the landing squash (a late press swaps the squash for the ball). A flat slime walking wobbles, stretching and squeezing with the distance it crawls. Both are drawn procedurally until the art exists.
+- *Ball and crawl (built, stand-ins).* A timed rebound, hold bounce or wall bounce shows the slime as a round ball for 0.3 s, never the landing squash (a late press swaps the squash for the ball) and never stretched: the body stays a circle in the slime's own palette and only its eyes roll around it (Sean, 2026-10-04: a bouncing ball, not cone shaped). A wall bounce also ends a Tackle it interrupts. A flat slime walking wobbles, stretching and squeezing with the distance it crawls. Both are drawn procedurally (`SlimeBall`, `SpeciesLook.crawl_scale`) until the art exists.
 - *Tackle.* The dash: 340 for 0.18 s (62 px; the player's today is 260 for 0.15 s), one per airtime, with the tackle stun when wired in.
 
 **Spider (crawler).** Signature: Web zip.
@@ -92,7 +92,7 @@ Edits `scripts/movement/movement_profile.gd`, `move_input.gd`, `move_state.gd`, 
 
 ## Art needs
 
-Slime: puddle slide, wall stick pose, a ball (a round, curled frame to replace the squared and spun `fall` stand-in) and crawl frames (2 to 4 of a flat body inching forward, to replace the procedural wobble). Spider: wall and ceiling crawl, zip, idle, rise, fall (only hang, drop and crawl exist). Biped: everything. Wolf: pounce, vault, skid, trot (only idle, walk, windup, charge and rest exist). Frames follow the art pipeline (individual frames, assembled by a tool).
+Slime: puddle slide, wall stick pose, a ball (a round body frame, with the eyes as separate sprites so they can roll, to replace the procedural `SlimeBall`) and crawl frames (2 to 4 of a flat body inching forward, to replace the procedural wobble). Spider: wall and ceiling crawl, zip, idle, rise, fall (only hang, drop and crawl exist). Biped: everything. Wolf: pounce, vault, skid, trot (only idle, walk, windup, charge and rest exist). Frames follow the art pipeline (individual frames, assembled by a tool).
 
 ## Known gaps and open
 

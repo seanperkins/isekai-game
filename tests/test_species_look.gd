@@ -69,9 +69,6 @@ func test_the_slimes_clips_gain_a_ball_stand_in_without_touching_the_game_data()
 	assert_eq(SpeciesLook.clips_for("slime")["ball"]["frames"], ["fall"])
 	assert_false(SlimeAnimator.load_clips("res://data/slime_clips.json").has("ball"))
 
-func test_the_ball_is_square() -> void:
-	assert_eq(SpeciesLook.ball_scale(Vector2(42.0, 38.0)), Vector2(38.0 / 42.0, 1.0))
-
 func test_the_crawl_wobble_stretches_and_squeezes_without_changing_volume() -> void:
 	assert_eq(SpeciesLook.crawl_scale(0.0), Vector2.ONE)
 	var out := SpeciesLook.crawl_scale(PI / 2.0)

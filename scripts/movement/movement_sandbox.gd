@@ -22,9 +22,9 @@ const VERB_TINT := Color(1.5, 1.3, 0.7)
 const BOOST_JUMP_HEIGHT := 1.85
 ## How long the slime's landing frame shows (the player's LAND_SQUASH_SECONDS).
 const LAND_SECONDS := 0.12
-## How long a bounce shows as a ball, how fast the stand-in ball turns (rad/s), and how fast the crawl wobble eases in and out.
+## How long a bounce shows as a ball, how fast its eyes roll around it (rad/s), and how fast the crawl wobble eases in and out.
 const BALL_SECONDS := 0.3
-const BALL_SPIN := 12.0
+const BALL_ROLL := 10.0
 const CRAWL_EASE := 8.0
 
 ## When set, replaces the keyboard and pad. `jump_pressed` is consumed (cleared) by the next physics frame, so a test
@@ -48,6 +48,7 @@ var _land_timer := 0.0
 var _landing := false
 var _landing_speed := 0.0
 var _ball_time := 0.0
+var _ball_roll := 0.0
 var _crawl_phase := 0.0
 var _crawl_gain := 0.0
 var _cam: Camera2D
@@ -104,6 +105,7 @@ func set_profile(id: String) -> void:
 	profile = p
 	state = MoveState.new()  # no momentum or timers carry over a switch
 	_ball_time = 0.0
+	_ball_roll = 0.0
 	_landing = false
 	if body != null:
 		body.velocity = Vector2.ZERO
@@ -240,10 +242,18 @@ func _draw_body(delta: float) -> void:
 		_animator.play(_clip)
 		_animator.advance(delta)
 		var frame := _animator.frame()
-		_sprite.texture = _sheet.frame_texture(frame)
-		_sprite.scale = _look_scale(frame, delta)
+		var size := _sheet.frame_size(frame)
+		if _clip == "ball":
+			# the bouncing slime is a round ball whose eyes roll around it, drawn by SlimeBall (no frame for it yet)
+			_ball_roll += BALL_ROLL * delta
+			_sprite.texture = SlimeBall.texture(_ball_roll)
+			size = Vector2(SlimeBall.SIZE, SlimeBall.SIZE)
+		else:
+			_ball_roll = 0.0
+			_sprite.texture = _sheet.frame_texture(frame)
+		_sprite.scale = _look_scale(delta)
 		_sprite.flip_h = state.wall_side < 0 if _clip == "wall" else _facing < 0  # a wall on the left is gripped facing left
-		_sprite.position = body.position + Vector2(0.0, BodyConfig.BOTTOM - _sheet.frame_size(frame).y * _sprite.scale.y / 2.0)
+		_sprite.position = body.position + Vector2(0.0, BodyConfig.BOTTOM - size.y * _sprite.scale.y / 2.0)
 	else:
 		_rect.scale = Vector2.ONE
 		_rect.position = body.position + Vector2(-_rect.size.x / 2.0, BodyConfig.BOTTOM - _rect.size.y)
@@ -254,21 +264,15 @@ func _draw_body(delta: float) -> void:
 	_label.text = "%s%s   speed %d   boost %s   verb: %s   last jump: rise %.1f px, air %.2f s\n1 biped   2 slime   3 wolf   4 spider   B boost   J tackle   S down (flatten, slide)   at a wall: press into it to stick, jump to kick off, hold jump to bounce" % [
 		profile.id, " (placeholder, no art yet)" if _sheet == null else "", int(absf(body.velocity.x)), "on" if boosted else "off", doing, _last["rise"], _last["airtime"]]
 
-## The sprite's scale: the slime's spring, squared for the ball (which also turns), wobbling while it crawls flat.
-func _look_scale(frame: String, delta: float) -> Vector2:
-	if profile.id != "slime":
+## The sprite's scale: the slime's spring, wobbling while it crawls flat. The ball is never squashed, stretched or wobbled.
+func _look_scale(delta: float) -> Vector2:
+	if profile.id != "slime" or _clip == "ball":
 		return Vector2.ONE
 	var out := _spring.sprite_scale()
 	var crawling := state.spread and state.verb == "" and absf(state.velocity.x) > SpeciesLook.MOVING_SPEED
 	_crawl_phase = SpeciesLook.crawl_advance(_crawl_phase, state.velocity.x if crawling else 0.0, delta)
 	_crawl_gain = move_toward(_crawl_gain, 1.0 if crawling else 0.0, delta * CRAWL_EASE)
-	out *= Vector2.ONE.lerp(SpeciesLook.crawl_scale(_crawl_phase), _crawl_gain)
-	if _clip == "ball":
-		out *= SpeciesLook.ball_scale(_sheet.frame_size(frame))
-		_sprite.rotation += BALL_SPIN * _facing * delta
-	else:
-		_sprite.rotation = 0.0
-	return out
+	return out * Vector2.ONE.lerp(SpeciesLook.crawl_scale(_crawl_phase), _crawl_gain)
 
 func _block(r: Rect2) -> void:
 	var b := StaticBody2D.new()
