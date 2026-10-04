@@ -726,7 +726,10 @@ func _build_tree_card() -> void:
 		if y > 290.0:
 			break
 		var l := _label(_detail, line, Vector2(DETAIL_X, y), Vector2(190, 34), FONT_SMALL, Color.WHITE, true)
-		y += maxf(12.0, l.get_line_count() * 11.0 + 3.0)
+		var lines := float(l.get_line_count())
+		var h := maxf(12.0, lines * l.get_line_height() + (lines - 1.0) * l.get_theme_constant("line_spacing"))  # its own height, line spacing included
+		l.size = Vector2(190, h)
+		y += h + 3.0
 
 # --- helpers --------------------------------------------------------------
 

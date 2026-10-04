@@ -233,3 +233,20 @@ func test_a_form_card_shows_its_stage_blurb_and_grants_and_a_form_stub_shows_no_
 	card = "\n".join(screen.detail_texts())
 	assert_string_contains(card, "???")
 	assert_false(card.contains(player.forms["vast"].display_name))
+
+func test_a_card_clips_no_wrapped_line_and_stacks_no_two_labels() -> void:
+	_discover_all()
+	_open_tree()
+	for id in ["sticky_thread", "spore_cloud", "hydraulic_propulsion", "greater_slime", "slime"]:
+		screen.select_tree_node(id)
+		assert_eq(screen.selected_id(), id, "a node of a fresh soul's tree")
+		var labels: Array = screen._detail.find_children("*", "Label", true, false)
+		for l in labels:
+			var lab := l as Label
+			if lab.autowrap_mode != TextServer.AUTOWRAP_OFF:
+				var n := float(lab.get_line_count())
+				var needed := n * lab.get_line_height() + (n - 1.0) * lab.get_theme_constant("line_spacing")  # the renderer adds line_spacing between lines
+				assert_lte(needed, lab.size.y + 0.5, "%s: '%s' is clipped" % [id, lab.text])
+		for i in labels.size():
+			for j in range(i + 1, labels.size()):
+				assert_false(labels[i].get_rect().intersects(labels[j].get_rect()), "%s: '%s' overlaps '%s'" % [id, labels[i].text, labels[j].text])
