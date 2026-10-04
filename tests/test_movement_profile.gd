@@ -71,3 +71,19 @@ func test_copy_keeps_the_probes_and_up() -> void:
 	assert_eq(c.sweep, i.sweep)
 	assert_eq(c.ray, i.ray)
 	assert_eq([c.up, c.on_ceiling], [0.7, true])
+
+func test_the_spider_zips_with_the_spec_numbers() -> void:
+	var sp := MovementProfile.of("spider")
+	assert_true(sp.verbs.has("zip"))
+	assert_true(sp.verbs.has("crawl"))
+	assert_eq([sp.zip_range, sp.zip_speed, sp.zip_keep, sp.zip_cooldown], [160.0, 400.0, 0.6, 0.4])
+	for id in ["biped", "slime", "wolf"]:
+		assert_false(MovementProfile.of(id).verbs.has("zip"), id)
+
+func test_copy_keeps_aim_and_cast() -> void:
+	var i := MoveInput.new()
+	i.aim = Vector2(0.5, -1.0)
+	i.cast = func(_a: Vector2, _b: Vector2, _o: bool) -> Dictionary: return {}
+	var c := i.copy()
+	assert_eq(c.aim, i.aim)
+	assert_eq(c.cast, i.cast)

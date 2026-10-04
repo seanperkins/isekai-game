@@ -59,3 +59,11 @@ var surface_lock := 0.0
 var surface_oneway := false
 var surface_shift := Vector2.ZERO
 var surface_event := ""
+## The web zip (ZipStep). `zip_dir` is the unit direction while a thread pulls (ZERO otherwise), `zip_left` the px of thread
+## still to pull, `zip_cooldown` the seconds before the next, `zip_target` the anchor as an offset from the body's centre at
+## the start (for the caller's thread), `zip_event` what happened this tick ("", "start", "fizzle", "grip", "arrive", "cancel").
+var zip_dir := Vector2.ZERO
+var zip_left := 0.0
+var zip_cooldown := 0.0
+var zip_target := Vector2.ZERO
+var zip_event := ""

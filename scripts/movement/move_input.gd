@@ -26,6 +26,12 @@ var on_ceiling := false
 ## species that crawls is not on a surface and uses the ground step.
 var sweep := Callable()
 var ray := Callable()
+## The web zip's cast, filled by the caller too: `cast(from: Vector2, to: Vector2, include_oneway: bool) -> Dictionary` is
+## `{}` when the segment meets nothing, else `{"point": Vector2, "normal": Vector2, "oneway": bool}` for the first hard solid
+## along it (offsets from the body's centre); a one-way ledge's top counts only when `include_oneway` and the segment goes down.
+var cast := Callable()
+## The resolved cast aim (a free pointer direction, else the left stick 8-way), ZERO for none; the zip then uses the facing.
+var aim := Vector2.ZERO
 ## Which side a wall is on within 6 px (-1 left, 1 right, 0 none): the caller probes it; the step ignores it on the floor.
 var wall_side := 0
 
@@ -43,6 +49,8 @@ func copy() -> MoveInput:
 	c.on_ceiling = on_ceiling
 	c.sweep = sweep
 	c.ray = ray
+	c.cast = cast
+	c.aim = aim
 	return c
 
 ## The stick as a vector (x right, y down): `dir` across and `down` minus `up` along.

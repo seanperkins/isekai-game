@@ -41,6 +41,7 @@ func input() -> MoveInput:
 	var i := MoveInput.new()
 	i.sweep = _sweep
 	i.ray = _ray
+	i.cast = _cast
 	return i
 
 ## Moves the body by what the step asked for and takes the surface it chose.
@@ -140,3 +141,53 @@ static func _segment(a: Vector2, b: Vector2, r: Rect2) -> float:
 		if t0 > t1:
 			return -1.0
 	return t0
+
+func _cast(from: Vector2, to: Vector2, include_oneway: bool) -> Dictionary:
+	var a := pos + from
+	var b := pos + to
+	var best := {}
+	var best_t := 2.0
+	for r in _hard:
+		var hit := _enter_segment(a, b, r)
+		if not hit.is_empty() and hit["t"] < best_t:
+			best_t = hit["t"]
+			best = {"point": a + (b - a) * best_t - pos, "normal": hit["normal"], "oneway": false}
+	if include_oneway and to.y > from.y:
+		for r in _oneway:
+			var hit := _enter_segment(a, b, r)
+			if not hit.is_empty() and hit["t"] < best_t:
+				best_t = hit["t"]
+				best = {"point": a + (b - a) * best_t - pos, "normal": hit["normal"], "oneway": true}
+	return best
+
+## Where the segment a to b first meets the closed rectangle r: `{"t": 0..1, "normal": Vector2}` (the face it enters through).
+static func _enter_segment(a: Vector2, b: Vector2, r: Rect2) -> Dictionary:
+	var t0 := 0.0
+	var t1 := 1.0
+	var normal := Vector2.ZERO
+	for axis in 2:
+		var lo: float = r.position[axis]
+		var hi: float = r.end[axis]
+		var p: float = a[axis]
+		var d: float = b[axis] - p
+		if absf(d) < EPS:
+			if p < lo or p > hi:
+				return {}
+			continue
+		var ta := (lo - p) / d
+		var tb := (hi - p) / d
+		var face := -1.0 if d > 0.0 else 1.0
+		if ta > tb:
+			var tmp := ta
+			ta = tb
+			tb = tmp
+		if ta > t0:
+			t0 = ta
+			normal = Vector2.ZERO
+			normal[axis] = face
+		t1 = minf(t1, tb)
+		if t0 > t1:
+			return {}
+	if normal == Vector2.ZERO:
+		return {}  # it starts inside the rectangle
+	return {"t": t0, "normal": normal}

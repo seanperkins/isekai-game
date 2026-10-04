@@ -60,6 +60,12 @@ const IDS := ["biped", "slime", "wolf", "spider"]
 ## every few frames), and how long after a corner pressing back the way it came goes back round it.
 @export var corner_lock := 0.10
 @export var crawl_back_window := 0.6
+## Web zip: the farthest solid it will fire at (px), the pull speed (px/s), the fraction of that speed a jump cancel keeps, and
+## the seconds before the next zip (from the end of the last).
+@export var zip_range := 160.0
+@export var zip_speed := 400.0
+@export var zip_keep := 0.6
+@export var zip_cooldown := 0.4
 ## The extra verbs this species has ("ooze"), and its burst rows (BurstDef: Tackle, the puddle slide, later roll and pounce).
 @export var verbs := PackedStringArray()
 @export var bursts: Array = []
