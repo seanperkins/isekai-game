@@ -34,8 +34,8 @@ func test_the_slime_wall_numbers() -> void:
 	assert_eq([s.wall_jump_push, s.wall_lock, s.wall_grace], [180.0, 0.15, 0.15])
 	assert_eq([s.wall_bounce_keep, s.wall_bounce_min], [0.85, 100.0])
 
-func test_the_other_species_have_no_wall_kit() -> void:
-	for id in ["biped", "wolf", "spider"]:
+func test_the_wolf_and_spider_have_no_wall_kit() -> void:
+	for id in ["wolf", "spider"]:
 		var p := MovementProfile.of(id)
 		assert_false(p.verbs.has("wall"), id)
 		assert_eq(p.wall_bounce_keep, 0.0, id)
@@ -137,3 +137,8 @@ func test_the_biped_rolls_and_slides_with_the_spec_numbers() -> void:
 	for id in ["slime", "spider", "wolf"]:
 		for r in MovementProfile.of(id).bursts:
 			assert_false((r as BurstDef).id in ["roll", "slide"], id)
+
+func test_the_biped_has_the_wall_verb_with_the_spec_numbers() -> void:
+	var biped := MovementProfile.of("biped")
+	assert_true(biped.verbs.has("wall"))
+	assert_eq([biped.wall_stick_time, biped.wall_slide_speed, biped.wall_jump_push, biped.wall_lock, biped.wall_grace, biped.wall_bounce_keep], [0.0, 90.0, 180.0, 0.15, 0.1, 0.0])

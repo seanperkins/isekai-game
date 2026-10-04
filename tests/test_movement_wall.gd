@@ -4,10 +4,12 @@ const DT := 1.0 / 60.0
 
 var slime: MovementProfile
 var wolf: MovementProfile
+var biped: MovementProfile
 
 func before_each() -> void:
 	slime = MovementProfile.of("slime")
 	wolf = MovementProfile.of("wolf")
+	biped = MovementProfile.of("biped")
 
 ## An airborne input with a wall on `side` (-1 left, 1 right, 0 none) and the stick at `dir`.
 func _wall(side: int, dir := 0.0) -> MoveInput:
@@ -73,11 +75,11 @@ func test_a_species_without_the_wall_verb_ignores_walls() -> void:
 	assert_false(s.clinging)
 
 ## A slime stuck to a wall on `side` (the stick pressed into it), ready to jump.
-func _stuck(side: int) -> MoveState:
+func _stuck(side: int, p := slime) -> MoveState:
 	var s := MoveState.new()
 	s.velocity.y = 300.0
 	for _k in 3:
-		_step(s, _wall(side, -float(side)))
+		_step(s, _wall(side, -float(side)), p)
 	return s
 
 func _press(side: int, held := true) -> MoveInput:
@@ -254,3 +256,52 @@ func test_the_bounce_does_not_need_the_wall_verb() -> void:
 	assert_true(s.wall_bounced)
 	assert_almost_eq(s.velocity.x, -119.0, 0.01)
 	assert_false(s.clinging)
+
+# --- the biped's wall slide and wall jump ---
+
+func test_a_falling_biped_pressing_into_a_wall_slides_at_90_at_once() -> void:
+	var s := MoveState.new()
+	s.velocity.y = 300.0
+	_step(s, _wall(-1, -1.0), biped)
+	assert_eq(s.velocity.y, 90.0, "no stick: the first tick is already the slide")
+	assert_true(s.clinging)
+	for _k in 10:
+		_step(s, _wall(-1, -1.0), biped)
+		assert_eq(s.velocity.y, 90.0)
+
+func test_the_biped_wall_jump_kicks_off_at_180_and_rises_as_far_as_the_base_jump() -> void:
+	var s := _stuck(-1, biped)
+	_step(s, _press(-1), biped)
+	assert_eq(s.velocity, Vector2(180.0, -330.0))
+	assert_eq(s.launched, "wall")
+	var y := s.velocity.y * DT
+	var top := y
+	var air := _wall(0)
+	air.jump_held = true
+	for k in 120:
+		_step(s, air, biped)
+		if k < 8:
+			assert_eq(s.velocity.x, 180.0, "locked for nine ticks, tick %d" % (k + 2))
+		y += s.velocity.y * DT
+		top = minf(top, y)
+	var flat: Dictionary = MovementSim.flat_jump(biped, 1.0, 100.0, 0.0)
+	assert_almost_eq(-top, flat["rise"], 0.001)
+
+func test_the_biped_wall_grace_is_a_tenth_of_a_second() -> void:
+	for quiet in [4, 7]:
+		var s := _stuck(-1, biped)
+		for _k in quiet:
+			_step(s, _wall(0), biped)
+		var press := _wall(0)
+		press.jump_pressed = true
+		_step(s, press, biped)
+		assert_eq(s.launched, "wall" if quiet == 4 else "", "%d ticks off the wall" % quiet)
+
+func test_the_biped_does_not_bounce_off_a_wall() -> void:
+	var s := MoveState.new()
+	s.velocity = Vector2(140.0, 0.0)
+	var free := _wall(0, 1.0)
+	free.jump_held = true
+	_step(s, free, biped)
+	_step(s, _hit(1), biped)
+	assert_false(s.wall_bounced)
