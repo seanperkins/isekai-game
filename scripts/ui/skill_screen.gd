@@ -42,11 +42,6 @@ const COL_PIP_OFF := Color(0.2, 0.28, 0.42)
 const FONT_BIG := 12
 const FONT_MAIN := 10
 const FONT_SMALL := 8
-## Stick navigation: one row per push; held past NAV_DELAY it repeats every NAV_REPEAT.
-const NAV_THRESHOLD := 0.5
-const NAV_DELAY := 0.35
-const NAV_REPEAT := 0.12
-
 var _player: Player
 var _rules
 var _compendium: CompendiumModel
@@ -65,12 +60,11 @@ var _stats := Control.new()
 var _tab_labels: Array = []
 var _tab_strip := Control.new()
 var _hint := Label.new()
-var _nav_dir := Vector2i.ZERO
+var _nav := NavStep.new()
 var _world: World
 var _progress
 var _map_found := ""
 var _map_rooms := 0
-var _nav_timer := 0.0
 ## The Settings menu: a child drawn over the tabs (see open_settings()).
 var settings_menu := SettingsMenu.new()
 ## Tree tab: the selected node and the zoom are the only state that outlives a rebuild; the camera follows from them.
@@ -280,28 +274,13 @@ func hint_text() -> String:
 func detail_texts() -> Array:
 	return _detail.find_children("*", "Label", true, false).map(func(l): return l.text)
 
-## The selection step for a stick reading: the dominant axis past NAV_THRESHOLD as a four-way direction (Vector2i.UP is up),
-## edge-triggered, then slow repeats while held. Stick motion arrives as a stream of events, so reading it per event skipped rows.
+## The selection step for a stick reading (see NavStep).
 func nav_step(stick: Vector2, delta: float) -> Vector2i:
-	var dir := Vector2i.ZERO
-	if maxf(absf(stick.x), absf(stick.y)) >= NAV_THRESHOLD:
-		dir = Vector2i(int(signf(stick.x)), 0) if absf(stick.x) > absf(stick.y) else Vector2i(0, int(signf(stick.y)))
-	if dir == Vector2i.ZERO:
-		_nav_dir = Vector2i.ZERO
-		return dir
-	if dir != _nav_dir:
-		_nav_dir = dir
-		_nav_timer = NAV_DELAY
-		return dir
-	_nav_timer -= delta
-	if _nav_timer <= 0.0:
-		_nav_timer = NAV_REPEAT
-		return dir
-	return Vector2i.ZERO
+	return _nav.step(stick, delta)
 
 func _process(delta: float) -> void:
 	if not visible:
-		_nav_dir = Vector2i.ZERO
+		_nav.reset()
 		return
 	var stick := Controls.last_stick
 	if settings_menu.is_open() or tab() != "tree":
