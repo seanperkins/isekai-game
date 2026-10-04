@@ -70,13 +70,12 @@ func test_an_exits_shortcut_lands_on_both_halves_in_one_step() -> void:
 
 func test_a_pools_level_and_skills_merge_into_the_kit_and_keep_the_rest() -> void:
 	var sel := _feature_sel("G1", "rebirth_pool")
-	var affinity: Dictionary = model.rooms["G1"].features[sel["index"]]["kit"]["affinity"].duplicate()
-	assert_false(affinity.is_empty(), "G1 ships an affinity")
+	model.rooms["G1"].features[sel["index"]]["kit"]["note"] = "keep me"
 	assert_eq(model.set_field(sel, "kit_level", 5), "")
 	assert_eq(model.get_field(sel, "kit_level"), 5)
 	assert_eq(model.set_field(sel, "kit_skills", ["leap"]), "")
 	assert_eq(model.get_field(sel, "kit_skills"), ["leap"])
-	assert_eq(model.rooms["G1"].features[sel["index"]]["kit"].get("affinity", {}), affinity, "G1's affinity survives every edit")
+	assert_eq(model.rooms["G1"].features[sel["index"]]["kit"].get("note", ""), "keep me", "another kit key survives every edit")
 	assert_eq(model.set_field(sel, "kit_level", 0), "", "0 unsets the level")
 	assert_false(model.rooms["G1"].features[sel["index"]]["kit"].has("level"))
 
