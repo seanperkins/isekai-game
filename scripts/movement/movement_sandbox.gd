@@ -190,7 +190,7 @@ func _physics_process(delta: float) -> void:
 	i.clearance_above = _clearance()
 	i.wall_side = _wall_side(i.dir)
 	i.on_ceiling = body.is_on_ceiling()
-	i.on_oneway_floor = was_on_floor and _ray(Vector2.ZERO, Vector2(0.0, BodyConfig.BOTTOM + 3.0), false) == SurfaceStep.ONEWAY
+	i.on_oneway_floor = was_on_floor and _stands_on_oneway()
 	if profile.verbs.has("crawl"):
 		i.sweep = _sweep
 		i.ray = _ray
@@ -318,6 +318,17 @@ func _update_thread(delta: float) -> void:
 	_thread.visible = _thread_alpha > 0.0
 	_thread.modulate.a = _thread_alpha
 	_thread.points = PackedVector2Array([body.global_position - _thread_dir * 8.0, _thread_anchor])
+
+## Whether the floor the body just slid on is a one-way ledge: its contacts, not a ray under the centre, so a body standing on a
+## ledge's edge (the centre past the end, the box still on it) counts.
+func _stands_on_oneway() -> bool:
+	if not body.is_on_floor():
+		return false
+	for k in body.get_slide_collision_count():
+		var col := body.get_slide_collision(k)
+		if col.get_normal().dot(Vector2.UP) > 0.7 and (col.get_collider() as CollisionObject2D).collision_layer == 2:
+			return true
+	return false
 
 ## The crawl's forward probe: how far the box can move along `motion` and what it meets.
 func _sweep(motion: Vector2) -> Dictionary:

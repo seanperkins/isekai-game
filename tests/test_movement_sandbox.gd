@@ -777,3 +777,15 @@ func test_a_jump_up_through_the_ledge_from_below_still_lands_on_it() -> void:
 	sb.scripted.jump_held = false
 	await _frames(90)
 	assert_almost_eq(sb.body.global_position.y, -62.0, 3.0, "up through it and onto its top")
+
+func test_a_body_standing_on_the_edge_of_a_ledge_still_drops_through() -> void:
+	for x in [156.0, 264.0]:  # the centre is 4 px past the ledge's end (x 160 to 260) and the 28 px box still rests on it
+		for id in ["biped", "slime", "wolf"]:
+			sb.scripted.down = 0.0
+			sb.set_profile(id)
+			sb.body.global_position = Vector2(x, -64.0)
+			await _frames(12)
+			assert_almost_eq(sb.body.global_position.y, -62.0, 3.0, "%s stands on the ledge's edge at x %s" % [id, x])
+			sb.scripted.down = 1.0
+			await _frames(60)
+			assert_almost_eq(sb.body.global_position.y, -12.0, 2.0, "%s dropped through from x %s" % [id, x])
