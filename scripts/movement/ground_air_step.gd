@@ -17,6 +17,7 @@ static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float, spee
 	_jump(s, i, p, jump_boost)
 	_release(s, i, p)
 	s.air_time = 0.0 if i.on_floor else s.air_time + dt
+	s.last_vy = s.velocity.y
 
 ## Every timer is decremented and clamped to zero first and tested `> 0.0` after, so floating-point residue is never
 ## treated as time left. The floor refills coyote time; a press fills the buffer.
@@ -63,19 +64,32 @@ static func _gravity(s: MoveState, i: MoveInput, p: MovementProfile, dt: float) 
 		g *= p.release_factor
 	s.velocity.y += g * dt
 
-## A live buffer launches from the floor or inside the coyote window; one launch per press.
+## A live buffer launches from the floor or inside the coyote window; one launch per press. On a landing (the floor after
+## at least REBOUND_MIN_AIR of air) a press is a timed rebound, which chains; with no press, a hard enough landing with jump
+## held bounces instead. A landing that is not a timed rebound ends the chain.
 static func _jump(s: MoveState, i: MoveInput, p: MovementProfile, jump_boost: float) -> void:
-	if s.buffer <= 0.0 or not (i.on_floor or s.coyote > 0.0):
-		return
-	s.launch_speed = p.jump_velocity * jump_boost
-	s.launched = "ground" if i.on_floor else "coyote"
-	if i.on_floor and s.air_time >= REBOUND_MIN_AIR and p.rebound_rise > 0.0:
-		s.launch_speed *= sqrt(1.0 + p.rebound_rise)
-		s.launched = "rebound"
-	s.velocity.y = -s.launch_speed
-	s.jumping = true
-	s.buffer = 0.0
-	s.coyote = 0.0
+	var landing := i.on_floor and s.air_time >= REBOUND_MIN_AIR
+	if s.buffer > 0.0 and (i.on_floor or s.coyote > 0.0):
+		s.launch_speed = p.jump_velocity * jump_boost
+		s.launched = "ground" if i.on_floor else "coyote"
+		if landing and p.rebound_rise > 0.0:
+			s.chain += 1
+			var cap := p.rebound_cap if p.rebound_cap > 0.0 else p.rebound_rise
+			s.launch_speed *= sqrt(1.0 + minf(p.rebound_rise * s.chain, cap))
+			s.launched = "rebound"
+		s.velocity.y = -s.launch_speed
+		s.jumping = true
+		s.buffer = 0.0
+		s.coyote = 0.0
+	elif landing and p.bounce_keep > 0.0 and i.jump_held and s.last_vy >= p.bounce_min_impact:
+		# The slime falls with fall_mult times gravity, so its impact speed is sqrt(fall_mult) above the speed it launched
+		# at; dividing it out makes each bounce 0.85 times the last launch speed, never more than the base jump.
+		s.launch_speed = minf(s.last_vy * p.bounce_keep / sqrt(p.fall_mult), p.jump_velocity * jump_boost)
+		s.launched = "bounce"
+		s.velocity.y = -s.launch_speed
+		s.jumping = true
+	if landing and s.launched != "rebound":
+		s.chain = 0
 
 ## Jump released while rising from a jump (never on the launch tick). CUT caps the rise speed once and never raises it;
 ## SOFT already did its work in the gravity step. The rise ends at the apex or on the floor.

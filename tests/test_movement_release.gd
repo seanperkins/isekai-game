@@ -44,14 +44,21 @@ func test_tap_hops_are_rounded_per_profile_and_never_a_no_op() -> void:
 		assert_between(tap, row[1], row[2], row[0].id)
 		assert_lt(tap, 0.6 * MovementSim.flat_jump(row[0])["rise"], row[0].id)
 
-func test_a_buffered_landing_rebounds_only_for_the_slime_and_never_compounds() -> void:
+func test_timed_rebounds_chain_thirty_then_sixty_percent_and_a_landing_without_a_press_resets() -> void:
 	var s := MoveState.new()
-	for _n in 2:  # one state across two landings
+	for expect in [sqrt(1.3), sqrt(1.6), sqrt(1.6)]:  # the third is the cap
 		s.air_time = 0.5
 		s.buffer = 0.05
 		GroundAirStep.step(s, MoveInput.new(), slime, 1.0 / 60.0)
-		assert_almost_eq(s.launch_speed, 328.5 * sqrt(1.15), 0.01)
+		assert_almost_eq(s.launch_speed, 328.5 * expect, 0.01)
 		assert_eq(s.launched, "rebound")
+	s.air_time = 0.5  # a landing with no press
+	GroundAirStep.step(s, MoveInput.new(), slime, 1.0 / 60.0)
+	assert_eq(s.chain, 0)
+	s.air_time = 0.5
+	s.buffer = 0.05
+	GroundAirStep.step(s, MoveInput.new(), slime, 1.0 / 60.0)
+	assert_almost_eq(s.launch_speed, 328.5 * sqrt(1.3), 0.01)
 	var w := MoveState.new()
 	w.air_time = 0.5
 	w.buffer = 0.05
@@ -59,11 +66,11 @@ func test_a_buffered_landing_rebounds_only_for_the_slime_and_never_compounds() -
 	assert_eq(w.launch_speed, 403.0)
 	assert_eq(w.launched, "ground")
 
-func test_the_rebound_raises_the_apex_by_about_fifteen_percent() -> void:
+func test_the_rebound_raises_the_apex_by_about_thirty_percent() -> void:
 	var ratio: float = MovementSim.flat_jump(slime, 1.0, 100.0, -1.0, true)["rise"] / MovementSim.flat_jump(slime)["rise"]
-	assert_between(ratio, 1.10, 1.20)
+	assert_between(ratio, 1.22, 1.38)
 
-func test_no_rebound_from_a_grounded_press_a_coyote_jump_or_a_held_button() -> void:
+func test_no_rebound_from_a_grounded_press_a_coyote_jump_or_a_held_button_without_a_hard_landing() -> void:
 	var i := MoveInput.new()
 	i.jump_pressed = true
 	i.jump_held = true
