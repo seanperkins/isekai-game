@@ -113,7 +113,7 @@ Skills and creatures name essences, the validator reads `Essences.ALL`, and a do
 - Modify: `scripts/core/essences.gd`
 - Modify: `tools/build_content.gd` (by script), regenerate `data/skills/*.tres` and `data/creatures/*.tres`
 - Modify tools: `tools/aim_shots.gd`, `tools/vfx_shots.gd`, `tools/evolution_shots.gd`
-- Test: `tests/test_constants.gd`, `tests/test_content.gd`, `tests/test_grotto_data.gd`, `tests/test_flooded_data.gd`, `tests/test_deep_data.gd`, `tests/test_deep_slice.gd`, `tests/test_pale_moth.gd`, `tests/test_skill_screen.gd`, `tests/test_status_text.gd`, `tests/test_scripted_run.gd`, `tests/test_web_tether.gd`, `tests/test_form_effects.gd`, `tests/test_player.gd`, `tests/test_skill_caps.gd`, `tests/test_form_tab.gd`
+- Test: `tests/test_constants.gd`, `tests/test_content.gd`, `tests/test_grotto_data.gd`, `tests/test_flooded_data.gd`, `tests/test_deep_data.gd`, `tests/test_deep_slice.gd`, `tests/test_pale_moth.gd`, `tests/test_skill_screen.gd`, `tests/test_status_text.gd`, `tests/test_scripted_run.gd`, `tests/test_web_tether.gd`, `tests/test_form_effects.gd`, `tests/test_player.gd`, `tests/test_skill_caps.gd`, `tests/test_form_tab.gd`, and the Hydraulic sweep: `tests/test_pointer_aim.gd`, `tests/test_mana.gd`, `tests/test_player_skill_set.gd`, `tests/test_water_stream.gd`, `tests/test_evolution_screen.gd`, `tests/test_aiming.gd`, `tests/test_channel.gd`, `tests/test_menu_input.gd`, `tests/test_levels.gd`
 
 **Interfaces:**
 - Consumes: `TestDefs.satisfy` (Task 1); `DefValidator` (checks `essence` tags against `Essences.ALL` and `source` tags against `Sources.ALL`).
@@ -218,8 +218,8 @@ func _eat_everything() -> void:
 ```
 
 Tests that unlock a real power with an old shorthand switch to `TestDefs.satisfy`:
-- `tests/test_skill_screen.gd`: the three `_emit("absorbed", {"essence": "poison"}, 4)` lines become `TestDefs.satisfy(rules, "poison_breath")`; in `test_screen_lists_navigates_and_assigns` the two lines `_emit("absorbed", {"essence": "water"}, 4)` and `_emit("absorbed", {"essence": "poison"}, 4)` become `TestDefs.satisfy(rules, "hydraulic_propulsion")` and `TestDefs.satisfy(rules, "poison_breath")`.
-- `tests/test_status_text.gd`: in `test_self_lines_show_stats_skills_essences_and_bands_without_numbers` replace the `for i in 3:` loop of `absorbed sound` with `TestDefs.satisfy(rules, "echolocation")` and the assertion `assert_string_contains(text, "sound 3")` with `assert_string_contains(text, "air 6")`; in `test_slot_and_ticker_text` replace the `for i in 4:` loop of `absorbed water` with `TestDefs.satisfy(rules, "hydraulic_propulsion")`.
+- `tests/test_skill_screen.gd`: the three `_emit("absorbed", {"essence": "poison"}, 4)` lines become `TestDefs.satisfy(rules, "poison_breath")` (the water lines are handled by the sweep below).
+- `tests/test_status_text.gd`: in `test_self_lines_show_stats_skills_essences_and_bands_without_numbers` replace the `for i in 3:` loop of `absorbed sound` with `TestDefs.satisfy(rules, "echolocation")` and the assertion `assert_string_contains(text, "sound 3")` with `assert_string_contains(text, "air 6")`; the water loop in `test_slot_and_ticker_text` is handled by the sweep below.
 - `tests/test_web_tether.gd` (the `for i in 3:` loop that absorbs `thread`): replace the loop with `TestDefs.satisfy(rules, "sticky_thread")  # Sticky Thread, slot 0`.
 - `tests/test_form_effects.gd` (`test_sonar_reads_echolocation_one_level_stronger`): replace the `for i in 3:` loop of `absorbed sound` with `TestDefs.satisfy(rules, "echolocation")`.
 - `tests/test_scripted_run.gd`: change the bat eat to `_eat("bat", {"air": 2})           # Echolocation (air 6) on the 3rd bat`; the water pool loop to `for i in 4:` with the comment `# Hydraulic Propulsion (8 water)`; the toad eat to `_eat("toad", {"water": 2, "dark": 1})`; the spider eat to `_eat("spider", {"water": 1, "dark": 1})`.
@@ -367,9 +367,38 @@ with
 				root.get_node("SkillRules").handle_event("predated", {"source": "spider", "kind": "creature"})
 ```
 
+Hydraulic Propulsion now needs `water ≥ 8` (it was 4), so every test that fed four water to unlock it feeds the skill's own unlock instead. Sweep them mechanically from the repo root:
+
+````bash
+python3 - <<'PYEOF'
+import re
+
+files = [
+    "test_pointer_aim", "test_mana", "test_skill_screen", "test_status_text", "test_player_skill_set", "test_water_stream",
+    "test_evolution_screen", "test_aiming", "test_player", "test_channel", "test_menu_input", "test_levels",
+]
+block = re.compile(r'^(?P<ind>[ \t]*)for i in 4:\n(?P=ind)\trules\.handle_event\("absorbed", \{"essence": "water"[^}]*\}\)(?P<c>[^\n]*)\n', re.M)
+emit = re.compile(r'^(?P<ind>[ \t]*)_emit\("absorbed", \{"essence": "water"[^}]*\}, 4\)(?P<c>[^\n]*)\n', re.M)
+total = 0
+for name in files:
+    path = f"tests/{name}.gd"
+    text = open(path).read()
+    text, n1 = block.subn(lambda m: f'{m.group("ind")}TestDefs.satisfy(rules, "hydraulic_propulsion"){m.group("c")}\n', text)
+    text, n2 = emit.subn(lambda m: f'{m.group("ind")}TestDefs.satisfy(rules, "hydraulic_propulsion"){m.group("c")}\n', text)
+    assert n1 + n2 > 0, path
+    total += n1 + n2
+    open(path, "w").write(text)
+    print(f"{name}: {n1 + n2}")
+print("replaced", total)
+PYEOF
+git diff --stat tests | tail -3
+````
+
+Expected: every listed file reports at least one replacement (about 22 in all). Then check that nothing still feeds four water to unlock Hydraulic Propulsion: `grep -nE 'for i in 4:' <the twelve files>`; a remaining `for i in 4:` that does something else is fine (read it, do not replace it blindly). The fixtures that build their own defs with their own thresholds (`test_accessors`, `test_skill_rules_levels`, `test_compendium_model`, `test_evolution_branches`) are deliberately not in the list.
+
 - [ ] **Step 4: Run the affected tests**
 
-Run each: `tools/run_tests.sh test_constants`, `test_content`, `test_grotto_data`, `test_flooded_data`, `test_deep_data`, `test_deep_slice`, `test_pale_moth`, `test_skill_screen`, `test_status_text`, `test_scripted_run`, `test_web_tether`, `test_form_effects`, `test_player`, `test_skill_caps`, `test_form_tab`, `test_def_validator`
+Run each: `tools/run_tests.sh test_constants`, `test_content`, `test_grotto_data`, `test_flooded_data`, `test_deep_data`, `test_deep_slice`, `test_pale_moth`, `test_skill_screen`, `test_status_text`, `test_scripted_run`, `test_web_tether`, `test_form_effects`, `test_player`, `test_skill_caps`, `test_form_tab`, `test_def_validator`, `test_pointer_aim`, `test_mana`, `test_player_skill_set`, `test_water_stream`, `test_evolution`, `test_aiming`, `test_channel`, `test_menu_input`, `test_levels`
 Expected: `PASS: <n> tests` for each. If `test_skill_screen` fails on the `condition_text` expectation for Echolocation (`Absorb sound essence ×3`), leave it: Task 3 rewrites that line with the new wording; note it and continue (or change the expected text to `Absorb air essence ×6` now).
 
 - [ ] **Step 5: Closing grep and the full suite**
