@@ -11,6 +11,9 @@ const PANE_NAMES := ["WHERE", "WHO", "HEAD START"]
 const PANEL_X := [32.0, 232.0, 432.0]
 const COL_TEXT := Color(0.75, 0.9, 1.0)
 const COL_DIM := Color(0.5, 0.5, 0.6)
+## A panel draws at most this many rows (they fit the 180 px column); a longer list scrolls to keep the selected row in view.
+const MAX_ROWS := 10
+const ROWS_ABOVE := 5  # the selected row sits this far down the window until the list's ends
 
 var _model: GoddessModel
 var _line := ""
@@ -91,6 +94,15 @@ func panel_rows(pane: int) -> Array:
 			out.append(mark + str(row["name"]))
 	return out
 
+## The rows actually drawn: all of them when they fit, else a window of MAX_ROWS that follows the selected row (so a head start
+## list of every owned power never runs off the screen, and the selected row is always visible).
+func shown_rows(pane: int) -> Array:
+	var rows := panel_rows(pane)
+	if rows.size() <= MAX_ROWS:
+		return rows
+	var start := clampi(_model.row(pane) - ROWS_ABOVE, 0, rows.size() - MAX_ROWS)
+	return rows.slice(start, start + MAX_ROWS)
+
 func footer_text() -> String:
 	if _model == null:
 		return ""
@@ -169,7 +181,7 @@ func _redraw() -> void:
 		_style(_headers[pane], COL_TEXT if focused else COL_DIM)
 		for child in _columns[pane].get_children():
 			child.queue_free()
-		for text in panel_rows(pane):
+		for text in shown_rows(pane):
 			var label := Label.new()
 			label.text = text
 			_style(label, COL_TEXT if focused else COL_DIM)

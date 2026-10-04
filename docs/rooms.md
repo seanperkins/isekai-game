@@ -94,7 +94,7 @@ These are the choices in the data that a test does not catch and a casual edit w
 | C4 Glow Pool | 1x1 | rest here |
 | C5 Drop Shaft | 1x3 | a zigzag of ledges down to the floor, which opens into the Grotto (G1) at x 220-380 |
 | C6 nook | 1x1 | a quiet crystal cavern with a tablet and the switch that opens the floor down into C1 for good |
-| G1 Grotto Mouth | 2x1, cell (5, 5) | the landing under C5's floor; a ledge chain under the hole climbs back up to C5; the Grotto's rebirth pool stands a little way in, with the first real kit |
+| G1 Grotto Mouth | 2x1, cell (5, 5) | the landing under C5's floor; a ledge chain under the hole climbs back up to C5; the Grotto's rebirth pool stands a little way in (its old kit was replaced by the head start bought in the goddess's menu) |
 | G2 Spore Hall | 3x2, cell (7, 5) | the hub: two levels, the lower floor (with the hole down to G3) and an upper walkway that meets G1, with two shafts of ledges between them |
 | G3 Vine Maze | 2x2, cell (8, 7) | snakes under overhangs, crabs below; a chain under the hole up to G2's floor, and a climb to the upper level and the exit to G4 |
 | G4 Glow Pool | 1x1, cell (10, 7) | a rest with a tablet, and the way down into the Flooded Tunnels: its floor opens into F1 at x 240-400 |

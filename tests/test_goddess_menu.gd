@@ -115,6 +115,27 @@ func test_the_stick_steps_once_per_push() -> void:
 	menu._process(0.016)
 	assert_eq(menu.panel_rows(P.WHERE), ["  Cave mouth", "  Grotto", "> Flooded"], "a fresh push steps again")
 
+func test_a_long_head_start_list_scrolls_to_keep_the_selected_row_visible() -> void:
+	var powers: Array = []
+	for i in 18:
+		powers.append({"id": "p%d" % i, "name": "Power %d" % i})
+	var soul := SoulProgress.new()
+	soul.points = 99
+	var model := GoddessModel.new([{"id": "C1", "name": "Cave mouth"}], [{"id": "slime", "name": "Slime"}], powers, soul, SoulRules.new())
+	menu.open(model, "line")
+	_press(KEY_Q)  # to Head start: the level row and 18 powers, 19 rows
+	assert_eq(menu.panel_rows(P.HEAD_START).size(), 19, "the model still holds every row")
+	assert_eq(menu.shown_rows(P.HEAD_START).size(), GoddessMenu.MAX_ROWS, "a window of rows, not all 19")
+	assert_true((menu.shown_rows(P.HEAD_START)[0] as String).begins_with("> "), "it starts at the top with the level row selected")
+	for step in 19:
+		var shown := menu.shown_rows(P.HEAD_START)
+		assert_eq(shown.size(), GoddessMenu.MAX_ROWS)
+		assert_eq(shown.filter(func(t: String) -> bool: return t.begins_with("> ")).size(), 1, "the selected row is on screen at step %d" % step)
+		_press(KEY_DOWN)
+	var last := menu.shown_rows(P.HEAD_START)
+	assert_true((last[last.size() - 1] as String).contains("Power 17"), "the last power is the last row shown")
+	assert_true((last[last.size() - 1] as String).begins_with("> "), "and it is the selected one")
+
 func test_a_stick_push_navigates_through_process_and_the_event_alone_moves_nothing() -> void:
 	menu.open(_model(12, 3), "line")
 	Controls.last_stick = Vector2.ZERO
