@@ -11,6 +11,10 @@ const FLOOR := Rect2(0, 0, 1400, 40)
 const WALLS := [Rect2(-40, -400, 40, 440), Rect2(1400, -400, 40, 440)]
 ## A low tunnel: a 12 px gap above the floor, so only a flat slime fits.
 const TUNNEL := Rect2(900, -52, 240, 40)
+## A pillar 110 px from the right end wall: a shaft to climb by wall jumps.
+const SHAFT_WALL := Rect2(1260, -300, 40, 300)
+## How far from a wall (px) still counts as touching it for the wall verbs.
+const WALL_RANGE := 6.0
 const START := Vector2(100, 0)
 ## The sprite's tint while a verb runs.
 const VERB_TINT := Color(1.5, 1.3, 0.7)
@@ -18,6 +22,9 @@ const VERB_TINT := Color(1.5, 1.3, 0.7)
 const BOOST_JUMP_HEIGHT := 1.85
 ## How long the slime's landing frame shows (the player's LAND_SQUASH_SECONDS).
 const LAND_SECONDS := 0.12
+## How fast the ball's eyes roll around it (rad/s), and how fast the crawl wobble eases in and out.
+const BALL_ROLL := 10.0
+const CRAWL_EASE := 8.0
 
 ## When set, replaces the keyboard and pad. `jump_pressed` is consumed (cleared) by the next physics frame, so a test
 ## sets it once; `jump_held` stays until the test clears it.
@@ -37,6 +44,12 @@ var _animator: SlimeAnimator
 var _clip := ""
 var _facing := 1
 var _land_timer := 0.0
+var _landing := false
+var _landing_speed := 0.0
+var _ball := false
+var _ball_roll := 0.0
+var _crawl_phase := 0.0
+var _crawl_gain := 0.0
 var _cam: Camera2D
 var _label: Label
 var _last := {"rise": 0.0, "airtime": 0.0}
@@ -54,6 +67,7 @@ func _ready() -> void:
 	for r in WALLS:
 		_block(r)
 	_block(TUNNEL)
+	_block(SHAFT_WALL)
 	body = CharacterBody2D.new()
 	body.name = "Body"
 	_shape = CollisionShape2D.new()
@@ -89,6 +103,9 @@ func set_profile(id: String) -> void:
 		return
 	profile = p
 	state = MoveState.new()  # no momentum or timers carry over a switch
+	_ball = false
+	_ball_roll = 0.0
+	_landing = false
 	if body != null:
 		body.velocity = Vector2.ZERO
 	if _sprite != null:
@@ -136,8 +153,10 @@ func _physics_process(delta: float) -> void:
 	var was_on_floor := body.is_on_floor()
 	i.on_floor = was_on_floor
 	i.clearance_above = _clearance()
+	i.wall_side = _wall_side(i.dir)
 	VerbRunner.step(state, i, profile, delta, 1.0, sqrt(BOOST_JUMP_HEIGHT) if boosted else 1.0)
 	_apply_box()
+	_judge_landing()
 	if state.launched != "":
 		_in_jump = true  # the take-off height is the position before this frame's move, as MovementSim measures it
 		_takeoff_y = body.global_position.y
@@ -155,13 +174,31 @@ func _physics_process(delta: float) -> void:
 			_last = {"rise": _takeoff_y - _top_y, "airtime": _air_ticks * delta}
 	_land_timer = maxf(0.0, _land_timer - delta)
 	if not was_on_floor and body.is_on_floor():
-		_spring.land(fall_speed)
-		_land_timer = LAND_SECONDS
+		_landing = true  # judged next tick, once the step has said whether this landing bounced
+		_landing_speed = fall_speed
 	if absf(state.velocity.x) > 1.0:
 		_facing = 1 if state.velocity.x > 0.0 else -1
 	_spring.update(state.velocity.y, delta)
 	_cam.position.x = clampf(body.position.x, 320.0, FLOOR.size.x - 320.0)
 	_draw_body(delta)
+
+## A bounce (timed rebound, hold bounce, wall bounce) is a ball, not a squash: it drops any squash a landing started and
+## stays a ball, eyes rolling, until it stops being one: a landing that does not bounce again (which squashes and shows the
+## landing frame, one tick after touching down), a Tackle, a wall grip or any other launch.
+func _judge_landing() -> void:
+	if state.launched == "rebound" or state.launched == "bounce" or state.wall_bounced:
+		_ball = true
+		_spring.calm()
+		_land_timer = 0.0
+		_landing = false
+		return
+	if _landing:
+		_spring.land(_landing_speed)
+		_land_timer = LAND_SECONDS
+		_landing = false
+		_ball = false
+	if state.launched != "" or state.verb != "" or state.clinging:
+		_ball = false
 
 func _read_input() -> MoveInput:
 	var i := MoveInput.new()
@@ -181,6 +218,16 @@ func _read_input() -> MoveInput:
 	i.signature_pressed = Input.is_action_just_pressed("tackle")
 	return i
 
+## Which side a wall is on within WALL_RANGE (the side the input points to first), 0 for none or on the floor.
+func _wall_side(dir: float) -> int:
+	if body.is_on_floor():
+		return 0
+	var first := 1 if dir >= 0.0 else -1
+	for side in [first, -first]:
+		if body.test_move(body.global_transform, Vector2(side * WALL_RANGE, 0.0)):
+			return side
+	return 0
+
 ## Free px above the body: 0 when it could not rise STAND_RISE (a low ceiling), else plenty.
 func _clearance() -> float:
 	return 0.0 if body.test_move(body.global_transform, Vector2(0.0, -VerbRunner.STAND_RISE)) else 1000.0
@@ -193,23 +240,41 @@ func _apply_box() -> void:
 
 func _draw_body(delta: float) -> void:
 	if _sheet != null:
-		_clip = SpeciesLook.clip_for(profile.id, body.is_on_floor(), state.velocity.y, state.velocity.x, _land_timer, state.verb, VerbRunner.is_flat(state, profile))
+		_clip = SpeciesLook.clip_for(profile.id, body.is_on_floor(), state.velocity.y, state.velocity.x, _land_timer, state.verb, VerbRunner.is_flat(state, profile), state.clinging, _ball)
 		_animator.play(_clip)
 		_animator.advance(delta)
 		var frame := _animator.frame()
-		_sprite.texture = _sheet.frame_texture(frame)
-		_sprite.scale = _spring.sprite_scale() if profile.id == "slime" else Vector2.ONE
-		_sprite.flip_h = _facing < 0
-		_sprite.position = body.position + Vector2(0.0, BodyConfig.BOTTOM - _sheet.frame_size(frame).y * _sprite.scale.y / 2.0)
+		var size := _sheet.frame_size(frame)
+		if _clip == "ball":
+			# the bouncing slime is a round ball whose eyes roll around it, drawn by SlimeBall (no frame for it yet)
+			_ball_roll += BALL_ROLL * delta
+			_sprite.texture = SlimeBall.texture(_ball_roll)
+			size = Vector2(SlimeBall.SIZE, SlimeBall.SIZE)
+		else:
+			_ball_roll = 0.0
+			_sprite.texture = _sheet.frame_texture(frame)
+		_sprite.scale = _look_scale(delta)
+		_sprite.flip_h = state.wall_side < 0 if _clip == "wall" else _facing < 0  # a wall on the left is gripped facing left
+		_sprite.position = body.position + Vector2(0.0, BodyConfig.BOTTOM - size.y * _sprite.scale.y / 2.0)
 	else:
 		_rect.scale = Vector2.ONE
 		_rect.position = body.position + Vector2(-_rect.size.x / 2.0, BodyConfig.BOTTOM - _rect.size.y)
 	var tint := VERB_TINT if state.verb != "" else Color.WHITE
 	_sprite.modulate = tint
 	_rect.modulate = tint
-	var doing := state.verb if state.verb != "" else ("flat" if state.spread else "")
-	_label.text = "%s%s   speed %d   boost %s   verb: %s   last jump: rise %.1f px, air %.2f s\n1 biped   2 slime   3 wolf   4 spider   B boost   J tackle   S down (flatten, slide)" % [
+	var doing := state.verb if state.verb != "" else ("flat" if state.spread else ("wall" if state.clinging else ""))
+	_label.text = "%s%s   speed %d   boost %s   verb: %s   last jump: rise %.1f px, air %.2f s\n1 biped   2 slime   3 wolf   4 spider   B boost   J tackle   S down (flatten, slide)   at a wall: press into it to stick, jump to kick off, hold jump to bounce" % [
 		profile.id, " (placeholder, no art yet)" if _sheet == null else "", int(absf(body.velocity.x)), "on" if boosted else "off", doing, _last["rise"], _last["airtime"]]
+
+## The sprite's scale: the slime's spring, wobbling while it crawls flat. The ball is never squashed, stretched or wobbled.
+func _look_scale(delta: float) -> Vector2:
+	if profile.id != "slime" or _clip == "ball":
+		return Vector2.ONE
+	var out := _spring.sprite_scale()
+	var crawling := state.spread and state.verb == "" and absf(state.velocity.x) > SpeciesLook.MOVING_SPEED
+	_crawl_phase = SpeciesLook.crawl_advance(_crawl_phase, state.velocity.x if crawling else 0.0, delta)
+	_crawl_gain = move_toward(_crawl_gain, 1.0 if crawling else 0.0, delta * CRAWL_EASE)
+	return out * Vector2.ONE.lerp(SpeciesLook.crawl_scale(_crawl_phase), _crawl_gain)
 
 func _block(r: Rect2) -> void:
 	var b := StaticBody2D.new()

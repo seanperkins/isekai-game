@@ -39,3 +39,13 @@ func test_a_long_frame_and_absurd_inputs_stay_bounded_and_keep_volume() -> void:
 		assert_true(is_finite(v.x) and is_finite(v.y))
 		assert_between(v.y, 0.78 - 0.0001, 1.22 + 0.0001)
 		assert_almost_eq(v.x * v.y, 1.0, 0.000001)
+
+func test_calm_stops_a_squash() -> void:
+	var sp := SquashSpring.new()
+	sp.land(500.0)
+	sp.update(0.0, 1.0 / 60.0)
+	assert_ne(sp.sprite_scale(), Vector2.ONE)
+	sp.calm()
+	assert_eq(sp.sprite_scale(), Vector2.ONE)
+	sp.update(0.0, 1.0 / 60.0)
+	assert_eq(sp.sprite_scale(), Vector2.ONE, "and it stays calm")

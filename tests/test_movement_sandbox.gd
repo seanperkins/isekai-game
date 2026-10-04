@@ -181,3 +181,236 @@ func test_holding_jump_after_a_long_fall_bounces_several_times() -> void:
 		if sb.state.launched == "bounce":
 			bounces += 1
 	assert_between(bounces, 3, 6)
+
+func test_a_falling_slime_sticks_then_slides_down_the_left_wall() -> void:
+	sb.body.global_position = Vector2(15.0, -250.0)
+	sb.scripted.dir = -1.0
+	await _frames(8)
+	assert_lte(sb.body.velocity.y, 16.0, "stuck")
+	assert_eq(sb.clip(), "wall")
+	assert_true((sb.get_node("Sprite") as Sprite2D).flip_h, "a wall on the left is gripped facing left")
+	await _frames(25)
+	assert_almost_eq(sb.body.velocity.y, 90.0, 1.0, "sliding")
+
+func test_a_jump_from_the_wall_kicks_off_and_up() -> void:
+	sb.body.global_position = Vector2(15.0, -250.0)
+	sb.scripted.dir = -1.0
+	await _frames(12)  # long enough for the coyote time the floor left behind to run out
+	sb.scripted.jump_pressed = true
+	var launched := false
+	var best_vx := 0.0
+	var best_vy := 0.0
+	for _k in 6:
+		await get_tree().physics_frame
+		launched = launched or sb.state.launched == "wall"
+		best_vx = maxf(best_vx, sb.body.velocity.x)
+		best_vy = minf(best_vy, sb.body.velocity.y)
+	assert_true(launched)
+	assert_gt(best_vx, 100.0)
+	assert_lt(best_vy, -300.0)
+
+func test_holding_jump_into_the_wall_bounces_off_it() -> void:
+	sb.body.global_position = Vector2(80.0, -350.0)
+	sb.state.velocity.x = -140.0
+	sb.scripted.dir = -1.0
+	sb.scripted.jump_held = true
+	var bounced := false
+	for _k in 80:
+		await get_tree().physics_frame
+		if sb.state.wall_bounced:
+			bounced = true
+			break
+	assert_true(bounced, "it bounced")
+	await _frames(2)
+	assert_gt(sb.body.velocity.x, 50.0)
+	assert_ne(sb.clip(), "wall")
+
+func test_the_shaft_wall_is_solid() -> void:
+	sb.body.global_position = Vector2(1230.0, -12.0)
+	sb.scripted.dir = 1.0
+	await _frames(60)
+	assert_lt(sb.body.global_position.x, 1247.0)
+
+func _sprite() -> Sprite2D:
+	return sb.get_node("Sprite") as Sprite2D
+
+func test_a_plain_landing_still_squashes() -> void:
+	sb.body.global_position = Vector2(300.0, -150.0)
+	var low := 1.0
+	var land_seen := false
+	for _k in 60:
+		await get_tree().physics_frame
+		low = minf(low, _sprite().scale.y)
+		land_seen = land_seen or sb.clip() == "land"
+	assert_lt(low, 0.97)
+	assert_true(land_seen)
+
+func test_a_timed_rebound_lands_as_a_ball_not_a_squash() -> void:
+	sb.body.global_position = Vector2(300.0, -200.0)
+	var pressed := false
+	var launch_frame := -1
+	var low := 9.0
+	var ball_seen := false
+	var shots: Array[Image] = []
+	var round_ok := true
+	for k in 120:
+		await get_tree().physics_frame
+		if not pressed and sb.body.velocity.y > 0.0 and sb.body.global_position.y > -42.0:
+			sb.scripted.jump_pressed = true  # within 30 px of the floor and falling
+			pressed = true
+		if launch_frame < 0 and sb.state.launched == "rebound":
+			launch_frame = k
+		if launch_frame >= 0 and k - launch_frame <= 4:
+			low = minf(low, _sprite().scale.y)
+			if sb.clip() == "ball":
+				ball_seen = true
+				shots.append(_sprite().texture.get_image())
+				round_ok = round_ok and _sprite().scale == Vector2.ONE and _sprite().rotation == 0.0 \
+					and shots.back().get_size() == Vector2i(SlimeBall.SIZE, SlimeBall.SIZE)
+	assert_gte(launch_frame, 0, "it rebounded")
+	assert_true(ball_seen)
+	assert_true(round_ok, "a round ball the size of the slime, never stretched, squashed or turned")
+	assert_gte(shots.size(), 2)
+	assert_true(shots[0].get_data() != shots[shots.size() - 1].get_data(), "the eyes roll")
+	assert_gte(low, 0.999, "never squashed")
+
+func test_a_hold_bounce_is_a_ball_too() -> void:
+	sb.body.global_position = Vector2(300.0, -300.0)
+	sb.scripted.jump_held = true
+	var launch_frame := -1
+	var ball_seen := false
+	for k in 120:
+		await get_tree().physics_frame
+		if launch_frame < 0 and sb.state.launched == "bounce":
+			launch_frame = k
+		if launch_frame >= 0 and k - launch_frame <= 2 and sb.clip() == "ball":
+			ball_seen = true
+	assert_gte(launch_frame, 0)
+	assert_true(ball_seen)
+
+func test_a_late_press_swaps_the_squash_for_the_ball() -> void:
+	sb.body.global_position = Vector2(300.0, -200.0)
+	var landed := -1
+	var launch_frame := -1
+	var ball_seen := false
+	var low := 9.0
+	for k in 120:
+		await get_tree().physics_frame
+		if landed < 0 and sb.body.is_on_floor():
+			landed = k
+		if landed >= 0 and k == landed + 2:
+			sb.scripted.jump_pressed = true
+		if launch_frame < 0 and sb.state.launched == "rebound":
+			launch_frame = k
+		if launch_frame >= 0 and k - launch_frame >= 2 and k - launch_frame <= 3:
+			low = minf(low, _sprite().scale.y)
+			ball_seen = ball_seen or sb.clip() == "ball"
+	assert_gte(launch_frame, 0, "a press 2 frames after landing still rebounds")
+	assert_true(ball_seen)
+	assert_gte(low, 0.999, "the squash gave way to the ball")
+
+func test_the_ball_ends_when_the_bouncing_does() -> void:
+	sb.body.global_position = Vector2(300.0, -300.0)
+	sb.scripted.jump_held = true
+	await _frames(40)
+	sb.scripted.jump_held = false
+	await _frames(250)
+	assert_eq(sb.clip(), "idle")
+	assert_ne(_sprite().texture.get_size(), Vector2(SlimeBall.SIZE, SlimeBall.SIZE), "the slime's own frame is back")
+
+func test_a_moving_flat_slime_wobbles_and_a_still_one_does_not() -> void:
+	sb.scripted.down = 1.0
+	await _frames(5)
+	sb.scripted.dir = 1.0
+	var lo := 9.0
+	var hi := 0.0
+	for _k in 40:
+		await get_tree().physics_frame
+		lo = minf(lo, _sprite().scale.x)
+		hi = maxf(hi, _sprite().scale.x)
+	assert_gt(hi - lo, 0.1, "it wobbles as it crawls")
+	sb.scripted.dir = 0.0
+	await _frames(30)
+	lo = 9.0
+	hi = 0.0
+	for _k in 10:
+		await get_tree().physics_frame
+		lo = minf(lo, _sprite().scale.x)
+		hi = maxf(hi, _sprite().scale.x)
+	assert_lt(hi - lo, 0.01, "still, it is still")
+
+func test_switching_species_mid_bounce_leaves_nothing_of_the_ball_behind() -> void:
+	sb.body.global_position = Vector2(300.0, -300.0)
+	sb.scripted.jump_held = true
+	for _k in 120:
+		await get_tree().physics_frame
+		if sb.clip() == "ball":
+			break
+	assert_eq(sb.clip(), "ball")
+	sb.set_profile("wolf")
+	await _frames(3)
+	assert_eq(sb.look(), "wolf")
+	assert_ne(sb.clip(), "ball")
+	assert_eq(_sprite().scale, Vector2.ONE)
+	assert_eq(_sprite().rotation, 0.0)
+
+func test_a_wall_bounce_shows_the_ball_not_the_tackle() -> void:
+	sb.body.global_position = Vector2(50.0, -350.0)
+	sb.scripted.dir = -1.0
+	sb.scripted.jump_held = true
+	sb.scripted.signature_pressed = true
+	var bounced := -1
+	var ball_seen := false
+	for k in 40:
+		await get_tree().physics_frame
+		if bounced < 0 and sb.state.wall_bounced:
+			bounced = k
+		if bounced >= 0 and k - bounced <= 3 and sb.clip() == "ball":
+			ball_seen = true
+		if bounced >= 0 and k - bounced <= 3:
+			assert_ne(sb.state.verb, "tackle", "the bounce ended the tackle")
+	assert_gte(bounced, 0, "it tackled into the wall and bounced")
+	assert_true(ball_seen)
+
+func test_the_ball_lasts_the_whole_flight_and_ends_at_the_plain_landing() -> void:
+	sb.body.global_position = Vector2(300.0, -200.0)
+	var pressed := false
+	var launch_frame := -1
+	var flight := 0
+	var ball_frames := 0
+	var after := ""
+	for k in 220:
+		await get_tree().physics_frame
+		if not pressed and sb.body.velocity.y > 0.0 and sb.body.global_position.y > -42.0:
+			sb.scripted.jump_pressed = true
+			pressed = true
+		if launch_frame < 0 and sb.state.launched == "rebound":
+			launch_frame = k
+		if launch_frame >= 0 and k - launch_frame >= 2 and not sb.body.is_on_floor() and k - launch_frame < 100:
+			flight += 1
+			ball_frames += 1 if sb.clip() == "ball" else 0
+		if launch_frame >= 0 and k - launch_frame == 150:
+			after = sb.clip()
+	assert_gte(launch_frame, 0, "it rebounded")
+	assert_gte(flight, 15, "a real flight")
+	assert_eq(ball_frames, flight, "a ball for the whole flight, rising and falling, not just its start")
+	assert_eq(after, "idle", "a plain landing ends the ball")
+
+func test_a_tackle_in_mid_bounce_ends_the_ball() -> void:
+	sb.body.global_position = Vector2(300.0, -300.0)
+	sb.scripted.jump_held = true
+	var bounce_frame := -1
+	var verb_seen := false
+	var clip_after := ""
+	for k in 120:
+		await get_tree().physics_frame
+		if bounce_frame < 0 and sb.state.launched == "bounce":
+			bounce_frame = k
+		if bounce_frame >= 0 and k == bounce_frame + 8:
+			sb.scripted.signature_pressed = true
+		if bounce_frame >= 0 and sb.state.verb == "tackle":
+			verb_seen = true
+		if bounce_frame >= 0 and k == bounce_frame + 26:
+			clip_after = sb.clip()
+	assert_true(verb_seen, "it tackled in the air")
+	assert_true(clip_after == "rise" or clip_after == "fall", "after the tackle it is the slime again, not the ball: %s" % clip_after)

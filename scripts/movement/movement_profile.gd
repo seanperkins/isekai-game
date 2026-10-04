@@ -38,10 +38,24 @@ const IDS := ["biped", "slime", "wolf", "spider"]
 ## (rise, so speed x sqrt(1 + it)), up to rebound_cap in total (0 caps the chain at one link).
 @export var rebound_rise := 0.0
 @export var rebound_cap := 0.0
+## A press this many seconds after a hard landing still counts as that landing's timed rebound (0 for none).
+@export var rebound_grace := 0.0
 ## Hold bounce: landing with jump held and an impact of at least bounce_min_impact relaunches at bounce_keep times the
 ## last launch speed (0 for none).
 @export var bounce_keep := 0.0
 @export var bounce_min_impact := 250.0
+## Wall verbs. The cling and the wall jump need the "wall" verb: stick at `wall_stick_speed` for `wall_stick_time`, then slide
+## at `wall_slide_speed`; a wall jump pushes off at `wall_jump_push` with the full jump speed upward and locks steering for
+## `wall_lock`; a wall jump still works `wall_grace` after leaving the wall. The bounce needs only `wall_bounce_keep` above 0:
+## holding jump into a wall at `wall_bounce_min` or more reflects that speed times `wall_bounce_keep`.
+@export var wall_stick_time := 0.2
+@export var wall_stick_speed := 15.0
+@export var wall_slide_speed := 90.0
+@export var wall_jump_push := 180.0
+@export var wall_lock := 0.15
+@export var wall_grace := 0.1
+@export var wall_bounce_keep := 0.0
+@export var wall_bounce_min := 100.0
 ## The extra verbs this species has ("ooze"), and its burst rows (BurstDef: Tackle, the puddle slide, later roll and pounce).
 @export var verbs := PackedStringArray()
 @export var bursts: Array = []

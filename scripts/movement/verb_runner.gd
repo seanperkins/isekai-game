@@ -15,8 +15,8 @@ static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float, spee
 	if i.dir != 0.0:
 		s.facing = 1 if i.dir > 0.0 else -1
 	_tick_cooldowns(s, dt)
-	if i.on_floor:
-		s.air_verb_used = false
+	if i.on_floor or (p.verbs.has("wall") and i.wall_side != 0):
+		s.air_verb_used = false  # landing, or touching a wall, gives the air verb back
 	_ooze(s, i, p)
 	_bursts(s, i, p, dt)
 	var input := i
@@ -25,6 +25,8 @@ static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float, spee
 		input.jump_pressed = false
 	var scale := speed_scale * (SPREAD_SPEED if s.spread else 1.0)
 	GroundAirStep.step(s, input, p, dt, scale, jump_boost)
+	if s.wall_bounced and s.verb != "":
+		_end(_row(p, s.verb), s)  # a wall bounce ends the burst: the slime leaves the wall bouncing, not tackling
 
 ## True while the body should use the flat collision box: spread, or a flat burst (the puddle slide) running.
 static func is_flat(s: MoveState, p: MovementProfile) -> bool:
