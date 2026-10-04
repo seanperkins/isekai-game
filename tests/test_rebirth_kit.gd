@@ -1,12 +1,13 @@
 extends GutTest
-## A rebirth pool's head start: granted skills that count as known but not discovered, a starting level
-## without EP, and seeded affinity that only ever counts toward the first evolution.
+## A rebirth pool's head start: granted skills that count as known but not discovered, and a starting level without EP.
 
 var rules: SkillRulesEngine
 var compendium: CompendiumModel
 var announcer: AnnouncerQueue
 var skills: Array
 var player: Player
+
+const FIRST_EVOLUTION_AREAS := ["cave", "grotto"]
 
 func before_each() -> void:
 	skills = DefLoader.load_dir("res://data/skills")
@@ -24,15 +25,6 @@ func before_each() -> void:
 func after_each() -> void:
 	SkillRules.reset_run()
 	Announcer.queue.clear()
-	FormOffers._default_supply = {}  # forget a supply a test pinned; the next reader recomputes it from disk
-
-## Evolution offers read FormOffers.default_supply (every room on disk). A pin about what the shipped rooms feed pins that
-## cache to the shipped rooms, so a room added later does not move it.
-func _pin_supply_to_the_shipped_rooms() -> void:
-	var creatures := {}
-	for c in DefLoader.load_dir("res://data/creatures"):
-		creatures[c.id] = c
-	FormOffers._default_supply = FormOffers.supply(ShippedRooms.load_all(), creatures, FormLoader.load_all(), FormOffers.FIRST_EVOLUTION_AREAS)
 
 func _tickers() -> Array:
 	var out: Array = []
@@ -130,24 +122,12 @@ func test_a_starting_level_plays_no_level_up_events() -> void:
 	RebirthKit.apply(player, rules, compendium, {"level": 4})
 	assert_false(seen.has("leveled_up"), "no fanfare at the start of a life")
 
-func test_seeded_affinity_counts_toward_the_first_evolution_and_nothing_else() -> void:
-	_pin_supply_to_the_shipped_rooms()
-	RebirthKit.apply(player, rules, compendium, {"affinity": {"thread": 7}})
-	assert_eq(player.progression.seeded["thread"], 7)
-	assert_eq(rules.count("absorbed", {"essence": "thread"}), 0, "the ledger is untouched: no skill unlocks from seeds")
-	assert_false(rules.owned().has("sticky_thread"))
-	player.progression.add_xp(Progression.stage_total(1))
-	var offers := player.form_offers()
-	assert_eq((offers[0] as FormDef).id, "weaver", "7 of Weaver's 11 thread is enough")
-
 func test_applying_a_kit_after_a_second_run_start_does_not_stack() -> void:
-	RebirthKit.apply(player, rules, compendium, {"skills": ["leap"], "level": 3, "affinity": {"thread": 2}})
+	RebirthKit.apply(player, rules, compendium, {"skills": ["leap"], "level": 3})
 	rules.start_run()
 	assert_eq(player.progression.level, 1)
-	assert_true(player.progression.seeded.is_empty())
-	RebirthKit.apply(player, rules, compendium, {"skills": ["leap"], "level": 3, "affinity": {"thread": 2}})
+	RebirthKit.apply(player, rules, compendium, {"skills": ["leap"], "level": 3})
 	assert_eq(player.progression.level, 3)
-	assert_eq(player.progression.seeded["thread"], 2)
 	assert_eq(player.stats.level_bonus("max_hp"), 2 * Player.LEVEL_UP_BONUS["max_hp"])
 
 func test_a_granted_skills_dependants_stay_locked_until_earned() -> void:
@@ -160,22 +140,12 @@ func test_an_empty_kit_changes_nothing() -> void:
 	RebirthKit.apply(player, rules, compendium, {})
 	assert_eq(player.progression.level, 1)
 	assert_eq(rules.owned(), ["appraisal"])
-	assert_true(player.progression.seeded.is_empty())
 
 func test_kit_validation_accepts_good_kits_and_names_bad_ones() -> void:
-	assert_eq(RebirthKit.validate({"skills": ["leap", "wall_cling"], "level": 3, "affinity": {"thread": 1}}).size(), 0)
+	assert_eq(RebirthKit.validate({"skills": ["leap", "wall_cling"], "level": 3}).size(), 0)
 	assert_gt(RebirthKit.validate({"skills": ["nope"]}).size(), 0)
 	assert_gt(RebirthKit.validate({"level": 11}).size(), 0)
-	assert_gt(RebirthKit.validate({"affinity": {"bogus": 1}}).size(), 0)
-
-func test_the_eligibility_check_bites_on_a_poorly_seeded_kit() -> void:
-	var forms := FormLoader.load_all()
-	var creatures := {}
-	for c in DefLoader.load_dir("res://data/creatures"):
-		creatures[c.id] = c
-	var supply := FormOffers.supply(ShippedRooms.load_all(), creatures, forms, FormOffers.FIRST_EVOLUTION_AREAS)  # the shipped rooms, not whatever is on disk
-	assert_lt(RebirthKit.eligible_lineages({"thread": 5}, supply, forms), 2, "one lineage is not enough")
-	assert_gte(RebirthKit.eligible_lineages({"thread": 7, "sound": 8, "flight": 8}, supply, forms), 2)
+	assert_eq(RebirthKit.validate({"affinity": {"bogus": 1}}).size(), 0, "a leftover key is ignored, not an error")
 
 ## One row per area: its pool's room (the first of `rooms`), the rooms a life eats in before its first heavy, and what its kit grants.
 const AREA_KITS := {
@@ -184,47 +154,11 @@ const AREA_KITS := {
 	"deep": {"rooms": ["D1", "D2"], "skills": ["leap", "wall_cling", "swim", "tremor"], "level": 5},
 }
 
-## The essences a life can eat in `ids`, as units: a creature that cannot be downed by tackle (the jelly) is not counted.
-func _units(rooms: Dictionary, creatures: Dictionary, ids: Array) -> Dictionary:
-	var out := {}
-	for id in ids:
-		for s in (rooms[id] as RoomDef).spawns:
-			var c: CreatureDef = creatures[s["id"]]
-			if c.untackleable:
-				continue
-			for e in c.essences:
-				out[e] = int(out.get(e, 0)) + int(c.essences[e])
-	return out
-
 func _creatures() -> Dictionary:
 	var out := {}
 	for c in DefLoader.load_dir("res://data/creatures"):
 		out[c.id] = c
 	return out
-
-func test_every_pool_leaves_two_lineages_eligible_and_its_seeds_matter() -> void:
-	# a seeded start must not lock you out of lineages: the kit's seeds plus what a life eats before its first heavy, against the
-	# first-evolution areas' supply, leave at least two eligible, and more than without the seeds
-	var forms := FormLoader.load_all()
-	var rooms := ShippedRooms.load_all()
-	var creatures := _creatures()
-	var supply := FormOffers.supply(rooms, creatures, forms, FormOffers.FIRST_EVOLUTION_AREAS)
-	for area in AREA_KITS:
-		var checked := 0
-		for p in RebirthChoice.pools(rooms):
-			if p["id"] == WorldProgress.DEFAULT_POOL or p["area"] != area:
-				continue
-			checked += 1
-			var seeds: Dictionary = (p["kit"] as Dictionary).get("affinity", {})
-			var without := _units(rooms, creatures, AREA_KITS[area]["rooms"])
-			var with_seeds := without.duplicate()
-			for e in seeds:
-				with_seeds[e] = int(with_seeds.get(e, 0)) + int(seeds[e])
-			var n_with := RebirthKit.eligible_lineages(with_seeds, supply, forms)
-			var n_without := RebirthKit.eligible_lineages(without, supply, forms)
-			assert_gte(n_with, 2, "%s pool %s leaves two lineages eligible" % [area, p["id"]])
-			assert_gt(n_with, n_without, "%s pool %s: the seeds are not decoration" % [area, p["id"]])
-		assert_eq(checked, 1, "the %s ships exactly one pool" % area)
 
 func test_every_pool_kit_is_valid_and_grants_what_its_row_says() -> void:
 	var rooms := World.load_rooms("res://data/rooms")
@@ -246,7 +180,7 @@ func test_every_kits_xp_to_the_cap_is_within_the_first_evolution_areas_total() -
 	var areas_total := 0
 	for id in WorldValidator.reachable(rooms, true):
 		var r: RoomDef = rooms[id]
-		if FormOffers.FIRST_EVOLUTION_AREAS.has(r.area):
+		if FIRST_EVOLUTION_AREAS.has(r.area):
 			areas_total += ShippedRooms.first_time(rooms, creatures, [id])
 	for p in RebirthChoice.pools(rooms):
 		if p["id"] == WorldProgress.DEFAULT_POOL:
@@ -285,6 +219,11 @@ func test_the_flooded_alone_does_not_fill_an_f1_lifes_first_stage() -> void:
 	assert_lt(first_pass, need, "the Flooded alone is not enough: the life climbs back to the Grotto or the Cave")
 	var areas_total := 0
 	for id in WorldValidator.reachable(rooms, true):
-		if FormOffers.FIRST_EVOLUTION_AREAS.has((rooms[id] as RoomDef).area):
+		if FIRST_EVOLUTION_AREAS.has((rooms[id] as RoomDef).area):
 			areas_total += ShippedRooms.first_time(rooms, creatures, [id])
 	assert_lte(need, areas_total, "the first-evolution areas supply it")
+
+func test_no_shipped_pool_carries_a_seeded_affinity() -> void:
+	var rooms := World.load_rooms("res://data/rooms")
+	for p in RebirthChoice.pools(rooms):
+		assert_false((p["kit"] as Dictionary).has("affinity"), "pool %s" % p["id"])

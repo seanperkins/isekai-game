@@ -562,7 +562,7 @@ func form_offers() -> Array:
 	var out: Array = []
 	if not progression.can_evolve():
 		return out
-	for id in FormOffers.offers(forms, form, FormOffers.absorbed_units(_rules, progression.seeded), FormOffers.default_supply(forms)):
+	for id in FormOffers.offers(forms, form, _rules):
 		out.append(forms[id])
 	return out
 

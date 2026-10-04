@@ -168,12 +168,11 @@ func test_a_kit_applies_after_start_run_and_never_survives_into_the_next_life() 
 	player.setup(rules, comp, [], func(n: String, t: Dictionary) -> void: rules.handle_event(n, t))
 	add_child_autofree(player)
 	rules.start_run()
-	RebirthKit.apply(player, rules, comp, {"skills": ["leap"], "level": 3, "affinity": {"thread": 2}})
+	RebirthKit.apply(player, rules, comp, {"skills": ["leap"], "level": 3})
 	assert_eq(player.progression.level, 3)
 	rules.start_run()  # the next life begins: everything goes
 	assert_eq(player.progression.level, 1)
 	assert_eq(rules.level_of("leap"), 0)
-	assert_true(player.progression.seeded.is_empty())
 	RebirthKit.apply(player, rules, comp, {})
 	assert_eq(player.progression.level, 1, "an empty kit gives an empty start")
 

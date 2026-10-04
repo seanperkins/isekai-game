@@ -95,7 +95,6 @@ func _init() -> void:
 		f.blurb = row[9]
 		f.size = STAGE_SIZE[f.stage]
 		if f.stage == 2 and f.lineage != "greater":
-			f.essences = essences_of(f.lineage)
 			f.powers = powers_of(f.lineage)
 		var path := "res://data/forms/%s.tres" % id
 		var err := ResourceSaver.save(f, path)
@@ -103,20 +102,6 @@ func _init() -> void:
 			printerr("failed to save %s: %s" % [path, error_string(err)])
 			failures += 1
 	quit(1 if failures > 0 else 0)
-
-static func essences_of(lineage: String) -> Array:
-	match lineage:
-		"weaver":
-			return ["thread"]
-		"tide":
-			return ["water"]
-		"toxic":
-			return ["poison", "spore"]
-		"bulwark":
-			return ["armor", "earth", "shell"]
-		"echo":
-			return ["sound", "flight"]
-	return []
 
 static func powers_of(lineage: String) -> Array:
 	match lineage:

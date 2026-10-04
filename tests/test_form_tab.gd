@@ -88,7 +88,7 @@ func test_the_form_tab_lists_the_offers_the_offers_logic_gives() -> void:
 	_to_cap()
 	screen.open()
 	screen.switch_tab(5)
-	var expected := FormOffers.offers(player.forms, player.form, FormOffers.absorbed_units(rules), FormOffers.default_supply(player.forms))
+	var expected := FormOffers.offers(player.forms, player.form, rules)
 	var seen: Array = []
 	for i in screen._selectable:
 		seen.append(screen._rows[i]["id"])

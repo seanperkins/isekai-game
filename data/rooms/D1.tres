@@ -49,10 +49,6 @@ features = [{
 "id": "D1",
 "kind": "rebirth_pool",
 "kit": {
-"affinity": {
-"thread": 7,
-"water": 6
-},
 "level": 5,
 "skills": ["leap", "wall_cling", "swim", "tremor"]
 },

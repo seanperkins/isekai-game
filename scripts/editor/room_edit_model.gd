@@ -622,7 +622,7 @@ func get_field(sel: Dictionary, key: String) -> Variant:
 	return null
 
 ## Sets one inspector field: exit "shortcut" and "gate" (both halves); tablet "title" (required), "text" and "hint"; switch "shortcut" (required);
-## rebirth pool "kit_level" (0 unsets) and "kit_skills" (a list), merged into the kit so every other key (G1's affinity) is kept;
+## rebirth pool "kit_level" (0 unsets) and "kit_skills" (a list), merged into the kit so every other key is kept;
 ## solid "x" "y" "w" "h" (exact numbers, never snapped) and "hard" (Rock from below: thin solids only); water "x" "y" "w" "h" likewise.
 ## Optional keys are removed by "" or 0; required keys are never removed. A refusal returns the reason and changes nothing; a
 ## value equal to the stored one pushes nothing (_push declines an unchanged room).

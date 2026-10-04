@@ -21,8 +21,6 @@ var ep := 0
 var stage := 1
 ## "<spawn key>:down" / "<spawn key>:eat" for every first-time reward already paid this run.
 var claimed := {}
-## Essence units a rebirth kit seeded: they count toward the first evolution's affinity and nothing else.
-var seeded := {}
 
 ## XP needed to go from `from_level` to the next level in `p_stage`: 10, 15, 20, ... times the stage's multiplier.
 static func xp_to_next(from_level: int, p_stage: int = 1) -> int:
