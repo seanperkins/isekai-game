@@ -19,25 +19,28 @@ func _shot(n: String) -> void:
 func _compendium() -> CompendiumModel:
 	return root.get_node("Compendium").model
 
-## Every slot back to Unknown, in memory only, then the starting power Owned-once, as a new soul has it.
+## Every slot back to Unknown and no form reached, in memory only, then the starting power Owned-once, as a new soul has it.
 func _forget_everything() -> void:
 	var c := _compendium()
 	c.store = null
 	for id in c.states():
 		c._states[id] = CompendiumModel.State.UNKNOWN
 	c.raise("appraisal", CompendiumModel.State.OWNED_ONCE)
-
+	var progress = root.get_node("Compendium").progress
+	progress.profile = null  # nothing below reaches the profile
+	progress.forms_reached = []
 func _discover_some() -> void:
 	var c := _compendium()
 	root.get_node("SkillRules").grant("hydraulic_propulsion")
 	c.raise("hydraulic_propulsion", CompendiumModel.State.OWNED_ONCE)
 	c.raise("poison_breath", CompendiumModel.State.NAMED)
 	c.raise("leap", CompendiumModel.State.HINTED)
-
+	root.get_node("Compendium").progress.forms_reached = ["tide"]
 func _discover_everything() -> void:
 	var c := _compendium()
 	for id in c.states():
 		c.raise(id, CompendiumModel.State.OWNED_ONCE)
+	root.get_node("Compendium").progress.forms_reached = game.player.forms.keys()
 
 func _process(_delta: float) -> bool:
 	var screen = game.skill_screen  # untyped: a -s script compiles before the autoloads exist, and SkillScreen names Controls
@@ -69,6 +72,13 @@ func _process(_delta: float) -> bool:
 			screen.set_tree_overview(true)
 		72:
 			_shot("everything_overview")
+			screen.set_tree_overview(false)
+			screen.select_tree_node("silkbound")
 		78:
+			_shot("everything_silkbound")
+			screen.select_tree_node("toxic")
+		84:
+			_shot("everything_toxic")
+		90:
 			quit()
 	return false
