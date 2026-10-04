@@ -73,6 +73,10 @@ var _map_rooms := 0
 var _nav_timer := 0.0
 ## The Settings menu: a child drawn over the tabs (see open_settings()).
 var settings_menu := SettingsMenu.new()
+## Tree tab: the selected node and the zoom are the only state that outlives a rebuild; the camera follows from them.
+var _tree_sel := ""
+var _tree_overview := false
+var _tree_model := {}
 
 func bind(player: Player, rules, compendium: CompendiumModel, skill_defs: Array) -> void:
 	_player = player
@@ -155,6 +159,8 @@ func switch_tab(i: int) -> void:
 	_tab = posmod(i, tabs().size())
 	_sel = 0
 	_scroll = 0
+	_tree_sel = ""
+	_tree_overview = false
 	_refresh()
 	EventBus.world_event.emit("menu_move", {})
 
@@ -168,13 +174,65 @@ func move(delta: int) -> void:
 		EventBus.world_event.emit("menu_move", {})
 
 func selected_id() -> String:
+	if tab() == "tree":
+		return _tree_sel
 	if _selectable.is_empty():
 		return ""
 	return _rows[_selectable[_sel]].get("id", "")
 
+func tree_model() -> Dictionary:
+	return _tree_model
+
+func tree_overview() -> bool:
+	return _tree_overview
+
+## The SkillTreeView showing now, or null off the Tree tab.
+func tree_view() -> SkillTreeView:
+	for c in _list.get_children():
+		if c is SkillTreeView:
+			return c
+	return null
+
+## Moves the tree's selection one step in `dir` (Vector2i.UP is up), along SkillTreeModel.neighbor.
+func tree_move(dir: Vector2i) -> void:
+	if tab() != "tree" or _tree_model.is_empty():
+		return
+	var next := SkillTreeModel.neighbor(_tree_model, _tree_sel, dir)
+	if next != _tree_sel:
+		_tree_sel = next
+		EventBus.world_event.emit("menu_move", {})
+	_refresh()
+
+func select_tree_node(id: String) -> void:
+	if tab() != "tree" or not _tree_model.get("nodes", {}).has(id):
+		return
+	_tree_sel = id
+	EventBus.world_event.emit("menu_move", {})
+	_refresh()
+
+## The overview (dots and edges) or the normal zoom (names).
+func set_tree_overview(overview: bool) -> void:
+	if tab() != "tree" or overview == _tree_overview:
+		return
+	_tree_overview = overview
+	EventBus.world_event.emit("menu_move", {})
+	_refresh()
+
+func toggle_tree_zoom() -> void:
+	set_tree_overview(not _tree_overview)
+
+## One step on the open tab: the tree moves four ways, a list up or down.
+func _step(dir: Vector2i) -> void:
+	if tab() == "tree":
+		tree_move(dir)
+	elif dir.y != 0:
+		move(dir.y)
+
 ## A ready evolution is permanent for the life, so it takes two presses: the first arms it, the second evolves (paying its
 ## essence price). Otherwise moves the selected active to the next slot (U → O → H → L → U).
 func accept() -> void:
+	if tab() == "tree":
+		return  # read-only: a power evolves in the Skills tab, the body in the Form tab
 	var id := selected_id()
 	if tab() == FORM_TAB:
 		if id != "" and _player.advance_form(id):
@@ -245,14 +303,16 @@ func _process(delta: float) -> void:
 	if not visible:
 		_nav_dir = Vector2i.ZERO
 		return
-	# The lists read only the vertical part, so a diagonal push still moves a list.
-	var step := nav_step(Vector2(0.0, Controls.last_stick.y), delta)
-	if step.y == 0:
+	var stick := Controls.last_stick
+	if settings_menu.is_open() or tab() != "tree":
+		stick = Vector2(0.0, stick.y)  # the lists read only the vertical part, so a diagonal push still moves a list
+	var step := nav_step(stick, delta)
+	if step == Vector2i.ZERO:
 		return
 	if settings_menu.is_open():
 		settings_menu.move(step.y)
 	else:
-		move(step.y)
+		_step(step)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if visible and settings_menu.is_open():
@@ -271,14 +331,21 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventJoypadMotion:
 		get_viewport().set_input_as_handled()  # the stick is read in _process
 		return
+	var tree := tab() == "tree"
 	if event.is_action_pressed("ui_up") or event.is_action_pressed("aim_up"):
-		move(-1)
+		_step(Vector2i.UP)
 	elif event.is_action_pressed("ui_down") or event.is_action_pressed("aim_down"):
-		move(1)
+		_step(Vector2i.DOWN)
 	elif event.is_action_pressed("tab_prev"):
 		switch_tab(_tab - 1)
 	elif event.is_action_pressed("tab_next"):
 		switch_tab(_tab + 1)
+	elif tree and (event.is_action_pressed("move_left") or event.is_action_pressed("ui_left")):
+		tree_move(Vector2i.LEFT)
+	elif tree and (event.is_action_pressed("move_right") or event.is_action_pressed("ui_right")):
+		tree_move(Vector2i.RIGHT)
+	elif tree and event.is_action_pressed("tree_zoom"):
+		toggle_tree_zoom()
 	elif event.is_action_pressed("settings"):
 		open_settings()
 	elif event.is_action_pressed("menu_accept") or event.is_action_pressed("ui_accept"):
@@ -352,13 +419,7 @@ func _refresh_tab() -> void:
 		_refresh_form()
 		return
 	if tab() == "tree":
-		_rows = []
-		_selectable = []
-		_hint.text = "LB/RB Tabs    B Back" if Controls.using_joypad else "Q/E Tabs    Esc Back"
-		_build_stats()
-		_clear(_list)
-		_clear(_detail)
-		_label(_list, "TREE", Vector2(LIST_X + 4, LIST_TOP + 2), Vector2(200, 12), FONT_SMALL, COL_TITLE)
+		_refresh_tree()
 		return
 	match tab():
 		"skills":
@@ -621,6 +682,44 @@ func _build_map() -> void:
 		_list.add_child(stub)
 	_map_found = m["found"]
 	_label(_list, _map_found, Vector2(LIST_X + 4, MAP_BOX.end.y + 6), Vector2(220, 12), FONT_SMALL, COL_DIM)
+
+## Tree tab: the graph of what the soul has found, the selected node's card and the hint. Rebuilt on every refresh like the
+## Map; the selected id and the zoom flag survive it, and the camera follows from them.
+func _refresh_tree() -> void:
+	_rows = []
+	_selectable = []
+	_tree_model = SkillTreeModel.build(_rules, _compendium, _player.forms, [], _player.form.form_id)
+	if not _tree_model["nodes"].has(_tree_sel):
+		_tree_sel = SkillTreeModel.root(_tree_model)
+	_hint.text = ("LB/RB Tabs    D-pad Move    L3 Zoom    B Back" if Controls.using_joypad
+		else "Q/E Tabs    Arrows Move    Z Zoom    Esc Back")
+	_build_stats()
+	_clear(_list)
+	_clear(_detail)
+	var view := SkillTreeView.new()
+	_list.add_child(view)
+	view.show_model(_tree_model, _tree_sel, _tree_overview)
+	_build_tree_card()
+
+## The card beside the tree, from SkillScreenModel.tree_card. A stub shows the locked icon and no name.
+func _build_tree_card() -> void:
+	if _tree_sel == "":
+		_label(_detail, "Nothing found yet.", Vector2(DETAIL_X, 52), Vector2(190, 12), FONT_MAIN, COL_DIM)
+		return
+	var n: Dictionary = _tree_model["nodes"][_tree_sel]
+	var card := SkillScreenModel.tree_card(_rules, n, _defs, _player.forms, _player.skillset.slots, int(_player.stats.get_stat("atk")))
+	var x := DETAIL_X
+	if n["kind"] != "form":
+		_icon(_detail, "icon_locked" if n["state"] == SkillTreeModel.STUB else "icon_" + _tree_sel, Vector2(DETAIL_X, 50), 40)
+		x = DETAIL_X + 46
+	_label(_detail, card["title"], Vector2(x, 52), Vector2(DETAIL_X + 192 - x, 16), FONT_BIG, Color.WHITE)
+	_label(_detail, card["status"], Vector2(x, 70), Vector2(DETAIL_X + 192 - x, 12), FONT_SMALL, COL_TITLE)
+	var y := 100.0
+	for line in card["lines"]:
+		if y > 290.0:
+			break
+		var l := _label(_detail, line, Vector2(DETAIL_X, y), Vector2(190, 34), FONT_SMALL, Color.WHITE, true)
+		y += maxf(12.0, l.get_line_count() * 11.0 + 3.0)
 
 # --- helpers --------------------------------------------------------------
 
