@@ -69,3 +69,65 @@ func test_a_jump_stands_the_slime_up_with_room_and_is_refused_without() -> void:
 	assert_eq(s.launched, "")
 	assert_true(s.spread)
 	assert_eq(s.buffer, 0.0, "a refused press is not buffered")
+
+func _signature() -> MoveInput:
+	var i := _in()
+	i.signature_pressed = true
+	return i
+
+func test_tackle_holds_260_for_nine_ticks_then_returns_control() -> void:
+	var s := MoveState.new()
+	VerbRunner.step(s, _signature(), slime, 1.0 / 60.0)
+	assert_eq(s.verb, "tackle")
+	assert_eq(s.velocity.x, 260.0)
+	for k in 8:
+		VerbRunner.step(s, _in(), slime, 1.0 / 60.0)
+		assert_eq(s.velocity.x, 260.0, "tick %d" % (k + 2))
+	assert_eq(s.verb, "tackle")
+	VerbRunner.step(s, _in(), slime, 1.0 / 60.0)
+	assert_eq(s.verb, "")
+	assert_lt(s.velocity.x, 260.0)
+
+func test_tackle_goes_the_way_the_slime_faces_and_a_second_press_does_not_restart_it() -> void:
+	var s := MoveState.new()
+	_run(slime, s, _in(-1.0), 1)
+	VerbRunner.step(s, _signature(), slime, 1.0 / 60.0)
+	assert_eq(s.velocity.x, -260.0)
+	VerbRunner.step(s, _signature(), slime, 1.0 / 60.0)
+	assert_lt(s.verb_left, 0.12)
+
+func test_a_jump_during_a_tackle_fires_and_keeps_the_tackle_speed() -> void:
+	var s := MoveState.new()
+	VerbRunner.step(s, _signature(), slime, 1.0 / 60.0)
+	var j := _in()
+	j.jump_pressed = true
+	j.jump_held = true
+	VerbRunner.step(s, j, slime, 1.0 / 60.0)
+	assert_eq(s.launched, "ground")
+	assert_eq(s.velocity.x, 260.0)
+
+func test_gravity_still_pulls_during_an_air_tackle() -> void:
+	var s := MoveState.new()
+	var t := _signature()
+	t.on_floor = false
+	VerbRunner.step(s, t, slime, 1.0 / 60.0)
+	assert_eq(s.velocity.x, 260.0)
+	assert_gt(s.velocity.y, 0.0)
+
+func test_species_without_a_tackle_row_ignore_the_button() -> void:
+	var s := MoveState.new()
+	VerbRunner.step(s, _signature(), biped, 1.0 / 60.0)
+	assert_eq(s.verb, "")
+	assert_eq(s.velocity.x, 0.0)
+
+func test_a_tackle_mid_jump_adds_no_vertical_reach() -> void:
+	var plain: float = MovementSim.flat_jump(slime)["rise"]
+	var sim := MovementSim.new(slime)
+	sim.tick(0.0, true, true)
+	var rise := 0.0
+	for k in 80:
+		sim.tick(0.0, false, true, 1.0, 0.0, k == 12)
+		rise = maxf(rise, -sim.pos.y)
+		if sim.on_floor:
+			break
+	assert_almost_eq(rise, plain, 0.5)
