@@ -24,6 +24,9 @@ extends Resource
 @export var mp_cost: int = 0
 ## The parent this evolution turns into: the branch key (siblings share it) and the active slot it takes over.
 @export var replaces: String = ""
+## What evolving this power costs, in held essence: element -> units. Set once on the base power; its evolution branches share
+## it (they read it through `replaces`). Empty on every other skill.
+@export var evolution_price: Dictionary = {}
 
 ## Event names whose arrival can change this skill's unlock or level.
 func listens_to() -> Array:
@@ -53,6 +56,14 @@ func essences_used() -> Array:
 	for c in unlock:
 		if c.get("event", "") == Events.ABSORBED and c.get("tags", {}).has("essence"):
 			_add(out, c["tags"]["essence"])
+	return out
+
+## Creature ids named by `predated` counters in the unlock ("eat a spider"), for the Compendium hint and the unlock wording.
+func sources_used() -> Array:
+	var out: Array = []
+	for c in unlock:
+		if c.get("event", "") == Events.PREDATED and c.get("tags", {}).has("source"):
+			_add(out, c["tags"]["source"])
 	return out
 
 static func _add(list: Array, value: String) -> void:

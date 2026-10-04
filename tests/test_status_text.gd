@@ -17,8 +17,7 @@ func before_each() -> void:
 func test_self_lines_show_stats_skills_essences_and_bands_without_numbers() -> void:
 	stats.apply_eat(TestDefs.creature("lizard", {"eat_bonus": {"stat": "def", "amount": 1, "per": 1}}))
 	stats.set_modifiers("body_armor", [{"stat": "def", "op": "add", "value": 2}])
-	for i in 3:
-		rules.handle_event("absorbed", {"essence": "sound", "source": "bat"})
+	TestDefs.satisfy(rules, "echolocation")
 	for i in 20:
 		rules.handle_event("jumped", {"from": "ground"})
 	var text := "\n".join(StatusText.self_lines(stats, health, rules, compendium, 2))
@@ -26,7 +25,7 @@ func test_self_lines_show_stats_skills_essences_and_bands_without_numbers() -> v
 	assert_string_contains(text, "DEF 3 (+1 eat, +2 skill)")
 	assert_string_contains(text, "Appraisal Lv1")
 	assert_string_contains(text, "Echolocation Lv1")
-	assert_string_contains(text, "sound 3")
+	assert_string_contains(text, "air 6")
 	assert_string_contains(text, "Leap — something stirs")
 	assert_false(text.contains("20/40"))
 
@@ -40,11 +39,11 @@ func test_creature_lines_grow_with_report() -> void:
 	var lv1 := "\n".join(StatusText.creature_lines({"id": "bat", "name": "Cave Bat", "hp": 2}))
 	assert_eq(lv1, "Cave Bat\nHP 2")
 	var lv3 := "\n".join(StatusText.creature_lines({"id": "toad", "name": "Poison Toad", "hp": 3,
-		"stats": {"max_hp": 3, "atk": 3, "def": 0, "spd": 70}, "essences": {"poison": 1, "water": 1},
+		"stats": {"max_hp": 3, "atk": 3, "def": 0, "spd": 70}, "essences": {"water": 1, "dark": 1},
 		"eat_bonus": {"stat": "max_hp", "amount": 1, "per": 1},
 		"skills": [{"id": "poison_spit", "level": 1}, {"id": "poison_resistance", "level": 2}]}))
 	assert_string_contains(lv3, "ATK 3  DEF 0  SPD 70")
-	assert_string_contains(lv3, "Essences: poison 1, water 1")
+	assert_string_contains(lv3, "Essences: water 1, dark 1")
 	assert_string_contains(lv3, "Eat bonus: +1 max_hp")
 	assert_string_contains(lv3, "Skills: poison_spit Lv1, poison_resistance Lv2")
 
@@ -54,10 +53,17 @@ func test_creature_lines_for_empty_report() -> void:
 func test_slot_and_ticker_text() -> void:
 	var slots := ActiveSlots.new()
 	assert_eq(StatusText.slot_line(slots, rules), "[U] —  [O] —  [H] —  [L] —")
-	for i in 4:
-		rules.handle_event("absorbed", {"essence": "water"})
+	TestDefs.satisfy(rules, "hydraulic_propulsion")
 	slots.add("hydraulic_propulsion")
 	assert_eq(StatusText.slot_line(slots, rules), "[U] Hydraulic Propulsion  [O] —  [H] —  [L] —")
 	assert_eq(StatusText.ticker_text({"kind": "level", "id": "hydraulic_propulsion", "level": 2}, rules), "Hydraulic Propulsion Lv2")
 	assert_eq(StatusText.ticker_text({"kind": "slot_replaced", "new_id": "water_blade", "old_id": "hydraulic_propulsion"}, rules),
 		"Water Blade replaced Hydraulic Propulsion")
+
+func test_the_essences_line_shows_what_is_held_after_paying_for_an_evolution() -> void:
+	TestDefs.satisfy(rules, "hydraulic_propulsion")  # water 8
+	for i in 12:
+		rules.handle_event("skill_used", {"id": "hydraulic_propulsion"})
+	assert_true(rules.evolve("water_blade"))  # pays water 6
+	var text := "\n".join(StatusText.self_lines(stats, health, rules, compendium, 1))
+	assert_string_contains(text, "water 2")

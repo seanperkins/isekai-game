@@ -347,10 +347,10 @@ func test_the_pool_inspector_offers_level_and_the_kit_legal_skills() -> void:
 	for c in checks:
 		assert_eq(c.focus_mode, Control.FOCUS_NONE)
 
-func test_ticking_a_skill_and_choosing_a_level_write_the_kit_and_keep_the_affinity() -> void:
+func test_ticking_a_skill_and_choosing_a_level_write_the_kit_and_keep_the_rest() -> void:
 	var idx: int = model.rooms["G1"].features.find_custom(func(f): return f["kind"] == "rebirth_pool")
 	var sel := {"room": "G1", "kind": "feature", "index": idx}
-	var affinity: Dictionary = model.rooms["G1"].features[idx]["kit"]["affinity"].duplicate()
+	model.rooms["G1"].features[idx]["kit"]["note"] = "keep me"
 	var had: Array = model.get_field(sel, "kit_skills")
 	assert_false(had.is_empty(), "G1 ships skills in its kit")
 	var slot := await _slot()
@@ -367,7 +367,7 @@ func test_ticking_a_skill_and_choosing_a_level_write_the_kit_and_keep_the_affini
 	var level: OptionButton = slot.find_field("kit_level")
 	level.item_selected.emit(4)
 	assert_eq(model.get_field(sel, "kit_level"), 4)
-	assert_eq(model.rooms["G1"].features[idx]["kit"].get("affinity", {}), affinity)
+	assert_eq(model.rooms["G1"].features[idx]["kit"].get("note", ""), "keep me")
 	extra.button_pressed = false
 	assert_eq(model.get_field(sel, "kit_skills").size(), had.size())
 

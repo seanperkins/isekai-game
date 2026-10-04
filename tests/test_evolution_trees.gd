@@ -27,6 +27,13 @@ func after_each() -> void:
 	SkillRules.reset_run()
 	Announcer.queue.clear()
 
+## Pays the parent's price: the essence is eaten first, as it would be in play.
+func _fund(parent: String) -> void:
+	var price: Dictionary = (skills_by_id[parent] as SkillDef).evolution_price
+	for e in price:
+		for i in int(price[e]):
+			rules.handle_event("absorbed", {"essence": e, "source": "test"})
+
 func test_each_tree_evolves_each_branch_in_a_fresh_run() -> void:
 	for tree in TREES:
 		var parent: String = tree[0]
@@ -40,6 +47,8 @@ func test_each_tree_evolves_each_branch_in_a_fresh_run() -> void:
 				rules.handle_event("skill_used", {"id": parent})
 			for c in tree[1]:
 				assert_true(rules.is_evolution_ready(c), "%s ready after %s reaches level %d" % [c, parent, n])
+			_fund(parent)
+			assert_true(rules.can_afford(chosen), chosen)
 			assert_true(rules.evolve(chosen), chosen)
 			assert_true(player.skillset.slots.slots.has(chosen), "%s is slotted" % chosen)
 			assert_false(player.skillset.slots.slots.has(parent), "%s left its slot" % parent)

@@ -18,13 +18,11 @@ func _to_cap() -> void:
 
 func test_evolving_to_weaver_sets_the_stage_resets_the_level_and_raises_the_cap() -> void:
 	_to_cap()
-	var ep := player.progression.ep
 	assert_true(player.advance_form("weaver"))
 	assert_eq(player.form.stage, 2)
 	assert_eq(player.form.form_id, "weaver")
 	assert_eq(player.progression.stage, 2)
 	assert_eq(player.progression.level, 1)
-	assert_eq(player.progression.ep, ep, "EP persists")
 	assert_eq(rules.stage_cap, 8)
 
 func test_the_level_bonuses_survive_the_reset() -> void:
@@ -205,8 +203,7 @@ func test_adaptable_heals_more_from_every_eat() -> void:
 	assert_eq(_hurt_then_eat(), plain + FormEffects.ADAPTABLE_HEAL)
 
 func test_sonar_reads_echolocation_one_level_stronger() -> void:
-	for i in 3:
-		rules.handle_event("absorbed", {"essence": "sound", "source": "bat"})
+	TestDefs.satisfy(rules, "echolocation")
 	assert_true(rules.owned().has("echolocation"))
 	var plain := player.skillset.level("reveals_hidden")
 	assert_gt(plain, 0)

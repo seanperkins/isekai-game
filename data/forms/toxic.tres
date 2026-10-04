@@ -8,7 +8,7 @@ id = "toxic"
 display_name = "Toxic"
 lineage = "toxic"
 parents = ["slime"]
-essences = ["poison", "spore"]
+powers = ["poison_breath", "spore_cloud"]
 stats = {
 "atk": 1,
 "max_hp": 5,

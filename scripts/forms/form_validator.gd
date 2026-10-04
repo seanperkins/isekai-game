@@ -34,6 +34,14 @@ static func validate(forms: Dictionary, skill_ids: Array, check_art := false) ->
 		for t in f.traits:
 			if not FormEffects.TRAITS.has(t):
 				errs.append("%s: unknown trait '%s'" % [id, t])
+		if f.stage == 2 and f.lineage != "greater":
+			if f.powers.is_empty():
+				errs.append("%s: a lineage form needs at least one opening power" % id)
+		elif not f.powers.is_empty():
+			errs.append("%s: only stage-2 lineage forms list powers" % id)
+		for p in f.powers:
+			if not skill_ids.has(p):
+				errs.append("%s: lists unknown power '%s'" % [id, p])
 		if f.size < 1.0 or f.size > 1.5:
 			errs.append("%s: size %.2f outside 1.0..1.5" % [id, f.size])
 		for c in [f.tint.r, f.tint.g, f.tint.b]:

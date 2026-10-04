@@ -14,18 +14,18 @@ hidden = false
 unlock = [{
 "event": "absorbed",
 "kind": "counter",
-"n": 3,
+"n": 6,
 "tags": {
-"essence": "sound"
+"essence": "air"
 }
 }]
 levels_on = {
 "event": "absorbed",
 "tags": {
-"essence": "sound"
+"essence": "air"
 }
 }
-level_curve = 3
+level_curve = 9
 max_level = 8
 effects = [{
 "flag": "reveals_hidden",

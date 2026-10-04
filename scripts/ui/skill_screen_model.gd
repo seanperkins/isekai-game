@@ -40,7 +40,7 @@ static func skill_rows(rules, all_defs: Array) -> Array:
 			for id in rules.ready_evolutions():
 				var d = _find(all_defs, id)
 				if d != null:
-					rows.append({"kind": "ready", "id": id, "name": d.display_name, "cost": rules.evolution_cost(id)})
+					rows.append({"kind": "ready", "id": id, "name": d.display_name, "price": rules.evolution_price(id), "affordable": rules.can_afford(id)})
 		if locked:
 			rows.append({"kind": "locked"})
 	return rows
@@ -132,6 +132,104 @@ static func detail(rules, d: SkillDef, slots: ActiveSlots, atk := 1) -> Dictiona
 static func capped_text() -> String:
 	return "Capped until you evolve"
 
+## A ready evolution's price and what you hold: "Evolve for water 6, dark 10 — you hold 8 water, 4 dark". The price text is the
+## essence overhaul's price_text(price), so the Skills tab and the Tree tab word a price the same way.
+static func price_line(rules, id: String) -> String:
+	var price: Dictionary = rules.evolution_price(id)
+	var held: Array = []
+	for e in Essences.ALL:
+		if price.has(e):
+			held.append("%d %s" % [int(rules.held(e)), e])
+	return "Evolve for %s — you hold %s" % [price_text(price), ", ".join(held)]
+
+## What a ready evolution still needs ("Needs 2 more dark"), or where to evolve it once nothing is short. The shortfall is the
+## essence overhaul's shortfall_text(rules, price), capitalised.
+static func short_line(rules, id: String) -> String:
+	var short := shortfall_text(rules, rules.evolution_price(id))
+	return "Evolve in the Skills tab" if short == "" else short.substr(0, 1).to_upper() + short.substr(1)
+
+## The Tree tab's status line per node state.
+const TREE_STATUS := {"owned": "Owned", "named": "Not yet learned", "retired": "Evolved",
+	"closed": "Closed: a sibling took the branch", "ready": "Ready to evolve", "current": "Your body now",
+	"reached": "Reached before", "stub": "Undiscovered"}
+
+## The Tree tab's card for a node: {"title", "status", "lines"}. A power held now reuses detail(). A ready evolution adds its
+## price, what you hold and what is short. The hint and the condition follow compendium_rows: the model only gives the
+## condition at Owned-once. A stub says nothing about itself.
+static func tree_card(rules, node: Dictionary, defs: Dictionary, forms: Dictionary, slots: ActiveSlots, atk := 1) -> Dictionary:
+	if node["state"] == SkillTreeModel.STUB:
+		return {"title": "???", "status": TREE_STATUS[SkillTreeModel.STUB], "lines": []}
+	if node["kind"] == "form":
+		return _form_tree_card(rules, node, forms)
+	var d: SkillDef = defs[node["id"]]
+	var status: String = TREE_STATUS[node["state"]]
+	var lines: Array = []
+	if node["state"] == SkillTreeModel.OWNED:
+		var c := detail(rules, d, slots, atk)
+		status = "Owned  Lv %d / %d" % [c["level"], c["max_level"]]
+		lines.append(c["description"])
+		lines.append_array(c["lines"])
+	elif node.has("condition") or [SkillTreeModel.READY, SkillTreeModel.RETIRED].has(node["state"]):
+		lines.append(d.description)
+	if node["state"] == SkillTreeModel.READY:
+		lines.append(price_line(rules, d.id))
+		lines.append(short_line(rules, d.id))
+	if node.has("hint"):
+		lines.append(node["hint"])
+	if node.get("condition", "") != "":
+		lines.append("How: " + node["condition"])
+	if d.source == "evolution" and defs.has(d.replaces):
+		lines.append("Evolves from " + defs[d.replaces].display_name)
+	return {"title": d.display_name, "status": status, "lines": lines}
+
+## A shown form's status on the Tree tab.
+const FORM_STATUS := {"current": "Your body now", "reached": "Reached before", "named": "Not yet reached"}
+
+## The Tree tab's card for a shown form: form_card's stats, traits and grants, with its stage and whether it is the body now,
+## was reached before, or is not yet reached. The slime is not a FormDef.
+static func _form_tree_card(rules, node: Dictionary, forms: Dictionary) -> Dictionary:
+	var status: String = FORM_STATUS[node["state"]]
+	if not forms.has(node["id"]):
+		return {"title": node["name"], "status": "Stage 1  " + status, "lines": ["Every life begins as a slime."]}
+	var c := form_card(forms[node["id"]], rules)
+	var lines: Array = [c["blurb"]]
+	lines.append_array(c["stats"])
+	lines.append_array(c["traits"])
+	if c["grants"] != "":
+		lines.append(c["grants"])
+	return {"title": c["name"], "status": "Stage %d  %s" % [c["stage"], status], "lines": lines}
+
+## A form's card, shared by the Form tab and the Tree tab: {"name", "stage", "blurb", "stats", "traits", "grants"}.
+## "grants" lists only the grants the player can still receive: a grant whose skill has retired is hidden.
+static func form_card(def: FormDef, rules) -> Dictionary:
+	var names: Array = []
+	for g in def.grants:
+		if rules.is_retired(g):
+			continue  # the player evolved it: the form can no longer give it
+		var sd = rules.get_def(g)
+		names.append(sd.display_name if sd != null else g)
+	return {"name": def.display_name, "stage": def.stage, "blurb": def.blurb, "stats": FormEffects.stat_lines(def),
+		"traits": def.traits.map(func(t): return FormEffects.TRAITS.get(t, str(t))),
+		"grants": "" if names.is_empty() else "Grants: " + ", ".join(names)}
+
+## A price as text, in the canonical element order: "water 6, dark 10".
+static func price_text(price: Dictionary) -> String:
+	var parts: Array = []
+	for e in Essences.ALL:
+		if price.has(e):
+			parts.append("%s %d" % [e, int(price[e])])
+	return ", ".join(parts)
+
+## What is short of a price: "needs 2 more water, 6 more dark"; empty when every element is held.
+static func shortfall_text(rules, price: Dictionary) -> String:
+	var parts: Array = []
+	for e in Essences.ALL:
+		if price.has(e):
+			var short: int = int(price[e]) - rules.held(e)
+			if short > 0:
+				parts.append("%d more %s" % [short, e])
+	return "needs " + ", ".join(parts) if not parts.is_empty() else ""
+
 static func effect_lines(d: SkillDef, level: int, atk := 1) -> Array:
 	var lines: Array = []
 	for e in d.effects:
@@ -178,6 +276,9 @@ static func _event_text(event: String, tags: Dictionary) -> String:
 	match event:
 		"absorbed":
 			return "Absorb %s essence" % tags.get("essence", "")
+		"predated":
+			if tags.has("source"):
+				return "Eat a %s" % str(tags["source"]).capitalize()
 		"damaged":
 			return "Take %s hits" % tags.get("damage_type", "any") if tags.has("damage_type") else "Take hits"
 	return EVENT_TEXT.get(event, event)

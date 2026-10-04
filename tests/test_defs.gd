@@ -76,3 +76,11 @@ func test_load_content_collects_load_and_validation_errors() -> void:
 	_cleanup(skills_dir)
 	_cleanup(creatures_dir)
 	DirAccess.remove_absolute(root)
+
+func test_satisfy_fires_the_events_a_counter_unlock_needs() -> void:
+	var engine: SkillRulesEngine = autofree(SkillRulesEngine.new())
+	var d := TestDefs.skill("s", {"unlock": [TestDefs.counter("jumped", 3), TestDefs.counter("absorbed", 2, {"essence": "air"})]})
+	engine.setup([d])
+	engine.start_run()
+	TestDefs.satisfy(engine, "s")
+	assert_eq(engine.level_of("s"), 1)

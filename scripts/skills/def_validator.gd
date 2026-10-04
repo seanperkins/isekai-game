@@ -25,6 +25,7 @@ static func validate(skills: Array, creatures: Array) -> PackedStringArray:
 	for d in by_id.values():
 		_check_skill(d, by_id, errors)
 	_check_siblings(by_id, errors)
+	_check_prices(by_id, errors)
 	_check_cycles(by_id, errors)
 	_check_creatures(creatures, by_id, errors)
 	return errors
@@ -112,6 +113,25 @@ static func _check_siblings(by_id: Dictionary, errors: PackedStringArray) -> voi
 		elif first[d.replaces][1] != n:
 			errors.append("%s: evolutions of '%s' must unlock at the same level (%s needs %d, %s needs %d)" % [
 				_where(d), d.replaces, first[d.replaces][0], first[d.replaces][1], d.id, n])
+
+## A base power that has evolutions carries the price of evolving it (known elements, positive units); every other skill carries none.
+static func _check_prices(by_id: Dictionary, errors: PackedStringArray) -> void:
+	var parents := {}
+	for d in by_id.values():
+		if d.source == "evolution" and d.replaces != "":
+			parents[d.replaces] = true
+	for d in by_id.values():
+		var w := _where(d)
+		if parents.has(d.id):
+			if d.evolution_price.is_empty():
+				errors.append("%s: a power with evolutions needs an evolution_price" % w)
+		elif not d.evolution_price.is_empty():
+			errors.append("%s: only a power with evolutions carries an evolution_price" % w)
+		for e in d.evolution_price:
+			if not Essences.ALL.has(e):
+				errors.append("%s: evolution_price names unknown essence '%s'" % [w, e])
+			elif int(d.evolution_price[e]) <= 0:
+				errors.append("%s: evolution_price of '%s' must be positive" % [w, e])
 
 static func _check_event_ref(w: String, field: String, event: String, tags: Dictionary, errors: PackedStringArray) -> void:
 	if not Events.ALL.has(event):

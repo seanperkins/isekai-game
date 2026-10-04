@@ -6,7 +6,7 @@ extends Resource
 @export var display_name: String = ""
 ## StatKeys -> int, e.g. {"max_hp": 2, "atk": 3, "def": 0, "spd": 140}
 @export var stats: Dictionary = {}
-## Essence -> units absorbed per eat, e.g. {"sound": 1, "flight": 1}
+## Essence -> units absorbed per eat, e.g. {"air": 2}
 @export var essences: Dictionary = {}
 ## [{"id": String, "level": int}] skills this creature uses
 @export var skills: Array = []

@@ -12,11 +12,11 @@ announce = "Analysis complete. Acquired [Sticky Thread]."
 source = "essence"
 hidden = false
 unlock = [{
-"event": "absorbed",
+"event": "predated",
 "kind": "counter",
 "n": 3,
 "tags": {
-"essence": "thread"
+"source": "spider"
 }
 }]
 levels_on = {
@@ -33,3 +33,6 @@ effects = [{
 "values": [1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
 }]
 mp_cost = 3
+evolution_price = {
+"dark": 14
+}

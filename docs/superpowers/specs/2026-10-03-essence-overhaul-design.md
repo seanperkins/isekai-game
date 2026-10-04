@@ -1,0 +1,137 @@
+# Essence Overhaul — Design
+
+Status: draft for Sean's review, revised after the first debate round (2026-10-03). The panel's five reviews are in
+`docs/ledgers/spec-review-2026-10-03/round-1/`. Built from the design doc (`docs/isekai-chronicles-design-doc.md`) and its review
+page (`docs/design-review/index.html`), which hold every decision below as Sean made it. This is the first of the three things the
+doc puts before the spider (the essence overhaul, the skill tree screen, and slime movement). The tree screen is a separate spec
+(`2026-10-03-skill-tree-screen-design.md`) and builds on this one.
+
+## What I understood
+
+The game has ten **trait essences** tied to particular creatures (sound, flight, poison, water, armor, earth, thread, spore, shell,
+shock). The design replaces them with **elements**: a power is unlocked by an element or a mix of elements, and **evolving a power
+spends essence** instead of an Evolution Point (EP). The stage-1 body forms stop reading an affinity ratio and are offered by the
+powers you own.
+
+Success: a life plays as it does today (same rooms, same creatures, each power unlocking within one eat of where it does now on a
+Cave-start full clear except the listed deliberate moves, and every power reachable from each rebirth start by some walk of the map without farming), but
+
+- every creature that carries essence today carries elements (the Cave Serpent carries none, as now), and no skill, form, kit or
+  test names a trait essence;
+- Poison Breath and Spore Cloud unlock from a **mix** (poison is water and dark; spore is air and dark), Jolt from light and air;
+- a ready evolution costs an authored price in the elements its power runs on, paid from essence you **hold**, and EP is gone;
+- the first evolution offers every lineage whose power you own, not an affinity ratio;
+- the full suite passes, and a data test pins the new vocabulary the way `tests/test_constants.gd` pins the old one.
+
+## Decisions
+
+| Topic | Decision |
+|---|---|
+| Elements | `Essences.ALL` becomes the five **first-pass** elements: `water`, `earth`, `air`, `light`, `dark`. Fire, mind and blood join the list with the first creature that carries them (the doc's "later, with new creatures"). Poison and Physical are not elements: poison is water and dark, and earth covers what Physical would have |
+| Mapping | Each trait unit becomes one unit of each element it maps to. `sound`, `flight` → air. `poison` → water + dark. `spore` → air + dark. `armor`, `shell` → earth. `shock` → light + air. `thread` has no element and is dropped. `water` and `earth` are unchanged. A creature's duplicate elements add (a bat's sound 1 and flight 1 become air 2). The derived creature table is below; any creature may be re-themed later (the Gloom Wolf is a candidate for dark), not here |
+| Thread | Thread powers unlock by **eating a spider**, not by an essence. Sticky Thread unlocks on `predated` with `{"source": "spider"}` (the Black Spider's id). `Player._complete_predation` already emits `source` on `PREDATED` and `Ledger` matches a counter on any tag subset, and `DefValidator._check_event_ref` already rejects an unknown `source` tag, so this needs **no new field, tag or validator rule**. An earlier draft added `CreatureDef.family`; it would have counted the Taratect once (there is exactly one, in the Deep) and cost six touch points, so it is deferred until the playable spider brings a second spider-kin. Two things follow. **Wording:** `condition_text` maps `predated` to "Eat creatures" and ignores tags, so it gains a `source` branch that names the creature ("Eat a Black Spider ×3"). **Hints:** the Compendium names a power at Appraisal 2 only through `essences_used()`, so a power with no element would never be hinted by the spider; a new `SkillDef.sources_used()` lets the hint also fire when a creature's id is the source a power's unlock names. The Taratect and the Vine Snake do not hint or count toward Sticky Thread |
+| Eaten and held | **Eaten** is what the ledger already counts (`ABSORBED` per element). Recipes read it, so spending never undoes an unlock. **Spending is recorded in the same ledger**: one `essence_spent` entry per unit, tagged with the element, written by `evolve()` with `_ledger.record` directly. The name is a constant on `SkillRulesEngine`, **not** a member of `Events.ALL` or `Events.INTERNAL`: `_drain` skips ledger recording for `INTERNAL` events (so a copy of `SKILL_UNLOCKED`'s shape would leave `held` forever unchanged), and membership in `ALL` would break `tests/test_constants.gd` (which pins `Events.ALL` to exactly its current names), `tests/test_audio_catalog.gd` (a cue for every name in `ALL`), and let a skill count the spend as a recipe condition. It is not emitted on `EventBus.game_event`, so the Compendium and Audio never see it. **Held** is the count of `ABSORBED` minus the count of `essence_spent` entries for that element, a projection of one log, so `reset_run()` clears the balance with everything else and no second piece of state exists. Banking and the death seed are later milestones and will read `held`; nothing here uses them |
+| Mix unlocks | A recipe is several `counter` conditions on `absorbed`, and `unlock` already means all of them (AND). So poison is `water ≥ n` and `dark ≥ n`, with no engine change. **Alternative recipes** (lightning from fire and air *or* light and air) need an OR the engine lacks; they are not needed until fire exists, so the OR group is deferred to the spec that adds fire. Spore is air and dark here; earth does not join it (decided, Open for Sean 5) |
+| Calibration | Merging elements changes how fast each element accrues, and the mapping adds **new sources** for some skills: the Black Spider, Vine Snake and Taratect now carry water (Hydraulic Propulsion), both moths carry air (Echolocation), the armor and shell creatures feed Tremor, the eels and the jelly carry air (Echolocation), and the bats and toads put air and dark into the **Cave**, where Spore Cloud's recipe can now be met without a moth. So keeping the cheapest source's eat count is not enough. **Priority rule, strongest first.** (1) **Reachability is a hard rule.** "Reachable" is defined once: *some walk of the fixed map from the start, without farming a respawning room*; a life may walk back (G1's exit leads to `C5`). Every power must be reachable from the Cave start and from each rebirth start (G1, F1, D1), or be listed as not. (2) The **Cave-start full clear** (area order cave, grotto, flooded, deep; within an area, room-id order, which the script writes down) is the **target**: each power unlocks within one eat of today's point there. (3) Rebirth-start **timing** is not held; where it moves, the move is listed. Holding the Cave-start target moves some rebirth timings, because the new-to-old earth ratio differs by area (the Cave and Grotto 2.75, the Deep about 1.44). **Expected deliberate moves**, listed so Sean decides on them rather than meeting them in the script's output: Echolocation, held near air 6 (the third bat), unlocks on a G1 life at the third Grotto moth instead of the Deep's wolves, and on an F1 life in the Flooded; Body Armor, held at earth 6 (the third lizard), moves the same way for G1 and F1; Tremor, held at its Cave-start point (the second Deep ant), needs earth 59, and an F1 or D1 life holds only 50 in one forward pass (Flooded 11 and Deep 39), so it must walk back for the last 9, a later unlock than today's (the alternative, a threshold of 50 or less, gives a Cave start Tremor in the Flooded, an area early; the default here is to hold the Cave-start point). Sticky Thread becomes reachable only by walking back to the Cave's Black Spiders (the only `source` it counts) from G1, F1 and D1, where today a vine snake or the Taratect supplies thread; that is an expected move, and the Weaver lineage opens there only after the walk. `test_essence_minimums_satisfy_every_essence_skill` is a census fixture (it totals 51 earth from its listed minimums), so its census is retuned with the thresholds rather than treated as a ceiling. The one-off calibration script prints, per skill: the unlock point before and after for the Cave-start walk and each rebirth start; the level reached by the end of each area for every skill that `levels_on` an absorbed element (Echolocation levels at 3 air per level and would reach the stage cap on a Cave and Grotto clear); and every creature that feeds a skill now but did not before. The chosen Cave-start points are **pinned in `tests/test_content.gd`**, beside `test_essence_minimums_satisfy_every_essence_skill`, so a later content edit cannot move them silently; that test also gains a branch for the `source`-unlocked Sticky Thread (its minimums must include three Black Spiders). The three earth skills (Body Armor, Hardened Shell, Tremor) become one element at three thresholds, in that order. `FormOffers.supply` only sums essence over spawns; it is not a model for the walk, which the script defines |
+| Price | `SkillDef` gains `evolution_price: Dictionary` (element → units), set **once, on the base power**, not on each evolution: a base power that has evolutions requires a non-empty price and every other skill requires none. Branches therefore cannot drift apart (the rule "siblings share one price" disappears with the duplication). `DefValidator` rejects unknown elements and enforces presence. `evolution_cost()` (EP) is replaced by `evolution_price(id)`, which reads the parent's. Sean chose "per power" for the price; the design doc's earlier wording ("each evolution") is corrected to match, and if branches should ever cost differently the price moves back onto the evolutions. The engine **assumes a price** (no empty-is-free branch): `test_evolution_branches` builds its own defs, so its fixture gives the parent a price. **The numbers:** recipes read eaten and `held = eaten − spent`, so until something is bought any price at or below the unlock threshold is already affordable. A price only binds when the prices that draw on one element add up to more than a life holds. On a Cave and Grotto full clear the review counted dark 29 (Cave 10, moths 10, snakes 6, pale moth 3), and three families draw on dark. The target is that a Cave and Grotto full clear affords any **one** family's evolution but not all three (an evolution can be ready before it is affordable, which is why the row says what is short). Starting values, tuned by play: Hydraulic Propulsion water 6; Poison Breath water 6 and dark 10; Spore Cloud air 6 and dark 12; Sticky Thread dark 14 (dark decided). The three dark prices sum to 36 against 29 held |
+| Who pays | `SkillRulesEngine.evolve(id)` checks the price, records the `essence_spent` entries and grants, in one call. Today its comment says "the caller has already paid its EP"; that split goes. `can_afford(id)` and `held(element)` serve the UI. `evolution_ready` still fires once, when the conditions are met; affordability is separate and has no signal, so the row can say "Ready — needs 2 more dark" |
+| EP | **Removed.** `Progression.ep`, `spend_ep`, the HUD's "EP n" (`hud.gd` `level_text`), the "— N EP in Skills" announcer text (`core_wiring.gd`), the EP wording in `skill_screen.gd` (the stats column `Lv %d    EP %d`, both list-row labels `EVOLVE %d EP`, the affordability check in `accept`, the card and the hint) and `skill_screen_model.gd` (the ready row's cost), the "no EP" rule and comment in the rebirth kit, and the stale comments (`skill_rules_engine.gd`, `progression.gd` including the `seeded` doc, `player.gd`, `rebirth_kit.gd` including the seeded-affinity comment) go. Levels still raise stats and gate the body evolution at the cap. Nothing else used EP. This is a cleanup of built code, not free |
+| Evolving | Evolving stays in the **Skills tab with today's two presses** (arm, then confirm), now priced in essence. The HUD already has one persistent label for the body evolution (`_evolve`, set from `evolve_text()` every frame in `hud.gd` `_process`); it grows a second line for a ready, affordable power evolution ("Evolve: Poison Breath → Miasma / Venom Bolt (Skills)"). Because the label is recomputed every frame, affordability is polled and needs no new signal; `held` is two linear scans of the ledger, so the HUD asks once per ready **parent** (not per branch) and `can_afford` memoizes on the ledger's size, which keeps the per-frame cost flat while an evolution waits on essence; `reset_run()` clears the memo (the ledger restarts at size 0, so a size-only key could return a previous life's answer). The frictionless in-world chooser the doc wants is **not here** (see Open for Sean 4) |
+| Forms | `FormDef.essences` becomes `FormDef.powers`; `tools/build_forms.gd` replaces `essences_of()` with a lineage → powers table and the `.tres` files are regenerated. A lineage is **open** when the player has reached any of its powers (`level_of(id) > 0`, which already counts a retired parent). A new public `FormOffers.open_lineages(forms, rules)` returns them in `LINEAGE_ORDER`; the stage 1 → 2 offers are those, plus the Greater Slime fallback when fewer than two are open (as now). **There is no ranking and no cap**: the design doc says the player "sees every evolution their current essence makes possible and picks one", and the earlier ranking (summed levels) was structurally biased (Bulwark has three powers, two of them levelling on damage taken, so it would top the offers regardless of play). `MAX_OFFERS`, `ELIGIBLE`, `supply`, `default_supply`, `affinity`, `absorbed_units`, `FIRST_EVOLUTION_AREAS` and `Progression.seeded` are removed. The Form tab holds at most five lineage rows (the fallback is added only when fewer than two are open, so six rows never occur); its layout is checked at plan time. **Consequence, accepted (Open for Sean 6):** with no cap, a Cave clear already opens all five lineages (Echolocation at the third bat, Hydraulic Propulsion at the fourth toad, Poison Breath at the fourth toad, Body Armor at the third lizard, Sticky Thread at the third spider), and the first evolution is reached only after the Cave and Grotto, so the offer becomes the same five for nearly everyone, where today's 60% rule varies with play (Open for Sean 6). `FormValidator` gains a rule for `powers` (known skill ids, stage-2 forms only). `.tres` files are the source of truth for forms (the generator's header says "run once, then edit freely"): the plan edits the generator and the files together and diffs the result so no hand edit is lost Stage 2 → 3 and 3 → 4 are unchanged. The skill tree reads `open_lineages` too, so the two screens cannot disagree |
+| Lineage powers | weaver: `sticky_thread` · tide: `hydraulic_propulsion` · toxic: `poison_breath`, `spore_cloud` · bulwark: `body_armor`, `hardened_shell`, `tremor` · echo: `echolocation`. Evolved powers count through their retired parent |
+| Rebirth kits | **Decided (2026-10-03): the goddess's altars replace the rebirth pools** (see the design doc), and a head start is chosen at the altar and bought with soul points, so there are no free kits in the end state. The altars belong to the later soul-point milestone; until it lands, the pools stay as built **minus `affinity`**: they keep `skills` and `level`, and nothing replaces the seeds. The old rule "every non-default pool opens at least two lineages" existed because affinity needed 60% of the supply; under "open = you own a power" it buys nothing, so `eligible_lineages`, the `ESSENCES` list and its validation, a validator rule and a test rewrite go now. D1 already grants `tremor`, which opens Bulwark. The room editor has **no** affinity field (its kit fields are `kit_level` and `kit_skills`, and it keeps every other key); the change there is the comment at `room_edit_model.gd` `set_field` and the tests that used G1's affinity as the "unrelated key survives an edit" probe, which need another key |
+| Display | The status text and the Skills tab's stats column show **held** per element (hiding zeros, as now). Locked powers still show Appraisal bands from the ledger. The unlock line for a mix keeps today's per-condition joiner ("Absorb water essence ×4 and Absorb dark essence ×4"); no merge rule is added. Creature cards list their elements. The Compendium's Appraisal-2 hint already fires when a creature carries **any** element of a recipe (`creature_report` loops `essences_used()`), and with shared elements that would name almost everything from almost everything (a bat would name Echolocation, Spore Cloud and Jolt; any water creature would name Hydraulic Propulsion and Poison Breath). So the rule becomes: a creature hints a power only when it carries **every** element of the recipe, or its id is the `source` the power's unlock names. Side effects, accepted: a Vine Snake (water 1, dark 1) stops hinting Sticky Thread, which its thread 1 hinted before, and a Black Spider newly hints Poison Breath and Hydraulic Propulsion |
+
+## The derived creature table
+
+Applying the mapping mechanically (thread dropped). These are the starting numbers for `tools/build_content.gd`, the source of truth.
+
+| Creature | Today | Becomes |
+|---|---|---|
+| Cave Bat | sound 1, flight 1 | air 2 |
+| Poison Toad | poison 1, water 1 | water 2, dark 1 |
+| Armored Lizard | armor 1, earth 1 | earth 2 |
+| Black Spider | thread 1, poison 1 | water 1, dark 1 |
+| Spore Moth | spore 1, flight 1 | air 2, dark 1 |
+| Mushroom Crab | shell 2, earth 1 | earth 3 |
+| Vine Snake | poison 1, thread 1 | water 1, dark 1 |
+| Pale Moth | spore 3, flight 2 | air 5, dark 3 |
+| Glass Eel | shock 1, water 1 | light 1, air 1, water 1 |
+| Cave Crayfish | shell 1, water 1 | earth 1, water 1 |
+| Drift Jelly | shock 1, water 2 | light 1, air 1, water 2 |
+| Bog Lizardman | earth 1, water 1 | unchanged |
+| Storm Eel | shock 3, water 2 | light 3, air 3, water 2 |
+| Gloom Wolf | sound 1, earth 1 | air 1, earth 1 |
+| Armed Ant | armor 1, earth 1 | earth 2 |
+| Stone Drake | earth 3, armor 1 | earth 4 |
+| Taratect | thread 3, poison 2 | water 2, dark 2 |
+| Water Pool | water 2 | unchanged |
+| Cave Serpent | none | none |
+
+## The powers
+
+Unlock conditions after the change. `n` values are set by the calibration; the shape is what the spec fixes.
+
+| Power | Unlock now | Levels on | Evolution price (on the base power; starting values) |
+|---|---|---|---|
+| Echolocation | air | air absorbed | — |
+| Poison Breath | water **and** dark | skill used | water 6, dark 10 → Miasma / Venom Bolt |
+| Spore Cloud | air **and** dark | skill used | air 6, dark 12 → Healing Spores / Puffball |
+| Jolt | light **and** air | skill used | — |
+| Hydraulic Propulsion | water | skill used | water 6 → Water Blade / Jet Dash |
+| Body Armor, Hardened Shell, Tremor | earth, at three thresholds | unchanged | — |
+| Sticky Thread | eat a spider (`source`) | skill used | dark 14 → Swing Thread / Binding Web (dark decided) |
+| Regeneration | unchanged (eat creatures) | unchanged | — |
+
+## Engine and data changes
+
+- `scripts/core/essences.gd`: the five elements; a doc comment that fire, mind and blood arrive with their first creature.
+- `scripts/skills/skill_def.gd`: `evolution_price`, and a `sources_used()` beside `essences_used()` (which already returns every element a mix names).
+- `scripts/skills/skill_rules_engine.gd`: the `essence_spent` constant, `held()`, `can_afford()` (memoized on ledger size), `evolution_price()`, `evolve()` pays by writing to the ledger.
+- `scripts/skills/ledger.gd`: a `size()` for the memo.
+- `scripts/skills/def_validator.gd`: elements against the new list; price rules.
+- `tools/build_content.gd` (source of truth): the creature table, skill unlocks, `levels_on`, prices. Re-run it to regenerate `data/skills` and `data/creatures`.
+- `scripts/forms/*` (`FormValidator` gains the `powers` rule), `tools/build_forms.gd` (`essences_of()` → powers table), `data/forms/*.tres`: `powers` replaces `essences`; `FormOffers` rewritten as above.
+- `scripts/world/rebirth_kit.gd`, `data/rooms/{G1,F1,D1}.tres`: `affinity` and `ESSENCES` go.
+- `scripts/actors/progression.gd`: `ep`, `spend_ep`, `seeded` removed; `start_at` loses its EP bookkeeping.
+- `scripts/player/player.gd`: `try_evolve` stops spending EP; `form_offers()` passes the rules.
+- `scripts/core/core_wiring.gd`, `scripts/ui/hud.gd`, `scripts/ui/skill_screen_model.gd`, `scripts/ui/skill_screen.gd`, `scripts/ui/status_text.gd`: price, held, the HUD line, wording, the `source` branch of `_event_text`.
+- `scripts/compendium/compendium_model.gd`: the every-element and source hint rule.
+- `tools/evolution_shots.gd`, `tools/aim_shots.gd`, `tools/vfx_shots.gd`: they feed trait essences (including `thread`, to unlock Sticky Thread) today, and `evolution_shots` hard-codes a tab index; both change.
+
+No save migration: the profile persists the Compendium, Bestiary, map, shortcuts, tablets, attuned pools, last choice and species id, none of which names a trait essence, and essence counters were never persisted.
+
+## Sequencing
+
+Three steps, each leaving the suite green, so the plan can stop or reorder between them:
+
+1. **Forms by powers.** A net deletion (`supply`, `affinity`, `absorbed_units`, `seeded`, the cap and the ranking, the kit `affinity`). It needs no new element.
+2. **The element vocabulary.** The creature table, the `source`-unlocked Sticky Thread, mix unlocks, the calibration and its pinned test.
+3. **Price, held and EP removal**, with the HUD line.
+
+## Testing
+
+Run `tools/run_tests.sh` (it reads the log and the JUnit file, not just the exit code). The lists below are the panel's starting inventory, **not** a verified one (round 2 found three tests the first list missed). The plan opens with a **grep-derived checklist** of every test and tool that mentions the retired names (`affinity`, `seeded`, `FIRST_EVOLUTION_AREAS`, `MAX_OFFERS`, the eight trait names used as essences, `ep`, `evolution_cost`) and closes by running it again; the grep, not these lists, is authoritative.
+
+- **New:** the vocabulary pin replaces `Essences.ALL` in `tests/test_constants.gd`; every creature's derived numbers match the table above (`DefValidator._check_creatures` already enforces that elements are known, so that half is not retested); `held` decreases through the real `evolve()` path (the ledger entry, not an event); the mix unlocks (Poison Breath needs both elements, the unlock waits for the second); `held` across an evolve, and that a recipe still counts spent essence; `can_afford` false then true, that the HUD line turns on from an `ABSORBED` event alone, and that the memo does not survive `reset_run()` (afford in life 1, reset, reach the same ledger size in life 2 without the essence: false); `evolve()` refuses when it cannot pay and records exactly the price when it can; the price-on-parent validator rules; a price that binds (a full-clear ledger cannot afford all three dark evolutions); Sticky Thread unlocking on the third Black Spider through `source`, and an unknown `source` failing the existing validator; the hint rule (a bat does not name Spore Cloud, a toad names Poison Breath, a Black Spider names Sticky Thread, a Vine Snake does not); `FormOffers.open_lineages` (open lineage, retired parent counts, order, fallback); the calibration's pinned Cave-start unlock points, the area-end levels for absorbed-levelled skills, and rebirth-start reachability for every power under the walk definition above (Sticky Thread from G1, F1 and D1 included).
+- **Changed (rewrite, not edit):** `test_first_evolution_areas` (the supply tests go; its "Cave and Grotto reach the stage-1 cap" check stays and the area constant moves into the test), `test_form_offers`, `test_rebirth_kit` (`eligible_lineages`, seeds, EP), `test_rebirth_pool`, `test_rebirth_flow`, `test_room_edit_model`, `test_room_edit_fields`, `test_room_editor_scene` (a different "unrelated key survives" probe), `test_skill_caps` (reads `sound`), `test_web_tether` (unlocks Sticky Thread by feeding a `thread` essence; it must feed `predated {"source": "spider"}`), `test_deep_slice`, `test_pale_moth`, `test_defs`, `test_player`, `test_accessors`, `test_audio_runtime`, `test_skill_rules_levels`.
+- **Changed (assertions):** the EP assertions in `test_progression_stages`, `test_levels`, `test_aim_fixes`, `test_form_effects`; the HUD level text ("… EP 0") in `test_form_tab`; the "Level up to earn EP" line in `test_evolution_screen`; the tests that call `evolve()` on the **real** defs and now need the price paid first by feeding `ABSORBED` events (`test_evolution_trees`, `test_scripted_run`, `test_evolution_screen`, which evolves after four water against a price of six, `test_levels`, `test_form_tab`), and `test_evolution_branches`, whose fixture parent gets a price; the essence-name assertions in `test_grotto_data`, `test_flooded_data`, `test_deep_data`, `test_content`, `test_status_text`, `test_skill_screen`, `test_def_validator`, `test_compendium_model`. Damage-type strings such as `"poison"` and `"physical"` are **not** essences and stay.
+- **Verification beyond tests:** play the first areas once with `--evolve` and a fresh life, and confirm by hand that Poison Breath, Spore Cloud, Jolt and Sticky Thread unlock from the intended creatures and that the first evolution offers every open lineage. Screenshots through `tools/evolution_shots.gd` if the Skills tab or Form tab layout moves.
+
+## Not here
+
+- The skill tree screen (its own spec) and slime movement feel.
+- The **in-world one-press chooser** for evolving (Open for Sean 4); the tab flow works meanwhile.
+- Stage 2 → 3 pairing by the evolved power. Bulwark and Echo have no branching power to pick a child from, and Toxic has four evolved powers for two children, so the pairings need authoring and a rule first.
+- The OR recipe group and fire (lightning's second recipe); mind and blood.
+- The essence seed on death, banking at shrines and soul points. They will read `held`; none of them is built here.
+- Items, corpses and the other species (a later milestone, designed in the doc).
+
+## Open for Sean
+
+1. **Thread evolutions are paid in dark.** Decided by Sean (2026-10-03): the spiders carry dark, and Sticky Thread's evolutions cost dark 14 as a starting value.
+2. **Rebirth pools: decided.** Sean replaced them with the goddess's altars (attune, bank essence, meet the goddess). Until the altar milestone, the pools stay as built minus `affinity`.
+3. **EP removal: decided.** Sean confirmed (2026-10-03): EP goes, because nothing else spends it.
+4. **Tab-based evolving now: decided.** Sean confirmed (2026-10-03): ship the Skills-tab flow priced in essence with the HUD line now, and design the in-world prompt as its own follow-up (the stick clicks L3 and R3 are unmapped candidates).
+5. **Spore Cloud in the Cave: decided.** Sean accepted the early unlock (2026-10-03): spore stays air and dark, earth does not join the recipe, and Spore Cloud becomes reachable in the Cave from bats (air) and toads (dark). The calibration records it as a deliberate move.
+6. **Every open lineage is offered: decided.** Sean confirmed (2026-10-03): no cap and no ranking, matching the doc's "sees every evolution their essence makes possible", even though almost every life will see the same five lineages after a Cave and Grotto clear.

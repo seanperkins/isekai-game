@@ -31,8 +31,8 @@ func _process(_delta: float) -> bool:
 	match frame:
 		20:
 			for i in 3:
-				rules.handle_event("absorbed", {"essence": "thread", "source": "shots"})  # Sticky Thread, slot 0
-			for i in 4:
+				rules.handle_event("predated", {"source": "spider", "kind": "creature"})  # Sticky Thread, slot 0
+			for i in 8:
 				rules.handle_event("absorbed", {"essence": "water", "source": "shots"})  # Hydraulic Propulsion, slot 1
 			var rect: Rect2 = game.world.current_rect()
 			p.global_position = rect.position + Vector2(300, 300)

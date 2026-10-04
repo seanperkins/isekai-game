@@ -13,8 +13,8 @@ stats = {
 "spd": 70
 }
 essences = {
-"poison": 1,
-"water": 1
+"dark": 1,
+"water": 2
 }
 skills = [{
 "id": "poison_spit",

@@ -101,8 +101,7 @@ func test_player_passes_the_held_direction_to_the_ability() -> void:
 	p.setup(rules, CompendiumModel.new([], []), [], func(n: String, t: Dictionary) -> void: rules.handle_event(n, t))
 	add_child_autofree(p)
 	rules.start_run()
-	for i in 4:
-		rules.handle_event("absorbed", {"essence": "water"})
+	TestDefs.satisfy(rules, "hydraulic_propulsion")
 	Input.action_press("aim_up")
 	p.use_active(0)
 	var hydro: Ability = p._abilities["hydraulic_propulsion"]

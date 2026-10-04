@@ -62,7 +62,7 @@ func test_levels_reset_when_a_run_restarts_in_place() -> void:
 	player.award_xp(25)
 	assert_eq(player.progression.level, 3)
 	rules.start_run()
-	assert_eq([player.progression.level, player.progression.xp, player.progression.ep], [1, 0, 0])
+	assert_eq([player.progression.level, player.progression.xp], [1, 0])
 	assert_eq(player.health.max_hp, 30)
 
 func test_debug_toggle_is_f3_and_back() -> void:

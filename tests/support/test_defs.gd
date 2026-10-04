@@ -38,3 +38,11 @@ static func all_creatures() -> Array:
 		else:
 			out.append(creature(sid))
 	return out
+
+## Fires the events that satisfy `id`'s counter unlocks, so a test need not repeat a threshold the calibration may tune.
+static func satisfy(rules: SkillRulesEngine, id: String) -> void:
+	var d: SkillDef = rules.get_def(id)
+	for c in d.unlock:
+		if c.get("kind", "") == "counter":
+			for i in int(c["n"]):
+				rules.handle_event(c["event"], c.get("tags", {}).duplicate())

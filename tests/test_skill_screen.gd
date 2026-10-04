@@ -40,7 +40,7 @@ func test_level_progress_counts_toward_the_next_level() -> void:
 
 func test_skill_rows_group_owned_skills_and_tease_locked_ones() -> void:
 	_emit("jumped", {}, 40)
-	_emit("absorbed", {"essence": "water"}, 4)
+	TestDefs.satisfy(rules, "hydraulic_propulsion")
 	var rows := SkillScreenModel.skill_rows(rules, skills)
 	var texts := rows.map(func(r): return r.get("text", r.get("name", "???")))
 	assert_eq(texts[0], "PROFICIENCY")
@@ -67,12 +67,14 @@ func test_condition_text_is_readable() -> void:
 	for d in skills:
 		by_id[d.id] = d
 	assert_eq(SkillScreenModel.condition_text(by_id["leap"], by_id), "Jump ×40")
-	assert_eq(SkillScreenModel.condition_text(by_id["echolocation"], by_id), "Absorb sound essence ×3")
+	assert_eq(SkillScreenModel.condition_text(by_id["echolocation"], by_id), "Absorb air essence ×6")
+	assert_eq(SkillScreenModel.condition_text(by_id["poison_breath"], by_id), "Absorb water essence ×4 and Absorb dark essence ×4")
+	assert_eq(SkillScreenModel.condition_text(by_id["sticky_thread"], by_id), "Eat a Spider ×3")
 	assert_eq(SkillScreenModel.condition_text(by_id["glutton"], by_id), "Eat creatures in a row without taking damage ×5")
 	assert_eq(SkillScreenModel.condition_text(by_id["jet_dash"], by_id), "Hydraulic Propulsion Lv3")
 
 func test_detail_card_for_an_active() -> void:
-	_emit("absorbed", {"essence": "poison"}, 4)
+	TestDefs.satisfy(rules, "poison_breath")
 	_emit("skill_used", {"id": "poison_breath"}, 4)
 	var by_id := {}
 	for d in skills:
@@ -98,7 +100,7 @@ func test_the_damage_line_follows_atk_and_no_other_line_does() -> void:
 	assert_eq(card["lines"], ["Damage 4"])
 
 func test_the_open_screen_shows_the_players_atk_in_the_damage_line() -> void:
-	_emit("absorbed", {"essence": "poison"}, 4)
+	TestDefs.satisfy(rules, "poison_breath")
 	player.stats.set_modifiers("t", [{"stat": "atk", "op": "add", "value": 4}])
 	_screen()
 	screen.open()
@@ -137,8 +139,8 @@ func test_screen_opens_paused_and_closes() -> void:
 
 func test_screen_lists_navigates_and_assigns() -> void:
 	_emit("jumped", {}, 40)
-	_emit("absorbed", {"essence": "water"}, 4)
-	_emit("absorbed", {"essence": "poison"}, 4)
+	TestDefs.satisfy(rules, "hydraulic_propulsion")
+	TestDefs.satisfy(rules, "poison_breath")
 	_screen()
 	screen.open()
 	assert_true(screen.row_texts().any(func(t): return t.begins_with("Leap")))
@@ -155,7 +157,7 @@ func test_screen_lists_navigates_and_assigns() -> void:
 func test_compendium_tab_shows_unknown_slots() -> void:
 	_screen()
 	screen.open()
-	screen.switch_tab(1)
+	screen.switch_tab(2)
 	assert_eq(screen.tab(), "compendium")
 	assert_true(screen.row_texts().has("???"))
 
@@ -171,7 +173,7 @@ func test_bestiary_tab_lists_creatures_and_shows_a_card() -> void:
 	compendium.on_game_event(Events.PREDATED, {"source": "bat", "kind": "creature"})
 	_screen()
 	screen.open()
-	screen.switch_tab(2)
+	screen.switch_tab(3)
 	assert_eq(screen.tab(), "bestiary")
 	assert_true(screen.row_texts().has("Cave Bat"))
 	assert_true(screen.row_texts().has("???"))
@@ -189,14 +191,24 @@ func test_bestiary_tab_lists_creatures_and_shows_a_card() -> void:
 func test_tabs_cycle_through_all_five() -> void:
 	_screen()
 	screen.open()
-	screen.switch_tab(3)
-	assert_eq(screen.tab(), "map")
+	screen.switch_tab(1)
+	assert_eq(screen.tab(), "tree")
 	screen.switch_tab(4)
-	assert_eq(screen.tab(), "sound")
+	assert_eq(screen.tab(), "map")
 	screen.switch_tab(5)
 	assert_eq(screen.tab(), "skills")
 	screen.switch_tab(-1)
-	assert_eq(screen.tab(), "sound")
+	assert_eq(screen.tab(), "map")
+
+func test_the_tree_tab_is_second_and_accept_on_it_assigns_nothing() -> void:
+	_screen()
+	screen.open()
+	screen.switch_tab(1)
+	assert_eq(screen.tab(), "tree")
+	var slots_before: Array = player.skillset.slots.slots.duplicate()
+	screen.accept()
+	assert_eq(player.skillset.slots.slots, slots_before)
+	assert_true(screen.is_open())
 
 func test_sheet_only_creatures_have_a_bestiary_portrait() -> void:
 	for id in ["bat", "toad", "lizard", "spider", "serpent", "spore_moth", "mushroom_crab", "vine_snake",
@@ -221,7 +233,7 @@ func test_the_channel_skills_say_how_much_holding_costs() -> void:
 		assert_false(card["lines"].any(func(l): return String(l).begins_with("Hold: +")), id)
 
 func _select_hydraulic() -> void:
-	_emit("absorbed", {"essence": "water"}, 4)  # auto-slots into slot 1
+	TestDefs.satisfy(rules, "hydraulic_propulsion")  # auto-slots into slot 1
 	_screen()
 	screen.open()
 	var guard := 0
@@ -249,10 +261,20 @@ func test_swim_and_jolt_read_in_the_skill_screens_own_words() -> void:
 	assert_true(SkillScreenModel.effect_lines(by_id["swim"], 1).has("Swim speed 120 px/s"))
 	assert_eq(SkillScreenModel.effect_lines(by_id["jolt"], 1), ["Damage 3"], "ATK 1, power 3")
 	assert_eq(SkillScreenModel.condition_text(by_id["swim"], by_id), "Spend time underwater ×20")
-	assert_eq(SkillScreenModel.condition_text(by_id["jolt"], by_id), "Absorb shock essence ×4")
+	assert_eq(SkillScreenModel.condition_text(by_id["jolt"], by_id), "Absorb light essence ×4 and Absorb air essence ×4")
 
 func test_tremor_reads_as_damage_scaled_by_attack() -> void:
 	var tremor: SkillDef = DefLoader.load_dir("res://data/skills").filter(func(d): return d.id == "tremor")[0]
 	assert_eq(SkillScreenModel.effect_lines(tremor, 1), ["Damage 3"], "ATK 1: the table value")
 	assert_eq(SkillScreenModel.effect_lines(tremor, 1, 5), ["Damage 6"], "3 x 200 / 100")
-	assert_eq(SkillScreenModel.condition_text(tremor, {"tremor": tremor}), "Absorb earth essence ×24")
+	assert_eq(SkillScreenModel.condition_text(tremor, {"tremor": tremor}), "Absorb earth essence ×59")
+
+func test_the_stats_column_lists_held_essence() -> void:
+	TestDefs.satisfy(rules, "hydraulic_propulsion")  # water 8
+	_screen()
+	screen.open()
+	var texts: Array = []
+	for c in screen._stats.get_children():
+		if c is Label:
+			texts.append((c as Label).text)
+	assert_true(texts.has("water  8"), str(texts))

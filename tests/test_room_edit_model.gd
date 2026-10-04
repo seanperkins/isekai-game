@@ -16,17 +16,17 @@ func test_the_model_edits_copies_never_the_loaded_rooms() -> void:
 func _kit_pool(rooms: Dictionary) -> Dictionary:
 	for id in rooms:
 		for f in (rooms[id] as RoomDef).features:
-			if f.get("kind", "") == "rebirth_pool" and (f["kit"] as Dictionary).has("affinity"):
+			if f.get("kind", "") == "rebirth_pool" and (f["kit"] as Dictionary).has("skills"):
 				return {"room": id, "feature": f}
 	return {}
 
 func test_a_nested_value_is_copied_too() -> void:
 	var original := _kit_pool(source)
-	assert_false(original.is_empty(), "a shipped room has a rebirth pool with a kit affinity")
+	assert_false(original.is_empty(), "a shipped room has a rebirth pool whose kit lists skills")
 	var copy := _kit_pool(model.rooms)
-	var before: Dictionary = original["feature"]["kit"]["affinity"].duplicate()
-	copy["feature"]["kit"]["affinity"]["zzz"] = 9
-	assert_eq(original["feature"]["kit"]["affinity"], before)
+	var before: Array = original["feature"]["kit"]["skills"].duplicate()
+	copy["feature"]["kit"]["skills"].append("zzz")
+	assert_eq(original["feature"]["kit"]["skills"], before)
 
 func test_a_copy_equals_its_source_by_exported_properties() -> void:
 	for id in source:

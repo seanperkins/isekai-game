@@ -64,8 +64,9 @@ func test_predation_completes_after_hold_and_absorbs_essences() -> void:
 	player.process_predate(0.5)
 	assert_false(_names().has("predated"))
 	player.process_predate(0.6)
-	assert_eq(events.slice(0, 3), [["predated", {"source": "toad", "kind": "creature"}],
-		["absorbed", {"essence": "poison", "source": "toad"}], ["absorbed", {"essence": "water", "source": "toad"}]])
+	assert_eq(events.slice(0, 4), [["predated", {"source": "toad", "kind": "creature"}],
+		["absorbed", {"essence": "water", "source": "toad"}], ["absorbed", {"essence": "water", "source": "toad"}],
+		["absorbed", {"essence": "dark", "source": "toad"}]])
 	assert_eq(player.stats.get_stat("max_hp"), 31)
 	assert_false(player.predation.active())
 
@@ -160,11 +161,10 @@ func test_inspect_creature_reports_with_post_inspect_level() -> void:
 	player.inspect_report.connect(func(lines: PackedStringArray) -> void: got.append(lines))
 	player.do_inspect()  # bat: 2 distinct -> Appraisal Lv2
 	assert_eq(rules.level_of("appraisal"), 2)
-	assert_string_contains("\n".join(got[0]), "Essences: sound 1, flight 1")
+	assert_string_contains("\n".join(got[0]), "Essences: air 2")
 
 func test_use_active_emits_skill_used_with_cooldown() -> void:
-	for i in 4:
-		rules.handle_event("absorbed", {"essence": "water", "source": "water_pool"})
+	TestDefs.satisfy(rules, "hydraulic_propulsion")
 	player.use_active(0)
 	player.use_active(0)
 	assert_eq(events.filter(func(e): return e[0] == "skill_used"), [["skill_used", {"id": "hydraulic_propulsion"}]])
@@ -209,8 +209,7 @@ func test_predate_hold_cancels_when_the_target_is_out_of_range() -> void:
 	assert_false(_names().has("predated"))
 
 func test_jump_and_actives_are_blocked_during_a_hold() -> void:
-	for i in 4:
-		rules.handle_event("absorbed", {"essence": "water", "source": "water_pool"})
+	TestDefs.satisfy(rules, "hydraulic_propulsion")
 	var bat := _enemy("bat", 20)
 	bat.receive_tackle(1, true)
 	player.begin_predate()

@@ -21,7 +21,7 @@ func before_all() -> void:
 func test_the_def_has_the_approved_numbers() -> void:
 	var c: CreatureDef = creatures["pale_moth"]
 	assert_eq([c.stats["max_hp"], c.stats["atk"], c.stats["def"], c.stats["spd"], c.xp], [7, 1, 0, 110, 8])
-	assert_eq(c.essences, {"spore": 3, "flight": 2})
+	assert_eq(c.essences, {"air": 5, "dark": 3})
 	assert_true(c.drifter)
 	assert_true(Sources.ALL.has("pale_moth"))
 

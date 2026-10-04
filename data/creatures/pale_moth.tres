@@ -13,8 +13,8 @@ stats = {
 "spd": 110
 }
 essences = {
-"flight": 2,
-"spore": 3
+"air": 5,
+"dark": 3
 }
 eat_bonus = {
 "amount": 2,

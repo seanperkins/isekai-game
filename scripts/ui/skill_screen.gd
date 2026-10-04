@@ -1,11 +1,11 @@
 class_name SkillScreen
 extends CanvasLayer
-## Great Sage skill window (Style D): Skills, Compendium, Bestiary, Map and Sound tabs, stats, grouped list and a
-## detail card. Esc / Start opens it and pauses the game; Q/E or LB/RB switch tabs;
+## Great Sage skill window (Style D): Skills, Tree, Compendium, Bestiary and Map tabs, stats, grouped list and a
+## detail card. Esc / Start opens it and pauses the game; Q/E or LB/RB switch tabs; Tab / R3 opens the Settings menu;
 ## Enter / A assigns an active to the U/O slots; Esc / B closes. Laid out for 640x360.
 
-## The five base tabs. A sixth, "form", joins once the body has evolved or can (see tabs()).
-const TABS := ["skills", "compendium", "bestiary", "map", "sound"]
+## The five base tabs. A sixth, "form", joins once the body has evolved or can (see tabs()). Sound lives in the Settings menu.
+const TABS := ["skills", "tree", "compendium", "bestiary", "map"]
 const FORM_TAB := "form"
 ## Five tabs share the top row: they end at x = 532 on the 640 px canvas; six are narrower.
 const TAB_X := 28.0
@@ -65,12 +65,18 @@ var _stats := Control.new()
 var _tab_labels: Array = []
 var _tab_strip := Control.new()
 var _hint := Label.new()
-var _nav_dir := 0
+var _nav_dir := Vector2i.ZERO
 var _world: World
 var _progress
 var _map_found := ""
 var _map_rooms := 0
 var _nav_timer := 0.0
+## The Settings menu: a child drawn over the tabs (see open_settings()).
+var settings_menu := SettingsMenu.new()
+## Tree tab: the selected node and the zoom are the only state that outlives a rebuild; the camera follows from them.
+var _tree_sel := ""
+var _tree_overview := false
+var _tree_model := {}
 
 func bind(player: Player, rules, compendium: CompendiumModel, skill_defs: Array) -> void:
 	_player = player
@@ -85,6 +91,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	visible = false
 	_build_frame()
+	add_child(settings_menu)
 	Controls.scheme_changed.connect(_on_scheme_changed)
 
 ## Controls keeps seeing input while this screen pauses the tree, so the scheme (and the slot labels this screen caches)
@@ -92,6 +99,8 @@ func _ready() -> void:
 func _on_scheme_changed() -> void:
 	if visible:
 		_refresh()
+	if settings_menu.is_open():
+		settings_menu.redraw()
 
 func is_open() -> bool:
 	return visible
@@ -105,6 +114,7 @@ func open() -> void:
 	EventBus.world_event.emit("menu_opened", {})
 
 func close() -> void:
+	settings_menu.close()
 	_armed = ""
 	visible = false
 	get_tree().paused = false
@@ -115,6 +125,17 @@ func toggle() -> void:
 		close()
 	else:
 		open()
+
+## Opens the Settings menu over the tabs (only while the screen is open); closing it returns to the same tab.
+func open_settings() -> void:
+	if not visible or settings_menu.is_open():
+		return
+	settings_menu.open()
+	EventBus.world_event.emit("menu_move", {})
+
+## The Settings button's name for the scheme in use; every tab's hint line ends with it.
+func settings_hint() -> String:
+	return "R3 Settings" if Controls.using_joypad else "Tab Settings"
 
 ## The tabs showing now: the base five, plus Form once the body has evolved or can.
 func tabs() -> Array:
@@ -138,6 +159,8 @@ func switch_tab(i: int) -> void:
 	_tab = posmod(i, tabs().size())
 	_sel = 0
 	_scroll = 0
+	_tree_sel = ""
+	_tree_overview = false
 	_refresh()
 	EventBus.world_event.emit("menu_move", {})
 
@@ -151,13 +174,65 @@ func move(delta: int) -> void:
 		EventBus.world_event.emit("menu_move", {})
 
 func selected_id() -> String:
+	if tab() == "tree":
+		return _tree_sel
 	if _selectable.is_empty():
 		return ""
 	return _rows[_selectable[_sel]].get("id", "")
 
-## A ready evolution is permanent for the life, so it takes two presses: the first arms it, the second evolves (spending
-## EP). Otherwise moves the selected active to the next slot (U → O → H → L → U).
+func tree_model() -> Dictionary:
+	return _tree_model
+
+func tree_overview() -> bool:
+	return _tree_overview
+
+## The SkillTreeView showing now, or null off the Tree tab.
+func tree_view() -> SkillTreeView:
+	for c in _list.get_children():
+		if c is SkillTreeView:
+			return c
+	return null
+
+## Moves the tree's selection one step in `dir` (Vector2i.UP is up), along SkillTreeModel.neighbor.
+func tree_move(dir: Vector2i) -> void:
+	if tab() != "tree" or _tree_model.is_empty():
+		return
+	var next := SkillTreeModel.neighbor(_tree_model, _tree_sel, dir)
+	if next != _tree_sel:
+		_tree_sel = next
+		EventBus.world_event.emit("menu_move", {})
+	_refresh()
+
+func select_tree_node(id: String) -> void:
+	if tab() != "tree" or not _tree_model.get("nodes", {}).has(id):
+		return
+	_tree_sel = id
+	EventBus.world_event.emit("menu_move", {})
+	_refresh()
+
+## The overview (dots and edges) or the normal zoom (names).
+func set_tree_overview(overview: bool) -> void:
+	if tab() != "tree" or overview == _tree_overview:
+		return
+	_tree_overview = overview
+	EventBus.world_event.emit("menu_move", {})
+	_refresh()
+
+func toggle_tree_zoom() -> void:
+	set_tree_overview(not _tree_overview)
+
+## One step on the open tab: the tree moves four ways, a list up or down.
+func _step(dir: Vector2i) -> void:
+	if tab() == "tree":
+		tree_move(dir)
+	elif dir.y != 0:
+		move(dir.y)
+
+## A ready evolution is permanent for the life, so it takes two presses: the first arms it, the second evolves (paying its
+## essence price). Otherwise moves the selected active to the next slot (U → O → H → L → U).
 func accept() -> void:
+	if tab() == "tree":
+		return  # read-only: a power evolves in the Skills tab, the body in the Form tab
 	var id := selected_id()
 	if tab() == FORM_TAB:
 		if id != "" and _player.advance_form(id):
@@ -169,7 +244,7 @@ func accept() -> void:
 		return
 	if id != "" and _rows[_selectable[_sel]]["kind"] == "ready":
 		if _armed != id:
-			if _player.progression.ep >= _rules.evolution_cost(id):
+			if _rules.can_afford(id):
 				_armed = id
 		elif _player.try_evolve(id):
 			_armed = ""
@@ -183,14 +258,6 @@ func accept() -> void:
 	EventBus.world_event.emit("menu_confirm", {})
 	_refresh()
 
-## Sound tab: changes the selected slider by one step (direction is -1 or +1).
-func adjust(direction: int) -> void:
-	if tab() != "sound" or _selectable.is_empty():
-		return
-	Audio.adjust_setting(str(_rows[_selectable[_sel]]["id"]), direction)
-	EventBus.world_event.emit("menu_move", {})
-	_refresh()
-
 func row_texts() -> Array:
 	var out: Array = []
 	for r in _rows:
@@ -202,7 +269,7 @@ func row_texts() -> Array:
 			"locked":
 				out.append("???")
 			"ready":
-				out.append("%s  EVOLVE %d EP" % [r["name"], r["cost"]])
+				out.append("%s  EVOLVE" % r["name"])
 			"slot", "creature":
 				out.append(r["name"])
 	return out
@@ -213,17 +280,15 @@ func hint_text() -> String:
 func detail_texts() -> Array:
 	return _detail.find_children("*", "Label", true, false).map(func(l): return l.text)
 
-## Rows to move for a stick reading: an edge-triggered step, then slow repeats while held.
-## Stick motion arrives as a stream of events, so reading it per event skipped rows.
-func nav_step(stick_y: float, delta: float) -> int:
-	var dir := 0
-	if stick_y <= -NAV_THRESHOLD:
-		dir = -1
-	elif stick_y >= NAV_THRESHOLD:
-		dir = 1
-	if dir == 0:
-		_nav_dir = 0
-		return 0
+## The selection step for a stick reading: the dominant axis past NAV_THRESHOLD as a four-way direction (Vector2i.UP is up),
+## edge-triggered, then slow repeats while held. Stick motion arrives as a stream of events, so reading it per event skipped rows.
+func nav_step(stick: Vector2, delta: float) -> Vector2i:
+	var dir := Vector2i.ZERO
+	if maxf(absf(stick.x), absf(stick.y)) >= NAV_THRESHOLD:
+		dir = Vector2i(int(signf(stick.x)), 0) if absf(stick.x) > absf(stick.y) else Vector2i(0, int(signf(stick.y)))
+	if dir == Vector2i.ZERO:
+		_nav_dir = Vector2i.ZERO
+		return dir
 	if dir != _nav_dir:
 		_nav_dir = dir
 		_nav_timer = NAV_DELAY
@@ -232,17 +297,29 @@ func nav_step(stick_y: float, delta: float) -> int:
 	if _nav_timer <= 0.0:
 		_nav_timer = NAV_REPEAT
 		return dir
-	return 0
+	return Vector2i.ZERO
 
 func _process(delta: float) -> void:
 	if not visible:
-		_nav_dir = 0
+		_nav_dir = Vector2i.ZERO
 		return
-	var step := nav_step(Controls.last_stick.y, delta)
-	if step != 0:
-		move(step)
+	var stick := Controls.last_stick
+	if settings_menu.is_open() or tab() != "tree":
+		stick = Vector2(0.0, stick.y)  # the lists read only the vertical part, so a diagonal push still moves a list
+	var step := nav_step(stick, delta)
+	if step == Vector2i.ZERO:
+		return
+	if settings_menu.is_open():
+		settings_menu.move(step.y)
+	else:
+		_step(step)
 
 func _unhandled_input(event: InputEvent) -> void:
+	if visible and settings_menu.is_open():
+		if not (event is InputEventJoypadMotion):  # the stick is read in _process
+			settings_menu.handle(event)
+		get_viewport().set_input_as_handled()
+		return
 	if event.is_action_pressed("menu"):
 		if not visible and _player != null and _player.health.is_dead():
 			return  # no menu over the death card: the restart would inherit the pause
@@ -254,18 +331,23 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventJoypadMotion:
 		get_viewport().set_input_as_handled()  # the stick is read in _process
 		return
+	var tree := tab() == "tree"
 	if event.is_action_pressed("ui_up") or event.is_action_pressed("aim_up"):
-		move(-1)
+		_step(Vector2i.UP)
 	elif event.is_action_pressed("ui_down") or event.is_action_pressed("aim_down"):
-		move(1)
+		_step(Vector2i.DOWN)
 	elif event.is_action_pressed("tab_prev"):
 		switch_tab(_tab - 1)
 	elif event.is_action_pressed("tab_next"):
 		switch_tab(_tab + 1)
-	elif event.is_action_pressed("move_left") or event.is_action_pressed("ui_left"):
-		adjust(-1)
-	elif event.is_action_pressed("move_right") or event.is_action_pressed("ui_right"):
-		adjust(1)
+	elif tree and (event.is_action_pressed("move_left") or event.is_action_pressed("ui_left")):
+		tree_move(Vector2i.LEFT)
+	elif tree and (event.is_action_pressed("move_right") or event.is_action_pressed("ui_right")):
+		tree_move(Vector2i.RIGHT)
+	elif tree and event.is_action_pressed("tree_zoom"):
+		toggle_tree_zoom()
+	elif event.is_action_pressed("settings"):
+		open_settings()
 	elif event.is_action_pressed("menu_accept") or event.is_action_pressed("ui_accept"):
 		accept()
 	elif event.is_action_pressed("menu_back") or event.is_action_pressed("ui_cancel"):
@@ -309,7 +391,13 @@ func _build_tabs() -> void:
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_tab_labels.append(tab_panel)
 
+## Rebuilds the open tab, then ends its hint line with the Settings button.
 func _refresh() -> void:
+	_refresh_tab()
+	if _player != null:
+		_hint.text += "    " + settings_hint()
+
+func _refresh_tab() -> void:
 	if _player == null:
 		return
 	if _tab_labels.size() != tabs().size():
@@ -330,17 +418,8 @@ func _refresh() -> void:
 	if tab() == FORM_TAB:
 		_refresh_form()
 		return
-	if tab() == "sound":
-		_rows = SkillScreenModel.sound_rows(Audio.settings)
-		_selectable = []
-		for i in _rows.size():
-			_selectable.append(i)
-		_sel = clampi(_sel, 0, _rows.size() - 1)
-		_hint.text = "LB/RB Tabs    Left/Right Adjust    B Back" if Controls.using_joypad else "Q/E Tabs    A/D Adjust    Esc Back"
-		_build_stats()
-		_clear(_list)
-		_clear(_detail)
-		_build_sound()
+	if tab() == "tree":
+		_refresh_tree()
 		return
 	match tab():
 		"skills":
@@ -379,7 +458,7 @@ func _build_stats() -> void:
 	var h := _player.health
 	var m := _player.mana
 	var p := _player.progression
-	_label(_stats, "Lv %d    EP %d" % [p.level, p.ep], Vector2(36, 92), Vector2(110, 12), FONT_MAIN, Color(1.0, 0.85, 0.45))
+	_label(_stats, "Lv %d" % p.level, Vector2(36, 92), Vector2(110, 12), FONT_MAIN, Color(1.0, 0.85, 0.45))
 	_bar(_stats, Vector2(36, 106), Vector2(108, 4), float(p.xp) / Progression.xp_to_next(p.level, p.stage), Color(1.0, 0.8, 0.3))
 	_label(_stats, "HP  %d/%d" % [h.hp, h.max_hp], Vector2(36, 114), Vector2(110, 12), FONT_MAIN, Color.WHITE)
 	_bar(_stats, Vector2(36, 128), Vector2(108, 6), float(h.hp) / h.max_hp, Color(0.85, 0.25, 0.3))
@@ -392,7 +471,7 @@ func _build_stats() -> void:
 	_label(_stats, "Essences", Vector2(36, y + 6), Vector2(110, 10), FONT_SMALL, COL_TITLE)
 	y += 18.0
 	for ess in Essences.ALL:
-		var n: int = _rules.count(Events.ABSORBED, {"essence": ess})
+		var n: int = _rules.held(ess)
 		if n > 0 and y < 306.0:
 			_label(_stats, "%s  %d" % [ess, n], Vector2(40, y), Vector2(106, 10), FONT_SMALL, COL_DIM)
 			y += 11.0
@@ -436,7 +515,7 @@ func _build_row(r: Dictionary, y: float, selected: bool) -> void:
 		_label(_list, "Lv%d" % r["level"], Vector2(LIST_X + 156, y + 4), Vector2(28, 12), FONT_MAIN, COL_CAPPED if r.get("capped", false) else Color.WHITE)
 		_bar(_list, Vector2(LIST_X + 186, y + 9), Vector2(50, 4), float(r["level"]) / maxf(1.0, float(r["max_level"])), COL_CAPPED if r.get("capped", false) else COL_PIP_ON)
 	elif r["kind"] == "ready":
-		_label(_list, "EVOLVE %d EP" % r["cost"], Vector2(LIST_X + 170, y + 5), Vector2(70, 10), FONT_SMALL, Color(1.0, 0.85, 0.45))
+		_label(_list, "EVOLVE", Vector2(LIST_X + 170, y + 5), Vector2(70, 10), FONT_SMALL, Color(1.0, 0.85, 0.45) if r["affordable"] else COL_DIM)
 	elif r["kind"] == "slot":
 		var state_text: String = ["", "known", "hinted", "found"][r["state"]]
 		_label(_list, state_text, Vector2(LIST_X + 186, y + 5), Vector2(54, 10), FONT_SMALL, COL_DIM)
@@ -465,7 +544,7 @@ func _build_detail() -> void:
 			_label(_detail, "How: " + r["condition"], Vector2(DETAIL_X, y), Vector2(190, 46), FONT_SMALL, COL_DIM, true)
 		return
 	if _rows[_selectable[_sel]]["kind"] == "ready":
-		var cost: int = _rules.evolution_cost(id)
+		var price: Dictionary = _rules.evolution_price(id)
 		_icon(_detail, "icon_" + id, Vector2(DETAIL_X, 50), 40)
 		_label(_detail, d.display_name, Vector2(DETAIL_X + 46, 50), Vector2(146, 16), FONT_BIG, Color.WHITE)
 		_label(_detail, "Ready to evolve", Vector2(DETAIL_X + 46, 68), Vector2(146, 12), FONT_MAIN, Color(1.0, 0.85, 0.45))
@@ -474,12 +553,12 @@ func _build_detail() -> void:
 		var closes: Array = _rules.siblings_of(id).map(func(sid: String) -> String: return _skill_name(sid))
 		if not closes.is_empty():
 			_label(_detail, "Closes: " + ", ".join(closes), Vector2(DETAIL_X, 142), Vector2(190, 22), FONT_SMALL, COL_DIM, true)
-		_label(_detail, "Costs %d EP  (you have %d)" % [cost, _player.progression.ep], Vector2(DETAIL_X, 166), Vector2(190, 12), FONT_MAIN, COL_TITLE)
-		var can := _player.progression.ep >= cost
-		var action := "Level up to earn EP"
+		_label(_detail, "Costs " + SkillScreenModel.price_text(price), Vector2(DETAIL_X, 166), Vector2(190, 12), FONT_MAIN, COL_TITLE)
+		var can: bool = _rules.can_afford(id)
+		var action := SkillScreenModel.shortfall_text(_rules, price)
 		if can:
 			action = "Press again to choose" if _armed == id else "[%s] Evolve" % ("A" if Controls.using_joypad else "Enter")
-		_label(_detail, action, Vector2(DETAIL_X, 182), Vector2(190, 12), FONT_MAIN, Color.WHITE if can else COL_DIM)
+		_label(_detail, action, Vector2(DETAIL_X, 182), Vector2(190, 24), FONT_MAIN, Color.WHITE if can else COL_DIM, true)
 		return
 	var card := SkillScreenModel.detail(_rules, d, _player.skillset.slots, int(_player.stats.get_stat("atk")))
 	_icon(_detail, "icon_" + id, Vector2(DETAIL_X, 50), 40)
@@ -604,17 +683,53 @@ func _build_map() -> void:
 	_map_found = m["found"]
 	_label(_list, _map_found, Vector2(LIST_X + 4, MAP_BOX.end.y + 6), Vector2(220, 12), FONT_SMALL, COL_DIM)
 
-func _build_sound() -> void:
-	_label(_list, "SOUND", Vector2(LIST_X, LIST_TOP), Vector2(200, 14), FONT_BIG, COL_TITLE)
-	var y := LIST_TOP + 30.0
-	for i in _rows.size():
-		var r: Dictionary = _rows[i]
-		if i == _sel:
-			_panel(_list, Vector2(LIST_X - 4.0, y - 5.0), Vector2(454.0, 24.0), COL_SELECTED, 1)
-		_label(_list, r["name"], Vector2(LIST_X, y), Vector2(110, 14), FONT_MAIN, Color.WHITE)
-		_bar(_list, Vector2(LIST_X + 120.0, y + 3.0), Vector2(240, 8), r["value"], COL_PIP_ON)
-		_label(_list, "%d%%" % int(round(r["value"] * 100.0)), Vector2(LIST_X + 372.0, y), Vector2(60, 14), FONT_MAIN, COL_DIM)
-		y += 34.0
+## Tree tab: the graph of what the soul has found, the selected node's card and the hint. Rebuilt on every refresh like the
+## Map; the selected id and the zoom flag survive it, and the camera follows from them.
+func _refresh_tree() -> void:
+	_rows = []
+	_selectable = []
+	_tree_model = SkillTreeModel.build(_rules, _compendium, _player.forms, _reached_forms(), _player.form.form_id)
+	if not _tree_model["nodes"].has(_tree_sel):
+		_tree_sel = SkillTreeModel.root(_tree_model)
+	_hint.text = ("LB/RB Tabs    D-pad Move    L3 Zoom    B Back" if Controls.using_joypad
+		else "Q/E Tabs    Arrows Move    Z Zoom    Esc Back")
+	_build_stats()
+	_clear(_list)
+	_clear(_detail)
+	var view := SkillTreeView.new()
+	_list.add_child(view)
+	view.show_model(_tree_model, _tree_sel, _tree_overview)
+	# Deferred: both handlers rebuild this tab, which frees the view, and a view must not be freed inside its own emit.
+	view.node_clicked.connect(select_tree_node, CONNECT_DEFERRED)
+	view.zoom_requested.connect(set_tree_overview, CONNECT_DEFERRED)
+	_build_tree_card()
+
+## Forms reached in any life, from the bound progress (none without one).
+func _reached_forms() -> Array:
+	return _progress.forms_reached if _progress != null else []
+
+## The card beside the tree, from SkillScreenModel.tree_card. A stub shows the locked icon and no name.
+func _build_tree_card() -> void:
+	if _tree_sel == "":
+		_label(_detail, "Nothing found yet.", Vector2(DETAIL_X, 52), Vector2(190, 12), FONT_MAIN, COL_DIM)
+		return
+	var n: Dictionary = _tree_model["nodes"][_tree_sel]
+	var card := SkillScreenModel.tree_card(_rules, n, _defs, _player.forms, _player.skillset.slots, int(_player.stats.get_stat("atk")))
+	var x := DETAIL_X
+	if n["kind"] != "form":
+		_icon(_detail, "icon_locked" if n["state"] == SkillTreeModel.STUB else "icon_" + _tree_sel, Vector2(DETAIL_X, 50), 40)
+		x = DETAIL_X + 46
+	_label(_detail, card["title"], Vector2(x, 52), Vector2(DETAIL_X + 192 - x, 16), FONT_BIG, Color.WHITE)
+	_label(_detail, card["status"], Vector2(x, 70), Vector2(DETAIL_X + 192 - x, 12), FONT_SMALL, COL_TITLE)
+	var y := 100.0
+	for line in card["lines"]:
+		if y > 290.0:
+			break
+		var l := _label(_detail, line, Vector2(DETAIL_X, y), Vector2(190, 34), FONT_SMALL, Color.WHITE, true)
+		var lines := float(l.get_line_count())
+		var h := maxf(12.0, lines * l.get_line_height() + (lines - 1.0) * l.get_theme_constant("line_spacing"))  # its own height, line spacing included
+		l.size = Vector2(190, h)
+		y += h + 3.0
 
 # --- helpers --------------------------------------------------------------
 
@@ -701,24 +816,19 @@ func _build_form() -> void:
 	big.position = Vector2(DETAIL_X, 48)
 	big.size = Vector2(190, 70)
 	_detail.add_child(big)
-	_label(_detail, sel.display_name, Vector2(DETAIL_X, 122), Vector2(190, 16), FONT_BIG, Color.WHITE)
-	_label(_detail, "Stage %d" % sel.stage, Vector2(DETAIL_X, 138), Vector2(190, 12), FONT_SMALL, COL_TITLE)
-	_label(_detail, sel.blurb, Vector2(DETAIL_X, 152), Vector2(190, 34), FONT_SMALL, Color.WHITE, true)
+	var card := SkillScreenModel.form_card(sel, _rules)
+	_label(_detail, card["name"], Vector2(DETAIL_X, 122), Vector2(190, 16), FONT_BIG, Color.WHITE)
+	_label(_detail, "Stage %d" % card["stage"], Vector2(DETAIL_X, 138), Vector2(190, 12), FONT_SMALL, COL_TITLE)
+	_label(_detail, card["blurb"], Vector2(DETAIL_X, 152), Vector2(190, 34), FONT_SMALL, Color.WHITE, true)
 	var dy := 190.0
-	for line in FormEffects.stat_lines(sel):
+	for line in card["stats"]:
 		_label(_detail, line, Vector2(DETAIL_X, dy), Vector2(190, 12), FONT_SMALL, COL_DIM)
 		dy += 11.0
-	for t in sel.traits:
-		_label(_detail, FormEffects.TRAITS.get(t, str(t)), Vector2(DETAIL_X, dy), Vector2(190, 22), FONT_SMALL, COL_TITLE, true)
+	for t in card["traits"]:
+		_label(_detail, t, Vector2(DETAIL_X, dy), Vector2(190, 22), FONT_SMALL, COL_TITLE, true)
 		dy += 22.0
-	var names: Array = []
-	for g in sel.grants:
-		if _rules.is_retired(g):
-			continue  # the player evolved it: the form can no longer give it
-		var sd = _defs.get(g)
-		names.append(sd.display_name if sd != null else g)
-	if not names.is_empty():
-		_label(_detail, "Grants: " + ", ".join(names), Vector2(DETAIL_X, dy), Vector2(190, 24), FONT_SMALL, Color.WHITE, true)
+	if card["grants"] != "":
+		_label(_detail, card["grants"], Vector2(DETAIL_X, dy), Vector2(190, 24), FONT_SMALL, Color.WHITE, true)
 
 func _skill_name(id: String) -> String:
 	var sd = _defs.get(id)

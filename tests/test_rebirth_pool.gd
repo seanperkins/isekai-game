@@ -66,7 +66,7 @@ func _errors(features: Array) -> String:
 	return str(WorldValidator.validate({"T1": _room("T1", features)}))
 
 func test_the_validator_accepts_a_good_pool() -> void:
-	var errs := WorldValidator.validate({"T1": _room("T1", [_feature("C1"), _feature("T1", {"skills": ["leap"], "level": 3, "affinity": {"thread": 2}})])})
+	var errs := WorldValidator.validate({"T1": _room("T1", [_feature("C1"), _feature("T1", {"skills": ["leap"], "level": 3})])})
 	assert_eq(errs.size(), 0, str(errs))
 
 func test_the_validator_names_each_mistake() -> void:
@@ -76,15 +76,12 @@ func test_the_validator_names_each_mistake() -> void:
 	assert_string_contains(_errors([_feature("X", {"skills": ["flight"]})]), "enemy-only")
 	assert_string_contains(_errors([_feature("X", {"level": 0})]), "level")
 	assert_string_contains(_errors([_feature("X", {"level": 11})]), "level")
-	assert_string_contains(_errors([_feature("X", {"affinity": {"bogus": 1}})]), "essence")
-	assert_string_contains(_errors([_feature("X", {"affinity": {"thread": -2}})]), "units")
 
 func test_the_validator_names_malformed_pool_data_instead_of_crashing() -> void:
 	assert_string_contains(_errors([_feature("C1"), _feature("X", [])]), "kit")
 	assert_string_contains(_errors([_feature("C1"), {"kind": "rebirth_pool", "id": "X", "area": "cave", "kit": {}, "pos": "here"}]), "pos")
 	assert_string_contains(_errors([_feature("C1"), {"kind": "rebirth_pool", "id": 7, "area": "cave", "kit": {}, "pos": Vector2(1, 1)}]), "id")
 	assert_string_contains(_errors([_feature("C1"), _feature("X", {"skills": "leap"})]), "skills")
-	assert_string_contains(_errors([_feature("C1"), _feature("X", {"affinity": [1]})]), "affinity")
 	assert_string_contains(_errors([_feature("C1"), _feature("X", {"skills": [3]})]), "skill")
 
 func test_the_default_pool_must_be_in_the_start_room() -> void:

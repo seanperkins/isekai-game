@@ -40,8 +40,7 @@ func before_each() -> void:
 		rules.handle_event(n, t))
 	add_child_autofree(player)
 	rules.start_run()
-	for i in 4:
-		rules.handle_event("absorbed", {"essence": "water", "source": "water_pool"})  # Hydraulic Propulsion in slot 0
+	TestDefs.satisfy(rules, "hydraulic_propulsion")  # Hydraulic Propulsion in slot 0
 	ch = TestChannel.new()
 	player.add_child(ch)
 	ch.setup(player, [100], 1)

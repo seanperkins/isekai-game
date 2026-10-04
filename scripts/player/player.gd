@@ -5,6 +5,8 @@ extends CharacterBody2D
 signal died
 signal inspect_report(lines: PackedStringArray)
 signal not_enough_mp(skill_id: String)
+## A body evolution succeeded (advance_form): the game records the form as reached.
+signal form_advanced(id: String)
 
 const SPEED := 140.0
 const JUMP_VELOCITY := -330.0
@@ -546,14 +548,10 @@ func on_enemy_downed(def: CreatureDef, spawn_key := "") -> void:
 	if not health.is_dead():
 		progression.award(spawn_key, "down", def.xp)
 
-## Spends EP to unlock a ready evolution. False when not ready or not enough EP.
+## Pays the price in held essence and unlocks a ready evolution. False when it is not ready or the price is not held.
 func try_evolve(id: String) -> bool:
-	if not _rules.is_evolution_ready(id) or progression.ep < _rules.evolution_cost(id):
-		return false
-	var cost := _rules.evolution_cost(id)
 	if not _rules.evolve(id):
 		return false
-	progression.spend_ep(cost)
 	EventBus.world_event.emit("evolved", {"id": id})
 	return true
 
@@ -562,7 +560,7 @@ func form_offers() -> Array:
 	var out: Array = []
 	if not progression.can_evolve():
 		return out
-	for id in FormOffers.offers(forms, form, FormOffers.absorbed_units(_rules, progression.seeded), FormOffers.default_supply(forms)):
+	for id in FormOffers.offers(forms, form, _rules):
 		out.append(forms[id])
 	return out
 
@@ -590,7 +588,7 @@ func body_scale() -> float:
 	return d.size if d != null and _form_sheet == null else 1.0
 
 ## Evolves the body into `id`: a legal next form, and (unless `force`, for tests and debugging) the level
-## cap reached. Resets the level (keeping EP and the level bonuses), raises the skill cap and re-checks
+## cap reached. Resets the level (keeping the level bonuses), raises the skill cap and re-checks
 ## every skill, applies the form's stats and traits, grants its skills, and changes the look. The
 ## collision box never changes.
 func advance_form(id: String, force := false) -> bool:
@@ -611,6 +609,7 @@ func advance_form(id: String, force := false) -> bool:
 	_sync_max_hp()
 	_begin_evolve_moment(def)
 	EventBus.world_event.emit("evolved_body", {"id": id, "stage": form.stage})
+	form_advanced.emit(id)
 	return true
 
 func evolving() -> bool:
@@ -641,7 +640,7 @@ func _evolve_step(delta: float) -> void:
 	tick(delta)
 	_update_visual(delta)
 
-## Sets the character level a rebirth kit starts at (bonuses, no EP, no fanfare).
+## Sets the character level a rebirth kit starts at (bonuses, no fanfare).
 func start_at_level(level: int) -> void:
 	_kit_starting = true
 	progression.start_at(level)

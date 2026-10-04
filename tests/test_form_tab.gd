@@ -36,6 +36,7 @@ func _eat_everything() -> void:
 	for id in rooms:
 		for s in (rooms[id] as RoomDef).spawns:
 			var c: CreatureDef = creatures[s["id"]]
+			rules.handle_event("predated", {"source": c.id, "kind": "creature"})
 			for e in c.essences:
 				for i in int(c.essences[e]):
 					rules.handle_event("absorbed", {"essence": e, "source": c.id})
@@ -88,12 +89,23 @@ func test_the_form_tab_lists_the_offers_the_offers_logic_gives() -> void:
 	_to_cap()
 	screen.open()
 	screen.switch_tab(5)
-	var expected := FormOffers.offers(player.forms, player.form, FormOffers.absorbed_units(rules), FormOffers.default_supply(player.forms))
+	var expected := FormOffers.offers(player.forms, player.form, rules)
 	var seen: Array = []
 	for i in screen._selectable:
 		seen.append(screen._rows[i]["id"])
 	assert_eq(seen, expected)
 	assert_eq(screen.selected_id(), expected[0])
+
+func test_five_open_lineages_are_five_selectable_rows_none_dropped() -> void:
+	_eat_everything()
+	_to_cap()
+	screen.open()
+	screen.switch_tab(5)
+	assert_eq(screen._selectable.size(), 5, "every open lineage is a row")
+	var seen: Array = []
+	for i in screen._selectable:
+		seen.append(screen._rows[i]["id"])
+	assert_eq(seen, ["weaver", "tide", "toxic", "bulwark", "echo"])
 
 func test_choosing_an_offer_evolves_the_body() -> void:
 	_eat_everything()
@@ -184,7 +196,7 @@ func _hud() -> Hud:
 
 func test_the_hud_shows_the_cap_and_the_evolution_prompt() -> void:
 	var h := _hud()
-	assert_eq(h.level_text(), "Lv 1/10  XP 0/10  EP 0")
+	assert_eq(h.level_text(), "Lv 1/10  XP 0/10")
 	assert_eq(h.evolve_text(), "")
 	_to_cap()
 	assert_true(h.level_text().contains("MAX"), h.level_text())
@@ -244,3 +256,30 @@ func test_the_form_card_omits_grants_the_player_has_retired() -> void:
 	screen.switch_tab(5)
 	_select_form("tide")
 	assert_false("\n".join(screen.detail_texts()).contains("Grants:"), "the only grant is a retired parent")
+
+# --- form_card: the card the Form tab and the Tree tab share ---
+
+class FakeRules:
+	var retired: Array = []
+	var defs := {}
+
+	func is_retired(id: String) -> bool:
+		return retired.has(id)
+
+	func get_def(id: String) -> SkillDef:
+		return defs.get(id)
+
+func test_form_card_names_the_stats_traits_and_the_grants_still_receivable() -> void:
+	var tide: FormDef = player.forms["tide"]
+	var fake := FakeRules.new()
+	for d in skills:
+		fake.defs[d.id] = d
+	var card := SkillScreenModel.form_card(tide, fake)
+	assert_eq(card["name"], tide.display_name)
+	assert_eq(card["stage"], 2)
+	assert_eq(card["blurb"], tide.blurb)
+	assert_eq(card["stats"], FormEffects.stat_lines(tide))
+	assert_eq(card["traits"], tide.traits.map(func(t): return FormEffects.TRAITS.get(t, str(t))))
+	assert_eq(card["grants"], "Grants: Hydraulic Propulsion")
+	fake.retired = ["hydraulic_propulsion"]
+	assert_eq(SkillScreenModel.form_card(tide, fake)["grants"], "", "a retired grant is hidden")

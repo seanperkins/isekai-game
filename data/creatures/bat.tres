@@ -13,8 +13,7 @@ stats = {
 "spd": 140
 }
 essences = {
-"flight": 1,
-"sound": 1
+"air": 2
 }
 skills = [{
 "id": "echolocation",

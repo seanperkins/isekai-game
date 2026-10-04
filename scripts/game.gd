@@ -82,6 +82,8 @@ func _ready() -> void:
 	add_child(skill_screen)
 	skill_screen.bind(player, SkillRules, Compendium.model, SkillRules.skill_defs)
 	skill_screen.bind_world(world, progress)
+	# The run's progress, so an editor Play's evolutions stay in its own in-memory progress.
+	player.form_advanced.connect(progress.reach_form)
 	skill_screen.visibility_changed.connect(func() -> void: hud.visible = not skill_screen.visible)
 	run = Run.new()
 	add_child(run)

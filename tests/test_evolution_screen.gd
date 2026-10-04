@@ -32,7 +32,7 @@ func _emit(ev: String, tags: Dictionary, n: int) -> void:
 		rules.handle_event(ev, tags)
 
 func _ready_both() -> void:
-	_emit("absorbed", {"essence": "water"}, 4)
+	TestDefs.satisfy(rules, "hydraulic_propulsion")
 	_emit("skill_used", {"id": "hydraulic_propulsion"}, 12)  # Lv3: Water Blade and Jet Dash together
 
 func _screen() -> SkillScreen:
@@ -100,15 +100,16 @@ func test_closing_disarms() -> void:
 	assert_eq(rules.level_of("water_blade"), 0, "the reopened screen needs a fresh first press")
 	s.close()
 
-func test_an_ep_short_press_never_evolves_and_the_card_says_how_to_earn_ep() -> void:
-	_ready_both()
+func test_a_short_press_never_evolves_and_the_card_says_what_is_short() -> void:
+	TestDefs.satisfy(rules, "poison_breath")  # water 4, dark 4
+	_emit("skill_used", {"id": "poison_breath"}, 24)  # Lv4: Miasma and Venom Bolt together
 	var s := _screen()
-	_select(s, "water_blade")
+	_select(s, "miasma")
 	s.accept()
 	s.accept()
-	assert_eq(rules.level_of("water_blade"), 0)
+	assert_eq(rules.level_of("miasma"), 0)
 	var text := _detail(s)
-	assert_string_contains(text, "Level up to earn EP")
+	assert_string_contains(text, "needs 2 more water, 6 more dark")
 	assert_false(text.contains("Press again to choose"))
 	s.close()
 
@@ -169,7 +170,7 @@ func test_switching_tabs_disarms() -> void:
 
 func test_a_retired_parent_is_not_capped() -> void:
 	rules.set_stage_cap(3)
-	_emit("absorbed", {"essence": "water"}, 4)
+	TestDefs.satisfy(rules, "hydraulic_propulsion")
 	_emit("skill_used", {"id": "hydraulic_propulsion"}, 30)
 	assert_true(rules.is_capped("hydraulic_propulsion"))
 	rules.evolve("water_blade")

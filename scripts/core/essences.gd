@@ -1,16 +1,12 @@
 class_name Essences
 extends RefCounted
-## Essence names. flight feeds no skill yet; it is reserved for a later one. shock feeds Jolt and earth feeds Tremor.
+## Essence names: the first-pass elements. Fire, mind and blood join with the first creature that carries them. The order is
+## canonical: Player emits ABSORBED in this order.
 
-const SOUND := "sound"
-const FLIGHT := "flight"
-const POISON := "poison"
 const WATER := "water"
-const ARMOR := "armor"
 const EARTH := "earth"
-const THREAD := "thread"
-const SPORE := "spore"
-const SHELL := "shell"
-const SHOCK := "shock"
+const AIR := "air"
+const LIGHT := "light"
+const DARK := "dark"
 
-const ALL := [SOUND, FLIGHT, POISON, WATER, ARMOR, EARTH, THREAD, SPORE, SHELL, SHOCK]
+const ALL := [WATER, EARTH, AIR, LIGHT, DARK]

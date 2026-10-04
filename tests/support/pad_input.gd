@@ -44,6 +44,23 @@ static func mouse_button(index: int, pressed := true) -> void:
 	b.pressed = pressed
 	_send(b)
 
+## A press and a release at `game_pos` in game px. The root viewport maps a window position back through its stretch
+## transform, so this applies that transform first, as mouse_move does for a relative motion.
+static func mouse_click(game_pos: Vector2, index := MOUSE_BUTTON_LEFT) -> void:
+	var at := (Engine.get_main_loop() as SceneTree).root.get_final_transform() * game_pos
+	# A real pointer arrives before it clicks: move it there first (no travel, so the control scheme does not change).
+	var m := InputEventMouseMotion.new()
+	m.position = at
+	m.global_position = at
+	_send(m)
+	for pressed in [true, false]:
+		var b := InputEventMouseButton.new()
+		b.button_index = index as MouseButton
+		b.pressed = pressed
+		b.position = at
+		b.global_position = at
+		_send(b)
+
 static func reset() -> void:
 	for dev in [0, 1]:
 		for a in [JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y, JOY_AXIS_RIGHT_X, JOY_AXIS_RIGHT_Y]:
