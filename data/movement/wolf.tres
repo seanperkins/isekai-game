@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="MovementProfile" format=3]
+
+[ext_resource type="Script" path="res://scripts/movement/movement_profile.gd" id="1_mp"]
+
+[resource]
+script = ExtResource("1_mp")
+id = "wolf"
+top_speed = 230.0
+ground_accel_time = 0.4
+ground_stop_time = 0.1
+ground_turn_time = 0.1
+air_accel_mult = 0.25
+air_stop_time = 0.35
+air_keeps_momentum = true
+jump_velocity = 403.0
+gravity = 1344.0
+fall_mult = 1.3
+apex_band = 0.0
+apex_gravity_mult = 0.5
+release_style = 1
+release_factor = 2.0
+coyote = 0.1
+buffer = 0.1
+rebound_rise = 0.0
