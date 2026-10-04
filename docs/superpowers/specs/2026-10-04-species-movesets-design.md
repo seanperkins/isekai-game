@@ -50,6 +50,7 @@ Starting values, tuned by play in the sandbox. Speeds px/s, times s.
 
 - No verb locks control for more than 0.5 s (roll 0.35, mantle 0.25, pounce 0.35, zip at most 0.4, slide at most 0.5, Tackle 0.15). A verb starts only on a press or a held-direction trigger, except the passive assists: mantle, vault, and wall slide.
 - **The base jump (63 px rise at 60 Hz) is the floor for every species.** Verbs add reach, never replace it. **One air verb per airtime** (pounce, zip, roll, silk drop, mantle), reset on landing, wall contact or surface attach. Each verb's added reach is modelled (below) and has a ceiling pinned by a test; verbs may add horizontal reach freely.
+- **Down on a one-way ledge drops through it, for every species** (Sean, 2026-10-04; built, plan 5a). A fresh press of down (not a held direction) while standing on a one-way ledge starts a 0.2 s `fall_through` timer; the caller ignores one-way ledges while it runs (the sandbox clears the one-way bit of the body's collision mask). The slime does not flatten or start a puddle slide on that press, and a crawling spider lets go of the ledge and does not grip it again while it falls. A hard floor and the air are unchanged, and jumping up through a ledge still works.
 - **Priority.** Evolve and death cancel everything. Hurt or knockback cancels any verb except inside the roll's or slide's invulnerable window. Deep water ends zip, pounce and slide. A verb cannot begin while predating, evolving, roped or in deep water. Mantle beats a wall jump on the same press; a jump pressed during a burst fires at once and keeps the burst's speed (a burst locks only the horizontal axis); a jump pressed during a verb that owns both axes is buffered and fires when control returns. A roll or slide that ends under a low ceiling stays crouched until it can stand. Silk drop ends when the thread's body touches the floor.
 
 ## Per-species room validation
@@ -96,6 +97,7 @@ Slime: puddle slide, wall stick pose, a ball (a round body frame, with the eyes 
 
 ## Known gaps and open
 
+- The player's room collision (`room_builder.gd`: one-way shapes with a 6 px margin) must turn the one-way bit of the body's mask off for `fall_through` seconds when the runner is wired in; 133 of 172 room solids are one-way, so this is how the player gets down through most rooms.
 - **Room content.** Today's 23 rooms contain no hard step of 24 px or less and no hard low ceiling, and 133 of 172 interior solids are one-way. Roll's duck, the puddle slide's tunnel, vault and mantle have little to act on until rooms are built or edited for them; the sandbox provides them for tuning.
 - The slime's timed rebound chain reaches about 1.6 times the base rise (about 100 px at +60%), and the hold bounce adds no reach beyond the fall it came from. The chain breaks the G5 chimney guard in `tests/test_grotto_rooms.gd` (a screen of about 97 px); the reach model and that test must account for it before it ships in the game.
 - The silk drop is not covered for the thread's anchor ending under it sideways (the thread does not break), a pendulum swing, and the priority table (hurt, rope, evolve, deep water).

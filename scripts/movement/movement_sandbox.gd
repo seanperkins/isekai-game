@@ -190,12 +190,14 @@ func _physics_process(delta: float) -> void:
 	i.clearance_above = _clearance()
 	i.wall_side = _wall_side(i.dir)
 	i.on_ceiling = body.is_on_ceiling()
+	i.on_oneway_floor = was_on_floor and _ray(Vector2.ZERO, Vector2(0.0, BodyConfig.BOTTOM + 3.0), false) == SurfaceStep.ONEWAY
 	if profile.verbs.has("crawl"):
 		i.sweep = _sweep
 		i.ray = _ray
 	if profile.verbs.has("zip"):
 		i.cast = _cast
 	VerbRunner.step(state, i, profile, delta, 1.0, sqrt(BOOST_JUMP_HEIGHT) if boosted else 1.0)
+	body.set_collision_mask_value(2, state.fall_through <= 0.0)  # a press of down on a one-way ledge drops through it
 	_update_thread(delta)
 	if state.surface_n != Vector2.ZERO:
 		_crawl(delta)
@@ -379,7 +381,7 @@ func _draw_body(delta: float) -> void:
 	_sprite.modulate = tint
 	_rect.modulate = tint
 	var doing := state.verb if state.verb != "" else ("flat" if state.spread else ("wall" if state.clinging else ("crawl" if state.surface_n != Vector2.ZERO else "")))
-	_label.text = "%s%s   speed %d   boost %s   verb: %s   last jump: rise %.1f px, air %.2f s\n1 biped   2 slime   3 wolf   4 spider   B boost   J tackle   S down (flatten, slide)   at a wall: press into it to stick, jump to kick off, hold jump to bounce   spider: arrows crawl floors, walls and ceilings, jump hops off, J zips (aim with the arrows, a thread pulls you to the first solid within 160 px; jump cancels), S in the air or hanging from a ceiling drops on a thread (down reels, up climbs, jump lets go)" % [
+	_label.text = "%s%s   speed %d   boost %s   verb: %s   last jump: rise %.1f px, air %.2f s\n1 biped   2 slime   3 wolf   4 spider   B boost   J tackle   S down (flatten, slide)   down on a one-way ledge drops through it   at a wall: press into it to stick, jump to kick off, hold jump to bounce   spider: arrows crawl floors, walls and ceilings, jump hops off, J zips (aim with the arrows, a thread pulls you to the first solid within 160 px; jump cancels), S in the air or hanging from a ceiling drops on a thread (down reels, up climbs, jump lets go)" % [
 		profile.id, " (placeholder, no art yet)" if _sheet == null else "", int(absf(body.velocity.x)), "on" if boosted else "off", doing, _last["rise"], _last["airtime"]]
 
 ## The spider, after how spiders move: the legs follow the distance travelled (so they freeze the instant it stops, on the

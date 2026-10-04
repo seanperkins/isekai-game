@@ -726,3 +726,54 @@ func test_after_a_hop_onto_a_wall_holding_toward_it_keeps_climbing() -> void:
 	var y := sb.body.global_position.y
 	await _frames(30)
 	assert_lt(sb.body.global_position.y, y - 30.0, "holding right climbs, as walking into the wall does")
+
+## `id` standing on the one-way ledge (x 160 to 260, top y -50): the centre is 12 above it, at -62.
+func _on_the_ledge(id: String) -> void:
+	sb.scripted.down = 0.0
+	sb.set_profile(id)
+	sb.body.global_position = Vector2(200.0, -64.0)
+	await _frames(12)
+
+func test_every_species_drops_through_a_one_way_ledge_with_down() -> void:
+	for id in ["biped", "slime", "wolf", "spider"]:
+		await _on_the_ledge(id)
+		assert_almost_eq(sb.body.global_position.y, -62.0, 3.0, "%s stands on the ledge" % id)
+		sb.scripted.down = 1.0
+		await _frames(60)
+		assert_almost_eq(sb.body.global_position.y, -12.0, 2.0, "%s dropped through to the floor" % id)
+		if id == "spider":
+			assert_eq(sb.state.surface_n, Vector2.UP, "and the spider grips the floor below")
+
+func test_nobody_falls_through_a_hard_floor() -> void:
+	for id in ["biped", "slime", "wolf", "spider"]:
+		sb.scripted.down = 0.0
+		sb.set_profile(id)
+		sb.body.global_position = Vector2(100.0, -12.0)
+		await _frames(6)
+		sb.scripted.down = 1.0
+		await _frames(30)
+		assert_almost_eq(sb.body.global_position.y, -12.0, 1.5, "%s stays on the hard floor" % id)
+
+func test_down_already_held_does_not_drop_on_landing() -> void:
+	sb.scripted.down = 1.0
+	sb.set_profile("biped")
+	sb.body.global_position = Vector2(200.0, -110.0)
+	await _frames(60)
+	assert_almost_eq(sb.body.global_position.y, -62.0, 3.0, "it landed on the ledge with down held and stayed")
+	sb.scripted.down = 0.0
+	await _frames(3)
+	sb.scripted.down = 1.0
+	await _frames(60)
+	assert_almost_eq(sb.body.global_position.y, -12.0, 2.0, "a fresh press drops it")
+
+func test_a_jump_up_through_the_ledge_from_below_still_lands_on_it() -> void:
+	sb.scripted.down = 0.0
+	sb.set_profile("biped")
+	sb.body.global_position = Vector2(200.0, -12.0)
+	await _frames(6)
+	sb.scripted.jump_pressed = true
+	sb.scripted.jump_held = true
+	await _frames(30)
+	sb.scripted.jump_held = false
+	await _frames(90)
+	assert_almost_eq(sb.body.global_position.y, -62.0, 3.0, "up through it and onto its top")
