@@ -12,6 +12,11 @@ const LOOKS := {
 ## Horizontal speed (px/s) above which the spider crawls and the wolf walks, and from which the wolf gallops.
 const MOVING_SPEED := 8.0
 const GALLOP_SPEED := 150.0
+## The flat slime's crawl wobble: how far it stretches (a fraction) and how fast the phase turns per px travelled (radians).
+const CRAWL_AMPLITUDE := 0.15
+const CRAWL_RATE := 0.2
+## The slime's ball: a stand-in clip (the `fall` frame, squared and spun by the sandbox) until the art has a real round frame.
+const BALL_CLIP := {"frames": ["fall"], "fps": 1.0, "loop": false}
 
 static func has_look(species: String) -> bool:
 	return LOOKS.has(species)
@@ -28,15 +33,19 @@ static func clips_for(species: String) -> Dictionary:
 		return {}
 	var all := SlimeAnimator.load_clips(LOOKS[species]["clips"])
 	var key: String = LOOKS[species]["key"]
+	if species == "slime":
+		return all.merged({"ball": BALL_CLIP})
 	return all if key == "" else all.get(key, {})
 
 ## The clip for a body that is on the floor or not, moving at `vx` and falling at `vy`, `land_timer` seconds after
-## landing, running burst `verb` ("tackle", "puddle") and `flat` (spread or sliding). Only the slime has poses for the
-## verbs so far. "" when the species has no look.
-static func clip_for(species: String, on_floor: bool, vy: float, vx: float, land_timer: float, verb := "", flat := false) -> String:
+## landing, running burst `verb` ("tackle", "puddle"), `flat` (spread or sliding), clinging to a wall (`wall`) and bouncing
+## (`ball`, which only replaces the rise, fall and landing poses). Only the slime has poses for these so far. "" when the
+## species has no look.
+static func clip_for(species: String, on_floor: bool, vy: float, vx: float, land_timer: float, verb := "", flat := false, wall := false, ball := false) -> String:
 	match species:
 		"slime":
-			return SlimeState.pick(false, false, false, false, verb == "tackle", flat, on_floor, vy, land_timer, vx)
+			var pose := SlimeState.pick(false, false, false, wall, verb == "tackle", flat, on_floor, vy, land_timer, vx)
+			return "ball" if ball and (pose == "rise" or pose == "fall" or pose == "land") else pose
 		"spider":
 			if not on_floor:
 				return "drop"
@@ -48,3 +57,16 @@ static func clip_for(species: String, on_floor: bool, vy: float, vx: float, land
 				return "charge"
 			return "walk" if absf(vx) > MOVING_SPEED else "idle"
 	return ""
+
+## The scale that squares the ball: a frame as wide as it is tall.
+static func ball_scale(frame_size: Vector2) -> Vector2:
+	return Vector2(frame_size.y / frame_size.x, 1.0)
+
+## The crawl wobble at `phase`: it stretches out along the ground and squeezes back, keeping its volume.
+static func crawl_scale(phase: float) -> Vector2:
+	var a := CRAWL_AMPLITUDE * sin(phase)
+	return Vector2(1.0 + a, 1.0 / (1.0 + a))
+
+## The wobble's phase after `dt` seconds at horizontal speed `vx`: it turns with the distance crawled.
+static func crawl_advance(phase: float, vx: float, dt: float) -> float:
+	return phase + absf(vx) * dt * CRAWL_RATE
