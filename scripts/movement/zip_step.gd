@@ -36,8 +36,8 @@ static func _start(s: MoveState, i: MoveInput, p: MovementProfile, dt: float) ->
 		return false  # one air verb per airtime
 	var dir := direction(i.aim, s.facing)
 	var hit: Dictionary = i.cast.call(Vector2.ZERO, dir * p.zip_range, dir.y > 0.0)
-	if hit.is_empty() or (hit["point"] as Vector2).length() <= MIN_ANCHOR:
-		s.zip_event = "fizzle"  # nothing to fire at: it costs nothing
+	if hit.is_empty() or (hit["point"] as Vector2).length() <= MIN_ANCHOR or hit.get("slick", false):
+		s.zip_event = "fizzle"  # nothing to fire at (or a slick solid, which refuses the thread): it costs nothing
 		return false
 	s.zip_dir = dir
 	s.zip_target = hit["point"]
@@ -66,6 +66,10 @@ static func _pull(s: MoveState, i: MoveInput, p: MovementProfile, dt: float) -> 
 	var move := minf(p.zip_speed * dt, s.zip_left)
 	var motion := s.zip_dir * move
 	var hit: Dictionary = i.sweep.call(motion)
+	if not hit.is_empty() and hit.get("slick", false):
+		s.surface_shift = hit["travel"]  # it brushed a slick solid on the way: stop there, no grip
+		_end(s, p, "arrive")
+		return true
 	if not hit.is_empty():
 		var normal := SurfaceStep.axis(hit["normal"])
 		# the standing box is 28 wide and the wall box 24: close the 2 px to a wall; a floor or ceiling needs no change

@@ -15,6 +15,8 @@ const STICK := 3.0
 const NONE := 0
 const HARD := 1
 const ONEWAY := 2
+## A hard solid that refuses grip (a "slick" surface): it blocks the body but the spider never grips, crawls on or hangs from it.
+const SLICK := 3
 ## The stick must be this far along a surface to move, and a latch holds while the stick is within acos(LATCH_DOT) of it.
 const DEAD := 0.2
 const LATCH_DOT := 0.7
@@ -38,6 +40,9 @@ static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float, jump
 	s.launched = ""
 	GroundAirStep.timers(s, i, p, dt)
 	var here := _support(i, s.surface_n, Vector2.ZERO)
+	if here == SLICK:
+		_let_go(s)  # the surface under it is slick: no grip (on a floor the ground step takes over)
+		return false
 	if here != NONE:
 		s.surface_oneway = here == ONEWAY  # known even while standing still: a press of down on a ledge drops through it
 	if s.fall_through > 0.0 and s.surface_n == Vector2.UP and s.surface_oneway:
@@ -60,11 +65,18 @@ static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float, jump
 		var hit: Dictionary = i.sweep.call(motion)
 		if not hit.is_empty():
 			var wall := axis(hit["normal"])
+			if hit.get("slick", false) and wall.dot(s.surface_n) == 0.0 and wall.dot(dir) < -0.5:
+				s.surface_shift = hit["travel"]  # a slick wall is not climbed: it stops at it
+				return true
 			if wall.dot(s.surface_n) == 0.0 and wall.dot(dir) < -0.5:
 				s.surface_shift = (hit["travel"] as Vector2) + (s.surface_n + dir) * (HT - HN)
 				_corner(s, p, "concave", dir, wall, stick)
 				return true
 	var support := _support(i, s.surface_n, motion)
+	if support == SLICK:
+		s.surface_shift = motion
+		_let_go(s)  # it has walked onto slick: let go, and the ground step takes over from the next tick
+		return true
 	if support == NONE:
 		if s.surface_lock <= 0.0:
 			_wrap(s, i, p, motion, dir, stick)
@@ -98,7 +110,7 @@ static func _attach(s: MoveState, i: MoveInput) -> bool:
 	var kind := NONE
 	if i.on_floor:
 		kind = i.ray.call(Vector2.ZERO, Vector2(0.0, HN + STICK), false)
-		if kind != NONE:
+		if kind != NONE and kind != SLICK:  # a slick floor is walked on by the ground step, never gripped
 			n = Vector2.UP
 	if n == Vector2.ZERO and i.wall_side != 0 and stick.x * float(i.wall_side) > 0.5:
 		# no further than the support probe holds (HN + STICK), or the first move up the wall finds no surface and drops
@@ -167,6 +179,12 @@ static func _intent(s: MoveState, stick: Vector2, t: Vector2, p: MovementProfile
 		return s.surface_sigma
 	return 0.0
 
+## Lets go of a surface that turned out to be slick (or became so under the spider): it detaches and cannot grip again for a moment.
+static func _let_go(s: MoveState) -> void:
+	s.surface_n = Vector2.ZERO
+	s.surface_lock = REATTACH_LOCK
+	s.surface_event = "slick"
+
 ## What is under a centre `offset` from the body's own: the ray goes along the inward normal, and a floor counts a one-way
 ## ledge while a wall or ceiling never does.
 static func _support(i: MoveInput, n: Vector2, offset: Vector2) -> int:
@@ -195,7 +213,8 @@ static func _wrap(s: MoveState, i: MoveInput, p: MovementProfile, motion: Vector
 	var edge := dir.dot(motion * hi)
 	var shift := s.surface_n * (-HN - 2.0) + dir * (edge + HN)
 	s.surface_shift = shift
-	if _support(i, dir, shift) == NONE:
+	var beyond := _support(i, dir, shift)
+	if beyond == NONE or beyond == SLICK:  # nothing under the end face, or a slick one
 		s.surface_event = "convex_nothing"
 		s.surface_shift = motion * lo  # no corner to turn: it simply drops from the edge
 		s.surface_n = Vector2.ZERO

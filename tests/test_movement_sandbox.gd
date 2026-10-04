@@ -235,7 +235,7 @@ func _sprite() -> Sprite2D:
 	return sb.get_node("Sprite") as Sprite2D
 
 func test_a_plain_landing_still_squashes() -> void:
-	sb.body.global_position = Vector2(300.0, -150.0)
+	sb.body.global_position = Vector2(100.0, -150.0)
 	var low := 1.0
 	var land_seen := false
 	for _k in 60:
@@ -246,7 +246,7 @@ func test_a_plain_landing_still_squashes() -> void:
 	assert_true(land_seen)
 
 func test_a_timed_rebound_lands_as_a_ball_not_a_squash() -> void:
-	sb.body.global_position = Vector2(300.0, -200.0)
+	sb.body.global_position = Vector2(100.0, -200.0)
 	var pressed := false
 	var launch_frame := -1
 	var low := 9.0
@@ -275,7 +275,7 @@ func test_a_timed_rebound_lands_as_a_ball_not_a_squash() -> void:
 	assert_gte(low, 0.999, "never squashed")
 
 func test_a_hold_bounce_is_a_ball_too() -> void:
-	sb.body.global_position = Vector2(300.0, -300.0)
+	sb.body.global_position = Vector2(100.0, -300.0)
 	sb.scripted.jump_held = true
 	var launch_frame := -1
 	var ball_seen := false
@@ -289,7 +289,7 @@ func test_a_hold_bounce_is_a_ball_too() -> void:
 	assert_true(ball_seen)
 
 func test_a_late_press_swaps_the_squash_for_the_ball() -> void:
-	sb.body.global_position = Vector2(300.0, -200.0)
+	sb.body.global_position = Vector2(100.0, -200.0)
 	var landed := -1
 	var launch_frame := -1
 	var ball_seen := false
@@ -310,7 +310,7 @@ func test_a_late_press_swaps_the_squash_for_the_ball() -> void:
 	assert_gte(low, 0.999, "the squash gave way to the ball")
 
 func test_the_ball_ends_when_the_bouncing_does() -> void:
-	sb.body.global_position = Vector2(300.0, -300.0)
+	sb.body.global_position = Vector2(100.0, -300.0)
 	sb.scripted.jump_held = true
 	await _frames(40)
 	sb.scripted.jump_held = false
@@ -340,7 +340,7 @@ func test_a_moving_flat_slime_wobbles_and_a_still_one_does_not() -> void:
 	assert_lt(hi - lo, 0.01, "still, it is still")
 
 func test_switching_species_mid_bounce_leaves_nothing_of_the_ball_behind() -> void:
-	sb.body.global_position = Vector2(300.0, -300.0)
+	sb.body.global_position = Vector2(100.0, -300.0)
 	sb.scripted.jump_held = true
 	for _k in 120:
 		await get_tree().physics_frame
@@ -373,7 +373,7 @@ func test_a_wall_bounce_shows_the_ball_not_the_tackle() -> void:
 	assert_true(ball_seen)
 
 func test_the_ball_lasts_the_whole_flight_and_ends_at_the_plain_landing() -> void:
-	sb.body.global_position = Vector2(300.0, -200.0)
+	sb.body.global_position = Vector2(100.0, -200.0)
 	var pressed := false
 	var launch_frame := -1
 	var flight := 0
@@ -397,7 +397,7 @@ func test_the_ball_lasts_the_whole_flight_and_ends_at_the_plain_landing() -> voi
 	assert_eq(after, "idle", "a plain landing ends the ball")
 
 func test_a_tackle_in_mid_bounce_ends_the_ball() -> void:
-	sb.body.global_position = Vector2(300.0, -300.0)
+	sb.body.global_position = Vector2(100.0, -300.0)
 	sb.scripted.jump_held = true
 	var bounce_frame := -1
 	var verb_seen := false
@@ -549,8 +549,8 @@ func _fire_zip(aim: Vector2) -> void:
 	sb.scripted.signature_pressed = true
 
 func test_a_zip_pulls_the_spider_to_a_wall_and_it_grips() -> void:
-	await _spider_at(Vector2(250.0, -12.0))
-	_fire_zip(Vector2.RIGHT)
+	await _spider_at(Vector2(850.0, -12.0))  # under the slab, 60 px right of the pillar's right face
+	_fire_zip(Vector2.LEFT)
 	var started := false
 	var gripped := false
 	var step_max := 0.0
@@ -560,16 +560,16 @@ func test_a_zip_pulls_the_spider_to_a_wall_and_it_grips() -> void:
 		started = started or sb.state.zip_event == "start"
 		var x := sb.body.global_position.x
 		if started and not gripped:
-			step_max = maxf(step_max, x - last_x)
+			step_max = maxf(step_max, last_x - x)
 		last_x = x
 		if sb.state.zip_event == "grip":
 			gripped = true
 			break
 	assert_true(started and gripped, "fired and gripped")
-	assert_almost_eq(step_max, 400.0 / 60.0, 0.5, "pulled at about 400 px/s")
+	assert_between(step_max, 6.0, 9.0, "pulled at about 400 px/s (the grip frame adds its 2 px closing the gap to the wall)")
 	await _frames(2)
-	assert_eq(sb.state.surface_n, Vector2.LEFT)
-	assert_almost_eq(sb.body.global_position.x, 388.0, 2.5, "flush to the first ledge's left face")
+	assert_eq(sb.state.surface_n, Vector2.RIGHT)
+	assert_almost_eq(sb.body.global_position.x, 802.0, 2.5, "flush to the pillar's right face")
 
 func test_a_zip_to_the_ceiling_grips_the_underside() -> void:
 	await _spider_at(Vector2(830.0, -12.0))
@@ -591,9 +591,9 @@ func test_nothing_in_range_leaves_the_spider_where_it_is() -> void:
 	assert_eq(sb.state.zip_cooldown, 0.0)
 
 func test_a_jump_cancels_the_zip_in_the_air_with_60_percent_speed() -> void:
-	await _spider_at(Vector2(250.0, -12.0))
-	_fire_zip(Vector2.RIGHT)
-	await _frames(8)
+	await _spider_at(Vector2(850.0, -12.0))
+	_fire_zip(Vector2.LEFT)
+	await _frames(4)
 	sb.scripted.jump_pressed = true
 	var speed := 0.0
 	for _k in 4:
@@ -601,12 +601,12 @@ func test_a_jump_cancels_the_zip_in_the_air_with_60_percent_speed() -> void:
 		if sb.state.zip_event == "cancel":
 			speed = sb.body.velocity.x
 			break
-	assert_almost_eq(speed, 240.0, 6.0)
+	assert_almost_eq(speed, -240.0, 6.0)
 
 func test_the_thread_shows_while_it_zips_and_fades() -> void:
-	await _spider_at(Vector2(250.0, -12.0))
+	await _spider_at(Vector2(850.0, -12.0))
 	assert_false(_thread().visible)
-	_fire_zip(Vector2.RIGHT)
+	_fire_zip(Vector2.LEFT)
 	await _frames(5)
 	assert_true(_thread().visible, "a thread while it pulls")
 	assert_eq(_thread().points.size(), 2)
@@ -789,3 +789,67 @@ func test_a_body_standing_on_the_edge_of_a_ledge_still_drops_through() -> void:
 			sb.scripted.down = 1.0
 			await _frames(60)
 			assert_almost_eq(sb.body.global_position.y, -12.0, 2.0, "%s dropped through from x %s" % [id, x])
+
+func test_the_spider_crawling_into_the_slick_block_stops_at_it() -> void:
+	await _spider_at(Vector2(250.0, -12.0))
+	sb.scripted.dir = 1.0
+	await _frames(90)
+	assert_almost_eq(sb.body.global_position.x, 300.0 - 14.0, 3.0, "stopped at the slick face")
+	assert_eq(sb.state.surface_n, Vector2.UP, "and did not climb it")
+	assert_almost_eq(sb.body.global_position.y, -12.0, 1.5)
+
+func test_a_zip_at_the_slick_block_fizzles() -> void:
+	await _spider_at(Vector2(200.0, -12.0))
+	_fire_zip(Vector2.RIGHT)
+	var fizzled := false
+	for _k in 10:
+		await get_tree().physics_frame
+		fizzled = fizzled or sb.state.zip_event == "fizzle"
+	assert_true(fizzled)
+	assert_almost_eq(sb.body.global_position.x, 200.0, 0.5)
+
+func test_a_hop_at_the_slick_block_does_not_grip_it() -> void:
+	await _spider_at(Vector2(250.0, -12.0))
+	sb.scripted.dir = 1.0
+	sb.scripted.jump_pressed = true
+	var gripped := false
+	for _k in 120:
+		await get_tree().physics_frame
+		gripped = gripped or sb.state.surface_n == Vector2.LEFT
+	assert_false(gripped, "a slick face is not gripped")
+	assert_lt(sb.body.global_position.x, 290.0)
+
+func test_the_slick_ceiling_refuses_a_thread_and_a_zip() -> void:
+	await _spider_at(Vector2(330.0, -150.0))
+	sb.scripted.down = 1.0
+	var fizzled := false
+	for _k in 3:
+		await get_tree().physics_frame
+		fizzled = fizzled or sb.state.drop_event == "fizzle"
+	assert_true(fizzled, "no thread from a slick ceiling")
+	assert_eq(sb.state.drop_up, 0.0)
+	sb.scripted.down = 0.0
+	await _spider_at(Vector2(330.0, -102.0))  # standing on the slick block's top
+	_fire_zip(Vector2.UP)
+	var zip_fizzled := false
+	for _k in 10:
+		await get_tree().physics_frame
+		zip_fizzled = zip_fizzled or sb.state.zip_event == "fizzle"
+	assert_true(zip_fizzled, "no zip to a slick ceiling")
+
+func test_the_sticky_ledge_block_beside_the_slick_one_is_still_climbed() -> void:
+	await _spider_at(Vector2(378.0, -12.0))
+	sb.scripted.dir = 1.0
+	var climbed := false
+	for _k in 90:
+		await get_tree().physics_frame
+		climbed = climbed or sb.state.surface_n == Vector2.LEFT
+	assert_true(climbed, "an ordinary block is climbed")
+
+func test_the_slime_stops_at_the_slick_block_like_any_wall() -> void:
+	sb.set_profile("slime")
+	sb.body.global_position = Vector2(250.0, -12.0)
+	await _frames(4)
+	sb.scripted.dir = 1.0
+	await _frames(90)
+	assert_almost_eq(sb.body.global_position.x, 300.0 - 14.0, 3.0)

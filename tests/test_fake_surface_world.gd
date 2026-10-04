@@ -89,3 +89,32 @@ func test_cast_down_a_diagonal_ignores_a_ledges_side_and_finds_what_is_beyond() 
 	assert_false(hit["oneway"], "the ledge's left side at (160, -47) is not an anchor")
 	assert_almost_eq((hit["point"] as Vector2).x, 70.0, 0.5, "it reaches the block's face at (200, -7) instead")
 	assert_eq(hit["normal"], Vector2.LEFT)
+
+func test_a_ray_reports_slick_as_its_own_kind() -> void:
+	var w := _world()
+	w.pos = Vector2(1270, -60)
+	assert_eq(w.input().ray.call(Vector2.ZERO, Vector2(40, 0), true), SurfaceStep.SLICK)
+	w.pos = Vector2(100, -12)
+	assert_eq(w.input().ray.call(Vector2.ZERO, Vector2(0, 30), true), SurfaceStep.HARD)
+
+func test_sweep_and_cast_flag_a_slick_solid() -> void:
+	var w := _world()
+	w.pos = Vector2(1280, -60)
+	var slick_sweep: Dictionary = w.input().sweep.call(Vector2(30, 0))
+	assert_true(slick_sweep["slick"])
+	assert_almost_eq((slick_sweep["travel"] as Vector2).x, 6.0, 0.01, "a slick solid still blocks the body")
+	w.pos = Vector2(180, -60)
+	assert_false((w.input().sweep.call(Vector2(30, 0)) as Dictionary)["slick"])
+	w.pos = Vector2(1270, -60)
+	assert_true((w.input().cast.call(Vector2.ZERO, Vector2(100, 0), false) as Dictionary)["slick"])
+	w.pos = Vector2(180, -60)
+	assert_false((w.input().cast.call(Vector2.ZERO, Vector2(100, 0), false) as Dictionary)["slick"])
+	w.pos = Vector2(900, -100)
+	assert_false((w.input().cast.call(Vector2.ZERO, Vector2(0, 100), true) as Dictionary)["slick"], "a ledge is not slick")
+
+func test_the_slick_ceiling_is_hard_and_slick() -> void:
+	var w := _world()
+	w.pos = Vector2(1450, -60)
+	var hit: Dictionary = w.input().cast.call(Vector2.ZERO, Vector2(0, -100), false)
+	assert_true(hit["slick"])
+	assert_eq(hit["normal"], Vector2.DOWN)

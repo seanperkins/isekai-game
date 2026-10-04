@@ -202,3 +202,28 @@ func test_a_zip_onto_a_wall_holding_down_and_toward_it_does_not_climb() -> void:
 		SurfaceStep.step(s, i, spider, DT)
 		w.apply(s)
 	assert_gt(w.pos.y, y + 10.0, "right and down goes down the wall, not up it")
+
+func test_a_zip_aimed_at_a_slick_solid_fizzles() -> void:
+	var a := _at(Vector2(1230, -12))  # the slick block's face is 70 px away
+	assert_false(_tick(a[0], a[1], Vector2.RIGHT, true))
+	assert_eq((a[1] as MoveState).zip_event, "fizzle")
+	assert_eq((a[1] as MoveState).zip_cooldown, 0.0)
+	assert_false((a[1] as MoveState).air_verb_used)
+
+func test_a_zip_that_touches_slick_on_its_way_stops_without_gripping() -> void:
+	var w := FakeSurfaceWorld.new()
+	w.add_hard(Rect2(0, 0, 1000, 40))
+	w.add_hard(Rect2(200, -200, 40, 200))        # a sticky wall 140 px to the right of the spider
+	w.add_slick(Rect2(100, -5, 30, 5))           # a slick stub on the floor: the thread passes over it, the body does not
+	w.pos = Vector2(60, -12)
+	w.n = Vector2.UP
+	var s := MoveState.new()
+	s.surface_n = Vector2.UP
+	var events := _zip(w, s, Vector2.RIGHT)
+	assert_eq(events, ["start", "arrive"], "it stops where it touched the slick stub and does not grip it")
+	assert_eq(s.surface_n, Vector2.ZERO)
+	assert_almost_eq(w.pos.x, 100.0 - 14.0, 1.5)
+
+func test_sticky_anchors_still_zip() -> void:
+	var a := _at(Vector2(120, -12))
+	assert_eq(_zip(a[0], a[1], Vector2.RIGHT), ["start", "grip"])

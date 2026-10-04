@@ -17,7 +17,7 @@ func _at(pos: Vector2, n := Vector2.ZERO) -> Array:
 	return [w, s]
 
 ## One tick: `stick` is x right and y down (up negative); `press` marks the down edge as the runner would; `jump` a jump press.
-func _tick(w: FakeSurfaceWorld, s: MoveState, stick := Vector2.ZERO, press := false, jump := false) -> bool:
+func _tick(w: FakeSurfaceWorld, s: MoveState, stick := Vector2.ZERO, press := false, jump := false, on_floor := false) -> bool:
 	var i := w.input()
 	i.dir = stick.x
 	i.down = maxf(stick.y, 0.0)
@@ -25,6 +25,7 @@ func _tick(w: FakeSurfaceWorld, s: MoveState, stick := Vector2.ZERO, press := fa
 	i.jump_pressed = jump
 	i.jump_held = jump
 	s.down_pressed = press
+	i.on_floor = on_floor
 	var owns := DropStep.step(s, i, spider, DT)
 	w.apply(s)
 	return owns
@@ -166,3 +167,44 @@ func test_no_probes_and_a_zip_in_flight_do_nothing() -> void:
 	var a := _at(Vector2(600, -100))
 	(a[1] as MoveState).zip_dir = Vector2.RIGHT
 	assert_false(_tick(a[0], a[1], Vector2.ZERO, true), "a zip owns the tick")
+
+func test_a_thread_cannot_hang_from_a_slick_ceiling() -> void:
+	var a := _at(Vector2(1450, -40))  # under the slick slab (underside y -80)
+	assert_false(_tick(a[0], a[1], Vector2.ZERO, true))
+	assert_eq((a[1] as MoveState).drop_event, "fizzle")
+	assert_false((a[1] as MoveState).air_verb_used)
+
+func test_a_sticky_ceiling_still_takes_a_thread() -> void:
+	var a := _at(Vector2(600, -100))
+	_tick(a[0], a[1], Vector2.ZERO, true)
+	assert_eq((a[1] as MoveState).drop_event, "start")
+
+## A slick floor with a sticky ceiling 168 px above it.
+func _slick_floor_world(pos: Vector2) -> FakeSurfaceWorld:
+	var w := FakeSurfaceWorld.new()
+	w.add_slick(Rect2(0, 0, 1000, 40))
+	w.add_hard(Rect2(0, -200, 1000, 20))
+	w.pos = pos
+	return w
+
+func test_standing_on_a_slick_floor_a_press_of_down_is_not_a_drop() -> void:
+	var w := _slick_floor_world(Vector2(500, -12))
+	var s := MoveState.new()
+	assert_false(_tick(w, s, Vector2.ZERO, true, false, true), "on the ground (a slick floor has no surface) down is not a drop")
+	assert_eq(s.drop_up, 0.0)
+	assert_eq(s.drop_event, "")
+
+func test_reeling_down_onto_a_slick_floor_ends_the_thread_without_gripping_it() -> void:
+	var w := _slick_floor_world(Vector2(500, -80))
+	var s := MoveState.new()
+	_tick(w, s, Vector2(0, 1), true)
+	var landed := false
+	for _k in 120:
+		_tick(w, s, Vector2(0, 1))
+		if s.drop_event == "land":
+			landed = true
+			break
+	assert_true(landed)
+	assert_eq(s.surface_n, Vector2.ZERO, "a slick floor is not gripped: the ground step takes over")
+	assert_eq(s.drop_up, 0.0)
+	assert_almost_eq(w.pos.y, -12.0, 1.5)

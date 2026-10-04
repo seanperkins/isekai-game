@@ -10,6 +10,9 @@ const SLAB := Rect2(450, -200, 300, 40)
 const LEDGE := Rect2(850, -50, 120, 6)
 const SEAM_A := Rect2(1100, -60, 50, 60)
 const SEAM_B := Rect2(1150, -60, 50, 60)
+## A hard block that refuses grip (wall and top), and a slick slab over open floor (underside y -80).
+const SLICK_BLOCK := Rect2(1300, -90, 60, 90)
+const SLICK_CEILING := Rect2(1400, -100, 100, 20)
 const WALL_L := Rect2(-240, -400, 40, 440)
 const WALL_R := Rect2(1600, -400, 40, 440)
 const EPS := 0.001
@@ -19,12 +22,15 @@ var pos := Vector2(0, -12)
 var n := Vector2.UP
 var _hard: Array[Rect2] = []
 var _oneway: Array[Rect2] = []
+var _slick: Array[Rect2] = []
 
 static func build_spike_terrain() -> FakeSurfaceWorld:
 	var w := FakeSurfaceWorld.new()
 	for r in [FLOOR, BLOCK, PILLAR, SLAB, SEAM_A, SEAM_B, WALL_L, WALL_R]:
 		w.add_hard(r)
 	w.add_oneway(LEDGE)
+	w.add_slick(SLICK_BLOCK)
+	w.add_slick(SLICK_CEILING)
 	return w
 
 func add_hard(r: Rect2) -> void:
@@ -32,6 +38,11 @@ func add_hard(r: Rect2) -> void:
 
 func add_oneway(r: Rect2) -> void:
 	_oneway.append(r)
+
+## A hard solid that blocks the body but refuses the spider's grip.
+func add_slick(r: Rect2) -> void:
+	_hard.append(r)
+	_slick.append(r)
 
 func half() -> Vector2:
 	return Vector2(14, 12) if absf(n.y) > 0.5 else Vector2(12, 14)
@@ -52,6 +63,7 @@ func apply(s: MoveState) -> void:
 func _sweep(motion: Vector2) -> Dictionary:
 	var best := 2.0
 	var normal := Vector2.ZERO
+	var slick := false
 	var h := half()
 	for r in _hard:
 		var e := Rect2(r.position - h, r.size + h * 2.0)
@@ -62,9 +74,10 @@ func _sweep(motion: Vector2) -> Dictionary:
 		if t < best:
 			best = t
 			normal = hit["normal"]
+			slick = _slick.has(r)
 	if best > 1.0:
 		return {}
-	return {"travel": motion * best, "normal": normal}
+	return {"travel": motion * best, "normal": normal, "slick": slick}
 
 ## When the point `p` moving by `m` enters the (strict interior of the) rectangle `e`: `{"t": 0..1, "normal": Vector2}`.
 static func _enter(p: Vector2, m: Vector2, e: Rect2) -> Dictionary:
@@ -87,7 +100,7 @@ static func _enter(p: Vector2, m: Vector2, e: Rect2) -> Dictionary:
 			var tmp := ta
 			ta = tb
 			tb = tmp
-		if ta > t0:
+		if ta >= t0:  # touching at the start (ta == 0) is a hit with this face's normal, so a body flush against a wall stays blocked
 			t0 = ta
 			normal = Vector2.ZERO
 			normal[axis] = face
@@ -107,7 +120,7 @@ func _ray(from: Vector2, to: Vector2, hard_only: bool) -> int:
 		var t := _segment(a, b, r)
 		if t >= 0.0 and t < best:
 			best = t
-			kind = 1
+			kind = 3 if _slick.has(r) else 1
 	if not hard_only and to.y > from.y:  # a one-way ledge stops a ray going down onto it
 		for r in _oneway:
 			var t := _segment(a, b, r)
@@ -150,13 +163,13 @@ func _cast(from: Vector2, to: Vector2, include_oneway: bool) -> Dictionary:
 		var hit := _enter_segment(a, b, r)
 		if not hit.is_empty() and hit["t"] < best_t:
 			best_t = hit["t"]
-			best = {"point": a + (b - a) * best_t - pos, "normal": hit["normal"], "oneway": false}
+			best = {"point": a + (b - a) * best_t - pos, "normal": hit["normal"], "oneway": false, "slick": _slick.has(r)}
 	if include_oneway and to.y > from.y:
 		for r in _oneway:
 			var hit := _enter_segment(a, b, r)
 			if not hit.is_empty() and hit["normal"] == Vector2.UP and hit["t"] < best_t:  # only a ledge's top is an anchor
 				best_t = hit["t"]
-				best = {"point": a + (b - a) * best_t - pos, "normal": hit["normal"], "oneway": true}
+				best = {"point": a + (b - a) * best_t - pos, "normal": hit["normal"], "oneway": true, "slick": false}
 	return best
 
 ## Where the segment a to b first meets the closed rectangle r: `{"t": 0..1, "normal": Vector2}` (the face it enters through).

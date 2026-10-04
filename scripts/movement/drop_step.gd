@@ -19,13 +19,13 @@ static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float) -> b
 static func _start(s: MoveState, i: MoveInput, p: MovementProfile, dt: float) -> bool:
 	if not s.down_pressed or s.zip_dir != Vector2.ZERO:
 		return false
-	var airborne := s.surface_n == Vector2.ZERO
+	var airborne := s.surface_n == Vector2.ZERO and not i.on_floor  # standing on a slick floor (no surface) is on the ground, not airborne
 	if not (airborne and not s.air_verb_used) and s.surface_n != Vector2.DOWN:
 		return false  # from the air (once per airtime) or a ceiling; down on a wall is crawling down it
 	var hit: Dictionary = i.cast.call(Vector2.ZERO, Vector2(0.0, -p.drop_range), false)
 	var up := -(hit["point"] as Vector2).y if not hit.is_empty() else 0.0
-	if hit.is_empty() or up < SurfaceStep.HN - 0.5:
-		s.drop_event = "fizzle"  # nothing to hang from: it costs nothing
+	if hit.is_empty() or up < SurfaceStep.HN - 0.5 or hit.get("slick", false):
+		s.drop_event = "fizzle"  # nothing to hang from (a slick ceiling refuses a thread): it costs nothing
 		return false
 	var half := p.top_speed * p.drop_air
 	s.drop_up = maxf(up, SurfaceStep.HN)
@@ -70,19 +70,22 @@ static func _reel(s: MoveState, i: MoveInput, p: MovementProfile, dt: float) -> 
 			dx = (hx["travel"] as Vector2).x
 			s.drop_vx = 0.0
 	var landed := false
+	var slick_floor := false
 	if dy != 0.0:
 		var hy: Dictionary = i.sweep.call(Vector2(0.0, dy))
 		if not hy.is_empty():
 			landed = dy > 0.0 and SurfaceStep.axis(hy["normal"]) == Vector2.UP
+			slick_floor = hy.get("slick", false)
 			dy = (hy["travel"] as Vector2).y
 	s.surface_shift = Vector2(dx, dy)
 	s.drop_up += dy
 	if landed:
-		s.surface_n = Vector2.UP
-		s.surface_since = 99.0
-		s.surface_lock = 0.0
-		s.surface_latch = Vector2.ZERO
-		s.air_verb_used = false
+		if not slick_floor:  # a slick floor ends the thread but is not gripped: the ground step takes over
+			s.surface_n = Vector2.UP
+			s.surface_since = 99.0
+			s.surface_lock = 0.0
+			s.surface_latch = Vector2.ZERO
+			s.air_verb_used = false
 		s.drop_up = 0.0
 		s.drop_vx = 0.0
 		s.velocity = Vector2.ZERO
