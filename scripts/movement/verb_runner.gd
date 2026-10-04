@@ -1,7 +1,7 @@
 class_name VerbRunner
 extends RefCounted
-## The species' verbs on top of the ground and air step: facing, Ooze (the flat slime) and, in later tasks, the bursts
-## (Tackle, the puddle slide). Pure statics like GroundAirStep. A burst only owns horizontal velocity, so the step keeps
+## The species' verbs on top of the ground and air step: facing, Ooze (the flat slime), the bursts (Tackle, the puddle
+## slide) and the crawl (the spider's surfaces, handed to SurfaceStep while it is on one). Pure statics like GroundAirStep. A burst only owns horizontal velocity, so the step keeps
 ## running underneath it (gravity, jump, coyote and the jump buffer never stop), as Player._dash does today.
 
 ## The raw down input at which the slime flattens and holds flat.
@@ -17,6 +17,8 @@ static func step(s: MoveState, i: MoveInput, p: MovementProfile, dt: float, spee
 	_tick_cooldowns(s, dt)
 	if i.on_floor or (p.verbs.has("wall") and i.wall_side != 0):
 		s.air_verb_used = false  # landing, or touching a wall, gives the air verb back
+	if p.verbs.has("crawl") and SurfaceStep.step(s, i, p, dt, jump_boost):
+		return  # on a surface the crawl owns the body (the caller moves it by surface_shift); in the air the ground step runs
 	_ooze(s, i, p)
 	_bursts(s, i, p, dt)
 	var input := i

@@ -2,10 +2,12 @@ extends GutTest
 
 var slime: MovementProfile
 var biped: MovementProfile
+var spider: MovementProfile
 
 func before_each() -> void:
 	slime = MovementProfile.of("slime")
 	biped = MovementProfile.of("biped")
+	spider = MovementProfile.of("spider")
 
 func _in(dir := 0.0, on_floor := true, down := 0.0) -> MoveInput:
 	var i := MoveInput.new()
@@ -246,3 +248,35 @@ func test_a_tackle_into_a_wall_with_jump_held_reflects_it() -> void:
 	assert_true(s.wall_bounced)
 	assert_lt(s.velocity.x, -280.0)
 	assert_eq(s.verb, "", "the bounce ends the tackle, so the slime is not still tackling as it leaves the wall")
+
+func test_a_crawler_on_a_surface_skips_the_ground_step() -> void:
+	var w := FakeSurfaceWorld.build_spike_terrain()
+	w.pos = Vector2(40, -12)
+	var s := MoveState.new()
+	s.surface_n = Vector2.UP
+	var i := w.input()
+	i.dir = 1.0
+	VerbRunner.step(s, i, spider, 1.0 / 60.0)
+	assert_eq(s.velocity, Vector2.ZERO, "the caller moves it by surface_shift")
+	assert_almost_eq(s.surface_shift.x, 140.0 / 60.0, 0.001)
+
+func test_a_crawler_in_the_air_runs_the_ground_step() -> void:
+	var w := FakeSurfaceWorld.build_spike_terrain()
+	w.pos = Vector2(40, -200)
+	var s := MoveState.new()
+	var i := w.input()
+	i.on_floor = false
+	i.dir = 1.0
+	VerbRunner.step(s, i, spider, 1.0 / 60.0)
+	assert_almost_eq(s.velocity.y, 15.0, 0.001, "gravity")
+	assert_gt(s.velocity.x, 0.0, "air control")
+	assert_eq(s.surface_n, Vector2.ZERO)
+
+func test_a_spider_without_probes_is_the_ground_step_as_before() -> void:
+	var s := MoveState.new()
+	var i := MoveInput.new()
+	i.jump_pressed = true
+	i.jump_held = true
+	VerbRunner.step(s, i, spider, 1.0 / 60.0)
+	assert_eq(s.launched, "ground")
+	assert_eq(s.velocity.y, -330.0)
