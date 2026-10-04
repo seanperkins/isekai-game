@@ -53,6 +53,13 @@ const DUST_LIFE := 0.3
 const SKID_LEAN := 0.25
 const LEAN_EASE := 0.03
 const POUNCE_STRETCH := Vector2(1.2, 0.85)
+## The biped's mantle probe: how far inside the ledge (px past the wall's face) its top is read, how far above the feet the
+## ray starts, and how much shorter than the standing box the room check is (so a body flush on the lip is not an overlap).
+const MANTLE_INSET := 4.0
+const MANTLE_HEADROOM := 40.0
+const MANTLE_ROOM_SHRINK := 2.0
+## The placeholder's alpha while the body is invulnerable (the roll and slide's first 0.2 s).
+const INVULNERABLE_ALPHA := 0.6
 
 ## When set, replaces the keyboard and pad. `jump_pressed` is consumed (cleared) by the next physics frame, so a test
 ## sets it once; `jump_held` stays until the test clears it.
@@ -222,6 +229,8 @@ func _physics_process(delta: float) -> void:
 	if profile.id == "wolf":
 		i.step_ahead = _step_ahead()
 		i.touching_hostile = _dummy.overlaps_body(body)
+	if profile.verbs.has("mantle"):
+		i.mantle = _mantle(i.wall_side)
 	VerbRunner.step(state, i, profile, delta, 1.0, sqrt(BOOST_JUMP_HEIGHT) if boosted else 1.0)
 	body.set_collision_mask_value(2, state.fall_through <= 0.0)  # a press of down on a one-way ledge drops through it
 	_update_thread(delta)
@@ -408,6 +417,39 @@ func _step_ahead() -> float:
 	var height := feet - (hit["position"] as Vector2).y
 	return height if height >= 1.0 else 0.0
 
+## The biped's mantle probe: the displacement from the centre to standing on the hard ledge whose wall is within WALL_RANGE on
+## `side`, or ZERO. The ledge's top is the first hit of a ray down, a few px inside the ledge (hard and slick solids, never a
+## one-way ledge; a wall taller than the ray starts inside it, which is no hit); the target sits on the top, inset past the
+## wall's face, and is reported only when the standing box fits there.
+func _mantle(side: int) -> Vector2:
+	if side == 0 or body.is_on_floor():
+		return Vector2.ZERO
+	var half := _box.size.x / 2.0
+	var col := KinematicCollision2D.new()
+	if not body.test_move(body.global_transform, Vector2(side * WALL_RANGE, 0.0), col):
+		return Vector2.ZERO
+	var gap := absf(col.get_travel().x)
+	var feet := body.global_position.y + BodyConfig.BOTTOM
+	var x := body.global_position.x + side * (gap + half + MANTLE_INSET)
+	var q := PhysicsRayQueryParameters2D.create(Vector2(x, feet - MANTLE_HEADROOM), Vector2(x, feet + 2.0), 5, [body.get_rid()])
+	var hit := get_world_2d().direct_space_state.intersect_ray(q)
+	if hit.is_empty():
+		return Vector2.ZERO
+	var rise := feet - (hit["position"] as Vector2).y
+	if rise <= 0.0:
+		return Vector2.ZERO
+	var target := Vector2(side * (gap + 2.0 * half + 2.0), -rise)
+	var room := RectangleShape2D.new()
+	room.size = _box.size - Vector2(MANTLE_ROOM_SHRINK, MANTLE_ROOM_SHRINK)
+	var shape_q := PhysicsShapeQueryParameters2D.new()
+	shape_q.shape = room
+	shape_q.transform = Transform2D(0.0, body.global_position + target)
+	shape_q.collision_mask = 5
+	shape_q.exclude = [body.get_rid()]
+	if not get_world_2d().direct_space_state.intersect_shape(shape_q, 1).is_empty():
+		return Vector2.ZERO
+	return target
+
 ## A puff of dust at the paws, drifting up and fading (the skid's).
 func _puff_dust() -> void:
 	var puff := ColorRect.new()
@@ -454,13 +496,15 @@ func _draw_body(delta: float) -> void:
 		_sprite.flip_h = state.wall_side < 0 if _clip == "wall" else _facing < 0  # a wall on the left is gripped facing left
 		_sprite.position = body.position + Vector2(0.0, BodyConfig.BOTTOM - size.y * _sprite.scale.y / 2.0)
 	else:
-		_rect.scale = Vector2.ONE
+		_rect.scale = Vector2(1.0, BodyConfig.spread_size().y / BodyConfig.size().y) if VerbRunner.is_flat(state, profile) else Vector2.ONE
 		_rect.position = body.position + Vector2(-_rect.size.x / 2.0, BodyConfig.BOTTOM - _rect.size.y)
 	var tint := VERB_TINT if state.verb != "" else Color.WHITE
+	if state.invulnerable:
+		tint.a = INVULNERABLE_ALPHA
 	_sprite.modulate = tint
 	_rect.modulate = tint
 	var doing := state.verb if state.verb != "" else ("flat" if state.spread else ("wall" if state.clinging else ("crawl" if state.surface_n != Vector2.ZERO else "")))
-	_label.text = "%s%s   speed %d   boost %s   verb: %s   last jump: rise %.1f px, air %.2f s\n1 biped   2 slime   3 wolf   4 spider   B boost   J tackle   S down (flatten, slide)   down on a one-way ledge drops through it   at a wall: press into it to stick, jump to kick off, hold jump to bounce   wolf: J pounces along the arrows (forward if none; one air pounce per jump), a gallop hops low steps by itself, reversing at speed skids   spider: arrows crawl floors, walls and ceilings, jump hops off, J zips (aim with the arrows, a thread pulls you to the first solid within 160 px; jump cancels), S in the air or hanging from a ceiling drops on a thread (down reels, up climbs, jump lets go)" % [
+	_label.text = "%s%s   speed %d   boost %s   verb: %s   last jump: rise %.1f px, air %.2f s\n1 biped   2 slime   3 wolf   4 spider   B boost   J tackle   S down (flatten, slide)   down on a one-way ledge drops through it   at a wall: press into it to stick, jump to kick off, hold jump to bounce   biped: J rolls (slides when running), a jump that nearly clears a ledge mantles it by itself, walls slide and kick off   wolf: J pounces along the arrows (forward if none; one air pounce per jump), a gallop hops low steps by itself, reversing at speed skids   spider: arrows crawl floors, walls and ceilings, jump hops off, J zips (aim with the arrows, a thread pulls you to the first solid within 160 px; jump cancels), S in the air or hanging from a ceiling drops on a thread (down reels, up climbs, jump lets go)" % [
 		profile.id, " (placeholder, no art yet)" if _sheet == null else "", int(absf(body.velocity.x)), "on" if boosted else "off", doing, _last["rise"], _last["airtime"]]
 
 ## The spider, after how spiders move: the legs follow the distance travelled (so they freeze the instant it stops, on the

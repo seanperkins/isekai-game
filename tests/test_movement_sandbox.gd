@@ -241,6 +241,117 @@ func test_the_pounce_pose_follows_the_leap() -> void:
 	assert_true(_sprite().flip_h, "mirrored going left")
 	assert_almost_eq(_sprite().rotation, -atan2(v.y, absf(v.x)), 0.3)
 
+# --- the biped: roll, slide, mantle, wall jump ---
+
+func _biped_at(pos: Vector2, vx := 0.0, dir := 0.0) -> void:
+	sb.set_profile("biped")
+	sb.body.global_position = pos
+	sb.state.velocity.x = vx
+	sb.scripted.dir = dir
+	await _frames(3)
+
+func _box_height() -> float:
+	return ((sb.body.get_node("Shape") as CollisionShape2D).shape as RectangleShape2D).size.y
+
+func test_a_standing_biped_rolls_on_the_tackle_button_and_a_running_one_slides() -> void:
+	await _biped_at(Vector2(100.0, -12.0))
+	var from_x := sb.body.global_position.x
+	sb.scripted.signature_pressed = true
+	await _frames(2)
+	assert_eq(sb.state.verb, "roll")
+	assert_gt(sb.body.velocity.x, 200.0)
+	assert_lte(_box_height(), BodyConfig.spread_size().y + 0.01, "the box ducks")
+	assert_lt(sb._rect.scale.y, 0.6, "and so does the placeholder")
+	assert_almost_eq(sb._rect.modulate.a, 0.6, 0.01, "flickering while invulnerable")
+	await _frames(30)
+	assert_eq(sb.state.verb, "")
+	assert_almost_eq(sb.body.global_position.x - from_x, 77.0, 14.0)
+	assert_eq(_box_height(), BodyConfig.size().y, "stood back up")
+	assert_almost_eq(sb._rect.modulate.a, 1.0, 0.01)
+	await _frames(20)
+	sb.scripted.dir = 1.0
+	await _frames(20)
+	assert_almost_eq(sb.body.velocity.x, 140.0, 1.0)
+	sb.scripted.signature_pressed = true
+	await _frames(2)
+	assert_eq(sb.state.verb, "slide")
+	var kept := sb.body.velocity.x
+	assert_gt(kept, 120.0, "it keeps the speed")
+	sb.scripted.dir = 0.0
+	await _frames(12)
+	assert_lt(sb.body.velocity.x, kept - 40.0, "and bleeds it")
+
+func test_a_roll_ducks_the_tunnel_and_the_biped_stays_crouched_inside_it() -> void:
+	await _biped_at(Vector2(860.0, -12.0))
+	sb.scripted.signature_pressed = true
+	await _frames(30)
+	assert_eq(sb.state.verb, "", "the roll is over")
+	assert_gt(sb.body.global_position.x, 900.0 + 14.0, "inside the 12 px tunnel (it fits flat)")
+	assert_true(sb.state.crouched)
+	assert_lte(_box_height(), BodyConfig.spread_size().y + 0.01)
+	sb.body.global_position = Vector2(1120.0, -5.0)
+	sb.scripted.dir = 1.0
+	await _frames(60)
+	assert_gt(sb.body.global_position.x, 1140.0 + 14.0, "walked out of the far end at half speed")
+	assert_eq(_box_height(), BodyConfig.size().y, "and stands")
+	assert_false(sb.state.crouched)
+
+func test_a_biped_at_the_apex_beside_a_60_px_ledge_mantles_onto_it() -> void:
+	await _biped_at(Vector2(504.0, -69.0), 0.0, 1.0)  # the feet 3 px under the lip, 2 px from the wall
+	sb.set_profile("biped")
+	sb.body.global_position = Vector2(504.0, -69.0)
+	var started := false
+	var stood := false
+	var at_stand := Vector2.ZERO
+	for _k in 40:
+		await get_tree().physics_frame
+		started = started or sb.state.mantle_event == "start"
+		assert_ne(sb.state.launched, "wall", "the mantle beats the wall jump")
+		if sb.state.mantle_event == "stand":
+			stood = true
+			at_stand = sb.body.global_position
+			break
+	assert_true(started)
+	assert_true(stood)
+	assert_almost_eq(at_stand.x, 504.0 + 32.0, 4.0, "over the lip")
+	assert_almost_eq(at_stand.y, -60.0 - 12.0, 2.0, "feet on the ledge's top")
+	sb.scripted.dir = 0.0
+	await _frames(10)
+	assert_true(sb.body.is_on_floor())
+
+func test_a_biped_too_far_below_the_lip_does_not_mantle() -> void:
+	await _biped_at(Vector2(504.0, -56.0), 0.0, 1.0)  # the feet 16 px under the top
+	var started := false
+	for _k in 5:
+		await get_tree().physics_frame
+		started = started or sb.state.mantle_event == "start"
+	assert_false(started)
+
+func test_a_biped_beside_the_one_way_ledge_does_not_mantle() -> void:
+	await _biped_at(Vector2(144.0, -59.0), 0.0, 1.0)  # the feet 3 px under the one-way ledge's top, 2 px from its end
+	var started := false
+	for _k in 5:
+		await get_tree().physics_frame
+		started = started or sb.state.mantle_event == "start"
+	assert_false(started)
+
+func test_a_biped_slides_a_wall_without_sticking_and_jumps_off_it() -> void:
+	await _biped_at(Vector2(15.0, -250.0), 0.0, -1.0)
+	await _frames(12)  # long enough for the coyote time the floor left behind to run out
+	assert_almost_eq(sb.body.velocity.y, 90.0, 1.0, "the slide, no stick")
+	sb.scripted.jump_pressed = true
+	var launched := false
+	var best_vx := 0.0
+	var best_vy := 0.0
+	for _k in 6:
+		await get_tree().physics_frame
+		launched = launched or sb.state.launched == "wall"
+		best_vx = maxf(best_vx, sb.body.velocity.x)
+		best_vy = minf(best_vy, sb.body.velocity.y)
+	assert_true(launched)
+	assert_gt(best_vx, 100.0)
+	assert_lt(best_vy, -300.0)
+
 func after_each() -> void:
 	for action in ["move_right", "aim_down", "tackle"]:
 		Input.action_release(action)
