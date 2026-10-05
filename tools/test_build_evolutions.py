@@ -83,9 +83,9 @@ class BuildEvolutionsTest(unittest.TestCase):
         self.assertEqual(twins_of, {"J1", "U1", "G1"})
 
     def test_the_forms_with_a_data_file_are_counted(self):
-        self.assertEqual(self.data["summary"]["inData"], 123)
+        self.assertEqual(self.data["summary"]["inData"], 141)
         self.assertTrue(self.forms["W2A"]["inData"])
-        self.assertFalse(self.forms["J4W1b"]["inData"], "the slime's new form-4s wait for B2")
+        self.assertTrue(self.forms["J4W1b"]["inData"], "the slime's new form-4s are data since B2")
 
     def test_every_species_base_has_a_twin(self):
         for b in self.data["bases"]:
