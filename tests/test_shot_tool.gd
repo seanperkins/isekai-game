@@ -39,18 +39,24 @@ var fake: FakeRunner
 func before_all() -> void:
 	creatures = DefLoader.load_dir("res://data/creatures")
 
+## Everything under `path`, then `path` itself.
+func _wipe(path: String) -> void:
+	for d in DirAccess.get_directories_at(path):
+		_wipe("%s/%s" % [path, d])
+	for f in DirAccess.get_files_at(path):
+		DirAccess.remove_absolute("%s/%s" % [path, f])
+	DirAccess.remove_absolute(path)
+
 func before_each() -> void:
+	if DirAccess.dir_exists_absolute(ProjectSettings.globalize_path(TMP)):
+		_wipe(ProjectSettings.globalize_path(TMP))  # a run that was interrupted may have left directories behind
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(TMP))
 	calls = []
 	fake = FakeRunner.new(calls, TMP)
 	tools = RoomTools.new(RoomSession.new(), ShotRunner.new(fake.run, TMP))
 
 func after_each() -> void:
-	var d := DirAccess.open(TMP)
-	if d != null:
-		for f in d.get_files():
-			d.remove(f)
-	DirAccess.remove_absolute(ProjectSettings.globalize_path(TMP))
+	_wipe(ProjectSettings.globalize_path(TMP))
 
 func _images(r: Dictionary) -> Array:
 	return r["content"].filter(func(c: Dictionary) -> bool: return c["type"] == "image")
