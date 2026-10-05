@@ -67,3 +67,27 @@ func test_reset_returns_to_the_species_base() -> void:
 	f.reset()
 	assert_eq(f.form_id, "wolf")
 	assert_eq(f.stage, 1)
+
+## The slime's 24 forms and the wolf fixture in one dictionary.
+func _all() -> Dictionary:
+	var out := FormLoader.load_all()
+	out.merge(wolf_forms())
+	return out
+
+# --- Task 2: FormLoader species queries ---
+
+func test_of_species_splits_a_mixed_dictionary() -> void:
+	var all := _all()
+	assert_eq(FormLoader.of_species(all, "wolf").size(), 4)
+	assert_eq(FormLoader.of_species(all, "slime").size(), 24)
+	assert_eq(FormLoader.of_species(all, "goblin").size(), 0)
+
+func test_stage2_forms_default_to_the_slime() -> void:
+	assert_eq(FormLoader.stage2_forms(_all()).size(), 6)
+
+func test_stage2_forms_of_the_wolf_are_in_id_order() -> void:
+	var ids: Array = FormLoader.stage2_forms(_all(), "wolf").map(func(f: FormDef) -> String: return f.id)
+	assert_eq(ids, ["wolf_black_dog", "wolf_moonbound"])
+
+func test_a_species_with_no_forms_has_no_stage2_forms() -> void:
+	assert_eq(FormLoader.stage2_forms(_all(), "spider"), [])
