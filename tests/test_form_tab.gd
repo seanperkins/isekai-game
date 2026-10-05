@@ -279,3 +279,47 @@ func test_form_card_names_the_stats_traits_and_the_grants_still_receivable() -> 
 	assert_eq(card["grants"], "Grants: Hydraulic Propulsion")
 	fake.retired = ["hydraulic_propulsion"]
 	assert_eq(SkillScreenModel.form_card(tide, fake)["grants"], "", "a retired grant is hidden")
+
+# --- the card names a form's verb, what it gives up and how it is opened ---
+
+func _real_rules() -> SkillRulesEngine:
+	var r: SkillRulesEngine = autofree(SkillRulesEngine.new())
+	r.setup(DefLoader.load_dir("res://data/skills"))
+	r.start_run()
+	return r
+
+func test_the_form_card_names_the_verb_its_cost_and_cooldown() -> void:
+	var forms := FormLoader.load_all()
+	assert_eq(SkillScreenModel.form_card(forms["gleipnir"], _real_rules())["verb"], "Bind, 8 MP, 8 s")
+	assert_eq(SkillScreenModel.form_card(forms["shoggoth"], _real_rules())["verb"], "Pseudopod, 3 MP, 0.8 s", "the default cooldown when the spec has none")
+	assert_eq(SkillScreenModel.form_card(forms["wolf_hellhound"], _real_rules())["verb"], "Burning pounce, 7 MP, 6 s")
+
+func test_the_card_of_a_form_with_no_verb_has_none() -> void:
+	var forms := FormLoader.load_all()
+	assert_eq(SkillScreenModel.form_card(forms["weaver"], _real_rules())["verb"], "")
+	assert_eq(SkillScreenModel.form_card(forms["quicksilver_slime"], _real_rules())["verb"], "")
+	assert_eq(SkillScreenModel.form_card(forms["weaver"], FakeRules.new())["verb"], "", "a verb the rules do not know says nothing")
+
+func test_the_card_carries_gives_up_and_opened_by() -> void:
+	var fenrir: FormDef = FormLoader.load_all()["wolf_fenrir"]
+	var card := SkillScreenModel.form_card(fenrir, _real_rules())
+	assert_eq(card["gives_up"], fenrir.gives_up)
+	assert_eq(card["opened_by"], fenrir.opened_by)
+
+func test_the_tree_card_shows_verb_gives_up_and_opened_by_once_each() -> void:
+	var forms := FormLoader.load_all()
+	var rules := _real_rules()
+	var node := {"id": "wolf_fenrir", "kind": "form", "state": "named", "name": "Fenrir"}
+	var card := SkillScreenModel.tree_card(rules, node, {}, forms, ActiveSlots.new())
+	var lines: Array = card["lines"]
+	assert_eq(lines.filter(func(l: String) -> bool: return l.begins_with("Verb: ")), ["Verb: Unbound, 8 MP, 6 s"])
+	assert_eq(lines.filter(func(l: String) -> bool: return l.begins_with("Gives up: ")).size(), 1)
+	assert_eq(lines.filter(func(l: String) -> bool: return l.begins_with("Opened by: ")).size(), 1)
+
+func test_a_card_never_shows_an_empty_line() -> void:
+	var forms := FormLoader.load_all()
+	var rules := _real_rules()
+	for id in forms:
+		var node := {"id": id, "kind": "form", "state": "named", "name": id}
+		for l in SkillScreenModel.tree_card(rules, node, {}, forms, ActiveSlots.new())["lines"]:
+			assert_ne(str(l).strip_edges(), "", id)

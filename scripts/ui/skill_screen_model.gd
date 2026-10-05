@@ -203,6 +203,12 @@ static func _form_tree_card(rules, node: Dictionary, forms: Dictionary) -> Dicti
 		return {"title": node["name"], "status": "Stage 1  " + status, "lines": [SkillTreeModel.base_line(node["id"])]}
 	var c := form_card(forms[node["id"]], rules)
 	var lines: Array = [c["blurb"]]
+	if c["verb"] != "":
+		lines.append("Verb: " + c["verb"])
+	if c["gives_up"] != "":
+		lines.append("Gives up: " + c["gives_up"])
+	if c["opened_by"] != "":
+		lines.append("Opened by: " + c["opened_by"])
 	lines.append_array(c["stats"])
 	lines.append_array(c["traits"])
 	if c["grants"] != "":
@@ -227,7 +233,8 @@ static func gate_lines(def: FormDef, rules) -> Array:
 		out.append("Each power you own counts +%d" % FormOffers.POWER_BONUS)
 	return out
 
-## A form's card, shared by the Form tab and the Tree tab: {"name", "stage", "blurb", "stats", "traits", "grants"}.
+## A form's card, shared by the Form tab and the Tree tab: {"name", "stage", "blurb", "stats", "traits", "grants", "verb", "gives_up",
+## "opened_by"}.
 ## "grants" lists only the grants the player can still receive: a grant whose skill has retired is hidden.
 static func form_card(def: FormDef, rules) -> Dictionary:
 	var names: Array = []
@@ -238,7 +245,16 @@ static func form_card(def: FormDef, rules) -> Dictionary:
 		names.append(sd.display_name if sd != null else g)
 	return {"name": def.display_name, "stage": def.stage, "blurb": def.blurb, "stats": FormEffects.stat_lines(def),
 		"traits": def.traits.map(func(t): return FormEffects.TRAITS.get(t, str(t))),
-		"grants": "" if names.is_empty() else "Grants: " + ", ".join(names)}
+		"grants": "" if names.is_empty() else "Grants: " + ", ".join(names),
+		"verb": verb_line(def, rules), "gives_up": def.gives_up, "opened_by": def.opened_by}
+
+## A form's verb as one line: "Bind, 8 MP, 8 s" (name, cost, cooldown), "" for a form with none or one the rules do not know.
+static func verb_line(def: FormDef, rules) -> String:
+	var d: SkillDef = rules.get_def(def.verb) if def.verb != "" else null
+	if d == null:
+		return ""
+	var cooldown: float = float(SkillEffects.active_spec(d).get("cooldown", Ability.COOLDOWN_SECONDS))
+	return "%s, %d MP, %s s" % [d.display_name, d.mp_cost, ("%.1f" % cooldown).trim_suffix(".0")]
 
 ## A price as text, in the canonical element order: "water 6, dark 10".
 static func price_text(price: Dictionary) -> String:
