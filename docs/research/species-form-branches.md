@@ -440,6 +440,7 @@ Every base needs a world creature, and the essences the forms read (light, mind,
 | skeleton | Skeleton | cemetery, crypt | common | dark 2 | 3 | U1 | the undead base; its corpse gives a skull or rib graft |
 | village_goblin | Village Goblin | village, forest | common | earth 1, air 1 | 3 | G1 | the goblin base, and the humanoid a Weavermaid eats |
 | cave_rat | Cave Rat | Cave, Grotto, village | common | earth 1 | 2 | | the vermin a Pied Piper learns from, and a first companion |
+| junk | Junk Heap | village, crypt | common | earth 1 | 2 | | scrap a Tinker learns from; F2 places it |
 | firefly_swarm | Firefly Swarm | forest, swamp | common | light 1, air 1 | 3 | | light outside the Flooded; a lesson for the Puck |
 | moon_hare | Moon Hare | forest | rare | light 2 | 8 | | drops the Moonstone, Moonbound's other key |
 | tusker_boar | Tusker Boar | forest | common | earth 3 | 4 | | the large beast a Beast-Rider bonds with |

@@ -12,15 +12,16 @@ func before_all() -> void:
 func test_every_source_is_counted() -> void:
 	assert_eq(Sources.SHIPPED.size(), 19)
 	assert_eq(MenagerieIds.TWINS.size(), 140)
-	assert_eq(MenagerieIds.SUPPORT.size(), 28)
-	assert_eq(MenagerieIds.ALL.size(), 168)
-	assert_eq(Sources.ALL.size(), 187)
+	assert_eq(MenagerieIds.SUPPORT.size(), 29)
+	assert_eq(MenagerieIds.ALL.size(), 169)
+	assert_eq(Sources.ALL.size(), 188)
+	assert_true(MenagerieIds.SUPPORT.has("junk"), "the heap the Tinker learns from")
 	assert_eq(Sources.ALL.slice(0, 19), Sources.SHIPPED, "the shipped creatures keep their places")
 
 func test_every_source_has_exactly_one_creature_and_the_content_loads_clean() -> void:
 	var content := DefLoader.load_content("res://data/skills", "res://data/creatures")
 	assert_eq(content["errors"], [], "no errors")
-	assert_eq(content["creatures"].size(), 187)
+	assert_eq(content["creatures"].size(), 188)
 	for id in Sources.ALL:
 		assert_true(creatures.has(id), id)
 

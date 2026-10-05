@@ -33,7 +33,7 @@ ELEMENT_TINT = {"water": [0.45, 0.65, 1.0], "earth": [0.75, 0.6, 0.4], "air": [0
 # What a support monster looks like until it has art: a sheet and frame that exist, or a shipped creature it wears, tinted by its element.
 SUPPORT_SET = {"wild_slime": ("slime", "idle_1"), "skeleton": ("forms_undead", "skeleton"), "village_goblin": ("goblin", "idle_1")}
 SUPPORT_WEARS = {
-    "cave_rat": "lizard", "firefly_swarm": "pale_moth", "moon_hare": "toad", "tusker_boar": "stone_drake", "blood_leech": "vine_snake",
+    "cave_rat": "lizard", "junk": "mushroom_crab", "firefly_swarm": "pale_moth", "moon_hare": "toad", "tusker_boar": "stone_drake", "blood_leech": "vine_snake",
     "bog_wisp": "pale_moth", "goblin_shaman": "bog_lizardman", "candle_wisp": "spore_moth", "chapel_priest": "bog_lizardman",
     "stained_glass_moth": "pale_moth", "shield_guard": "stone_drake", "gargoyle": "spider", "ghost": "drift_jelly", "carrion_crow": "bat",
     "vampire_bat": "bat", "bone_hound": "gloom_wolf", "ember_beetle": "mushroom_crab", "lava_salamander": "lizard", "ash_moth": "spore_moth",

@@ -37,11 +37,17 @@ class RowsTest(unittest.TestCase):
     def tearDownClass(cls):
         os.chdir(cls.old)
 
-    def test_there_are_140_twins_and_28_support_monsters(self):
+    def test_there_are_140_twins_and_29_support_monsters(self):
         self.assertEqual(len(self.twins), 140)
-        self.assertEqual(len(self.support), 28)
-        self.assertEqual(len({r["id"] for r in self.rows}), 168, "every id is unique")
+        self.assertEqual(len(self.support), 29)
+        self.assertEqual(len({r["id"] for r in self.rows}), 169, "every id is unique")
         self.assertFalse({r["id"] for r in self.rows} & SHIPPED)
+
+    def test_the_junk_heap_is_an_earth_support_monster_in_the_village(self):
+        junk = next(r for r in self.support if r["id"] == "junk")
+        self.assertEqual(junk["essences"], {"earth": 1})
+        self.assertEqual(junk["role"], "common")
+        self.assertIn("village", [a.lower() for a in junk["areas"]])
 
     def test_a_twin_is_twin_plus_its_form_id_and_the_form_exists(self):
         for r in self.twins:
@@ -150,7 +156,7 @@ class WriteTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as out:
             ids_path = os.path.join(out, "menagerie_ids.gd")
             bc.build(out, ids_path)
-            self.assertEqual(len(glob.glob(os.path.join(out, "*.tres"))), 168)
+            self.assertEqual(len(glob.glob(os.path.join(out, "*.tres"))), 169)
             text = open(ids_path, encoding="utf-8").read()
             self.assertIn("class_name MenagerieIds", text)
             self.assertIn('"twin_wolf_fenrir"', text)

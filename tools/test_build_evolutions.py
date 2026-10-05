@@ -97,7 +97,7 @@ class BuildEvolutionsTest(unittest.TestCase):
 
     def test_support_monsters_use_known_areas_and_elements(self):
         support = [c for c in self.data["creatures"] if c["kind"] == "support"]
-        self.assertEqual(len(support), 28)
+        self.assertEqual(len(support), 29)
         for c in support:
             self.assertTrue(c["areas"], c["id"])
             self.assertTrue(set(c["essence"]) <= set(be.ELEMENTS), c["id"])

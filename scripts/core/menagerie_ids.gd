@@ -150,6 +150,7 @@ const SUPPORT := [
 	"skeleton",
 	"village_goblin",
 	"cave_rat",
+	"junk",
 	"firefly_swarm",
 	"moon_hare",
 	"tusker_boar",
