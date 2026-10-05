@@ -17,6 +17,7 @@ essences = {
 "mind": 4
 }
 xp = 10
+drops = [{"part": "focus", "chance": 0.3}]
 origin = "support"
 role = "elite"
 wears = "bog_lizardman"

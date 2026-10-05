@@ -17,6 +17,7 @@ essences = {
 "dark": 1
 }
 xp = 4
+drops = [{"part": "bow_arm", "chance": 0.3}]
 origin = "twin"
 stage = 2
 form = "undead_skeletal_archer"

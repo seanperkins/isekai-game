@@ -17,6 +17,7 @@ essences = {
 "earth": 2
 }
 xp = 4
+drops = [{"part": "ribs", "chance": 0.3}, {"part": "flesh", "chance": 0.3}]
 origin = "twin"
 stage = 2
 form = "undead_zombie"

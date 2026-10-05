@@ -22,5 +22,6 @@ eat_bonus = {
 "stat": "spd"
 }
 xp = 6
+drops = [{"part": "claw", "chance": 0.3}]
 pack = true
 charges = true

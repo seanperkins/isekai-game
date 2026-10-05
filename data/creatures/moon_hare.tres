@@ -16,6 +16,7 @@ essences = {
 "light": 2
 }
 xp = 8
+drops = [{"part": "moonstone", "chance": 0.15}]
 origin = "support"
 role = "rare"
 wears = "toad"

@@ -17,6 +17,7 @@ essences = {
 "earth": 2
 }
 xp = 4
+drops = [{"part": "weapon_arm", "chance": 0.3}]
 origin = "twin"
 stage = 2
 form = "undead_bone_warrior"

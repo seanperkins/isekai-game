@@ -17,6 +17,7 @@ essences = {
 "earth": 1
 }
 xp = 3
+drops = [{"part": "bow_arm", "chance": 0.25}]
 origin = "support"
 species = "goblin"
 role = "common"

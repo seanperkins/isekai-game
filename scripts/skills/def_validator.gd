@@ -156,6 +156,21 @@ static func _check_prices(by_id: Dictionary, errors: PackedStringArray) -> void:
 			elif int(d.evolution_price[e]) <= 0:
 				errors.append("%s: evolution_price of '%s' must be positive" % [w, e])
 
+## Each drop names a part that exists and a chance above 0 and up to 1.
+static func _check_drops(w: String, c: CreatureDef, errors: PackedStringArray) -> void:
+	if c.drops.is_empty():
+		return
+	var part_ids := PartLoader.load_all().keys()
+	for d in c.drops:
+		if typeof(d) != TYPE_DICTIONARY or str(d.get("part", "")) == "":
+			errors.append("%s: a drop names a part" % w)
+			continue
+		if not part_ids.has(d["part"]):
+			errors.append("%s: drop of unknown part '%s'" % [w, d["part"]])
+		var chance := float(d.get("chance", 0.0))
+		if chance <= 0.0 or chance > 1.0:
+			errors.append("%s: drop chance %s is outside 0 to 1" % [w, str(chance)])
+
 ## A creature's verb, origin and art: the verb is a data verb, a twin names its form, a still is a real frame, and `wears` is a shipped creature.
 static func _check_creature_look(w: String, c: CreatureDef, by_id: Dictionary, errors: PackedStringArray) -> void:
 	if not ["", "twin", "support"].has(c.origin):
@@ -257,6 +272,7 @@ static func _check_creatures(creatures: Array, by_id: Dictionary, errors: Packed
 		if not c.appraisal_target and c.predatable:
 			errors.append("%s: appraisal_target may be false only on non-predatable sources" % w)
 		_check_creature_look(w, c, by_id, errors)
+		_check_drops(w, c, errors)
 	for sid in Sources.ALL:
 		if not seen.has(sid):
 			errors.append("missing CreatureDef for source '%s'" % sid)

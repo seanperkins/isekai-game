@@ -22,4 +22,5 @@ eat_bonus = {
 "stat": "atk"
 }
 xp = 5
+drops = [{"part": "claw", "chance": 0.3}]
 projectile = "spear"

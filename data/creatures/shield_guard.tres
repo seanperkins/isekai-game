@@ -18,6 +18,7 @@ essences = {
 }
 xp = 5
 armored_charger = true
+drops = [{"part": "weapon_arm", "chance": 0.3}]
 origin = "support"
 role = "common"
 wears = "stone_drake"

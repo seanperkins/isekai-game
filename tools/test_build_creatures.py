@@ -105,6 +105,18 @@ class RowsTest(unittest.TestCase):
         self.assertTrue(by_id["ghost"]["flags"].get("drifter"))
         self.assertEqual((by_id["wild_slime"]["sprite_set"], by_id["wild_slime"]["sprite_frame"]), ("slime", "idle_1"))
 
+    def test_the_drops_are_the_design_tables(self):
+        drops = {r["id"]: sorted(p for p, _ in r["drops"]) for r in self.rows if r["drops"]}
+        self.assertEqual(drops["skeleton"], ["ribs", "skull"])
+        self.assertEqual(drops["twin_undead_ghoul"], ["claw", "flesh", "ribs"])
+        self.assertEqual(drops["moon_hare"], ["moonstone"])
+        self.assertEqual(len(drops), 13)
+        self.assertEqual([c for p, c in next(r for r in self.rows if r["id"] == "twin_undead_lich")["drops"]], [0.1])
+
+    def test_the_tres_writes_the_drops(self):
+        text = bc.tres(next(r for r in self.rows if r["id"] == "moon_hare"))
+        self.assertIn('drops = [{"part": "moonstone", "chance": 0.15}]', text)
+
     def test_the_three_species_bases_say_their_species_and_no_other_support_monster_does(self):
         species = {r["id"]: r["species"] for r in self.support if r["species"]}
         self.assertEqual(species, {"wild_slime": "slime", "skeleton": "undead", "village_goblin": "goblin"})
