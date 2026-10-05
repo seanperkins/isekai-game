@@ -1,0 +1,88 @@
+"""Checks for tools/build_species_forms.py against the design doc. Run from anywhere:
+  python3 -m unittest tools/test_build_species_forms.py
+"""
+import os
+import sys
+import tempfile
+import unittest
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+import build_species_forms as bsf  # noqa: E402
+
+
+class SlugTest(unittest.TestCase):
+    def test_slug_folds_accents_and_drops_apostrophes(self):
+        self.assertEqual(bsf.slug("Úlfheðinn"), "ulfhedinn")
+        self.assertEqual(bsf.slug("Beast of Gévaudan"), "beast_of_gevaudan")
+        self.assertEqual(bsf.slug("Cŵn Annwn"), "cwn_annwn")
+        self.assertEqual(bsf.slug("Heart-Weigher"), "heart_weigher")
+        self.assertEqual(bsf.slug("Philosopher's Stone"), "philosophers_stone")
+
+
+class FormsTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.old = os.getcwd()
+        os.chdir(os.path.dirname(HERE))
+        cls.forms = bsf.species_forms()
+        cls.by_id = {f["dataId"]: f for f in cls.forms}
+
+    @classmethod
+    def tearDownClass(cls):
+        os.chdir(cls.old)
+
+    def test_every_non_slime_form_gets_a_unique_prefixed_id(self):
+        self.assertEqual(len(self.forms), 99)
+        self.assertEqual(len(self.by_id), 99)
+        for f in self.forms:
+            self.assertTrue(f["dataId"].startswith(f["species"] + "_"), f["dataId"])
+            self.assertNotEqual(f["species"], "slime")
+
+    def test_a_stage_two_form_grows_from_its_species_and_a_child_from_its_parents_id(self):
+        moon = self.by_id["wolf_moonbound"]
+        self.assertEqual(moon["parents"], ["wolf"])
+        self.assertEqual(self.by_id["wolf_loup_garou"]["parents"], ["wolf_moonbound"])
+        self.assertEqual(self.by_id["wolf_loup_garou"]["lineage"], "moonbound")
+        self.assertEqual(self.by_id["wolf_beast_of_gevaudan"]["lineage"], "moonbound")
+
+    def test_stats_follow_the_stage_base_and_the_reads_flavour(self):
+        self.assertEqual(self.by_id["wolf_moonbound"]["stats"], {"atk": 1, "max_hp": 5, "max_mp": 3})
+        self.assertEqual(self.by_id["wolf_loup_garou"]["stats"], {"atk": 3, "max_hp": 12, "max_mp": 6})
+        self.assertEqual(self.by_id["wolf_dire_wolf"]["stats"], {"atk": 1, "def": 2, "max_hp": 12, "max_mp": 6})
+
+    def test_size_and_tint_follow_the_stage(self):
+        self.assertEqual(self.by_id["wolf_moonbound"]["size"], 1.12)
+        self.assertEqual(self.by_id["wolf_fenrir"]["size"], 1.4)
+        for f in self.forms:
+            self.assertTrue(all(0.0 <= c <= 1.0 for c in f["tint"]), f["dataId"])
+
+    def test_a_duplicate_id_is_an_error(self):
+        dup = [dict(self.forms[0]), dict(self.forms[0])]
+        with self.assertRaises(ValueError):
+            bsf.check_unique(dup)
+
+    def test_an_unknown_area_or_element_is_an_error(self):
+        bad = dict(self.forms[0], host=["moon"])
+        with self.assertRaises(ValueError):
+            bsf.check_row(bad)
+        bad = dict(self.forms[0], reads=["ether"])
+        with self.assertRaises(ValueError):
+            bsf.check_row(bad)
+
+    def test_the_tres_text_lists_the_new_fields(self):
+        text = bsf.tres(self.by_id["wolf_moonbound"])
+        for needle in ['id = "wolf_moonbound"', 'species = "wolf"', 'parents = ["wolf"]', 'reads = ["dark"]', 'host = ["forest"]',
+                       'size = 1.12', "verb_text = ", "source = "]:
+            self.assertIn(needle, text)
+        self.assertTrue(text.startswith('[gd_resource type="Resource" script_class="FormDef" format=3]'))
+
+    def test_build_writes_every_file(self):
+        with tempfile.TemporaryDirectory() as out:
+            ids = bsf.build(out)
+            self.assertEqual(len(ids), 99)
+            self.assertEqual(len(os.listdir(out)), 99)
+
+
+if __name__ == "__main__":
+    unittest.main()
