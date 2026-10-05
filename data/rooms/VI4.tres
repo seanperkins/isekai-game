@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
+
+[resource]
+script = ExtResource("1_roomdef")
+id = "VI4"
+area = "village"
+cell = Vector2i(13, 2)
+solids = [Rect2(160, 268, 120, 12)]
+decor = [{
+"id": "stalagmite",
+"pos": Vector2(120, 320)
+}, {
+"id": "rubble",
+"pos": Vector2(540, 320)
+}, {
+"anchor": "top",
+"id": "vine",
+"pos": Vector2(300, 20)
+}]
+spawns = [{
+"id": "goblin_shaman",
+"pos": Vector2(380, 314)
+}]
+exits = [{
+"edge": "right",
+"from": 200.0,
+"room": "VI3",
+"to": 320.0
+}]

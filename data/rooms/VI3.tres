@@ -1,0 +1,63 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
+
+[resource]
+script = ExtResource("1_roomdef")
+id = "VI3"
+area = "village"
+cell = Vector2i(14, 2)
+size = Vector2i(2, 1)
+solids = [Rect2(220, 274, 90, 12), Rect2(290, 222, 90, 12), Rect2(220, 170, 90, 12), Rect2(290, 118, 90, 12), Rect2(220, 66, 90, 12), Rect2(290, 14, 90, 12), Rect2(1040, 274, 90, 12), Rect2(1110, 222, 90, 12), Rect2(1040, 170, 90, 12), Rect2(1110, 118, 90, 12), Rect2(1040, 66, 90, 12), Rect2(1110, 14, 90, 12), Rect2(600, 268, 100, 12), Rect2(920, 268, 100, 12)]
+decor = [{
+"id": "flowers",
+"pos": Vector2(150, 320)
+}, {
+"id": "rubble",
+"pos": Vector2(450, 320)
+}, {
+"anchor": "top",
+"id": "root_hang",
+"pos": Vector2(600, 20)
+}, {
+"anchor": "top",
+"id": "root_hang",
+"pos": Vector2(900, 20)
+}, {
+"id": "stalagmite",
+"pos": Vector2(1230, 320)
+}]
+spawns = [{
+"id": "village_goblin",
+"pos": Vector2(520, 314)
+}, {
+"id": "village_goblin",
+"pos": Vector2(970, 262)
+}, {
+"id": "cave_rat",
+"pos": Vector2(330, 314)
+}, {
+"id": "junk",
+"pos": Vector2(620, 314)
+}]
+exits = [{
+"edge": "top",
+"from": 220.0,
+"room": "VI2",
+"to": 380.0
+}, {
+"edge": "top",
+"from": 1040.0,
+"room": "VI1",
+"to": 1200.0
+}, {
+"edge": "left",
+"from": 200.0,
+"room": "VI4",
+"to": 320.0
+}, {
+"edge": "bottom",
+"from": 740.0,
+"room": "VI5",
+"to": 900.0
+}]

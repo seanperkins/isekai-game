@@ -1,9 +1,9 @@
 [gd_resource type="Resource" script_class="RoomDef" format=3]
 
-[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_psoda"]
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
 
 [resource]
-script = ExtResource("1_psoda")
+script = ExtResource("1_roomdef")
 id = "F6"
 area = "flooded"
 cell = Vector2i(15, 5)
@@ -30,6 +30,12 @@ exits = [{
 "from": 440.0,
 "gate": "swim",
 "room": "F4",
+"to": 600.0
+}, {
+"edge": "top",
+"from": 440.0,
+"gate": "swim",
+"room": "VI5",
 "to": 600.0
 }]
 water = [Rect2(0, 200, 640, 160)]

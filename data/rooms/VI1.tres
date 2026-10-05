@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
+
+[resource]
+script = ExtResource("1_roomdef")
+id = "VI1"
+area = "village"
+cell = Vector2i(15, 1)
+solids = [Rect2(60, 274, 90, 12), Rect2(130, 222, 90, 12), Rect2(60, 170, 90, 12), Rect2(130, 118, 90, 12), Rect2(60, 66, 90, 12), Rect2(130, 14, 90, 12)]
+decor = [{
+"id": "flowers",
+"pos": Vector2(260, 320)
+}, {
+"anchor": "top",
+"id": "root_hang",
+"pos": Vector2(330, 20)
+}, {
+"id": "rubble",
+"pos": Vector2(600, 320)
+}]
+exits = [{
+"edge": "top",
+"from": 60.0,
+"room": "SW3",
+"to": 220.0
+}, {
+"edge": "left",
+"from": 200.0,
+"room": "VI2",
+"to": 320.0
+}, {
+"edge": "bottom",
+"from": 400.0,
+"room": "VI3",
+"to": 560.0
+}]
+features = [{
+"area": "village",
+"id": "VI1_pool",
+"kind": "glow_pool",
+"pos": Vector2(310, 320)
+}]

@@ -6,13 +6,20 @@ const SWAMP := {"SW1": [Vector2i(11, 0), Vector2i(1, 1)], "SW2": [Vector2i(12, 0
 	"SW4": [Vector2i(15, -1), Vector2i(1, 1)], "SW5": [Vector2i(16, 0), Vector2i(1, 1)]}
 ## The creatures the design table gives the swamp that exist as data before F2f places the twins.
 const SWAMP_SUPPORT := ["blood_leech", "bog_wisp", "firefly_swarm"]
+## The village: the Gate Shrine, the Palisade Roofs, the Yard and the Chieftain Hall, and the Sump below (the swamp's, in flooded art).
+const VILLAGE := {"VI1": [Vector2i(15, 1), Vector2i(1, 1), "village"], "VI2": [Vector2i(13, 1), Vector2i(2, 1), "village"],
+	"VI3": [Vector2i(14, 2), Vector2i(2, 1), "village"], "VI4": [Vector2i(13, 2), Vector2i(1, 1), "village"],
+	"VI5": [Vector2i(15, 3), Vector2i(1, 2), "swamp"]}
+const VILLAGE_SUPPORT := ["village_goblin", "cave_rat", "junk", "goblin_shaman"]
 
 var world: Dictionary  # the swamp built, the village not yet
 var before: Dictionary  # the forest's world
+var full: Dictionary  # everything checked in
 
 func before_all() -> void:
 	world = AreaWorlds.without(["VI"])
 	before = AreaWorlds.without(["SW", "VI"])
+	full = World.load_rooms(AreaBuilder.ROOMS_DIR)
 
 func test_the_swamp_is_five_rooms_at_their_cells_and_sizes() -> void:
 	for id in SWAMP:
@@ -62,6 +69,73 @@ func test_the_bog_flats_climb_ends_in_the_opening_to_the_roost() -> void:
 	var top: Rect2 = flat.solids[flat.solids.size() - 1]
 	assert_eq(top.position.y, 14.0, "the last ledge stands in the opening")
 	assert_true(top.position.x >= float(up[0]["from"]) and top.end.x <= float(up[0]["to"]))
+
+# --- the village ---
+
+func test_the_village_is_four_rooms_and_the_sump_at_their_cells_sizes_and_areas() -> void:
+	for id in VILLAGE:
+		assert_true(full.has(id), id)
+		var r: RoomDef = full[id]
+		assert_eq(r.cell, VILLAGE[id][0], id)
+		assert_eq(r.size, VILLAGE[id][1], id)
+		assert_eq(r.area, VILLAGE[id][2], id)
+
+func test_the_whole_world_has_no_problems() -> void:
+	assert_eq(Array(AreaBuilder.problems(full)), [])
+
+func test_every_village_room_is_reachable_from_the_start() -> void:
+	var reached := WorldValidator.reachable(full)
+	for id in VILLAGE:
+		assert_true(reached.has(id), "%s: no way in from the start room" % id)
+
+func test_the_gate_shrine_is_neutral_ground_a_pool_and_no_creatures_and_no_altar() -> void:
+	var shrine := full["VI1"] as RoomDef
+	assert_eq(shrine.spawns, [], "a non-goblin must never wake in a hostile palisade")
+	assert_eq(shrine.features.filter(func(f: Dictionary) -> bool: return f["kind"] == "glow_pool").size(), 1)
+	for id in VILLAGE:
+		for f in (full[id] as RoomDef).features:
+			assert_ne(f["kind"], "altar", id)
+
+func test_the_sump_joins_the_flooded_tunnels_by_a_swim_gate_on_both_ends() -> void:
+	var down: Dictionary = (full["VI5"] as RoomDef).exits.filter(func(e: Dictionary) -> bool: return e["room"] == "F6")[0]
+	assert_eq(down["edge"], "bottom")
+	assert_eq(down["gate"], "swim")
+	var up: Dictionary = (full["F6"] as RoomDef).exits.filter(func(e: Dictionary) -> bool: return e["room"] == "VI5")[0]
+	assert_eq(up["edge"], "top")
+	assert_eq(up["gate"], "swim")
+	assert_eq((full["VI5"] as RoomDef).water.size(), 1, "a flooded shaft")
+
+func test_f6_gains_exactly_one_exit_and_nothing_else_of_it_changes() -> void:
+	var was: RoomDef = world["F6"]
+	var now: RoomDef = full["F6"]
+	assert_eq(now.exits.size(), was.exits.size() + 1)
+	for p in now.get_property_list():
+		if (int(p["usage"]) & PROPERTY_USAGE_STORAGE) != 0 and p["name"] != "script" and p["name"] != "exits":
+			assert_eq(now.get(p["name"]), was.get(p["name"]), "F6.%s is as shipped" % p["name"])
+
+func test_the_village_adds_no_ungated_way_into_the_flooded_tunnels() -> void:
+	var flooded := func(rooms: Dictionary) -> Array:
+		var out: Array = WorldValidator.reachable(rooms, true).filter(func(id: String) -> bool: return (rooms[id] as RoomDef).area == "flooded")
+		out.sort()
+		return out
+	assert_eq(flooded.call(full), flooded.call(before), "swim is still what opens the Sump and F6")
+
+func test_every_village_spawn_is_a_creature_the_village_holds() -> void:
+	var seen := {}
+	for id in VILLAGE:
+		for s in (full[id] as RoomDef).spawns:
+			assert_true(VILLAGE_SUPPORT.has(s["id"]), "%s: %s" % [id, s["id"]])
+			seen[s["id"]] = true
+	for c in VILLAGE_SUPPORT:
+		assert_true(seen.has(c), "%s lives in the village" % c)
+
+func test_every_climb_in_the_village_ends_in_its_opening() -> void:
+	for id in ["VI1", "VI3", "VI5"]:
+		var r := full[id] as RoomDef
+		var holes := r.exits.filter(func(e: Dictionary) -> bool: return e["edge"] == "top")
+		for h: Dictionary in holes:
+			var in_hole := r.solids.filter(func(l: Rect2) -> bool: return l.position.y == 14.0 and l.position.x >= float(h["from"]) and l.end.x <= float(h["to"]))
+			assert_eq(in_hole.size(), 1, "%s: a ledge stands in the opening %s..%s" % [id, h["from"], h["to"]])
 
 func test_the_checked_in_rooms_are_what_the_builder_writes() -> void:
 	assert_eq(AreaBuilder.stale(AreaBuilder.build()), [])
