@@ -15,7 +15,7 @@ class Hidden extends Node2D:
 	func reveal() -> void:
 		revealed += 1
 
-const GROUPS := ["verb_fields", "verb_allies", "verb_vines", "verb_husks", "verb_bridges", "player_clouds"]
+const GROUPS := ["verb_fields", "verb_allies", "verb_vines", "verb_husks", "verb_bridges", "player_clouds", "vfx"]
 const STATS := ["atk", "def", "spd", "max_hp", "max_mp"]
 
 var test: GutTest
@@ -65,6 +65,7 @@ func fresh() -> void:
 	player.facing = 1
 	player.health.hp = player.health.max_hp - 10
 	player.mana.mp = player.mana.max_mp - 8
+	player._invuln = 1000.0  # the real lizard beside it would otherwise hurt it, and any change to its HP would look like a cast
 	for i in 5:
 		rules.handle_event(Events.ABSORBED, {"essence": "water", "source": "test"})
 	player.last_inspected = _creatures["lizard"]
