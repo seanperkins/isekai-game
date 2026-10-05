@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
+
+[resource]
+script = ExtResource("1_roomdef")
+id = "VO1"
+area = "volcano"
+cell = Vector2i(22, 8)
+solids = [Rect2(460, 274, 90, 12), Rect2(530, 222, 90, 12), Rect2(460, 170, 90, 12), Rect2(530, 118, 90, 12), Rect2(460, 66, 90, 12), Rect2(530, 14, 90, 12)]
+decor = [{
+"id": "rubble",
+"pos": Vector2(120, 320)
+}, {
+"id": "crystal_rose",
+"light": Color(1, 0.55, 0.75, 1),
+"pos": Vector2(330, 320)
+}, {
+"anchor": "top",
+"id": "stalactite",
+"pos": Vector2(250, 20)
+}]
+exits = [{
+"edge": "top",
+"from": 460.0,
+"room": "D4",
+"to": 620.0
+}, {
+"edge": "right",
+"from": 200.0,
+"room": "VO2",
+"to": 320.0
+}]
+features = [{
+"id": "VO1_tablet",
+"kind": "tablet",
+"pos": Vector2(200, 320),
+"text": "Heat rises from below. Ash falls from the vents above, and the stone is warm underfoot.",
+"title": "Warm tablet"
+}]

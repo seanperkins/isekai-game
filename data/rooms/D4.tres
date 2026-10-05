@@ -1,9 +1,9 @@
 [gd_resource type="Resource" script_class="RoomDef" format=3]
 
-[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_ddfep"]
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
 
 [resource]
-script = ExtResource("1_ddfep")
+script = ExtResource("1_roomdef")
 id = "D4"
 area = "deep"
 cell = Vector2i(21, 7)
@@ -57,4 +57,9 @@ exits = [{
 "from": 240.0,
 "room": "D5",
 "to": 320.0
+}, {
+"edge": "bottom",
+"from": 1100.0,
+"room": "VO1",
+"to": 1260.0
 }]

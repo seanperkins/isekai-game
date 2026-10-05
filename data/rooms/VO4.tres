@@ -1,0 +1,58 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
+
+[resource]
+script = ExtResource("1_roomdef")
+id = "VO4"
+area = "volcano"
+cell = Vector2i(24, 10)
+size = Vector2i(2, 1)
+solids = [Rect2(240, 274, 90, 12), Rect2(310, 222, 90, 12), Rect2(240, 170, 90, 12), Rect2(310, 118, 90, 12), Rect2(240, 66, 90, 12), Rect2(310, 14, 90, 12), Rect2(700, 274, 90, 12), Rect2(770, 222, 90, 12), Rect2(700, 170, 90, 12), Rect2(770, 118, 90, 12), Rect2(700, 66, 90, 12), Rect2(770, 14, 90, 12)]
+decor = [{
+"id": "crystal_gold",
+"light": Color(1, 0.85, 0.4, 1),
+"pos": Vector2(650, 320)
+}, {
+"id": "rubble",
+"pos": Vector2(120, 320)
+}, {
+"anchor": "top",
+"id": "stalactite",
+"pos": Vector2(600, 20)
+}, {
+"anchor": "top",
+"id": "stalactite",
+"pos": Vector2(1050, 20)
+}]
+spawns = [{
+"id": "lava_salamander",
+"pos": Vector2(980, 314)
+}, {
+"id": "ember_beetle",
+"pos": Vector2(1100, 314)
+}, {
+"id": "ember_beetle",
+"pos": Vector2(1220, 314)
+}]
+exits = [{
+"edge": "top",
+"from": 700.0,
+"room": "VO3",
+"to": 860.0
+}, {
+"edge": "right",
+"from": 200.0,
+"room": "VO5",
+"to": 320.0
+}, {
+"edge": "bottom",
+"from": 440.0,
+"room": "VO6",
+"to": 600.0
+}, {
+"edge": "top",
+"from": 240.0,
+"room": "VO7",
+"to": 400.0
+}]

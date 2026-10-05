@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
+
+[resource]
+script = ExtResource("1_roomdef")
+id = "VO7"
+area = "volcano"
+cell = Vector2i(24, 9)
+solids = [Rect2(100, 268, 100, 12), Rect2(420, 268, 100, 12), Rect2(240, 274, 90, 12), Rect2(310, 222, 90, 12), Rect2(240, 170, 90, 12), Rect2(310, 118, 90, 12), Rect2(240, 66, 90, 12), Rect2(310, 14, 90, 12)]
+decor = [{
+"id": "rubble",
+"pos": Vector2(90, 320)
+}]
+exits = [{
+"edge": "bottom",
+"from": 240.0,
+"room": "VO4",
+"to": 400.0
+}, {
+"edge": "top",
+"from": 240.0,
+"room": "VO2",
+"shortcut": "ash_cut",
+"to": 400.0
+}]
+features = [{
+"id": "VO7_switch",
+"kind": "switch",
+"pos": Vector2(560, 320),
+"shortcut": "ash_cut"
+}]

@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
+
+[resource]
+script = ExtResource("1_roomdef")
+id = "VO5"
+area = "volcano"
+cell = Vector2i(26, 10)
+decor = [{
+"id": "crystal_rose",
+"light": Color(1, 0.55, 0.75, 1),
+"pos": Vector2(220, 320)
+}, {
+"anchor": "top",
+"id": "stalactite",
+"pos": Vector2(380, 20)
+}]
+spawns = [{
+"id": "lava_salamander",
+"pos": Vector2(460, 314)
+}, {
+"id": "ash_moth",
+"pos": Vector2(200, 164)
+}]
+exits = [{
+"edge": "left",
+"from": 200.0,
+"room": "VO4",
+"to": 320.0
+}]
+features = [{
+"area": "volcano",
+"id": "VO5_pool",
+"kind": "glow_pool",
+"pos": Vector2(320, 320)
+}]

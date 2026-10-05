@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
+
+[resource]
+script = ExtResource("1_roomdef")
+id = "VO3"
+area = "volcano"
+cell = Vector2i(25, 8)
+size = Vector2i(1, 2)
+solids = [Rect2(450, 634, 90, 12), Rect2(385, 589, 90, 12), Rect2(320, 544, 90, 12), Rect2(255, 499, 90, 12), Rect2(190, 454, 90, 12), Rect2(125, 409, 90, 12), Rect2(60, 364, 90, 12)]
+decor = [{
+"anchor": "top",
+"id": "stalactite",
+"pos": Vector2(400, 20)
+}, {
+"id": "rubble",
+"pos": Vector2(560, 680)
+}]
+spawns = [{
+"id": "ash_moth",
+"pos": Vector2(300, 394)
+}]
+exits = [{
+"edge": "left",
+"from": 200.0,
+"room": "VO2",
+"to": 320.0
+}, {
+"edge": "bottom",
+"from": 60.0,
+"room": "VO4",
+"to": 220.0
+}]

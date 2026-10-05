@@ -1,0 +1,64 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
+
+[resource]
+script = ExtResource("1_roomdef")
+id = "VO2"
+area = "volcano"
+cell = Vector2i(23, 8)
+size = Vector2i(2, 1)
+solids = [Rect2(300, 268, 120, 12), Rect2(1100, 268, 120, 12)]
+decor = [{
+"id": "crystal_gold",
+"light": Color(1, 0.85, 0.4, 1),
+"pos": Vector2(360, 268)
+}, {
+"id": "crystal_rose",
+"light": Color(1, 0.55, 0.75, 1),
+"pos": Vector2(1160, 268)
+}, {
+"anchor": "top",
+"id": "stalactite",
+"pos": Vector2(520, 20)
+}, {
+"anchor": "top",
+"id": "stalactite",
+"pos": Vector2(1000, 20)
+}]
+spawns = [{
+"id": "ember_beetle",
+"pos": Vector2(560, 314)
+}, {
+"id": "ember_beetle",
+"pos": Vector2(680, 314)
+}, {
+"id": "lava_salamander",
+"pos": Vector2(780, 314)
+}, {
+"id": "ash_moth",
+"pos": Vector2(1150, 164)
+}]
+exits = [{
+"edge": "left",
+"from": 200.0,
+"room": "VO1",
+"to": 320.0
+}, {
+"edge": "right",
+"from": 200.0,
+"room": "VO3",
+"to": 320.0
+}, {
+"edge": "bottom",
+"from": 880.0,
+"room": "VO7",
+"shortcut": "ash_cut",
+"to": 1040.0
+}]
+features = [{
+"area": "volcano",
+"id": "VO2_pool",
+"kind": "glow_pool",
+"pos": Vector2(160, 320)
+}]

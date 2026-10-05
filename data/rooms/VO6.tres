@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
+
+[resource]
+script = ExtResource("1_roomdef")
+id = "VO6"
+area = "volcano"
+cell = Vector2i(24, 11)
+solids = [Rect2(440, 274, 90, 12), Rect2(510, 222, 90, 12), Rect2(440, 170, 90, 12), Rect2(510, 118, 90, 12), Rect2(440, 66, 90, 12), Rect2(510, 14, 90, 12)]
+decor = [{
+"id": "crystal_blue",
+"light": Color(0.3, 0.5, 1, 1),
+"pos": Vector2(120, 320)
+}, {
+"id": "crystal_teal",
+"light": Color(0.3, 1, 0.9, 1),
+"pos": Vector2(300, 320)
+}]
+exits = [{
+"edge": "top",
+"from": 440.0,
+"room": "VO4",
+"to": 600.0
+}]
+features = [{
+"id": "VO6_tablet",
+"kind": "tablet",
+"pos": Vector2(200, 320),
+"text": "Cool stone, and a draught from somewhere hot.",
+"title": "Cool tablet"
+}]
