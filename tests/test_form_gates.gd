@@ -54,3 +54,39 @@ func test_only_a_stage_two_lineage_form_carries_a_gate() -> void:
 func test_greater_slime_has_no_gate() -> void:
 	var g := _lineage({"lineage": "greater", "powers": [], "reveal": {"dark": 4}, "offer": {"dark": 5}})
 	assert_eq(_errors(g), ["x: only a stage-2 lineage form carries a reveal and an offer"])
+
+# --- the Tree tab says what a lineage needs ---
+
+class DietRules:
+	var diet := {}
+	func absorbed(element: String) -> int:
+		return int(diet.get(element, 0))
+
+func _diet(diet: Dictionary) -> DietRules:
+	var r := DietRules.new()
+	r.diet = diet
+	return r
+
+func test_gate_lines_say_what_a_lineage_needs_and_what_you_have() -> void:
+	var forms := FormLoader.load_species()
+	assert_eq(SkillScreenModel.gate_lines(forms["weaver"], _diet({"dark": 7})),
+		["Shows at: dark 24 (you have 7)", "On offer at: dark 26", "Each power you own counts +3"])
+
+func test_toxic_lists_both_elements_in_canonical_order() -> void:
+	var forms := FormLoader.load_species()
+	assert_eq(SkillScreenModel.gate_lines(forms["toxic"], _diet({})),
+		["Shows at: water 10 (you have 0), dark 8 (you have 0)", "On offer at: water 20, dark 14", "Each power you own counts +3"])
+
+func test_a_form_without_a_gate_has_no_lines() -> void:
+	assert_eq(SkillScreenModel.gate_lines(FormLoader.load_species()["greater_slime"], _diet({})), [])
+
+func test_the_tree_card_of_a_stage_two_form_carries_them() -> void:
+	var skills := DefLoader.load_dir("res://data/skills")
+	var r: SkillRulesEngine = autofree(SkillRulesEngine.new())
+	r.setup(skills)
+	r.start_run()
+	var forms := FormLoader.load_species()
+	var node := {"id": "echo", "kind": "form", "state": SkillTreeModel.NAMED, "name": "Echo"}
+	var card := SkillScreenModel.tree_card(r, node, {}, forms, ActiveSlots.new())
+	assert_true(card["lines"].has("Shows at: air 10 (you have 0)"), str(card["lines"]))
+	assert_true(card["lines"].has("On offer at: air 34"))

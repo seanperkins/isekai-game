@@ -197,7 +197,25 @@ static func _form_tree_card(rules, node: Dictionary, forms: Dictionary) -> Dicti
 	lines.append_array(c["traits"])
 	if c["grants"] != "":
 		lines.append(c["grants"])
+	lines.append_array(gate_lines(forms[node["id"]], rules))
 	return {"title": c["name"], "status": "Stage %d  %s" % [c["stage"], status], "lines": lines}
+
+## What a lineage form asks of the diet: where it shows in the Tree tab (with what the player has absorbed), where it is on
+## offer, and that each owned power helps. Empty for a form with no gate. Elements in canonical order.
+static func gate_lines(def: FormDef, rules) -> Array:
+	if def.reveal.is_empty():
+		return []
+	var shows: Array = []
+	var offer: Array = []
+	for e in Essences.ALL:
+		if def.reveal.has(e):
+			shows.append("%s %d (you have %d)" % [e, int(def.reveal[e]), rules.absorbed(e)])
+		if def.offer.has(e):
+			offer.append("%s %d" % [e, int(def.offer[e])])
+	var out: Array = ["Shows at: " + ", ".join(shows), "On offer at: " + ", ".join(offer)]
+	if not def.powers.is_empty():
+		out.append("Each power you own counts +%d" % FormOffers.POWER_BONUS)
+	return out
 
 ## A form's card, shared by the Form tab and the Tree tab: {"name", "stage", "blurb", "stats", "traits", "grants"}.
 ## "grants" lists only the grants the player can still receive: a grant whose skill has retired is hidden.
