@@ -8,6 +8,8 @@ signal shortcut_opened(id: String)
 ## The Cave mouth's rebirth pool: always attuned, so the game always has somewhere to start.
 const DEFAULT_ALTAR := "C1"
 const DEFAULT_SPECIES := "slime"
+## Deaths after the one that left them that remains outlast, unrecovered.
+const REMAINS_DEATHS := 3
 
 var profile  # Profile, or null
 var visited: Array = []
@@ -22,6 +24,8 @@ var bosses: Array = []
 ## Where the next run starts ({"altar", "species", "kit"}), set on death and consumed by the game on reload.
 ## In memory only: the scene rebuilds on every death, so it cannot live on the Run node.
 var pending_start := {}
+## What the last life carried when it died: {"room", "pos": [x, y] (local to the room), "parts": [ids], "deaths_left"}; {} for none.
+var remains := {}
 var _last_altar := DEFAULT_ALTAR
 var _species := DEFAULT_SPECIES
 
@@ -34,6 +38,7 @@ func _init(p_profile = null) -> void:
 		rebirths = profile.list_section("rebirths")
 		forms_reached = profile.list_section("forms_reached")
 		bosses = profile.list_section("bosses")
+		remains = _read_remains(profile.dict_section("remains"))
 		var choice: Dictionary = profile.dict_section("rebirth_choice")
 		if typeof(choice.get("pool")) == TYPE_STRING:
 			_last_altar = choice["pool"]
@@ -114,6 +119,57 @@ func sanitize(pool_ids: Array) -> void:
 		_last_altar = DEFAULT_ALTAR
 	_save()
 
+## A life ended carrying `parts`: they wait at `pos` (local to `room`), replacing older remains. A death with nothing to leave does
+## nothing here (the game counts it with note_death_unrecovered).
+func leave_remains(room: String, pos: Vector2, parts: Array) -> void:
+	if room == "" or parts.is_empty():
+		return
+	remains = {"room": room, "pos": [pos.x, pos.y], "parts": parts.duplicate(), "deaths_left": REMAINS_DEATHS}
+	_save()
+
+## The remains, once: taking them clears them, so they never come back twice.
+func take_remains() -> Dictionary:
+	var out := remains
+	remains = {}
+	_save()
+	return out
+
+## A death passed with the remains still out there: they go after REMAINS_DEATHS of them.
+func note_death_unrecovered() -> void:
+	if remains.is_empty():
+		return
+	remains["deaths_left"] = int(remains["deaths_left"]) - 1
+	if int(remains["deaths_left"]) <= 0:
+		remains = {}
+	_save()
+
+## Drops parts the data no longer holds from the remains, and the whole of them when none is left or their room is gone.
+func sanitize_remains(part_ids: Array, room_ids: Array) -> void:
+	if remains.is_empty():
+		return
+	var kept: Array = remains["parts"].filter(func(id: String) -> bool: return part_ids.has(id))
+	if kept.is_empty() or not room_ids.has(remains["room"]):
+		remains = {}
+	else:
+		remains["parts"] = kept
+	_save()
+
+## The saved section if it is whole, else {}: a malformed one is dropped, not repaired.
+static func _read_remains(d: Dictionary) -> Dictionary:
+	if typeof(d.get("room")) != TYPE_STRING or d["room"] == "" or typeof(d.get("pos")) != TYPE_ARRAY or d["pos"].size() != 2:
+		return {}
+	for n in d["pos"]:
+		if typeof(n) != TYPE_FLOAT and typeof(n) != TYPE_INT:
+			return {}
+	if typeof(d.get("parts")) != TYPE_ARRAY or d["parts"].is_empty() or d["parts"].any(func(x) -> bool: return typeof(x) != TYPE_STRING):
+		return {}
+	if typeof(d.get("deaths_left")) != TYPE_FLOAT and typeof(d.get("deaths_left")) != TYPE_INT:
+		return {}
+	if int(d["deaths_left"]) < 1:
+		return {}
+	return {"room": d["room"], "pos": [float(d["pos"][0]), float(d["pos"][1])], "parts": d["parts"].duplicate(),
+		"deaths_left": mini(int(d["deaths_left"]), REMAINS_DEATHS)}
+
 ## The pending start, once: reading it clears it, so an unrelated reload never replays a kit.
 func take_pending() -> Dictionary:
 	var out := pending_start
@@ -129,5 +185,6 @@ func _save() -> void:
 	profile.set_section("rebirths", rebirths.duplicate())
 	profile.set_section("forms_reached", forms_reached.duplicate())
 	profile.set_section("bosses", bosses.duplicate())
+	profile.set_section("remains", remains.duplicate(true))
 	profile.set_section("rebirth_choice", {"pool": _last_altar, "species": _species})
 	profile.save()

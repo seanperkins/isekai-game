@@ -93,6 +93,17 @@ func test_a_new_run_starts_with_nothing_carried_or_worn() -> void:
 	assert_eq(player.inventory.carried(), [])
 	assert_eq(player.stats.get_stat("def"), def)
 
+func test_releasing_the_parts_gives_up_all_of_them_and_the_passives() -> void:
+	_make("undead")
+	var def := player.stats.get_stat("def")
+	player.collect_part("ribs")
+	player.collect_part("moonstone")
+	var ids := player.release_parts()
+	ids.sort()
+	assert_eq(ids, ["moonstone", "ribs"])
+	assert_eq(player.inventory.count("ribs") + player.inventory.count("moonstone"), 0)
+	assert_eq(player.stats.get_stat("def"), def)
+
 # --- shedding ---
 
 func test_a_hit_of_a_quarter_of_max_hp_sheds_the_latest_graft() -> void:

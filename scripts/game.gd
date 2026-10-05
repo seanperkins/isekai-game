@@ -39,6 +39,7 @@ var ambient: CanvasModulate
 var _skills_by_id := {}
 var _creatures := {}
 var _parts := {}
+var _progress: WorldProgress
 var _drop_rng := RandomNumberGenerator.new()
 var _editor_play := false
 ## Started with `-- --room=menagerie`: an editor-Play-like run in the room of every creature, with no editor to go back to.
@@ -54,6 +55,7 @@ func _on_room_entered(id: String) -> void:
 	var biome := TerrainArt.art_key(area)  # a new area borrows its biome's light and music bed
 	player.in_dark = DeedTags.is_dark_area(area)
 	player.emit_deed(Deeds.ROOM_ENTERED, {"room": id, "area": area})
+	_place_remains()
 	var target: Color = TerrainArt.ambient(biome, AMBIENT)
 	var tw := create_tween()
 	tw.tween_property(ambient, "color", target, 0.6)
@@ -72,6 +74,7 @@ func _ready() -> void:
 	player = Player.new()
 	player.setup(SkillRules, Compendium.model, SkillRules.creature_defs, _emit_game_event)
 	player.part_dropped.connect(_on_part_dropped)
+	player.died.connect(_on_player_died)
 	world = World.new()
 	add_child(world)
 	var request := Game.play_request
@@ -100,6 +103,7 @@ func _ready() -> void:
 	var rooms: Dictionary = request["rooms"] if _editor_play else World.load_rooms(ROOMS_DIR)
 	# The editor's Play runs on a fresh in-memory progress, so nothing it visits or opens reaches the real profile.
 	var progress = WorldProgress.new() if _editor_play else Compendium.progress
+	_progress = progress
 	if _editor_play and bool(request.get("open_shortcuts", false)):
 		# before the world builds its first room, so the entry room has neither the gate nor the switch
 		for id in rooms:
@@ -119,6 +123,7 @@ func _ready() -> void:
 	world.room_entered.connect(_on_room_entered)
 	var altars := RebirthChoice.altars(rooms)
 	progress.sanitize(altars.map(func(p: Dictionary) -> String: return p["id"]))
+	progress.sanitize_remains(_parts.keys(), rooms.keys())
 	var start := {"default": false, "room": request["room"], "pos": request["pos"], "kit": request.get("kit", {})} if _editor_play \
 		else Game.resolve_start(altars, progress.take_pending(), progress.is_attuned)
 	var species := Game.species_arg(args)
@@ -248,6 +253,29 @@ func _leave_parts(def: CreatureDef, enemy: Node2D) -> void:
 	var ids := Drops.roll(def, _drop_rng)
 	for i in ids.size():
 		_put_pickup(room, ids[i], enemy.position + Vector2((i - (ids.size() - 1) / 2.0) * 10.0, 0.0))
+
+## Everything the dead body carried waits where it fell (kept inside the room, so it can be reached); a death with nothing to leave
+## only counts against the remains already out there.
+func _on_player_died() -> void:
+	var ids := player.release_parts()
+	if ids.is_empty() or world == null or not is_instance_valid(world.room):
+		_progress.note_death_unrecovered()
+		return
+	var size := world.current_rect().size
+	var at := world.room.to_local(player.global_position)
+	_progress.leave_remains(world.current_id, Vector2(clampf(at.x, 8.0, size.x - 8.0), clampf(at.y, 8.0, size.y - 8.0)), ids)
+
+## Remains in this room lie where their owner fell, once however often the room is announced.
+func _place_remains() -> void:
+	var r := _progress.remains
+	if r.is_empty() or r["room"] != world.current_id or not is_instance_valid(world.room):
+		return
+	if world.room.get_children().any(func(n: Node) -> bool: return n is Remains):
+		return
+	var pile := Remains.new()
+	pile.setup(r["parts"], Vector2(r["pos"][0], r["pos"][1]))
+	pile.recovered.connect(_progress.take_remains)
+	world.room.add_child(pile)
 
 ## A graft knocked off the player lies in the room it was lost in.
 func _on_part_dropped(id: String, pos: Vector2, delay: float) -> void:

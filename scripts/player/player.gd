@@ -1404,6 +1404,12 @@ func _shed_graft(from: Vector2) -> void:
 	_emit.call(Deeds.GRAFT_SHED, {"part": id})
 	part_dropped.emit(id, global_position + Vector2(-away * 14.0, -4.0), SHED_PICKUP_DELAY)
 
+## A dying body lets go of everything it carried and wore (the ids), and the passives go with it.
+func release_parts() -> Array:
+	var ids := inventory.take_all()
+	stats.set_timed_modifiers(GRAFT_SOURCE, [])
+	return ids
+
 func _refresh_grafts() -> void:
 	stats.set_timed_modifiers(GRAFT_SOURCE, inventory.stat_mods())
 	refresh_stats()
