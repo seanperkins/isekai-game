@@ -1,14 +1,26 @@
 class_name FormOffers
 extends RefCounted
-## Which bodies the slime is offered when it can evolve. Pure functions over data.
-##   Stage 1 to 2: every lineage whose power the player has reached (open_lineages), in LINEAGE_ORDER, plus the
+## Which bodies a species is offered when it can evolve. Pure functions over data.
+##   Stage 1 to 2, the slime: every lineage whose power the player has reached (open_lineages), in LINEAGE_ORDER, plus the
 ##     Greater Slime fallback when fewer than two lineages are open. No ranking and no cap.
+##   Stage 1 to 2, any other species: every one of its stage-2 forms, until it has gates of its own.
 ##   Stage 2 to 3: the form's two children. Stage 3 to 4: the lineage's one Sovereign. Stage 4: none.
 
 const LINEAGE_ORDER := ["weaver", "tide", "toxic", "bulwark", "echo"]
 const FALLBACK := "greater_slime"
+const GREATER := "greater"
 
-## lineage -> the skill ids that open it, read from the stage-2 forms (the Greater lineage opens on nothing).
+## The lineages of a species in the order the Tree tab lists them: the slime's six, or another species' own in form-id order.
+static func lineage_order(forms: Dictionary, species := Form.DEFAULT_SPECIES) -> Array:
+	if species == Form.DEFAULT_SPECIES:
+		return LINEAGE_ORDER + [GREATER]
+	var out: Array = []
+	for f in FormLoader.stage2_forms(forms, species):
+		if not out.has((f as FormDef).lineage):
+			out.append((f as FormDef).lineage)
+	return out
+
+## The slime's lineage -> the skill ids that open it, read from the stage-2 forms (the Greater lineage opens on nothing).
 static func lineage_powers(forms: Dictionary) -> Dictionary:
 	var out := {}
 	for f in FormLoader.stage2_forms(forms):
@@ -16,7 +28,7 @@ static func lineage_powers(forms: Dictionary) -> Dictionary:
 			out[(f as FormDef).lineage] = (f as FormDef).powers
 	return out
 
-## The lineages the player has opened this life, in LINEAGE_ORDER. A lineage is open when any of its powers has been reached:
+## The slime's lineages the player has opened this life, in LINEAGE_ORDER. A lineage is open when any of its powers has been reached:
 ## `rules.level_of` keeps answering the level a retired parent reached, so an evolved power still opens its lineage.
 static func open_lineages(forms: Dictionary, rules) -> Array:
 	var powers := lineage_powers(forms)
@@ -33,13 +45,15 @@ static func open_lineages(forms: Dictionary, rules) -> Array:
 ## The form ids on offer for `form` (a Form), given the rules state.
 static func offers(forms: Dictionary, form: Form, rules) -> Array:
 	if form.stage == 1:
-		return _first_offers(forms, rules)
+		return _first_offers(forms, form.species, rules)
 	var out: Array = []
 	for k in FormLoader.children_of(forms, form.form_id):
 		out.append((k as FormDef).id)
 	return out
 
-static func _first_offers(forms: Dictionary, rules) -> Array:
+static func _first_offers(forms: Dictionary, species: String, rules) -> Array:
+	if species != Form.DEFAULT_SPECIES:
+		return FormLoader.stage2_forms(forms, species).map(func(f: FormDef) -> String: return f.id)
 	var out := open_lineages(forms, rules)
 	if out.size() < 2 and forms.has(FALLBACK):
 		out.append(FALLBACK)

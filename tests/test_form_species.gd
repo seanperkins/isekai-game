@@ -135,3 +135,32 @@ func test_a_wolf_form_with_no_lineage_is_reported() -> void:
 func test_only_stage_two_forms_grow_from_a_wolf_base() -> void:
 	var f := make("wolf_skip", "wolf", 3, "moonbound", ["wolf"])
 	assert_string_contains("\n".join(_errors({"wolf_skip": f})), "only stage-2 forms grow from the base wolf")
+
+# --- Task 4: FormOffers per species ---
+
+## A stand-in for SkillRulesEngine: FormOffers only asks level_of.
+class FakeRules:
+	var levels := {}
+	func level_of(id: String) -> int:
+		return int(levels.get(id, 0))
+
+func test_a_wolf_at_stage_one_is_offered_every_wolf_line() -> void:
+	assert_eq(FormOffers.offers(_all(), Form.new("wolf"), FakeRules.new()), ["wolf_black_dog", "wolf_moonbound"])
+
+func test_a_wolf_form_is_offered_its_children() -> void:
+	var wolf := Form.new("wolf")
+	wolf.advance("wolf_moonbound", _all())
+	assert_eq(FormOffers.offers(_all(), wolf, FakeRules.new()), ["wolf_loup_garou", "wolf_ulfhedinn"])
+
+func test_the_slime_offers_do_not_change_beside_a_wolf() -> void:
+	assert_eq(FormOffers.offers(_all(), Form.new(), FakeRules.new()), ["greater_slime"])
+
+func test_lineage_order_for_the_slime_is_the_six_lineages() -> void:
+	assert_eq(FormOffers.lineage_order(_all()), ["weaver", "tide", "toxic", "bulwark", "echo", "greater"])
+
+func test_lineage_order_for_the_wolf_follows_form_ids() -> void:
+	assert_eq(FormOffers.lineage_order(_all(), "wolf"), ["black_dog", "moonbound"])
+
+func test_a_species_with_no_forms_offers_nothing() -> void:
+	assert_eq(FormOffers.offers({}, Form.new("spider"), FakeRules.new()), [])
+	assert_eq(FormOffers.lineage_order({}, "spider"), [])
