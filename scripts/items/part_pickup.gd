@@ -6,6 +6,8 @@ const COLLECT_RANGE := 14.0
 const RADIUS := 5.0
 
 var part: PartDef
+## Seconds it lies before it can be taken: a graft just knocked off is not picked straight back up.
+var delay := 0.0
 var _taken := false
 
 func setup(p: PartDef, pos: Vector2) -> void:
@@ -28,11 +30,15 @@ func _ready() -> void:
 	rim.default_color = part.color.darkened(0.55)
 	add_child(rim)
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	if _taken:
 		return
+	if delay > 0.0:
+		delay -= delta
+		return
 	for body in get_tree().get_nodes_in_group("player"):
-		if body is Node2D and body.has_method("collect_part") and body.global_position.distance_to(global_position) <= COLLECT_RANGE:
+		if body is Node2D and body.has_method("collect_part") and body.global_position.distance_to(global_position) <= COLLECT_RANGE \
+				and (not body.has_method("can_collect_parts") or body.can_collect_parts()):
 			_taken = true
 			body.collect_part(part.id)
 			queue_free()

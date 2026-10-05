@@ -71,6 +71,7 @@ func _ready() -> void:
 	_parts = PartLoader.load_all()
 	player = Player.new()
 	player.setup(SkillRules, Compendium.model, SkillRules.creature_defs, _emit_game_event)
+	player.part_dropped.connect(_on_part_dropped)
 	world = World.new()
 	add_child(world)
 	var request := Game.play_request
@@ -246,9 +247,22 @@ func _leave_parts(def: CreatureDef, enemy: Node2D) -> void:
 		return
 	var ids := Drops.roll(def, _drop_rng)
 	for i in ids.size():
-		var pickup := PartPickup.new()
-		pickup.setup(_parts[ids[i]], enemy.position + Vector2((i - (ids.size() - 1) / 2.0) * 10.0, 0.0))
-		room.add_child(pickup)
+		_put_pickup(room, ids[i], enemy.position + Vector2((i - (ids.size() - 1) / 2.0) * 10.0, 0.0))
+
+## A graft knocked off the player lies in the room it was lost in.
+func _on_part_dropped(id: String, pos: Vector2, delay: float) -> void:
+	if world == null or not is_instance_valid(world.room):
+		return
+	_put_pickup(world.room, id, world.room.to_local(pos), delay)
+
+func _put_pickup(room: Node, id: String, local_pos: Vector2, delay := 0.0) -> void:
+	var part: PartDef = _parts.get(id)
+	if part == null:
+		return
+	var pickup := PartPickup.new()
+	pickup.setup(part, local_pos)
+	pickup.delay = delay
+	room.add_child(pickup)
 
 ## The room is cleared when its last enemy goes down: a deed, once per room, and alone when no ally is out.
 func _check_room_cleared() -> void:

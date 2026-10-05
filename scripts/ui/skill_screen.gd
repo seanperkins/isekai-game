@@ -769,6 +769,12 @@ func _build_form() -> void:
 			_label(_list, line, Vector2(LIST_X, y), Vector2(LIST_W, 12), FONT_SMALL, COL_DIM)
 			y += 11.0
 		y += 8.0
+	var part_lines := _player.part_lines()
+	for line in part_lines:
+		_label(_list, line, Vector2(LIST_X, y), Vector2(LIST_W, 12), FONT_SMALL, COL_DIM)
+		y += 11.0
+	if not part_lines.is_empty():
+		y += 8.0
 	if _selectable.is_empty():
 		_build_locked(y)
 		return

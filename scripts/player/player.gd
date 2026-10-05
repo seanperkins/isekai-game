@@ -7,6 +7,8 @@ signal inspect_report(lines: PackedStringArray)
 signal not_enough_mp(skill_id: String)
 ## A body evolution succeeded (advance_form): the game records the form as reached.
 signal form_advanced(id: String)
+## A graft knocked off: what it is, where it falls, and how long it lies before it can be taken back.
+signal part_dropped(id: String, pos: Vector2, delay: float)
 
 const SPEED := 140.0
 const JUMP_VELOCITY := -330.0
@@ -42,6 +44,10 @@ const PLACEHOLDER_TINT := {"wolf": Color(0.75, 0.75, 0.85), "goblin": Color(0.65
 const KNOCKBACK := Vector2(160.0, -140.0)
 ## A shock hit locks input this long (the same lock a hit's knockback uses, so it only adds the difference).
 const SHOCK_STUN := 0.3
+## A hit that takes this fraction of max HP knocks one worn graft off; it lies SHED_PICKUP_DELAY seconds before it can be picked up again.
+const SHED_FRACTION := 0.25
+const SHED_PICKUP_DELAY := 0.8
+const GRAFT_SOURCE := "graft"
 const EAT_HEAL := 5
 const BASE_STATS := {"max_hp": 30, "atk": 1, "def": 0, "spd": 100, "max_mp": 20, "mp_regen": 100}
 const EAT_MP := 4
@@ -108,6 +114,9 @@ var _slow := 0.0
 var in_dark := false
 ## The creature id that killed the last life ("" for none): killing one is an avenged defeat. Set by the game at a life's start.
 var avenge_target := ""
+## The parts this life carries and wears: any species carries them, only the undead wear the grafts (can_graft).
+var _part_defs := PartLoader.load_all()
+var inventory := Inventory.new(_part_defs)
 var _ceiling_t := 0.0
 ## True while become_form runs: the forced line is neither announced nor recorded as reached.
 var _debug_silent := false
@@ -1148,8 +1157,11 @@ func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, cau
 	last_hit_cause = cause if cause != "" else damage_type  # before take_hit: a lethal hit fires `died`
 	end_channel()  # a hit ends any channel, including a poison hit that carries no `from`
 	var m := skillset.incoming(damage_type, health.hp, health.max_hp)
-	health.take_hit(Damage.hit(raw, damage_type, stats.get_stat("def"), m["percent_off"], m["flat_off"]), damage_type)
+	var dealt := Damage.hit(raw, damage_type, stats.get_stat("def"), m["percent_off"], m["flat_off"])
+	health.take_hit(dealt, damage_type)
 	_invuln = INVULN_SECONDS
+	if not health.is_dead() and float(dealt) >= health.max_hp * SHED_FRACTION:
+		_shed_graft(from)
 	if from != Vector2.INF and not health.is_dead():
 		var away := 1.0 if global_position.x >= from.x else -1.0
 		velocity = Vector2(away * KNOCKBACK.x, KNOCKBACK.y) * skillset.knockback_factor()
@@ -1360,6 +1372,63 @@ func _nearest_in_group(group: String, range_px: float, accept: Callable):
 			best_d = d
 	return best
 
+## Whether this body wears grafts (the undead) rather than only carrying parts.
+func can_graft() -> bool:
+	return species == "undead"
+
+## A dead body takes nothing: what it carried is already on the floor.
+func can_collect_parts() -> bool:
+	return not health.is_dead()
+
+## Takes a part: worn when the body can graft it and there is room, else carried. Says what it did.
+func collect_part(id: String) -> void:
+	if not can_collect_parts():
+		return
+	var r := inventory.add(id, can_graft())
+	if not r["ok"]:
+		return
+	if r["worn"]:
+		_refresh_grafts()
+	_emit.call(Deeds.PART_HARVESTED, {"part": id})
+	_emit.call(Deeds.ITEM_CARRIED, {})
+	if r["worn"]:
+		_emit.call(Deeds.GRAFT_ATTACHED, {"part": id})
+
+## The latest worn graft falls off beside the body, away from the blow.
+func _shed_graft(from: Vector2) -> void:
+	var id := inventory.shed_one()
+	if id == "":
+		return
+	_refresh_grafts()
+	var away := 1.0 if from == Vector2.INF or global_position.x >= from.x else -1.0
+	_emit.call(Deeds.GRAFT_SHED, {"part": id})
+	part_dropped.emit(id, global_position + Vector2(-away * 14.0, -4.0), SHED_PICKUP_DELAY)
+
+func _refresh_grafts() -> void:
+	stats.set_timed_modifiers(GRAFT_SOURCE, inventory.stat_mods())
+	refresh_stats()
+
+## The Form tab's lines: "Grafts: ..." for what is worn and "Carrying: ..." for the rest, each only when there is something.
+func part_lines() -> Array:
+	var lines := []
+	var worn := _part_names(inventory.worn())
+	if worn != "":
+		lines.append("Grafts: " + worn)
+	var carried := _part_names(inventory.carried())
+	if carried != "":
+		lines.append("Carrying: " + carried)
+	return lines
+
+func _part_names(ids: Array) -> String:
+	var counts := {}
+	for id in ids:
+		counts[id] = int(counts.get(id, 0)) + 1
+	var names := []
+	for id in counts:
+		var part_name: String = _part_defs[id].display_name
+		names.append(part_name if counts[id] == 1 else "%s x%d" % [part_name, counts[id]])
+	return ", ".join(names)
+
 ## Re-reads max HP and MP from the stats (after a kit or a form changed them).
 func refresh_stats() -> void:
 	_sync_max_hp()
@@ -1388,6 +1457,7 @@ func _on_run_started() -> void:
 	_water.reset()
 	drop_rope()
 	end_channel()
+	inventory = Inventory.new(_part_defs)  # a life starts with nothing; stats.reset_run() clears the graft passives
 	stats.reset_run()
 	_sync_max_hp()
 

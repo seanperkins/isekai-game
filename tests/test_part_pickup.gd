@@ -6,6 +6,10 @@ class FakeBody extends Node2D:
 	func collect_part(id: String) -> void:
 		got.append(id)
 
+class SpentBody extends FakeBody:
+	func can_collect_parts() -> bool:
+		return false
+
 var parts := {}
 var skills_by_id := {}
 var creatures := {}
@@ -65,6 +69,25 @@ func test_a_player_that_cannot_collect_leaves_it_where_it_lies() -> void:
 	odd.add_to_group("player")
 	var p := _pickup("claw", Vector2.ZERO)
 	p._physics_process(0.016)
+	assert_false(p.is_queued_for_deletion())
+
+func test_a_pickup_that_was_just_dropped_waits_out_its_delay() -> void:
+	var body := _body()
+	var p := _pickup("claw", Vector2.ZERO)
+	p.delay = 0.5
+	p._physics_process(0.3)
+	p._physics_process(0.3)
+	assert_eq(body.got, [], "still lying")
+	p._physics_process(0.3)
+	assert_eq(body.got, ["claw"])
+
+func test_a_body_that_cannot_take_parts_leaves_it_where_it_lies() -> void:
+	var spent := SpentBody.new()
+	add_child_autofree(spent)
+	spent.add_to_group("player")
+	var p := _pickup("claw", Vector2.ZERO)
+	p._physics_process(0.016)
+	assert_eq(spent.got, [])
 	assert_false(p.is_queued_for_deletion())
 
 func test_two_pickups_under_the_player_are_both_collected() -> void:
