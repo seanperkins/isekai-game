@@ -977,6 +977,12 @@ func try_pickpocket() -> bool:
 func _on_companion_died(pal: Companion) -> void:
 	companions.erase(pal)
 
+## The traps this body set go with its life (they are not in the room, so nothing else would take them up).
+func _release_traps() -> void:
+	for trap in get_tree().get_nodes_in_group("verb_traps"):
+		if trap.caster == self:
+			trap.queue_free()
+
 ## Every companion is lost with the body that had them: its death, or a new life.
 func _release_companions() -> void:
 	for pal in companions:
@@ -1576,11 +1582,13 @@ func _on_run_started() -> void:
 	lessons.reset()
 	forged = {}
 	_release_companions()
+	_release_traps()
 	stats.reset_run()
 	_sync_max_hp()
 
 func _on_health_died() -> void:
 	_release_companions()
+	_release_traps()
 	audio_events.reset()
 	EventBus.world_event.emit("player_died", {})
 	cancel_predate()

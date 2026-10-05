@@ -244,3 +244,25 @@ func test_an_interactable_in_reach_wins_over_a_bond() -> void:
 	assert_eq(shrine.used, 1)
 	assert_false(e.is_queued_for_deletion())
 	assert_eq(player.companions.size(), 0)
+
+func test_the_players_death_takes_up_its_traps() -> void:
+	_make("goblin")
+	var trap := VerbTrap.new()
+	add_child_autofree(trap)
+	trap.launch(player, Vector2.ZERO, 3, 30.0, 2.0)
+	var other := Node2D.new()
+	add_child_autofree(other)
+	var theirs := VerbTrap.new()
+	add_child_autofree(theirs)
+	theirs.launch(other, Vector2.ZERO, 3, 30.0, 2.0)
+	player.receive_hit(player.health.max_hp * 5, "fire")
+	assert_true(trap.is_queued_for_deletion())
+	assert_false(theirs.is_queued_for_deletion(), "only its own")
+
+func test_a_new_run_takes_up_the_traps_of_the_last_life() -> void:
+	_make("goblin")
+	var trap := VerbTrap.new()
+	add_child_autofree(trap)
+	trap.launch(player, Vector2.ZERO, 3, 30.0, 2.0)
+	rules.start_run()
+	assert_true(trap.is_queued_for_deletion())

@@ -24,6 +24,8 @@ func launch(p_caster: Node2D, at: Vector2, power: int, seconds: float, stun: flo
 	queue_redraw()
 
 func _physics_process(delta: float) -> void:
+	if is_instance_valid(caster) and not caster.is_physics_processing():
+		return  # a room change freezes the caster; nothing it set plays meanwhile, and its time does not run
 	_age += delta
 	if _age >= _seconds:
 		queue_free()
@@ -32,8 +34,8 @@ func _physics_process(delta: float) -> void:
 		return
 	queue_redraw()
 	for n in get_tree().get_nodes_in_group("actors"):
-		if not (n is Enemy) or n.dormant or n.status.state != EnemyStatus.ACTIVE:
-			continue
+		if not (n is Enemy) or n.dormant or n.status.state != EnemyStatus.ACTIVE or not n.can_be_hit():
+			continue  # a warded enemy takes no blow, so it takes no trap
 		var d: Vector2 = n.global_position - global_position
 		if absf(d.x) <= REACH.x and absf(d.y) <= REACH.y:
 			_spring(n)

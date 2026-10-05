@@ -9,6 +9,8 @@ class Hands extends Node2D:
 		pass
 	func emit_deed(event_name: String, tags := {}) -> void:
 		deeds.append([event_name, tags])
+	func _physics_process(_delta: float) -> void:
+		pass  # a real caster is a processing node; set_physics_process(false) is how a room change freezes it
 
 var skills_by_id := {}
 var skills := {}
@@ -97,6 +99,27 @@ func test_a_stunned_a_dormant_a_downed_or_a_far_enemy_springs_nothing() -> void:
 	assert_eq(caster.deeds, [])
 	assert_eq(_traps().size(), 1)
 	assert_eq(far.health.hp, 9)
+
+func test_a_warded_enemy_is_not_stunned_and_does_not_spring_it() -> void:
+	VerbKinds.run(_ability(), {"kind": "trap"})
+	var e := _enemy(caster.global_position)
+	e.ward(5.0)
+	_armed(_traps()[0])
+	assert_ne(e.status.state, EnemyStatus.STUNNED)
+	assert_eq(caster.deeds, [])
+	assert_eq(_traps().size(), 1, "still there for the next one")
+
+func test_a_trap_waits_while_its_caster_is_frozen() -> void:
+	VerbKinds.run(_ability(), {"kind": "trap", "seconds": 5.0})
+	var e := _enemy(caster.global_position)
+	caster.set_physics_process(false)  # a room change freezes the player
+	var trap: VerbTrap = _traps()[0]
+	trap._physics_process(VerbTrap.ARM_SECONDS + 10.0)
+	assert_eq(e.health.hp, 9)
+	assert_false(trap.is_queued_for_deletion(), "its time does not run out while frozen")
+	caster.set_physics_process(true)
+	_armed(trap)
+	assert_lt(e.health.hp, 9)
 
 func test_the_caster_and_other_actors_do_not_spring_it() -> void:
 	VerbKinds.run(_ability(), {"kind": "trap"})
