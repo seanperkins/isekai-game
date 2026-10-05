@@ -336,6 +336,10 @@ func is_rooted() -> bool:
 func can_be_predated() -> bool:
 	return not dormant and _root <= 0.0 and def.predatable and status.predatable()
 
+## Whether a spider can web it into a cocoon now: alive, awake and stunned, and one that can be eaten.
+func can_be_cocooned() -> bool:
+	return not dormant and def.predatable and status.state == EnemyStatus.STUNNED
+
 ## Whether a goblin can pick its pocket now: alive and awake (stunned will do), one that can be eaten, not tried yet, with something it could leave.
 func can_be_robbed() -> bool:
 	return not dormant and not robbed and def.predatable and not Drops.for_def(def).is_empty() \

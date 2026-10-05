@@ -764,7 +764,7 @@ func do_inspect() -> void:
 	if thing != null:
 		thing.interact(self)
 		return
-	if try_bond() or try_pickpocket():
+	if try_bond() or try_pickpocket() or try_cocoon():
 		return
 	var target = _nearest_in_group("inspectable", INSPECT_RANGE, func(_n): return true)
 	if target == null:
@@ -972,6 +972,19 @@ func try_pickpocket() -> bool:
 		return true
 	collect_part(found[0])
 	_emit.call(Deeds.ITEM_STOLEN, {"creature": target.def.id, "part": found[0]})
+	return true
+
+## The spider webs the nearest stunned creature into a cocoon it carries (a carried item like any other, at most Inventory.COCOON_COUNT_MAX):
+## the creature leaves the room alive, never downed. True when one was webbed; a refusal (the cap, no one in reach, the wrong species) costs nothing.
+func try_cocoon() -> bool:
+	if species != "spider" or health.is_dead() or inventory.cocoons().size() >= Inventory.COCOON_COUNT_MAX:
+		return false
+	var target = _nearest_in_group("predatable", PREDATE_RANGE, func(n) -> bool: return n.has_method("can_be_cocooned") and n.can_be_cocooned())
+	if target == null:
+		return false
+	var def: CreatureDef = target.consume()
+	collect_part(Inventory.COCOON_PREFIX + def.id)
+	_emit.call(Deeds.PREY_COCOONED, {"creature": def.id})
 	return true
 
 func _on_companion_died(pal: Companion) -> void:
