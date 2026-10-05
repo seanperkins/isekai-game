@@ -69,6 +69,8 @@ func fresh() -> void:
 	for i in 5:
 		rules.handle_event(Events.ABSORBED, {"essence": "water", "source": "test"})
 	player.last_inspected = _creatures["lizard"]
+	player.collect_part("claw")  # two carried parts, so a forge has something to spend
+	player.collect_part("claw")
 
 ## The verb a form grants, built as the Player builds it, on the arena's player.
 func verb(form_id: String) -> VerbAbility:

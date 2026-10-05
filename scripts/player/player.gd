@@ -48,6 +48,7 @@ const SHOCK_STUN := 0.3
 const SHED_FRACTION := 0.25
 const SHED_PICKUP_DELAY := 0.8
 const GRAFT_SOURCE := "graft"
+const FORGE_SOURCE := "forged"
 const EAT_HEAL := 5
 const BASE_STATS := {"max_hp": 30, "atk": 1, "def": 0, "spd": 100, "max_mp": 20, "mp_regen": 100}
 const EAT_MP := 4
@@ -119,6 +120,8 @@ var _part_defs := PartLoader.load_all()
 var inventory := Inventory.new(_part_defs)
 ## What the goblin has learned this life: its essence comes from lessons, not from devouring (see learn_from).
 var lessons := Lessons.new()
+## What a forged weapon has added this life: stat -> amount (the Smith's Forge).
+var forged := {}
 ## The bonded creatures that follow and fight beside the body (Companion), at most companion_cap() at a time.
 var companions: Array = []
 var _ceiling_t := 0.0
@@ -902,6 +905,25 @@ func on_enemy_downed(def: CreatureDef, spawn_key := "") -> void:
 func emit_deed(event_name: String, tags := {}) -> void:
 	_emit.call(event_name, tags)
 
+## How many parts are carried, not worn: what a forge can spend.
+func parts_carried() -> int:
+	return inventory.carried().size()
+
+## Spends `parts` carried parts (never a worn graft) on `amount` more of `stat` for the rest of the life; forges stack. False, and nothing
+## spent, when too few are carried.
+func forge(stat: String, amount: int, parts: int) -> bool:
+	if parts_carried() < parts:
+		return false
+	for i in parts:
+		inventory.take_carried()
+	forged[stat] = int(forged.get(stat, 0)) + amount
+	var mods := []
+	for s in forged:
+		mods.append({"stat": s, "op": "add", "value": forged[s]})
+	stats.set_timed_modifiers(FORGE_SOURCE, mods)
+	refresh_stats()
+	return true
+
 ## How many companions the body keeps: the Lord of Beasts two, everyone else one.
 func companion_cap() -> int:
 	return 2 if form.form_id == "goblin_lord_of_beasts" else 1
@@ -1534,6 +1556,7 @@ func _on_run_started() -> void:
 	end_channel()
 	inventory = Inventory.new(_part_defs)  # a life starts with nothing; stats.reset_run() clears the graft passives
 	lessons.reset()
+	forged = {}
 	_release_companions()
 	stats.reset_run()
 	_sync_max_hp()

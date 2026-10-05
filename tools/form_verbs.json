@@ -1569,16 +1569,15 @@
     "mp": 6,
     "value": 0,
     "fidelity": "approx",
-    "note": "An attack and defence window; no weapon is forged and no forge is needed.",
-    "text": "Craft a named weapon from parts at a forge.",
+    "note": "A portable forge: two carried parts become a lasting +2 ATK for the life; forges in the village rooms come with F2.",
+    "text": "Forge a named weapon from two carried parts: a lasting +2 ATK.",
     "spec": {
-      "kind": "buff",
-      "stats": {
-        "atk": 3,
-        "def": 2
-      },
-      "seconds": 15.0,
-      "cooldown": 25.0
+      "kind": "forge",
+      "stat": "atk",
+      "amount": 2,
+      "parts": 2,
+      "deed": "weapon_forged",
+      "cooldown": 10.0
     }
   },
   {

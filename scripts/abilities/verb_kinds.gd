@@ -5,7 +5,7 @@ extends RefCounted
 
 ## The scene every data-defined verb uses.
 const SCENE := "res://scenes/abilities/verb.tscn"
-const KINDS := ["bolt", "burst", "ring", "dash", "zone", "mark", "heal", "ward", "buff", "pull", "aura", "chain", "engulf", "dissolve", "glide", "anchor", "decoy", "summon", "vine", "transmute", "copy", "reveal", "bridge", "trap"]
+const KINDS := ["bolt", "burst", "ring", "dash", "zone", "mark", "heal", "ward", "buff", "pull", "aura", "chain", "engulf", "dissolve", "glide", "anchor", "decoy", "summon", "vine", "transmute", "copy", "reveal", "bridge", "trap", "forge"]
 ## Each kind's keys and what they hold (validate() checks them). Every kind also takes `cooldown` (seconds, in place of the default);
 ## the kinds in TYPED also take damage_type, and those in STRIKES a status and `drain` (the fraction of the damage the caster heals).
 const SCHEMA := {
@@ -33,6 +33,7 @@ const SCHEMA := {
 	"reveal": {"radius": "number"},
 	"bridge": {"length": "number", "seconds": "number"},
 	"trap": {"seconds": "number", "stun": "number"},
+	"forge": {"stat": "stat", "amount": "number", "parts": "number"},
 }
 ## The kinds that hurt, which take a `damage_type`; STRIKES are the instant ones, which also take a `status`.
 ## The kinds an enemy casts (at the player, or on itself). The rest need a player's hands: a summon, a bridge, a vine, a reveal, a copy.
@@ -92,6 +93,9 @@ const TRAP_SECONDS := 30.0
 const TRAP_STUN := 2.0
 ## How many of one caster's traps stand at once: a cast beyond it takes the place of the oldest.
 const TRAP_MAX := 3
+const FORGE_STAT := "atk"
+const FORGE_AMOUNT := 2
+const FORGE_PARTS := 2
 const BUFF_SOURCE := "verb_buff"
 const BUFF_GENERATION := "verb_buff_generation"
 const BOLT_RANGE := 260.0
@@ -152,6 +156,8 @@ static func run(ability: Ability, spec: Dictionary) -> void:
 			_bridge(ability, spec)
 		"trap":
 			_trap(ability, spec)
+		"forge":
+			_forge(ability, spec)
 	if spec.has("deed"):
 		_deed(ability, str(spec["deed"]))
 
@@ -439,6 +445,18 @@ static func _trap(a: Ability, spec: Dictionary) -> void:
 	a.actor.get_parent().add_child(trap)
 	trap.launch(a.actor, a.actor.global_position, a.power(), float(spec.get("seconds", TRAP_SECONDS)), float(spec.get("stun", TRAP_STUN)))
 
+## Whether the caster can pay for the cast. Only a forge asks for anything: carried parts. A cast that cannot be paid for is not ready, so it
+## costs nothing.
+static func can_run(a: Ability, spec: Dictionary) -> bool:
+	if spec.get("kind", "") == "forge":
+		return a.actor.has_method("parts_carried") and a.actor.parts_carried() >= int(spec.get("parts", FORGE_PARTS))
+	return true
+
+## Spends carried parts on a lasting bonus to a stat for the life (Forge).
+static func _forge(a: Ability, spec: Dictionary) -> void:
+	a.actor.forge(str(spec.get("stat", FORGE_STAT)), int(spec.get("amount", FORGE_AMOUNT)), int(spec.get("parts", FORGE_PARTS)))
+	Vfx.puffs(a.actor, Art.texture("spit_glob"), [a.actor.global_position + Vector2(0, -8)], Color(1.0, 0.7, 0.3, 0.9), 0.4)
+
 ## The skill's damage to each target, then the spec's status. `ignore_def` skips an Enemy's DEF.
 static func _strike(a: Ability, targets: Array, spec: Dictionary, ignore_def := false, counts := true) -> void:
 	var power := a.power()
@@ -527,6 +545,8 @@ static func _fits(v, what: String) -> bool:
 			return typeof(v) == TYPE_BOOL
 		"text", "deed":
 			return typeof(v) == TYPE_STRING and v != ""
+		"stat":
+			return typeof(v) == TYPE_STRING and Stats.DEFAULTS.has(v)
 		"stats":
 			return typeof(v) == TYPE_DICTIONARY and not v.is_empty() and v.keys().all(func(k): return Stats.DEFAULTS.has(k) and _is_number(v[k]))
 		"status":
@@ -539,6 +559,8 @@ static func _expects(key: String, what: String) -> String:
 			return "%s must be true or false" % key
 		"deed":
 			return "deed must be a deed name"
+		"stat":
+			return "stat must be a stat id"
 		"text":
 			return "%s must be a damage type name" % key
 		"stats":

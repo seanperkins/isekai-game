@@ -170,10 +170,17 @@ def g_trap(d, fg):
         d.polygon([(x, 22), (x + 3, 11), (x + 6, 22)], fill=fg)
 
 
+def g_forge(d, fg):
+    d.rectangle([6, 12, 26, 17], fill=fg)
+    d.polygon([(10, 17), (22, 17), (20, 24), (12, 24)], fill=fg)
+    d.rectangle([8, 24, 24, 27], fill=fg)
+    d.line([(3, 14), (6, 14)], fill=fg, width=2)
+
+
 GLYPHS = {"bolt": g_bolt, "burst": g_burst, "ring": g_ring, "dash": g_dash, "zone": g_zone, "mark": g_mark, "heal": g_heal,
           "ward": g_ward, "buff": g_buff, "pull": g_pull, "aura": g_aura, "chain": g_chain, "engulf": g_engulf,
           "dissolve": g_dissolve, "glide": g_glide, "anchor": g_anchor, "decoy": g_decoy, "summon": g_summon, "vine": g_vine,
-          "transmute": g_transmute, "copy": g_copy, "reveal": g_reveal, "bridge": g_bridge, "trap": g_trap}
+          "transmute": g_transmute, "copy": g_copy, "reveal": g_reveal, "bridge": g_bridge, "trap": g_trap, "forge": g_forge}
 
 
 def form_tint(form):
