@@ -980,6 +980,23 @@ func fill_vitals() -> void:
 	mana.restore(mana.max_mp)
 
 ## Grants XP directly (tests, and the --evolve launch shortcut).
+## Becomes the form `id` for a debug start (`--form=`): its species, then every form down its parent chain, each forced, and the
+## evolve moment skipped. False for an id that is not a form (a species base, a typo): nothing changes.
+func become_form(id: String) -> bool:
+	if not forms.has(id):
+		return false
+	var chain: Array = []
+	var current := id
+	while forms.has(current):
+		chain.push_front(current)
+		current = str((forms[current] as FormDef).parents[0])
+	set_species((forms[id] as FormDef).species)
+	for f in chain:
+		if not advance_form(f, true):
+			return false
+	_evolve_time = 0.0
+	return true
+
 func debug_grant_xp(amount: int) -> void:
 	progression.add_xp(amount)
 

@@ -27,6 +27,7 @@ godot --path . -- --opening                            # replay the opening
 godot --path . -- --skip-opening                       # skip it
 godot --path . -- --evolve                             # start at the first body evolution
 godot --path . -- --species=wolf                       # start as a wolf (goblin, undead or spider too)
+godot --path . -- --form=wolf_fenrir                   # start as that form, its whole line evolved (ids are in data/forms)
 godot --path . res://scenes/movement_sandbox.tscn      # the species movement sandbox
 tools/edit_rooms.sh                                    # the room editor
 ```

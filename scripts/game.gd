@@ -140,6 +140,8 @@ func _ready() -> void:
 	if not _editor_play:
 		Compendium.soul.session_points = Game.soul_points_arg(OS.get_cmdline_user_args())  # set, not added: a reload refills it
 	begin_life(start)
+	if Game.form_arg(args) != "":
+		player.become_form(Game.form_arg(args))
 	if Game.wants_evolve(OS.get_cmdline_user_args()):
 		player.debug_grant_xp(Progression.stage_total(1))  # reach the first evolution without a grind
 	if _editor_play:
@@ -275,6 +277,15 @@ static func resolve_start(altars: Array, pending: Dictionary, attuned: Callable)
 			return {"default": false, "room": p["room"], "pos": p["pos"] + Vector2(0.0, -BodyConfig.BOTTOM),
 				"kit": kit, "altar": id, "species": species}
 	return default
+
+## `-- --form=wolf_fenrir` starts the run as that form, its whole line evolved to it ("" for no flag, a bare flag or an empty one).
+## An id that is not a form does nothing.
+static func form_arg(args: Array) -> String:
+	for arg in args:
+		var text := str(arg)
+		if text.begins_with("--form="):
+			return text.trim_prefix("--form=")
+	return ""
 
 ## `-- --species=wolf` (or goblin, undead, spider) starts the run as that species, whatever the goddess's menu gave; "" for no flag, a
 ## bare flag or a species nobody knows.
