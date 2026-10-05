@@ -200,8 +200,18 @@ def copy_sprites(used):
         shutil.copyfile("assets/sheets/%s.png" % sid, os.path.join(OUT, "sprites", "%s.png" % sid))
 
 
+def read_frames():
+    """sheet id -> {frame name: rect} for every sheet, so a form can show its own still."""
+    out = {}
+    for path in sorted(glob.glob("assets/sheets/*.json")):
+        sid = os.path.basename(path)[:-5]
+        if os.path.exists("assets/sheets/%s.png" % sid):
+            out[sid] = {name: fr["rect"] for name, fr in json.loads(read(path))["frames"].items()}
+    return out
+
+
 def read_forms_data():
-    """data/forms/*.tres -> id -> {tint, size, sprite_set} for the slime forms that exist."""
+    """data/forms/*.tres -> id -> {tint, size, sheet, frame} for the forms that exist (frame is the still in the sheet, or None)."""
     out = {}
     for path in sorted(glob.glob("data/forms/*.tres")):
         text = read(path)
@@ -209,8 +219,10 @@ def read_forms_data():
         tint = re.search(r"tint = Color\(([^)]*)\)", text)
         size = re.search(r"^size = ([\d.]+)", text, re.M)
         sheet = re.search(r'sprite_set = "(\w+)"', text)
+        frame = re.search(r'sprite_frame = "(\w+)"', text)
         out[fid] = {"tint": [float(x) for x in tint.group(1).split(",")][:3] if tint else [1, 1, 1],
-                    "size": float(size.group(1)) if size else 1.0, "sheet": sheet.group(1) if sheet else None}
+                    "size": float(size.group(1)) if size else 1.0, "sheet": sheet.group(1) if sheet else None,
+                    "frame": frame.group(1) if frame else None}
     return out
 
 
@@ -219,16 +231,19 @@ BUILT_SLIME = {"J2W": "weaver", "J3W1": "snare", "J4W1a": "silkbound", "J3W2": "
                "J4T1a": "tidal", "J3T2": "tempest", "J2X": "toxic", "J3X1": "acid", "J4X1a": "venom", "J3X2": "blight",
                "J2B": "bulwark", "J3B1": "golem", "J4B1a": "stone", "J3B2": "crystal", "J2E": "echo", "J3E1": "phantom",
                "J4E2a": "storm", "J3E2": "sky", "J2G": "greater_slime", "J3G1": "vast", "J4G1a": "prime", "J3G2": "radiant"}
-def in_game_data(f):
-    """Whether the form has a data file (data/forms/<id>.tres): the slime's built forms, and the other species' since A3."""
+def data_id(f):
+    """The id of the form's data file (data/forms/<id>.tres): the slime's built forms by their own ids, the rest by name."""
     import build_species_forms as bsf  # a late import: that module imports this one
     if f["id"] in BUILT_SLIME:
-        fid = BUILT_SLIME[f["id"]]
-    elif f["species"] == "slime":
-        fid = bsf.slug(f["name"])
-    else:
-        fid = "%s_%s" % (f["species"], bsf.slug(f["name"]))
-    return os.path.exists("data/forms/%s.tres" % fid)
+        return BUILT_SLIME[f["id"]]
+    if f["species"] == "slime":
+        return bsf.slug(f["name"])
+    return "%s_%s" % (f["species"], bsf.slug(f["name"]))
+
+
+def in_game_data(f):
+    """Whether the form has a data file (data/forms/<id>.tres): the slime's built forms, and the other species' since A3."""
+    return os.path.exists("data/forms/%s.tres" % data_id(f))
 
 
 BASE_SPRITE = {"J1": "slime", "W1": "gloom_wolf", "S1": "spider", "G1": "goblin"}
@@ -251,6 +266,7 @@ def build():
     existing = read_creatures()
     spawns = read_spawns()
     sprites = read_sprites()
+    frames = read_frames()
     form_data = read_forms_data()
 
     twin_existing = {}  # form or base id -> existing creature id
@@ -292,8 +308,10 @@ def build():
         f["inData"] = in_game_data(f)
         f["twin"] = twin_for(f)
         f["children"] = [c["id"] for c in forms if c["parent"] == f["id"]]
-        if f["id"] in BUILT_SLIME:
-            fd = form_data.get(BUILT_SLIME[f["id"]], {})
+        fd = form_data.get(data_id(f), {})
+        if fd.get("frame"):
+            f["art"] = {"sheet": fd["sheet"], "frame": fd["frame"]}  # the art track's still of this form
+        elif f["id"] in BUILT_SLIME:
             f["art"] = {"tint": fd.get("tint"), "size": fd.get("size"), "sheet": fd.get("sheet")}
     for b in bases.values():
         b["twin"] = twin_for(b)
@@ -306,6 +324,8 @@ def build():
     def sprite_of(node):
         art = node.get("art") or {}
         sheet = art.get("sheet")
+        if art.get("frame") and art["frame"] in frames.get(sheet, {}):
+            return {"sheet": sheet, "image": "sprites/%s.png" % sheet, "rect": frames[sheet][art["frame"]], "tint": None}
         if sheet and sheet in sprites:
             return {"sheet": sheet, **sprites[sheet], "tint": None if node["id"] in bases else None}
         if art.get("tint") and "slime" in sprites:

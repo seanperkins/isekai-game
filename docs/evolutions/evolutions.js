@@ -207,7 +207,7 @@
     const rows = D.species.map((s) => h('tr', {}, h('td', {}, s.name), h('td', {}, tally[s.id].own), h('td', {}, tally[s.id].tinted), h('td', {}, tally[s.id].twin), h('td', {}, tally[s.id].none)));
     const totals = Object.values(tally).reduce((a, t) => ({ own: a.own + t.own, tinted: a.tinted + t.tinted, twin: a.twin + t.twin, none: a.none + t.none }), { own: 0, tinted: 0, twin: 0, none: 0 });
     const out = [
-      h('p', { class: 'note' }, 'The art that exists today, animating, and how much of the tree it covers. Most of the 141 forms have no art yet: a built slime form reuses the slime sprite with its tint, and the rest wait for the Codex art pipeline (tools/art).'),
+      h('p', { class: 'note' }, 'The art that exists today, animating, and how much of the tree it covers. ' + totals.own + ' of the ' + D.forms.length + ' forms have art of their own: the art track drew one still for each form of the wolf, undead, spider and goblin and for the slime\'s eighteen new form-fours (tools/art). A built slime form without a sheet reuses the slime sprite with its tint.'),
       h('div', { class: 'table-scroll' }, h('table', {},
         h('thead', {}, h('tr', {}, ['Species', 'Own art', 'Slime sprite, tinted', 'Art of an existing twin', 'No art yet'].map((x) => h('th', {}, x)))),
         h('tbody', {}, rows, h('tr', {}, h('td', {}, h('strong', {}, 'All forms')), h('td', {}, totals.own), h('td', {}, totals.tinted), h('td', {}, totals.twin), h('td', {}, totals.none))))),

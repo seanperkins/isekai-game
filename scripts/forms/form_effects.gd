@@ -39,13 +39,16 @@ static func stat_lines(def: FormDef) -> Array:
 		out.append("%s%d %s" % ["+" if v >= 0 else "", v, STAT_LABEL.get(stat, stat)])
 	return out
 
-## What a form looks like: its own sheet's still (or idle frame), or the base sheet's idle frame with the form's tint.
+## What a form looks like: its own sheet's still (or idle frame), or the base sheet's idle frame with the form's tint (also when
+## the still it names is not in the sheet).
 ## With no base sheet at all the texture is null (callers draw nothing rather than crash).
 static func look(def: FormDef, base_sheet: SpriteSheet) -> Dictionary:
 	if def.sprite_set != "" and SpriteSheet.available(def.sprite_set):
 		var sheet := SpriteSheet.load_set(def.sprite_set)
-		var frame := def.sprite_frame if def.sprite_frame != "" and sheet.has_frame(def.sprite_frame) else "idle_1"
-		return {"texture": sheet.frame_texture(frame), "tint": Color.WHITE}
+		if def.sprite_frame == "":
+			return {"texture": sheet.frame_texture("idle_1"), "tint": Color.WHITE}
+		if sheet.has_frame(def.sprite_frame):
+			return {"texture": sheet.frame_texture(def.sprite_frame), "tint": Color.WHITE}
 	return {"texture": base_sheet.frame_texture("idle_1") if base_sheet != null else null, "tint": def.tint}
 
 ## Extra HP from eating, from traits (adaptable).

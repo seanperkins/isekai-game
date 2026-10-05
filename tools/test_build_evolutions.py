@@ -35,6 +35,22 @@ class BuildEvolutionsTest(unittest.TestCase):
         self.assertEqual(counts, {"slime": 42, "wolf": 21, "undead": 29, "spider": 21, "goblin": 28})
         self.assertEqual(len(self.data["forms"]), 141)
 
+    def test_a_form_with_a_still_shows_it_from_its_species_sheet(self):
+        warg = next(f for f in self.data["forms"] if f["name"] == "Warg")
+        self.assertEqual(warg["sprite"]["sheet"], "forms_wolf")
+        self.assertEqual(warg["sprite"]["image"], "sprites/forms_wolf.png")
+        self.assertEqual(len(warg["sprite"]["rect"]), 4)
+        self.assertFalse(warg["sprite"].get("tint"))
+
+    def test_the_new_slime_forms_show_their_stills_too(self):
+        gleipnir = next(f for f in self.data["forms"] if f["name"] == "Gleipnir")
+        self.assertEqual(gleipnir["sprite"]["sheet"], "forms_slime")
+
+    def test_the_other_four_species_forms_all_have_their_own_art(self):
+        for f in self.data["forms"]:
+            if f["species"] != "slime":
+                self.assertEqual(f["sprite"]["sheet"], "forms_" + f["species"], f["name"])
+
     def test_every_species_has_at_least_three_lines_and_two_children_each(self):
         for s in self.data["species"]:
             self.assertGreaterEqual(len(s["lines"]), 3, s["id"])
@@ -114,3 +130,4 @@ class BuildEvolutionsTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

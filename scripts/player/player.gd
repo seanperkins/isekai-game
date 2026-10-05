@@ -481,20 +481,27 @@ func _update_visual_species(delta: float) -> void:
 ## A form with a still: that frame at the sheet's own size, mirrored when it faces left, swelling and glowing through the evolution
 ## moment, red for a moment when hurt. The hurt shape is the frame's traced one.
 func _draw_still() -> void:
-	var glow := evolve_glow()
-	var scale := body_scale() * (1.0 + EVOLVE_SWELL * glow)
+	var scale := _form_scale()
 	var size := _sheet.frame_size(_still)
 	_sprite.texture = _sheet.frame_texture(_still)
 	_sprite.position.y = BODY_BOTTOM - size.y * scale / 2.0
 	_sprite.scale = Vector2.ONE * scale
 	_sprite.rotation = 0.0
-	var tint := body_tint().lerp(Color(2.2, 2.2, 2.2), glow * 0.8)
-	if _invuln > INVULN_SECONDS - HURT_FLASH and not evolving():
-		tint = tint.lerp(Color(1.0, 0.45, 0.45), 0.6)
-	_sprite.modulate = tint
+	_sprite.modulate = _form_tint()
 	_sprite.flip_h = facing < 0
 	if _shapes != null:
 		_shapes.refresh(_sheet, _still, _sprite.flip_h)
+
+## The body's scale: the form's own, swelling through the evolution moment.
+func _form_scale() -> float:
+	return body_scale() * (1.0 + EVOLVE_SWELL * evolve_glow())
+
+## The body's tint: the form's own, glowing through the evolution moment, red for a moment when hurt.
+func _form_tint() -> Color:
+	var tint := body_tint().lerp(Color(2.2, 2.2, 2.2), evolve_glow() * 0.8)
+	if _invuln > INVULN_SECONDS - HURT_FLASH and not evolving():
+		tint = tint.lerp(Color(1.0, 0.45, 0.45), 0.6)
+	return tint
 
 ## The spider, after how spiders move: the legs follow the distance travelled (so they freeze the instant it stops), the body is
 ## rigid, the sprite turns to the surface and eases through a corner (the body changes surface in one tick; the sprite starts where
@@ -529,13 +536,15 @@ func _draw_spider(delta: float) -> void:
 	_spider_pivot = maxf(0.0, _spider_pivot - delta)
 	var squeeze := 1.0 - 0.55 * sin(PI * (1.0 - _spider_pivot / SPIDER_PIVOT_SECONDS)) if _spider_pivot > 0.0 else 1.0
 	var size := _sheet.frame_size(clip)
-	var scale := body_scale()
+	var scale := _form_scale()
 	_sprite.texture = _sheet.frame_texture(clip)
 	_sprite.rotation = _spider_angle
 	_sprite.flip_h = _spider_sense < 0.0  # the sprite's right is the clockwise tangent: against it, mirror
 	_sprite.scale = Vector2(squeeze, 1.0) * scale
 	_sprite.position = _spider_off + Vector2.UP.rotated(_spider_angle) * (size.y * scale / 2.0 - SurfaceStep.HN)
-	_sprite.modulate = body_tint()
+	_sprite.modulate = _form_tint()
+	if _still != "" and _shapes != null:
+		_shapes.refresh(_sheet, _still, _sprite.flip_h)  # a turned spider uses the body box instead (hurt_polygon)
 	_spider_prev = global_position
 	_update_thread(delta)
 
@@ -953,7 +962,10 @@ func _evolve_step(delta: float) -> void:
 		velocity.y += GRAVITY * delta
 	move_and_slide()
 	tick(delta)
-	_update_visual(delta)
+	if species_body != null:
+		_update_visual_species(delta)
+	else:
+		_update_visual(delta)
 
 ## Sets the character level a rebirth kit starts at (bonuses, no fanfare).
 func start_at_level(level: int) -> void:

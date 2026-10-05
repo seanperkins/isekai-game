@@ -42,6 +42,19 @@ def creature_def(cid):
     return (name.group(1) if name else None), (stats or None)
 
 
+def classify(cid, name):
+    """A sheet's bestiary group ("player", "form" or "enemy"), display name and note: the player's species, the slime's animated
+    forms (form_*), the art track's stills of a species' forms (forms_*), or an enemy."""
+    if cid in PLAYER_SPECIES:
+        name, note = PLAYER_SPECIES[cid]
+        return "player", name, note
+    if cid.startswith("forms_"):
+        return "form", cid[6:].replace("_", " ").title() + " forms (player bodies)", "One still for each of the species' evolved forms: the player's body when it evolves."
+    if cid.startswith("form_"):
+        return "form", cid[5:].replace("_", " ").title() + " (player form)", "The slime's evolved form: it keeps the player's body."
+    return "enemy", name or cid.replace("_", " ").title(), ("Its art is also %s." % ALSO_PLAYABLE[cid]) if cid in ALSO_PLAYABLE else ""
+
+
 def build():
     creatures = []
     os.makedirs(os.path.join(OUT, "sheets"), exist_ok=True)
@@ -54,18 +67,7 @@ def build():
         order = list(frames.keys())
         default = next((f for f in DEFAULT_FRAMES if f in frames), order[0])
         name, stats = creature_def(cid)
-        note = ""
-        if cid in PLAYER_SPECIES:
-            group, (name, note) = "player", PLAYER_SPECIES[cid]
-        elif cid.startswith("form_"):
-            group = "form"
-            name = cid[5:].replace("_", " ").title() + " (player form)"
-            note = "The slime's evolved form: it keeps the player's body."
-        else:
-            group = "enemy"
-            name = name or cid.replace("_", " ").title()
-            if cid in ALSO_PLAYABLE:
-                note = "Its art is also %s." % ALSO_PLAYABLE[cid]
+        group, name, note = classify(cid, name)
         bodies = []
         if group == "enemy":
             bodies.append({"label": "Terrain body (every enemy)", "w": ENEMY_BODY[0], "h": ENEMY_BODY[1]})

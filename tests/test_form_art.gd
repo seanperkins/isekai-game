@@ -189,3 +189,43 @@ func test_a_species_body_does_not_take_an_animated_form_sheet_with_no_still() ->
 	Input.action_press("move_right")
 	await wait_physics_frames(20)  # it runs on without a bad frame lookup
 	assert_true(player.get_node("Sprite").visible)
+
+func _bounds(points: PackedVector2Array) -> Rect2:
+	var r := Rect2(points[0], Vector2.ZERO)
+	for p in points:
+		r = r.expand(p)
+	return r
+
+func test_a_still_spider_has_its_frames_hurt_shape_swells_through_evolution_and_flashes_when_hit() -> void:
+	await _spawn("spider")
+	var base_scale: float = (player.get_node("Sprite") as Sprite2D).scale.x
+	var forms := FormLoader.load_all()
+	var stage2: Array = forms.values().filter(func(f: FormDef) -> bool: return f.species == "spider" and f.stage == 2)
+	assert_true(player.advance_form(stage2[0].id, true))
+	await wait_physics_frames(3)
+	var sprite: Sprite2D = player.get_node("Sprite")
+	assert_gt(sprite.scale.x, base_scale + 0.05, "swelling through the evolution moment")
+	await _settle()
+	var frame := player.still_frame()
+	player.global_position.y -= 80.0  # in the air, where a spider is not turned to a surface
+	await wait_physics_frames(3)
+	var traced: PackedVector2Array = SpriteSheet.load_set("forms_spider").hurt(frame)
+	Input.action_press("move_left")  # in the air, turning round: the shape is mirrored with the sprite
+	await wait_physics_frames(12)
+	assert_true(sprite.flip_h, "facing left")
+	var mirrored := PackedVector2Array()
+	for p in traced:
+		mirrored.append(Vector2(-p.x, p.y))
+	var expected := ShapeHit.moved(mirrored, player.global_position + Vector2(0.0, Player.BODY_BOTTOM), 1.0)
+	assert_eq(player.hurt_polygon(), expected, "the still's own traced shape, mirrored, point for point")
+	player.receive_hit(1, "physical", player.global_position + Vector2(40.0, 0.0))
+	await wait_physics_frames(2)
+	assert_lt(sprite.modulate.g, sprite.modulate.r, "red for a moment when hurt")
+
+func test_look_falls_back_to_the_base_when_the_requested_frame_is_missing() -> void:
+	var broken: FormDef = FormLoader.load_all()["wolf_warg"].duplicate()
+	broken.sprite_frame = "no_such_frame"
+	var base := SpriteSheet.load_set("gloom_wolf")
+	var look: Dictionary = FormEffects.look(broken, base)
+	assert_eq(_region(look["texture"]), _region(base.frame_texture("idle_1")), "the base sheet's idle frame")
+	assert_eq(look["tint"], broken.tint, "tinted as a form with no art is")
