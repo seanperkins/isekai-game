@@ -10,9 +10,11 @@ cell = Vector2i(7, -3)
 size = Vector2i(3, 1)
 solids = [Rect2(300, 268, 120, 12), Rect2(470, 216, 120, 12), Rect2(640, 268, 120, 12), Rect2(810, 216, 120, 12), Rect2(980, 268, 120, 12), Rect2(1150, 216, 120, 12), Rect2(1320, 268, 120, 12), Rect2(1490, 216, 120, 12)]
 decor = [{
+"anchor": "top",
 "id": "grotto_root_hang",
 "pos": Vector2(600, 20)
 }, {
+"anchor": "top",
 "id": "grotto_root_hang",
 "pos": Vector2(1500, 20)
 }]

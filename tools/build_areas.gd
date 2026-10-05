@@ -18,10 +18,19 @@ func _run() -> void:
 		quit(1)
 		return
 	var ids: Array = builder.stale(world)
+	var orphans: Array = builder.orphans(world, builder.modules())
 	if check:
-		print("build_areas: %d rooms would change%s" % [ids.size(), (": " + ", ".join(ids)) if not ids.is_empty() else ""])
-		quit(1 if not ids.is_empty() else 0)
+		print("build_areas: %d rooms would change%s; %d orphans%s" % [ids.size(), (": " + ", ".join(ids)) if not ids.is_empty() else "",
+			orphans.size(), (": " + ", ".join(orphans)) if not orphans.is_empty() else ""])
+		quit(1 if not (ids.is_empty() and orphans.is_empty()) else 0)
 		return
-	builder.write(world, ids)
-	print("build_areas: wrote %d rooms%s" % [ids.size(), (": " + ", ".join(ids)) if not ids.is_empty() else ""])
+	var errors: PackedStringArray = builder.write(world, ids)
+	if not errors.is_empty():
+		for e in errors:
+			print("build_areas: " + e)
+		quit(1)
+		return
+	builder.remove(orphans)
+	print("build_areas: wrote %d rooms%s, removed %d orphans%s" % [ids.size(), (": " + ", ".join(ids)) if not ids.is_empty() else "",
+		orphans.size(), (": " + ", ".join(orphans)) if not orphans.is_empty() else ""])
 	quit(0)

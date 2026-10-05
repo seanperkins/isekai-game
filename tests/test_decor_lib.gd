@@ -4,7 +4,7 @@ extends GutTest
 ## Every decor entry the shipped rooms carry, as {room, d}.
 func _shipped_decor() -> Array:
 	var out: Array = []
-	var rooms := World.load_rooms("res://data/rooms")
+	var rooms := ShippedRooms.load_all()
 	for id in rooms:
 		for d in (rooms[id] as RoomDef).decor:
 			out.append({"room": id, "d": d})
@@ -17,6 +17,12 @@ func test_the_39_shipped_decor_ids_are_pinned_to_the_catalog() -> void:
 		ids[d["id"]] = true
 		assert_eq(DecorLib.entry(d["id"], d["pos"]), d, "%s in %s" % [d["id"], item["room"]])
 	assert_eq(ids.size(), 39)
+
+func test_every_decor_entry_in_every_room_is_the_catalogs_entry() -> void:
+	var rooms := World.load_rooms("res://data/rooms")
+	for id in rooms:
+		for d in (rooms[id] as RoomDef).decor:
+			assert_eq(DecorLib.entry(d["id"], d["pos"]), d, "%s in %s" % [d["id"], id])
 
 func test_every_row_has_a_sprite_a_valid_anchor_and_a_light_that_is_absent_or_a_color() -> void:
 	assert_eq(DecorLib.CATALOG.size(), 46)

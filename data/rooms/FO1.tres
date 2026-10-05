@@ -10,14 +10,18 @@ cell = Vector2i(3, 0)
 solids = [Rect2(230, 268, 110, 12)]
 decor = [{
 "id": "grotto_flowers",
+"light": Color(1, 0.85, 0.4, 1),
 "pos": Vector2(280, 268)
 }, {
 "id": "grotto_glow_fungus",
+"light": Color(0.5, 1, 0.6, 1),
 "pos": Vector2(120, 320)
 }, {
 "id": "grotto_flowers",
+"light": Color(1, 0.85, 0.4, 1),
 "pos": Vector2(470, 320)
 }, {
+"anchor": "top",
 "id": "grotto_root_hang",
 "pos": Vector2(360, 20)
 }]

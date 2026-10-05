@@ -10,16 +10,20 @@ cell = Vector2i(4, 0)
 size = Vector2i(2, 1)
 solids = [Rect2(100, 268, 100, 12), Rect2(210, 216, 100, 12), Rect2(320, 164, 100, 12), Rect2(780, 268, 110, 12), Rect2(940, 216, 110, 12), Rect2(1100, 268, 100, 12)]
 decor = [{
+"anchor": "top",
 "id": "grotto_root_hang",
 "pos": Vector2(200, 20)
 }, {
+"anchor": "top",
 "id": "grotto_root_hang",
 "pos": Vector2(900, 20)
 }, {
 "id": "grotto_flowers",
+"light": Color(1, 0.85, 0.4, 1),
 "pos": Vector2(560, 320)
 }, {
 "id": "grotto_glow_fungus",
+"light": Color(0.5, 1, 0.6, 1),
 "pos": Vector2(1180, 320)
 }]
 spawns = [{

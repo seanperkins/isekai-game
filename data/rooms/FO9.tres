@@ -12,6 +12,7 @@ decor = [{
 "pos": Vector2(150, 320)
 }, {
 "id": "grotto_glow_fungus",
+"light": Color(0.5, 1, 0.6, 1),
 "pos": Vector2(540, 320)
 }]
 spawns = [{

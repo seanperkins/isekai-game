@@ -45,9 +45,10 @@ static func start(r: RoomDef, x: float) -> void:
 static func spawn(r: RoomDef, creature_id: String, x: float, surface_y: float) -> void:
 	r.spawns.append({"id": creature_id, "pos": Vector2(x, stand(surface_y))})
 
+## A decor piece as the editor writes it (DecorLib.entry: its light and anchor from the catalog); `extra` overrides.
 static func decor(r: RoomDef, id: String, x: float, surface_y: float, extra := {}) -> void:
-	var d := {"id": id, "pos": Vector2(x, surface_y)}
-	d.merge(extra)
+	var d := DecorLib.entry(id, Vector2(x, surface_y))
+	d.merge(extra, true)
 	r.decor.append(d)
 
 static func feature(r: RoomDef, kind: String, id: String, x: float, surface_y: float, extra := {}) -> void:

@@ -7,6 +7,10 @@ extends RefCounted
 const ROOMS_DIR := "res://data/rooms"
 ## Godot picks a fresh random id for the script resource on every save; pinning it makes a save reproducible.
 const SCRIPT_ID := "1_roomdef"
+const DEFAULT_TMP_PATH := "user://area_builder_tmp.tres"
+
+## Where serialize saves a room to read its text back (a test points it somewhere that cannot be written to).
+static var tmp_path := DEFAULT_TMP_PATH
 
 static func modules() -> Array:
 	return AreaRegistry.modules()
@@ -51,16 +55,19 @@ static func copy_room(r: RoomDef) -> RoomDef:
 static func problems(world: Dictionary) -> PackedStringArray:
 	var creature_ids: Array = DefLoader.load_dir("res://data/creatures").map(func(c: CreatureDef) -> String: return c.id)
 	var out := WorldValidator.validate(world, creature_ids, DefLoader.load_dir("res://data/perks", "PerkDef"))
+	for id in world:
+		if not RoomEditModel.valid_id(id):  # an id is a file name: it must not be able to name another place
+			out.append("%s: not a plain room id" % id)
 	for f in RoomLint.check(world):
 		out.append("%s [%s] %s" % [f["room"], f["rule"], f["text"]])
 	return out
 
-## The .tres text of a room, as Godot writes it, with the script's resource id pinned.
+## The .tres text of a room, as Godot writes it, with the script's resource id pinned; "" when it could not be saved.
 static func serialize(r: RoomDef) -> String:
-	var tmp := "user://area_builder_tmp.tres"
-	ResourceSaver.save(r, tmp)
-	var text := FileAccess.get_file_as_string(tmp)
-	DirAccess.remove_absolute(ProjectSettings.globalize_path(tmp))
+	if ResourceSaver.save(r, tmp_path) != OK:
+		return ""
+	var text := FileAccess.get_file_as_string(tmp_path)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(tmp_path))
 	return pin_script_id(text)
 
 static func pin_script_id(text: String) -> String:
@@ -91,8 +98,43 @@ static func stale(world: Dictionary, dir := ROOMS_DIR) -> Array:
 			out.append(id)
 	return out
 
-static func write(world: Dictionary, ids: Array, dir := ROOMS_DIR) -> void:
+## Writes the rooms `ids`; the errors, none when all were written. Every room is serialized and every id checked before any file is
+## opened, so one that cannot be leaves every file as it was (a file is truncated on opening).
+static func write(world: Dictionary, ids: Array, dir := ROOMS_DIR) -> PackedStringArray:
+	var errors := PackedStringArray()
+	var texts := {}
+	for id in ids:
+		if not RoomEditModel.valid_id(id):
+			errors.append("%s: not a plain room id, not written" % id)
+			continue
+		texts[id] = serialize(world[id])
+		if texts[id] == "":
+			errors.append("%s: could not be serialized, nothing written" % id)
+	if not errors.is_empty():
+		return errors
 	for id in ids:
 		var f := FileAccess.open("%s/%s.tres" % [dir, id], FileAccess.WRITE)
-		f.store_string(serialize(world[id]))
+		if f == null:
+			errors.append("%s: could not be opened for writing" % id)
+			continue
+		f.store_string(texts[id])
 		f.close()
+	return errors
+
+## The generated room files (an id a module's prefix makes) that no module builds any more.
+static func orphans(world: Dictionary, mods: Array, dir := ROOMS_DIR) -> Array:
+	var prefixes: Array = []
+	for m in mods:
+		if m.prefix() != "":
+			prefixes.append(m.prefix())
+	var out: Array = []
+	for file in DirAccess.get_files_at(dir):
+		var id: String = file.get_basename()
+		if file.ends_with(".tres") and _generated(id, prefixes) and not world.has(id):
+			out.append(id)
+	out.sort()
+	return out
+
+static func remove(ids: Array, dir := ROOMS_DIR) -> void:
+	for id in ids:
+		DirAccess.remove_absolute(ProjectSettings.globalize_path("%s/%s.tres" % [dir, id]))

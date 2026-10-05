@@ -9,6 +9,7 @@ area = "forest"
 cell = Vector2i(10, -3)
 solids = [Rect2(200, 268, 120, 12)]
 decor = [{
+"anchor": "top",
 "id": "grotto_root_hang",
 "pos": Vector2(320, 20)
 }]

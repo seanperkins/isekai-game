@@ -131,8 +131,20 @@ func test_spawn_decor_and_feature_stand_on_the_surface_given() -> void:
 	AreaKit.decor(r, "glow_fungus", 200.0, 320.0, {"light": Color(0.5, 1, 0.6, 1)})
 	AreaKit.feature(r, "glow_pool", "FOREST_POOL", 300.0, 320.0)
 	assert_eq(r.spawns, [{"id": "bat", "pos": Vector2(100, 320.0 - Enemy.BODY_BOTTOM)}])
-	assert_eq(r.decor, [{"id": "glow_fungus", "pos": Vector2(200, 320), "light": Color(0.5, 1, 0.6, 1)}])
+	assert_eq(r.decor, [{"id": "glow_fungus", "pos": Vector2(200, 320), "light": Color(0.5, 1, 0.6, 1)}], "an extra overrides the catalog's")
 	assert_eq(r.features, [{"kind": "glow_pool", "id": "FOREST_POOL", "pos": Vector2(300, 320)}])
+
+func test_decor_is_the_catalogs_entry_with_its_light_and_anchor() -> void:
+	var r := AreaKit.room("T", "forest", Vector2i.ZERO)
+	AreaKit.decor(r, "grotto_flowers", 280.0, 268.0)
+	AreaKit.decor(r, "grotto_root_hang", 360.0, 20.0)
+	AreaKit.decor(r, "grotto_rubble", 400.0, 320.0)
+	assert_eq(r.decor[0], DecorLib.entry("grotto_flowers", Vector2(280, 268)))
+	assert_eq(r.decor[0]["light"], DecorLib.CATALOG["grotto_flowers"]["light"])
+	assert_eq(r.decor[1], DecorLib.entry("grotto_root_hang", Vector2(360, 20)))
+	assert_eq(r.decor[1]["anchor"], "top")
+	assert_eq(r.decor[2], DecorLib.entry("grotto_rubble", Vector2(400, 320)))
+	assert_false(r.decor[2].has("light"))
 
 func test_start_is_on_the_floor_stand_and_passes_the_start_rule() -> void:
 	var r := AreaKit.room("T", "forest", Vector2i.ZERO)
