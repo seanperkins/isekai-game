@@ -7,7 +7,7 @@ extends Resource
 @export var description: String = ""
 @export var hint: String = ""
 @export var announce: String = ""
-## proficiency | essence | evolution | enemy_only
+## proficiency | essence | evolution | enemy_only | form_verb (a body's verb: granted by its form, never unlocked)
 @export var source: String = "proficiency"
 @export var hidden: bool = true
 @export var secret: bool = false

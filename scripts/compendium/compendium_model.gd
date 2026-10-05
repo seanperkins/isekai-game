@@ -1,6 +1,6 @@
 class_name CompendiumModel
 extends RefCounted
-## Persistent skill knowledge. One slot per non-enemy_only skill; slot states only rise.
+## Persistent skill knowledge. One slot per skill a player can discover (not enemy_only or form_verb); slot states only rise.
 ## Exact unlock conditions are shown only on owned-once slots (the UI's job).
 
 signal slot_changed(id: String, state: int)
@@ -18,7 +18,7 @@ var _records := {}    # creature id -> {seen, appraisal, eaten, defeated} (Besti
 
 func _init(skill_defs: Array, creature_defs: Array, p_store = null) -> void:
 	for d in skill_defs:
-		if d.source != "enemy_only":
+		if d.source != "enemy_only" and d.source != "form_verb":
 			_defs[d.id] = d
 			_states[d.id] = State.UNKNOWN
 	for c in creature_defs:

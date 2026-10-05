@@ -51,13 +51,14 @@ const BOSS_SPAWN_GAP := 200.0
 
 static var _hintable: Array = []
 
-## Skill ids a tablet hint can name: CompendiumModel keeps no slot for an enemy_only skill, so raise() on one does nothing.
+## Skill ids a tablet hint can name: CompendiumModel keeps no slot for an enemy_only or form_verb skill, so raise() on one does nothing.
 static func hintable_skill_ids() -> Array:
 	if _hintable.is_empty():
-		for d in DefLoader.load_dir("res://data/skills"):
-			if d.source != "enemy_only":
-				_hintable.append(d.id)
+		_hintable = hintable_from(DefLoader.load_dir("res://data/skills"))
 	return _hintable
+
+static func hintable_from(defs: Array) -> Array:
+	return defs.filter(func(d: SkillDef) -> bool: return d.source != "enemy_only" and d.source != "form_verb").map(func(d: SkillDef) -> String: return d.id)
 
 static func check(rooms: Dictionary) -> Array:
 	var out: Array = []

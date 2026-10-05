@@ -9,8 +9,9 @@ const REQUIRE_GATES := true
 ## The areas a form may be found in: the four built and the eight planned.
 const AREAS := ["cave", "grotto", "flooded", "deep", "forest", "swamp", "village", "sacred", "cemetery", "crypt", "volcano", "demon"]
 
-## `check_art` also requires every form's sprite set to have its sheet (the art tests turn it on).
-static func validate(forms: Dictionary, skill_ids: Array, check_art := false) -> PackedStringArray:
+## `check_art` also requires every form's sprite set to have its sheet (the art tests turn it on). `verb_ids` are the ids of the
+## form_verb skills, which a form's `verb` must be one of.
+static func validate(forms: Dictionary, skill_ids: Array, check_art := false, verb_ids: Array = []) -> PackedStringArray:
 	var errs := PackedStringArray()
 	for id in forms:
 		var f: FormDef = forms[id]
@@ -48,6 +49,11 @@ static func validate(forms: Dictionary, skill_ids: Array, check_art := false) ->
 		for g in f.grants:
 			if not skill_ids.has(g):
 				errs.append("%s: grants unknown skill '%s'" % [id, g])
+		if f.verb != "":
+			if not verb_ids.has(f.verb):
+				errs.append("%s: verb '%s' is not a form_verb skill" % [id, f.verb])
+			if not f.grants.has(f.verb):
+				errs.append("%s: verb '%s' must be in its grants" % [id, f.verb])
 		for t in f.traits:
 			if not FormEffects.TRAITS.has(t):
 				errs.append("%s: unknown trait '%s'" % [id, t])

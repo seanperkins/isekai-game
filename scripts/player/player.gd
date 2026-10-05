@@ -602,6 +602,8 @@ func body_scale() -> float:
 func advance_form(id: String, force := false) -> bool:
 	if health.is_dead() or (not force and not progression.can_evolve()):
 		return false
+	var from_def := form_def()
+	var old_verb := from_def.verb if from_def != null else ""
 	if not form.advance(id, forms):
 		return false
 	progression.evolve_stage()
@@ -609,6 +611,8 @@ func advance_form(id: String, force := false) -> bool:
 	var def: FormDef = forms[id]
 	skillset.form_mods = FormEffects.modifiers(def)
 	skillset.form_flags = FormEffects.flags(def)
+	if old_verb != "" and def.verb != "":
+		skillset.slots.replace(old_verb, def.verb)  # the new verb takes the old one's slot; the grant below finds it owned
 	for g in def.grants:
 		_rules.grant(g)
 	_rules.recheck_levels()

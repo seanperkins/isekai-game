@@ -3,6 +3,8 @@ extends RefCounted
 ## The primitives a verb is built from. A verb is data: a skill whose active effect carries a `spec` ({"kind": ..., parameters}),
 ## which VerbAbility hands to run(). Damage is the skill's own (Damage.skill_power of the effect's value and the caster's ATK).
 
+## The scene every data-defined verb uses.
+const SCENE := "res://scenes/abilities/verb.tscn"
 const KINDS := ["bolt", "burst", "ring", "dash", "zone", "mark", "heal", "ward", "buff"]
 ## Each kind's keys and what they hold (validate() checks them). The kinds in STRIKES also take damage_type and status.
 const SCHEMA := {

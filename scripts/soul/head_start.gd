@@ -3,12 +3,12 @@ extends RefCounted
 ## The head start bought with soul points in the goddess's menu: starting levels and powers the Compendium has seen owned.
 ## The cart is {"levels": int, "powers": Array of skill ids}; its kit is what HeadStart.apply gives at the start of a life.
 
-## Ids of the base powers that can be taken: Owned-once in the Compendium, and never an evolution, an enemy-only skill or the
+## Ids of the base powers that can be taken: Owned-once in the Compendium, and never an evolution, an enemy-only skill, a form's verb or the
 ## starting skill. Sorted by display name.
 static func eligible_powers(compendium: CompendiumModel, skill_defs: Array) -> Array:
 	var ids: Array = []
 	for d: SkillDef in skill_defs:
-		if d.source == "evolution" or d.source == "enemy_only" or d.starting:
+		if d.source == "evolution" or d.source == "enemy_only" or d.source == "form_verb" or d.starting:
 			continue
 		if compendium.state(d.id) == CompendiumModel.State.OWNED_ONCE:
 			ids.append(d.id)

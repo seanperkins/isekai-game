@@ -26,6 +26,8 @@ extends Resource
 @export var traits: Array = []
 ## Player skill ids this body grants on arrival.
 @export var grants: Array = []
+## The form_verb skill this body's verb is (also in `grants`), or "" for none. It takes the previous form's verb's slot.
+@export var verb := ""
 ## Multiplies the base sheet when the form has no art of its own.
 @export var tint := Color.WHITE
 ## The sprite is this much larger (never the collision box).

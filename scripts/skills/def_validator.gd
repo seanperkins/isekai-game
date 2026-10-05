@@ -2,7 +2,7 @@ class_name DefValidator
 extends RefCounted
 ## Startup validation for skill and creature data. Returns every problem found; empty = valid.
 
-const SOURCES := ["proficiency", "essence", "evolution", "enemy_only"]
+const SOURCES := ["proficiency", "essence", "evolution", "enemy_only", "form_verb"]
 const EFFECT_KINDS := ["modifier", "conditional_modifier", "capability", "active"]
 const DAMAGE_TAKEN := "damage_taken"
 
@@ -50,6 +50,8 @@ static func _check_skill(d: SkillDef, by_id: Dictionary, errors: PackedStringArr
 			errors.append("%s: enemy_only skill must not have an unlock" % w)
 		if d.max_level != 1:
 			errors.append("%s: enemy_only skill must have max_level 1" % w)
+	elif d.source == "form_verb":
+		_check_form_verb(w, d, errors)
 	elif not d.starting and d.unlock.is_empty():
 		errors.append("%s: needs at least one unlock condition" % w)
 	if d.max_level > 1 and (d.levels_on.is_empty() or d.level_curve <= 0):
@@ -71,6 +73,8 @@ static func _check_skill(d: SkillDef, by_id: Dictionary, errors: PackedStringArr
 					errors.append("%s: skill_level references unknown skill '%s'" % [w, pid])
 				elif by_id[pid].source == "enemy_only":
 					errors.append("%s: skill_level references enemy_only skill '%s'" % [w, pid])
+				elif by_id[pid].source == "form_verb":
+					errors.append("%s: skill_level references form_verb skill '%s'" % [w, pid])
 			_:
 				errors.append("%s: unknown condition kind '%s'" % [w, kind])
 	for e in d.effects:
@@ -81,6 +85,21 @@ static func _check_skill(d: SkillDef, by_id: Dictionary, errors: PackedStringArr
 		errors.append("%s: replaces '%s', which is not a parent" % [w, d.replaces])
 	if d.source == "evolution":
 		_check_evolution(w, d, by_id, errors)
+
+## A form's verb is granted by the body, so it has no way to unlock or level; it is an active, and one that uses the verb scene
+## carries a valid spec.
+static func _check_form_verb(w: String, d: SkillDef, errors: PackedStringArray) -> void:
+	if not d.unlock.is_empty():
+		errors.append("%s: form_verb skill must not have an unlock" % w)
+	if d.max_level != 1:
+		errors.append("%s: form_verb skill must have max_level 1" % w)
+	if not d.levels_on.is_empty():
+		errors.append("%s: form_verb skill must not level" % w)
+	if SkillEffects.active_scene(d) == "":
+		errors.append("%s: form_verb skill needs an active effect" % w)
+	elif SkillEffects.active_scene(d) == VerbKinds.SCENE:
+		for m in VerbKinds.validate(SkillEffects.active_spec(d)):
+			errors.append("%s: %s" % [w, m])
 
 ## An evolution turns its parent into it: one skill_level unlock on the parent, single-level, an active, never starting.
 static func _check_evolution(w: String, d: SkillDef, by_id: Dictionary, errors: PackedStringArray) -> void:
