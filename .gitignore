@@ -14,3 +14,6 @@ __pycache__/
 
 # Codex run scratch beside generated frames
 art_source/frames/**/.last.txt
+
+# Godot writes .import files next to any PNG it scans, including the review page's sprite copies
+docs/**/*.import
