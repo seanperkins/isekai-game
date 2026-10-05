@@ -43,7 +43,9 @@ Built 2026-10-05: a verb spec's `deed` key (the Tomte's and Hearth God's zones s
 - **Ward-stones**: a verb spec may carry `deed`; the Tomte's and the Hearth God's zones say `ward_stone_placed` when cast.
 - **Forging**: the Smith's verb carries `parts: 2` and `deed: weapon_forged`: it spends two carried parts, then grants a lasting +2 ATK for the life (a named weapon), and says the deed. Without the parts it does nothing and costs nothing. (The design says "at a forge"; forges arrive with the village in F2, so for now it is portable.)
 
-## E2d: cocoons
+## E2d: cocoons (built)
+
+Built 2026-10-05: cocoons as inventory items (`Inventory.add_cocoon`, `cocoons`, `take_cocoon`, `carried_parts`), `Player.try_cocoon`, `eat_cocoon` and `try_release_prey`, `Enemy.can_be_cocooned`, and `Game._on_prey_released`. A cocoon is not a part: a forge, a taming offer and `parts_carried()` leave it alone. Eating one is instant on the predate button when there is nothing in reach. A freed creature stands stunned for two seconds. With E2d the whole of E2 is built and `Deeds.RESERVED` holds only the F2 deeds.
 
 - A cocoon holds one living creature. It is carried like any item: the id `cocoon:<creature>` in the inventory, held (never worn), at most two at once, left in the remains with the rest.
 - Cocooning removes the creature (it is not downed) and says `prey_cocooned {creature}`.

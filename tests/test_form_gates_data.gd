@@ -4,7 +4,7 @@ extends GutTest
 ## The deeds something emits today (the rest of Deeds.EVENTS is in Deeds.RESERVED).
 const EMITTED := ["defeated", "guard_broken", "room_cleared", "room_entered", "skill_hit", "skill_missed", "switch_hit",
 	"part_harvested", "graft_attached", "graft_shed", "item_carried", "corpse_left", "lesson_learned", "bond_formed",
-	"trap_sprung", "weapon_forged", "item_stolen", "ward_stone_placed"]
+	"trap_sprung", "weapon_forged", "item_stolen", "ward_stone_placed", "prey_cocooned", "prey_freed"]
 const TOTAL := {2: 26, 3: 34, 4: 44}
 
 var forms: Dictionary
@@ -94,7 +94,8 @@ func test_the_gates_that_wait_on_a_later_piece_are_known() -> void:
 		for piece in needs:
 			waiting[piece] = int(waiting.get(piece, 0)) + 1
 	assert_false(waiting.has("E1"), "E1 is built: " + str(waiting))
-	assert_true(waiting.has("E2") and waiting.has("F2"), str(waiting))
+	assert_false(waiting.has("E2"), "E2 is built: " + str(waiting))
+	assert_true(waiting.has("F2"), str(waiting))
 	gut.p("gate atoms waiting on a later piece: %s" % waiting)
 
 func test_a_gate_that_asks_for_a_part_names_a_part_that_exists() -> void:
@@ -331,3 +332,31 @@ func test_a_goblin_that_picks_three_pockets_meets_the_leprechauns_atom() -> void
 		add_child_autofree(e)
 		assert_true(p.try_pickpocket())
 	assert_eq(_count(rules, "item_stolen"), 3)
+
+func test_a_spider_that_webs_a_stunned_creature_meets_the_broodmothers_and_cocoon_mothers_atoms() -> void:
+	var made := _species_player("spider")
+	var p: Player = made[0]
+	var rules: SkillRulesEngine = made[1]
+	assert_eq(_count(rules, "prey_cocooned"), 0)
+	_stun_next_to(p, "bat")
+	assert_true(p.try_cocoon())
+	assert_eq(_count(rules, "prey_cocooned"), 1)
+	assert_eq(rules.condition_value({"kind": "counter", "event": "prey_cocooned", "tags": {"creature": "bat"}, "n": 1}), 1)
+
+func test_a_spider_that_lets_a_cocooned_creature_go_meets_anansis_atom() -> void:
+	var made := _species_player("spider")
+	var p: Player = made[0]
+	var rules: SkillRulesEngine = made[1]
+	p.collect_part("cocoon:bat")
+	assert_eq(_count(rules, "prey_freed"), 0)
+	assert_true(p.try_release_prey())
+	assert_eq(_count(rules, "prey_freed"), 1)
+
+func test_a_wolf_or_a_goblin_never_meets_a_cocoon_atom() -> void:
+	for species in ["wolf", "goblin"]:
+		var made := _species_player(species)
+		var p: Player = made[0]
+		var rules: SkillRulesEngine = made[1]
+		_stun_next_to(p, "bat")
+		assert_false(p.try_cocoon(), species)
+		assert_eq(_count(rules, "prey_cocooned"), 0, species)
