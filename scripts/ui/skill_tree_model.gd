@@ -21,7 +21,9 @@ const COL_PITCH := 118.0
 const ROW_PITCH := 14.0
 const GRID_COLS := 2
 ## The lineage of Greater Slime, which no power opens.
-const GREATER := "greater"
+const GREATER := FormOffers.GREATER
+## What each species' base form is called.
+const BASE_NAMES := {"slime": "Slime", "wolf": "Wolf", "undead": "Skeleton", "spider": "Spiderling", "goblin": "Scrapper"}
 ## Between the power band and the form band.
 const BAND_GAP := 16.0
 
@@ -37,7 +39,8 @@ static func build(rules, compendium: CompendiumModel, forms: Dictionary, reached
 		var n := _skill_node(rules, compendium, d, by_id)
 		if not n.is_empty():
 			nodes[d.id] = n
-	nodes.merge(_form_nodes(rules, forms, reached_forms, current_form, nodes))
+	var species := species_of(current_form, forms)
+	nodes.merge(_form_nodes(rules, forms, reached_forms, current_form, nodes, species))
 	var edges: Array = []
 	for d in defs:
 		if d.source == "evolution" and d.replaces != "":
@@ -52,10 +55,21 @@ static func build(rules, compendium: CompendiumModel, forms: Dictionary, reached
 	var row_powers := _row_powers(defs, forms)
 	var slots := _power_slots(defs, row_powers, nodes)
 	if not forms.is_empty():
-		slots.merge(_form_slots(forms, _band_rows(defs, row_powers) * ROW_PITCH + BAND_GAP))
+		slots.merge(_form_slots(forms, _band_rows(defs, row_powers) * ROW_PITCH + BAND_GAP, species))
 	for id in nodes:
 		nodes[id]["pos"] = slots[id]
 	return {"nodes": nodes, "edges": _visible_edges(nodes, edges), "size": _canvas(slots)}
+
+## The species the body is: a base id is its own species, a form's is its `species`, anything else is the slime.
+static func species_of(current_form: String, forms: Dictionary) -> String:
+	if Form.is_base(current_form):
+		return current_form
+	if forms.has(current_form):
+		return (forms[current_form] as FormDef).species
+	return Form.DEFAULT_SPECIES
+
+static func base_name(species: String) -> String:
+	return BASE_NAMES.get(species, species.capitalize())
 
 ## Every non-enemy skill, in id order: the Compendium keeps one slot for each.
 static func _skill_defs(rules, compendium: CompendiumModel) -> Array:
@@ -228,19 +242,20 @@ static func _band_rows(defs: Array, row_powers: Array) -> int:
 	return maxi(rows, ceili(cells / float(GRID_COLS)))
 
 ## The form band's nodes, or {} without forms.
-## - The slime is always there: current, or reached by definition.
+## - The body's species base is always there: current, or reached by definition.
 ## - A stage-2 form shows once a power that opens it shows, or once reached. It is named when reached or when its lineage
-##   is open this life (FormOffers.open_lineages, the same function that decides the Form tab's first offers).
+##   is open this life (FormOffers.open_lineages, the same function that decides the Form tab's first offers). Another
+##   species has no gates yet, so all its lineages count as open.
 ## - Greater Slime has no opening power. It is always there, named when reached or on offer (fewer than two lineages open).
 ## - A stage-3 or stage-4 form is a stub once a parent is named, and named only when reached.
-static func _form_nodes(rules, forms: Dictionary, reached: Array, current: String, skill_nodes: Dictionary) -> Dictionary:
+static func _form_nodes(rules, forms: Dictionary, reached: Array, current: String, skill_nodes: Dictionary, species := Form.DEFAULT_SPECIES) -> Dictionary:
 	var out := {}
 	if forms.is_empty():
 		return out
-	out[Form.BASE] = {"id": Form.BASE, "kind": "form", "state": CURRENT if current == Form.BASE else REACHED, "name": "Slime"}
-	var open: Array = FormOffers.open_lineages(forms, rules)
-	for f in FormLoader.stage2_forms(forms):
-		var greater: bool = f.lineage == GREATER
+	out[species] = {"id": species, "kind": "form", "state": CURRENT if current == species else REACHED, "name": base_name(species)}
+	var open: Array = FormOffers.open_lineages(forms, rules) if species == Form.DEFAULT_SPECIES else FormOffers.lineage_order(forms, species)
+	for f in FormLoader.stage2_forms(forms, species):
+		var greater: bool = species == Form.DEFAULT_SPECIES and f.lineage == GREATER
 		var named: bool = reached.has(f.id) or f.id == current or (open.size() < 2 if greater else open.has(f.lineage))
 		if named or greater or f.powers.any(func(p): return skill_nodes.has(p)):
 			out[f.id] = _form_node(f, named, reached, current)
@@ -257,19 +272,19 @@ static func _form_node(f: FormDef, named: bool, reached: Array, current: String)
 	var state := CURRENT if f.id == current else (REACHED if reached.has(f.id) else NAMED)
 	return {"id": f.id, "kind": "form", "state": state, "name": f.display_name}
 
-## The form band from canvas y `top`: the stage across (the slime in column 0, then stages 2 to 4), two rows per lineage
-## down (FormOffers.LINEAGE_ORDER, then greater). The stage-3 pair fills the two rows, stages 2 and 4 sit between them,
-## and the slime sits level with the middle of the band. Every edge joins adjacent columns.
-static func _form_slots(forms: Dictionary, top: float) -> Dictionary:
-	var lineages: Array = FormOffers.LINEAGE_ORDER.duplicate()
-	lineages.append(GREATER)
-	var slots := {Form.BASE: Vector2(0, top + (lineages.size() - 0.5) * ROW_PITCH)}
+## The form band from canvas y `top`: the stage across (the species' base in column 0, then stages 2 to 4), two rows per
+## lineage down (FormOffers.lineage_order). The stage-3 pair fills the two rows, stages 2 and 4 sit between them, and the base
+## sits level with the middle of the band. Every edge joins adjacent columns. The layout assumes the slime's shape (two
+## stage-3 forms and one Sovereign per lineage); the new shape is laid out by the slime rebuild (B2).
+static func _form_slots(forms: Dictionary, top: float, species := Form.DEFAULT_SPECIES) -> Dictionary:
+	var lineages: Array = FormOffers.lineage_order(forms, species)
+	var slots := {species: Vector2(0, top + (lineages.size() - 0.5) * ROW_PITCH)}
 	for li in lineages.size():
 		var row := li * 2
 		var thirds := 0
 		for id in _sorted_keys(forms):
 			var f: FormDef = forms[id]
-			if f.lineage != lineages[li]:
+			if f.species != species or f.lineage != lineages[li]:
 				continue
 			if f.stage == 3:
 				slots[id] = Vector2(2 * COL_PITCH, top + (row + thirds) * ROW_PITCH)

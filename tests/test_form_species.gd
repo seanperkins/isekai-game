@@ -223,3 +223,44 @@ func test_a_new_run_returns_a_wolf_to_the_wolf_base() -> void:
 	rules.start_run()
 	assert_eq(p.form.form_id, "wolf")
 	assert_eq(p.form.stage, 1)
+
+# --- Task 6: SkillTreeModel for the body's species ---
+
+func _tree(forms: Dictionary, current: String, reached: Array = []) -> Dictionary:
+	var skills := DefLoader.load_dir("res://data/skills")
+	var compendium := CompendiumModel.new(skills, DefLoader.load_dir("res://data/creatures"))
+	var r: SkillRulesEngine = autofree(SkillRulesEngine.new())
+	r.setup(skills)
+	CoreWiring.connect_core(r, compendium, AnnouncerQueue.new())
+	r.start_run()
+	return SkillTreeModel.build(r, compendium, forms, reached, current)
+
+func _form_ids(model: Dictionary) -> Array:
+	var out: Array = []
+	for id in model["nodes"]:
+		if model["nodes"][id]["kind"] == "form":
+			out.append(id)
+	out.sort()
+	return out
+
+func test_the_wolf_tree_has_the_wolf_base_and_its_lines() -> void:
+	var model := _tree(_all(), "wolf")
+	assert_eq(_form_ids(model), ["wolf", "wolf_black_dog", "wolf_loup_garou", "wolf_moonbound", "wolf_ulfhedinn"])
+	assert_eq(model["nodes"]["wolf"]["state"], SkillTreeModel.CURRENT)
+	assert_eq(model["nodes"]["wolf"]["name"], "Wolf")
+	for id in model["nodes"]:
+		assert_true(model["nodes"][id].has("pos"), "%s has a position" % id)
+
+func test_wolf_stage_three_forms_are_stubs_until_reached() -> void:
+	var model := _tree(_all(), "wolf")
+	assert_eq(model["nodes"]["wolf_loup_garou"]["state"], SkillTreeModel.STUB)
+	assert_false(model["nodes"]["wolf_loup_garou"].has("name"))
+	var reached := _tree(_all(), "wolf_moonbound", ["wolf_moonbound"])
+	assert_eq(reached["nodes"]["wolf_moonbound"]["state"], SkillTreeModel.CURRENT)
+
+func test_the_slime_tree_is_unchanged_with_wolf_forms_loaded() -> void:
+	assert_eq(_form_ids(_tree(_all(), "slime")), _form_ids(_tree(FormLoader.load_all(), "slime")))
+
+func test_a_species_with_no_forms_gives_only_its_base() -> void:
+	assert_eq(_form_ids(_tree(FormLoader.load_all(), "spider")), ["spider"])
+	assert_eq(SkillTreeModel.base_name("spider"), "Spiderling")
