@@ -402,7 +402,7 @@ func _refresh_tab() -> void:
 		return
 	match tab():
 		"skills":
-			_rows = SkillScreenModel.skill_rows(_rules, _all)
+			_rows = SkillScreenModel.skill_rows(_rules, _all, _player.skillset.slots.owned)
 		"compendium":
 			_rows = SkillScreenModel.compendium_rows(_compendium, _all)
 		_:

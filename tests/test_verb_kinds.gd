@@ -197,3 +197,21 @@ func test_validate_reports_the_exact_messages() -> void:
 	assert_eq(Array(VerbKinds.validate({"kind": "buff", "stats": {"spd": "fast"}})), ["buff: stats must be a dictionary of stat id to number"])
 	assert_eq(Array(VerbKinds.validate({"kind": "buff", "stats": {"luck": 3}})), ["buff: stats must be a dictionary of stat id to number"])
 	assert_eq(Array(VerbKinds.validate({"kind": "bolt", "status": {"burn": 2}})), ["bolt: status must be slow and stun seconds"])
+
+func test_a_buff_survives_a_skill_refresh() -> void:
+	var p := _real_player()
+	var before := p.stats.get_stat("spd")
+	var a: VerbAbility = load("res://scenes/abilities/verb.tscn").instantiate()
+	p.add_child(a)
+	a.spec = {"kind": "buff", "stats": {"spd": 20}, "seconds": 0.2}
+	a.setup(p, [1], 1)
+	a.activate()
+	p.skillset.refresh()  # what any level-up or unlock does
+	assert_eq(p.stats.get_stat("spd"), before + 20, "the buff is still on")
+	await wait_seconds(0.4)
+	assert_eq(p.stats.get_stat("spd"), before, "and it still ends")
+
+func test_active_spec_ignores_a_spec_that_is_not_a_dictionary() -> void:
+	for bad in ["bolt", [1], 3]:
+		var d := TestDefs.skill("v", {"effects": [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [4], "spec": bad}]})
+		assert_eq(SkillEffects.active_spec(d), {})

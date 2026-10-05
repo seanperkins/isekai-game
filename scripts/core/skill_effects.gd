@@ -59,11 +59,13 @@ static func active_scene(def: SkillDef) -> String:
 			return e.get("scene", "")
 	return ""
 
-## The verb spec of the active effect ({} for an ability with its own script).
+## The verb spec of the active effect ({} for an ability with its own script, or a spec that is not a dictionary: the
+## validator reports that).
 static func active_spec(def: SkillDef) -> Dictionary:
 	for e in def.effects:
 		if e.get("kind", "") == "active":
-			return e.get("spec", {})
+			var spec = e.get("spec", {})
+			return spec if spec is Dictionary else {}
 	return {}
 
 static func active_values(def: SkillDef) -> Array:

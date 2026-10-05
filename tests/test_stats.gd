@@ -44,6 +44,22 @@ func test_reset_run_clears_eat_bonus_and_modifiers() -> void:
 	s.reset_run()
 	assert_eq(s.get_stat("max_hp"), 30)
 
+func test_a_timed_modifier_survives_clear_modifiers_and_ends_by_name() -> void:
+	var s := Stats.new()
+	s.set_timed_modifiers("buff", [{"stat": "spd", "op": "add", "value": 20}])
+	s.set_modifiers("skill", [{"stat": "spd", "op": "add", "value": 5}])
+	assert_eq(s.get_stat("spd"), 125)
+	s.clear_modifiers()
+	assert_eq(s.get_stat("spd"), 120, "a skill refresh clears the skills' modifiers, not the timed one")
+	s.set_timed_modifiers("buff", [])
+	assert_eq(s.get_stat("spd"), 100)
+
+func test_reset_run_clears_timed_modifiers() -> void:
+	var s := Stats.new()
+	s.set_timed_modifiers("buff", [{"stat": "spd", "op": "add", "value": 20}])
+	s.reset_run()
+	assert_eq(s.get_stat("spd"), 100)
+
 func test_hit_percent_then_flat_then_floor_min_one() -> void:
 	assert_eq(Damage.hit(4, "physical", 0, 20, 0), 3)    # 3.2 -> 3
 	assert_eq(Damage.hit(4, "physical", 0, 80, 0), 1)    # 0.8 -> min 1

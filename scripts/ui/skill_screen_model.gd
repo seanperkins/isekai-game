@@ -3,6 +3,9 @@ extends RefCounted
 ## Pure data for the Skills / Compendium screen.
 
 const GROUPS := [["PROFICIENCY", "proficiency"], ["ESSENCE", "essence"], ["EVOLUTION", "evolution"]]
+## The body's verbs sit in their own group on the Skills tab, so one pushed out of a slot can be put back. Not in GROUPS: the
+## Compendium has no slot for a form_verb, and a verb has no "???" row.
+const VERB_GROUP := ["BODY", "form_verb"]
 const ACTIVE_LABEL := {"poison_breath": "Damage", "water_blade": "Damage",
 	"hydraulic_propulsion": "Distance %", "sticky_thread": "Hold tier",
 	"swing_thread": "Hold tier", "spore_cloud": "Radius", "binding_web": "Hold tier",
@@ -22,7 +25,8 @@ static func counts_as_locked(rules, d: SkillDef) -> bool:
 	return rules.level_of(d.id) == 0 and not d.secret and not rules.is_evolution_ready(d.id) and not rules.is_closed(d.id)
 
 ## Skills tab: the skills held now per group (not a parent that evolved), plus one "???" row while a locked one remains.
-static func skill_rows(rules, all_defs: Array) -> Array:
+## `equippable_verbs` are the ids of the form verbs the player may slot (ActiveSlots.owned): a verb its form replaced is not one.
+static func skill_rows(rules, all_defs: Array, equippable_verbs: Array = []) -> Array:
 	var rows: Array = []
 	var held: Array = rules.owned()
 	for g in GROUPS:
@@ -43,6 +47,12 @@ static func skill_rows(rules, all_defs: Array) -> Array:
 					rows.append({"kind": "ready", "id": id, "name": d.display_name, "price": rules.evolution_price(id), "affordable": rules.can_afford(id)})
 		if locked:
 			rows.append({"kind": "locked"})
+	var verbs: Array = all_defs.filter(func(d) -> bool: return d.source == VERB_GROUP[1] and equippable_verbs.has(d.id) and rules.owned().has(d.id))
+	if not verbs.is_empty():
+		rows.append({"kind": "header", "text": VERB_GROUP[0]})
+		for d in _by_name(verbs):
+			rows.append({"kind": "skill", "id": d.id, "name": d.display_name, "level": rules.level_of(d.id), "max_level": d.max_level,
+				"capped": false})
 	return rows
 
 static func _find(defs: Array, id: String):
@@ -302,7 +312,10 @@ static func _event_text(event: String, tags: Dictionary) -> String:
 	return EVENT_TEXT.get(event, event)
 
 static func _sorted(defs: Array) -> Array:
-	var out := defs.filter(func(d): return d.source != "enemy_only")
+	return _by_name(defs.filter(func(d): return d.source != "enemy_only" and d.source != VERB_GROUP[1]))
+
+static func _by_name(defs: Array) -> Array:
+	var out := defs.duplicate()
 	out.sort_custom(func(a, b): return a.display_name < b.display_name)
 	return out
 

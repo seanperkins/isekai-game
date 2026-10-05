@@ -98,6 +98,10 @@ static func _check_form_verb(w: String, d: SkillDef, errors: PackedStringArray) 
 	if SkillEffects.active_scene(d) == "":
 		errors.append("%s: form_verb skill needs an active effect" % w)
 	elif SkillEffects.active_scene(d) == VerbKinds.SCENE:
+		for e in d.effects:
+			if e.get("kind", "") == "active" and not (e.get("spec", {}) is Dictionary):
+				errors.append("%s: form_verb spec must be a dictionary" % w)
+				return
 		for m in VerbKinds.validate(SkillEffects.active_spec(d)):
 			errors.append("%s: %s" % [w, m])
 

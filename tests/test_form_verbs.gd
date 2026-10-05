@@ -15,7 +15,7 @@ func after_each() -> void:
 	SkillRules.reset_run()
 	Announcer.queue.clear()
 
-func _verb_skill(id: String, spec := {"kind": "bolt"}, fields := {}) -> SkillDef:
+func _verb_skill(id: String, spec: Variant = {"kind": "bolt"}, fields := {}) -> SkillDef:
 	var f := {"source": "form_verb", "mp_cost": 2, "max_level": 1,
 		"effects": [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [4], "spec": spec}]}
 	f.merge(fields, true)
@@ -75,6 +75,10 @@ func test_a_form_verb_that_is_unlocked_or_levelled_or_passive_is_reported() -> v
 	assert_string_contains("\n".join(DefValidator.validate([passive], [])), "form_verb skill needs an active effect")
 	var free := _verb_skill("fv", {"kind": "bolt"}, {"mp_cost": 0})
 	assert_string_contains("\n".join(DefValidator.validate([free], [])), "needs a positive mp_cost")
+
+func test_a_form_verb_whose_spec_is_not_a_dictionary_is_reported_not_crashed() -> void:
+	for bad in ["bolt", [1], 3]:
+		assert_string_contains("\n".join(_about(_verb_skill("fv", bad))), "spec must be a dictionary")
 
 func test_nothing_can_unlock_on_a_form_verb() -> void:
 	var needs := TestDefs.skill("needy", {"unlock": [TestDefs.level("fv", 1)]})
@@ -152,6 +156,40 @@ func test_a_form_with_a_verb_after_one_without_takes_a_free_slot() -> void:
 	_evolve("fa")
 	_evolve("fb")
 	assert_true(_slots().has("vb"))
+
+# --- the Skills tab ---
+
+func _skill_ids_listed(rows: Array) -> Array:
+	return rows.filter(func(r: Dictionary) -> bool: return r["kind"] == "skill").map(func(r: Dictionary) -> String: return r["id"])
+
+func test_the_skills_tab_lists_the_form_verbs_the_player_can_equip() -> void:
+	var defs := [_verb_skill("va"), _verb_skill("vb"), TestDefs.skill("plain")]
+	_build(defs, [])
+	rules.grant("va")
+	rules.grant("vb")
+	var rows := SkillScreenModel.skill_rows(rules, defs, ["va"])
+	assert_eq(_skill_ids_listed(rows), ["va"], "a verb that was replaced is not offered, and an unheld skill is not a row")
+	assert_true(rows.any(func(r: Dictionary) -> bool: return r["kind"] == "header" and r["text"] == "BODY"))
+	assert_false(SkillScreenModel.skill_rows(rules, defs).any(func(r: Dictionary) -> bool: return r["kind"] == "header" and r["text"] == "BODY"),
+		"no verb to equip, no BODY header")
+
+func test_the_compendium_never_lists_a_form_verb() -> void:
+	var defs := [_verb_skill("fv"), TestDefs.skill("plain")]
+	var rows := SkillScreenModel.compendium_rows(CompendiumModel.new(defs, []), defs)
+	assert_false(rows.any(func(r: Dictionary) -> bool: return r.get("id", "") == "fv"))
+
+func test_an_evicted_form_verb_stays_equippable_and_can_be_put_back() -> void:
+	var defs := [_verb_skill("va")]
+	_build(defs, [_form("fa", 2, "slime", "va")])
+	_evolve("fa")
+	var slots: ActiveSlots = player.skillset.slots
+	for id in ["x1", "x2", "x3", "x4"]:
+		slots.add(id)
+	assert_false(slots.slots.has("va"), "pushed out by four newer actives")
+	assert_true(slots.owned.has("va"))
+	assert_eq(_skill_ids_listed(SkillScreenModel.skill_rows(rules, defs, slots.owned)), ["va"])
+	slots.assign(slots.next_slot_for("va"), "va")
+	assert_true(slots.slots.has("va"))
 
 # --- the form validator ---
 

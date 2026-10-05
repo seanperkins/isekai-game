@@ -11,6 +11,7 @@ var _base := {}
 var _eat := {}     # stat -> bonus
 var _eaten := {}   # creature id -> count this run
 var _mods := {}    # source id -> [{"stat", "op", "value"}]
+var _timed := {}   # the same, for a verb's buff: SkillSet.refresh() clears _mods but not these
 var _level := {}   # stat -> bonus from character level-ups (this run)
 
 func _init(base: Dictionary = {}) -> void:
@@ -41,6 +42,13 @@ func set_modifiers(source_id: String, mods: Array) -> void:
 	else:
 		_mods[source_id] = mods.duplicate(true)
 
+## A modifier that outlives a skill refresh (clear_modifiers), set and removed by whoever times it. An empty list removes it.
+func set_timed_modifiers(source_id: String, mods: Array) -> void:
+	if mods.is_empty():
+		_timed.erase(source_id)
+	else:
+		_timed[source_id] = mods.duplicate(true)
+
 func eat_bonus(key: String) -> int:
 	return int(_eat.get(key, 0))
 
@@ -64,17 +72,19 @@ func clear_modifiers() -> void:
 func get_stat(key: String) -> int:
 	var value: int = int(_base.get(key, 0)) + int(_eat.get(key, 0)) + int(_level.get(key, 0))
 	var override = null
-	for source in _mods:
-		for m in _mods[source]:
-			if m["stat"] != key:
-				continue
-			if m["op"] == "set":
-				override = int(m["value"])
-			else:
-				value += int(m["value"])
+	for bucket in [_mods, _timed]:
+		for source in bucket:
+			for m in bucket[source]:
+				if m["stat"] != key:
+					continue
+				if m["op"] == "set":
+					override = int(m["value"])
+				else:
+					value += int(m["value"])
 	return override if override != null else value
 
 func reset_run() -> void:
+	_timed.clear()
 	_level.clear()
 	_eat.clear()
 	_eaten.clear()

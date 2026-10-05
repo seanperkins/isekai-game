@@ -135,7 +135,8 @@ static func _ward(a: Ability, spec: Dictionary) -> void:
 	if a.actor.has_method("ward"):
 		a.actor.ward(float(spec.get("seconds", WARD_SECONDS)))
 
-## Stat modifiers on the caster for `seconds`. A second cast replaces the first; the first cast's timer then does nothing.
+## Stat modifiers on the caster for `seconds`, in Stats' timed bucket so a skill refresh does not end them. A second cast replaces
+## the first; the first cast's timer then does nothing.
 static func _buff(a: Ability, spec: Dictionary) -> void:
 	var stats = a.actor.get("stats")
 	if stats == null:
@@ -145,12 +146,12 @@ static func _buff(a: Ability, spec: Dictionary) -> void:
 		mods.append({"stat": stat, "op": "add", "value": int(spec["stats"][stat])})
 	var generation := int(a.actor.get_meta(BUFF_GENERATION, 0)) + 1
 	a.actor.set_meta(BUFF_GENERATION, generation)
-	stats.set_modifiers(BUFF_SOURCE, mods)
+	stats.set_timed_modifiers(BUFF_SOURCE, mods)
 	a.actor.get_tree().create_timer(float(spec.get("seconds", BUFF_SECONDS))).timeout.connect(_buff_ends.bind(a.actor, generation))
 
 static func _buff_ends(actor, generation: int) -> void:
 	if is_instance_valid(actor) and int(actor.get_meta(BUFF_GENERATION, 0)) == generation:
-		actor.stats.set_modifiers(BUFF_SOURCE, [])
+		actor.stats.set_timed_modifiers(BUFF_SOURCE, [])
 
 ## The skill's damage to each target, then the spec's status.
 static func _strike(a: Ability, targets: Array, spec: Dictionary) -> void:
