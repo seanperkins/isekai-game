@@ -488,11 +488,20 @@ func _gut_ui(visible: bool) -> void:
 	if layer != null:
 		layer.visible = visible
 
+## The scene a Play changed to (a real Game, a current scene of its own) is not the test's to leave running: it would play on for the rest of
+## the suite, and its deaths would reload scenes and take the input of every later test.
+func _end_game_scene() -> void:
+	var scene := get_tree().current_scene
+	if scene != null:
+		scene.queue_free()
+		get_tree().current_scene = null
+
 func after_each() -> void:
 	_gut_ui(true)
 	Game.play_request = {}
 	Game.editor_resume = null
 	RoomEditor.sandbox_root = ""
+	_end_game_scene()
 
 func _editor() -> RoomEditor:
 	_gut_ui(false)
@@ -710,6 +719,10 @@ func test_the_toggles_reach_the_play_request() -> void:
 	assert_eq(Game.editor_resume["play_options"], {"movement": true, "shortcuts": true})
 	Game.play_request = {}
 	Game.editor_resume = null
+	await wait_process_frames(3)  # the scene change ed.play() queued has happened by now
+	assert_true(get_tree().current_scene is Game, "Play did start a game")
+	_end_game_scene()
+	assert_null(get_tree().current_scene)
 
 func test_the_movement_kit_names_only_skills_a_start_may_grant() -> void:
 	var by_id := {}
