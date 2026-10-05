@@ -25,6 +25,12 @@ static func wolf_forms() -> Dictionary:
 		out[f.id] = f
 	return out
 
+var rules: SkillRulesEngine
+
+func after_each() -> void:
+	SkillRules.reset_run()
+	Announcer.queue.clear()
+
 # --- Task 1: FormDef.species and a species-aware Form ---
 
 func test_a_form_def_without_a_species_is_a_slime_form() -> void:
@@ -164,3 +170,56 @@ func test_lineage_order_for_the_wolf_follows_form_ids() -> void:
 func test_a_species_with_no_forms_offers_nothing() -> void:
 	assert_eq(FormOffers.offers({}, Form.new("spider"), FakeRules.new()), [])
 	assert_eq(FormOffers.lineage_order({}, "spider"), [])
+
+# --- Task 5: WorldProgress bases and Player.species ---
+
+## A player of `species` on a fresh run, with the wolf fixture forms loaded beside the slime's.
+func _player(species: String) -> Player:
+	rules = autofree(SkillRulesEngine.new())
+	rules.setup(DefLoader.load_dir("res://data/skills"))
+	var p := Player.new()
+	p.species = species
+	p.setup(rules, CompendiumModel.new([], []), [], func(n: String, t: Dictionary) -> void: rules.handle_event(n, t))
+	add_child_autofree(p)
+	rules.start_run()
+	p.forms.merge(wolf_forms())
+	return p
+
+func test_every_base_is_reached_by_definition() -> void:
+	var progress := WorldProgress.new()
+	assert_true(progress.is_form_reached("wolf"))
+	assert_true(progress.is_form_reached("slime"))
+	progress.reach_form("wolf")
+	assert_eq(progress.forms_reached, [])
+	progress.reach_form("wolf_moonbound")
+	assert_eq(progress.forms_reached, ["wolf_moonbound"])
+	progress.reach_form("nonsense")
+	assert_true(progress.is_form_reached("nonsense"), "an id the data does not know is stored and read back untouched")
+	assert_eq(progress.forms_reached, ["wolf_moonbound", "nonsense"])
+
+func test_a_wolf_player_starts_as_the_wolf_base() -> void:
+	var p := _player("wolf")
+	assert_eq(p.form.form_id, "wolf")
+	assert_eq(p.form.species, "wolf")
+	assert_null(p.form_def())
+
+func test_a_wolf_player_evolves_into_a_wolf_form_only() -> void:
+	var wolf := _player("wolf")
+	assert_true(wolf.advance_form("wolf_moonbound", true))
+	assert_eq(wolf.form.form_id, "wolf_moonbound")
+	var slime := _player("slime")
+	assert_false(slime.advance_form("wolf_moonbound", true), "the form is in its data, but it is a wolf's")
+	assert_eq(slime.form.form_id, "slime")
+
+func test_a_wolf_player_at_the_cap_is_offered_wolf_forms() -> void:
+	var p := _player("wolf")
+	assert_eq(p.form_offers(), [], "nothing is offered below the level cap")
+	p.progression.add_xp(Progression.stage_total(p.progression.stage))
+	assert_eq(p.form_offers().map(func(f: FormDef) -> String: return f.id), ["wolf_black_dog", "wolf_moonbound"])
+
+func test_a_new_run_returns_a_wolf_to_the_wolf_base() -> void:
+	var p := _player("wolf")
+	p.advance_form("wolf_moonbound", true)
+	rules.start_run()
+	assert_eq(p.form.form_id, "wolf")
+	assert_eq(p.form.stage, 1)

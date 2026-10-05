@@ -104,6 +104,9 @@ var _sheet: SpriteSheet         # the sheet being drawn: the form's own, or the 
 var _base_sheet: SpriteSheet    # the plain slime's sheet, also worn (tinted, scaled) by forms without art
 var _form_sheet: SpriteSheet    # the current form's own sheet, or null
 ## The evolved body: stage and form (Form.advance is the only way they change) and the form definitions.
+## Which species this body is (Form.SPECIES): set before setup(), which builds `form` for it. Only the form tree follows it so
+## far; the body, the movement and the sheet are the slime's until the species are wired into the player.
+var species := Form.DEFAULT_SPECIES
 var form := Form.new()
 var forms := {}
 ## Seconds left of the evolution moment: a short lock and shield while the body changes.
@@ -127,6 +130,7 @@ var rope_line := Line2D.new()
 var _carrying := false
 
 func setup(rules: SkillRulesEngine, compendium: CompendiumModel, creature_defs: Array, emit: Callable) -> void:
+	form = Form.new(species)
 	_rules = rules
 	_compendium = compendium
 	_emit = emit

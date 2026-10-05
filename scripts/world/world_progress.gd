@@ -15,7 +15,7 @@ var shortcuts: Array = []
 var tablets: Array = []
 ## Rebirth pools the player has attuned to (the default pool is implicit).
 var rebirths: Array = []
-## Body forms reached in any life (the Tree tab keeps them). The base slime is reached by definition and never stored.
+## Body forms reached in any life (the Tree tab keeps them). Every species' base is reached by definition and never stored.
 var forms_reached: Array = []
 ## Boss creature ids the player has beaten.
 var bosses: Array = []
@@ -88,13 +88,13 @@ func is_attuned(id: String) -> bool:
 
 ## Written by the game when Player.form_advanced fires.
 func reach_form(id: String) -> void:
-	if id == "" or id == Form.BASE or forms_reached.has(id):
+	if id == "" or Form.is_base(id) or forms_reached.has(id):
 		return
 	forms_reached.append(id)
 	_save()
 
 func is_form_reached(id: String) -> bool:
-	return id == Form.BASE or forms_reached.has(id)
+	return Form.is_base(id) or forms_reached.has(id)
 
 ## The last life's choice. Its `pool` key holds an altar id: a key the saved `rebirth_choice` section has always used, kept so
 ## no save needs migrating.
