@@ -172,13 +172,16 @@ def read_creatures():
 
 
 def read_spawns():
-    """area -> creature id -> count, over the shipped rooms."""
+    """area -> creature id -> count, over the shipped rooms, without the creatures the placement added."""
     out = {}
     for rid in SHIPPED:
         text = read("data/rooms/%s.tres" % rid)
         area = re.search(r'^area = "(\w+)"', text, re.M).group(1)
         m = re.search(r"\nspawns = \[(.*?)\n?\]\n", text, re.S)
-        for cid in re.findall(r'"id": "(\w+)"', m.group(1)) if m else []:
+        for spawn in re.findall(r"\{(.*?)\}", m.group(1), re.S) if m else []:
+            if '"by":' in spawn:  # a creature the placement put there (tools/areas/placement.gd), not one the rooms were made with
+                continue
+            cid = re.search(r'"id": "(\w+)"', spawn).group(1)
             out.setdefault(area, {}).setdefault(cid, 0)
             out[area][cid] += 1
     return out

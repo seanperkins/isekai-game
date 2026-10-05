@@ -133,6 +133,17 @@ class BuildEvolutionsTest(unittest.TestCase):
         loaded = json.loads(text[len("window.EVOLUTIONS = "):].rstrip().rstrip(";"))
         self.assertEqual(len(loaded["forms"]), 141)
 
+    def test_the_supply_counts_only_the_creatures_the_rooms_were_made_with(self):
+        spawns = be.read_spawns()
+        ids = {cid for counts in spawns.values() for cid in counts}
+        self.assertFalse([c for c in ids if c.startswith("twin_")])
+        with open("tools/creature_areas.json", encoding="utf-8") as fh:
+            new = set(json.load(fh)["creatures"])
+        # the support monsters the area modules put in the new areas' rooms are not in the shipped rooms either
+        self.assertFalse(ids & new, sorted(ids & new))
+        self.assertEqual(sum(spawns["cave"].values()) + sum(spawns["grotto"].values()) + sum(spawns["flooded"].values()) + sum(spawns["deep"].values()),
+                         sum(sum(counts.values()) for counts in spawns.values()))
+
 
 if __name__ == "__main__":
     unittest.main()
