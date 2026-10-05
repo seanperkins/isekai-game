@@ -36,7 +36,8 @@ func _process(_delta: float) -> bool:
 	if _protocol == null:
 		var protocol_script: GDScript = load("res://scripts/editor/mcp/mcp_protocol.gd")
 		var tools_script: GDScript = load("res://scripts/editor/mcp/room_tools.gd")
-		_protocol = protocol_script.new(tools_script.new())
+		var session_script: GDScript = load("res://scripts/editor/mcp/room_session.gd")
+		_protocol = protocol_script.new(tools_script.new(session_script.new()))
 	_mutex.lock()
 	var batch := _lines
 	_lines = []

@@ -19,20 +19,20 @@ static func to_json(r: RoomDef, indexed := false) -> Dictionary:
 		"solids": [], "water": [], "spawns": [], "features": [], "decor": [], "exits": [],
 	}
 	for i in r.solids.size():
-		out["solids"].append(_tag({"rect": _plain(r.solids[i]), "hard": r.hard_ledges.has(r.solids[i])}, i, indexed))
+		out["solids"].append(_tag({"rect": plain(r.solids[i]), "hard": r.hard_ledges.has(r.solids[i])}, i, indexed))
 	for i in r.water.size():
-		out["water"].append(_tag({"rect": _plain(r.water[i])}, i, indexed))
+		out["water"].append(_tag({"rect": plain(r.water[i])}, i, indexed))
 	for i in r.spawns.size():
-		out["spawns"].append(_tag({"creature": r.spawns[i]["id"], "pos": _plain(r.spawns[i]["pos"])}, i, indexed))
+		out["spawns"].append(_tag({"creature": r.spawns[i]["id"], "pos": plain(r.spawns[i]["pos"])}, i, indexed))
 	for i in r.features.size():
-		out["features"].append(_tag(_plain(r.features[i]), i, indexed))
+		out["features"].append(_tag(plain(r.features[i]), i, indexed))
 	for i in r.decor.size():
-		var d: Dictionary = _plain(r.decor[i])
+		var d: Dictionary = plain(r.decor[i])
 		d["piece"] = d["id"]
 		d.erase("id")
 		out["decor"].append(_tag(d, i, indexed))
 	for i in r.exits.size():
-		out["exits"].append(_tag(_plain(r.exits[i]), i, indexed))
+		out["exits"].append(_tag(plain(r.exits[i]), i, indexed))
 	return out
 
 ## The content of room `r` in the runtime types content_from_json produces and the model applies:
@@ -118,7 +118,7 @@ static func _nums(v, n: int) -> Variant:
 	return out
 
 ## Runtime value to plain JSON types: Vector2, Rect2 and Color become number arrays, containers are converted inside.
-static func _plain(v) -> Variant:
+static func plain(v) -> Variant:
 	match typeof(v):
 		TYPE_VECTOR2, TYPE_VECTOR2I:
 			return [v.x, v.y]
@@ -127,11 +127,11 @@ static func _plain(v) -> Variant:
 		TYPE_COLOR:
 			return [v.r, v.g, v.b, v.a]
 		TYPE_ARRAY:
-			return v.map(func(x): return _plain(x))
+			return v.map(func(x): return plain(x))
 		TYPE_DICTIONARY:
 			var out := {}
 			for k in v:
-				out[k] = _plain(v[k])
+				out[k] = plain(v[k])
 			return out
 	return v
 
