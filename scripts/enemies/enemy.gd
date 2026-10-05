@@ -602,15 +602,35 @@ func _draw_creature(delta: float) -> void:
 	else:
 		_sprite.modulate = def.sprite_tint
 
-## A still: one frame at the creature's size, turned with it. It has no animation and its hurt box stays the body's.
+## A still: one frame at the creature's size, turned with it. It has no frames, so it is moved: it breathes (its height squashes by
+## STILL_BREATH either way every STILL_BREATH_SECONDS, its feet fixed), hops STILL_HOP px and leans STILL_LEAN radians towards where it faces
+## while it walks, and holds rigid when it is stunned or down. Its hurt box stays the body's.
+const STILL_BREATH_SECONDS := 1.8
+const STILL_BREATH := 0.03
+const STILL_HOP := 3.0
+const STILL_HOP_RATE := 11.0
+const STILL_LEAN := 0.06
+
 func _draw_still() -> void:
 	var frame := _still_frame()
 	var size := def.sprite_size
+	var height := _still.frame_size(frame).y * size
 	_sprite.texture = _still.frame_texture(frame)
-	_sprite.scale = Vector2.ONE * size
-	_sprite.position.y = BODY_BOTTOM - _still.frame_size(frame).y * size / 2.0
 	_sprite.flip_h = facing < 0
 	_sprite.flip_v = status.state == EnemyStatus.DOWNED
+	var scale_y := size
+	var hop := 0.0
+	var lean := 0.0
+	if status.state == EnemyStatus.ACTIVE:
+		var phase := float(hash(spawn_key if spawn_key != "" else str(get_instance_id())) % 628) / 100.0  # a crowd does not breathe in step
+		scale_y = size * (1.0 + sin(_anim_t * TAU / STILL_BREATH_SECONDS + phase) * STILL_BREATH)
+		if absf(velocity.x) > 1.0:
+			var step := sin(_anim_t * STILL_HOP_RATE)
+			hop = absf(step) * STILL_HOP
+			lean = (1.0 if facing >= 0 else -1.0) * STILL_LEAN * step * step
+	_sprite.scale = Vector2(size, scale_y)
+	_sprite.rotation = lean
+	_sprite.position.y = BODY_BOTTOM - height * scale_y / size / 2.0 - hop
 
 ## Strands while a thread slows it, the cocoon while a thread holds it, nothing once either ends or it is down.
 func _update_web() -> void:

@@ -25,7 +25,9 @@ func test_a_twin_shows_its_forms_still_at_its_size() -> void:
 	var sprite: Sprite2D = e.get_node("Sprite")
 	var want := SpriteSheet.load_set("forms_wolf").frame_texture("fenrir") as AtlasTexture
 	assert_eq((sprite.texture as AtlasTexture).region, want.region)
-	assert_eq(sprite.scale, Vector2.ONE * creatures["twin_wolf_fenrir"].sprite_size)
+	var size: float = creatures["twin_wolf_fenrir"].sprite_size
+	assert_almost_eq(sprite.scale.x, size, 0.0001)
+	assert_almost_eq(sprite.scale.y, size, size * Enemy.STILL_BREATH + 0.001, "it breathes a little (tests/test_enemy_still_motion.gd)")
 	assert_almost_eq(sprite.position.y, Enemy.BODY_BOTTOM - want.region.size.y * sprite.scale.y / 2.0, 0.01, "its feet are on the ground")
 
 func test_a_still_turns_with_the_creature() -> void:
