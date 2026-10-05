@@ -40,6 +40,10 @@ CALLS = [
     ("list_rooms lists the 23 shipped rooms", tool("list_rooms"), lambda r: len(text_of(r)["rooms"]) == 23),
     ("get_room C1 has solids with indexes", tool("get_room", {"room": "C1"}),
      lambda r: text_of(r)["spec"]["id"] == "C1" and text_of(r)["spec"]["solids"][0]["index"] == 0),
+    ("preview of C1 is a PNG image then text", tool("preview", {"room": "C1"}),
+     lambda r: r["result"]["content"][0]["type"] == "image" and r["result"]["content"][0]["data"].startswith("iVBORw0KGgo")
+     and r["result"]["content"][1]["type"] == "text"),
+    ("preview of the world is a PNG image", tool("preview"), lambda r: r["result"]["content"][0]["type"] == "image"),
     ("problems has a count and a list", tool("problems"), lambda r: text_of(r)["count"] == len(text_of(r)["items"])),
     ("an unknown tool is an error result", tool("nope"), is_error),
     ("a 200 KB line arrives whole and is answered", tool("nope", {"pad": "x" * 200000}), is_error),

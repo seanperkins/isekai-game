@@ -16,6 +16,7 @@ func _init(p_session: RoomSession = null) -> void:
 	_register_add()
 	_register_change()
 	_register_persist()
+	_register_preview()
 
 func tool_list() -> Array:
 	var out: Array = []
@@ -369,3 +370,35 @@ func _register_persist() -> void:
 func _save(args: Dictionary) -> Dictionary:
 	var out := _session.save(args.get("rooms", []), bool(args.get("force", false)))
 	return result([{"type": "text", "text": JSON.stringify(RoomSpec.plain(out))}], out["saved"].is_empty() and not out["errors"].is_empty())
+
+# --- preview ---
+
+func _register_preview() -> void:
+	_add("preview", "A schematic picture of a room (or the whole world when `room` is left out) plus a legend and a text map. The picture has no "
+		+ "letters: spawns, features and exits are listed by index in the text.",
+		obj({"room": {"type": "string", "description": "Room id; leave out for the world map."},
+			"scale": {"type": "number", "description": "Pixels per world pixel for a room, default 0.5; raised to 0.25 and lowered to keep the image within 2000 px."},
+			"text": {"type": "boolean", "description": "Include the legend and text map (default true)."}}), _preview)
+
+static func _png(img: Image) -> Dictionary:
+	return {"type": "image", "data": Marshalls.raw_to_base64(img.save_png_to_buffer()), "mimeType": "image/png"}
+
+func _preview(args: Dictionary) -> Dictionary:
+	var model := _session.model
+	if not args.has("room"):
+		var m := WorldSize.measure(model.rooms)
+		var dirty := model.dirty.keys()
+		dirty.sort()
+		var text := "world: %d rooms, %d screens (one grid cell per screen; unsaved rooms have a yellow outline: %s)\n%s" % [
+			m["rooms"], m["screens"], ", ".join(dirty) if not dirty.is_empty() else "none", RoomPreview.world_grid(model.rooms)]
+		return result([_png(RoomPreview.world_image(model.rooms, model.dirty, 800)), {"type": "text", "text": text}])
+	var r := _room(args["room"])
+	if r == null:
+		return _no_room(args["room"])
+	var scale := float(args.get("scale", 0.5))
+	var content: Array = [_png(RoomPreview.image(r, scale))]
+	if bool(args.get("text", true)):
+		var head := "%s (%s): %dx%d screens, %dx%d px, image scale %s\n" % [
+			r.id, r.area, r.size.x, r.size.y, r.pixel_size().x, r.pixel_size().y, RoomPreview.clamp_scale(r, scale)]
+		content.append({"type": "text", "text": head + RoomPreview.legend(r) + "\n" + RoomPreview.text_map(r)})
+	return result(content)
