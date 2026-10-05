@@ -57,7 +57,7 @@ const TAGS := {
 ## last one leaves it empty (tests/test_form_gates_data.gd lists what the gates still wait for).
 const RESERVED := {
 	BARRIER_BROKEN: "F2", HIDDEN_FOUND: "F2",  # the verbs report them; the rooms have nothing to dissolve or reveal yet
-	VILLAGE_VISITED_UNSEEN: "F2", GAP_CROSSED: "F2", LAMP_DRUNK: "F2", VILLAGE_KEPT: "F2", ROOM_HELD: "F2", VIGIL_KEPT: "F2", "defeated.moonlit": "F2",
+	VILLAGE_VISITED_UNSEEN: "F2", GAP_CROSSED: "F2", LAMP_DRUNK: "F2", VILLAGE_KEPT: "F2", ROOM_HELD: "F2", VIGIL_KEPT: "F2",
 }
 
 ## A deed or an event the game always had.

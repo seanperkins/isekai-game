@@ -39,3 +39,4 @@ features = [{
 "kind": "glow_pool",
 "pos": Vector2(470, 320)
 }]
+tags = ["moonlit"]

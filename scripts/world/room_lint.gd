@@ -36,11 +36,14 @@ const FEATURE_BOX := {
 
 const RULES := ["solid_outside", "outside", "in_rock", "exit_blocked", "exit_narrow", "start_floor", "ledge_reach", "over_hole",
 	"altar_clearance", "feature_id", "shortcut_pair", "hint_unknown", "decor_unknown", "water_rect", "swimmer_dry", "water_exit",
-	"creature_fit", "boss_room", "tremor_range", "glimpse"]
+	"creature_fit", "boss_room", "tremor_range", "glimpse", "room_tag"]
 
 ## A standing creature needs this many times its tallest frame of clear height above its footing and this many times its widest
 ## frame of footing; a ceiling-anchored one the same height as a drop below its anchor and the same width at the anchor. The
 ## sheet's frames are the sizes as drawn in game, which already carry the creature size ladder.
+## The words a room's `tags` may hold.
+const TAGS := ["moonlit", "hold"]
+
 const FIT_HEIGHT := 1.25
 const FIT_FOOTING := 2.0
 ## A boss room's threshold is this far from every exit (the Jet Dash's 700 px/s over the 0.4 s before the doors slam, the 28 px body
@@ -85,6 +88,7 @@ static func check_room(r: RoomDef, rooms: Dictionary) -> Array:
 	out.append_array(_boss_room(r, rooms))
 	out.append_array(_tremor_range(r))
 	out.append_array(_glimpse(r))
+	out.append_array(_room_tag(r))
 	out.append_array(_feature_id(r, rooms))
 	out.append_array(_shortcut_pair(r, rooms))
 	out.append_array(_hint_unknown(r))
@@ -643,6 +647,13 @@ static func _boss_room(r: RoomDef, rooms: Dictionary) -> Array:
 	for e in r.exits:
 		if _gap(threshold, RoomBuilder.gate_rect(size, e)) < SEAL_CLEARANCE - 0.01:
 			out.append(_f(r, "boss_room", "the threshold is %d px from the %s exit, at least %d so the doors never close on the player" % [int(_gap(threshold, RoomBuilder.gate_rect(size, e))), e.get("edge", ""), int(SEAL_CLEARANCE)]))
+	return out
+
+static func _room_tag(r: RoomDef) -> Array:
+	var out: Array = []
+	for t in r.tags:
+		if not TAGS.has(str(t)):
+			out.append(_f(r, "room_tag", "the tag '%s' is not one of %s" % [t, ", ".join(TAGS)]))
 	return out
 
 static func _tremor_range(r: RoomDef) -> Array:

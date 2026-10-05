@@ -39,3 +39,4 @@ exits = [{
 "room": "FO7",
 "to": 320.0
 }]
+tags = ["moonlit"]

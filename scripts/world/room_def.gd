@@ -37,6 +37,9 @@ const NO_START := Vector2(-1, -1)
 @export var boss := {}
 ## How hard the ground shakes while the player is here, 0 for not at all to 1 (the warning that a boss is ahead).
 @export var tremor := 0.0
+## Words that say what a room is, for the deeds that read them (RoomLint.TAGS): `moonlit` (open sky: a kill here is a moonlit kill) and `hold` (a
+## room a player can hold against what is in it: Deeds.ROOM_HELD).
+@export var tags: Array = []
 ## A dark silhouette of a creature behind the room's solids: {"creature": id, "pos": Vector2, "scale": float, optional "frame": String}.
 @export var glimpse := {}
 

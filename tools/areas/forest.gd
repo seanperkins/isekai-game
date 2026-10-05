@@ -57,6 +57,7 @@ func _treeline() -> RoomDef:
 	AreaKit.decor(r, "grotto_root_hang", 900.0, 20.0)
 	AreaKit.decor(r, "grotto_flowers", 560.0, 320.0)
 	AreaKit.decor(r, "grotto_glow_fungus", 1180.0, 320.0)
+	AreaKit.tag(r, "moonlit")
 	return r
 
 # --- FO3 the Clearing: the hub, a pool, the way up to the trunk ---
@@ -67,6 +68,7 @@ func _clearing() -> RoomDef:
 	AreaKit.feature(r, "glow_pool", "FO3_pool", 470.0, 320.0, {"area": "forest"})
 	AreaKit.decor(r, "grotto_flowers", 330.0, 320.0)
 	AreaKit.decor(r, "grotto_glow_fungus", 560.0, 320.0)
+	AreaKit.tag(r, "moonlit")
 	return r
 
 # --- FO4 the Root Hollow: a pocket under the Treeline that drops into the cave ---
@@ -87,6 +89,7 @@ func _trunk() -> RoomDef:
 	AreaKit.ledge(r, 390.0, 364.0, 220.0)  # the last, out to the door onto the Canopy Walk (a hop up of 44)
 	AreaKit.decor(r, "grotto_root_hang", 300.0, 20.0)
 	AreaKit.decor(r, "grotto_flowers", 470.0, 988.0)
+	AreaKit.tag(r, "moonlit")
 	return r
 
 # --- FO6 the Canopy Walk: three screens along the tops of the trees ---
@@ -99,6 +102,7 @@ func _canopy() -> RoomDef:
 	AreaKit.spawn(r, "village_goblin", 1100.0, 320.0)
 	AreaKit.decor(r, "grotto_root_hang", 600.0, 20.0)
 	AreaKit.decor(r, "grotto_root_hang", 1500.0, 20.0)
+	AreaKit.tag(r, "moonlit")
 	return r
 
 # --- FO7 the Nest: a dead end for the spider, rare ---
@@ -107,6 +111,7 @@ func _nest() -> RoomDef:
 	AreaKit.ledge(r, 200.0, 268.0, 120.0)
 	AreaKit.spawn(r, "moon_hare", 420.0, 320.0)
 	AreaKit.decor(r, "grotto_root_hang", 320.0, 20.0)
+	AreaKit.tag(r, "moonlit")
 	return r
 
 # --- FO8 the Floor Trail: three screens of forest floor, the wolf's ---
@@ -121,6 +126,7 @@ func _trail() -> RoomDef:
 	AreaKit.decor(r, "grotto_root_hang", 500.0, 20.0)
 	AreaKit.decor(r, "grotto_root_hang", 1300.0, 20.0)
 	AreaKit.decor(r, "grotto_flowers", 820.0, 320.0)
+	AreaKit.tag(r, "moonlit")
 	return r
 
 # --- FO9 the Den: a dead end, rare ---

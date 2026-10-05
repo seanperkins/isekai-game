@@ -56,6 +56,7 @@ func _on_room_entered(id: String) -> void:
 	var area: String = world.rooms[id].area
 	var biome := TerrainArt.art_key(area)  # a new area borrows its biome's light and music bed
 	player.in_dark = DeedTags.is_dark_area(area)
+	player.in_moonlight = (world.rooms[id] as RoomDef).tags.has("moonlit")
 	player.emit_deed(Deeds.ROOM_ENTERED, {"room": id, "area": area})
 	_place_remains()
 	var target: Color = TerrainArt.ambient(biome, AMBIENT)

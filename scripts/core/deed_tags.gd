@@ -16,7 +16,7 @@ static func is_dark_area(area: String) -> bool:
 	return DARK_AREAS.has(area)
 
 ## `blow` is Enemy.last_blow ({} when none was recorded): from_behind, distance, damage_type, marked, alert, fleeing. `ctx` is what the
-## player knows: ceiling (hanging from one, or just dropped from one), dark (in a dark area) and avenged (it killed the last life).
+## player knows: ceiling (hanging from one, or just dropped from one), dark (in a dark area), moonlit (in a room tagged `moonlit`) and avenged (it killed the last life).
 static func for_defeat(def: CreatureDef, blow: Dictionary, ctx: Dictionary) -> Dictionary:
 	var tags := {"source": def.id}
 	if def.species != "":
@@ -39,6 +39,8 @@ static func for_defeat(def: CreatureDef, blow: Dictionary, ctx: Dictionary) -> D
 		tags["ceiling"] = true
 	if ctx.get("dark", false):
 		tags["dark"] = true
+	if ctx.get("moonlit", false):
+		tags["moonlit"] = true
 	if ctx.get("avenged", false):
 		tags["avenged"] = true
 	return tags

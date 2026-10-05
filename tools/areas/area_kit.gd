@@ -55,6 +55,11 @@ static func flank(r: RoomDef, from_x: float, to_x: float) -> Array:
 	var y := floor_y(r) - 52.0
 	return [ledge(r, from_x - 140.0, y, 100.0), ledge(r, to_x + 20.0, y, 100.0)]
 
+## A room tag (RoomLint.TAGS), once.
+static func tag(r: RoomDef, name: String) -> void:
+	if not r.tags.has(name):
+		r.tags.append(name)
+
 ## The start on the floor stand (a new run places the player here); only the starting room has one.
 static func start(r: RoomDef, x: float) -> void:
 	r.start = Vector2(x, floor_y(r) - BodyConfig.BOTTOM)
