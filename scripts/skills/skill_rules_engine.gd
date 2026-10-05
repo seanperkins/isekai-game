@@ -338,6 +338,11 @@ func _conditions_met(d: SkillDef) -> bool:
 	return true
 
 func _current(c: Dictionary) -> int:
+	return condition_value(c)
+
+## How far a condition has got: its counter, its streak, the level of the skill it names, or the essence of an element still held
+## (the kinds a skill's unlock and a form's gate share).
+func condition_value(c: Dictionary) -> int:
 	match c.get("kind", ""):
 		"counter":
 			return _ledger.counter(c["event"], c.get("tags", {}))
@@ -345,4 +350,6 @@ func _current(c: Dictionary) -> int:
 			return _ledger.reset_counter(c["event"], c.get("tags", {}), c["reset_on"])
 		"skill_level":
 			return level_of(c["id"])
+		"held":
+			return held(c["element"])
 	return 0

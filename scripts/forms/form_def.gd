@@ -49,3 +49,6 @@ extends Resource
 @export var gives_up := ""
 ## How it opens: the diet, power, lesson, graft or condition the design asks for.
 @export var opened_by := ""
+## What opens this form (wolf, undead, spider and goblin forms; the slime has `reveal` and `offer`): atoms that must all hold, in the
+## shape FormGate reads. A form with no gate is open whenever its parent is.
+@export var gate: Array = []

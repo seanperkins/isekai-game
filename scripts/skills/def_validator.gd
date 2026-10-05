@@ -65,7 +65,7 @@ static func _check_skill(d: SkillDef, by_id: Dictionary, errors: PackedStringArr
 				_check_event_ref(w, "unlock", c.get("event", ""), c.get("tags", {}), errors)
 				if int(c.get("n", 0)) <= 0:
 					errors.append("%s: unlock n must be positive" % w)
-				if kind == "reset_counter" and not Events.ALL.has(c.get("reset_on", "")):
+				if kind == "reset_counter" and not Deeds.known(c.get("reset_on", "")):
 					errors.append("%s: unknown reset_on event '%s'" % [w, c.get("reset_on", "")])
 			"skill_level":
 				var pid: String = c.get("id", "")
@@ -178,7 +178,7 @@ static func _check_creature_look(w: String, c: CreatureDef, by_id: Dictionary, e
 		errors.append("%s: wears '%s', which is not a shipped creature" % [w, c.wears])
 
 static func _check_event_ref(w: String, field: String, event: String, tags: Dictionary, errors: PackedStringArray) -> void:
-	if not Events.ALL.has(event):
+	if not Deeds.known(event):
 		errors.append("%s: %s uses unknown event '%s'" % [w, field, event])
 		return
 	if Events.INTERNAL.has(event):

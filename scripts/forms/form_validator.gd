@@ -67,6 +67,8 @@ static func validate(forms: Dictionary, skill_ids: Array, check_art := false, ve
 			if not skill_ids.has(p):
 				errs.append("%s: lists unknown power '%s'" % [id, p])
 		_check_gate(f, errs)
+		for m in FormGate.validate(f):
+			errs.append("%s: %s" % [id, m])
 		for e in f.reads:
 			if not Essences.ALL.has(e):
 				errs.append("%s: reads unknown essence '%s'" % [id, e])
