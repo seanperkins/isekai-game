@@ -38,7 +38,7 @@ func _kinds(m: AltarModel) -> Array:
 
 func test_rows_are_attune_five_elements_then_the_perk() -> void:
 	assert_eq(_kinds(_model()), ["attune", "element", "element", "element", "element", "element", "perk"])
-	assert_eq(_model().rows().slice(1, 6).map(func(r: Dictionary) -> String: return r["element"]), Essences.ALL)
+	assert_eq(_model().rows().slice(1, 6).map(func(r: Dictionary) -> String: return r["element"]), Essences.FIRST_PASS)
 	assert_eq(_kinds(_model("C1", false)), ["attune", "element", "element", "element", "element", "element"], "no perk, no perk row")
 
 func test_attuning_records_it_once_and_calls_back() -> void:

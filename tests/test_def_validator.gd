@@ -48,10 +48,10 @@ func test_internal_event_in_levels_on_fails() -> void:
 func test_unknown_tag_source_and_essence_fail() -> void:
 	var s := _valid_skills()
 	s.append(TestDefs.skill("bad1", {"unlock": [TestDefs.counter("predated", 1, {"source": "dragon"})]}))
-	s.append(TestDefs.skill("bad2", {"unlock": [TestDefs.counter("absorbed", 1, {"essence": "fire"})]}))
+	s.append(TestDefs.skill("bad2", {"unlock": [TestDefs.counter("absorbed", 1, {"essence": "ether"})]}))
 	var errors := _errors_with(s)
 	assert_string_contains(errors, "unknown source 'dragon'")
-	assert_string_contains(errors, "unknown essence 'fire'")
+	assert_string_contains(errors, "unknown essence 'ether'")
 
 func test_skill_level_cycle_fails() -> void:
 	var s := _valid_skills()
@@ -112,13 +112,13 @@ func test_enemy_only_rules() -> void:
 
 func test_creature_problems_fail() -> void:
 	var creatures := TestDefs.all_creatures()
-	creatures[0].essences = {"fire": 1}
+	creatures[0].essences = {"ether": 1}
 	creatures[1].skills = [{"id": "nope", "level": 1}]
 	creatures[2].skills = [{"id": "leap", "level": 3}]
 	creatures[3].eat_bonus = {"stat": "mana", "amount": 1, "per": 1}
 	creatures[4].appraisal_target = false
 	var errors := _errors_with(_valid_skills(), creatures)
-	assert_string_contains(errors, "unknown essence 'fire'")
+	assert_string_contains(errors, "unknown essence 'ether'")
 	assert_string_contains(errors, "unknown skill id 'nope'")
 	assert_string_contains(errors, "skill 'leap' level 3 is outside 1..2")
 	assert_string_contains(errors, "eat_bonus stat 'mana' is not in StatKeys")

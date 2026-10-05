@@ -1,7 +1,8 @@
 class_name AltarModel
 extends RefCounted
 ## An altar's menu as pure state: attune once, bank held essence into soul points per element, and buy the altar's local perk.
-## Rows, in order: attune, one per essence (water, earth, air, light, dark), then the perk when the altar has one. Banking and
+## Rows, in order: attune, one per essence (the five first-pass elements, then any later one while some is held), then the perk
+## when the altar has one. Banking and
 ## buying need an attuned altar. A perk bought here applies from the next life (SoulPerks), never to the live body.
 
 ## What the last action did, for the menu's footer.
@@ -33,7 +34,7 @@ func attuned() -> bool:
 
 func rows() -> Array:
 	var out: Array = [{"kind": "attune", "done": attuned()}]
-	for element in Essences.ALL:
+	for element in _elements():
 		var units := _units_of(element)
 		@warning_ignore("integer_division")
 		var points := units / maxi(1, _rules.bank_rate)
@@ -44,7 +45,7 @@ func rows() -> Array:
 	return out
 
 func row() -> int:
-	return _row
+	return mini(_row, _row_count() - 1)
 
 ## Moves the highlighted row, stopping at the ends.
 func move(step: int) -> void:
@@ -84,6 +85,7 @@ func _bank(element: String) -> bool:
 		message = "Nothing to bank."
 		return false
 	_units[element] = 0
+	_row = mini(_row, _row_count() - 1)  # a later element's row goes when nothing of it is held
 	message = "Banked %d soul point%s." % [gained, "" if gained == 1 else "s"]
 	return true
 
@@ -98,11 +100,20 @@ func _buy() -> bool:
 	return true
 
 func _row_count() -> int:
-	return 1 + Essences.ALL.size() + (1 if _perk != null else 0)
+	return 1 + _elements().size() + (1 if _perk != null else 0)
+
+## The elements with a row: the five first-pass ones always, and a later one while any of it is held.
+func _elements() -> Array:
+	var out: Array = Essences.FIRST_PASS.duplicate()
+	for element in Essences.LATER:
+		if _engine.held(element) > 0:
+			out.append(element)
+	return out
 
 ## The essence of an element row, or "" for the attune and perk rows.
 func _element_at(row: int) -> String:
-	return Essences.ALL[row - 1] if row >= 1 and row <= Essences.ALL.size() else ""
+	var elements := _elements()
+	return elements[row - 1] if row >= 1 and row <= elements.size() else ""
 
 func _units_of(element: String) -> int:
 	return clampi(int(_units.get(element, 0)), 0, Banking.max_units(_rules, _engine, element))
