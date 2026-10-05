@@ -237,6 +237,7 @@ func _spawn(id: String, pos: Vector2) -> Node2D:
 		node.setup(def, _skills_by_id)
 		node.downed.connect(func(d: CreatureDef) -> void: player.on_enemy_downed(d, node.spawn_key))
 		node.downed.connect(func(_d: CreatureDef) -> void: player.note_defeat(node))
+		node.downed.connect(func(_d: CreatureDef) -> void: player.learn_from(node))
 		node.downed.connect(func(_d: CreatureDef) -> void: _check_room_cleared())
 		node.tree_exiting.connect(_check_room_cleared)  # an enemy eaten alive leaves without ever going down
 		node.downed.connect(func(d: CreatureDef) -> void: Compendium.model.on_creature_defeated(d.id))

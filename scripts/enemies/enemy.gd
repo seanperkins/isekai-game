@@ -112,6 +112,8 @@ var _spit_cd := 0.0
 var last_blow := {}
 ## Set when the player appraises it: an appraised enemy counts as marked.
 var appraised := false
+## The goblin has been paid for this creature (it learned from it, downed or eaten): it pays once however it ends.
+var lesson_paid := false
 var _blow_from_behind := false
 var verb_casts := 0
 var _verb: Ability

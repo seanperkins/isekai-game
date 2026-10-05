@@ -117,6 +117,8 @@ var avenge_target := ""
 ## The parts this life carries and wears: any species carries them, only the undead wear the grafts (can_graft).
 var _part_defs := PartLoader.load_all()
 var inventory := Inventory.new(_part_defs)
+## What the goblin has learned this life: its essence comes from lessons, not from devouring (see learn_from).
+var lessons := Lessons.new()
 var _ceiling_t := 0.0
 ## True while become_form runs: the forced line is neither announced nor recorded as reached.
 var _debug_silent := false
@@ -896,6 +898,23 @@ func on_enemy_downed(def: CreatureDef, spawn_key := "") -> void:
 func emit_deed(event_name: String, tags := {}) -> void:
 	_emit.call(event_name, tags)
 
+## The goblin has dealt with a creature (downed or eaten it): the first of its type in a life is a lesson, `lesson_learned`, and pays all
+## of that creature's essence; a repeat pays a trickle of one unit. A creature pays once however it ends. Other species learn nothing.
+func learn_from(enemy) -> void:
+	if species != "goblin" or health.is_dead() or enemy.lesson_paid:
+		return
+	enemy.lesson_paid = true
+	var r := lessons.learn(enemy.def)
+	if r["first"]:
+		var tags := {"creature": enemy.def.id}
+		if enemy.def.species != "":
+			tags["species"] = enemy.def.species
+		if r["element"] != "":
+			tags["element"] = r["element"]
+		_emit.call(Deeds.LESSON_LEARNED, tags)
+	for ess in r["essences"]:
+		_emit.call(Events.ABSORBED, {"essence": ess, "source": enemy.def.id})
+
 ## An enemy was downed: say how, as a `defeated` deed (DeedTags). Nothing when the player is dead.
 func note_defeat(enemy) -> void:
 	if health.is_dead():
@@ -1273,9 +1292,13 @@ func _complete_predation(t) -> void:
 	if c.species != "":
 		eaten["species"] = c.species
 	_emit.call(Events.PREDATED, eaten)
-	for ess in Essences.ALL:  # canonical order, independent of how the .tres stored the keys
-		for i in int(c.essences.get(ess, 0)):
-			_emit.call(Events.ABSORBED, {"essence": ess, "source": c.id})
+	var learns := species == "goblin" and kind == "creature"  # a goblin eats only to heal; what it learns pays its essence
+	if learns:
+		learn_from(t)
+	else:
+		for ess in Essences.ALL:  # canonical order, independent of how the .tres stored the keys
+			for i in int(c.essences.get(ess, 0)):
+				_emit.call(Events.ABSORBED, {"essence": ess, "source": c.id})
 	stats.apply_eat(c)
 	_sync_max_hp()
 	health.heal(EAT_HEAL + FormEffects.eat_heal(skillset.capabilities) + skillset.heal_on(Events.PREDATED, {"source": c.id, "kind": kind}))
@@ -1464,6 +1487,7 @@ func _on_run_started() -> void:
 	drop_rope()
 	end_channel()
 	inventory = Inventory.new(_part_defs)  # a life starts with nothing; stats.reset_run() clears the graft passives
+	lessons.reset()
 	stats.reset_run()
 	_sync_max_hp()
 
