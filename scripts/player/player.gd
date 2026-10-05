@@ -715,6 +715,7 @@ func begin_predate() -> void:
 		return
 	var target = _nearest_in_group("predatable", PREDATE_RANGE, func(n): return n.can_be_predated())
 	if target == null:
+		eat_cocoon()  # nothing to eat: a spider eats what it webbed earlier
 		return
 	target.set_held(true)
 	drop_rope()
@@ -985,6 +986,18 @@ func try_cocoon() -> bool:
 	var def: CreatureDef = target.consume()
 	collect_part(Inventory.COCOON_PREFIX + def.id)
 	_emit.call(Deeds.PREY_COCOONED, {"creature": def.id})
+	return true
+
+## Eats the first carried cocoon: its creature, as eating it alive would (its essences, the heal, the XP and MP). False, and nothing taken, with
+## no cocoon, a dead body, or a cocooned creature the player has no data for.
+func eat_cocoon() -> bool:
+	if health.is_dead() or inventory.cocoons().is_empty():
+		return false
+	var def: CreatureDef = _creatures.get(inventory.cocoons()[0])
+	if def == null:
+		return false
+	inventory.take_cocoon()
+	_absorb_eaten(def, "creature", "", null)
 	return true
 
 func _on_companion_died(pal: Companion) -> void:
@@ -1392,14 +1405,18 @@ func _complete_predation(t) -> void:
 	_end_cover()
 	predation.cancel()
 	var c: CreatureDef = t.consume()
-	var kind := "terrain" if c.id == Sources.WATER_POOL else "creature"
+	_absorb_eaten(c, "terrain" if c.id == Sources.WATER_POOL else "creature", t.spawn_key if "spawn_key" in t else "", t)
+
+## What an eat gives, for a creature eaten alive and for one eaten out of a cocoon (`eaten_node` is null for the latter): the eat event, its
+## essence (a goblin's comes from the lesson instead), the eat bonus, the heal, and for a creature the XP and MP.
+func _absorb_eaten(c: CreatureDef, kind: String, spawn_key: String, eaten_node) -> void:
 	var eaten := {"source": c.id, "kind": kind}
 	if c.species != "":
 		eaten["species"] = c.species
 	_emit.call(Events.PREDATED, eaten)
-	var learns := species == "goblin" and kind == "creature"  # a goblin eats only to heal; what it learns pays its essence
+	var learns := species == "goblin" and kind == "creature" and eaten_node != null  # a goblin eats only to heal; what it learns pays its essence
 	if learns:
-		learn_from(t)
+		learn_from(eaten_node)
 	else:
 		for ess in Essences.ALL:  # canonical order, independent of how the .tres stored the keys
 			for i in int(c.essences.get(ess, 0)):
@@ -1409,7 +1426,7 @@ func _complete_predation(t) -> void:
 	health.heal(EAT_HEAL + FormEffects.eat_heal(skillset.capabilities) + skillset.heal_on(Events.PREDATED, {"source": c.id, "kind": kind}))
 	if kind == "creature":
 		if not health.is_dead():
-			progression.award(t.spawn_key if "spawn_key" in t else "", "eat", c.xp)
+			progression.award(spawn_key, "eat", c.xp)
 		mana.restore(EAT_MP)
 		_creatures_eaten += 1
 		if _creatures_eaten % 3 == 0:

@@ -141,3 +141,91 @@ func test_enemy_can_be_cocooned_only_when_alive_awake_stunned_and_edible() -> vo
 	assert_true(e.can_be_cocooned())
 	e.dormant = true
 	assert_false(e.can_be_cocooned(), "dormant")
+
+# --- eaten later ---
+
+func test_eating_a_cocoon_is_eating_the_creature() -> void:
+	var d := _def("t_prey", {"dark": 1, "earth": 2})
+	d.species = "wolf"
+	_make("spider", [d])
+	player.collect_part("cocoon:t_prey")
+	player.health.hp = 1
+	assert_true(player.eat_cocoon())
+	assert_eq(_named(Events.PREDATED), [{"source": "t_prey", "kind": "creature", "species": "wolf"}])
+	assert_eq(_named(Events.ABSORBED).map(func(t: Dictionary) -> String: return t["essence"]), ["earth", "earth", "dark"])
+	assert_gt(player.health.hp, 1, "an eat heals")
+	assert_eq(player.inventory.cocoons(), [], "the cocoon is spent")
+
+func test_eating_a_cocoon_pays_the_xp_and_the_mp_of_an_eat() -> void:
+	var d := _def()
+	d.xp = 7
+	_make("spider", [d])
+	player.collect_part("cocoon:t_prey")
+	player.mana.mp = 0
+	var xp := player.progression.xp
+	player.eat_cocoon()
+	assert_eq(player.progression.xp, xp + 7)
+	assert_eq(player.mana.mp, Player.EAT_MP)
+
+func test_every_third_eat_raises_max_mp_whether_a_cocoon_or_not() -> void:
+	var d := _def()
+	_make("spider", [d])
+	var max_mp := player.stats.get_stat("max_mp")
+	for i in 2:
+		var e := _creature(d, Vector2(10, 0))
+		player._complete_predation(e)
+	player.collect_part("cocoon:t_prey")
+	player.eat_cocoon()
+	assert_eq(player.stats.get_stat("max_mp"), max_mp + Player.MAX_MP_PER_THREE_EATS)
+
+func test_with_no_cocoon_nothing_is_eaten_and_nothing_is_said() -> void:
+	_make("spider", [_def()])
+	assert_false(player.eat_cocoon())
+	assert_eq(events, [])
+
+func test_a_cocoon_of_a_creature_the_player_does_not_know_is_kept() -> void:
+	_make("spider", [])
+	player.collect_part("cocoon:t_prey")
+	assert_false(player.eat_cocoon())
+	assert_eq(player.inventory.cocoons(), ["t_prey"])
+	assert_eq(_named(Events.PREDATED).size(), 0)
+
+func test_a_dead_spider_eats_nothing() -> void:
+	_make("spider", [_def()])
+	player.collect_part("cocoon:t_prey")
+	player.receive_hit(player.health.max_hp * 5, "fire")
+	assert_false(player.eat_cocoon())
+
+func test_the_predate_button_eats_the_cocoon_when_nothing_is_in_reach() -> void:
+	_make("spider", [_def()])
+	player.collect_part("cocoon:t_prey")
+	player.begin_predate()
+	assert_eq(player.inventory.cocoons(), [])
+	assert_eq(_named(Events.PREDATED).size(), 1)
+
+func test_the_predate_button_eats_the_creature_in_reach_and_not_the_cocoon() -> void:
+	var d := _def()
+	_make("spider", [d])
+	player.collect_part("cocoon:t_prey")
+	var e := _creature(d)
+	player.begin_predate()
+	assert_true(player.predation.active(), "it starts eating the creature")
+	assert_eq(player.inventory.cocoons(), ["t_prey"])
+	player.cancel_predate()
+	assert_false(e.is_queued_for_deletion())
+
+func test_a_goblin_eating_a_creature_alive_is_unchanged_by_all_this() -> void:
+	var d := _def("t_a", {"earth": 2})
+	_make("goblin", [d])
+	var e := _creature(d)
+	player._complete_predation(e)
+	assert_eq(_named(Events.ABSORBED).size(), 2, "the lesson's units, once")
+	assert_eq(_named(Deeds.LESSON_LEARNED).size(), 1)
+
+func test_a_goblin_that_somehow_carries_a_cocoon_eats_it_for_its_essence_and_learns_nothing() -> void:
+	var d := _def("t_a", {"earth": 2})
+	_make("goblin", [d])
+	player.collect_part("cocoon:t_a")
+	assert_true(player.eat_cocoon())
+	assert_eq(_named(Events.ABSORBED).size(), 2)
+	assert_eq(_named(Deeds.LESSON_LEARNED).size(), 0, "there is no creature in front of it to learn from")
