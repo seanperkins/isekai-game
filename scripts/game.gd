@@ -38,6 +38,8 @@ var _opening_def: OpeningDef
 var ambient: CanvasModulate
 var _skills_by_id := {}
 var _creatures := {}
+## How long a creature let out of a cocoon stands stunned, before it comes to.
+const FREED_STUN_SECONDS := 2.0
 var _parts := {}
 var _progress: WorldProgress
 var _drop_rng := RandomNumberGenerator.new()
@@ -74,6 +76,7 @@ func _ready() -> void:
 	player = Player.new()
 	player.setup(SkillRules, Compendium.model, SkillRules.creature_defs, _emit_game_event)
 	player.part_dropped.connect(_on_part_dropped)
+	player.prey_released.connect(_on_prey_released)
 	player.died.connect(_on_player_died)
 	world = World.new()
 	add_child(world)
@@ -280,6 +283,18 @@ func _place_remains() -> void:
 	pile.setup(r["parts"], Vector2(r["pos"][0], r["pos"][1]))
 	pile.recovered.connect(_progress.take_remains)
 	world.room.add_child(pile)
+
+## A creature the spider let out of its cocoon stands in the room again, stunned for a moment.
+func _on_prey_released(id: String, pos: Vector2) -> void:
+	if world == null or not is_instance_valid(world.room):
+		return
+	var prey := _spawn(id, Vector2.ZERO)
+	if prey == null:
+		return
+	world.room.add_child(prey)
+	prey.global_position = pos
+	if prey is Enemy:
+		(prey as Enemy).status.stun(FREED_STUN_SECONDS)
 
 ## A graft knocked off the player lies in the room it was lost in.
 func _on_part_dropped(id: String, pos: Vector2, delay: float) -> void:

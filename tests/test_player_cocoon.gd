@@ -229,3 +229,54 @@ func test_a_goblin_that_somehow_carries_a_cocoon_eats_it_for_its_essence_and_lea
 	assert_true(player.eat_cocoon())
 	assert_eq(_named(Events.ABSORBED).size(), 2)
 	assert_eq(_named(Deeds.LESSON_LEARNED).size(), 0, "there is no creature in front of it to learn from")
+
+# --- freed ---
+
+func test_a_spider_with_a_cocoon_and_nothing_to_inspect_lets_the_prey_go() -> void:
+	_make()
+	player.collect_part("cocoon:t_prey")
+	watch_signals(player)
+	player.do_inspect()
+	assert_eq(player.inventory.cocoons(), [])
+	assert_eq(_named(Deeds.PREY_FREED), [{"creature": "t_prey"}])
+	assert_signal_emitted(player, "prey_released")
+	assert_signal_not_emitted(player, "inspect_report")
+	var params = get_signal_parameters(player, "prey_released")
+	assert_eq(params[0], "t_prey")
+	assert_gt((params[1] as Vector2).x, player.global_position.x, "beside it, the way it faces")
+
+func test_the_prey_is_let_out_on_the_side_the_spider_faces() -> void:
+	_make()
+	player.facing = -1
+	player.collect_part("cocoon:t_prey")
+	watch_signals(player)
+	player.try_release_prey()
+	assert_lt((get_signal_parameters(player, "prey_released")[1] as Vector2).x, player.global_position.x)
+
+func test_a_creature_to_inspect_wins_over_freeing_and_the_cocoon_is_kept() -> void:
+	_make()
+	player.collect_part("cocoon:t_prey")
+	_creature(_def("t_other"), Vector2(10, 0), false)  # awake: nothing to web, something to inspect
+	watch_signals(player)
+	player.do_inspect()
+	assert_signal_emitted(player, "inspect_report")
+	assert_eq(player.inventory.cocoons(), ["t_prey"])
+	assert_eq(_named(Deeds.PREY_FREED).size(), 0)
+
+func test_with_no_cocoon_nothing_is_freed() -> void:
+	_make()
+	assert_false(player.try_release_prey())
+	assert_eq(events, [])
+
+func test_only_a_spider_frees_prey() -> void:
+	for species in ["slime", "wolf", "goblin", "undead"]:
+		_make(species)
+		player.collect_part("cocoon:t_prey")
+		assert_false(player.try_release_prey(), species)
+		assert_eq(player.inventory.cocoons(), ["t_prey"], species)
+
+func test_a_dead_spider_frees_nothing() -> void:
+	_make()
+	player.collect_part("cocoon:t_prey")
+	player.receive_hit(player.health.max_hp * 5, "fire")
+	assert_false(player.try_release_prey())

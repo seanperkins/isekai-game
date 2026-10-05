@@ -9,6 +9,8 @@ signal not_enough_mp(skill_id: String)
 signal form_advanced(id: String)
 ## A graft knocked off: what it is, where it falls, and how long it lies before it can be taken back.
 signal part_dropped(id: String, pos: Vector2, delay: float)
+## A spider let the creature in a cocoon go: which, and where it stands.
+signal prey_released(id: String, pos: Vector2)
 
 const SPEED := 140.0
 const JUMP_VELOCITY := -330.0
@@ -769,6 +771,8 @@ func do_inspect() -> void:
 		return
 	var target = _nearest_in_group("inspectable", INSPECT_RANGE, func(_n): return true)
 	if target == null:
+		if try_release_prey():
+			return
 		sensors.inspected("self", true)
 		inspect_report.emit(StatusText.self_lines(stats, health, _rules, _compendium, _rules.level_of("appraisal")))
 		return
@@ -986,6 +990,18 @@ func try_cocoon() -> bool:
 	var def: CreatureDef = target.consume()
 	collect_part(Inventory.COCOON_PREFIX + def.id)
 	_emit.call(Deeds.PREY_COCOONED, {"creature": def.id})
+	return true
+
+## The spider lets the creature in its first cocoon go (nothing else to do on the button): `prey_freed`, and the creature stands beside it.
+## False with no cocoon, the wrong species or a dead body.
+func try_release_prey() -> bool:
+	if species != "spider" or health.is_dead():
+		return false
+	var id := inventory.take_cocoon()
+	if id == "":
+		return false
+	_emit.call(Deeds.PREY_FREED, {"creature": id})
+	prey_released.emit(id, global_position + Vector2(facing * 20.0, 0.0))
 	return true
 
 ## Eats the first carried cocoon: its creature, as eating it alive would (its essences, the heal, the XP and MP). False, and nothing taken, with
