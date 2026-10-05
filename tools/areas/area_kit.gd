@@ -38,6 +38,23 @@ static func stairs(r: RoomDef, x: float, y: float, dx: float, rise: float, count
 		made.append(ledge(r, x + dx * i, y - rise * i, w))
 	return made
 
+## A zigzag of ledges from the floor up to the ceiling opening `from_x` to `to_x`, as the shipped rooms climb to an exit in the ceiling
+## (G1): the first is a hop up from the floor, each next at most 52 higher and 70 across, and the last has its top at 14, inside the opening.
+static func climb(r: RoomDef, from_x: float, to_x: float) -> Array:
+	var first := floor_y(r) - 46.0
+	var steps := ceili((first - 14.0) / 52.0)
+	var rise := (first - 14.0) / steps
+	var width := (to_x - from_x) - 70.0
+	var made: Array = []
+	for i in steps + 1:
+		made.append(ledge(r, from_x if i % 2 == 0 else from_x + 70.0, first - rise * i, width))
+	return made
+
+## A ledge a hop above the floor either side of a floor opening `from_x` to `to_x`: the footing for whoever climbs out of it (C5's).
+static func flank(r: RoomDef, from_x: float, to_x: float) -> Array:
+	var y := floor_y(r) - 52.0
+	return [ledge(r, from_x - 140.0, y, 100.0), ledge(r, to_x + 20.0, y, 100.0)]
+
 ## The start on the floor stand (a new run places the player here); only the starting room has one.
 static func start(r: RoomDef, x: float) -> void:
 	r.start = Vector2(x, floor_y(r) - BodyConfig.BOTTOM)

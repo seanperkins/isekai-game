@@ -152,3 +152,39 @@ func test_start_is_on_the_floor_stand_and_passes_the_start_rule() -> void:
 	assert_eq(r.start, Vector2(80.0, 320.0 - BodyConfig.BOTTOM))
 	var findings := RoomLint.check_room(r, _world([r])).filter(func(f: Dictionary) -> bool: return f["rule"] == "start_floor")
 	assert_eq(findings, [])
+
+# --- the vertical-exit pattern: a climb up to a ceiling opening, a landing either side of a floor opening ---
+
+func test_climb_ends_in_the_ceiling_opening() -> void:
+	var r := AreaKit.room("T", "forest", Vector2i.ZERO)
+	var made := AreaKit.climb(r, 240.0, 400.0)
+	assert_eq(r.solids, made)
+	var last: Rect2 = made[-1]
+	assert_eq(last.position.y, 14.0, "the last ledge's top is in the opening")
+	for l: Rect2 in made:
+		assert_gte(l.position.x, 240.0)
+		assert_lte(l.end.x, 400.0 + 0.001, "every ledge stands inside the opening's span")
+		assert_gte(l.size.x, 60.0, "wide enough to stand on")
+
+func test_climb_in_a_one_screen_room_matches_the_forests_clearing() -> void:
+	var r := AreaKit.room("T", "forest", Vector2i.ZERO)
+	var made := AreaKit.climb(r, 240.0, 400.0)
+	assert_eq(made.size(), 6)
+	assert_eq((made[0] as Rect2).position.y, 274.0)
+	assert_eq(made, [Rect2(240, 274, 90, 12), Rect2(310, 222, 90, 12), Rect2(240, 170, 90, 12), Rect2(310, 118, 90, 12),
+		Rect2(240, 66, 90, 12), Rect2(310, 14, 90, 12)])
+
+func test_climb_in_a_tall_room_keeps_every_rise_within_the_base_jump_and_passes_ledge_reach() -> void:
+	var r := AreaKit.room("T", "swamp", Vector2i.ZERO, Vector2i(1, 2))
+	var made := AreaKit.climb(r, 240.0, 400.0)
+	for i in range(1, made.size()):
+		assert_lte((made[i - 1] as Rect2).position.y - (made[i] as Rect2).position.y, 52.0 + 0.001)
+	assert_eq((made[-1] as Rect2).position.y, 14.0)
+	var findings := RoomLint.check_room(r, _world([r])).filter(func(f: Dictionary) -> bool: return f["rule"] == "ledge_reach")
+	assert_eq(findings, [])
+
+func test_flank_stands_either_side_of_the_opening_a_hop_above_the_floor() -> void:
+	var r := AreaKit.room("T", "forest", Vector2i.ZERO, Vector2i(1, 3))
+	var made := AreaKit.flank(r, 240.0, 400.0)
+	assert_eq(made, [Rect2(100, 988, 100, 12), Rect2(420, 988, 100, 12)])
+	assert_eq(r.solids, made)
