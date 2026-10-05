@@ -57,7 +57,7 @@ func _rooms(arena_extra := {}) -> Dictionary:
 	var ante := _def("ANTE", Vector2i(0, 0), Vector2i(1, 1), [{"edge": "right", "from": 240.0, "to": 320.0, "room": "ARENA"}], {"start": Vector2(100, 310)})
 	return {"ARENA": arena, "ANTE": ante}
 
-## Builds the world in the arena, adds the arena node the way Task 5's build_room will, and returns it. The player starts at local `at`.
+## Builds the world in the arena (build_room adds the arena node) and returns it. The player starts at local `at`.
 func _arena(at: Vector2, rooms := {}) -> BossArena:
 	var defs := rooms if not rooms.is_empty() else _rooms()
 	world = World.new()
@@ -67,13 +67,11 @@ func _arena(at: Vector2, rooms := {}) -> BossArena:
 	world.enter("ARENA")
 	var def: RoomDef = defs["ARENA"]
 	player.global_position = def.world_rect().position + at
-	var boss: Enemy
+	var arena: BossArena
 	for n in world.room.get_children():
-		if n is Enemy:
-			boss = n
-	var arena := BossArena.new()
-	arena.setup(def, world.ctx, boss, [], false)
-	world.room.add_child(arena)
+		if n is BossArena:
+			arena = n
+	assert_not_null(arena, "build_room adds the arena for a room with a boss")
 	events = []
 	EventBus.world_event.connect(_on_event)
 	return arena

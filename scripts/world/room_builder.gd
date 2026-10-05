@@ -168,18 +168,32 @@ static func build_room(def: RoomDef, ctx: Dictionary) -> Node2D:
 	# Painted stone is pale, so point lights are gentler there or they blow it out to white.
 	build_decor(node, {"decor": def.decor}, PAINTED_LIGHT if painted else 1.0)
 	var spawn: Callable = ctx.get("spawn", Callable())
+	# A boss room has an arena only where there is a progress to remember the kill in and a spawner to make the boss: the editor's
+	# preview has neither, and shows the room without them. A boss already beaten is not spawned again and its room has no arena.
+	var boss_id := str(def.boss.get("creature", ""))
+	var arena_wanted := boss_id != "" and progress != null and spawn.is_valid()
+	var boss_beaten: bool = arena_wanted and progress.is_defeated(boss_id)
+	var boss_node: Enemy = null
 	if spawn.is_valid():
 		for i in def.spawns.size():
 			var s: Dictionary = def.spawns[i]
+			if boss_beaten and s["id"] == boss_id:
+				continue
 			var n = spawn.call(s["id"], s["pos"])
 			if n != null:
 				if "spawn_key" in n:
 					n.spawn_key = "%s:%d" % [def.id, i]
 				node.add_child(n)
+				if arena_wanted and boss_node == null and s["id"] == boss_id and n is Enemy:
+					boss_node = n
 	for f in def.features:
 		var feature := RoomFeatures.make(f, ctx)
 		if feature != null:
 			node.add_child(feature)
+	if arena_wanted and not boss_beaten and boss_node != null:
+		var arena := BossArena.new()
+		arena.setup(def, ctx, boss_node, solids, painted)
+		node.add_child(arena)
 	return node
 
 ## Open unless it is a shortcut nobody has opened yet.

@@ -76,4 +76,7 @@ func _handle(event: String) -> void:
 			for n in get_parent().get_children():
 				if n.is_in_group(GATE_GROUP):
 					n.queue_free()
+			var progress = _ctx.get("progress")
+			if progress != null:
+				progress.defeat_boss(str(_def.boss["creature"]))  # a tick after the downed signal: the Bestiary has the defeat by now
 			EventBus.world_event.emit("boss_defeated", {"pos": global_position})
