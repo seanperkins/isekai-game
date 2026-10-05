@@ -5,7 +5,7 @@ extends RefCounted
 
 ## The scene every data-defined verb uses.
 const SCENE := "res://scenes/abilities/verb.tscn"
-const KINDS := ["bolt", "burst", "ring", "dash", "zone", "mark", "heal", "ward", "buff", "pull", "aura", "chain", "engulf", "dissolve", "glide", "anchor", "decoy", "summon", "vine"]
+const KINDS := ["bolt", "burst", "ring", "dash", "zone", "mark", "heal", "ward", "buff", "pull", "aura", "chain", "engulf", "dissolve", "glide", "anchor", "decoy", "summon", "vine", "transmute", "copy"]
 ## Each kind's keys and what they hold (validate() checks them). Every kind also takes `cooldown` (seconds, in place of the default);
 ## the kinds in STRIKES also take damage_type and status.
 const SCHEMA := {
@@ -28,6 +28,8 @@ const SCHEMA := {
 	"decoy": {"seconds": "number", "speed": "number", "ward": "number"},
 	"summon": {"count": "number", "seconds": "number"},
 	"vine": {"height": "number", "seconds": "number"},
+	"transmute": {"from_units": "number", "to_units": "number"},
+	"copy": {"seconds": "number"},
 }
 ## The kinds that hurt, which take a `damage_type`; STRIKES are the instant ones, which also take a `status`.
 const TYPED := ["bolt", "burst", "ring", "dash", "mark", "zone", "pull", "aura", "chain", "engulf", "dissolve"]
@@ -72,6 +74,11 @@ const SUMMON_SPACING := 14.0
 const VINE_HEIGHT := 160.0
 const VINE_SECONDS := 10.0
 const VINE_FLOOR_PROBE := 400.0
+const TRANSMUTE_FROM := 3
+const TRANSMUTE_TO := 2
+const COPY_SECONDS := 8.0
+const COPY_STATS := ["atk", "def"]
+const COPY_SOURCE := "verb_copy"
 const BUFF_SOURCE := "verb_buff"
 const BUFF_GENERATION := "verb_buff_generation"
 const BOLT_RANGE := 260.0
@@ -122,6 +129,10 @@ static func run(ability: Ability, spec: Dictionary) -> void:
 			_summon(ability, spec)
 		"vine":
 			_vine(ability, spec)
+		"transmute":
+			_transmute(ability, spec)
+		"copy":
+			_copy(ability, spec)
 
 static func _bolt(a: Ability, spec: Dictionary) -> void:
 	var dir := a.aim_dir()
@@ -198,23 +209,44 @@ static func _ward(a: Ability, spec: Dictionary) -> void:
 	if a.actor.has_method("ward"):
 		a.actor.ward(float(spec.get("seconds", WARD_SECONDS)))
 
-## Stat modifiers on the caster for `seconds`, in Stats' timed bucket so a skill refresh does not end them. A second cast replaces
-## the first; the first cast's timer then does nothing.
 static func _buff(a: Ability, spec: Dictionary) -> void:
-	var stats = a.actor.get("stats")
-	if stats == null:
-		return
 	var mods: Array = []
 	for stat in spec.get("stats", {}):
 		mods.append({"stat": stat, "op": "add", "value": int(spec["stats"][stat])})
-	var generation := int(a.actor.get_meta(BUFF_GENERATION, 0)) + 1
-	a.actor.set_meta(BUFF_GENERATION, generation)
-	stats.set_timed_modifiers(BUFF_SOURCE, mods)
-	a.actor.get_tree().create_timer(float(spec.get("seconds", BUFF_SECONDS))).timeout.connect(_buff_ends.bind(a.actor, generation))
+	_timed(a, BUFF_SOURCE, mods, float(spec.get("seconds", BUFF_SECONDS)))
 
-static func _buff_ends(actor, generation: int) -> void:
-	if is_instance_valid(actor) and int(actor.get_meta(BUFF_GENERATION, 0)) == generation:
-		actor.stats.set_timed_modifiers(BUFF_SOURCE, [])
+## Stat modifiers on the caster for `seconds`, in Stats' timed bucket so a skill refresh does not end them. A second cast of the same
+## source replaces the first; the first cast's timer then does nothing.
+static func _timed(a: Ability, source: String, mods: Array, seconds: float) -> void:
+	var stats = a.actor.get("stats")
+	if stats == null:
+		return
+	var key := "%s_%s" % [BUFF_GENERATION, source]
+	var generation := int(a.actor.get_meta(key, 0)) + 1
+	a.actor.set_meta(key, generation)
+	stats.set_timed_modifiers(source, mods)
+	a.actor.get_tree().create_timer(seconds).timeout.connect(_timed_ends.bind(a.actor, source, generation))
+
+static func _timed_ends(actor, source: String, generation: int) -> void:
+	if is_instance_valid(actor) and int(actor.get_meta("%s_%s" % [BUFF_GENERATION, source], 0)) == generation:
+		actor.stats.set_timed_modifiers(source, [])
+
+## Moves held essence from the element held most to the one held least, at a loss (Transmute).
+static func _transmute(a: Ability, spec: Dictionary) -> void:
+	if a.actor.has_method("transmute_essence"):
+		a.actor.transmute_essence(int(spec.get("from_units", TRANSMUTE_FROM)), int(spec.get("to_units", TRANSMUTE_TO)))
+
+## The caster takes the last appraised creature's attack and defence for a while (Copy).
+static func _copy(a: Ability, spec: Dictionary) -> void:
+	var creature = a.actor.get("last_inspected")
+	if creature == null:
+		return
+	var mods: Array = []
+	for stat in COPY_STATS:
+		var v := int(creature.stats.get(stat, 0))
+		if v != 0:
+			mods.append({"stat": stat, "op": "add", "value": v})
+	_timed(a, COPY_SOURCE, mods, float(spec.get("seconds", COPY_SECONDS)))
 
 ## A field centred `ahead` of the caster that draws foes in (Maelstrom), and hurts them each second when the spec says.
 static func _pull(a: Ability, spec: Dictionary) -> void:

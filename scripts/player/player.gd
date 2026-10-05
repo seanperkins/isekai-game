@@ -130,6 +130,8 @@ var eat_prompt := Label.new()
 var _creatures_eaten := 0
 ## The most recent cast, for the input debug overlay: {"id", "aim"}.
 var last_cast := {}
+## The creature last appraised (Inspect on it), for Copy; null until one is.
+var last_inspected: CreatureDef = null
 ## The thread the slime is swinging from, or null.
 var rope: Rope = null
 var rope_line := Line2D.new()
@@ -434,6 +436,7 @@ func do_inspect() -> void:
 		inspect_report.emit(StatusText.self_lines(stats, health, _rules, _compendium, _rules.level_of("appraisal")))
 		return
 	var c: CreatureDef = target.def
+	last_inspected = c
 	sensors.inspected(c.id, c.appraisal_target)
 	inspect_report.emit(StatusText.creature_lines(_compendium.creature_report(c.id, _rules.level_of("appraisal"))))
 
@@ -791,6 +794,19 @@ func receive_poison(application: int, tick_amount: int, seconds: float) -> void:
 	_poison_left = seconds
 	_poison_tick = tick_amount
 	_poison_acc = 0.0
+
+## Turns `from_units` of the first-pass element held most into `to_units` of the one held least (Transmute). False, and nothing
+## spent, when no element is held enough or all are held evenly. The gained essence is announced like any absorbed essence.
+func transmute_essence(from_units: int, to_units: int) -> bool:
+	var held := {}
+	for e in Essences.FIRST_PASS:
+		held[e] = _rules.held(e)
+	var pair := Essences.transmute_pair(held, from_units)
+	if pair.is_empty() or not _rules.spend_essence(pair[0], from_units):
+		return false
+	for i in to_units:
+		_emit.call(Events.ABSORBED, {"essence": pair[1], "source": "transmute"})
+	return true
 
 ## Falls no faster than `fall` px/s for `seconds`.
 func glide(seconds: float, fall := GLIDE_FALL) -> void:

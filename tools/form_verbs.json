@@ -232,5 +232,34 @@
       "seconds": 10.0,
       "cooldown": 6.0
     }
+  },
+  {
+    "form": "philosophers_stone",
+    "name": "Transmute",
+    "mp": 4,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "Moves three of the most held first-pass element into two of the least held; there is no element chooser, it never makes fire, mind or blood, and it does not digest parts faster.",
+    "text": "Convert held essence of one element into another at a loss.",
+    "spec": {
+      "kind": "transmute",
+      "from_units": 3,
+      "to_units": 2,
+      "cooldown": 4.0
+    }
+  },
+  {
+    "form": "mimic",
+    "name": "Copy",
+    "mp": 6,
+    "value": 0,
+    "fidelity": "needs",
+    "note": "Takes the last appraised creature's attack and defence for eight seconds; its shape and one of its moves wait for the creature kits (F1).",
+    "text": "Take the shape and one move of the last creature you inspected, for a short time.",
+    "spec": {
+      "kind": "copy",
+      "seconds": 8.0,
+      "cooldown": 10.0
+    }
   }
 ]

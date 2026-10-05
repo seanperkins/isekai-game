@@ -19,7 +19,8 @@ stats = {
 "spd": 12
 }
 traits = ["sonar"]
-grants = ["echolocation", "leap"]
+grants = ["echolocation", "leap", "verb_mimic"]
+verb = "verb_mimic"
 tint = Color(1, 0.7, 1, 1)
 size = 1.4
 blurb = "Copy: take the shape and one move of the last creature you inspected, for a short time"
