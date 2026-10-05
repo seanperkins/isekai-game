@@ -27,7 +27,7 @@ Scope: the framework (data, lock, wake, win, persistence, warning cues, lint) an
 
 ### Boss room data
 
-`RoomDef` gains two fields, both empty by default so no existing room changes:
+`RoomDef` gains three fields, all empty by default so no existing room changes unless it is edited:
 
 - `boss: Dictionary`: `{"creature": id, "threshold": Rect2}`. `creature` names a spawn in the room's own `spawns` (the boss, whose id appears there once); `threshold` is a rect in local px, the line the player crosses to start the fight. A room with a `boss` is an arena.
 - `tremor: float`: 0 for none, 0 to 1 for how hard the ground shakes while the player is in the room (the warning, below).
@@ -50,7 +50,7 @@ Rebirth (the player dies) discards the room: the world builds rooms fresh on eve
 
 **The seal** is the arena's own gate, built the way a shortcut's is but not tied to one: the closed-shortcut path in `RoomBuilder.build_room` makes a gate only for an exit that `is_exit_open` calls closed and groups it by shortcut id (`World._open_gate` frees it on a shortcut event), and an ordinary exit has none. The gate-building code (the solid from `RoomBuilder.gate_rect`, with the painted art on it) is pulled into one `RoomBuilder` helper that both paths call. The arena calls it for every exit of its room when the intro starts, adds the solids to a group of its own (`boss_gate`), plays the slam cue, and frees only that group on `won`. The threshold must sit at least `SEAL_CLEARANCE` (96) px from every exit span, so a closing gate never lands on the player.
 
-**The boss wakes.** `Enemy` gains `dormant: bool`. A dormant enemy is frozen where it spawned (no gravity, no movement, no AI, so a dropper stays on its ceiling), deals no contact damage, and refuses damage at both entry points: `can_be_hit()` and `receive_hit()` (area skills call the latter directly). Its hang or idle frame shows. The arena sets it on the boss at build time and clears it when the intro ends; the Taratect's spawn in the arena data is on the ceiling, where it hangs.
+**The boss wakes.** `Enemy` gains `dormant: bool`. A dormant enemy is frozen where it spawned (no gravity, no movement, no AI, so a dropper stays on its ceiling), deals no contact damage, and refuses everything that would affect it, at every entry point: damage through `can_be_hit()` and `receive_hit()` (area skills call the latter directly), and the stun, thread and predation paths (`receive_tackle`, `receive_thread`, eating), since a stun would make the boss predatable. Its hang or idle frame shows. The arena sets it on the boss at build time and clears it when the intro ends; the Taratect's spawn in the arena data is on the ceiling, where it hangs.
 
 **The boss dies.** The arena listens to the boss node's `downed` signal, not the `enemy_died` world event: `Enemy._on_died` emits the event first and `downed` after, and `Game._spawn` connects `downed` to the compendium's `on_creature_defeated` and the player's progression. The arena connects after those and records the defeat on the next frame, so the Bestiary has the defeat before the profile says the boss never spawns again; a stop between the two leaves the boss alive, not unearned.
 
@@ -62,7 +62,7 @@ Rebirth (the player dies) discards the room: the world builds rooms fresh on eve
 
 All three are data on rooms, so every boss gets the same grammar:
 
-1. **The antechamber.** An arena has exactly one exit, and it leads to a room with a glow pool and no spawns. The glow pool is the existing feature that restores HP and MP (D5 pairs one with a tablet), so the player arrives at the fight rested, and the quiet pause before the door is the warning. It is a glow pool and not an altar because the world validator allows one altar per area and the Deep's is D1's (an altar is also the place the player is reborn, and a rest is not). The cost is that dying in the arena sends the player back to D1; whether the Deep gets a second altar by the arena, with the validator's rule relaxed, is Sean's call and is listed in the open items. (Research rule: a safe room immediately before the arena.)
+1. **The antechamber.** An arena has exactly one exit, and it leads to a room with a glow pool and no spawns. The glow pool is the existing feature that restores HP and MP (D5 pairs one with a tablet), so the player can arrive at the fight rested, and the quiet pause before the door is the warning. It is a glow pool and not an altar because the world validator allows one altar per area and the Deep's is D1's (an altar is also the place the player is reborn, and a rest is not). The cost is that dying in the arena sends the player back to D1; whether the Deep gets a second altar by the arena, with the validator's rule relaxed, is Sean's call and is listed in the open items. (Research rule: a safe room immediately before the arena.)
 2. **Sound and screen cues.** A room with `tremor` shakes the screen and drops dust from the ceiling every 5 to 9 seconds (a random gap) and plays a `boss_tremor` cue, scaled by the value: about 0.3 in the rooms leading up, 0.6 in the antechamber. The arena adds `boss_slam` (the doors) and `boss_wake` (the roar), and the death cue routing in `data/audio/cues.json` gets `"taratect": "enemy_death_boss"` (only the serpent has it; anything else falls to `enemy_death_beast`). Files come from the audio pipeline, with the nearest existing sounds as stand-ins until then.
 3. **Traces and a glimpse.** The approach rooms carry decor of the creature (web strands, husks, claw marks on the walls; `deep_bones` exists, the web and claw pieces are new art from the art pipeline). The antechamber has a gap in its wall behind translucent web in which a large dark silhouette of the boss moves slowly: the room's `glimpse`, a sprite of the creature's own sheet frame tinted dark and scaled up, drawn by `RoomBuilder` behind the solids (not through `SetDressing`, which `RoomBuilder.simple_layers` switches off today), so no new art. Lint checks that the creature has a sheet and the position is inside the room.
 
@@ -76,10 +76,10 @@ Placement is for the plan to settle against the real geometry; the recommendatio
 
 ### Room size follows creature size
 
-`RoomLint` gets a `creature_fit` rule, constants beside the others and pinned by tests. For each spawn, with `W` and `H` the widest and tallest frame of its sheet (read through `SpriteSheet`):
+`RoomLint` gets a `creature_fit` rule, constants beside the others and pinned by tests. For each spawn whose creature has a sheet (the water pools have none and are skipped; swimmers are skipped, they live in water), with `W` and `H` the widest and tallest frame of its sheet (read through `SpriteSheet`):
 
-- the **clear height** above the spawn's footing, up to the nearest solid, is at least `1.25 * H`;
-- the **footing** it stands on (the floor or a solid's top, the contiguous run under the spawn) is at least `2 * W` wide.
+- a creature that stands: the **clear height** above its footing, up to the nearest solid, is at least `1.25 * H`, and the **footing** (the floor or a solid's top, the contiguous run under the spawn) is at least `2 * W` wide;
+- a creature anchored to a ceiling (a dropper, the Taratect): the **clear drop** below its anchor, down to the nearest solid, is at least `1.25 * H`, and the room is at least `2 * W` wide at the anchor; the footing check does not apply.
 
 Boss rooms add their own rules: at least 2 screens in one dimension; one exit; that exit leads to a room with a glow pool and no spawns; `boss.creature` is in `spawns` and at least 200 px from the threshold; the threshold is inside the room and `SEAL_CLEARANCE` from every exit span; the floor has no hole (so nothing falls out) and no water. A room with `tremor` has it in `[0, 1]`. The rules run in the editor's Validate and in the suite over every room, like the existing ones, and the shipped rooms must pass: the stone drake's bigger frames (108x99 for its windup) are checked against D3, D4 and D5, and what fails is fixed or waived with a reason in the room's data, not by loosening the rule.
 
@@ -87,7 +87,7 @@ The enemies' terrain body is a fixed 16x12 box whatever the sprite is (`Enemy.BO
 
 ## Constraints
 
-- No existing room, creature or save changes behaviour: the new fields default to empty, `dormant` to false, `defeated_bosses` to empty.
+- No existing mechanic changes: the new fields default to empty, `dormant` to false, the `bosses` section to empty. The only rooms edited are the Deep's: D2 (the chimney and a `tremor`), D6 (the arena) and the new D7.
 - The seal never closes on the player (clearance rule), never traps a body that cannot fight: death is a rebirth.
 - A defeated boss stays defeated across rebirths and saves; an undefeated one is full health every time you enter.
 - No time estimates in plans; plans stay lean.
