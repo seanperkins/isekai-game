@@ -8,7 +8,7 @@
 #  - the app you were in gets the focus back if Godot takes it anyway (by process id: it never launches or opens anything);
 #  - the game's sound is muted (--audio-driver Dummy) unless SHOT_AUDIO=1: a shot run is not for listening to.
 # Usage:  tools/shot_run.sh tools/room_shots.gd [-- tool arguments ...]
-# Environment:  GODOT (the binary, default godot); SHOT_AUDIO=1 (leave the sound on); SHOT_HOME (HOME for the run, default .tmp/gdhome); SHOT_GODOT_ARGS (extra Godot
+# Environment:  GODOT (the binary, default godot); SHOT_AUDIO=1 (leave the sound on); SHOT_HOME (HOME for the run; default a throwaway one); SHOT_GODOT_ARGS (extra Godot
 # flags, e.g. "--fixed-fps 60"); SHOT_DIR (the project copy goes to $SHOT_DIR.proj and the log to $SHOT_DIR.log, default .tmp/shotrun.PID,
 # so two runs never touch each other). Written and tested on macOS: osascript is skipped where it is missing.
 # SHOT_TIMEOUT is the seconds a run may take before it is killed (default 900; a tool whose script errors can otherwise wait forever).
@@ -24,14 +24,20 @@ shift
 [ "${1:-}" = "--" ] && shift
 
 GODOT="${GODOT:-godot}"
-HOME_DIR="${SHOT_HOME:-$PWD/.tmp/gdhome}"
 SHOT_DIR="${SHOT_DIR:-$PWD/.tmp/shotrun.$$}"
+# Each run gets a throwaway HOME (and so a fresh profile) unless SHOT_HOME names one: tools like evolution_shots save what they reach,
+# and a profile shared with tools/run_tests.sh made its tests see forms nobody earned.
+OWN_HOME=""
+if [ -z "${SHOT_HOME:-}" ]; then OWN_HOME="$SHOT_DIR.home"; fi
+HOME_DIR="${SHOT_HOME:-$OWN_HOME}"
 PROJ="$SHOT_DIR.proj"
 LOG="$SHOT_DIR.log"
-mkdir -p "$HOME_DIR" "$(dirname "$SHOT_DIR")"
+mkdir -p "$(dirname "$SHOT_DIR")"
+[ -n "$OWN_HOME" ] && rm -rf "$OWN_HOME"
+mkdir -p "$HOME_DIR"
 rm -rf "$PROJ" "$LOG"
 pid=""
-trap '[ -n "$pid" ] && kill "$pid" 2>/dev/null; rm -rf "$PROJ"' EXIT
+trap '[ -n "$pid" ] && kill "$pid" 2>/dev/null; rm -rf "$PROJ" $OWN_HOME' EXIT
 mkdir -p "$PROJ"
 for f in * .godot; do
 	case "$f" in project.godot|.tmp|.git|.worktrees|node-compile-cache) continue;; esac
@@ -51,7 +57,7 @@ case "$mine" in ''|*[!0-9]*) mine=""; echo "note: cannot read the frontmost app 
 AUDIO_ARGS="--audio-driver Dummy"
 [ "${SHOT_AUDIO:-0}" = "1" ] && AUDIO_ARGS=""
 if [ -n "${SHOT_DRY_RUN:-}" ]; then  # print the command and stop (the tests read it)
-	echo "$GODOT --path $PROJ --position 30000,30000 $AUDIO_ARGS ${SHOT_GODOT_ARGS:-} -s res://$tool -- $*"
+	echo "HOME=$HOME_DIR $GODOT --path $PROJ --position 30000,30000 $AUDIO_ARGS ${SHOT_GODOT_ARGS:-} -s res://$tool -- $*"
 	exit 0
 fi
 # shellcheck disable=SC2086  # AUDIO_ARGS and SHOT_GODOT_ARGS are lists of flags

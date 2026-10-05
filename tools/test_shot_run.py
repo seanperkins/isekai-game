@@ -34,6 +34,13 @@ class CommandLineTest(unittest.TestCase):
         out = dry_run("tools/moveset_gifs.gd", SHOT_GODOT_ARGS="--fixed-fps 60")
         self.assertIn("--fixed-fps 60", out.stdout)
 
+    def test_the_run_has_its_own_home_not_the_test_runners(self):
+        out = dry_run("tools/evolution_shots.gd")
+        self.assertRegex(out.stdout, r"HOME=\S+\.home ")
+        self.assertNotIn("gdhome", out.stdout)
+        named = dry_run("tools/editor_shots.gd", SHOT_HOME="/tmp/somewhere")
+        self.assertIn("HOME=/tmp/somewhere ", named.stdout)
+
     def test_it_runs_in_a_copy_of_the_project_not_the_real_one(self):
         out = dry_run("tools/evolution_shots.gd")
         self.assertRegex(out.stdout, r"--path \S+\.proj ")
