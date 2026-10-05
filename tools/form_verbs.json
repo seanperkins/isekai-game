@@ -1757,7 +1757,8 @@
       "seconds": 10.0,
       "slow": true,
       "heals": 2,
-      "cooldown": 14.0
+      "cooldown": 14.0,
+      "deed": "ward_stone_placed"
     }
   },
   {
@@ -1774,7 +1775,8 @@
       "seconds": 12.0,
       "slow": true,
       "heals": 3,
-      "cooldown": 16.0
+      "cooldown": 16.0,
+      "deed": "ward_stone_placed"
     }
   },
   {

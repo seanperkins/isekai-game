@@ -9,5 +9,5 @@ display_name = "Hearth"
 description = "Plant a ward-stone; creatures near it are slowed and you heal."
 announce = "New verb. Acquired [Hearth]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "zone", "radius": 70, "seconds": 10.0, "slow": true, "heals": 2, "cooldown": 14.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "zone", "radius": 70, "seconds": 10.0, "slow": true, "heals": 2, "cooldown": 14.0, "deed": "ward_stone_placed"}}]
 mp_cost = 6

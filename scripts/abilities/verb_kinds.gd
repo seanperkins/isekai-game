@@ -145,6 +145,8 @@ static func run(ability: Ability, spec: Dictionary) -> void:
 			_reveal(ability, spec)
 		"bridge":
 			_bridge(ability, spec)
+	if spec.has("deed"):
+		_deed(ability, str(spec["deed"]))
 
 static func _bolt(a: Ability, spec: Dictionary) -> void:
 	var dir := a.aim_dir()
@@ -476,6 +478,7 @@ static func validate(spec: Dictionary) -> PackedStringArray:
 		return out
 	var keys: Dictionary = SCHEMA[kind].duplicate()
 	keys["cooldown"] = "number"
+	keys["deed"] = "deed"  # any verb may say a deed (Deeds) when the player casts it
 	if kind in TYPED:
 		keys["damage_type"] = "text"
 	if kind in STRIKES:
@@ -490,6 +493,8 @@ static func validate(spec: Dictionary) -> PackedStringArray:
 			out.append("%s: %s" % [kind, _expects(key, keys[key])])
 		elif key == "drain" and (float(spec[key]) < 0.0 or float(spec[key]) > 1.0):
 			out.append("%s: drain must be from 0 to 1" % kind)
+		elif key == "deed" and not Deeds.known(str(spec[key])):
+			out.append("%s: deed '%s' is not a deed" % [kind, spec[key]])
 	if kind == "buff" and not spec.has("stats"):
 		out.append("buff: stats must be a dictionary of stat id to number")
 	return out
@@ -503,7 +508,7 @@ static func _fits(v, what: String) -> bool:
 			return _is_number(v)
 		"bool":
 			return typeof(v) == TYPE_BOOL
-		"text":
+		"text", "deed":
 			return typeof(v) == TYPE_STRING and v != ""
 		"stats":
 			return typeof(v) == TYPE_DICTIONARY and not v.is_empty() and v.keys().all(func(k): return Stats.DEFAULTS.has(k) and _is_number(v[k]))
@@ -515,6 +520,8 @@ static func _expects(key: String, what: String) -> String:
 	match what:
 		"bool":
 			return "%s must be true or false" % key
+		"deed":
+			return "deed must be a deed name"
 		"text":
 			return "%s must be a damage type name" % key
 		"stats":

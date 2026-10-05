@@ -9,5 +9,5 @@ display_name = "Lar"
 description = "Ward-stones link into one wider aura."
 announce = "New verb. Acquired [Lar]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "zone", "radius": 110, "seconds": 12.0, "slow": true, "heals": 3, "cooldown": 16.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "zone", "radius": 110, "seconds": 12.0, "slow": true, "heals": 3, "cooldown": 16.0, "deed": "ward_stone_placed"}}]
 mp_cost = 8
