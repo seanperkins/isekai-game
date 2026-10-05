@@ -82,6 +82,13 @@ var _ward := 0.0
 ## A verb's glide (Ride): while it runs a falling body falls no faster than _glide_fall.
 var _glide := 0.0
 var _glide_fall := GLIDE_FALL
+## The species' movement (a wolf, goblin, undead or spider body), or null for the slime, which moves by the code below. Built in
+## setup() from `species`; it moves this body, so `velocity` is its velocity too.
+var species_body: SpeciesBody
+## The horizontal speed an ability's push or a hit's knockback holds for `_dash` seconds on a species body.
+var _dash_vx := 0.0
+var _pounce_applied := false
+var _last_verb := ""
 var _dash := 0.0
 ## The water model: whether the body centre is in a DeepWater, the submerged clock, the edges (see PlayerWater).
 var _water := PlayerWater.new()
@@ -160,12 +167,20 @@ func setup(rules: SkillRulesEngine, compendium: CompendiumModel, creature_defs: 
 	add_to_group("actors")
 	if get_child_count() == 0:
 		_build_body()
+	if species != Form.DEFAULT_SPECIES and MovementProfile.for_species(species) != null:
+		_build_species_body()
+
+func uses_species_body() -> bool:
+	return species_body != null
 
 func _physics_process(delta: float) -> void:
 	if health == null or health.is_dead():
 		return
 	if _evolve_time > 0.0:
 		_evolve_step(delta)
+		return
+	if species_body != null:
+		_species_physics(delta)
 		return
 	var wet := _step_water(delta)
 	var dir := Input.get_axis("move_left", "move_right")
@@ -199,6 +214,19 @@ func _physics_process(delta: float) -> void:
 		do_jump()
 	if Input.is_action_just_pressed("tackle"):
 		do_tackle()
+	_actions(delta)
+	var fall_speed := velocity.y  # move_and_slide zeroes it on landing
+	move_and_slide()
+	audio_events.update(is_on_floor(), fall_speed, velocity.x, spreading, _clinging())
+	if rope != null:
+		_stay_on_rope()
+	sensors.physics_update(is_on_wall(), is_on_floor())
+	tick(delta)
+	_update_visual(delta)
+	_update_prompt()
+
+## What every body does besides moving: eat, Inspect, the four active slots and a held channel.
+func _actions(delta: float) -> void:
 	# A freed prey (its room was left mid-eat) makes predation.active() false on its own, so end the
 	# cover here or the slime stays hidden and the cover node is orphaned.
 	if _cover != null and not predation.active():
@@ -221,15 +249,63 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed("active_4"):
 		use_active(3)
 	_channel_step(delta)
-	var fall_speed := velocity.y  # move_and_slide zeroes it on landing
-	move_and_slide()
-	audio_events.update(is_on_floor(), fall_speed, velocity.x, spreading, _clinging())
-	if rope != null:
-		_stay_on_rope()
+
+## One physics tick of a species body: the input becomes a MoveInput, the species' verbs and the move run (water and a glide get the
+## last word on the velocity), a signature burst that touches a hostile hits it, then the shared actions and the usual bookkeeping.
+func _species_physics(delta: float) -> void:
+	var wet := _step_water(delta)
+	_dash = maxf(0.0, _dash - delta)
+	var eating := predation.active()
+	var i := MoveInput.new()
+	i.dir = 0.0 if eating else Input.get_axis("move_left", "move_right")
+	i.jump_pressed = not eating and Input.is_action_just_pressed("jump")
+	i.jump_held = Input.is_action_pressed("jump")
+	i.down = Input.get_action_strength("aim_down")
+	i.up = Input.get_action_strength("aim_up")
+	i.aim = cast_aim()
+	i.signature_pressed = not eating and Input.is_action_just_pressed("tackle")
+	var st := species_body.state
+	st.velocity = velocity  # whatever wrote the body's velocity since last tick (a room slide, an ability) is the truth
+	species_body.fill_input(i, func() -> bool: return _tackle_target() != null)
+	species_body.think(i, delta, sqrt(stats.get_stat("jump_height") / 100.0), stats.get_stat("spd") / 100.0)
+	facing = st.facing
+	if _dash > 0.0:
+		st.velocity.x = _dash_vx  # a push or a knockback holds the horizontal for its time
+	species_body.move(_species_adjust.bind(wet, delta))
+	_species_combat()
+	_actions(delta)
+	audio_events.update(is_on_floor(), species_body.fall_speed, velocity.x, false, st.clinging)
 	sensors.physics_update(is_on_wall(), is_on_floor())
 	tick(delta)
-	_update_visual(delta)
+	_update_visual_species(delta)
 	_update_prompt()
+
+## The last word on a species body's velocity before it moves: the water model, then a glide's cap on the fall.
+func _species_adjust(v: Vector2, wet: Dictionary, delta: float) -> Vector2:
+	if _water.in_water:
+		v = _water.adjust(v, is_on_floor(), skillset.has("swim"),
+			Vector2.ZERO if predation.active() else Input.get_vector("move_left", "move_right", "aim_up", "aim_down"),
+			float(stats.get_stat("swim_speed")),
+			sqrt(stats.get_stat("jump_height") / 100.0), _dash > 0.0, wet["entered"], delta)
+	if _glide > 0.0 and v.y > _glide_fall:
+		v.y = _glide_fall
+	return v
+
+## A pounce that has touched a hostile hits it once, as the slime's Tackle does; a burst that starts says so for the sound.
+func _species_combat() -> void:
+	var st := species_body.state
+	if st.verb != "" and _last_verb == "":
+		EventBus.world_event.emit("tackled", {})
+	_last_verb = st.verb
+	if st.verb == "pounce" and st.pounce_hit and not _pounce_applied:
+		_pounce_applied = true
+		var target = _tackle_target()
+		if target != null and target.has_method("receive_tackle"):
+			var from_behind: bool = target.facing == facing
+			if target.receive_tackle(stats.get_stat("atk"), from_behind, global_position):
+				_emit.call(Events.STUNNED_ENEMY, {"source": target.def.id})
+	elif st.verb != "pounce":
+		_pounce_applied = false
 
 ## Shows what Inspect or Eat would do here: "I: read" by a tablet, "Hold K to eat" by food.
 func _update_prompt() -> void:
@@ -270,6 +346,60 @@ func _update_visual(delta: float) -> void:
 	_sprite.modulate = body_tint().lerp(Color(2.2, 2.2, 2.2), glow * 0.8)
 	_sprite.flip_h = left
 	_shapes.refresh(_sheet, frame, left)
+
+## The species' body: its movement, and (with a sheet) its look in place of the slime's.
+func _build_species_body() -> void:
+	species_body = SpeciesBody.new(self, _shape, _rect)
+	species_body.set_profile(MovementProfile.for_species(species))
+	var look := species_body.profile.id
+	var sheet := SpeciesLook.sheet_for(look) if use_sheet else null
+	if sheet == null:
+		return  # no sheet: the old frames stand in, as for a slime with no sheet
+	_sheet = sheet
+	_base_sheet = sheet
+	_form_sheet = null
+	_animator = SlimeAnimator.new(SpeciesLook.clips_for(look))
+	_animator.play(SpeciesLook.clip_for(look, true, 0.0, 0.0, 0.0))
+	var first := _animator.frame()
+	_sprite.texture = _sheet.frame_texture(first)
+	_sprite.position.y = BODY_BOTTOM - _sheet.frame_size(first).y / 2.0
+	if _shapes != null:
+		_shapes.refresh(_sheet, first, false)
+
+## The species' clip for what the body is doing, drawn at the sheet's own size; the facing mirrors it.
+func _update_visual_species(delta: float) -> void:
+	var on_floor := is_on_floor()
+	if on_floor and not _was_on_floor:
+		_land_timer = LAND_SQUASH_SECONDS
+	_was_on_floor = on_floor
+	_land_timer = maxf(0.0, _land_timer - delta)
+	if _sheet == null:
+		_draw_fallback_sprite()
+		return
+	var st := species_body.state
+	var look := species_body.profile.id
+	var clip := SpeciesLook.clip_for(look, on_floor, velocity.y, velocity.x, _land_timer, st.verb, VerbRunner.is_flat(st, species_body.profile), st.clinging)
+	if clip == "" or not _sheet.has_frame(_animator_first_frame(clip)):
+		clip = "idle"
+	_animator.play(clip)
+	_animator.advance(delta)
+	var frame := _animator.frame()
+	var glow := evolve_glow()
+	var scale := body_scale() * (1.0 + EVOLVE_SWELL * glow)
+	_sprite.texture = _sheet.frame_texture(frame)
+	_sprite.position.y = BODY_BOTTOM - _sheet.frame_size(frame).y * scale / 2.0
+	_sprite.scale = Vector2.ONE * scale
+	var tint := body_tint().lerp(Color(2.2, 2.2, 2.2), glow * 0.8)
+	if _invuln > INVULN_SECONDS - HURT_FLASH and not evolving():
+		tint = tint.lerp(Color(1.0, 0.45, 0.45), 0.6)
+	_sprite.modulate = tint
+	_sprite.flip_h = (st.wall_side < 0) if clip == "wall" else facing < 0
+	_shapes.refresh(_sheet, frame, _sprite.flip_h)
+
+## The first frame of a clip (a clip the sheet's clip file lacks has none, and the body shows its idle).
+func _animator_first_frame(clip: String) -> String:
+	var frames: Array = SpeciesLook.clips_for(species_body.profile.id).get(clip, {}).get("frames", [])
+	return str(frames[0]) if not frames.is_empty() else ""
 
 ## The old frames at the body's scale, for when the sheet is missing.
 func _draw_fallback_sprite() -> void:
@@ -408,8 +538,8 @@ func cancel_predate() -> void:
 	_end_cover()
 
 func _start_cover(target: Node2D) -> void:
-	if _sheet == null:
-		return
+	if _sheet == null or species_body != null:
+		return  # the cover is the slime's own frames; the other species eat without one until they have their own art
 	_end_cover()
 	_cover = EatCover.new()
 	get_parent().add_child(_cover)
@@ -773,6 +903,7 @@ func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, cau
 		var away := 1.0 if global_position.x >= from.x else -1.0
 		velocity = Vector2(away * KNOCKBACK.x, KNOCKBACK.y) * skillset.knockback_factor()
 		_dash = 0.2
+		_dash_vx = velocity.x
 	if damage_type == "shock" and not health.is_dead():
 		_dash = maxf(_dash, SHOCK_STUN)  # after the knockback block, which assigns 0.2
 
@@ -848,6 +979,7 @@ func tick(delta: float) -> void:
 func apply_impulse(v: Vector2) -> void:
 	velocity = Vector2(v.x, v.y if not is_zero_approx(v.y) else velocity.y)
 	_dash = 0.25
+	_dash_vx = velocity.x
 
 func _complete_predation(t) -> void:
 	_end_cover()

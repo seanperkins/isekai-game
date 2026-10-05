@@ -67,9 +67,10 @@ func fill_input(i: MoveInput, hostile := Callable()) -> void:
 	if profile.verbs.has("mantle"):
 		i.mantle = _mantle(i.wall_side)
 
-## The species' verbs for this tick, and the one-way ledges the body may drop through.
-func think(i: MoveInput, dt: float, jump_boost := 1.0) -> void:
-	VerbRunner.step(state, i, profile, dt, 1.0, jump_boost)
+## The species' verbs for this tick, and the one-way ledges the body may drop through. `speed_scale` multiplies the walking speed (a
+## stat), `jump_boost` the jump.
+func think(i: MoveInput, dt: float, jump_boost := 1.0, speed_scale := 1.0) -> void:
+	VerbRunner.step(state, i, profile, dt, speed_scale, jump_boost)
 	body.set_collision_mask_value(2, state.fall_through <= 0.0)  # a press of down on a one-way ledge drops through it
 
 ## Moves the body. On a surface the crawl owns it (the step's shift, the surface's box) and this returns true; otherwise a zip's or
