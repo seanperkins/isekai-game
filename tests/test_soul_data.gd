@@ -19,11 +19,17 @@ func test_slime_is_the_default_species_with_a_movement_profile() -> void:
 
 func test_every_cause_has_a_line() -> void:
 	var lines: GoddessLines = load("res://data/goddess/lines.tres")
-	var causes := _creature_ids().filter(func(id: String) -> bool: return id != Sources.WATER_POOL)
+	var causes := _creature_ids().filter(func(id: String) -> bool: return Sources.SHIPPED.has(id) and id != Sources.WATER_POOL)
 	causes.append_array(["poison", "spear"])
-	assert_eq(causes.size(), 20)
+	assert_eq(causes.size(), 20, "the shipped creatures and the two other causes")
 	for cause in causes:
 		assert_true(lines.by_cause.has(cause) and not lines.by_cause[cause].is_empty(), "a line for %s" % cause)
+
+func test_a_twin_or_support_monster_takes_her_fallback_line_until_it_has_one() -> void:
+	var lines: GoddessLines = load("res://data/goddess/lines.tres")
+	for id in ["twin_echo", "twin_wolf_fenrir", "chapel_priest"]:
+		assert_false(lines.by_cause.has(id), "%s has no line of its own yet" % id)
+		assert_ne(lines.line_for(id, 1, 5), "", "%s: she still says something" % id)
 
 func test_the_stats_perk_is_the_caves_and_can_be_bought() -> void:
 	var perk: PerkDef = load("res://data/perks/stats.tres")

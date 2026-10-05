@@ -2,7 +2,7 @@ extends GutTest
 
 func test_autoloads_boot_with_valid_content_and_wiring() -> void:
 	assert_eq(SkillRules.skill_defs.filter(func(d: SkillDef) -> bool: return d.source != "form_verb").size(), 32, "the authored skills; form verbs are generated")
-	assert_eq(SkillRules.creature_defs.size(), 19)
+	assert_eq(SkillRules.creature_defs.size(), Sources.ALL.size(), "19 shipped, 140 twins and 28 support monsters")
 	assert_not_null(SkillRules.get_def("leap"))
 	assert_not_null(Compendium.model)
 	assert_not_null(Announcer.queue)
