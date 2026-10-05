@@ -228,3 +228,20 @@ func test_the_dodge_cannot_be_free_in_the_grandma_round() -> void:
 	m.act()
 	assert_eq(m.chosen(), "grandma", "the grayed rows cannot be chosen")
 	assert_false(m.free_dodge())
+
+func test_the_model_says_when_the_old_lady_was_chosen_whatever_her_id() -> void:
+	for id in ["grandma", "save_grandma"]:
+		var d := _turn_def()
+		d.grandma["id"] = id
+		var m := OpeningModel.new(d)
+		assert_false(m.grandma_chosen())
+		m.act()
+		assert_false(m.grandma_chosen(), "an ordinary command in an ordinary round")
+		m.act()
+		m.act()
+		m.act()
+		m.act()
+		assert_eq(m.chosen(), id)
+		assert_true(m.grandma_chosen(), id)
+		m.act()
+		assert_false(m.grandma_chosen(), "once it is over")

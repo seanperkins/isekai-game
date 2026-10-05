@@ -576,3 +576,59 @@ func test_the_arrow_stays_above_the_tallest_charging_frame() -> void:
 	scene.skip()
 	var marker := scene.get_node("TurnMarker") as Node2D
 	assert_lt(marker.position.y, OpeningScene.FLOOR_Y - OpeningScene.TRUCK_MARKER_HEIGHT, "clear of the tilted truck, whatever frame it is on")
+
+# --- the panel's findings: damage that does not divide, and an old lady with her own id ---
+
+## `count` rounds of one command each, no old lady, so only the damage maths is under test.
+func _rounds_def(count: int) -> OpeningDef:
+	var d := _def_full()
+	d.grandma = {}
+	d.trucks = []
+	for t in count:
+		var results := {}
+		for c in d.choices:
+			results[c["id"]] = "r%d_%s" % [t, c["id"]]
+		d.trucks.append({"prompt": "P%d" % t, "results": results})
+	return d
+
+## Plays every round with Jump and checks HP after each: it follows the same schedule whatever the round count, so it is never
+## spent before the last round and is exactly zero after it.
+func _check_hp_schedule(count: int, with_second_truck: bool) -> void:
+	scene.play(_rounds_def(count))
+	if with_second_truck:
+		_choose(1)  # the free dodge
+		_take_the_hit()
+		assert_eq(scene.trucks_shown(), 2)
+	for r in count:
+		assert_true(scene.is_playing(), "round %d of %d is still to play" % [r + 1, count])
+		_choose(2)
+		_take_the_hit()
+		var expected := OpeningScene.MAX_HP - ceili(float(OpeningScene.MAX_HP * (r + 1)) / float(count))
+		assert_eq(scene.hp(), expected, "HP after round %d of %d" % [r + 1, count])
+		if r < count - 1:
+			assert_gt(scene.hp(), 0, "not spent before the last round")
+			assert_eq(scene.beat(), "intro")
+	assert_eq(scene.beat(), "ko")
+	assert_eq(scene.hp(), 0)
+
+func test_hp_runs_out_exactly_on_the_last_round_with_six_rounds_and_two_trucks() -> void:
+	_check_hp_schedule(6, true)
+
+func test_hp_runs_out_exactly_on_the_last_round_with_seven_rounds_and_one_truck() -> void:
+	_check_hp_schedule(7, false)
+
+func test_hp_runs_out_exactly_on_the_last_round_with_seven_rounds_and_two_trucks() -> void:
+	_check_hp_schedule(7, true)
+
+func test_saving_works_whatever_the_old_lady_is_called() -> void:
+	var d := _def_full()
+	d.grandma["id"] = "save_grandma"
+	scene.play(d)
+	_to_the_last_round()
+	scene.skip()
+	_press(KEY_ENTER)
+	assert_eq(scene.commuter().clip(), "save", "the shove plays under her own id too")
+	_press(KEY_ENTER)
+	assert_eq(scene.grandma().clip(), "safe")
+	assert_eq(scene.commuter().position.x, OpeningScene.GRANDMA_X)
+	assert_gt(scene.grandma().position.x, OpeningScene.HERO_REST.x)

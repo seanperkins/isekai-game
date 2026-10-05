@@ -34,7 +34,7 @@ func test_the_commuter_has_a_clip_for_every_command_the_copy_offers_and_for_the_
 	var def := load("res://data/opening/opening.tres") as OpeningDef
 	for choice in def.choices:
 		assert_true(clips.has(OpeningScene.ACTION_CLIPS.get(choice["id"], "")), "a clip for the command %s" % choice["id"])
-	assert_true(clips.has(OpeningScene.ACTION_CLIPS.get(def.grandma["id"], "")), "a clip for saving the old lady")
+	assert_true(clips.has(OpeningScene.ACTION_CLIPS.get("grandma", "")), "a clip for saving the old lady")
 	for needed in ["idle", "hurt", "ko"]:
 		assert_true(clips.has(needed), needed)
 	var truck: Dictionary = SlimeAnimator.load_clips(OpeningActor.CLIPS)["truck"]

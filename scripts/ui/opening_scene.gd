@@ -468,10 +468,11 @@ func _enter_command() -> void:
 	_set_turn("player", _hero)
 	_redraw()
 
-func _start_action(id: String) -> void:
+func _start_action(choice_id: String) -> void:
 	_beat = Beat.ACTION
 	_set_turn("")
 	_set_message(_model.result_line())
+	var id := "grandma" if _model.grandma_chosen() else choice_id  # her own id in the data may be anything
 	_hero.play(ACTION_CLIPS.get(id, "idle"))
 	var home := _hero_home
 	var tw := _new_tween()
@@ -538,24 +539,31 @@ func _action_done() -> void:
 	tw.tween_callback(_start_truck_turn)
 
 ## The trucks' turn: each one on the street charges, one after the other, and leaves off the right of the screen. Normally every
-## charge hits (the round's damage shared between them); after the first Dodge the one truck misses instead and goes straight by.
+## charge hits; after the first Dodge the one truck misses instead and goes straight by. HP follows one schedule whatever the number
+## of rounds or trucks: after round r of n it is MAX_HP minus ceil(MAX_HP * r / n), so it is never spent before the last round and is
+## exactly zero after it, and a round's drop is shared between the trucks that hit in it.
 func _start_truck_turn() -> void:
 	_beat = Beat.HIT
 	var count := _model.trucks_on_screen()
 	var miss := _model.free_dodge()
-	var last_round := _model.truck() + 1 >= _model.truck_count()
-	var round_damage := ceili(float(MAX_HP) / float(_model.truck_count()))
-	var per_hit := ceili(float(round_damage) / float(count))
+	var rounds := _model.truck_count()
+	var hp_start := _hp
+	var hp_end := mini(hp_start, MAX_HP - ceili(float(MAX_HP * (_model.truck() + 1)) / float(rounds)))
+	if miss:
+		hp_end = hp_start
 	_set_turn("truck", _trucks[0])
 	var tw := _new_tween()
 	for i in count:
 		if i > 0:
 			tw.tween_callback(_recover)
-		_queue_attack(tw, i, miss, last_round and i == count - 1, per_hit)
+		var target := hp_start - ceili(float(hp_start - hp_end) * float(i + 1) / float(count))
+		if _model.truck() + 1 >= rounds and i == count - 1 and not miss:
+			target = 0  # the last hit of the last round is the knock-out
+		_queue_attack(tw, i, miss, target)
 	tw.tween_callback(_after_hit)
 	_redraw()
 
-func _queue_attack(tw: Tween, i: int, miss: bool, last: bool, per_hit: int) -> void:
+func _queue_attack(tw: Tween, i: int, miss: bool, target_hp: int) -> void:
 	var truck: OpeningActor = _trucks[i]
 	var rage: bool = _angry[i] and not miss
 	tw.tween_callback(_attack_begin.bind(i, rage))
@@ -567,7 +575,7 @@ func _queue_attack(tw: Tween, i: int, miss: bool, last: bool, per_hit: int) -> v
 		tw.tween_callback(_hero_leap)
 		tw.tween_property(truck, "position:x", TRUCK_OFF_RIGHT, 0.6)
 	else:
-		tw.tween_callback(_impact.bind(last, per_hit, rage))
+		tw.tween_callback(_impact.bind(target_hp, rage))
 		tw.tween_interval(0.55)
 		tw.tween_property(truck, "position:x", TRUCK_OFF_RIGHT, 0.6)
 
@@ -604,10 +612,10 @@ func _recover() -> void:
 	_stage.position = Vector2.ZERO
 	_hero_reset()
 
-func _impact(last: bool, per_hit: int, rage: bool) -> void:
+func _impact(target_hp: int, rage: bool) -> void:
 	EventBus.world_event.emit("opening_hit", {})
 	var before := _hp
-	_hp = 0 if last else maxi(0, _hp - per_hit)
+	_hp = clampi(target_hp, 0, before)
 	_set_message("You take %d damage!" % maxi(1, before - _hp))
 	_hero.play("hurt")
 	_kill(_fx)

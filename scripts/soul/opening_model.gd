@@ -113,6 +113,10 @@ func act() -> bool:
 func chosen() -> String:
 	return _chosen
 
+## Whether the choice taken is the old lady's, whatever her id is.
+func grandma_chosen() -> bool:
+	return grandma_here() and _chosen == str(_def.grandma.get("id", "grandma"))
+
 ## Whether the result showing is the dodge that cannot fail.
 func free_dodge() -> bool:
 	return _free and phase == Phase.RESULT
@@ -123,7 +127,7 @@ func result_line() -> String:
 		return ""
 	if _free and _def.dodge_success.strip_edges() != "":
 		return _def.dodge_success
-	if grandma_here() and _chosen == str(_def.grandma.get("id", "grandma")):
+	if grandma_chosen():
 		var line := str(_def.grandma.get("result", ""))
 		return line if line.strip_edges() != "" else _def.fallback
 	return _def.result_for(_truck, _chosen)

@@ -40,3 +40,11 @@ His answers to the three questions asked first: automatic turns with a bouncing 
 - Sean's rewrite of the placeholder copy; the second-truck prompt reads best before round 2's "Another truck is coming."
 - Her menu is still dark navy after the white fade.
 - Two trucks overlap (the rear one is mostly hidden behind the front one's box); tune slots if it reads badly.
+
+## Final review (debate:run, changeset against main, seats executor, auditor, cartographer, pentester)
+
+- Seats not configured on this machine and so not run: executor-b, simplifier, antigravity, deepseek (the lens picked them; the config has no such entries). The cartographer's first run failed on a model its acpx agent does not advertise and was re-run on the executor's model.
+- Executor: APPROVED (a bare verdict, no findings). Pentester: APPROVED, no exploitable path.
+- Final: fixed damage rounding up twice (auditor, P2): with a round count that does not divide 30 and two trucks, a round cost more than its share and HP ran out before the last round. HP now follows one schedule (after round r of n it is MAX_HP minus ceil(MAX_HP·r/n)); a round's drop is shared between the trucks — `test_hp_runs_out_exactly_on_the_last_round_with_*` RED→GREEN.
+- Final: fixed a custom old-lady id silently skipping the shove (auditor, P2): the scene dispatched on the literal id "grandma"; it now asks `OpeningModel.grandma_chosen()` — `test_saving_works_whatever_the_old_lady_is_called` and `test_the_model_says_when_the_old_lady_was_chosen_whatever_her_id` RED→GREEN.
+- Final: minor (deferred): `docs/superpowers/specs/2026-10-04-the-opening-design.md` (cartographer) describes the first, code-drawn opening ("every choice fails", one truck drawn with `_draw`). It was already superseded by the JRPG-battle redo before this branch; the design doc, playtest checklist and this ledger carry the current description. Mark it superseded when someone next touches it.
