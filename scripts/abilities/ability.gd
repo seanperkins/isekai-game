@@ -8,6 +8,8 @@ const COOLDOWN_SECONDS := 0.8
 var actor: Node2D
 var values: Array = []
 var level := 1
+## Verb parameters from the skill's active effect (a data-defined verb: see VerbKinds). Empty for a scripted ability.
+var spec := {}
 ## Cast direction (unit vector). Zero means "forward", i.e. the actor's facing.
 var aim := Vector2.ZERO
 var _cooldown := 0.0

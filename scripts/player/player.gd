@@ -844,6 +844,7 @@ func _ability(id: String) -> Ability:
 	if not (node is Ability):
 		node.free()
 		return null
+	node.spec = SkillEffects.active_spec(d)
 	node.setup(self, SkillEffects.active_values(d), _rules.level_of(id))
 	add_child(node)
 	_abilities[id] = node
