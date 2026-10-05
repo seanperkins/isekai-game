@@ -1,20 +1,21 @@
 extends SceneTree
 ## Real-renderer shots of the Tree tab at both zooms with nothing, some and everything discovered. Run from the project
 ## root with the windowed renderer (--headless has no texture to read):
-##   env HOME="$PWD/.tmp/gdhome" godot --path . -s res://tools/tree_shots.gd
+##   tools/shot_run.sh tools/tree_shots.gd
 ## Writes .tmp/tree/*.png. It saves nothing: the Compendium's store is detached before anything is raised.
 
 const OUT := "res://.tmp/tree/"
+var view: SubViewport  # the stage the game is drawn on (tools/shot_stage.gd)
 var game
 var frame := 0
 
 func _initialize() -> void:
 	game = load("res://scenes/main.tscn").instantiate()
-	root.add_child(game)
+	view = ShotStage.mount(root, game)
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT))
 
 func _shot(n: String) -> void:
-	root.get_viewport().get_texture().get_image().save_png(ProjectSettings.globalize_path("%s%s.png" % [OUT, n]))
+	view.get_texture().get_image().save_png(ProjectSettings.globalize_path("%s%s.png" % [OUT, n]))
 
 func _compendium() -> CompendiumModel:
 	return root.get_node("Compendium").model

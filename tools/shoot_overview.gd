@@ -3,17 +3,23 @@ extends SceneTree
 ## Each room is shot one screen at a time in the real engine, with the HUD, the player and the
 ## screen-glued foreground frame hidden, then placed at the room's world position. Needs a window:
 ## do not pass --headless.
-##   env HOME="$PWD/.tmp/gdhome" godot --path . -s tools/shoot_overview.gd
+##   tools/shot_run.sh tools/shoot_overview.gd
 ## Far parallax layers follow the camera, so they jump at screen boundaries inside a room.
 
 const SCREEN := Vector2i(640, 360)
 
+var view: SubViewport  # the stage the game is drawn on (tools/shot_stage.gd)
+
 func _initialize() -> void:
+	_run()
+
+func _run() -> void:
+	await process_frame  # the autoloads are only ready after the first frame: scripts first loaded before it fail to compile
 	var game = load("res://scenes/main.tscn").instantiate()
-	root.add_child(game)
+	view = ShotStage.mount(root, game)
 	for _i in 4:
 		await process_frame
-	var world: World = game.world
+	var world = game.world  # untyped: naming World here compiles it before the autoloads exist, and it and the scripts it needs break
 	var extent := Rect2()
 	for id in world.rooms:
 		extent = extent.merge((world.rooms[id] as RoomDef).world_rect())
@@ -25,7 +31,9 @@ func _initialize() -> void:
 	for id in world.rooms:
 		var def: RoomDef = world.rooms[id]
 		world.enter(id)
-		world.room.get_node("foreground").visible = false
+		var foreground = world.room.get_node_or_null("foreground")
+		if foreground != null:
+			foreground.visible = false
 		var rect := def.world_rect()
 		game.player.global_position = rect.position + Vector2(-5000, -5000)  # out of every room
 		for cy in def.size.y:
@@ -34,7 +42,7 @@ func _initialize() -> void:
 				world.camera.global_position = centre
 				for _i in 6:
 					await process_frame
-				var shot := root.get_texture().get_image()
+				var shot := view.get_texture().get_image()
 				shot.resize(SCREEN.x, SCREEN.y, Image.INTERPOLATE_LANCZOS)
 				shot.convert(Image.FORMAT_RGB8)
 				canvas.blit_rect(shot, Rect2i(Vector2i.ZERO, SCREEN),

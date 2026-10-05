@@ -1,20 +1,21 @@
 extends SceneTree
 ## Real-renderer shots of the evolution flow. Run from the project root:
-##   env HOME="$PWD/.tmp/gdhome" godot --path . -s res://tools/evolution_shots.gd
+##   tools/shot_run.sh tools/evolution_shots.gd
 ## Writes .tmp/evolution/*.png: the HUD prompt, the Form tab, and each Weaver-lineage stage plus a tinted form.
 
 const OUT := "res://.tmp/evolution/"
+var view: SubViewport  # the stage the game is drawn on (tools/shot_stage.gd)
 var game
 var frame := 0
 var steps: Array = []
 
 func _initialize() -> void:
 	game = load("res://scenes/main.tscn").instantiate()
-	root.add_child(game)
+	view = ShotStage.mount(root, game)
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT))
 
 func _shot(n: String) -> void:
-	root.get_viewport().get_texture().get_image().save_png(ProjectSettings.globalize_path("%s%s.png" % [OUT, n]))
+	view.get_texture().get_image().save_png(ProjectSettings.globalize_path("%s%s.png" % [OUT, n]))
 
 func _cap() -> void:
 	var p = game.player

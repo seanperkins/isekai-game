@@ -1,21 +1,22 @@
 extends SceneTree
 ## Real-renderer shots of the channel and effect looks. Run from the project root (windowed, unsandboxed):
-##   env HOME="$PWD/.tmp/gdhome" godot --path . -s res://tools/vfx_shots.gd
+##   tools/shot_run.sh tools/vfx_shots.gd
 ## Writes .tmp/vfx/*.png: the web tether on an enemy, the rope on rock, the water stream, Water Blade, Binding Web, and an
 ## enemy with a few strands and in a cocoon.
 
 const OUT := "res://.tmp/vfx/"
+var view: SubViewport  # the stage the game is drawn on (tools/shot_stage.gd)
 var game
 var frame := 0
 var dummy
 
 func _initialize() -> void:
 	game = load("res://scenes/main.tscn").instantiate()
-	root.add_child(game)
+	view = ShotStage.mount(root, game)
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT))
 
 func _shot(n: String) -> void:
-	root.get_viewport().get_texture().get_image().save_png(ProjectSettings.globalize_path("%s%s.png" % [OUT, n]))
+	view.get_texture().get_image().save_png(ProjectSettings.globalize_path("%s%s.png" % [OUT, n]))
 
 func _ability(id: String, values: Array) -> Ability:
 	var a: Ability = load("res://scenes/abilities/%s.tscn" % id).instantiate()

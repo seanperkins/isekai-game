@@ -1,10 +1,11 @@
 extends SceneTree
 ## Real-Cave frames of the creatures and of each death cause. Needs a real renderer. Run from the
 ## project root:
-##   env HOME="$PWD/.tmp/gdhome" godot --path . -s res://tools/enemy_in_game.gd
+##   tools/shot_run.sh tools/enemy_in_game.gd
 ## Shots go to .tmp/enemy-frames/game_*.png. Enemies are untyped: a -s script cannot see autoloads.
 
 const OUT := "res://.tmp/enemy-frames/"
+var view: SubViewport  # the stage the game is drawn on (tools/shot_stage.gd)
 var game
 var frame := 0
 var row := []      # the creatures shown at rest
@@ -12,11 +13,11 @@ var victims := {}  # cause -> enemy
 
 func _initialize() -> void:
 	game = load("res://scenes/main.tscn").instantiate()
-	root.add_child(game)
+	view = ShotStage.mount(root, game)
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT))
 
 func _shot(n: String) -> void:
-	root.get_viewport().get_texture().get_image().save_png(ProjectSettings.globalize_path("%sgame_%s.png" % [OUT, n]))
+	view.get_texture().get_image().save_png(ProjectSettings.globalize_path("%sgame_%s.png" % [OUT, n]))
 
 func _spawn(id: String, dx: float, still: bool = true):
 	var p = game.player

@@ -2,19 +2,21 @@ extends SceneTree
 ## Shoots one demo room per biome so the biomes can be compared side by side:
 ## .tmp/shots/biome_<name>_<n>.png. The rooms only exist in memory: they are built here from each
 ## biome's prefab set and are not part of the world data. Needs a window (no --headless).
-##   env HOME="$PWD/.tmp/gdhome" godot --path . -s tools/shoot_biomes.gd -- cave grotto flooded
+##   tools/shot_run.sh tools/shoot_biomes.gd -- cave grotto flooded
 
 const SHOTS := {  # camera focus x in the 1280-wide demo room
 	"a": 320.0,
 	"b": 960.0,
 }
 
+var view: SubViewport  # the stage the game is drawn on (tools/shot_stage.gd)
+
 func _initialize() -> void:
 	var biomes: Array = OS.get_cmdline_user_args()
 	if biomes.is_empty():
 		biomes = ["cave", "grotto", "flooded"]
 	var game = load("res://scenes/main.tscn").instantiate()
-	root.add_child(game)
+	view = ShotStage.mount(root, game)
 	for _i in 4:
 		await process_frame
 	var world: World = game.world
@@ -34,7 +36,7 @@ func _initialize() -> void:
 			for _i in 8:
 				await process_frame
 			var path := "%s/biome_%s_%s.png" % [dir, biome, key]
-			root.get_texture().get_image().save_png(path)
+			view.get_texture().get_image().save_png(path)
 			print("saved ", path)
 		world.set_physics_process(true)
 	quit(0)

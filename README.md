@@ -60,7 +60,7 @@ tools/run_tests.sh altar        # only test files whose name contains "altar"
 
 Godot's exit code is not trusted: the script reads the log and the JUnit XML and fails on any engine error, an empty run or a failed test. See `tools/run_tests.sh` for `FIXED_FPS` and `TEST_TIMEOUT`.
 
-Manual checks live in [`docs/playtest-checklist.md`](docs/playtest-checklist.md).
+Manual checks live in [`docs/playtest-checklist.md`](docs/playtest-checklist.md). Screenshots and clips come from the shot tools, run through [`tools/shot_run.sh`](docs/shots.md), which takes over no screen and makes no sound.
 
 ## Project layout
 

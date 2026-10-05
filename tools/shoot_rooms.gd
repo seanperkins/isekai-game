@@ -1,6 +1,6 @@
 extends SceneTree
 ## Saves screenshots of real rooms to .tmp/shots/. Needs a window: do not pass --headless.
-##   env HOME="$PWD/.tmp/gdhome" godot --path . -s tools/shoot_rooms.gd
+##   tools/shot_run.sh tools/shoot_rooms.gd
 ## Each shot is [room id, focus point in room-local px]. The camera and player sit on the focus.
 
 const SHOTS := [
@@ -13,9 +13,11 @@ const SHOTS := [
 	["C6", Vector2(320, 250)],
 ]
 
+var view: SubViewport  # the stage the game is drawn on (tools/shot_stage.gd)
+
 func _initialize() -> void:  # autoloads exist by now, unlike in _init
 	var game = load("res://scenes/main.tscn").instantiate()
-	root.add_child(game)
+	view = ShotStage.mount(root, game)
 	for _i in 4:
 		await process_frame
 	var dir := ProjectSettings.globalize_path("res://.tmp/shots")
@@ -32,7 +34,7 @@ func _initialize() -> void:  # autoloads exist by now, unlike in _init
 		world.camera.global_position = World.view_center(rect, rect.position + shot[1])
 		for _i in 6:
 			await process_frame
-		var img := root.get_texture().get_image()
+		var img := view.get_texture().get_image()
 		n += 1
 		var path := "%s/%02d_%s.png" % [dir, n, id]
 		img.save_png(path)

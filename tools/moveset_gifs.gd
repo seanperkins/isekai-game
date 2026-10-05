@@ -1,9 +1,11 @@
 extends SceneTree
 ## Real-renderer captures of each species' moveset, played in the movement sandbox by scripted input, one PNG sequence per clip.
-## Run from the project root, windowed and unsandboxed (tools/art/moveset_gifs.py assembles the GIFs and movesets.json):
+## Run from the project root (tools/art/moveset_gifs.py assembles the GIFs and movesets.json):
 ##   mkdir -p .tmp/moveset-gifs && D=$(mktemp -d .tmp/moveset-gifs/run.XXXXXX)
-##   env HOME="$PWD/.tmp/gdhome" TMPDIR="$PWD/$D" gtimeout -k 5 600 godot --path . --windowed --resolution 640x360 --fixed-fps 60 \
-##     -s res://tools/moveset_gifs.gd -- --out="$PWD/$D" [--only=wolf-pounce,slime] [--trace]
+##   TMPDIR="$PWD/$D" SHOT_GODOT_ARGS="--fixed-fps 60" gtimeout -k 5 600 tools/shot_run.sh tools/moveset_gifs.gd -- --out="$PWD/$D" \
+##     [--only=wolf-pounce,slime] [--trace]
+## tools/shot_run.sh keeps the OS window a tiny one; the sandbox is drawn on a ShotStage whose size is the clip's frame size, so there is
+## no real window to size, and a frame is exactly the stage.
 ## Writes <out>/<species>-<clip>/NNNN.png and <out>/manifest.json (and <out>/trace.txt with --trace). The engine runs on a fixed
 ## 60 Hz clock (--fixed-fps 60), so one rendered frame is exactly one physics tick, and every STRIDE-th tick is kept. Nothing here
 ## changes the game: it sets MovementSandbox.scripted (the input the sandbox reads instead of the keyboard), moves the camera,
@@ -27,6 +29,7 @@ var out_dir := ""
 var only := PackedStringArray()
 var trace := false
 var trace_file: FileAccess
+var view: SubViewport  # the stage the sandbox is drawn on, `win` pixels big, one canvas unit to a pixel (tools/shot_stage.gd)
 var sb: MovementSandbox
 var cam: Camera2D
 var win := DEFAULT_SIZE
@@ -64,14 +67,13 @@ func _initialize() -> void:
 	if trace:
 		trace_file = FileAccess.open(out_dir.path_join("trace.txt"), FileAccess.WRITE)
 	RenderingServer.set_default_clear_color(CLEAR)
+	view = ShotStage.open(root, DEFAULT_SIZE, Vector2i.ZERO)
 	if root.has_node("Controls"):
 		root.get_node("Controls").mouse_aim = false  # autoloads are not compile-time names in a -s script
 	_run()
 
 func _run() -> void:
 	await process_frame  # the tree is only ready after the first frame: add_child before it does not run _ready yet
-	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)  # project.godot asks for fullscreen
-	root.content_scale_mode = Window.CONTENT_SCALE_MODE_DISABLED  # 1 canvas unit = 1 pixel: the camera zoom is the only scale
 	await _fit(DEFAULT_SIZE)
 	await _slime()
 	await _biped()
@@ -101,15 +103,13 @@ func _write_manifest() -> void:
 	f.store_string(JSON.stringify({"tick_hz": 60, "clips": clips}, "  "))
 	f.close()
 
-## Puts the window at `size` pixels. macOS re-applies its own size a little after a mode or size change, so keep setting ours for a
-## while in real time (the fixed clock does not wait).
+## Puts the stage at `size` pixels.
 func _fit(size: Vector2i) -> void:
 	win = size
-	for _k in 40:
+	ShotStage.resize(view, size)
+	for _k in 2:
 		await process_frame
-		OS.delay_msec(10)
-		DisplayServer.window_set_size(size)
-	assert(root.size == size, "the window is %s, not %s" % [root.size, size])
+	assert(view.size == size, "the stage is %s, not %s" % [view.size, size])
 
 ## A fresh sandbox (no leftover dust, thread or box shape), the species picked and the body put at `pos`.
 ## opts: size (the window, 640x360), zoom (2), cam (the fixed centre, world px, default the body), follow ("x", "y" or "xy": the camera
@@ -124,7 +124,7 @@ func _setup(species: String, pos: Vector2, opts := {}) -> void:
 	if size != win:
 		await _fit(size)
 	sb = load(SANDBOX).instantiate()
-	root.add_child(sb)
+	view.add_child(sb)
 	sb.scripted = MoveInput.new()
 	sb.set_profile(species)
 	sb.body.global_position = pos
@@ -160,7 +160,7 @@ func _make_hud() -> void:
 	if hud_layer != null:
 		hud_layer.queue_free()
 	hud_layer = CanvasLayer.new()
-	root.add_child(hud_layer)
+	view.add_child(hud_layer)
 	chips = {}
 	var x := 8.0
 	var specs := [["left", "<", 18.0], ["right", ">", 18.0], ["up", "^", 18.0], ["down", "v", 18.0], ["jump", "SPACE", 46.0], ["sig", "J", 18.0]]
@@ -226,8 +226,6 @@ func _until(cond: Callable, limit: int) -> bool:
 	return cond.call()
 
 func _frame() -> void:
-	if root.size != win:
-		DisplayServer.window_set_size(win)  # the window manager moved it: put it back (a frame at the wrong size is rejected below)
 	if (follow_x or follow_y) and is_instance_valid(sb.body):
 		var target: Vector2 = sb.body.global_position + follow_off
 		if follow_x:
@@ -254,7 +252,7 @@ func _frame() -> void:
 			sb.state.verb, sb.clip(), sb.state.launched, sb.state.surface_n, sb.state.zip_event, sb.state.drop_event, sb.state.mantle_event,
 			sb.state.skidding, sb.state.clinging, sb.state.pounce_hit])
 	if tick % rec_stride == 0:
-		var img := root.get_texture().get_image()
+		var img := view.get_texture().get_image()
 		if img.get_size() != win:
 			bad_frames += 1
 			push_error("frame at %s, not %s" % [img.get_size(), win])

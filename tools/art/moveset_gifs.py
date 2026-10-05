@@ -2,8 +2,8 @@
 real engine (the movement sandbox, scripted input). Run from the project root:
 
   mkdir -p .tmp/moveset-gifs && D=$(mktemp -d .tmp/moveset-gifs/run.XXXXXX)
-  env HOME="$PWD/.tmp/gdhome" TMPDIR="$PWD/$D" gtimeout -k 5 600 godot --path . --windowed --resolution 640x360 --fixed-fps 60 \\
-      -s res://tools/moveset_gifs.gd -- --out="$PWD/$D"          # windowed, so unsandboxed
+  TMPDIR="$PWD/$D" SHOT_GODOT_ARGS="--fixed-fps 60" gtimeout -k 5 600 tools/shot_run.sh tools/moveset_gifs.gd -- --out="$PWD/$D"
+  # shot_run.sh opens a tiny off-screen window and mutes the sound; it needs a display, so run it unsandboxed
   uv run --python 3.12 --with Pillow python tools/art/moveset_gifs.py "$D"
 
 With no argument it takes the newest .tmp/moveset-gifs/run.* directory. The GIFs play at the speed the game ran (a frame every

@@ -1,20 +1,22 @@
 extends SceneTree
-## Real-renderer shots of the aim reticle and the mouse scheme. Run from the project root (windowed, unsandboxed):
-##   env HOME="$PWD/.tmp/gdhome" godot --path . -s res://tools/aim_shots.gd
+## Real-renderer shots of the aim reticle and the mouse scheme. Run from the project root:
+##   tools/shot_run.sh tools/aim_shots.gd
+## The cursor is simulated by pushing a mouse-motion event to the stage; the real cursor is never moved.
 ## Writes .tmp/aim/*.png: the reticle on the right stick at two angles, on an enlarged form, following the real cursor, the HUD
 ## chips with the mouse live, and a skill-screen card with the mouse live.
 
 const OUT := "res://.tmp/aim/"
+var view: SubViewport  # the stage the game is drawn on (tools/shot_stage.gd)
 var game
 var frame := 0
 
 func _initialize() -> void:
 	game = load("res://scenes/main.tscn").instantiate()
-	root.add_child(game)
+	view = ShotStage.mount(root, game)
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT))
 
 func _shot(n: String) -> void:
-	root.get_viewport().get_texture().get_image().save_png(ProjectSettings.globalize_path("%s%s.png" % [OUT, n]))
+	view.get_texture().get_image().save_png(ProjectSettings.globalize_path("%s%s.png" % [OUT, n]))
 
 func _axis(axis: int, value: float) -> void:
 	var ev := InputEventJoypadMotion.new()
@@ -62,7 +64,9 @@ func _process(_delta: float) -> bool:
 			_stick(0.0, 0.0)
 			controls.mouse_aim = true  # a warp may send no motion event: say the mouse is the aimer
 			controls.using_joypad = false
-			Input.warp_mouse(Vector2(430, 110))
+			var motion := InputEventMouseMotion.new()  # the cursor at (430, 110) of the game's 640x360, without touching the real one
+			motion.position = Vector2(430, 110)
+			view.push_input(motion, true)
 		56:
 			print("cursor world ", p.get_global_mouse_position(), " player ", p.global_position, " free_aim ", p.free_aim())
 			_shot("cursor")

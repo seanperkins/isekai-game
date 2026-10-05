@@ -1,16 +1,17 @@
 extends SceneTree
 ## Real-renderer shots of a tall room from its top, middle and bottom, to check the layers' vertical
 ## parallax. Run from the project root:
-##   env HOME="$PWD/.tmp/gdhome" godot --path . -s res://tools/tall_room_shots.gd
+##   tools/shot_run.sh tools/tall_room_shots.gd
 ## Writes .tmp/tall-room/{top,middle,bottom}.png.
 
 const OUT := "res://.tmp/tall-room/"
+var view: SubViewport  # the stage the game is drawn on (tools/shot_stage.gd)
 var game
 var frame := 0
 
 func _initialize() -> void:
 	game = load("res://scenes/main.tscn").instantiate()
-	root.add_child(game)
+	view = ShotStage.mount(root, game)
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT))
 
 func _report(n: String) -> void:
@@ -23,7 +24,7 @@ func _report(n: String) -> void:
 
 func _shot(n: String) -> void:
 	_report(n)
-	root.get_viewport().get_texture().get_image().save_png(ProjectSettings.globalize_path("%s%s.png" % [OUT, n]))
+	view.get_texture().get_image().save_png(ProjectSettings.globalize_path("%s%s.png" % [OUT, n]))
 
 func _place(local_y: float) -> void:
 	var p = game.player

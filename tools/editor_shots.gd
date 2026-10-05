@@ -1,12 +1,13 @@
 extends SceneTree
-## Real-renderer shots of the room editor and of a room played from it. Run from the project root (windowed, unsandboxed):
-##   env HOME="$PWD/.tmp/editor-home" godot --path . -s res://tools/editor_shots.gd
+## Real-renderer shots of the room editor and of a room played from it. Run from the project root:
+##   SHOT_HOME="$PWD/.tmp/editor-home" tools/shot_run.sh tools/editor_shots.gd
 ## Writes .tmp/editor/*.png: C1 fitted, C2 edited (a solid, a toad) at 1:1, a Solid drag in progress with its live label, the
 ## Creature palette, the Validate list, a placed tablet with its inspector, the problems list with findings, G1's pool with the
 ## kit checklist, the World overview, a new `deep` room dressed with decor (the Decor tool, a ledge's panel) and a `flooded` one on the
 ## overview, and C6 played from the editor with Wall Cling granted and every shortcut open.
 
 const OUT := "res://.tmp/editor/"
+var view: SubViewport  # the stage the game is drawn on (tools/shot_stage.gd)
 var ed
 var frame := 0
 
@@ -14,7 +15,7 @@ func _initialize() -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT))
 
 func _shot(n: String) -> void:
-	root.get_viewport().get_texture().get_image().save_png(ProjectSettings.globalize_path("%s%s.png" % [OUT, n]))
+	view.get_texture().get_image().save_png(ProjectSettings.globalize_path("%s%s.png" % [OUT, n]))
 
 func _mouse(button: bool, pressed: bool, room_pt: Vector2) -> void:
 	var v = ed.view
@@ -35,7 +36,7 @@ func _process(_delta: float) -> bool:
 		2:
 			# built here, not in _initialize: the autoloads the editor names exist only once the tree is running
 			ed = load("res://scenes/room_editor.tscn").instantiate()
-			root.add_child(ed)
+			view = ShotStage.mount(root, ed)
 		10:
 			_shot("editor_c1")
 		12:
@@ -65,7 +66,7 @@ func _process(_delta: float) -> bool:
 				b.button_index = MOUSE_BUTTON_LEFT
 				b.pressed = pressed
 				b.position = Vector2(20, 62)
-				root.push_input(b, true)
+				view.push_input(b, true)
 		32:
 			print("PALETTE_CLICK creature_id=", ed.view.creature_id)
 		34:
@@ -153,6 +154,10 @@ func _process(_delta: float) -> bool:
 			ed.get_script().set("sandbox_root", OS.get_user_data_dir())  # naming RoomEditor here would compile it before the autoloads exist
 			ed.play(Vector2(120, 250))
 			ed.queue_free()
+		124:
+			# the editor's Play changed the scene: the game is now a child of the root, outside the stage the frames come from
+			if current_scene != null:
+				current_scene.reparent(view)
 		220:
 			_shot("play_c6_cling")
 			quit()
