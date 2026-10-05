@@ -41,6 +41,8 @@ extends Resource
 @export var origin: String = ""
 ## The form a twin is the world twin of (data/forms id).
 @export var form: String = ""
+## The stage (2 to 4) of the form a twin is the twin of; 0 for a creature that is not one.
+@export var stage: int = 0
 ## The species of the form it twins ("" for a creature that is not one), and its place in the world ("common", "elite", "rare", ...).
 @export var species: String = ""
 @export var role: String = ""

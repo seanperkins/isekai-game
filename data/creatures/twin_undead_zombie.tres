@@ -18,6 +18,7 @@ essences = {
 }
 xp = 4
 origin = "twin"
+stage = 2
 form = "undead_zombie"
 species = "undead"
 role = "common enemy"

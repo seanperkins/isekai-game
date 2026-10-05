@@ -18,6 +18,7 @@ essences = {
 }
 xp = 20
 origin = "twin"
+stage = 4
 form = "spider_cocoon_mother"
 species = "spider"
 role = "rare or boss"

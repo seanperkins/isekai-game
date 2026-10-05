@@ -18,6 +18,7 @@ essences = {
 }
 xp = 4
 origin = "twin"
+stage = 2
 form = "spider_stalker"
 species = "spider"
 role = "common enemy"

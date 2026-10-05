@@ -19,6 +19,7 @@ essences = {
 xp = 10
 pack = true
 origin = "twin"
+stage = 3
 form = "goblin_puck"
 species = "goblin"
 role = "elite"

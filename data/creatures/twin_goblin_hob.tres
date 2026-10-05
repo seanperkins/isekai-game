@@ -18,6 +18,7 @@ essences = {
 xp = 4
 pack = true
 origin = "twin"
+stage = 2
 form = "goblin_hob"
 species = "goblin"
 role = "neutral helper"

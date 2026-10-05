@@ -125,6 +125,8 @@ def tres(row):
         if row["flags"].get(flag):
             lines.append("%s = true" % flag)
     lines.append("origin = %s" % q(row["origin"]))
+    if row["stage"]:
+        lines.append("stage = %d" % row["stage"])
     for key, field in (("form", "form"), ("species", "species"), ("role", "role"), ("verb", "verb"), ("sprite_set", "sprite_set"),
                        ("sprite_frame", "sprite_frame"), ("wears", "wears")):
         if row[field]:

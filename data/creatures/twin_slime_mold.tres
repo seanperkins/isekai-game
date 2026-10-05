@@ -18,6 +18,7 @@ essences = {
 }
 xp = 20
 origin = "twin"
+stage = 4
 form = "slime_mold"
 species = "slime"
 role = "rare or boss"

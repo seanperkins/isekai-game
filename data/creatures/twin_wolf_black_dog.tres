@@ -20,6 +20,7 @@ xp = 4
 pack = true
 charges = true
 origin = "twin"
+stage = 2
 form = "wolf_black_dog"
 species = "wolf"
 role = "common enemy"

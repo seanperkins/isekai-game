@@ -25,6 +25,7 @@ func test_a_plain_creature_has_no_verb_form_or_art() -> void:
 	assert_eq(c.form, "")
 	assert_eq(c.origin, "")
 	assert_eq(c.species, "")
+	assert_eq(c.stage, 0)
 	assert_eq(c.role, "")
 	assert_eq(c.sprite_set, "")
 	assert_eq(c.sprite_frame, "")
@@ -33,7 +34,7 @@ func test_a_plain_creature_has_no_verb_form_or_art() -> void:
 	assert_eq(c.sprite_tint, Color.WHITE)
 
 func test_the_validator_accepts_a_twin_with_a_known_verb_and_a_real_still() -> void:
-	var errors := _errors({"origin": "twin", "form": "wolf_fenrir", "verb": "verb_wolf_fenrir", "sprite_set": "forms_wolf", "sprite_frame": "fenrir"})
+	var errors := _errors({"origin": "twin", "form": "wolf_fenrir", "stage": 4, "verb": "verb_wolf_fenrir", "sprite_set": "forms_wolf", "sprite_frame": "fenrir"})
 	assert_eq(errors, PackedStringArray(), "no errors")
 
 func test_an_unknown_verb_is_an_error() -> void:
@@ -54,6 +55,10 @@ func test_wearing_a_creature_that_is_not_shipped_is_an_error() -> void:
 
 func test_an_origin_outside_the_three_is_an_error() -> void:
 	assert_true(_has(_errors({"origin": "wild"}), "origin 'wild'"))
+
+func test_a_twin_needs_a_stage_from_two_to_four() -> void:
+	assert_true(_has(_errors({"origin": "twin", "form": "wolf_fenrir"}), "a twin's stage is 2 to 4, not 0"))
+	assert_true(_has(_errors({"origin": "twin", "form": "wolf_fenrir", "stage": 5}), "not 5"))
 
 func test_a_twin_needs_its_form() -> void:
 	assert_true(_has(_errors({"origin": "twin"}), "a twin needs a form"))

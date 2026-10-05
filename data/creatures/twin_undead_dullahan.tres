@@ -17,6 +17,7 @@ essences = {
 }
 xp = 20
 origin = "twin"
+stage = 4
 form = "undead_dullahan"
 species = "undead"
 role = "rare or boss"

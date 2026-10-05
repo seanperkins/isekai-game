@@ -20,6 +20,7 @@ xp = 20
 pack = true
 charges = true
 origin = "twin"
+stage = 4
 form = "wolf_lupa"
 species = "wolf"
 role = "rare or boss"

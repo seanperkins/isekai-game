@@ -126,7 +126,7 @@ class WriteTest(unittest.TestCase):
         row = next(r for r in self.rows if r["id"] == "twin_wolf_fenrir")
         text = bc.tres(row)
         for part in ('script_class="CreatureDef"', 'id = "twin_wolf_fenrir"', 'origin = "twin"', 'form = "wolf_fenrir"', 'species = "wolf"',
-                     'verb = "verb_wolf_fenrir"', 'sprite_set = "forms_wolf"', 'sprite_frame = "fenrir"', "pack = true", "charges = true", "xp = 20"):
+                     'stage = 4', 'verb = "verb_wolf_fenrir"', 'sprite_set = "forms_wolf"', 'sprite_frame = "fenrir"', "pack = true", "charges = true", "xp = 20"):
             self.assertIn(part, text)
         self.assertEqual(text, bc.tres(row), "the same row writes the same text")
 

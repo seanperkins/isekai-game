@@ -162,6 +162,8 @@ static func _check_creature_look(w: String, c: CreatureDef, by_id: Dictionary, e
 		errors.append("%s: origin '%s' is not twin or support" % [w, c.origin])
 	if c.origin == "twin" and c.form == "":
 		errors.append("%s: a twin needs a form" % w)
+	if c.origin == "twin" and (c.stage < 2 or c.stage > 4):
+		errors.append("%s: a twin's stage is 2 to 4, not %d" % [w, c.stage])
 	if c.verb != "":
 		if not by_id.has(c.verb):
 			errors.append("%s: verb '%s' is not a skill" % [w, c.verb])

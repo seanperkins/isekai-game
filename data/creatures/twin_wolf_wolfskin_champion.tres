@@ -19,6 +19,7 @@ xp = 20
 pack = true
 charges = true
 origin = "twin"
+stage = 4
 form = "wolf_wolfskin_champion"
 species = "wolf"
 role = "rare or boss"

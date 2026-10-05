@@ -18,6 +18,7 @@ essences = {
 }
 xp = 4
 origin = "twin"
+stage = 2
 form = "undead_skeletal_archer"
 species = "undead"
 role = "common enemy"

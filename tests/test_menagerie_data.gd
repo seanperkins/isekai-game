@@ -34,6 +34,7 @@ func test_a_twin_is_the_twin_of_a_real_form_of_its_species_with_its_verb() -> vo
 			continue
 		assert_eq(id, "twin_" + c.form)
 		assert_eq(c.species, f.species, id)
+		assert_eq(c.stage, f.stage, id)
 		assert_eq(c.verb, f.verb, id)
 		if f.sprite_set != "":
 			assert_eq([c.sprite_set, c.sprite_frame], [f.sprite_set, f.sprite_frame if f.sprite_frame != "" else "idle_1"], id)
@@ -59,6 +60,11 @@ func test_a_higher_stage_is_stronger() -> void:
 		stage_hp[stage] = maxi(int(stage_hp.get(stage, 0)), int(c.stats["max_hp"]))
 	assert_lt(stage_hp[2], stage_hp[3])
 	assert_lt(stage_hp[3], stage_hp[4])
+
+func test_support_monsters_are_no_stage() -> void:
+	for id in MenagerieIds.SUPPORT:
+		assert_eq(creatures[id].stage, 0, id)
+		assert_eq(creatures[id].origin, "support", id)
 
 func test_the_shipped_creatures_are_untouched() -> void:
 	assert_eq(creatures["taratect"].stats["max_hp"], 24)

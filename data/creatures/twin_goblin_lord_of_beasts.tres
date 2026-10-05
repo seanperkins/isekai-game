@@ -19,6 +19,7 @@ essences = {
 xp = 20
 pack = true
 origin = "twin"
+stage = 4
 form = "goblin_lord_of_beasts"
 species = "goblin"
 role = "rare or boss"

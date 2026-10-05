@@ -20,6 +20,7 @@ xp = 10
 pack = true
 charges = true
 origin = "twin"
+stage = 3
 form = "wolf_loup_garou"
 species = "wolf"
 role = "elite"

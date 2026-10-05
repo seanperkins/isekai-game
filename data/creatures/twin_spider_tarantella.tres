@@ -18,6 +18,7 @@ essences = {
 }
 xp = 20
 origin = "twin"
+stage = 4
 form = "spider_tarantella"
 species = "spider"
 role = "rare or boss"

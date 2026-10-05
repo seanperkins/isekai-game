@@ -19,6 +19,7 @@ essences = {
 xp = 4
 pack = true
 origin = "twin"
+stage = 2
 form = "goblin_beastcaller"
 species = "goblin"
 role = "common enemy"

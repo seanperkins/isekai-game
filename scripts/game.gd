@@ -39,6 +39,8 @@ var ambient: CanvasModulate
 var _skills_by_id := {}
 var _creatures := {}
 var _editor_play := false
+## Started with `-- --room=menagerie`: an editor-Play-like run in the room of every creature, with no editor to go back to.
+var _menagerie := false
 
 ## Each biome sets its own ambient light and sound: the bright Cave, a darker deep, and so on.
 func _on_room_entered(id: String) -> void:
@@ -69,6 +71,10 @@ func _ready() -> void:
 	var launch := Game.launch_override
 	Game.launch_override = {}
 	var args := Array(launch.get("args", OS.get_cmdline_user_args()))
+	if request.is_empty() and Game.room_arg(args) == Menagerie.NAME:
+		_menagerie = true
+		request = Menagerie.request(SkillRules.creature_defs)
+		_editor_play = true
 	var headless: bool = launch.get("headless", DisplayServer.get_name() == "headless")
 	var wanted := Game.wants_opening(Compendium.soul, args, headless, _editor_play, Game.opening_flag_used)
 	if wanted and args.has("--opening"):
@@ -94,6 +100,8 @@ func _ready() -> void:
 		for e in Game.world_errors(rooms, _creatures.keys()):
 			push_error(e)
 	var world_ctx := {"spawn": _spawn, "progress": progress, "compendium": Compendium.model, "announce": Announcer.queue.push_unlock}
+	if _menagerie:
+		world_ctx["compendium"] = null  # looking at every creature is not seeing them: the bestiary is the real profile's
 	if not _editor_play:
 		world_ctx["altar_menu"] = _open_altar_menu  # the menu is built once the goddess exists, after the world
 	world.setup(rooms, player, world_ctx)
@@ -147,7 +155,11 @@ func _ready() -> void:
 		player.become_form(Game.form_arg(args))
 	if Game.wants_evolve(OS.get_cmdline_user_args()):
 		player.debug_grant_xp(Progression.stage_total(1))  # reach the first evolution without a grind
-	if _editor_play:
+	if _menagerie:
+		var keeper := MenagerieKeeper.new()
+		keeper.tags = Menagerie.tags(SkillRules.creature_defs)
+		add_child(keeper)
+	elif _editor_play:
 		var back := EditorReturn.new()
 		back.game = self
 		add_child(back)
@@ -213,7 +225,7 @@ func _emit_game_event(event_name: String, tags: Dictionary) -> void:
 	EventBus.game_event.emit(event_name, tags)
 
 func _restart() -> void:
-	if _editor_play:
+	if _editor_play and not _menagerie:  # the menagerie has no editor: a death starts it again
 		return_to_editor()
 		return
 	_prepare_restart()
@@ -298,6 +310,15 @@ static func species_arg(args: Array) -> String:
 		if text.begins_with("--species="):
 			var id := text.trim_prefix("--species=")
 			return id if Form.SPECIES.has(id) else ""
+	return ""
+
+## `-- --room=menagerie` starts in the room of every creature; "" for no flag, a bare or empty one, or a room nobody knows.
+static func room_arg(args: Array) -> String:
+	for arg in args:
+		var text := str(arg)
+		if text.begins_with("--room="):
+			var id := text.trim_prefix("--room=")
+			return id if id == Menagerie.NAME else ""
 	return ""
 
 ## `-- --soul=N` on the command line grants N soul points to spend this session: 0 to 9999, anything else reads 0.

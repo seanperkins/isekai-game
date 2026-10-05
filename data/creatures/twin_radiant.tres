@@ -17,6 +17,7 @@ essences = {
 }
 xp = 10
 origin = "twin"
+stage = 3
 form = "radiant"
 species = "slime"
 role = "elite"
