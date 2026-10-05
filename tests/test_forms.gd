@@ -5,7 +5,7 @@ var forms := {}
 var skill_ids: Array = []
 
 func before_all() -> void:
-	forms = FormLoader.load_all()
+	forms = FormLoader.load_species()
 	for d in DefLoader.load_dir("res://data/skills"):
 		if d.source != "enemy_only":
 			skill_ids.append(d.id)

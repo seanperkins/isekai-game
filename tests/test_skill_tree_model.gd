@@ -326,7 +326,7 @@ func test_a_power_with_no_unlock_condition_has_no_how_line() -> void:
 # --- the forms band ---
 
 func _forms() -> Dictionary:
-	return FormLoader.load_all()
+	return FormLoader.load_species()
 
 func _assert_walk_reaches_everything(m: Dictionary) -> void:
 	var seen := _walk(m)

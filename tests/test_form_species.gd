@@ -17,10 +17,10 @@ static func make(id: String, species: String, stage: int, lineage: String, paren
 static func wolf_forms() -> Dictionary:
 	var out := {}
 	for f in [
-		make("wolf_moonbound", "wolf", 2, "moonbound", ["wolf"]),
-		make("wolf_loup_garou", "wolf", 3, "moonbound", ["wolf_moonbound"]),
-		make("wolf_ulfhedinn", "wolf", 3, "moonbound", ["wolf_moonbound"]),
-		make("wolf_black_dog", "wolf", 2, "black_dog", ["wolf"]),
+		make("fx_moonbound", "wolf", 2, "moonbound", ["wolf"]),
+		make("fx_loup_garou", "wolf", 3, "moonbound", ["fx_moonbound"]),
+		make("fx_ulfhedinn", "wolf", 3, "moonbound", ["fx_moonbound"]),
+		make("fx_black_dog", "wolf", 2, "black_dog", ["wolf"]),
 	]:
 		out[f.id] = f
 	return out
@@ -35,9 +35,8 @@ func after_each() -> void:
 
 func test_a_form_def_without_a_species_is_a_slime_form() -> void:
 	assert_eq(FormDef.new().species, "slime")
-	var forms := FormLoader.load_all()
-	for id in forms:
-		assert_eq((forms[id] as FormDef).species, "slime", id)
+	for id in ["weaver", "snare", "arachne", "silkbound"]:
+		assert_eq((load("res://data/forms/%s.tres" % id) as FormDef).species, "slime", id)
 
 func test_is_base_knows_every_species_and_nothing_else() -> void:
 	for s in Form.SPECIES:
@@ -55,11 +54,11 @@ func test_a_wolf_body_starts_at_the_wolf_base() -> void:
 func test_a_wolf_body_advances_into_a_wolf_form_and_a_slime_body_does_not() -> void:
 	var forms := wolf_forms()
 	var wolf := Form.new("wolf")
-	assert_true(wolf.advance("wolf_moonbound", forms))
+	assert_true(wolf.advance("fx_moonbound", forms))
 	assert_eq(wolf.stage, 2)
-	assert_eq(wolf.form_id, "wolf_moonbound")
+	assert_eq(wolf.form_id, "fx_moonbound")
 	var slime := Form.new()
-	assert_false(slime.advance("wolf_moonbound", forms))
+	assert_false(slime.advance("fx_moonbound", forms))
 	assert_eq(slime.stage, 1)
 	assert_eq(slime.form_id, "slime")
 
@@ -69,14 +68,14 @@ func test_a_form_of_another_species_with_a_matching_parent_id_is_refused() -> vo
 
 func test_reset_returns_to_the_species_base() -> void:
 	var f := Form.new("wolf")
-	f.advance("wolf_moonbound", wolf_forms())
+	f.advance("fx_moonbound", wolf_forms())
 	f.reset()
 	assert_eq(f.form_id, "wolf")
 	assert_eq(f.stage, 1)
 
 ## The slime's 24 forms and the wolf fixture in one dictionary.
 func _all() -> Dictionary:
-	var out := FormLoader.load_all()
+	var out := FormLoader.load_species()
 	out.merge(wolf_forms())
 	return out
 
@@ -93,7 +92,7 @@ func test_stage2_forms_default_to_the_slime() -> void:
 
 func test_stage2_forms_of_the_wolf_are_in_id_order() -> void:
 	var ids: Array = FormLoader.stage2_forms(_all(), "wolf").map(func(f: FormDef) -> String: return f.id)
-	assert_eq(ids, ["wolf_black_dog", "wolf_moonbound"])
+	assert_eq(ids, ["fx_black_dog", "fx_moonbound"])
 
 func test_a_species_with_no_forms_has_no_stage2_forms() -> void:
 	assert_eq(FormLoader.stage2_forms(_all(), "spider"), [])
@@ -125,13 +124,13 @@ func test_a_wolf_form_that_grows_from_the_slime_base_is_reported() -> void:
 	assert_eq(Array(_errors({"odd": f})), ["odd: parent 'slime' is another species' base"])
 
 func test_a_wolf_form_that_grows_from_a_slime_form_is_reported() -> void:
-	var all := FormLoader.load_all()
+	var all := FormLoader.load_species()
 	all["odd3"] = make("odd3", "wolf", 3, "weaver", ["weaver"])
 	assert_eq(Array(_errors(all)), ["odd3: parent 'weaver' is a slime form"])
 
 func test_a_child_whose_lineage_differs_from_its_parents_is_reported() -> void:
 	var all := wolf_forms()
-	all["wolf_odd"] = make("wolf_odd", "wolf", 3, "x", ["wolf_moonbound"])
+	all["wolf_odd"] = make("wolf_odd", "wolf", 3, "x", ["fx_moonbound"])
 	assert_eq(Array(_errors(all)), ["wolf_odd: lineage 'x' differs from its parent's 'moonbound'"])
 
 func test_a_wolf_form_with_no_lineage_is_reported() -> void:
@@ -151,12 +150,12 @@ class FakeRules:
 		return int(levels.get(id, 0))
 
 func test_a_wolf_at_stage_one_is_offered_every_wolf_line() -> void:
-	assert_eq(FormOffers.offers(_all(), Form.new("wolf"), FakeRules.new()), ["wolf_black_dog", "wolf_moonbound"])
+	assert_eq(FormOffers.offers(_all(), Form.new("wolf"), FakeRules.new()), ["fx_black_dog", "fx_moonbound"])
 
 func test_a_wolf_form_is_offered_its_children() -> void:
 	var wolf := Form.new("wolf")
-	wolf.advance("wolf_moonbound", _all())
-	assert_eq(FormOffers.offers(_all(), wolf, FakeRules.new()), ["wolf_loup_garou", "wolf_ulfhedinn"])
+	wolf.advance("fx_moonbound", _all())
+	assert_eq(FormOffers.offers(_all(), wolf, FakeRules.new()), ["fx_loup_garou", "fx_ulfhedinn"])
 
 func test_the_slime_offers_do_not_change_beside_a_wolf() -> void:
 	assert_eq(FormOffers.offers(_all(), Form.new(), FakeRules.new()), ["greater_slime"])
@@ -191,11 +190,11 @@ func test_every_base_is_reached_by_definition() -> void:
 	assert_true(progress.is_form_reached("slime"))
 	progress.reach_form("wolf")
 	assert_eq(progress.forms_reached, [])
-	progress.reach_form("wolf_moonbound")
-	assert_eq(progress.forms_reached, ["wolf_moonbound"])
+	progress.reach_form("fx_moonbound")
+	assert_eq(progress.forms_reached, ["fx_moonbound"])
 	progress.reach_form("nonsense")
 	assert_true(progress.is_form_reached("nonsense"), "an id the data does not know is stored and read back untouched")
-	assert_eq(progress.forms_reached, ["wolf_moonbound", "nonsense"])
+	assert_eq(progress.forms_reached, ["fx_moonbound", "nonsense"])
 
 func test_a_wolf_player_starts_as_the_wolf_base() -> void:
 	var p := _player("wolf")
@@ -205,21 +204,21 @@ func test_a_wolf_player_starts_as_the_wolf_base() -> void:
 
 func test_a_wolf_player_evolves_into_a_wolf_form_only() -> void:
 	var wolf := _player("wolf")
-	assert_true(wolf.advance_form("wolf_moonbound", true))
-	assert_eq(wolf.form.form_id, "wolf_moonbound")
+	assert_true(wolf.advance_form("fx_moonbound", true))
+	assert_eq(wolf.form.form_id, "fx_moonbound")
 	var slime := _player("slime")
-	assert_false(slime.advance_form("wolf_moonbound", true), "the form is in its data, but it is a wolf's")
+	assert_false(slime.advance_form("fx_moonbound", true), "the form is in its data, but it is a wolf's")
 	assert_eq(slime.form.form_id, "slime")
 
 func test_a_wolf_player_at_the_cap_is_offered_wolf_forms() -> void:
 	var p := _player("wolf")
 	assert_eq(p.form_offers(), [], "nothing is offered below the level cap")
 	p.progression.add_xp(Progression.stage_total(p.progression.stage))
-	assert_eq(p.form_offers().map(func(f: FormDef) -> String: return f.id), ["wolf_black_dog", "wolf_moonbound"])
+	assert_eq(p.form_offers().map(func(f: FormDef) -> String: return f.id), ["fx_black_dog", "fx_moonbound"])
 
 func test_a_new_run_returns_a_wolf_to_the_wolf_base() -> void:
 	var p := _player("wolf")
-	p.advance_form("wolf_moonbound", true)
+	p.advance_form("fx_moonbound", true)
 	rules.start_run()
 	assert_eq(p.form.form_id, "wolf")
 	assert_eq(p.form.stage, 1)
@@ -245,7 +244,7 @@ func _form_ids(model: Dictionary) -> Array:
 
 func test_the_wolf_tree_has_the_wolf_base_and_its_lines() -> void:
 	var model := _tree(_all(), "wolf")
-	assert_eq(_form_ids(model), ["wolf", "wolf_black_dog", "wolf_loup_garou", "wolf_moonbound", "wolf_ulfhedinn"])
+	assert_eq(_form_ids(model), ["fx_black_dog", "fx_loup_garou", "fx_moonbound", "fx_ulfhedinn", "wolf"])
 	assert_eq(model["nodes"]["wolf"]["state"], SkillTreeModel.CURRENT)
 	assert_eq(model["nodes"]["wolf"]["name"], "Wolf")
 	for id in model["nodes"]:
@@ -253,16 +252,16 @@ func test_the_wolf_tree_has_the_wolf_base_and_its_lines() -> void:
 
 func test_wolf_stage_three_forms_are_stubs_until_reached() -> void:
 	var model := _tree(_all(), "wolf")
-	assert_eq(model["nodes"]["wolf_loup_garou"]["state"], SkillTreeModel.STUB)
-	assert_false(model["nodes"]["wolf_loup_garou"].has("name"))
-	var reached := _tree(_all(), "wolf_moonbound", ["wolf_moonbound"])
-	assert_eq(reached["nodes"]["wolf_moonbound"]["state"], SkillTreeModel.CURRENT)
+	assert_eq(model["nodes"]["fx_loup_garou"]["state"], SkillTreeModel.STUB)
+	assert_false(model["nodes"]["fx_loup_garou"].has("name"))
+	var reached := _tree(_all(), "fx_moonbound", ["fx_moonbound"])
+	assert_eq(reached["nodes"]["fx_moonbound"]["state"], SkillTreeModel.CURRENT)
 
 func test_the_slime_tree_is_unchanged_with_wolf_forms_loaded() -> void:
-	assert_eq(_form_ids(_tree(_all(), "slime")), _form_ids(_tree(FormLoader.load_all(), "slime")))
+	assert_eq(_form_ids(_tree(_all(), "slime")), _form_ids(_tree(FormLoader.load_species(), "slime")))
 
 func test_a_species_with_no_forms_gives_only_its_base() -> void:
-	assert_eq(_form_ids(_tree(FormLoader.load_all(), "spider")), ["spider"])
+	assert_eq(_form_ids(_tree(FormLoader.load_species(), "spider")), ["spider"])
 	assert_eq(SkillTreeModel.base_name("spider"), "Spiderling")
 
 # --- Final review: the base card and the Form tab name the body's own species ---

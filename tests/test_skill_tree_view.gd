@@ -119,7 +119,7 @@ func test_the_wheel_asks_for_a_zoom_and_a_click_on_empty_space_asks_for_nothing(
 	assert_signal_not_emitted(v, "node_clicked")
 
 func test_with_the_forms_band_every_group_is_no_taller_than_the_box_and_shares_the_screen_when_it_fits() -> void:
-	var forms := FormLoader.load_all()
+	var forms := FormLoader.load_species()
 	model = SkillTreeModel.build(rules, compendium, forms, forms.keys(), "slime")
 	for id in model["nodes"]:
 		var group := SkillTreeView.neighborhood(model, id)

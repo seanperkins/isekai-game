@@ -10,7 +10,7 @@ class FakeRules:
 var forms := {}
 
 func before_all() -> void:
-	forms = FormLoader.load_all()
+	forms = FormLoader.load_species()
 
 func _rules(levels: Dictionary) -> FakeRules:
 	var r := FakeRules.new()

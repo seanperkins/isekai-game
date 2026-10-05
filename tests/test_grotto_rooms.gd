@@ -190,7 +190,7 @@ func _max_apex_stages_1_and_2() -> float:
 	for d in DefLoader.load_dir("res://data/skills"):
 		if d.id == "leap":
 			leap = d
-	var forms := FormLoader.load_all()
+	var forms := FormLoader.load_species()
 	var best := 0.0
 	for stage in [1, 2]:
 		var cap: int = Form.STAGE_CAPS[stage - 1]
