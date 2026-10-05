@@ -157,3 +157,10 @@ func test_a_stun_in_the_middle_of_the_windup_drops_the_cast() -> void:
 	await wait_physics_frames(40)
 	assert_eq(e.verb_casts, 0)
 	assert_false(e.telegraphing())
+
+func test_a_dying_enemy_never_casts() -> void:
+	var e := _enemy("twin_undead_dullahan")
+	e.status.die()
+	player.global_position = Vector2(100, 0)
+	await wait_physics_frames(60)
+	assert_eq(e.verb_casts, 0)
