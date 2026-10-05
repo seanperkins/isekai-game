@@ -338,14 +338,14 @@ A lineage opens when you have **absorbed** this much of its element(s) this life
 
 Powers are one input, not a gate: each owned power of a lineage counts as **+3** of its element. That brings a lineage in 2 to 3 eats earlier (a few more for Toxic, which has two powers) and never opens one alone: the most a lineage can get is +9 (Bulwark's three powers, against a threshold of 30) or +6 (Toxic's two, against 8 of dark).
 
-What it does, by walk (eats counted from 1 over the rooms in the walk's order; XP at each area's end):
+What it does, by walk (eats counted from 1 over the rooms in the walk's order; "revealed" counts the +3 per owned power, which the numbers in the last column leave out; built and pinned in `tests/test_lineage_gate_calibration.gd`):
 
 | Start | After the first area | By 270 XP | Opens, in order |
 |---|---|---|---|
 | Cave | 3 open (Toxic, Tide, Echo) at eat 22 | 5 | Toxic 15, Tide 17, Echo 18 (Cave); Bulwark 43, Weaver 45 (Grotto) |
-| Grotto (G1) | 2 open (Echo, Bulwark) at eat 29 | 4: no Weaver | Echo 7, Bulwark 26 (Grotto); Toxic 33, Tide 39 (Flooded); Weaver 77 (back in the Cave) |
+| Grotto (G1) | 3 revealed (Toxic, Bulwark, Echo) at eat 29: Poison Breath and Spore Cloud's +6 reveal Toxic early | 4: no Weaver | Echo 7, Bulwark 26 (Grotto); Toxic 33 without the power bonus, 16 with it; Tide 39 (Flooded); Weaver 77 (back in the Cave) |
 | Flooded (F1) | 2 open (Tide, Echo) at eat 20 | 4: no Weaver | Tide 16, Echo 20 (Flooded); Bulwark 30 (Deep); Toxic 50 (Grotto); Weaver 77 |
-| Deep (D1) | 1 open (Bulwark) at eat 22, so the Greater fallback is also offered | 4: no Weaver | Bulwark 18 (Deep); Echo 25, Tide 36 (Flooded); Toxic 50 (Grotto); Weaver 77 |
+| Deep (D1) | 2 revealed (Bulwark, Echo: Echolocation's +3) at eat 22, none offered yet, so the Greater fallback shows | 4: no Weaver | Bulwark 18 (Deep); Echo 25 without the bonus; Tide 36 (Flooded); Toxic 50 (Grotto); Weaver 77 |
 
 **Can the menu miss a lineage?** Yes, through Weaver. A second walk simulated partial diets: each creature is eaten with a set chance, and the lineages open at the first evolution (270 XP, or the end of the walk if it is never reached), 1,000 walks per cell. The share of walks where Weaver is open:
 

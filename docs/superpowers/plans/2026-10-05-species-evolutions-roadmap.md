@@ -1,6 +1,6 @@
 # Species evolutions: the roadmap, in pieces
 
-Status: proposal (2026-10-05). Source design: `docs/research/species-form-branches.md` (every form, its world twin, the essences, the monsters to add) and the review page `docs/evolutions/` (live at `/evolutions/`). This file splits building it into pieces. Each piece gets its own short spec or plan, test-first, in its own worktree and branch, reviewed and merged on its own, and ends with something the player can see or play. Built so far: A1 (species-aware forms), A2 (fire, mind and blood) and A3 (the other four species' 99 forms as data). The 24 slime forms already existed.
+Status: proposal (2026-10-05). Source design: `docs/research/species-form-branches.md` (every form, its world twin, the essences, the monsters to add) and the review page `docs/evolutions/` (live at `/evolutions/`). This file splits building it into pieces. Each piece gets its own short spec or plan, test-first, in its own worktree and branch, reviewed and merged on its own, and ends with something the player can see or play. Built so far: A1 (species-aware forms), A2 (fire, mind and blood), A3 (the other four species' 99 forms as data), B1 and B2 (the slime's diet gates, one parent per Sovereign, 18 new stage-4 forms, the tree layout). B3 (slime verbs) needs C1. The 24 slime forms already existed.
 
 ## What exists and what is missing
 
