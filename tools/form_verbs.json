@@ -1,11 +1,161 @@
 [
-  {"form": "gleipnir", "name": "Bind", "mp": 8, "value": 2, "fidelity": "full", "note": "",
-   "text": "Roots one big enemy or boss for a few seconds.",
-   "spec": {"kind": "bolt", "range": 160, "half_width": 24, "pierce": false, "status": {"root": 4.0}, "cooldown": 8.0}},
-  {"form": "shoggoth", "name": "Pseudopod", "mp": 3, "value": 5, "fidelity": "full", "note": "",
-   "text": "Extrudes long limbs for reach.",
-   "spec": {"kind": "bolt", "range": 150, "half_width": 12}},
-  {"form": "poltergeist", "name": "Hurl", "mp": 4, "value": 6, "fidelity": "approx", "note": "Always has rubble to throw; the design needs loose objects in the room.",
-   "text": "Throws loose rubble in the room at enemies.",
-   "spec": {"kind": "bolt", "range": 220, "half_width": 14, "pierce": false}}
+  {
+    "form": "gleipnir",
+    "name": "Bind",
+    "mp": 8,
+    "value": 2,
+    "fidelity": "full",
+    "note": "",
+    "text": "Roots one big enemy or boss for a few seconds.",
+    "spec": {
+      "kind": "bolt",
+      "range": 160,
+      "half_width": 24,
+      "pierce": false,
+      "status": {
+        "root": 4.0
+      },
+      "cooldown": 8.0
+    }
+  },
+  {
+    "form": "shoggoth",
+    "name": "Pseudopod",
+    "mp": 3,
+    "value": 5,
+    "fidelity": "full",
+    "note": "",
+    "text": "Extrudes long limbs for reach.",
+    "spec": {
+      "kind": "bolt",
+      "range": 150,
+      "half_width": 12
+    }
+  },
+  {
+    "form": "poltergeist",
+    "name": "Hurl",
+    "mp": 4,
+    "value": 6,
+    "fidelity": "approx",
+    "note": "Always has rubble to throw; the design needs loose objects in the room.",
+    "text": "Throws loose rubble in the room at enemies.",
+    "spec": {
+      "kind": "bolt",
+      "range": 220,
+      "half_width": 14,
+      "pierce": false
+    }
+  },
+  {
+    "form": "kraken",
+    "name": "Maelstrom",
+    "mp": 8,
+    "value": 2,
+    "fidelity": "approx",
+    "note": "The whirlpool draws foes in and hurts them; it does not pull loose parts of yours too.",
+    "text": "A whirlpool that pulls enemies in.",
+    "spec": {
+      "kind": "pull",
+      "radius": 96,
+      "seconds": 3.0,
+      "strength": 90,
+      "damage": true,
+      "damage_type": "water",
+      "cooldown": 6.0
+    }
+  },
+  {
+    "form": "tiamat",
+    "name": "Flood",
+    "mp": 7,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "It slows everything in a wide patch; it does not fill the room's low ground with swimmable water.",
+    "text": "Floods the low ground for a while.",
+    "spec": {
+      "kind": "zone",
+      "radius": 120,
+      "seconds": 6.0,
+      "slow": true,
+      "cooldown": 8.0
+    }
+  },
+  {
+    "form": "alkahest",
+    "name": "Dissolve",
+    "mp": 5,
+    "value": 6,
+    "fidelity": "approx",
+    "note": "Skips armour and opens anything in the group `dissolvable`; the world's weak gates and grates arrive with the new areas (F2). It does not corrode your own held parts.",
+    "text": "Eats through a weak gate, grate or armour plate.",
+    "spec": {
+      "kind": "dissolve",
+      "range": 60,
+      "half_width": 40
+    }
+  },
+  {
+    "form": "pestilence",
+    "name": "Contagion",
+    "mp": 6,
+    "value": 3,
+    "fidelity": "full",
+    "note": "",
+    "text": "Poison jumps between enemies standing close.",
+    "spec": {
+      "kind": "chain",
+      "range": 160,
+      "jump": 80,
+      "hops": 3,
+      "damage_type": "poison"
+    }
+  },
+  {
+    "form": "slime_mold",
+    "name": "Network",
+    "mp": 5,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "It slows enemies on a creeping patch; it does not show the shortest route to a mark.",
+    "text": "A growth spreads along the floor and slows enemies on it.",
+    "spec": {
+      "kind": "zone",
+      "radius": 140,
+      "seconds": 8.0,
+      "slow": true,
+      "cooldown": 10.0
+    }
+  },
+  {
+    "form": "talos",
+    "name": "Guardian",
+    "mp": 7,
+    "value": 2,
+    "fidelity": "approx",
+    "note": "A patrol aura that hurts what comes near; it has no visible nail that drains you when hit.",
+    "text": "A patrol aura that hurts what comes near.",
+    "spec": {
+      "kind": "aura",
+      "radius": 60,
+      "seconds": 6.0,
+      "damage": true,
+      "cooldown": 10.0
+    }
+  },
+  {
+    "form": "cube",
+    "name": "Engulf",
+    "mp": 6,
+    "value": 2,
+    "fidelity": "approx",
+    "note": "It stuns the enemy where it stands and digests it; the enemy is not drawn inside the body.",
+    "text": "Swallows a small enemy and holds it while it digests.",
+    "spec": {
+      "kind": "engulf",
+      "range": 40,
+      "seconds": 3.0,
+      "cooldown": 6.0
+    }
+  }
 ]

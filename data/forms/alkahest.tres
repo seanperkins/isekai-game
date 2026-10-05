@@ -18,7 +18,8 @@ stats = {
 "mp_regen": 40
 }
 traits = ["venom_blood"]
-grants = ["poison_breath"]
+grants = ["poison_breath", "verb_alkahest"]
+verb = "verb_alkahest"
 tint = Color(0.7, 1, 0.6, 1)
 size = 1.4
 blurb = "Dissolve: eat through a weak gate, grate or armour plate"

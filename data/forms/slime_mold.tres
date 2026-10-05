@@ -17,7 +17,8 @@ stats = {
 "max_mp": 13
 }
 traits = ["venom_blood"]
-grants = ["poison_breath", "poison_resistance"]
+grants = ["poison_breath", "poison_resistance", "verb_slime_mold"]
+verb = "verb_slime_mold"
 tint = Color(0.7, 1, 0.6, 1)
 size = 1.4
 blurb = "Network: a growth spreads along the floor, slows enemies on it and shows the shortest route to a mark (a map aid)"

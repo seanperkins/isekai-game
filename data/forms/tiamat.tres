@@ -18,7 +18,8 @@ stats = {
 "mp_regen": 40
 }
 traits = ["water_thrift"]
-grants = ["hydraulic_propulsion"]
+grants = ["hydraulic_propulsion", "verb_tiamat"]
+verb = "verb_tiamat"
 tint = Color(0.6, 0.85, 1, 1)
 size = 1.4
 blurb = "Flood: fills the room's low ground with water for a while"

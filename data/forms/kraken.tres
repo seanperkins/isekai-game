@@ -18,7 +18,8 @@ stats = {
 "mp_regen": 40
 }
 traits = ["water_thrift"]
-grants = ["hydraulic_propulsion"]
+grants = ["hydraulic_propulsion", "verb_kraken"]
+verb = "verb_kraken"
 tint = Color(0.6, 0.85, 1, 1)
 size = 1.4
 blurb = "Maelstrom: a whirlpool that pulls enemies in"

@@ -13,12 +13,13 @@ var radius := 24.0
 var damage := 1
 var slow := true
 var heals := 0
+var damage_type := "poison"
 var _seconds := 0.0
 var _elapsed := 0.0
 var _ticks := 0
 var _actor: Node2D
 
-## `opts` may hold `damage` (default 1), `slow` (default true), `heals` (default 0), `color` (the tint) and `look` ("web"
+## `opts` may hold `damage` (default 1), `damage_type` (default "poison"), `slow` (default true), `heals` (default 0), `color` (the tint) and `look` ("web"
 ## draws Binding Web's web sprite where the flat square would be; any other value keeps the square).
 func launch(at: Vector2, p_radius: float, seconds: float, actor: Node2D, opts := {}) -> void:
 	global_position = at
@@ -28,6 +29,7 @@ func launch(at: Vector2, p_radius: float, seconds: float, actor: Node2D, opts :=
 	damage = int(opts.get("damage", 1))
 	slow = bool(opts.get("slow", true))
 	heals = int(opts.get("heals", 0))
+	damage_type = str(opts.get("damage_type", "poison"))
 	add_to_group("player_clouds")
 	for c in get_children():
 		c.queue_free()
@@ -62,7 +64,7 @@ func _physics_process(delta: float) -> void:
 func _pulse() -> void:
 	if damage > 0:
 		for n in _enemies_inside():
-			n.receive_hit(damage, "poison", global_position, "poison")
+			n.receive_hit(damage, damage_type, global_position, "poison" if damage_type == "poison" else "")
 	if heals > 0 and _actor.global_position.distance_to(global_position) <= radius:
 		var h = _actor.get("health")
 		if h != null:

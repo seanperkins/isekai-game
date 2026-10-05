@@ -5,7 +5,7 @@ extends RefCounted
 
 ## The scene every data-defined verb uses.
 const SCENE := "res://scenes/abilities/verb.tscn"
-const KINDS := ["bolt", "burst", "ring", "dash", "zone", "mark", "heal", "ward", "buff"]
+const KINDS := ["bolt", "burst", "ring", "dash", "zone", "mark", "heal", "ward", "buff", "pull", "aura", "chain", "engulf", "dissolve"]
 ## Each kind's keys and what they hold (validate() checks them). Every kind also takes `cooldown` (seconds, in place of the default);
 ## the kinds in STRIKES also take damage_type and status.
 const SCHEMA := {
@@ -18,8 +18,15 @@ const SCHEMA := {
 	"heal": {"hp": "number", "mp": "number"},
 	"ward": {"seconds": "number"},
 	"buff": {"stats": "stats", "seconds": "number"},
+	"pull": {"radius": "number", "seconds": "number", "strength": "number", "damage": "bool", "ahead": "number"},
+	"aura": {"radius": "number", "seconds": "number", "damage": "bool"},
+	"chain": {"range": "number", "jump": "number", "hops": "number", "half_width": "number"},
+	"engulf": {"range": "number", "seconds": "number"},
+	"dissolve": {"range": "number", "half_width": "number"},
 }
-const STRIKES := ["bolt", "burst", "ring", "dash", "mark"]
+## The kinds that hurt, which take a `damage_type`; STRIKES are the instant ones, which also take a `status`.
+const TYPED := ["bolt", "burst", "ring", "dash", "mark", "zone", "pull", "aura", "chain", "engulf", "dissolve"]
+const STRIKES := ["bolt", "burst", "ring", "dash", "mark", "chain", "dissolve"]
 const STATUSES := ["slow", "stun", "root"]
 const DASH_SPEED := 500.0
 const DASH_VERTICAL := 0.6
@@ -31,6 +38,22 @@ const MARK_RANGE := 200.0
 const MARK_DELAY := 4.0
 const WARD_SECONDS := 2.0
 const BUFF_SECONDS := 5.0
+const PULL_RADIUS := 96.0
+const PULL_SECONDS := 3.0
+const PULL_STRENGTH := 90.0
+const PULL_AHEAD := 70.0
+const AURA_RADIUS := 60.0
+const AURA_SECONDS := 6.0
+const CHAIN_RANGE := 160.0
+const CHAIN_JUMP := 80.0
+const CHAIN_HOPS := 3
+const CHAIN_HALF_WIDTH := 40.0
+const ENGULF_RANGE := 40.0
+const ENGULF_HALF_WIDTH := 30.0
+const ENGULF_SECONDS := 3.0
+const ENGULF_RADIUS := 6.0
+const DISSOLVE_RANGE := 60.0
+const DISSOLVE_HALF_WIDTH := 40.0
 const BUFF_SOURCE := "verb_buff"
 const BUFF_GENERATION := "verb_buff_generation"
 const BOLT_RANGE := 260.0
@@ -61,6 +84,16 @@ static func run(ability: Ability, spec: Dictionary) -> void:
 			_ward(ability, spec)
 		"buff":
 			_buff(ability, spec)
+		"pull":
+			_pull(ability, spec)
+		"aura":
+			_aura(ability, spec)
+		"chain":
+			_chain(ability, spec)
+		"engulf":
+			_engulf(ability, spec)
+		"dissolve":
+			_dissolve(ability, spec)
 
 static func _bolt(a: Ability, spec: Dictionary) -> void:
 	var dir := a.aim_dir()
@@ -104,7 +137,8 @@ static func _zone(a: Ability, spec: Dictionary) -> void:
 	a.actor.get_parent().add_child(cloud)
 	var power := Damage.skill_power(a.value(), a.actor_atk()) if bool(spec.get("damage", false)) else 0
 	cloud.launch(a.actor.global_position, float(spec.get("radius", ZONE_RADIUS)), float(spec.get("seconds", ZONE_SECONDS)), a.actor,
-		{"damage": power, "slow": bool(spec.get("slow", true)), "heals": int(spec.get("heals", 0)), "color": _color(spec, 0.3)})
+		{"damage": power, "slow": bool(spec.get("slow", true)), "heals": int(spec.get("heals", 0)), "color": _color(spec, 0.3),
+		"damage_type": str(spec.get("damage_type", "poison"))})
 
 ## Brands the nearest foe in range; the hit lands `delay` seconds later if it is still there. The power is fixed at the cast.
 static func _mark(a: Ability, spec: Dictionary) -> void:
@@ -154,14 +188,90 @@ static func _buff_ends(actor, generation: int) -> void:
 	if is_instance_valid(actor) and int(actor.get_meta(BUFF_GENERATION, 0)) == generation:
 		actor.stats.set_timed_modifiers(BUFF_SOURCE, [])
 
-## The skill's damage to each target, then the spec's status.
-static func _strike(a: Ability, targets: Array, spec: Dictionary) -> void:
+## A field centred `ahead` of the caster that draws foes in (Maelstrom), and hurts them each second when the spec says.
+static func _pull(a: Ability, spec: Dictionary) -> void:
+	var at: Vector2 = a.actor.global_position + a.aim_dir() * float(spec.get("ahead", PULL_AHEAD))
+	_field(a, spec, at, {"pull": float(spec.get("strength", PULL_STRENGTH))}, PULL_RADIUS, PULL_SECONDS)
+
+## A field that stays on the caster and hurts what comes near (Guardian).
+static func _aura(a: Ability, spec: Dictionary) -> void:
+	_field(a, spec, a.actor.global_position, {"follow": a.actor}, AURA_RADIUS, AURA_SECONDS)
+
+static func _field(a: Ability, spec: Dictionary, at: Vector2, opts: Dictionary, radius: float, seconds: float) -> void:
+	var field := VerbField.new()
+	a.actor.get_parent().add_child(field)
+	opts["damage"] = Damage.skill_power(a.value(), a.actor_atk()) if bool(spec.get("damage", false)) else 0
+	opts["damage_type"] = str(spec.get("damage_type", "physical"))
+	opts["color"] = _color(spec, 0.25)
+	field.launch(a.actor, at, float(spec.get("radius", radius)), float(spec.get("seconds", seconds)), opts)
+
+## Hits the nearest foe in front, then jumps to the nearest foe within `jump` of it that is not yet hit, `hops` times (Contagion).
+static func _chain(a: Ability, spec: Dictionary) -> void:
+	var first := a.targets_in_front(float(spec.get("range", CHAIN_RANGE)), float(spec.get("half_width", CHAIN_HALF_WIDTH)))
+	if first.is_empty():
+		return
+	var power := Damage.skill_power(a.value(), a.actor_atk())
+	var jump := float(spec.get("jump", CHAIN_JUMP))
+	var hit: Array = []
+	var current = first[0]
+	var from: Vector2 = a.actor.global_position
+	for i in 1 + int(spec.get("hops", CHAIN_HOPS)):
+		hit.append(current)
+		var here: Vector2 = current.global_position
+		_hit(current, power, spec, from)
+		Vfx.line(a.actor, from, here, _color(spec), 2.0, 0.3)
+		var next = null
+		var best := jump + 0.001
+		for f in a.targets_around(1.0e9):
+			var d: float = f.global_position.distance_to(here)
+			if not hit.has(f) and d < best:
+				next = f
+				best = d
+		if next == null:
+			break
+		from = here
+		current = next
+
+## Stuns the nearest foe in front that can be stunned and holds it while a field on it digests it, once a second (Engulf).
+static func _engulf(a: Ability, spec: Dictionary) -> void:
+	var seconds := float(spec.get("seconds", ENGULF_SECONDS))
+	for t in a.targets_in_front(float(spec.get("range", ENGULF_RANGE)), ENGULF_HALF_WIDTH):
+		if not (t is Enemy) or not t.def.predatable:
+			continue
+		t.status.stun(seconds)
+		var digest := Damage.skill_power(a.value(), a.actor_atk()) if a.value() > 0 else 0
+		var field := VerbField.new()
+		a.actor.get_parent().add_child(field)
+		field.launch(a.actor, t.global_position, ENGULF_RADIUS, seconds,
+			{"follow": t, "damage": digest, "damage_type": str(spec.get("damage_type", "physical")), "ignore_def": true, "color": _color(spec, 0.2)})
+		return
+
+## A short burst that skips an enemy's armour and opens whatever is in the group `dissolvable` (a weak gate or grate: its own
+## `dissolve()`). The skill's damage to an ordinary target.
+static func _dissolve(a: Ability, spec: Dictionary) -> void:
+	var reach := float(spec.get("range", DISSOLVE_RANGE))
+	var half := float(spec.get("half_width", DISSOLVE_HALF_WIDTH))
+	var dir: Vector2 = a.aim_dir()
+	var from: Vector2 = a.actor.global_position
+	_strike(a, a.targets_in_front(reach, half), spec, true)
+	for n in a.actor.get_tree().get_nodes_in_group("dissolvable"):
+		var d: Vector2 = n.global_position - from
+		if d.dot(dir) >= -4.0 and d.dot(dir) <= reach and absf(d.cross(dir)) <= half and n.has_method("dissolve"):
+			n.dissolve()
+	Vfx.line(a.actor, from, from + dir * reach, _color(spec), 6.0, 0.2)
+
+## The skill's damage to each target, then the spec's status. `ignore_def` skips an Enemy's DEF.
+static func _strike(a: Ability, targets: Array, spec: Dictionary, ignore_def := false) -> void:
 	var power := Damage.skill_power(a.value(), a.actor_atk())
 	for t in targets:
-		_hit(t, power, spec, a.actor.global_position)
+		_hit(t, power, spec, a.actor.global_position, ignore_def)
 
-static func _hit(t, power: int, spec: Dictionary, from: Vector2) -> void:
-	t.receive_hit(power, str(spec.get("damage_type", "physical")), from, "")
+static func _hit(t, power: int, spec: Dictionary, from: Vector2, ignore_def := false) -> void:
+	var type := str(spec.get("damage_type", "physical"))
+	if ignore_def and t is Enemy:
+		t.receive_hit(power, type, from, "", true)
+	else:
+		t.receive_hit(power, type, from, "")
 	_apply_status(t, spec.get("status", {}))
 
 ## slow: any actor that can be slowed. stun: an Enemy that can be eaten (the serpent cannot be stunned). root: any Enemy, a boss included.
@@ -187,8 +297,9 @@ static func validate(spec: Dictionary) -> PackedStringArray:
 		return out
 	var keys: Dictionary = SCHEMA[kind].duplicate()
 	keys["cooldown"] = "number"
-	if kind in STRIKES:
+	if kind in TYPED:
 		keys["damage_type"] = "text"
+	if kind in STRIKES:
 		keys["status"] = "status"
 	for key in spec:
 		if key == "kind":

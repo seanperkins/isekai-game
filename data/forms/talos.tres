@@ -17,7 +17,8 @@ stats = {
 "max_mp": 10
 }
 traits = ["hard_shell"]
-grants = ["body_armor", "toughness"]
+grants = ["body_armor", "toughness", "verb_talos"]
+verb = "verb_talos"
 tint = Color(0.95, 0.83, 0.65, 1)
 size = 1.4
 blurb = "Guardian: a patrol aura; if the visible nail is hit it drains you"

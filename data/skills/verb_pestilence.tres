@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_pestilence"
+display_name = "Contagion"
+description = "Poison jumps between enemies standing close."
+announce = "New verb. Acquired [Contagion]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [3], "spec": {"kind": "chain", "range": 160, "jump": 80, "hops": 3, "damage_type": "poison"}}]
+mp_cost = 6

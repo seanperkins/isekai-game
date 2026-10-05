@@ -17,7 +17,8 @@ stats = {
 "max_mp": 10
 }
 traits = ["venom_blood"]
-grants = ["poison_breath", "poison_resistance"]
+grants = ["poison_breath", "poison_resistance", "verb_pestilence"]
+verb = "verb_pestilence"
 tint = Color(0.7, 1, 0.6, 1)
 size = 1.4
 blurb = "Contagion: poison jumps between enemies standing close"
