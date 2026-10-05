@@ -60,3 +60,9 @@ exits = [{
 "room": "CA2",
 "to": 320.0
 }]
+features = [{
+"id": "CA1_lamp",
+"kind": "lamp",
+"pos": Vector2(1150, 320)
+}]
+tags = ["hold"]

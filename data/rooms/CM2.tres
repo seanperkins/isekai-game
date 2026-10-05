@@ -57,4 +57,8 @@ features = [{
 "pos": Vector2(860, 320),
 "text": "The living and the dead keep this ground in truce. Beyond the lych gate the dead keep their own counsel.",
 "title": "Weathered tablet"
+}, {
+"id": "CM2_vigil",
+"kind": "vigil",
+"pos": Vector2(620, 320)
 }]

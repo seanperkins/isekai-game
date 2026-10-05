@@ -56,3 +56,10 @@ exits = [{
 "room": "VO7",
 "to": 400.0
 }]
+features = [{
+"id": "VO4_barrier",
+"kind": "barrier",
+"pos": Vector2(520, 360),
+"size": Vector2(160, 40)
+}]
+tags = ["hold"]

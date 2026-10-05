@@ -53,3 +53,8 @@ exits = [{
 "room": "CR5",
 "to": 1060.0
 }]
+features = [{
+"id": "CR2_lamp",
+"kind": "lamp",
+"pos": Vector2(760, 320)
+}]

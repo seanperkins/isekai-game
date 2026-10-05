@@ -103,6 +103,8 @@ func _canopy() -> RoomDef:
 	AreaKit.decor(r, "grotto_root_hang", 600.0, 20.0)
 	AreaKit.decor(r, "grotto_root_hang", 1500.0, 20.0)
 	AreaKit.tag(r, "moonlit")
+	AreaKit.feature(r, "gap", "FO6_gap_a", 785.0, 268.0, {"width": 50.0})  # between the third branch and the fourth
+	AreaKit.feature(r, "gap", "FO6_gap_b", 1125.0, 268.0, {"width": 50.0})  # between the fifth and the sixth
 	return r
 
 # --- FO7 the Nest: a dead end for the spider, rare ---
@@ -127,6 +129,7 @@ func _trail() -> RoomDef:
 	AreaKit.decor(r, "grotto_root_hang", 1300.0, 20.0)
 	AreaKit.decor(r, "grotto_flowers", 820.0, 320.0)
 	AreaKit.tag(r, "moonlit")
+	AreaKit.tag(r, "hold")
 	return r
 
 # --- FO9 the Den: a dead end, rare ---

@@ -47,6 +47,8 @@ func _boardwalk() -> RoomDef:
 	AreaKit.decor(r, "flooded_flowers", 1150.0, 320.0)
 	AreaKit.decor(r, "flooded_lichen_hang", 600.0, 20.0)
 	AreaKit.decor(r, "flooded_root_hang", 1100.0, 20.0)
+	AreaKit.feature(r, "gap", "SW2_gap_a", 390.0, 268.0, {"width": 80.0})  # between planks
+	AreaKit.feature(r, "gap", "SW2_gap_b", 620.0, 268.0, {"width": 80.0})
 	return r
 
 # --- SW3 the Bog Flat: the hub of the swamp; a climb to the Roost, the Blind to the east, and the village's hole in the floor ---
@@ -82,4 +84,5 @@ func _blind() -> RoomDef:
 	AreaKit.decor(r, "flooded_rubble", 150.0, 320.0)
 	AreaKit.decor(r, "flooded_glow_fungus", 520.0, 320.0)
 	AreaKit.decor(r, "flooded_root_hang", 300.0, 20.0)
+	AreaKit.feature(r, "barrier", "SW5_barrier", 44.0, 320.0, {"size": Vector2(24.0, 120.0)})  # across the door: a slab the dissolve verb opens
 	return r

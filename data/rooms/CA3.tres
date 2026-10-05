@@ -35,4 +35,13 @@ features = [{
 "id": "CA3_pool",
 "kind": "glow_pool",
 "pos": Vector2(360, 320)
+}, {
+"id": "CA3_hidden",
+"kind": "hidden",
+"pos": Vector2(44, 320),
+"size": Vector2(24, 120)
+}, {
+"id": "CA3_vigil",
+"kind": "vigil",
+"pos": Vector2(440, 320)
 }]

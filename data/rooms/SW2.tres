@@ -48,3 +48,14 @@ exits = [{
 "room": "SW3",
 "to": 320.0
 }]
+features = [{
+"id": "SW2_gap_a",
+"kind": "gap",
+"pos": Vector2(390, 268),
+"width": 80.0
+}, {
+"id": "SW2_gap_b",
+"kind": "gap",
+"pos": Vector2(620, 268),
+"width": 80.0
+}]

@@ -39,4 +39,15 @@ exits = [{
 "room": "FO7",
 "to": 320.0
 }]
+features = [{
+"id": "FO6_gap_a",
+"kind": "gap",
+"pos": Vector2(785, 268),
+"width": 50.0
+}, {
+"id": "FO6_gap_b",
+"kind": "gap",
+"pos": Vector2(1125, 268),
+"width": 50.0
+}]
 tags = ["moonlit"]

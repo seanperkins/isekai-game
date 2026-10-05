@@ -72,6 +72,7 @@ func _yard() -> RoomDef:
 	AreaKit.decor(r, "root_hang", 600.0, 20.0)
 	AreaKit.decor(r, "root_hang", 900.0, 20.0)
 	AreaKit.decor(r, "stalagmite", 1230.0, 320.0)
+	AreaKit.feature(r, "lamp", "VI3_lamp", 700.0, 320.0)
 	return r
 
 # --- VI4 the Chieftain Hall: a dead end west of the Yard ---

@@ -30,3 +30,9 @@ exits = [{
 "room": "SW3",
 "to": 320.0
 }]
+features = [{
+"id": "SW5_barrier",
+"kind": "barrier",
+"pos": Vector2(44, 320),
+"size": Vector2(24, 120)
+}]

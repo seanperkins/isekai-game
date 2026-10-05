@@ -37,6 +37,7 @@ func _threshold() -> RoomDef:
 	AreaKit.decor(r, "deep_bones", 150.0, 320.0)
 	AreaKit.decor(r, "deep_glow_fungus", 480.0, 320.0)
 	AreaKit.decor(r, "deep_root_hang", 300.0, 20.0)
+	AreaKit.feature(r, "vigil", "DM1_vigil", 400.0, 320.0)
 	return r
 
 # --- DM2 the Gate Hall: three screens, the pool, and a way out to each spoke (down to the West, up to the Middle, east) ---
@@ -112,4 +113,5 @@ func _reliquary() -> RoomDef:
 	AreaKit.decor(r, "deep_bones", 200.0, 320.0)
 	AreaKit.decor(r, "deep_glow_fungus", 520.0, 320.0)
 	AreaKit.decor(r, "deep_wall_crystal", 440.0, 320.0)
+	AreaKit.feature(r, "hidden", "DM7_hidden", 44.0, 320.0, {"size": Vector2(24.0, 120.0)})
 	return r

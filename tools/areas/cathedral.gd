@@ -44,6 +44,8 @@ func _nave() -> RoomDef:
 	AreaKit.decor(r, "stalagmite", 120.0, 320.0)
 	AreaKit.decor(r, "root_hang", 900.0, 20.0)
 	AreaKit.decor(r, "root_hang", 1600.0, 20.0)
+	AreaKit.feature(r, "lamp", "CA1_lamp", 1150.0, 320.0)
+	AreaKit.tag(r, "hold")
 	return r
 
 # --- CA2 the Transept: the crossing; the climb to the Bell Shaft rises from its floor ---
@@ -65,6 +67,8 @@ func _font() -> RoomDef:
 	AreaKit.decor(r, "crystal_rose", 250.0, 320.0)
 	AreaKit.decor(r, "flowers", 520.0, 320.0)
 	AreaKit.decor(r, "vine", 300.0, 20.0)
+	AreaKit.feature(r, "hidden", "CA3_hidden", 44.0, 320.0, {"size": Vector2(24.0, 120.0)})  # a door that looks like wall until revealed
+	AreaKit.feature(r, "vigil", "CA3_vigil", 440.0, 320.0)
 	return r
 
 # --- CA4 the Bell Shaft: three screens up from the Transept, a zigzag to a door in the west wall ---

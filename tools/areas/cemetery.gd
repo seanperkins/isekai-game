@@ -47,6 +47,7 @@ func _churchyard() -> RoomDef:
 	AreaKit.decor(r, "stalagmite", 1200.0, 320.0)
 	AreaKit.decor(r, "root_hang", 640.0, 20.0)
 	AreaKit.decor(r, "vine", 1100.0, 20.0)
+	AreaKit.feature(r, "vigil", "CM2_vigil", 620.0, 320.0)
 	return r
 
 # --- CM3 the Lych Gate: the churchyard's east gate; a drifter over the road to the crypt ---

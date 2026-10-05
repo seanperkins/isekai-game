@@ -52,6 +52,7 @@ func _ossuary() -> RoomDef:
 	AreaKit.decor(r, "deep_stalagmite", 1200.0, 320.0)
 	AreaKit.decor(r, "deep_root_hang", 500.0, 20.0)
 	AreaKit.decor(r, "deep_lichen_hang", 1000.0, 20.0)
+	AreaKit.feature(r, "lamp", "CR2_lamp", 760.0, 320.0)
 	return r
 
 # --- CR3 the Niche Gallery: three screens; shelves cut in the walls at either end, open floor between for the hounds' run ---
@@ -70,6 +71,7 @@ func _gallery() -> RoomDef:
 	AreaKit.decor(r, "deep_wall_crystal", 1800.0, 320.0)
 	AreaKit.decor(r, "deep_lichen_hang", 700.0, 20.0)
 	AreaKit.decor(r, "deep_root_hang", 1500.0, 20.0)
+	AreaKit.tag(r, "hold")
 	return r
 
 # --- CR4 the Vault: a dead end ---

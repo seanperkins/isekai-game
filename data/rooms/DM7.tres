@@ -29,3 +29,9 @@ exits = [{
 "room": "DM5",
 "to": 320.0
 }]
+features = [{
+"id": "DM7_hidden",
+"kind": "hidden",
+"pos": Vector2(44, 320),
+"size": Vector2(24, 120)
+}]

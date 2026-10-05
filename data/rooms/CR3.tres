@@ -55,3 +55,4 @@ exits = [{
 "room": "CR4",
 "to": 320.0
 }]
+tags = ["hold"]

@@ -36,4 +36,8 @@ features = [{
 "pos": Vector2(320, 320),
 "text": "The stone is warm, and red where the lamplight touches it. Whatever keeps the hall beyond has kept it a long time.",
 "title": "Scorched tablet"
+}, {
+"id": "DM1_vigil",
+"kind": "vigil",
+"pos": Vector2(400, 320)
 }]
