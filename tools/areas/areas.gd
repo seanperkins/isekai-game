@@ -1,0 +1,6 @@
+class_name AreaRegistry
+extends RefCounted
+## The area modules the builder runs, in the order they build (a later one may attach to an earlier one's rooms).
+
+static func modules() -> Array:
+	return []

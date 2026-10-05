@@ -6,5 +6,10 @@ extends RefCounted
 func area() -> String:
 	return ""
 
+## The letters its room ids start with ("FO" for FO1, FO2 ...): the rooms the builder makes afresh on every run, and the exits to such rooms
+## it strips from the hand-authored rooms before the module attaches them again.
+func prefix() -> String:
+	return ""
+
 func build(_world: Dictionary) -> void:
 	pass
