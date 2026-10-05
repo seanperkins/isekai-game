@@ -1,29 +1,41 @@
 extends SceneTree
-## Frames of the Menagerie at a few stops along its length. Needs a real renderer. Run from the project root:
+## Frames of the Menagerie at a few stops along its length. Needs a real renderer (Godot cannot render headless). Run:
 ##   tools/menagerie_shots.sh
-## The script opens the window far off-screen and gives the focus back to the app you were in (Godot cannot render headless). To run
-## this by hand instead:
-##   env HOME="$PWD/.tmp/gdhome" godot --path . -s res://tools/menagerie_shots.gd -- --room=menagerie
-## Shots go to .tmp/menagerie-frames/stop_N.png. Every creature is held asleep and the player cannot be hurt, so a frame shows the
-## creatures at rest and not a fight. The game is untyped: a -s script cannot see autoloads.
+## The wrapper runs this in a throwaway copy of the project whose window is a tiny, borderless one that cannot take focus, and the
+## game is drawn into a 1280x720 SubViewport that this script saves, so nothing takes over the screen. Frames land in
+## .tmp/menagerie-frames/stop_N.png (`--out=DIR` changes that). Every creature is held asleep and the player cannot be hurt, so a
+## frame shows the creatures at rest and not a fight. The game is untyped: a -s script cannot see autoloads.
 
-const OUT := "res://.tmp/menagerie-frames/"
+const VIEW_SIZE := Vector2i(1280, 720)
+const GAME_SIZE := Vector2i(640, 360)  # the game's own resolution, drawn at twice the size
 const STOPS := [60.0, 420.0, 1000.0, 1700.0, 4400.0, 7000.0, 9200.0, 10300.0]
 const SETTLE := 25
+var out := ProjectSettings.globalize_path("res://.tmp/menagerie-frames")
+var view: SubViewport
 var game
 var frame := 0
 var stop := 0
 
 func _initialize() -> void:
+	for arg in OS.get_cmdline_user_args():
+		if str(arg).begins_with("--out="):
+			out = str(arg).trim_prefix("--out=")
+	DirAccess.make_dir_recursive_absolute(out)
+	print("shots: window mode=%d size=%s" % [DisplayServer.window_get_mode(), DisplayServer.window_get_size()])  # the wrapper checks this
+	view = SubViewport.new()
+	view.size = VIEW_SIZE
+	view.size_2d_override = GAME_SIZE
+	view.size_2d_override_stretch = true
+	view.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	root.add_child(view)
 	game = load("res://scenes/main.tscn").instantiate()
-	root.add_child(game)
-	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT))
+	view.add_child(game)
 
 func _process(_delta: float) -> bool:
 	frame += 1
 	if frame == 5 or (frame > 5 and (frame - 5) % SETTLE == 0):
 		if frame > 5:
-			root.get_viewport().get_texture().get_image().save_png(ProjectSettings.globalize_path("%sstop_%d.png" % [OUT, stop]))
+			view.get_texture().get_image().save_png("%s/stop_%d.png" % [out, stop])
 			stop += 1
 			if stop >= STOPS.size():
 				quit()
