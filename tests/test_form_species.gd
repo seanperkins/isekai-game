@@ -91,3 +91,47 @@ func test_stage2_forms_of_the_wolf_are_in_id_order() -> void:
 
 func test_a_species_with_no_forms_has_no_stage2_forms() -> void:
 	assert_eq(FormLoader.stage2_forms(_all(), "spider"), [])
+
+# --- Task 3: FormValidator checks species, parentage and lineage ---
+
+func _skill_ids() -> Array:
+	var out: Array = []
+	for d in DefLoader.load_dir("res://data/skills"):
+		if d.source != "enemy_only":
+			out.append(d.id)
+	return out
+
+func _errors(forms: Dictionary) -> PackedStringArray:
+	return FormValidator.validate(forms, _skill_ids())
+
+func test_the_fixture_species_passes_the_validator() -> void:
+	assert_eq(_errors(wolf_forms()).size(), 0, str(_errors(wolf_forms())))
+
+func test_the_slime_data_still_passes_beside_a_second_species() -> void:
+	assert_eq(_errors(_all()).size(), 0, str(_errors(_all())))
+
+func test_an_unknown_species_is_reported_once() -> void:
+	var f := make("were", "werewolf", 2, "x", ["werewolf"])
+	assert_eq(Array(_errors({"were": f})), ["were: unknown species 'werewolf'"])
+
+func test_a_wolf_form_that_grows_from_the_slime_base_is_reported() -> void:
+	var f := make("odd", "wolf", 2, "x", ["slime"])
+	assert_eq(Array(_errors({"odd": f})), ["odd: parent 'slime' is another species' base"])
+
+func test_a_wolf_form_that_grows_from_a_slime_form_is_reported() -> void:
+	var all := FormLoader.load_all()
+	all["odd3"] = make("odd3", "wolf", 3, "weaver", ["weaver"])
+	assert_eq(Array(_errors(all)), ["odd3: parent 'weaver' is a slime form"])
+
+func test_a_child_whose_lineage_differs_from_its_parents_is_reported() -> void:
+	var all := wolf_forms()
+	all["wolf_odd"] = make("wolf_odd", "wolf", 3, "x", ["wolf_moonbound"])
+	assert_eq(Array(_errors(all)), ["wolf_odd: lineage 'x' differs from its parent's 'moonbound'"])
+
+func test_a_wolf_form_with_no_lineage_is_reported() -> void:
+	var f := make("wolf_blank", "wolf", 2, "", ["wolf"])
+	assert_eq(Array(_errors({"wolf_blank": f})), ["wolf_blank: no lineage"])
+
+func test_only_stage_two_forms_grow_from_a_wolf_base() -> void:
+	var f := make("wolf_skip", "wolf", 3, "moonbound", ["wolf"])
+	assert_string_contains("\n".join(_errors({"wolf_skip": f})), "only stage-2 forms grow from the base wolf")
