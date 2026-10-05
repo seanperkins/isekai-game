@@ -51,6 +51,11 @@ func test_the_player_starts_on_the_floor_at_the_left_end() -> void:
 	assert_lt(room.start.x, room.spawns[0]["pos"].x)
 	assert_true(room.is_start())
 
+func test_the_player_starts_out_of_reach_of_every_creature() -> void:
+	var room: RoomDef = Menagerie.request(creatures)["rooms"][Menagerie.ROOM_ID]
+	for s in room.spawns:
+		assert_gt(room.start.distance_to(s["pos"]), MenagerieKeeper.WAKE_RANGE, "%s would wake the moment the room loads" % s["id"])
+
 func test_the_room_passes_the_world_validator_and_the_lint() -> void:
 	var request := Menagerie.request(creatures)
 	var rooms: Dictionary = request["rooms"]

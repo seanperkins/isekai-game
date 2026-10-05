@@ -8,7 +8,7 @@ const NAME := "menagerie"
 ## The water pool is terrain, not a creature.
 const EXCLUDED := ["water_pool"]
 const SPACING := 56.0
-const FIRST_X := 160.0
+const FIRST_X := 260.0  # far enough from START that nothing wakes when the room loads
 const START := Vector2(60, 308)
 const DROP_Y := 300.0  # a spawn drops from here onto the floor
 const HANG_Y := 200.0  # a ceiling walker hangs in mid-air, low enough that a player on the floor under it wakes it and it sees them
