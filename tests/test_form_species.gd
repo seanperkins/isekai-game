@@ -264,3 +264,23 @@ func test_the_slime_tree_is_unchanged_with_wolf_forms_loaded() -> void:
 func test_a_species_with_no_forms_gives_only_its_base() -> void:
 	assert_eq(_form_ids(_tree(FormLoader.load_all(), "spider")), ["spider"])
 	assert_eq(SkillTreeModel.base_name("spider"), "Spiderling")
+
+# --- Final review: the base card and the Form tab name the body's own species ---
+
+func test_a_wolf_base_card_names_the_wolf_not_the_slime() -> void:
+	var r: SkillRulesEngine = autofree(SkillRulesEngine.new())
+	var wolf := SkillScreenModel.tree_card(r, _tree(_all(), "wolf")["nodes"]["wolf"], {}, _all(), ActiveSlots.new())
+	assert_eq(wolf["title"], "Wolf")
+	assert_eq("\n".join(wolf["lines"]), "Every life begins as a wolf.")
+	var slime := SkillScreenModel.tree_card(r, _tree(_all(), "slime")["nodes"]["slime"], {}, _all(), ActiveSlots.new())
+	assert_eq("\n".join(slime["lines"]), "Every life begins as a slime.", "the slime's card is unchanged")
+
+func test_the_form_note_names_a_wolf_body() -> void:
+	var p := _player("wolf")
+	var skills := DefLoader.load_dir("res://data/skills")
+	var screen := SkillScreen.new()
+	add_child_autofree(screen)
+	screen.bind(p, rules, CompendiumModel.new(skills, []), skills)
+	var note := screen.form_note()
+	assert_true(note.begins_with("Wolf, stage 1"), note)
+	assert_false(note.contains("Slime"), note)

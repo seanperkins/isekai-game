@@ -71,6 +71,10 @@ static func species_of(current_form: String, forms: Dictionary) -> String:
 static func base_name(species: String) -> String:
 	return BASE_NAMES.get(species, species.capitalize())
 
+## The line a species' base card carries: "Every life begins as a slime."
+static func base_line(species: String) -> String:
+	return "Every life begins as a %s." % base_name(species).to_lower()
+
 ## Every non-enemy skill, in id order: the Compendium keeps one slot for each.
 static func _skill_defs(rules, compendium: CompendiumModel) -> Array:
 	var ids: Array = compendium.states().keys()

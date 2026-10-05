@@ -186,11 +186,11 @@ static func tree_card(rules, node: Dictionary, defs: Dictionary, forms: Dictiona
 const FORM_STATUS := {"current": "Your body now", "reached": "Reached before", "named": "Not yet reached"}
 
 ## The Tree tab's card for a shown form: form_card's stats, traits and grants, with its stage and whether it is the body now,
-## was reached before, or is not yet reached. The slime is not a FormDef.
+## was reached before, or is not yet reached. A species' base is not a FormDef.
 static func _form_tree_card(rules, node: Dictionary, forms: Dictionary) -> Dictionary:
 	var status: String = FORM_STATUS[node["state"]]
 	if not forms.has(node["id"]):
-		return {"title": node["name"], "status": "Stage 1  " + status, "lines": ["Every life begins as a slime."]}
+		return {"title": node["name"], "status": "Stage 1  " + status, "lines": [SkillTreeModel.base_line(node["id"])]}
 	var c := form_card(forms[node["id"]], rules)
 	var lines: Array = [c["blurb"]]
 	lines.append_array(c["stats"])

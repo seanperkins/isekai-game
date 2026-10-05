@@ -741,7 +741,7 @@ func _base_sheet() -> SpriteSheet:
 ## One paragraph about the body: who you are, and what evolving offers (or that it is the only path).
 func form_note() -> String:
 	var d := _player.form_def()
-	var who := "Slime" if d == null else d.display_name
+	var who := SkillTreeModel.base_name(_player.form.species) if d == null else d.display_name
 	var note := "%s, stage %d of %d. Skills reach Lv%d." % [who, _player.form.stage, Progression.MAX_STAGE, _player.form.cap()]
 	var offers := _player.form_offers()
 	if offers.size() == 1:
