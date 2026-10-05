@@ -112,6 +112,8 @@ var _spit_cd := 0.0
 var last_blow := {}
 ## Set when the player appraises it: an appraised enemy counts as marked.
 var appraised := false
+## A goblin has picked this creature's pocket: it is tried once.
+var robbed := false
 ## The goblin has been paid for this creature (it learned from it, downed or eaten): it pays once however it ends.
 var lesson_paid := false
 var _blow_from_behind := false
@@ -333,6 +335,11 @@ func is_rooted() -> bool:
 
 func can_be_predated() -> bool:
 	return not dormant and _root <= 0.0 and def.predatable and status.predatable()
+
+## Whether a goblin can pick its pocket now: alive and awake (stunned will do), one that can be eaten, not tried yet, with something it could leave.
+func can_be_robbed() -> bool:
+	return not dormant and not robbed and def.predatable and not Drops.for_def(def).is_empty() \
+		and (status.state == EnemyStatus.ACTIVE or status.state == EnemyStatus.STUNNED)
 
 ## Whether a wolf or a goblin can bond with it now: alive, awake and stunned, and it accepts a bond at all (CreatureDef.bonds).
 func can_be_bonded() -> bool:

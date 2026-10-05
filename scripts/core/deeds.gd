@@ -48,7 +48,7 @@ const TAGS := {
 	GUARD_BROKEN: ["source"], BARRIER_BROKEN: [], HIDDEN_FOUND: [], ROOM_CLEARED: ["room", "alone"], ROOM_ENTERED: ["room", "area"],
 	SKILL_HIT: ["id"], SKILL_MISSED: ["id"], SWITCH_HIT: ["far"],
 	PART_HARVESTED: ["part"], GRAFT_ATTACHED: ["part"], GRAFT_SHED: ["part"], BOND_FORMED: ["kind", "creature"],
-	LESSON_LEARNED: ["creature", "species", "element"], TRAP_SPRUNG: [], WEAPON_FORGED: [], ITEM_STOLEN: [], WARD_STONE_PLACED: [],
+	LESSON_LEARNED: ["creature", "species", "element"], TRAP_SPRUNG: [], WEAPON_FORGED: [], ITEM_STOLEN: ["creature", "part"], WARD_STONE_PLACED: [],
 	PREY_COCOONED: [], GAP_CROSSED: [], LAMP_DRUNK: [], VILLAGE_KEPT: [], ROOM_HELD: ["room"], VIGIL_KEPT: [], CORPSE_LEFT: ["source"],
 	ITEM_CARRIED: [], VILLAGE_VISITED_UNSEEN: [], PREY_FREED: [],
 }

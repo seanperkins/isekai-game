@@ -122,6 +122,8 @@ var inventory := Inventory.new(_part_defs)
 var lessons := Lessons.new()
 ## What a forged weapon has added this life: stat -> amount (the Smith's Forge).
 var forged := {}
+## What a pickpocket's luck is rolled from.
+var drop_rng := RandomNumberGenerator.new()
 ## The bonded creatures that follow and fight beside the body (Companion), at most companion_cap() at a time.
 var companions: Array = []
 var _ceiling_t := 0.0
@@ -762,7 +764,7 @@ func do_inspect() -> void:
 	if thing != null:
 		thing.interact(self)
 		return
-	if try_bond():
+	if try_bond() or try_pickpocket():
 		return
 	var target = _nearest_in_group("inspectable", INSPECT_RANGE, func(_n): return true)
 	if target == null:
@@ -954,6 +956,22 @@ func try_bond() -> bool:
 	pal.launch(self, def, target.global_position)
 	pal.died.connect(_on_companion_died)
 	companions.append(pal)
+	return true
+
+## The goblin picks the pocket of the nearest living creature with something to leave: it rolls the creature's drops once, takes the first
+## part found (no fight, the creature stays), and the creature is not tried again. True whenever a creature was tried, empty pocket or not.
+func try_pickpocket() -> bool:
+	if species != "goblin" or health.is_dead():
+		return false
+	var target = _nearest_in_group("predatable", PREDATE_RANGE, func(n) -> bool: return n.has_method("can_be_robbed") and n.can_be_robbed())
+	if target == null:
+		return false
+	target.robbed = true
+	var found := Drops.roll(target.def, drop_rng)
+	if found.is_empty():
+		return true
+	collect_part(found[0])
+	_emit.call(Deeds.ITEM_STOLEN, {"creature": target.def.id, "part": found[0]})
 	return true
 
 func _on_companion_died(pal: Companion) -> void:
