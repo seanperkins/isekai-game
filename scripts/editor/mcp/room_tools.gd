@@ -13,6 +13,7 @@ var _table := {}  # name -> {description, schema, handler}
 func _init(p_session: RoomSession = null) -> void:
 	_session = p_session
 	_register_read()
+	_register_add()
 
 func tool_list() -> Array:
 	var out: Array = []
@@ -111,9 +112,10 @@ static func _check_value(path: String, schema: Dictionary, v) -> String:
 	return ""
 
 ## An element of a fixed-size array that is the wrong type is reported as the array being the wrong shape ("pos: expected an array of
-## 2 numbers"); any other element error keeps its own path.
+## 2 numbers"); a range error ("size[0]: expected at least 1") keeps its own path.
 static func shape_error(path: String, shape: String, err: String, item_type: String) -> String:
-	if item_type in ["number", "integer", "string", "boolean"] and err.begins_with("%s[" % path):
+	var range_error := err.contains(": expected at ") or err.contains(": expected one of")
+	if item_type in ["number", "integer", "string", "boolean"] and err.begins_with("%s[" % path) and not range_error:
 		return "%s: expected %s" % [path, shape]
 	return err
 
@@ -201,3 +203,80 @@ func _problems(args: Dictionary) -> Dictionary:
 func _world_size(_args: Dictionary) -> Dictionary:
 	var m := WorldSize.measure(_session.model.rooms)
 	return ok({"measure": RoomSpec.plain(m), "yardsticks": WorldSize.yardsticks(m), "areas": WorldSize.area_rows(m)})
+
+# --- the add tools ---
+# Each is a thin wrapper over one RoomEditModel call and returns the model's own refusal text. No schema here lists the valid edges,
+# sides, kinds or ids as an enum: the model's message ("not an edge", "unknown creature 'x'") says what is wrong, and catalog lists them.
+
+func _register_add() -> void:
+	var room := {"type": "string", "description": "Room id."}
+	var corners := {"room": room, "a": vec2("One corner, room-local px."), "b": vec2("The opposite corner; both snap to the 4 px grid.")}
+	_add("new_room", "Create a room beside an existing one, level with it, joined by a paired door. Area must have terrain art (see catalog areas).",
+		obj({"beside": {"type": "string", "description": "The existing room."}, "edge": {"type": "string", "description": "left, right, top or bottom of `beside`."},
+			"id": {"type": "string", "description": "Letters, digits and underscore."}, "area": {"type": "string"},
+			"size": {"type": "array", "items": {"type": "integer", "minimum": 1, "maximum": RoomEditModel.MAX_SCREENS},
+				"minItems": 2, "maxItems": 2, "description": "[width, height] in screens, 1 to 6."}},
+			["beside", "edge", "id", "area", "size"]), _new_room)
+	_add("grow_room", "Grow a room by whole screens on its left, right or top (the bottom stays where the floor is).",
+		obj({"room": room, "side": {"type": "string", "description": "left, right or top."}, "screens": {"type": "integer", "minimum": 1}}, ["room", "side"]),
+		_grow_room)
+	_add("add_solid", "Add a solid (rock, or a one-way ledge when thin) from two corners. Returns its ref.", obj(corners, ["room", "a", "b"]),
+		func(a: Dictionary) -> Dictionary: return _added(a["room"], func() -> String: return _session.model.add_solid(a["room"], _v(a["a"]), _v(a["b"]))))
+	_add("add_water", "Add deep water from two corners (at least 32 px each way, inside the room, not touching other water). Returns its ref.",
+		obj(corners, ["room", "a", "b"]),
+		func(a: Dictionary) -> Dictionary: return _added(a["room"], func() -> String: return _session.model.add_water(a["room"], _v(a["a"]), _v(a["b"]))))
+	_add("add_spawn", "Add a creature spawn in open space. Returns its ref.",
+		obj({"room": room, "creature": {"type": "string", "description": "A creature id (see catalog creatures)."}, "pos": vec2()}, ["room", "creature", "pos"]),
+		func(a: Dictionary) -> Dictionary: return _added(a["room"], func() -> String: return _session.model.add_spawn(a["room"], a["creature"], _v(a["pos"]))))
+	_add("add_feature", "Add a feature (glow_pool, tablet, switch or altar) standing on the surface below `pos`. Returns its ref.",
+		obj({"room": room, "kind": {"type": "string", "description": "glow_pool, tablet, switch or altar."}, "pos": vec2()}, ["room", "kind", "pos"]),
+		func(a: Dictionary) -> Dictionary: return _added(a["room"], func() -> String: return _session.model.add_feature(a["room"], a["kind"], _v(a["pos"]))))
+	_add("add_decor", "Add a decor piece standing on (or hanging from) the surface at `pos`. Returns its ref.",
+		obj({"room": room, "piece": {"type": "string", "description": "A decor id (see catalog decor)."}, "pos": vec2()}, ["room", "piece", "pos"]),
+		func(a: Dictionary) -> Dictionary: return _added(a["room"], func() -> String: return _session.model.add_decor(a["room"], a["piece"], _v(a["pos"]))))
+	_add("add_exit", "Add an exit on an edge of a room over [from, to] (px along the edge) and its partner in the room across, in one step. Returns the ref of this half.",
+		obj({"room": room, "edge": {"type": "string", "description": "left, right, top or bottom."}, "from": {"type": "number"}, "to": {"type": "number"},
+			"gate": {"type": "string", "enum": WorldValidator.GATES, "description": "Optional: the movement needed to pass."},
+			"shortcut": {"type": "string", "description": "Optional: a shortcut id (the exit is closed until a switch opens it)."}},
+			["room", "edge", "from", "to"]), _add_exit)
+
+func _v(a: Array) -> Vector2:
+	return Vector2(float(a[0]), float(a[1]))
+
+## Runs `edit` (a model call that returns "" or a refusal) on an existing room and answers with the new element's ref, read from the
+## model's selection, which every successful add leaves on the element it made.
+func _added(room_id: String, edit: Callable) -> Dictionary:
+	if _room(room_id) == null:
+		return _no_room(room_id)
+	var err: String = edit.call()
+	if err != "":
+		return fail(err)
+	var sel: Dictionary = _session.model.selection
+	return ok({"ok": true, "ref": {"room": sel["room"], "kind": sel["kind"], "index": sel["index"]}})
+
+func _new_room(args: Dictionary) -> Dictionary:
+	if _room(args["beside"]) == null:
+		return _no_room(args["beside"])
+	var size: Array = args["size"]
+	var err := _session.model.new_room_beside(args["beside"], args["edge"], args["id"], args["area"], Vector2i(int(size[0]), int(size[1])))
+	return fail(err) if err != "" else ok({"ok": true, "room": args["id"]})
+
+func _grow_room(args: Dictionary) -> Dictionary:
+	if _room(args["room"]) == null:
+		return _no_room(args["room"])
+	var err := _session.model.grow_room(args["room"], args["side"], int(args.get("screens", 1)))
+	if err != "":
+		return fail(err)
+	var r := _room(args["room"])
+	return ok({"ok": true, "room": r.id, "cell": [r.cell.x, r.cell.y], "size": [r.size.x, r.size.y]})
+
+func _add_exit(args: Dictionary) -> Dictionary:
+	var opts := {}
+	if args.has("gate"):
+		opts["gate"] = args["gate"]
+	if args.has("shortcut"):
+		if args["shortcut"] != "" and not RoomEditModel.valid_id(args["shortcut"]):
+			return fail("a shortcut id is letters, digits and underscore")
+		opts["shortcut"] = args["shortcut"]
+	return _added(args["room"], func() -> String:
+		return _session.model.add_exit(args["room"], args["edge"], float(args["from"]), float(args["to"]), opts))
