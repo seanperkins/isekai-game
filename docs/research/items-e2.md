@@ -24,11 +24,13 @@ Every face button is taken, so the species' social action rides on `inspect` (Y)
 - Lessons are per life (the ledger is), and the set resets with a new run.
 - `junk` is a support monster (a heap of scrap, earth) so the Tinker's "lesson from junk" has a source; F2 places it.
 
-## E2b: bonds and companions
+## E2b: bonds and companions (built)
+
+Built 2026-10-05: `CreatureDef.bonds`, `Enemy.can_be_bonded`, `Companion`, `Player.try_bond`. `pack`: `gloom_wolf`, `bone_hound` and the 21 wolf twins. `tame`: `cave_rat`, `gloom_wolf`, `tusker_boar`, `stone_drake`. `large`: `tusker_boar` and `stone_drake` (their stats are small or not, so size is data and not `max_hp`). A goblin offers the first carried part. A companion never strikes a stunned creature, so it cannot kill what the player means to eat or bond.
 
 - A **companion** is a creature that follows the player and fights beside it with its own stats. It has HP and is hurt by the contact hits of enemies near it; it is **lost for good** when it dies, and with the player's death or a new run. It follows through room changes. Cap one at a time, two for the Lord of Beasts form.
 - `CreatureDef.bonds: Array` names the bonds a creature accepts (`pack`, `tame`). Wolf-kind creatures take `pack`; vermin, wolves and boars take `tame`.
-- A bond says `bond_formed {kind, creature}`. A creature with `max_hp >= DeedTags.HEAVY_HP` also says it with `kind: large`. A bond that has lasted `LONG_BOND_SECONDS` of play says it once more with `kind: long`.
+- A bond says `bond_formed {kind, creature}`. A creature whose `bonds` list `large` also says it with `kind: large`. A bond that has lasted `LONG_BOND_SECONDS` of play says it once more with `kind: long`.
 - A goblin's companion grows with the goblin's lessons of its type (+1 ATK per three trickles, up to +3).
 - Taming is also a lesson (E2a), and a bond is not a kill: the creature is not downed and says no `defeated`.
 

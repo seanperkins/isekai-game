@@ -3,7 +3,7 @@ extends GutTest
 
 ## The deeds something emits today (the rest of Deeds.EVENTS is in Deeds.RESERVED).
 const EMITTED := ["defeated", "guard_broken", "room_cleared", "room_entered", "skill_hit", "skill_missed", "switch_hit",
-	"part_harvested", "graft_attached", "graft_shed", "item_carried", "corpse_left", "lesson_learned"]
+	"part_harvested", "graft_attached", "graft_shed", "item_carried", "corpse_left", "lesson_learned", "bond_formed"]
 const TOTAL := {2: 26, 3: 34, 4: 44}
 
 var forms: Dictionary
@@ -137,10 +137,13 @@ func test_a_wolf_that_carries_the_same_parts_does_not_open_an_undead_gate() -> v
 	assert_eq(SkillRules.condition_value({"kind": "counter", "event": "graft_attached", "tags": {}, "n": 1}), 0, "carried is not attached")
 
 func _goblin() -> Array:
+	return _species_player("goblin")
+
+func _species_player(species: String) -> Array:
 	var rules: SkillRulesEngine = autofree(SkillRulesEngine.new())
 	rules.setup(DefLoader.load_dir("res://data/skills"))
 	var p := Player.new()
-	p.species = "goblin"
+	p.species = species
 	p.use_sheet = false
 	p.setup(rules, CompendiumModel.new([], []), [], func(n: String, t: Dictionary) -> void: rules.handle_event(n, t))
 	add_child_autofree(p)
@@ -196,3 +199,44 @@ func test_the_tinkers_junk_lesson_has_a_creature_to_learn_from() -> void:
 		for a in _atoms(f):
 			if a.get("event", "") == "lesson_learned" and a.get("tags", {}).has("creature"):
 				assert_true(ids.has(a["tags"]["creature"]), "%s asks for a lesson from '%s'" % [f.id, a["tags"]["creature"]])
+
+func _bond_atom(rules: SkillRulesEngine, tags: Dictionary) -> int:
+	return rules.condition_value({"kind": "counter", "event": "bond_formed", "tags": tags, "n": 1})
+
+func _stun_next_to(p: Player, id: String) -> Enemy:
+	var e := _real_enemy(id)
+	e.position = p.position + Vector2(10, 0)
+	e.status.stun(30.0)
+	return e
+
+func test_a_wolf_that_bonds_a_gloom_wolf_meets_the_wargs_gate_atom() -> void:
+	var made := _species_player("wolf")
+	var p: Player = made[0]
+	var rules: SkillRulesEngine = made[1]
+	assert_eq(_bond_atom(rules, {"kind": "pack"}), 0)
+	_stun_next_to(p, "gloom_wolf")
+	assert_true(p.try_bond())
+	assert_eq(_bond_atom(rules, {"kind": "pack"}), 1)
+
+func test_a_goblin_that_tames_a_rat_a_wolf_and_a_boar_meets_those_gate_atoms() -> void:
+	var made := _species_player("goblin")
+	var p: Player = made[0]
+	var rules: SkillRulesEngine = made[1]
+	for id in ["cave_rat", "gloom_wolf", "tusker_boar"]:
+		p.collect_part("claw")
+		_stun_next_to(p, id)
+		assert_true(p.try_bond(), id)
+		p._release_companions()
+	assert_eq(_bond_atom(rules, {"kind": "tame", "creature": "cave_rat"}), 1)
+	assert_eq(_bond_atom(rules, {"creature": "gloom_wolf"}), 1)
+	assert_eq(_bond_atom(rules, {"kind": "large"}), 1, "the boar is a large companion")
+
+func test_a_bond_that_lasts_meets_the_long_bond_atom() -> void:
+	var made := _species_player("wolf")
+	var p: Player = made[0]
+	var rules: SkillRulesEngine = made[1]
+	_stun_next_to(p, "gloom_wolf")
+	p.try_bond()
+	assert_eq(_bond_atom(rules, {"kind": "long"}), 0)
+	(p.companions[0] as Companion)._physics_process(Companion.LONG_BOND_SECONDS + 1.0)
+	assert_eq(_bond_atom(rules, {"kind": "long"}), 1)
