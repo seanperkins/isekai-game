@@ -15,7 +15,7 @@
 - Gates apply to the wolf, undead, spider and goblin forms (99). The slime keeps `reveal`/`offer`. A gate is all of its atoms; the parent form is implicit (the tree).
 - Essence atoms read the form's `reads`, `counter absorbed {essence}` this life. Total essence by stage, split evenly over the reads (ceil): stage 2 = 26, stage 3 = 34, stage 4 = 44 (the slime offers at 24 to 26). Hard numbers are calibrated in F3.
 - A deed atom's `n` is 3 to 6; a streak is `reset_counter` reset on `damaged` (or `skill_missed`). "Plus fire/mind/blood (later)" is an essence atom now (A2 made them real).
-- Every atom carries a `text` the cards show ("kills from behind"). Event names come from `Events.ALL`; tags a gate uses come from `Deeds.TAGS`.
+- Every atom carries a `text` the cards show ("kills from behind"). Event names come from `Events.ALL` or `Deeds.EVENTS`; tags a gate uses come from `Deeds.TAGS`.
 - `Deeds.RESERVED` lists the events and tags with no emitter yet; each later piece (items, bonds, areas) removes its own, and the last piece asserts the list is empty.
 - No push. No attribution lines in commits.
 
@@ -33,16 +33,16 @@
 
 **Files:**
 - Create: `scripts/forms/form_gate.gd`, `scripts/core/deeds.gd`
-- Modify: `scripts/core/events.gd`, `scripts/forms/form_def.gd`, `scripts/forms/form_validator.gd`, `scripts/skills/skill_rules_engine.gd`
+- Modify: `autoload/skill_rules.gd`, `scripts/skills/def_validator.gd`, `scripts/forms/form_def.gd`, `scripts/forms/form_validator.gd`, `scripts/skills/skill_rules_engine.gd`
 - Test: `tests/test_form_gate.gd`
 
 **Interfaces:**
-- Produces: `Events.DEFEATED`, `GUARD_BROKEN`, `BARRIER_BROKEN`, `HIDDEN_FOUND`, `ROOM_CLEARED`, `ROOM_ENTERED`, `SKILL_HIT`, `SKILL_MISSED`, `SWITCH_HIT` and the reserved `GRAFT_ATTACHED`, `GRAFT_SHED`, `BOND_FORMED`, `LESSON_LEARNED`, `TRAP_SPRUNG`, `WEAPON_FORGED`, `ITEM_STOLEN`, `WARD_STONE_PLACED`, `PREY_COCOONED`, `GAP_CROSSED`, `LAMP_DRUNK`, `VILLAGE_KEPT`, `ROOM_HELD`, `VIGIL_KEPT`, `CORPSE_LEFT`, `ITEM_CARRIED` (all in `Events.ALL`); `Deeds.TAGS: Dictionary` (event -> allowed tag keys), `Deeds.RESERVED: Dictionary` (event or `event.tag` -> the piece that supplies it); `FormDef.gate: Array`; `SkillRulesEngine.condition_value(c: Dictionary) -> int` (public `_current`, also answering `held`); `FormGate.met(def: FormDef, rules) -> bool`, `FormGate.progress(def, rules) -> Array` of `{"text", "have", "need", "met"}`, `FormGate.summary(def, rules) -> String` ("dark 8/26, kills from behind 2/5"), `FormGate.validate(def) -> PackedStringArray`.
+- Produces: constants on `Deeds` (not in `Events.ALL`, which two tests pin and the audio catalog must cover): `DEFEATED`, `GUARD_BROKEN`, `BARRIER_BROKEN`, `HIDDEN_FOUND`, `ROOM_CLEARED`, `ROOM_ENTERED`, `SKILL_HIT`, `SKILL_MISSED`, `SWITCH_HIT` and the reserved `GRAFT_ATTACHED`, `GRAFT_SHED`, `BOND_FORMED`, `LESSON_LEARNED`, `TRAP_SPRUNG`, `WEAPON_FORGED`, `ITEM_STOLEN`, `WARD_STONE_PLACED`, `PREY_COCOONED`, `GAP_CROSSED`, `LAMP_DRUNK`, `VILLAGE_KEPT`, `ROOM_HELD`, `VIGIL_KEPT`, `CORPSE_LEFT`, `ITEM_CARRIED`, all in `Deeds.EVENTS`; `Deeds.known(event) -> bool` (a deed or an `Events.ALL` event), which `SkillRules` and `DefValidator` use instead of `Events.ALL.has`; `Deeds.TAGS: Dictionary` (every event a gate may use, the old ones too: absorbed, predated, skill_used, damaged, stunned_enemy, ... -> its allowed tag keys), `Deeds.RESERVED: Dictionary` (event or `event.tag` -> the piece that supplies it); `FormDef.gate: Array`; `SkillRulesEngine.condition_value(c: Dictionary) -> int` (public `_current`, also answering `held`); `FormGate.met(def: FormDef, rules) -> bool`, `FormGate.progress(def, rules) -> Array` of `{"text", "have", "need", "met"}`, `FormGate.summary(def, rules) -> String` ("dark 8/26, kills from behind 2/5"), `FormGate.validate(def) -> PackedStringArray`.
 
 - [ ] **Step 1: Write the failing tests** in `tests/test_form_gate.gd` with a stub `rules` (a `SkillRulesEngine` fed events through `handle_event`, as the engine's own tests do): a counter atom is met at its `n` and not before; a `reset_counter` atom restarts at the reset event; `skill_level` needs the skill owned; `held` reads `held(element)` (absorbed minus spent); `any` is met when one member is and its progress is the best member's; a gate is met only when every atom is; `progress` returns one row per atom with `have` capped at `need`; `summary` lists unmet atoms first; an empty gate is met; `validate` rejects an unknown event, an event used with a tag `Deeds.TAGS` does not allow, `n < 1`, a missing `text`, an unknown kind, an `any` with no members, and accepts a reserved event; `FormValidator.validate` includes a form's gate errors; `Deeds.TAGS` has an entry for every new non-reserved event and `Deeds.RESERVED` names only events in `Events.ALL`.
 - [ ] **Step 2: Run** `tools/run_tests.sh test_form_gate`. Expected: FAIL (classes missing).
 - [ ] **Step 3: Implement** the constants and registries, `FormDef.gate` (an `@export var gate: Array`), `condition_value`, and `FormGate` (the `any` kind is handled in `FormGate`, the rest by `condition_value`).
-- [ ] **Step 4: Run** the same command, then `test_form_validator`, `test_events`, `test_constants`, `test_skill_rules_engine`. Expected: PASS.
+- [ ] **Step 4: Run** the same command, then `test_form_validator`, `test_constants`, `test_def_validator`, `test_audio_catalog`, `test_skill_rules_levels`. Expected: PASS.
 - [ ] **Step 5: Commit** `feat: a form's gate, the deed events and the way to read them`.
 
 ### Task 2: Kill deeds
@@ -53,12 +53,12 @@
 - Test: `tests/test_deed_tags.gd`, `tests/test_defeated.gd`
 
 **Interfaces:**
-- Consumes: Task 1's `Events.DEFEATED`, `Deeds.TAGS`.
+- Consumes: Task 1's `Deeds.DEFEATED`, `Deeds.TAGS`.
 - Produces: `Enemy.last_blow: Dictionary` ({"from_behind", "distance", "damage_type", "cause", "marked", "alert", "fleeing"}), `DeedTags.for_defeat(def: CreatureDef, blow: Dictionary, ctx: Dictionary) -> Dictionary` (pure; `ctx` is {"ceiling", "dark"}), `Player.note_defeat(enemy: Enemy) -> void` (emits `defeated`), `CreatureDef.species` set for the three base support monsters.
 
 - [ ] **Step 1: Write the failing tests.** `DeedTags.for_defeat` (pure, table-driven): a tackle from behind sets `behind`; a blow from more than `DeedTags.RANGED_PX` away sets `ranged`; `damage_type == "poison"` sets `poison`; a def with `max_hp >= DeedTags.HEAVY_HP` sets `heavy`; a marked target sets `marked`; a blow on an enemy that was not alert sets `unseen`; a target moving away sets `fleeing`; `ctx.ceiling` and `ctx.dark` pass through; false flags are left out; `source` is the def id and `species` is set only when the def has one. `test_defeated.gd` with real nodes: an enemy killed by a tackle from behind makes the player's ledger count `defeated {behind: true}` once; two enemies downed in the same frame count twice; an enemy downed with no recorded blow counts with no flags and does not crash; eating a goblin base counts `predated {species: "goblin"}`.
 - [ ] **Step 2: Run** `tools/run_tests.sh test_deed_tags test_defeated`. Expected: FAIL.
-- [ ] **Step 3: Implement.** `Enemy` records `last_blow` in `receive_hit` and `receive_tackle` (before the damage) and `marked` from the `verb_marks` meta the mark verb sets on its target; `Game._spawn` calls `player.note_defeat(node)` from `downed`; `Player.note_defeat` emits `Events.DEFEATED` with `DeedTags.for_defeat(def, blow, {ceiling: the spider body's surface is the ceiling, dark: the area's ambient is dark})`; the generator sets `species` on `wild_slime` (slime), `skeleton` (undead) and `village_goblin` (goblin); `Player._complete_predation` adds the creature's `species` to `predated`.
+- [ ] **Step 3: Implement.** `Enemy` records `last_blow` in `receive_hit` and `receive_tackle` (before the damage) and `marked` from the `verb_marks` meta the mark verb sets on its target; `Game._spawn` calls `player.note_defeat(node)` from `downed`; `Player.note_defeat` emits `Deeds.DEFEATED` with `DeedTags.for_defeat(def, blow, {ceiling: the spider body's surface is the ceiling, dark: the area's ambient is dark})`; the generator sets `species` on `wild_slime` (slime), `skeleton` (undead) and `village_goblin` (goblin); `Player._complete_predation` adds the creature's `species` to `predated`.
 - [ ] **Step 4: Run** the tests above and `test_enemy_ai`, `test_enemy_verb`, `test_menagerie_data`, `tools/test_build_creatures.py`. Expected: PASS.
 - [ ] **Step 5: Commit** `feat: a kill says how it was made`.
 
