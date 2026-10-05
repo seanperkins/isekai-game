@@ -11,9 +11,9 @@ func before_all() -> void:
 	forms = FormLoader.load_species()
 	for c in DefLoader.load_dir("res://data/creatures"):
 		creatures[c.id] = c
-	for r in DefLoader.load_dir("res://data/rooms", "RoomDef"):
-		if ShippedRooms.IDS.has(r.id):
-			rooms[r.id] = r
+	var made := AreaWorlds.upto("DM")  # the hand-made rooms: the numbers are the design doc's, calibrated before creatures were placed in rooms
+	for id in ShippedRooms.IDS:
+		rooms[id] = made[id]
 
 ## [[area, revealed, offered], ...] at the end of each area, walking from `start_area` ("" is the Cave start).
 func _walk(start_area: String) -> Array:

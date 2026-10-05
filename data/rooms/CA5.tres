@@ -32,6 +32,26 @@ spawns = [{
 }, {
 "id": "candle_wisp",
 "pos": Vector2(1000, 174)
+}, {
+"by": "PL",
+"id": "twin_cloud_rider",
+"pos": Vector2(55.399998, 314)
+}, {
+"by": "PL",
+"id": "twin_spider_norn",
+"pos": Vector2(929.4, 314)
+}, {
+"by": "PL",
+"id": "twin_goblin_orpheus",
+"pos": Vector2(508.8, 314)
+}, {
+"by": "PL",
+"id": "twin_undead_hierophant",
+"pos": Vector2(1156.8, 314)
+}, {
+"by": "PL",
+"id": "twin_spider_light_eater",
+"pos": Vector2(284.2, 314)
 }]
 exits = [{
 "edge": "right",

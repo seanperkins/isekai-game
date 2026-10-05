@@ -1,9 +1,9 @@
 [gd_resource type="Resource" script_class="RoomDef" format=3]
 
-[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_ej0os"]
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
 
 [resource]
-script = ExtResource("1_ej0os")
+script = ExtResource("1_roomdef")
 id = "F2"
 area = "flooded"
 cell = Vector2i(12, 7)
@@ -25,6 +25,14 @@ spawns = [{
 }, {
 "id": "glass_eel",
 "pos": Vector2(160, 560)
+}, {
+"by": "PL",
+"id": "twin_alkahest",
+"pos": Vector2(151.4, 674)
+}, {
+"by": "PL",
+"id": "twin_tempest",
+"pos": Vector2(591.5, 674)
 }]
 exits = [{
 "edge": "left",

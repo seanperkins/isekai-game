@@ -152,19 +152,23 @@ func test_a_feature_nobody_attached_is_never_stripped() -> void:
 	var world := AreaBuilder.build_with([AddsASwitch.new()])
 	assert_eq((world["C6"] as RoomDef).features.size(), before + 1, "C6's own pool, tablet and switch stay")
 
+## A room's spawns without the ones the real placement put there: these tests are about a made-up module's.
+func _spawns_but_placed(r: RoomDef) -> Array:
+	return r.spawns.filter(func(s: Dictionary) -> bool: return s.get("by", "") != "PL")
+
 func test_a_marked_spawn_is_stripped_and_placed_once_and_an_unmarked_one_is_never_touched() -> void:
-	var hand := (World.load_rooms(AreaBuilder.ROOMS_DIR)["C6"] as RoomDef).spawns.size()
+	var hand := _spawns_but_placed(World.load_rooms(AreaBuilder.ROOMS_DIR)["C6"]).size()
 	var first := AreaBuilder.build_with([PlacesASpawn.new()])
-	assert_eq((first["C6"] as RoomDef).spawns.size(), hand + 1)
+	assert_eq(_spawns_but_placed(first["C6"]).size(), hand + 1)
 	_write(first)
 	var second := AreaBuilder.build_with([PlacesASpawn.new()], dir)
-	assert_eq((second["C6"] as RoomDef).spawns.size(), hand + 1, "stripped, then placed again: not twice")
+	assert_eq(_spawns_but_placed(second["C6"]).size(), hand + 1, "stripped, then placed again: not twice")
 	assert_eq(AreaBuilder.stale(second, dir), [])
 	var without := AreaBuilder.build_with([AddsASpawn.new()])  # a module with another prefix leaves the QP spawn alone
-	assert_eq((without["C6"] as RoomDef).spawns.size(), hand + 1, "its own spawn, unmarked")
+	assert_eq(_spawns_but_placed(without["C6"]).size(), hand + 1, "its own spawn, unmarked")
 
 func test_the_shipped_rooms_helper_leaves_off_placed_spawns() -> void:
-	var hand := (World.load_rooms(AreaBuilder.ROOMS_DIR)["C6"] as RoomDef).spawns.size()
+	var hand := _spawns_but_placed(World.load_rooms(AreaBuilder.ROOMS_DIR)["C6"]).size()
 	var world := AreaBuilder.build_with([PlacesASpawn.new()])
 	assert_eq((ShippedRooms.only(world)["C6"] as RoomDef).spawns.size(), hand)
 

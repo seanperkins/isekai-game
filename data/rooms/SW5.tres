@@ -23,6 +23,18 @@ decor = [{
 spawns = [{
 "id": "firefly_swarm",
 "pos": Vector2(320, 184)
+}, {
+"by": "PL",
+"id": "twin_spider_plaguemother",
+"pos": Vector2(140.2, 314)
+}, {
+"by": "PL",
+"id": "twin_goblin_boggart",
+"pos": Vector2(604.8, 314)
+}, {
+"by": "PL",
+"id": "twin_slime_mold",
+"pos": Vector2(391.4, 314)
 }]
 exits = [{
 "edge": "left",

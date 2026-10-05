@@ -1,9 +1,9 @@
 [gd_resource type="Resource" script_class="RoomDef" format=3]
 
-[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_a4hbi"]
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
 
 [resource]
-script = ExtResource("1_a4hbi")
+script = ExtResource("1_roomdef")
 id = "C5"
 area = "cave"
 cell = Vector2i(5, 2)
@@ -113,6 +113,26 @@ spawns = [{
 }, {
 "id": "water_pool",
 "pos": Vector2(560, 1036)
+}, {
+"by": "PL",
+"id": "twin_sky",
+"pos": Vector2(39.5, 1034)
+}, {
+"by": "PL",
+"id": "twin_golem",
+"pos": Vector2(159.5, 1034)
+}, {
+"by": "PL",
+"id": "twin_bulwark",
+"pos": Vector2(136.64, 878)
+}, {
+"by": "PL",
+"id": "twin_echo",
+"pos": Vector2(276.64, 826)
+}, {
+"by": "PL",
+"id": "twin_greater_slime",
+"pos": Vector2(136.64, 774)
 }]
 exits = [{
 "edge": "left",

@@ -34,6 +34,14 @@ spawns = [{
 }, {
 "id": "blinker",
 "pos": Vector2(1120, 314)
+}, {
+"by": "PL",
+"id": "caller",
+"pos": Vector2(109, 314)
+}, {
+"by": "PL",
+"id": "twin_undead_vampire",
+"pos": Vector2(268.8, 314)
 }]
 exits = [{
 "edge": "left",

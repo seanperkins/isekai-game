@@ -23,6 +23,23 @@ decor = [{
 "id": "deep_root_hang",
 "pos": Vector2(800, 20)
 }]
+spawns = [{
+"by": "PL",
+"id": "twin_undead_banshee",
+"pos": Vector2(26, 314)
+}, {
+"by": "PL",
+"id": "twin_undead_dullahan",
+"pos": Vector2(393.7, 314)
+}, {
+"by": "PL",
+"id": "twin_undead_mummy_priest",
+"pos": Vector2(217.125, 314)
+}, {
+"by": "PL",
+"id": "twin_undead_adept",
+"pos": Vector2(118.64, 314)
+}]
 exits = [{
 "edge": "top",
 "from": 900.0,

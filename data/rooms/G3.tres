@@ -1,9 +1,9 @@
 [gd_resource type="Resource" script_class="RoomDef" format=3]
 
-[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_1cu18"]
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
 
 [resource]
-script = ExtResource("1_1cu18")
+script = ExtResource("1_roomdef")
 id = "G3"
 area = "grotto"
 cell = Vector2i(8, 7)
@@ -104,6 +104,10 @@ spawns = [{
 }, {
 "id": "mushroom_crab",
 "pos": Vector2(850, 668)
+}, {
+"by": "PL",
+"id": "twin_acid",
+"pos": Vector2(1239.5, 674)
 }]
 exits = [{
 "edge": "top",

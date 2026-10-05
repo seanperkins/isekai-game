@@ -1,9 +1,9 @@
 [gd_resource type="Resource" script_class="RoomDef" format=3]
 
-[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_q4o63"]
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
 
 [resource]
-script = ExtResource("1_q4o63")
+script = ExtResource("1_roomdef")
 id = "C2"
 area = "cave"
 cell = Vector2i(2, 2)
@@ -116,6 +116,18 @@ spawns = [{
 }, {
 "id": "lizard",
 "pos": Vector2(1100, 300)
+}, {
+"by": "PL",
+"id": "twin_wolf_dire_wolf",
+"pos": Vector2(126.5, 314)
+}, {
+"by": "PL",
+"id": "twin_vast",
+"pos": Vector2(855.5, 314)
+}, {
+"by": "PL",
+"id": "twin_spider_stalker",
+"pos": Vector2(368.72, 314)
 }]
 exits = [{
 "edge": "left",

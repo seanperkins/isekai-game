@@ -78,10 +78,10 @@ func _without_script_ids(text: String) -> String:
 	return rx.sub(text, "1_ID", true)
 
 func test_an_unedited_room_saves_identical_to_the_shipped_file_but_for_the_script_id() -> void:
-	for id in ["C1", "G3"]:
+	for id in ["C1", "G4"]:  # rooms with no creature the placement added: the model holds the hand-made rooms, the file may hold more
 		model.dirty[id] = true
 	model.save_dirty(TMP)
-	for id in ["C1", "G3"]:
+	for id in ["C1", "G4"]:
 		assert_eq(_without_script_ids(FileAccess.get_file_as_string("%s/%s.tres" % [TMP, id])),
 			_without_script_ids(FileAccess.get_file_as_string("res://data/rooms/%s.tres" % id)), id)
 

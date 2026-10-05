@@ -35,6 +35,14 @@ spawns = [{
 }, {
 "id": "firefly_swarm",
 "pos": Vector2(1000, 184)
+}, {
+"by": "PL",
+"id": "twin_spider_brood_queen",
+"pos": Vector2(109.625, 314)
+}, {
+"by": "PL",
+"id": "twin_goblin_beastcaller",
+"pos": Vector2(262.64, 314)
 }]
 exits = [{
 "edge": "left",

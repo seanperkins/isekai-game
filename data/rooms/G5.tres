@@ -1,9 +1,9 @@
 [gd_resource type="Resource" script_class="RoomDef" format=3]
 
-[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_c1ih6"]
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
 
 [resource]
-script = ExtResource("1_c1ih6")
+script = ExtResource("1_roomdef")
 id = "G5"
 area = "grotto"
 cell = Vector2i(7, 7)
@@ -53,6 +53,18 @@ dressing = [{
 spawns = [{
 "id": "pale_moth",
 "pos": Vector2(320, 190)
+}, {
+"by": "PL",
+"id": "twin_silkbound",
+"pos": Vector2(55.399998, 314)
+}, {
+"by": "PL",
+"id": "twin_venom",
+"pos": Vector2(522.8, 314)
+}, {
+"by": "PL",
+"id": "twin_king_slime",
+"pos": Vector2(295.4, 314)
 }]
 exits = [{
 "edge": "right",

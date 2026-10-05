@@ -34,6 +34,18 @@ spawns = [{
 }, {
 "id": "cave_rat",
 "pos": Vector2(620, 314)
+}, {
+"by": "PL",
+"id": "twin_goblin_rat_king",
+"pos": Vector2(28.1, 314)
+}, {
+"by": "PL",
+"id": "twin_goblin_pied_piper",
+"pos": Vector2(217.125, 314)
+}, {
+"by": "PL",
+"id": "twin_goblin_rumpelstiltskin",
+"pos": Vector2(820.8, 314)
 }]
 exits = [{
 "edge": "right",

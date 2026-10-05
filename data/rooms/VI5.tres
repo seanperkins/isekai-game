@@ -25,6 +25,19 @@ decor = [{
 "id": "flooded_root_hang",
 "pos": Vector2(560, 20)
 }]
+spawns = [{
+"by": "PL",
+"id": "twin_spider_venomspinner",
+"pos": Vector2(37.625, 674)
+}, {
+"by": "PL",
+"id": "twin_blight",
+"pos": Vector2(399.5, 674)
+}, {
+"by": "PL",
+"id": "bog_wisp",
+"pos": Vector2(222, 674)
+}]
 exits = [{
 "edge": "top",
 "from": 100.0,

@@ -77,6 +77,10 @@ dressing = [{
 spawns = [{
 "id": "toad",
 "pos": Vector2(520, 300)
+}, {
+"by": "PL",
+"id": "twin_poltergeist",
+"pos": Vector2(151.4, 314)
 }]
 exits = [{
 "edge": "left",

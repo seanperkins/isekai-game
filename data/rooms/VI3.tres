@@ -39,6 +39,22 @@ spawns = [{
 }, {
 "id": "junk",
 "pos": Vector2(620, 314)
+}, {
+"by": "PL",
+"id": "goblin_shaman",
+"pos": Vector2(109, 314)
+}, {
+"by": "PL",
+"id": "twin_spider_anansi",
+"pos": Vector2(424.7, 314)
+}, {
+"by": "PL",
+"id": "twin_spider_jorogumo",
+"pos": Vector2(227.125, 314)
+}, {
+"by": "PL",
+"id": "twin_goblin_tomte",
+"pos": Vector2(697.125, 314)
 }]
 exits = [{
 "edge": "top",

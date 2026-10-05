@@ -46,6 +46,34 @@ spawns = [{
 }, {
 "id": "stone_drake",
 "pos": Vector2(1040, 308)
+}, {
+"by": "PL",
+"id": "twin_wolf_skoll",
+"pos": Vector2(161.2, 314)
+}, {
+"by": "PL",
+"id": "twin_gleipnir",
+"pos": Vector2(607.4, 314)
+}, {
+"by": "PL",
+"id": "twin_philosophers_stone",
+"pos": Vector2(775.4, 314)
+}, {
+"by": "PL",
+"id": "twin_shoggoth",
+"pos": Vector2(595.4, 210)
+}, {
+"by": "PL",
+"id": "twin_goblin_giant_killer",
+"pos": Vector2(299.8, 314)
+}, {
+"by": "PL",
+"id": "twin_undead_bone_colossus",
+"pos": Vector2(1021.7, 210)
+}, {
+"by": "PL",
+"id": "twin_undead_deathless",
+"pos": Vector2(988.1, 314)
 }]
 exits = [{
 "edge": "left",

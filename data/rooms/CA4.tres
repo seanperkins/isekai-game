@@ -21,6 +21,26 @@ decor = [{
 spawns = [{
 "id": "stained_glass_moth",
 "pos": Vector2(320, 554)
+}, {
+"by": "PL",
+"id": "twin_spider_veil_spinner",
+"pos": Vector2(44.2, 1034)
+}, {
+"by": "PL",
+"id": "twin_radiant",
+"pos": Vector2(183.5, 1034)
+}, {
+"by": "PL",
+"id": "twin_crystal",
+"pos": Vector2(583.5, 1034)
+}, {
+"by": "PL",
+"id": "stained_glass_moth",
+"pos": Vector2(430, 1034)
+}, {
+"by": "PL",
+"id": "ghost",
+"pos": Vector2(84, 150)
 }]
 exits = [{
 "edge": "bottom",

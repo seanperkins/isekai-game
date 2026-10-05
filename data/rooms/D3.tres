@@ -1,9 +1,9 @@
 [gd_resource type="Resource" script_class="RoomDef" format=3]
 
-[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_jqefw"]
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
 
 [resource]
-script = ExtResource("1_jqefw")
+script = ExtResource("1_roomdef")
 id = "D3"
 area = "deep"
 cell = Vector2i(20, 6)
@@ -36,6 +36,38 @@ spawns = [{
 }, {
 "id": "armed_ant",
 "pos": Vector2(322, 668)
+}, {
+"by": "PL",
+"id": "twin_wolf_fenrir",
+"pos": Vector2(65.2, 674)
+}, {
+"by": "PL",
+"id": "twin_spider_chasm_weaver",
+"pos": Vector2(204.2, 650)
+}, {
+"by": "PL",
+"id": "twin_spider_swarm_sovereign",
+"pos": Vector2(503.5, 626)
+}, {
+"by": "PL",
+"id": "twin_stone",
+"pos": Vector2(62.8, 602)
+}, {
+"by": "PL",
+"id": "twin_spider_tsuchigumo",
+"pos": Vector2(201.4, 554)
+}, {
+"by": "PL",
+"id": "twin_undead_barrow_king",
+"pos": Vector2(373.7, 626)
+}, {
+"by": "PL",
+"id": "twin_undead_pharaoh",
+"pos": Vector2(48.8, 506)
+}, {
+"by": "PL",
+"id": "twin_phantom",
+"pos": Vector2(199.5, 458)
 }]
 exits = [{
 "edge": "left",

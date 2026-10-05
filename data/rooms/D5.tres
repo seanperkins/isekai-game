@@ -31,6 +31,18 @@ spawns = [{
 }, {
 "id": "gloom_wolf",
 "pos": Vector2(360, 308)
+}, {
+"by": "PL",
+"id": "twin_wolf_amarok",
+"pos": Vector2(569.2, 314)
+}, {
+"by": "PL",
+"id": "twin_wolf_gabriel_hound",
+"pos": Vector2(448.5, 314)
+}, {
+"by": "PL",
+"id": "twin_undead_abomination",
+"pos": Vector2(225.7, 314)
 }]
 exits = [{
 "edge": "left",

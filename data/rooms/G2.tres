@@ -1,9 +1,9 @@
 [gd_resource type="Resource" script_class="RoomDef" format=3]
 
-[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_4qqxt"]
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
 
 [resource]
-script = ExtResource("1_4qqxt")
+script = ExtResource("1_roomdef")
 id = "G2"
 area = "grotto"
 cell = Vector2i(7, 5)
@@ -123,6 +123,26 @@ spawns = [{
 }, {
 "id": "vine_snake",
 "pos": Vector2(1400, 626)
+}, {
+"by": "PL",
+"id": "twin_arachne",
+"pos": Vector2(46.375, 674)
+}, {
+"by": "PL",
+"id": "twin_snare",
+"pos": Vector2(190.375, 674)
+}, {
+"by": "PL",
+"id": "twin_toxic",
+"pos": Vector2(468.64, 674)
+}, {
+"by": "PL",
+"id": "twin_weaver",
+"pos": Vector2(759.44, 674)
+}, {
+"by": "PL",
+"id": "wild_slime",
+"pos": Vector2(562, 674)
 }]
 exits = [{
 "edge": "left",

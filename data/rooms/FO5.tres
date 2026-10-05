@@ -18,6 +18,27 @@ decor = [{
 "light": Color(1, 0.85, 0.4, 1),
 "pos": Vector2(470, 988)
 }]
+spawns = [{
+"by": "PL",
+"id": "twin_undead_wild_huntsman",
+"pos": Vector2(28.8, 1034)
+}, {
+"by": "PL",
+"id": "twin_goblin_beast_rider",
+"pos": Vector2(198.75, 1034)
+}, {
+"by": "PL",
+"id": "twin_spider_loom_weaver",
+"pos": Vector2(107.75, 1034)
+}, {
+"by": "PL",
+"id": "twin_wolf_warg",
+"pos": Vector2(589.6, 1034)
+}, {
+"by": "PL",
+"id": "village_goblin",
+"pos": Vector2(420.5, 1034)
+}]
 exits = [{
 "edge": "bottom",
 "from": 240.0,

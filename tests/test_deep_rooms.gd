@@ -8,7 +8,7 @@ var rooms: Dictionary
 var creatures := {}
 
 func before_all() -> void:
-	rooms = World.load_rooms("res://data/rooms")
+	rooms = AreaWorlds.upto("DM")  # the world without the placed creatures: these pins are about the hand-made rooms
 	for c in DefLoader.load_dir("res://data/creatures"):
 		creatures[c.id] = c
 

@@ -18,6 +18,18 @@ decor = [{
 spawns = [{
 "id": "moon_hare",
 "pos": Vector2(380, 314)
+}, {
+"by": "PL",
+"id": "twin_wolf_lupa",
+"pos": Vector2(161.2, 314)
+}, {
+"by": "PL",
+"id": "twin_wolf_beast_of_gevaudan",
+"pos": Vector2(507.2, 314)
+}, {
+"by": "PL",
+"id": "twin_spider_cocoon_mother",
+"pos": Vector2(284.2, 314)
 }]
 exits = [{
 "edge": "left",

@@ -10,6 +10,8 @@ extends AreaModule
 const PLAN_PATH := "res://tools/creature_areas.json"
 const MARK := "PL"
 const WEIGHT := {"common": 1.0, "elite": 2.0, "rare": 3.0}
+## A lair is drawn to its rares only while its weighted load per screen is under this (an old spawn counts 1, a placed one its class's weight).
+const LAIR_CAP := 8.0
 const CLASS_RANK := {"rare": 0, "elite": 1, "common": 2}
 ## x spacing of the spots tried along a surface.
 const STEP := 24.0
@@ -90,7 +92,7 @@ func build(world: Dictionary) -> void:
 		(world[home] as RoomDef).spawns.append({"id": cid, "pos": spot, "by": MARK})
 		loads[home] = float(loads[home]) + float(WEIGHT[cls])
 
-## The plan's creatures, rares first and the ones with the fewest areas first, then by id.
+## The plan's creatures, rares first, the ones with the fewest areas first, the biggest first (they need the most room), then by id.
 func _order() -> Array:
 	var ids: Array = (_plan["creatures"] as Dictionary).keys()
 	ids.sort_custom(func(a: String, b: String) -> bool:
@@ -100,21 +102,29 @@ func _order() -> Array:
 			return int(CLASS_RANK[ra["class"]]) < int(CLASS_RANK[rb["class"]])
 		if ra["areas"].size() != rb["areas"].size():
 			return ra["areas"].size() < rb["areas"].size()
+		var wa := size_of(_defs[a]).x if _defs.has(a) else 0.0
+		var wb := size_of(_defs[b]).x if _defs.has(b) else 0.0
+		if not is_equal_approx(wa, wb):
+			return wa > wb
 		return a < b)
 	return ids
 
-## The rooms of the creature's areas, a rare's lairs first, then the emptiest per screen, then by id.
+## The rooms of the creature's areas, a rare's lairs with room left first, then the emptiest per screen, then by id.
 func _rooms_for(row: Dictionary, cls: String, by_area: Dictionary, lairs: Array, loads: Dictionary, world: Dictionary) -> Array:
 	var ids: Array = []
 	for a in row["areas"]:
 		for id in by_area.get(a, []):
 			if not ids.has(id):
 				ids.append(id)
+	var per_screen := func(id: String) -> float:
+		return float(loads[id]) / float((world[id] as RoomDef).size.x * (world[id] as RoomDef).size.y)
+	var open_lair := func(id: String) -> bool:  # a lair a rare is drawn to: it has room left
+		return cls == "rare" and lairs.has(id) and per_screen.call(id) < LAIR_CAP
 	ids.sort_custom(func(a: String, b: String) -> bool:
-		if cls == "rare" and lairs.has(a) != lairs.has(b):
-			return lairs.has(a)
-		var la := float(loads[a]) / float((world[a] as RoomDef).size.x * (world[a] as RoomDef).size.y)
-		var lb := float(loads[b]) / float((world[b] as RoomDef).size.x * (world[b] as RoomDef).size.y)
+		if open_lair.call(a) != open_lair.call(b):
+			return open_lair.call(a)
+		var la: float = per_screen.call(a)
+		var lb: float = per_screen.call(b)
 		if not is_equal_approx(la, lb):
 			return la < lb
 		return a < b)
