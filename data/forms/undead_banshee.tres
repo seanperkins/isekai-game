@@ -20,6 +20,8 @@ stats = {
 }
 tint = Color(0.8, 0.825, 0.975, 1)
 size = 1.4
+sprite_set = "forms_undead"
+sprite_frame = "banshee"
 blurb = "Wail: a cone that stuns and frightens"
 reads = ["air", "dark"]
 host = ["crypt"]

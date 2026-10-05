@@ -81,6 +81,11 @@ static func validate(forms: Dictionary, skill_ids: Array, check_art := false, ve
 				break
 		if check_art and f.sprite_set != "" and not SpriteSheet.available(f.sprite_set):
 			errs.append("%s: sprite set '%s' has no sheet" % [id, f.sprite_set])
+		if check_art and f.sprite_frame != "":
+			if f.sprite_set == "":
+				errs.append("%s: a sprite frame needs a sprite set" % id)
+			elif SpriteSheet.available(f.sprite_set) and not SpriteSheet.load_set(f.sprite_set).has_frame(f.sprite_frame):
+				errs.append("%s: sprite frame '%s' is not in sheet '%s'" % [id, f.sprite_frame, f.sprite_set])
 	return errs
 
 ## The reveal and offer thresholds of a lineage form: known elements, positive amounts, the same elements, offer at least reveal.

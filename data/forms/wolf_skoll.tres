@@ -20,6 +20,8 @@ stats = {
 }
 tint = Color(0.8, 0.825, 0.975, 1)
 size = 1.4
+sprite_set = "forms_wolf"
+sprite_frame = "skoll"
 blurb = "Chaser: gallop never slows; mark a fleeing enemy and the pounce is free when you catch it"
 reads = ["air", "dark"]
 host = ["deep"]

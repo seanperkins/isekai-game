@@ -17,6 +17,8 @@ stats = {
 }
 tint = Color(0.7, 0.6, 0.85, 1)
 size = 1.25
+sprite_set = "forms_undead"
+sprite_frame = "deadeye"
 blurb = "six sure shots, then a cursed seventh"
 reads = ["dark"]
 host = ["crypt"]

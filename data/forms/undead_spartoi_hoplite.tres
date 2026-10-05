@@ -18,6 +18,8 @@ stats = {
 }
 tint = Color(0.8, 0.69, 0.725, 1)
 size = 1.25
+sprite_set = "forms_undead"
+sprite_frame = "spartoi_hoplite"
 blurb = "Shield wall: block and spear thrust; sow two bone soldiers"
 reads = ["earth", "dark"]
 host = ["crypt", "deep"]

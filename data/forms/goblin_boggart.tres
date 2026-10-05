@@ -18,6 +18,8 @@ stats = {
 }
 tint = Color(0.75, 0.65, 0.9, 1)
 size = 1.4
+sprite_set = "forms_goblin"
+sprite_frame = "boggart"
 blurb = "Curse-stone and a fear aura (a corrupted Tomte)"
 reads = ["dark"]
 host = ["swamp"]

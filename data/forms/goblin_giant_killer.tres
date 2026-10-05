@@ -18,6 +18,8 @@ stats = {
 }
 tint = Color(1, 0.915, 0.7, 1)
 size = 1.4
+sprite_set = "forms_goblin"
+sprite_frame = "giant_killer"
 blurb = "damage scales with the target's size"
 reads = ["light", "earth"]
 host = ["deep"]

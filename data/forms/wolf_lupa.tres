@@ -18,6 +18,8 @@ stats = {
 }
 tint = Color(1, 0.875, 0.875, 1)
 size = 1.4
+sprite_set = "forms_wolf"
+sprite_frame = "lupa"
 blurb = "Suckle: heals packmates and grows a pup into a second packmate"
 reads = ["light", "mind"]
 host = ["forest"]

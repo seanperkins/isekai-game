@@ -17,6 +17,8 @@ stats = {
 }
 tint = Color(0.7, 0.6, 0.85, 1)
 size = 1.25
+sprite_set = "forms_wolf"
+sprite_frame = "barghest"
 blurb = "Fear howl: enemies falter and flee"
 reads = ["dark"]
 host = ["crypt", "deep"]

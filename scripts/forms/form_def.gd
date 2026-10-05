@@ -34,6 +34,9 @@ extends Resource
 @export var size := 1.0
 ## A sheet set in res://assets/sheets/ (e.g. "form_weaver"), or "" for the tinted base sheet.
 @export var sprite_set := ""
+## The frame of that sheet that is this form's still (the art track draws one still per form), or "" when the sheet's own clips
+## (idle_1 and the rest) are the look.
+@export var sprite_frame := ""
 @export var blurb := ""
 ## The essences this body reads (Essences.ALL): the elements that open it and that its kit leans on.
 @export var reads: Array = []

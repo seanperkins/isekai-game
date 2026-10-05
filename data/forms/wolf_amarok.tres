@@ -19,6 +19,8 @@ stats = {
 }
 tint = Color(0.775, 0.84, 0.85, 1)
 size = 1.4
+sprite_set = "forms_wolf"
+sprite_frame = "amarok"
 blurb = "Lone hunter: strongest with no packmate, hunts isolated prey"
 reads = ["earth", "water"]
 host = ["deep"]

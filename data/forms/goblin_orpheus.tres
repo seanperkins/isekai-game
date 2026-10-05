@@ -18,6 +18,8 @@ stats = {
 }
 tint = Color(1, 0.875, 0.875, 1)
 size = 1.4
+sprite_set = "forms_goblin"
+sprite_frame = "orpheus"
 blurb = "Lull: calm a hostile creature so it stops attacking and can be tamed"
 reads = ["light", "mind"]
 host = ["sacred"]

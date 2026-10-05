@@ -19,6 +19,8 @@ stats = {
 }
 tint = Color(0.75, 0.775, 0.925, 1)
 size = 1.12
+sprite_set = "forms_goblin"
+sprite_frame = "skulker"
 blurb = "sneak strike, smoke bomb"
 reads = ["dark", "air"]
 host = ["crypt", "demon"]

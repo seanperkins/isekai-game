@@ -135,3 +135,35 @@ class FormsTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ArtTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.old = os.getcwd()
+        os.chdir(os.path.dirname(HERE))
+
+    @classmethod
+    def tearDownClass(cls):
+        os.chdir(cls.old)
+
+    def test_art_for_finds_the_frame_by_slug(self):
+        by_id = {f["dataId"]: f for f in bsf.species_forms() + bsf.slime_forms()}
+        self.assertEqual(bsf.art_for(by_id["wolf_warg"]), {"set": "forms_wolf", "frame": "warg"})
+        self.assertEqual(bsf.art_for(by_id["gleipnir"]), {"set": "forms_slime", "frame": "gleipnir"})
+        undead = next(f for f in by_id.values() if f["species"] == "undead")
+        self.assertEqual(bsf.art_for(undead), {"set": "forms_undead", "frame": undead["dataId"][len("undead_"):]})
+
+    def test_a_form_without_art_gets_none(self):
+        self.assertEqual(bsf.art_for({"species": "wolf", "dataId": "wolf_no_such_form"}), {})
+        self.assertEqual(bsf.art_for({"species": "newt", "dataId": "newt_thing"}), {})
+
+    def test_every_generated_form_has_art(self):
+        for f in bsf.species_forms() + bsf.slime_forms():
+            self.assertTrue(bsf.art_for(f), f["dataId"])
+
+    def test_the_tres_writes_the_set_and_the_frame(self):
+        f = next(f for f in bsf.species_forms() if f["dataId"] == "wolf_warg")
+        text = bsf.tres(f)
+        self.assertIn('sprite_set = "forms_wolf"', text)
+        self.assertIn('sprite_frame = "warg"', text)

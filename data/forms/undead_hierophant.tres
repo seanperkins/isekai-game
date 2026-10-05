@@ -18,6 +18,8 @@ stats = {
 }
 tint = Color(0.933, 0.8, 0.883, 1)
 size = 1.4
+sprite_set = "forms_undead"
+sprite_frame = "hierophant"
 blurb = "Consecrate: a ring of light that heals you and your summons and burns the living"
 reads = ["light", "dark", "mind"]
 host = ["sacred"]

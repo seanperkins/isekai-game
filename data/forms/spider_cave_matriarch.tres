@@ -18,6 +18,8 @@ stats = {
 }
 tint = Color(0.8, 0.69, 0.725, 1)
 size = 1.25
+sprite_set = "forms_spider"
+sprite_frame = "cave_matriarch"
 blurb = "a huge lone hunter: heavy bite, a web wall"
 reads = ["earth", "dark"]
 host = ["deep"]

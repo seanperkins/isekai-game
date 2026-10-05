@@ -18,6 +18,8 @@ stats = {
 }
 tint = Color(0.95, 0.69, 0.525, 1)
 size = 1.25
+sprite_set = "forms_goblin"
+sprite_frame = "smith"
 blurb = "Forge: craft a named weapon from parts at a forge"
 reads = ["earth", "fire"]
 host = ["volcano"]

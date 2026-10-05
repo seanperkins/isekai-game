@@ -20,6 +20,8 @@ stats = {
 }
 tint = Color(0.85, 1, 1, 1)
 size = 1.4
+sprite_set = "forms_undead"
+sprite_frame = "arash"
 blurb = "Life-arrow: spend most of your HP on one arrow that crosses the room and pierces"
 reads = ["air"]
 host = ["deep"]

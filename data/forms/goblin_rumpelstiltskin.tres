@@ -18,6 +18,8 @@ stats = {
 }
 tint = Color(0.975, 0.79, 0.825, 1)
 size = 1.4
+sprite_set = "forms_goblin"
+sprite_frame = "rumpelstiltskin"
 blurb = "Spin: transmute junk into a better part, two for one"
 reads = ["earth", "mind"]
 host = ["village"]

@@ -16,6 +16,8 @@ stats = {
 }
 tint = Color(1, 0.95, 0.7, 1)
 size = 1.12
+sprite_set = "forms_goblin"
+sprite_frame = "hob"
 blurb = "Offer and Ward: protects an area"
 reads = ["light"]
 host = ["village", "sacred"]

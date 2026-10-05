@@ -18,6 +18,8 @@ stats = {
 }
 tint = Color(0.875, 0.7, 0.95, 1)
 size = 1.4
+sprite_set = "forms_undead"
+sprite_frame = "deathless"
 blurb = "Hidden soul: place an anchor; if you die in range you rise there once per life"
 reads = ["dark", "mind"]
 host = ["deep"]

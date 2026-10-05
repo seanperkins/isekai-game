@@ -20,6 +20,8 @@ stats = {
 }
 tint = Color(0.95, 1, 0.9, 1)
 size = 1.4
+sprite_set = "forms_wolf"
+sprite_frame = "wepwawet"
 blurb = "Opener: reveals hidden exits and shortcuts in a room"
 reads = ["light", "air"]
 host = ["sacred"]

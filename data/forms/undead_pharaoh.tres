@@ -18,6 +18,8 @@ stats = {
 }
 tint = Color(0.75, 0.65, 0.9, 1)
 size = 1.4
+sprite_set = "forms_undead"
+sprite_frame = "pharaoh"
 blurb = "Decree: a curse ring marks everything in the room; tomb guards rise"
 reads = ["dark"]
 host = ["deep"]

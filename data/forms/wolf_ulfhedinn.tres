@@ -18,6 +18,8 @@ stats = {
 }
 tint = Color(0.8, 0.69, 0.725, 1)
 size = 1.25
+sprite_set = "forms_wolf"
+sprite_frame = "ulfhedinn"
 blurb = "Skin: you choose the change; a berserk window with no flinch and iron-proof"
 reads = ["dark", "earth"]
 host = ["forest", "cave"]

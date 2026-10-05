@@ -18,6 +18,8 @@ stats = {
 }
 tint = Color(0.8, 0.69, 0.725, 1)
 size = 1.25
+sprite_set = "forms_undead"
+sprite_frame = "ghoul"
 blurb = "claws, a paralysing touch, a stench cloud"
 reads = ["dark", "earth"]
 host = ["cemetery", "crypt"]

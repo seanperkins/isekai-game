@@ -18,6 +18,8 @@ stats = {
 }
 tint = Color(0.75, 0.65, 0.9, 1)
 size = 1.4
+sprite_set = "forms_undead"
+sprite_frame = "demilich"
 blurb = "a floating skull, very frail, very strong"
 reads = ["dark"]
 host = ["deep"]

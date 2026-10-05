@@ -19,6 +19,8 @@ stats = {
 }
 tint = Color(0.75, 0.775, 0.925, 1)
 size = 1.25
+sprite_set = "forms_spider"
+sprite_frame = "shadow_stalker"
 blurb = "Silent drop: a bonus strike in dim light"
 reads = ["dark", "air"]
 host = ["crypt"]

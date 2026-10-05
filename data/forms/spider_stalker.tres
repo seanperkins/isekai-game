@@ -19,6 +19,8 @@ stats = {
 }
 tint = Color(0.75, 0.775, 0.925, 1)
 size = 1.12
+sprite_set = "forms_spider"
+sprite_frame = "stalker"
 blurb = "Ambush: a ceiling drop and a web zip"
 reads = ["dark", "air"]
 host = ["crypt", "cave"]

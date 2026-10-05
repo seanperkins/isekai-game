@@ -17,6 +17,8 @@ stats = {
 }
 tint = Color(0.7, 0.6, 0.85, 1)
 size = 1.12
+sprite_set = "forms_undead"
+sprite_frame = "adept"
 blurb = "a few bone minions; a focus"
 reads = ["dark"]
 host = ["crypt", "deep"]

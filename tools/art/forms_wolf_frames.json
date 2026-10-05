@@ -1,0 +1,132 @@
+{
+ "canonical": "art_source/frames/gloom_wolf/idle_1.png",
+ "style": "Modern pixel art with soft lighting (Style D). The first reference image is the plain gloom wolf: a lean cave wolf with thick near-black fur, a faint violet star-shaped mark on the forehead, pale glowing eyes, pointed ears and a bushy tail; keep its clean dark outline, chunky readable pixels and soft lighting, and keep the same dark fur and the faint star mark on the forehead unless the description says otherwise. Any further reference shows the same line's earlier form, so this creature is that form grown and changed, still the same animal. Side view, the creature facing right. Draw only one creature: no ground, no shadow, no text, no border, no other animals, no people. Never use magenta, hot pink or saturated purple on the creature (use pale lavender and soft rose instead), so it stays clear of the magenta background.",
+ "frames": [
+  {
+   "name": "moonbound",
+   "width": 45,
+   "refs": [],
+   "prompt": "The Moonbound, the first stage of a werewolf: the gloom wolf risen onto two powerful digitigrade hind legs, hunched forward in a half-turned stance, long muscular forearms ending in clawed hands, but still a wolf and not a man: a full wolf head with a long muzzle, pointed ears, thick near-black fur everywhere, a bushy tail hanging behind, pale glowing violet-white eyes, the faint violet star mark on its forehead, and a few bared white fangs. A soft cold pale lavender moonlight sheen rims its shoulders and the tips of its ears, with a faint crescent-shaped pale glint in the chest fur. Dark violet and near-black tones only. Standing upright on two legs, facing right."
+  },
+  {
+   "name": "black_dog",
+   "width": 60,
+   "refs": [],
+   "prompt": "The Black Dog, the British omen hound: the gloom wolf grown sleeker and more hound-like, a lean low-slung shaggy black dog slinking forward in a silent crouched stalk, head carried low, ears flat and pricked back, thick near-black ragged fur, large pale glowing violet-white eyes, the faint violet star mark on its forehead, and a long tail held low. Thin wisps of pale cyan mist curl around its paws and lower legs so that its feet seem to make no sound, and a faint pale cyan wind-sheen touches its back fur. On all four legs, facing right."
+  },
+  {
+   "name": "warg",
+   "width": 60,
+   "refs": [],
+   "prompt": "The Warg, a Norse war-wolf: the gloom wolf grown heavier and meaner, a stocky muscular wolf with a deep chest, thick neck and broad skull, a notched ear and old scars across its muzzle and flank, thick near-black fur with patches of tan earth-brown, a rough tan leather war harness across its chest with a few iron studs and a bone fang hanging from it, glowing pale amber-violet eyes, the faint violet star mark on its forehead, a snarl with big white fangs, bracing its heavy forelegs for a hard pounce. Earth tan and brown accents. On all four legs, facing right."
+  },
+  {
+   "name": "loup_garou",
+   "width": 50,
+   "refs": ["moonbound"],
+   "prompt": "The Loup-Garou, the cursed French werewolf: the same wolf-headed beast as the reference, now taller, broader and more bestial, caught in a hunched frenzy on two digitigrade hind legs, jaws wide open and dripping, long clawed hands curled and ready, scraps of ragged dark peasant breeches hanging from its waist, matted near-black fur, a bushy tail lashing behind, the faint violet star mark on its forehead flaring, and eyes that glow a hot red-lavender. Vivid blood crimson smears on its muzzle, its claws and its chest fur, with a few crimson drops. Dark violet and crimson only. Standing upright on two legs, facing right."
+  },
+  {
+   "name": "ulfhedinn",
+   "width": 50,
+   "refs": ["moonbound"],
+   "prompt": "The Ulfhedinn, a Norse wolf-skin warrior: the same wolf-headed upright beast as the reference, now a disciplined berserker standing tall and square on two digitigrade hind legs, wearing a grey wolf pelt draped over its shoulders like a cloak with the empty pelt-head resting on one shoulder, tan leather straps across its chest, bone and iron bracers on its forearms, tan earth-brown paint stripes across its muzzle and chest, braided fur at its temples, thick near-black fur, a bushy tail behind, pale glowing violet-white eyes, the faint violet star mark on its forehead, lips drawn back in a calm growl, clawed hands open and relaxed. Earth tan and brown accents. Standing upright on two legs, facing right."
+  },
+  {
+   "name": "barghest",
+   "width": 68,
+   "refs": ["black_dog"],
+   "prompt": "The Barghest, Yorkshire's spectral black hound and omen of death: the same shaggy black dog as the reference, now larger and gaunt, standing tall with its head thrown up and its jaws wide in a terrible howl, a huge ragged shaggy near-black coat whose edges dissolve into thin dark violet wisps, enormous round glowing pale violet-white eyes like lamps, the faint violet star mark on its forehead, a ghostly look with the tips of its tail and the fur on its legs fading into dark violet smoke. Dark violet and near-black only. On all four legs, facing right."
+  },
+  {
+   "name": "cwn_annwn",
+   "width": 68,
+   "refs": ["black_dog"],
+   "prompt": "The Cwn Annwn, the Welsh hound of the Otherworld that hunts souls: the same hound shape as the reference but its fur has turned ghost-white, a lean pale spectral hound with a faintly translucent body, vivid crimson-red ears (the folklore mark of these hounds), pale glowing warm gold eyes, the faint violet star mark still on its forehead, a soft warm gold glow rimming its whole body, trotting forward with its head raised, fangs just showing, a long tail trailing. Ghost white, warm gold and crimson-red ears. On all four legs, facing right."
+  },
+  {
+   "name": "dire_wolf",
+   "width": 68,
+   "refs": ["warg"],
+   "prompt": "The Dire Wolf, a fantasy giant: the same stocky war-wolf as the reference, now far bigger and heavier, a massive tank-like wolf with a huge broad head, a thick short neck, a deep barrel chest, thick pillar-like legs with enormous paws, shaggy near-black fur with a heavy ruff, and plates of hard tan stone-like earth-coloured fur and bone across its shoulders and back like natural armour, a scarred muzzle, glowing pale amber-violet eyes, the faint violet star mark on its forehead, planted square and unmovable with its head low and jaws closed, a low growl. Earth tan and brown accents. On all four legs, facing right."
+  },
+  {
+   "name": "church_grim",
+   "width": 68,
+   "refs": ["warg"],
+   "prompt": "The Church Grim, the black dog buried at the church wall to guard the churchyard: the same sturdy wolf as the reference, now calm, noble and watchful, standing firmly with its head held high and its ears pricked, thick smooth near-black fur, steady glowing warm gold eyes, the faint star mark on its forehead now glowing warm gold, a soft warm gold light along the edges of its fur like a halo, and a dull tan weathered stone collar carved with a small cross at its neck, with a few small tan stone flecks clinging to its legs. Near-black, warm gold light and earth tan. On all four legs, facing right."
+  },
+  {
+   "name": "beast_of_gevaudan",
+   "width": 56,
+   "refs": ["loup_garou"],
+   "prompt": "The Beast of Gevaudan, the man-eater of 1764: the same wolf-headed upright beast as the reference, now huge and lean and terrifyingly stealthy, creeping forward in a low hunched stalk on two digitigrade hind legs with one long clawed arm stretched ahead, an extra-long snout, a bristling dark mane and a dark stripe down its spine, shaggy near-black fur with a few small old bullet scars that glint dully and have not hurt it, a long thin tail held low, narrowed pale glowing eyes, the faint violet star mark on its forehead, jaws slightly open with long white fangs. Blood crimson on its muzzle, its claws and the fur of its chest. Dark violet and crimson only. Standing upright on two legs, facing right."
+  },
+  {
+   "name": "lycaon",
+   "width": 56,
+   "refs": ["loup_garou"],
+   "prompt": "Lycaon, the king turned into the first wolf: the same wolf-headed upright beast as the reference, now a tall gaunt wolf-king standing on two digitigrade hind legs with its head thrown back and its muzzle raised in a great howl, a ragged tattered dark violet royal cloak hanging from its shoulders, a broken tarnished iron circlet crown on its head, thick near-black fur, a bushy tail, long clawed hands hanging, pale glowing lavender-white eyes, the faint violet star mark on its forehead glowing brighter, and a faint dark violet aura around its fur. Dark violet and near-black only. Standing upright on two legs, facing right."
+  },
+  {
+   "name": "wolfskin_champion",
+   "width": 56,
+   "refs": ["ulfhedinn"],
+   "prompt": "The Wolfskin Champion, the Norse wolf-skin warrior at its peak: the same upright wolf-headed berserker as the reference, now taller, huge and battle-hardened on two digitigrade hind legs, wearing a whole grey wolf pelt cloak with its head hood on its shoulders, iron-studded tan leather armour across its chest and shoulders, bone trophies on straps, tan earth-brown war paint, scarred near-black fur, a bushy tail, glowing pale violet-white eyes, the faint violet star mark on its forehead, caught biting down on the rim of a round tan wooden shield that it holds up in front of its chest with both clawed hands. Earth tan and brown accents. Standing upright on two legs, facing right."
+  },
+  {
+   "name": "skoll",
+   "width": 76,
+   "refs": ["ulfhedinn"],
+   "prompt": "Skoll, the Norse wolf that chases the sun across the sky: a four-legged wolf (unlike the upright reference, which only shows the line's markings and colours) in a full flat-out gallop, body stretched long and low with its forelegs reaching far ahead and its hind legs driving behind, thick near-black fur streaming back in the wind, long streamers of pale cyan wind light flowing from its flanks, ears and bushy tail, glowing pale cyan eyes, the faint violet star mark on its forehead, jaws open as it strains forward and upward. Pale cyan and dark violet. On all four legs, facing right."
+  },
+  {
+   "name": "hellhound",
+   "width": 76,
+   "refs": ["barghest"],
+   "prompt": "The Hellhound, Garmr guarding the gate of Hel: the same gaunt shaggy black hound as the reference, now bigger and burning, a huge near-black hound with glowing cracks of ember orange-red running through its fur like cooling coals, flames of ember orange-red licking from its mane, its back and its tail, a spiked dark iron collar with a snapped chain link at its neck, burning ember-orange eyes, the faint violet star mark on its forehead now a glowing ember, jaws wide with glowing embers inside, leaping forward in a burning pounce with fire trailing from its paws. Fire ember orange-red and near-black. On all four legs, facing right."
+  },
+  {
+   "name": "black_shuck",
+   "width": 76,
+   "refs": ["barghest"],
+   "prompt": "Black Shuck, East Anglia's giant black dog with one burning eye: the same gaunt shaggy black hound as the reference, now enormous and low-slung, a huge ragged near-black dog stalking forward with its head lowered, a thick shaggy coat that melts into dark mist at its edges, and a single huge round burning red eye in the middle of its forehead, glowing like a lamp, in place of the star mark, with no other eye, bared white fangs, a long tail dragging low, a heavy menacing presence. Dark violet and near-black with the one red eye. On all four legs, facing right."
+  },
+  {
+   "name": "gabriel_hound",
+   "width": 76,
+   "refs": ["cwn_annwn"],
+   "prompt": "The Gabriel Hound, the ghost hound heard baying overhead: the same pale spectral hound as the reference, now flying through the air in a long gliding leap with its head raised and its mouth open in a haunting bay, a lean ghostly pale grey-violet body that is semi-translucent with its legs and long tail trailing off into streams of pale cyan wind and mist, glowing pale cyan eyes, the faint violet star mark on its forehead, a pale cyan glow along its back and ears. Pale cyan, ghost grey and dark violet. Airborne, body stretched out, facing right."
+  },
+  {
+   "name": "cu_sith",
+   "width": 76,
+   "refs": ["cwn_annwn"],
+   "prompt": "The Cu Sith, the Scottish fairy hound as big as a calf: the same lean hound shape as the reference, now very large, long-legged and shaggy like a huge wolfhound, with a thick dark mossy forest-green coat (green rather than black), its long tail curled in a tight plaited coil over its back, large tan paws, glowing pale cyan eyes, the faint star mark on its forehead glowing pale green-white, its mouth open mid-bark with a curl of pale cyan breath leaving its jaws, a few tan earth-brown highlights on its paws and legs. Dark green, earth tan and pale cyan. On all four legs, facing right."
+  },
+  {
+   "name": "fenrir",
+   "width": 76,
+   "refs": ["dire_wolf"],
+   "prompt": "Fenrir, the Norse wolf who breaks every chain: the same massive stocky wolf as the reference, now colossal and furious, heaving forward with its jaws gaping enormously wide, a thick near-black coat with a huge mane, thick broken iron chains and shackles hanging from its neck, forelegs and tail with their snapped ends dangling close against its body, no flying rocks, no flying chain links, no debris and no dust anywhere around it, only the creature itself with clean outlines, glowing pale amber-violet eyes, the faint violet star mark on its forehead, tan earth-brown highlights on its paws and chest. Earth tan, iron grey and near-black. On all four legs, facing right."
+  },
+  {
+   "name": "amarok",
+   "width": 76,
+   "refs": ["dire_wolf"],
+   "prompt": "The Amarok, the Inuit giant lone wolf that hunts at night: the same massive wolf as the reference, now gaunt, long-legged and silent, stalking alone with its head low, a thick winter coat of near-black fur frosted with cool water blue and pale ice-blue highlights and a dusting of white frost and snow, a heavy ruff, small icicles hanging from its chin and belly fur, glowing pale ice-blue eyes, the faint star mark on its forehead glowing pale blue, tan earth-brown patches on its paws and underbelly. Water blue, near-black and earth tan. On all four legs, facing right."
+  },
+  {
+   "name": "wepwawet",
+   "width": 76,
+   "refs": ["church_grim"],
+   "prompt": "Wepwawet, Egypt's wolf Opener of the Ways: the same noble black wolf-hound as the reference, now tall, slender and elegant with long legs and tall upright pointed ears, walking proudly forward with its head raised, a broad warm gold Egyptian collar and gold armbands on its forelegs, warm gold glints in its smooth near-black fur, a thin pale cyan linen sash flowing behind it in the wind, glowing warm gold eyes, a glowing warm gold star mark on its forehead. Warm gold light, pale cyan sash and near-black fur. On all four legs, facing right."
+  },
+  {
+   "name": "lupa",
+   "width": 76,
+   "refs": ["church_grim"],
+   "prompt": "The Lupa, Rome's Capitoline she-wolf who nursed Romulus and Remus: the same noble black wolf as the reference, now a calm, strong, motherly she-wolf standing with her head lowered gently and her ears relaxed, a warm bronze-gold sheen across her near-black fur, a visible row of teats along her belly, gentle glowing pale rose-pink eyes, the star mark on her forehead glowing soft rose pink, a soft pale rose and warm gold glow rimming her outline, a full bushy tail. Warm gold light and soft rose pink. On all four legs, facing right."
+  }
+ ]
+}

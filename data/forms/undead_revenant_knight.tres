@@ -18,6 +18,8 @@ stats = {
 }
 tint = Color(0.8, 0.69, 0.725, 1)
 size = 1.25
+sprite_set = "forms_undead"
+sprite_frame = "revenant_knight"
 blurb = "Vengeance: hits harder against the creature that killed your last life; heavy swings"
 reads = ["earth", "dark"]
 host = ["crypt"]

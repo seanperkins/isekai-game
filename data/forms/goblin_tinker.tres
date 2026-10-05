@@ -17,6 +17,8 @@ stats = {
 }
 tint = Color(0.9, 0.78, 0.6, 1)
 size = 1.12
+sprite_set = "forms_goblin"
+sprite_frame = "tinker"
 blurb = "crafted throwables, rigged traps, more recipe slots"
 reads = ["earth"]
 host = ["village", "volcano"]

@@ -18,6 +18,8 @@ stats = {
 }
 tint = Color(0.85, 0.575, 0.725, 1)
 size = 1.4
+sprite_set = "forms_goblin"
+sprite_frame = "bloodcap"
 blurb = "Cap-throw: a boomerang cap that returns, dyed"
 reads = ["dark", "blood"]
 host = ["demon"]

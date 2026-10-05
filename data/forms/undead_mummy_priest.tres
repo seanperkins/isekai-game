@@ -18,6 +18,8 @@ stats = {
 }
 tint = Color(0.8, 0.69, 0.725, 1)
 size = 1.25
+sprite_set = "forms_undead"
+sprite_frame = "mummy_priest"
 blurb = "Wrap: bandages bind enemies; a sand gust"
 reads = ["dark", "earth"]
 host = ["crypt", "deep"]

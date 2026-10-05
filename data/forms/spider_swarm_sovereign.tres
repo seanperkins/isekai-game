@@ -20,6 +20,8 @@ stats = {
 }
 tint = Color(0.8, 0.825, 0.975, 1)
 size = 1.4
+sprite_set = "forms_spider"
+sprite_frame = "swarm_sovereign"
 blurb = "Disperse: the body breaks into a swarm that squeezes through grates and reforms (a traversal gate)"
 reads = ["dark", "air"]
 host = ["deep"]

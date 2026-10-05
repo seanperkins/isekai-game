@@ -18,6 +18,8 @@ stats = {
 }
 tint = Color(0.75, 0.65, 0.9, 1)
 size = 1.4
+sprite_set = "forms_goblin"
+sprite_frame = "changeling"
 blurb = "Swap: trade places with a decoy; look like a creature to scout"
 reads = ["dark"]
 host = ["village"]

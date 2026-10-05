@@ -17,6 +17,8 @@ stats = {
 }
 tint = Color(0.8, 0.525, 0.675, 1)
 size = 1.25
+sprite_set = "forms_wolf"
+sprite_frame = "loup_garou"
 blurb = "Frenzy: each kill stokes a bloodlust meter (faster, bleeding bites); at full you cannot stop"
 reads = ["dark", "blood"]
 host = ["forest", "swamp"]

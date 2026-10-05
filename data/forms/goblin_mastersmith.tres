@@ -18,6 +18,8 @@ stats = {
 }
 tint = Color(1, 0.74, 0.575, 1)
 size = 1.4
+sprite_set = "forms_goblin"
+sprite_frame = "mastersmith"
 blurb = "a second gear slot; flawless upgrades"
 reads = ["earth", "fire"]
 host = ["volcano"]

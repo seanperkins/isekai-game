@@ -20,6 +20,8 @@ stats = {
 }
 tint = Color(0.8, 0.825, 0.975, 1)
 size = 1.4
+sprite_set = "forms_wolf"
+sprite_frame = "gabriel_hound"
 blurb = "Hunt's passage: the pack carries you over one gap (a short glide)"
 reads = ["air", "dark"]
 host = ["deep"]

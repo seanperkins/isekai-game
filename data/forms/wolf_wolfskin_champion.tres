@@ -18,6 +18,8 @@ stats = {
 }
 tint = Color(0.95, 0.83, 0.65, 1)
 size = 1.4
+sprite_set = "forms_wolf"
+sprite_frame = "wolfskin_champion"
 blurb = "Shield-bite: breaks guards; the berserk window refills on kills"
 reads = ["earth"]
 host = ["cave"]

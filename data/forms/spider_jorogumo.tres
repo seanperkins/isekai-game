@@ -19,6 +19,8 @@ stats = {
 }
 tint = Color(0.75, 0.775, 0.925, 1)
 size = 1.25
+sprite_set = "forms_spider"
+sprite_frame = "jorogumo"
 blurb = "Veil: pass as a goblin or villager (village standing reads you as welcome); revealing it bursts the veil"
 reads = ["air", "dark"]
 host = ["village"]

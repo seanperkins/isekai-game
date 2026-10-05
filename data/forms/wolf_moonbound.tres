@@ -17,6 +17,8 @@ stats = {
 }
 tint = Color(0.7, 0.6, 0.85, 1)
 size = 1.12
+sprite_set = "forms_wolf"
+sprite_frame = "moonbound"
 blurb = "Rise: stand on two legs for claws and items, drop to four to gallop"
 reads = ["dark"]
 host = ["forest"]

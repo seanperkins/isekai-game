@@ -12,6 +12,10 @@ art_source/audio/raw/
 # Python bytecode from the tools
 __pycache__/
 
+# The raw Codex frames behind the new forms' art (about 160 MB; the built sheets in assets/sheets are committed). Regenerate with
+# tools/art/generate_frames.py from the specs in tools/art/forms_*_frames.json, or keep them on disk to re-assemble the sheets.
+art_source/frames/forms_*/
+
 # Codex run scratch beside generated frames
 art_source/frames/**/.last.txt
 

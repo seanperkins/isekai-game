@@ -115,8 +115,13 @@ func test_each_lineage_has_its_own_look_and_the_weaver_line_has_art() -> void:
 	for id in ["weaver", "snare", "arachne", "silkbound"]:
 		assert_eq((forms[id] as FormDef).sprite_set, "form_" + id, id)
 	for id in forms:
-		if not ["weaver", "snare", "arachne", "silkbound"].has(id):
-			assert_eq((forms[id] as FormDef).sprite_set, "", "%s uses the tinted base sheet until its art is generated" % id)
+		var f: FormDef = forms[id]
+		if ["weaver", "snare", "arachne", "silkbound"].has(id):
+			continue
+		if f.sprite_frame != "":
+			assert_eq(f.sprite_set, "forms_" + f.species, "%s has its still in its species' sheet" % id)
+		else:
+			assert_eq(f.sprite_set, "", "%s uses the tinted base sheet until its art is generated" % id)
 
 func test_a_later_stage_is_stronger_than_an_earlier_one_in_the_same_lineage() -> void:
 	for chain in [["weaver", "snare", "silkbound"], ["tide", "brook", "tidal"], ["toxic", "acid", "venom"],

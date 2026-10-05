@@ -17,6 +17,8 @@ stats = {
 }
 tint = Color(0.8, 0.525, 0.675, 1)
 size = 1.25
+sprite_set = "forms_goblin"
+sprite_frame = "redcap"
 blurb = "Dye: each kill refreshes a blood-cap timer for speed and damage; if it dries you lose it"
 reads = ["dark", "blood"]
 host = ["crypt"]

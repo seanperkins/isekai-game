@@ -18,6 +18,8 @@ stats = {
 }
 tint = Color(0.75, 0.65, 0.9, 1)
 size = 1.4
+sprite_set = "forms_spider"
+sprite_frame = "seven_spider_spirits"
 blurb = "Sisters: split into seven decoys that web"
 reads = ["dark"]
 host = ["deep"]

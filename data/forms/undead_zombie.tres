@@ -18,6 +18,8 @@ stats = {
 }
 tint = Color(0.8, 0.69, 0.725, 1)
 size = 1.12
+sprite_set = "forms_undead"
+sprite_frame = "zombie"
 blurb = "Devour corpses to heal; heft: slow, heavy swings"
 reads = ["earth", "dark"]
 host = ["swamp", "cemetery"]

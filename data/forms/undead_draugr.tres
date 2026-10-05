@@ -18,6 +18,8 @@ stats = {
 }
 tint = Color(0.8, 0.69, 0.725, 1)
 size = 1.25
+sprite_set = "forms_undead"
+sprite_frame = "draugr"
 blurb = "Heft: huge barrow-blade swings; it swells as it kills"
 reads = ["earth", "dark"]
 host = ["cemetery", "crypt", "deep"]

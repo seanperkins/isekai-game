@@ -19,6 +19,8 @@ stats = {
 }
 tint = Color(0.675, 0.75, 0.975, 1)
 size = 1.4
+sprite_set = "forms_spider"
+sprite_frame = "plaguemother"
 blurb = "a poison cloud that spreads on death"
 reads = ["water", "dark"]
 host = ["swamp"]

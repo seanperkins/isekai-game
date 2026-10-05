@@ -20,6 +20,8 @@ stats = {
 }
 tint = Color(0.9, 0.915, 0.85, 1)
 size = 1.4
+sprite_set = "forms_goblin"
+sprite_frame = "gremlin"
 blurb = "Sabotage: disable an enemy device or turn a trap against its owner"
 reads = ["earth", "air"]
 host = ["village"]

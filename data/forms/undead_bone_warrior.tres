@@ -18,6 +18,8 @@ stats = {
 }
 tint = Color(0.8, 0.69, 0.725, 1)
 size = 1.12
+sprite_set = "forms_undead"
+sprite_frame = "bone_warrior"
 blurb = "Heft: a slow overhead cleave and a shield"
 reads = ["earth", "dark"]
 host = ["crypt", "cave"]

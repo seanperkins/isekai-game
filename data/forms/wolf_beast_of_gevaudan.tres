@@ -18,6 +18,8 @@ stats = {
 }
 tint = Color(0.85, 0.575, 0.725, 1)
 size = 1.4
+sprite_set = "forms_wolf"
+sprite_frame = "beast_of_gevaudan"
 blurb = "Stalk-kill: a stealth opener that deals huge damage to the first target, shrugs off ranged hits"
 reads = ["dark", "blood"]
 host = ["forest"]

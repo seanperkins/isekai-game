@@ -1,0 +1,244 @@
+{
+ "canonical": "art_source/frames/goblin/idle_1.png",
+ "style": "Modern pixel art with soft lighting (Style D): an undead creature drawn from bone, rotting flesh, tattered cloth, rusted iron and ghostly light, with a clean dark outline, chunky readable pixels, gentle highlights and soft shading. The first reference image is a small goblin acrobat: use it ONLY as the rendering reference (pixel size, outline weight, soft lighting, palette richness, full-body proportions of a small biped); never copy its body, ears, face or colours. Any further reference image is the previous form of this same creature line: keep its bone tone, head shape and any signature gear recognisable so it reads as the same creature grown stronger, but give this form its own pose and silhouette. Side view, the creature facing right, the whole creature fully inside the frame with a wide margin of empty background on every side. Exactly one creature, nothing else: no ground, no wall, no shadow, no text, no letters, no hieroglyphs, no runes, no symbols, no border. The creature, its gear and any weapon form ONE connected silhouette: no separate floating bits, sparks, particles, smoke or streaks around it, and nothing trailing far from the body. Every colour is solid and opaque, nothing see-through. Glows are small hard-edged solid shapes (a lit eye, a lit gem, an ember), never soft halos or blurry auras. Never use bright magenta, hot pink or neon violet on the creature: dark violet means a deep muted purple, and pink means a soft pastel rose.",
+ "frames": [
+  {
+   "name": "skeleton",
+   "width": 17,
+   "refs": [],
+   "prompt": "The undead species' own base body, a plain animated Skeleton, the first thing every undead life is: a slim, human-sized skeleton of weathered ivory and grey bone with warm brown shading in the cracks, a cracked skull with deep dark eye sockets holding two tiny cold pinpoint glints and a slightly open jaw, a visible ribcage, spine and long bony limbs, bony hands and feet, a scrap of rotted brown cloth tied at the hips, and a short notched rusty iron sword gripped in one hand with the blade pointing straight down along its thigh, parallel to the leg and no wider than the body. Standing relaxed with weight on both feet, a faint forward hunch. No colour accents: just bone, rust and old cloth."
+  },
+  {
+   "name": "zombie",
+   "width": 25,
+   "refs": [
+    "skeleton"
+   ],
+   "prompt": "A Zombie, the shambling dead of Haitian zombi lore and of film, grown from the skeleton into a big, heavy, hunched corpse: sagging grey-green rotting flesh with earth-tan dirt caked on it and dark violet bruising, bone showing through at the ribs and one shoulder, torn sagging rags and ragged trousers, a slack jaw with dried gore around it, clouded dull eyes, and thick long arms hanging low with ragged hands that look ready for slow, heavy swings. Lurching stance, leaning forward, a clod of grave earth stuck in its thin hair."
+  },
+  {
+   "name": "bone_warrior",
+   "width": 25,
+   "refs": [
+    "skeleton"
+   ],
+   "prompt": "A Bone Warrior, a sown warrior of Cadmus and Jason grown from dragon's teeth, grown from the skeleton into a broad, big-boned heavy skeleton: thick ivory bones stained earth tan, a rim of dragon-tooth fangs along its jaw, dark violet glints in its eye sockets, a battered bronze helm with a short crest, a bronze pauldron, a round bronze shield strapped to the near arm, and a heavy bronze cleaver raised overhead in the other hand for a slow overhead cleave. Standing braced and wide, the cleaver upright so the whole figure stays compact."
+  },
+  {
+   "name": "skeletal_archer",
+   "width": 19,
+   "refs": [
+    "skeleton"
+   ],
+   "prompt": "A Skeletal Archer, grown from the skeleton: a slim, agile skeleton of ivory and grey bone with a short bone-white recurve bow held vertically in one hand at its side, a quiver of white bone arrows on its back, a bundle of throwing bones at the belt, a short tattered pale cyan scarf knotted at its neck with the ends hanging down, a light hood of rag, and the other bony hand ready at its hip to throw. Alert upright stance, ivory bone with pale cyan air accents and dark shadow."
+  },
+  {
+   "name": "adept",
+   "width": 19,
+   "refs": [
+    "skeleton"
+   ],
+   "prompt": "An Adept of necromancy, in the manner of the Witch of Endor raising Samuel, grown from the skeleton: a skeleton in a hooded dark violet robe with its cracked skull showing under the hood, a small fingerbone charm on a cord, a short gnarled wooden staff in one hand topped with a small dark violet crystal as its focus, and the other bony hand held open, palm up, at its side. Standing calm and watchful, ivory bone and dark violet cloth."
+  },
+  {
+   "name": "ghoul",
+   "width": 21,
+   "refs": [
+    "zombie"
+   ],
+   "prompt": "A Ghoul, the Arabic ghul: a gaunt, hunched desert corpse-eater and shapeshifter grown from the zombie, sallow grey-brown skin stretched tight over every rib, a lean hyena-like face with sharp yellow teeth and glinting eyes, long hooked black claws on both hands, ragged sand-tan desert wraps and a torn headcloth with a few dark violet stains of rot on the wraps, and no weapon at all. Tall and lanky, hunched at the shoulders but standing nearly upright with its legs under its body and close together, its long arms hanging down in front of it with the clawed hands low and held in close to its thighs, not spread out wide, so the figure is much taller than it is wide. Earth tan and dark violet accents."
+  },
+  {
+   "name": "draugr",
+   "width": 28,
+   "refs": [
+    "zombie"
+   ],
+   "prompt": "A Draugr, the Norse barrow-dweller, grown from the zombie into a huge, swollen, broad-shouldered dead Viking: bloated blue-black skin, tattered wool and rusted chainmail, a dented old iron helm, a long grey braided beard, pale glowing eyes, a heavy gold arm-ring glinting on one wrist (a hoard guard), and a huge rusted barrow-blade, a great notched broadsword, held in both hands upright against its shoulder ready for a heavy swing. Keep the whole creature and blade compact, the blade pointing straight up. Earth tan and dark violet accents."
+  },
+  {
+   "name": "revenant_knight",
+   "width": 28,
+   "refs": [
+    "bone_warrior"
+   ],
+   "prompt": "A Revenant Knight, the dead who return for vengeance, grown from the bone warrior into a skeleton in blackened, dented full plate armour: a closed great helm with two pale lavender eye-slits glowing, a torn dark violet surcoat with a blank, scratched-out crest, mud and earth tan stains on the steel, a trailing rusted chain at the belt, and a huge two-handed great blade held point up against its shoulder for a heavy swing. Tall, grim and heavy, standing with the blade upright and compact."
+  },
+  {
+   "name": "spartoi_hoplite",
+   "width": 21,
+   "refs": [
+    "bone_warrior"
+   ],
+   "prompt": "A Spartoi Hoplite, one of Cadmus's sown men, grown from the bone warrior: a skeleton in a Greek hoplite's panoply, a bronze Corinthian helm with a dark crest, a bronze cuirass over its ribs, bronze greaves, a big round bronze shield, plain and dented, held forward on the near arm, and a short spear held upright in the other hand with the point up, crouched slightly behind the shield in a shield-wall stance. Ivory bone with earth-tan staining and dark violet in the eye sockets."
+  },
+  {
+   "name": "deadeye",
+   "width": 21,
+   "refs": [
+    "skeletal_archer"
+   ],
+   "prompt": "A Deadeye, the marksman of Der Freischutz whose magic bullets never miss, grown from the skeletal archer: a skeleton in a forester's dark green-black hunting coat and a plumed hunter's hat with one eye socket glowing a sinister dark violet, a tall bow held vertically at its side, and a bandolier across its chest holding seven arrows, six with bright steel heads and the seventh with a black-violet cursed tip. Standing sure and calm, ivory bone, forest green-black cloth and dark violet accents."
+  },
+  {
+   "name": "corpse_candle",
+   "width": 18,
+   "refs": [
+    "skeletal_archer"
+   ],
+   "prompt": "A Corpse Candle, the Welsh canwyll corff, a light seen before a death, a will-o'-the-wisp grown from the skeletal archer: a small floating flame spirit, a tall teardrop flame of solid hard-edged pale cyan with a dark violet core and a skull-like face of two hollow dark eyes and a thin mouth inside it, burning on a very short stub of melted ivory tallow candle that is its base, and nothing else, no sparks and no smoke. Keep it small and compact: a plump, rounded, stubby flame only slightly taller than the candle stub, the whole creature only about one and a half times as tall as it is wide, not a tall thin flame. Hovering, with no body and no legs, pale cyan, ivory and dark violet only."
+  },
+  {
+   "name": "lich",
+   "width": 21,
+   "refs": [
+    "adept"
+   ],
+   "prompt": "A Lich, the lic or corpse, a sorcerer-king who hid his soul away, grown from the adept: a skeleton in tattered black and dark violet robes with a high ornate collar, a jagged bone-and-iron crown, two lit soft rose-pink eye sockets, a rose-pink gem phylactery hanging on its chest on a chain, one skeletal hand raised palm-out, and a staff with a small skull on top held in the other. Standing tall and regal, dark violet and soft rose-pink accents."
+  },
+  {
+   "name": "mummy_priest",
+   "width": 21,
+   "refs": [
+    "adept"
+   ],
+   "prompt": "A Mummy-Priest, the embalmed priest-magician of Egypt with a curse, grown from the adept: a mummy wrapped in aged linen bandages stained earth tan, with no hieroglyphs or writing anywhere, loose bandage ends hanging behind it, a broad gold collar, a striped dark violet headcloth, kohl-lined eyes glowing dark violet in the gaps of the wrap, one hand raised with bandage ribbons unwinding from it as if about to bind an enemy, and sand dust on its feet. Standing in a ritual pose, earth tan and dark violet accents."
+  },
+  {
+   "name": "vampire",
+   "width": 24,
+   "refs": [
+    "ghoul"
+   ],
+   "prompt": "A Vampire of European lore grown from the ghoul into an elegant tall noble: deathly white skin, slicked-back black hair, sharp fangs showing in a thin smile, glowing crimson eyes, a high-collared long black coat lined with blood-crimson silk over a dark violet waistcoat, and a silver goblet of dark blood held in one pale clawed hand. Standing upright and poised, the other hand at its side, dark violet shadow in the folds of the coat and crimson as the accent colour."
+  },
+  {
+   "name": "jiangshi",
+   "width": 24,
+   "refs": [
+    "ghoul"
+   ],
+   "prompt": "A Jiangshi, the Chinese hopping corpse, grown from the ghoul: a rigid, stiff corpse in a dark green-teal Qing-dynasty official's robe and a flat-topped black official's hat, pale green-grey skin, a long blank yellow paper talisman strip hanging from the hat over its face with no writing or characters on it at all, both arms stretched straight out in front of it with long dark nails, caught mid-hop with both feet together and knees locked, pale cyan trim along the hem and sleeves of its robe, dark violet shading."
+  },
+  {
+   "name": "barrow_king",
+   "width": 31,
+   "refs": [
+    "draugr"
+   ],
+   "prompt": "A Barrow-King, the haugbui or mound-dweller, grown from the draugr into a hulking, crowned lord of the dead: a tarnished gold crown on a skull-like face with a long grey beard, a heavy moss-grown fur-trimmed cloak of earth and roots, thick battered plate armour crusted with earth-tan clods and green moss, gold coins, rings and torcs hanging from its belt and wrists, both enormous fists clenched and raised overhead ready to slam the ground. Standing wide and massive, earth tan as the accent colour."
+  },
+  {
+   "name": "abomination",
+   "width": 31,
+   "refs": [
+    "draugr"
+   ],
+   "prompt": "An Abomination, a stitched-together giant in the manner of Shelley's creature, grown from the draugr: a hulking body of mismatched patchwork skin in grey, green and pale tan, thick black surgical stitches across the face, neck and arms, a bolted iron plate on one shoulder, one arm much bigger than the other, a second smaller arm stitched on at its side as a spare graft, a heavy brow, dull yellow eyes, a few dangling chains, and a huge cleaver in its big hand held up at its shoulder. Earth tan and dark violet accents."
+  },
+  {
+   "name": "dullahan",
+   "width": 31,
+   "refs": [
+    "revenant_knight"
+   ],
+   "prompt": "A Dullahan, the Irish headless rider, grown from the revenant knight: a tall headless figure in black plate armour and a long dark violet cloak hanging straight down from its shoulders, with its own severed pale head held tucked under one arm, grinning, with dim glowing eyes and wild hair, and in its other hand a long whip made of a human spine, the vertebrae knotted along it, hanging down in a loose coil at its side. Standing straight and menacing, dark violet shadows."
+  },
+  {
+   "name": "bone_colossus",
+   "width": 31,
+   "refs": [
+    "revenant_knight"
+   ],
+   "prompt": "A Bone Colossus, a giant made of bone like Ymir whose bones were the mountains, grown from the revenant knight: a huge, massive skeleton assembled from enormous bones lashed together with iron bands, a comparatively small cracked skull with dim sockets, shoulders as broad as boulders, arms like tree trunks, ivory bone stained earth tan with moss and bits of rock clinging to it, and a giant rusted cleaver on a thighbone haft held upright on its shoulder in both fists. Hunched, heavy stomping stance, the weapon upright to keep the silhouette compact."
+  },
+  {
+   "name": "sower_of_teeth",
+   "width": 24,
+   "refs": [
+    "spartoi_hoplite"
+   ],
+   "prompt": "A Sower of Teeth, Cadmus sowing the dragon's teeth, grown from the spartoi hoplite: a robed skeletal figure in a faded earth-tan Greek chiton with a bronze breastplate and a pushed-back bronze helm, a leather seed-bag slung at the hip spilling a few large ivory dragon fangs, and one bony hand clutching a handful of white fangs against its chest. Walking pose mid-stride, a small bronze serpent-fang dagger at the belt, ivory bone, earth tan and a hint of dark violet."
+  },
+  {
+   "name": "master_of_the_dance",
+   "width": 24,
+   "refs": [
+    "spartoi_hoplite"
+   ],
+   "prompt": "A Master of the Dance, Death leading the medieval Danse Macabre, grown from the spartoi hoplite: a tall elegant skeleton in the finery of a courtier, a dark violet velvet doublet and a tattered ruffled collar, a short faded cape hanging from the shoulders, a feathered cap on its skull, pointed shoes, standing tall on one leg with the other knee lifted in a small dancing step, one bony arm bent and raised beside its head in a graceful flourish and the other hand resting on its hip, its jaw fixed in a wide grin. Keep the pose slender and compact, with both arms held close to the body, so the figure is much taller than it is wide. Ivory bone and dark violet cloth."
+  },
+  {
+   "name": "arash",
+   "width": 24,
+   "refs": [
+    "deadeye"
+   ],
+   "prompt": "Arash, the Persian archer whose arrow marked the border and who died of the shot, grown from the deadeye: a wasted, gaunt skeletal archer in solid opaque ivory bone, in an ancient Persian soft pointed cap and a scale-mail vest with a sash hanging at the waist, standing with a great bow drawn and aimed steeply upward at about sixty degrees with one long pale cyan arrow nocked, its hollow ribcage and its eye sockets glowing solid pale cyan. Heroic, compact aiming stance."
+  },
+  {
+   "name": "wild_huntsman",
+   "width": 24,
+   "refs": [
+    "deadeye"
+   ],
+   "prompt": "The Wild Huntsman of the Wild Hunt, in the manner of Odin and Herne, grown from the deadeye: a tall skeletal hunter-king with a great branching stag-antlered skull, a ragged dark violet cloak with a pale cyan lining hanging from its shoulders in tattered strips, a curved hunting horn hanging at the hip, a long bow in one hand held vertically, a quiver of black arrows with pale cyan fletching, and glowing pale eyes fixed ahead on its prey. Striding forward, dark violet cloth and pale cyan lining."
+  },
+  {
+   "name": "stingy_jack",
+   "width": 24,
+   "refs": [
+    "corpse_candle"
+   ],
+   "prompt": "Stingy Jack, the Irish man who tricked the Devil and wanders forever with a coal in a turnip, grown from the corpse candle: a gaunt, pale, grinning dead man in a patched threadbare coat and a battered flat cap, one hand holding up a hollowed-out carved turnip lantern with a jagged grinning face and an ember red-orange coal glowing inside it, the other hand in a coat pocket, a sly scheming look and a hunched wandering stance. Dark violet shadows, the ember red-orange lantern as the accent."
+  },
+  {
+   "name": "banshee",
+   "width": 20,
+   "refs": [
+    "corpse_candle"
+   ],
+   "prompt": "A Banshee, the Irish bean sidhe whose wail foretells a death, grown from the corpse candle: a floating ghostly woman with long pale hair hanging down her back and a long tattered shroud whose hem ends in ragged tapering strips instead of legs, no mist, her face upturned, hollow eyes and her mouth wide open in a piercing wail, both thin hands clawed against her cheeks. Solid opaque pale cyan and ghost-white with dark violet shadow in the shroud's folds."
+  },
+  {
+   "name": "deathless",
+   "width": 24,
+   "refs": [
+    "lich"
+   ],
+   "prompt": "Koschei the Deathless, whose soul sits in a needle in an egg in a duck in a hare in a chest under an oak, grown from the lich: a tall, emaciated, skeletal Slavic king with a long white beard, a tall fur-trimmed cap, and a heavy fur-collared dark violet robe embroidered with pale thread, carrying a small egg-shaped locket on a chain at his chest with a thin silver needle through it and a small rose-pink gem in its end, and a hand resting on a jewelled sword hilt. Standing gaunt, dark violet and soft rose-pink accents."
+  },
+  {
+   "name": "demilich",
+   "width": 20,
+   "refs": [
+    "lich"
+   ],
+   "prompt": "A Demilich, a lich reduced to a single skull, grown from the lich: just one large floating skull of ancient yellowed ivory, cracked and crowned with a thin tarnished band, with gemstones set in its teeth and a larger gem in its brow, small solid dark violet flames burning in its eye sockets, hovering with no body at all and no neck. Small and menacing, ivory and dark violet only."
+  },
+  {
+   "name": "hierophant",
+   "width": 24,
+   "refs": [
+    "lich"
+   ],
+   "prompt": "A Hierophant, a secret light-aligned undead, the arch-priest who mummified himself while alive like the incorrupt monks of Dewa Sanzan, grown from the lich: a serene robed mummified arch-priest, dried honey-gold skin, eyes calmly closed, a tall ceremonial hat and layered ivory-and-gold ritual robes with a long stole, one hand raised in blessing and the other holding a tall golden staff, wreathed in warm gold light: a solid hard-edged golden nimbus disc directly behind the head overlapping the head and shoulders, warm gold rim light along the robes, a few soft rose-pink embroidered bands on the stole, and a little dark violet only in the deepest shadows of the robe. Standing perfectly still and peaceful."
+  },
+  {
+   "name": "pharaoh",
+   "width": 24,
+   "refs": [
+    "mummy_priest"
+   ],
+   "prompt": "A Pharaoh, the Egyptian king buried with a household of the dead, grown from the mummy-priest: a tall mummified king, with no hieroglyphs or writing anywhere, wearing a gold-and-blue striped nemes headdress topped by a golden cobra, a long false braided beard, a broad gold collar, a crook and a flail crossed over its chest, a body wrapped in aged linen, glowing dark violet eyes, and a heavy dark violet cloak hanging from its shoulders. Standing rigid and commanding, gold, linen and dark violet."
+  },
+  {
+   "name": "heart_weigher",
+   "width": 24,
+   "refs": [
+    "mummy_priest"
+   ],
+   "prompt": "A Heart-Weigher, in the manner of Ammit who eats the hearts that weigh heavier than the feather, grown from the mummy-priest: a tall, upright mummified figure with a crocodile's long toothed jaws (the snout kept short and pointing right) and a lion's shaggy mane of dark bandage, a dark bandaged body in a striped dark violet and gold kilt, glowing dark eyes. It holds a very small brass balance scale tucked in close against its chest in one hand: the scale is tiny and narrow, no wider than the creature's torso, with a short beam, a blood-crimson heart in one tiny pan and a white feather in the other, and the other arm hangs straight down at its side. Stand straight with the legs under the body, feet close together, so the whole figure is about twice as tall as it is wide, dark violet and blood crimson accents."
+  }
+ ]
+}

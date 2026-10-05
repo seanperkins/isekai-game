@@ -20,6 +20,8 @@ stats = {
 }
 tint = Color(0.8, 0.825, 0.975, 1)
 size = 1.4
+sprite_set = "forms_spider"
+sprite_frame = "anansi"
 blurb = "Steal: take a power or essence from a living enemy without killing it (the decided future method)"
 reads = ["air", "dark"]
 host = ["village"]

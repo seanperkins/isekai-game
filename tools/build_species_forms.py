@@ -7,6 +7,7 @@ project root:
   python3 tools/build_species_forms.py
 The slime's 24 built files (and the five lineage forms' reveal and offer) are never written here.
 """
+import json
 import os
 import re
 import sys
@@ -182,6 +183,26 @@ def check_verb_rows(rows, form_ids):
             raise ValueError("form_verbs.json: '%s' needs a name, a spec kind and a positive mp" % r["form"])
 
 
+_FRAMES = {}
+
+
+def sheet_frames(species):
+    """The frame names of the species' art sheet (assets/sheets/forms_<species>.json), empty when it has none."""
+    if species not in _FRAMES:
+        path = "assets/sheets/forms_%s.json" % species
+        _FRAMES[species] = set(json.load(open(path, encoding="utf-8"))["frames"]) if os.path.exists(path) else set()
+    return _FRAMES[species]
+
+
+def art_for(f):
+    """The sheet and still frame a form was drawn as: its id without the species prefix (the slime's is its id), in
+    forms_<species>. Empty when the sheet has no such frame."""
+    species = f["species"]
+    prefix = species + "_"
+    frame = f["dataId"] if species == "slime" or not f["dataId"].startswith(prefix) else f["dataId"][len(prefix):]
+    return {"set": "forms_%s" % species, "frame": frame} if frame in sheet_frames(species) else {}
+
+
 def q(text):
     return '"%s"' % text.replace("\\", "\\\\").replace('"', '\\"')
 
@@ -214,6 +235,11 @@ def tres(f):
         lines.append("verb = %s" % q(f["verbId"]))
     lines += [
         "tint = Color(%s, %s, %s, 1)" % (num(r), num(g), num(b)), "size = %s" % num(f["size"]),
+    ]
+    art = art_for(f)
+    if art:
+        lines += ["sprite_set = %s" % q(art["set"]), "sprite_frame = %s" % q(art["frame"])]
+    lines += [
         "blurb = %s" % q(f["verb"]),
         "reads = %s" % arr(f["reads"]), "host = %s" % arr(f["host"]), "source = %s" % q(f["source"]),
         "verb_text = %s" % q(f["verb"]), "gives_up = %s" % q(f["givesUp"]), "opened_by = %s" % q(f["openedBy"]),

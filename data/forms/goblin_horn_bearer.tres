@@ -20,6 +20,8 @@ stats = {
 }
 tint = Color(0.95, 1, 0.9, 1)
 size = 1.4
+sprite_set = "forms_goblin"
+sprite_frame = "horn_bearer"
 blurb = "Horn: a blast that stuns and rallies allies"
 reads = ["light", "air"]
 host = ["sacred"]

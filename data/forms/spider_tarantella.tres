@@ -21,6 +21,8 @@ stats = {
 }
 tint = Color(0.725, 0.925, 1, 1)
 size = 1.4
+sprite_set = "forms_spider"
+sprite_frame = "tarantella"
 blurb = "Dance-venom: a bitten enemy staggers erratically into hazards"
 reads = ["water", "air"]
 host = ["swamp"]

@@ -18,6 +18,8 @@ stats = {
 }
 tint = Color(0.75, 0.65, 0.9, 1)
 size = 1.4
+sprite_set = "forms_spider"
+sprite_frame = "nightstalker"
 blurb = "kills reset the zip; unseen in shadow"
 reads = ["dark"]
 host = ["crypt"]

@@ -18,6 +18,8 @@ stats = {
 }
 tint = Color(0.85, 0.74, 0.775, 1)
 size = 1.4
+sprite_set = "forms_spider"
+sprite_frame = "cocoon_mother"
 blurb = "prey cocooned alive hatch into stronger young"
 reads = ["earth", "dark"]
 host = ["forest"]
