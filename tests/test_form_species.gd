@@ -181,7 +181,7 @@ func _player(species: String) -> Player:
 	p.setup(rules, CompendiumModel.new([], []), [], func(n: String, t: Dictionary) -> void: rules.handle_event(n, t))
 	add_child_autofree(p)
 	rules.start_run()
-	p.forms.merge(wolf_forms())
+	p.forms = _all()  # the slime's data and the wolf fixture: the real wolf forms would add offers of their own
 	return p
 
 func test_every_base_is_reached_by_definition() -> void:
