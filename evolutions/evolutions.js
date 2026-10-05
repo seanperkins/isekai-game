@@ -46,6 +46,7 @@
     const t = [];
     if (n.ask) t.push(tag('ask', '★ ask'));
     if (n.built) t.push(tag('built', 'built'));
+    else if (n.inData) t.push(tag('built', 'in data'));
     if (n.decided) t.push(tag('decided', 'decided'));
     if (n.secret) t.push(tag('secret', 'secret'));
     return t;
@@ -206,7 +207,7 @@
     const rows = D.species.map((s) => h('tr', {}, h('td', {}, s.name), h('td', {}, tally[s.id].own), h('td', {}, tally[s.id].tinted), h('td', {}, tally[s.id].twin), h('td', {}, tally[s.id].none)));
     const totals = Object.values(tally).reduce((a, t) => ({ own: a.own + t.own, tinted: a.tinted + t.tinted, twin: a.twin + t.twin, none: a.none + t.none }), { own: 0, tinted: 0, twin: 0, none: 0 });
     const out = [
-      h('p', { class: 'note' }, 'The art that exists today, animating, and how much of the tree it covers. Most of the 141 forms have no art yet: a built slime form reuses the slime sprite with its tint, and the rest wait for the Codex art pipeline (tools/art).'),
+      h('p', { class: 'note' }, 'The art that exists today, animating, and how much of the tree it covers. ' + totals.own + ' of the ' + D.forms.length + ' forms have art of their own: the art track drew one still for each form of the wolf, undead, spider and goblin and for the slime\'s eighteen new form-fours (tools/art). A built slime form without a sheet reuses the slime sprite with its tint.'),
       h('div', { class: 'table-scroll' }, h('table', {},
         h('thead', {}, h('tr', {}, ['Species', 'Own art', 'Slime sprite, tinted', 'Art of an existing twin', 'No art yet'].map((x) => h('th', {}, x)))),
         h('tbody', {}, rows, h('tr', {}, h('td', {}, h('strong', {}, 'All forms')), h('td', {}, totals.own), h('td', {}, totals.tinted), h('td', {}, totals.twin), h('td', {}, totals.none))))),
@@ -343,7 +344,7 @@
   function stats() {
     const clips = D.movesets ? D.movesets.species.reduce((a, s) => a + s.clips.length, 0) : 0;
     const items = [
-      [D.summary.forms, 'forms in five species, ' + D.summary.built + ' already built'],
+      [D.summary.forms, 'forms in five species, ' + D.summary.inData + ' in the game\u2019s data'],
       [D.summary.newCreatureTypes, 'new creature types (' + D.summary.support + ' support, ' + D.summary.newTwins + ' form twins)'],
       [D.essences.length, 'essences, ' + later.size + ' not carried by any creature yet'],
       [D.species.reduce((a, s) => a + s.lines.length, 0), 'evolution lines'],
