@@ -16,6 +16,10 @@ extends Resource
 @export var parents: Array = []
 ## The skills that open this lineage (stage-2 lineage forms only): reaching any of them, or having evolved one, offers the lineage.
 @export var powers: Array = []
+## The diet that shows this lineage in the Tree tab (`reveal`) and puts it on the stage-2 menu (`offer`): element id to the
+## amount absorbed this life. Only a lineage form has them, and the offer names the same elements at the same amounts or more.
+@export var reveal := {}
+@export var offer := {}
 ## stat id -> amount added (StatKeys)
 @export var stats := {}
 ## FormEffects.TRAITS ids

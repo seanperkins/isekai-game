@@ -4,6 +4,8 @@ extends RefCounted
 
 ## The slime's lineages. Another species names its own: any non-empty id, shared by a stage-2 form and all its descendants.
 const LINEAGES := ["weaver", "tide", "toxic", "bulwark", "echo", "greater"]
+## Whether a slime lineage form must carry a reveal and an offer (turned on when the five lineages have theirs).
+const REQUIRE_GATES := false
 ## The areas a form may be found in: the four built and the eight planned.
 const AREAS := ["cave", "grotto", "flooded", "deep", "forest", "swamp", "village", "sacred", "cemetery", "crypt", "volcano", "demon"]
 
@@ -58,6 +60,7 @@ static func validate(forms: Dictionary, skill_ids: Array, check_art := false) ->
 		for p in f.powers:
 			if not skill_ids.has(p):
 				errs.append("%s: lists unknown power '%s'" % [id, p])
+		_check_gate(f, errs)
 		for e in f.reads:
 			if not Essences.ALL.has(e):
 				errs.append("%s: reads unknown essence '%s'" % [id, e])
@@ -73,3 +76,32 @@ static func validate(forms: Dictionary, skill_ids: Array, check_art := false) ->
 		if check_art and f.sprite_set != "" and not SpriteSheet.available(f.sprite_set):
 			errs.append("%s: sprite set '%s' has no sheet" % [id, f.sprite_set])
 	return errs
+
+## The reveal and offer thresholds of a lineage form: known elements, positive amounts, the same elements, offer at least reveal.
+static func _check_gate(f: FormDef, errs: PackedStringArray) -> void:
+	var gated := not f.reveal.is_empty() or not f.offer.is_empty()
+	var can_gate: bool = f.stage == 2 and (f.species != Form.DEFAULT_SPECIES or f.lineage != "greater")
+	if gated and not can_gate:
+		errs.append("%s: only a stage-2 lineage form carries a reveal and an offer" % f.id)
+		return
+	if not gated:
+		if REQUIRE_GATES and can_gate and f.species == Form.DEFAULT_SPECIES:
+			errs.append("%s: a lineage form needs a reveal and an offer" % f.id)
+		return
+	for kind in ["reveal", "offer"]:
+		var d: Dictionary = f.reveal if kind == "reveal" else f.offer
+		for e in d:
+			if not Essences.ALL.has(e):
+				errs.append("%s: %s names unknown essence '%s'" % [f.id, kind, e])
+			elif int(d[e]) <= 0:
+				errs.append("%s: %s of '%s' must be positive" % [f.id, kind, e])
+	var a := f.reveal.keys()
+	var b := f.offer.keys()
+	a.sort()
+	b.sort()
+	if a != b:
+		errs.append("%s: offer must name the same elements as its reveal" % f.id)
+		return
+	for e in f.reveal:
+		if int(f.offer[e]) < int(f.reveal[e]):
+			errs.append("%s: offer of '%s' is below its reveal" % [f.id, e])
