@@ -13,18 +13,18 @@ func _room(id: String, area: String, w: int, h: int, cell := Vector2i.ZERO) -> R
 	r.cell = cell
 	return r
 
-func test_the_shipped_world_is_23_rooms_and_45_screens() -> void:
+func test_the_shipped_world_is_24_rooms_and_47_screens() -> void:
 	var m := WorldSize.measure(_rooms())
-	assert_eq(m["rooms"], 23)
-	assert_eq(m["screens"], 45)
-	assert_almost_eq(m["avg"], 45.0 / 23.0, 0.001)
+	assert_eq(m["rooms"], 24)
+	assert_eq(m["screens"], 47)
+	assert_almost_eq(m["avg"], 47.0 / 24.0, 0.001)
 
 func test_rooms_and_screens_per_area_are_counted() -> void:
 	var per: Dictionary = WorldSize.measure(_rooms())["per_area"]
 	assert_eq(per["cave"], {"rooms": 6, "screens": 11})
 	assert_eq(per["grotto"], {"rooms": 5, "screens": 14})
 	assert_eq(per["flooded"], {"rooms": 6, "screens": 11})
-	assert_eq(per["deep"], {"rooms": 6, "screens": 9})
+	assert_eq(per["deep"], {"rooms": 7, "screens": 11})
 
 func test_the_shape_of_a_room_is_summarised() -> void:
 	var m := WorldSize.measure({
@@ -48,10 +48,10 @@ func test_no_rooms_measure_as_zero_without_dividing_by_zero() -> void:
 func test_the_three_yardsticks_read_rooms_and_screens() -> void:
 	var ys := WorldSize.yardsticks(WorldSize.measure(_rooms()))
 	assert_eq(ys.size(), 3)
-	assert_eq([ys[0]["now"], ys[0]["target"]], [23, WorldSize.SM_ROOMS])
-	assert_eq([ys[1]["now"], ys[1]["target"]], [45, WorldSize.BODY_SCALED_SCREENS])
-	assert_eq([ys[2]["now"], ys[2]["target"]], [45, WorldSize.SM_SCREENS])
-	assert_almost_eq(ys[0]["frac"], 23.0 / 255.0, 0.0001)
+	assert_eq([ys[0]["now"], ys[0]["target"]], [24, WorldSize.SM_ROOMS])
+	assert_eq([ys[1]["now"], ys[1]["target"]], [47, WorldSize.BODY_SCALED_SCREENS])
+	assert_eq([ys[2]["now"], ys[2]["target"]], [47, WorldSize.SM_SCREENS])
+	assert_almost_eq(ys[0]["frac"], 24.0 / 255.0, 0.0001)
 	assert_lt(ys[2]["frac"], ys[1]["frac"], "the strict bar is the harder one")
 
 func test_a_world_past_a_target_reports_a_fraction_over_one() -> void:

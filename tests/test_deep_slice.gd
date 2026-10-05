@@ -33,17 +33,17 @@ func test_the_taratect_has_clips_an_arm_and_a_portrait() -> void:
 	assert_eq(_pick("taratect"), "crawl")
 	assert_true(SkillScreen.PORTRAIT_FRAME.has("taratect"))
 
-func test_d6_sits_above_d2_behind_the_wall_cling_gate_and_holds_one_taratect() -> void:
+func test_d6_is_the_two_screen_arena_beside_d7_and_holds_one_taratect() -> void:
 	var d6: RoomDef = rooms["D6"]
 	assert_eq(d6.cell, Vector2i(19, 5))
-	assert_eq(d6.size, Vector2i(1, 1))
+	assert_eq(d6.size, Vector2i(2, 1))
 	assert_eq(d6.area, "deep")
 	var gated := []
 	for id in ["D1", "D2", "D3", "D4", "D5"]:
 		for e in (rooms[id] as RoomDef).exits:
 			if e.has("gate"):
 				gated.append("%s:%s" % [id, e["gate"]])
-	assert_eq(gated, ["D2:wall_cling"], "D2's top exit (D6's own half carries the gate too, but is outside D1 to D5)")
+	assert_eq(gated, ["D2:wall_cling"], "D2's top exit climbs to D7, the antechamber (D7's own half carries the gate too, but is outside D1 to D5)")
 	assert_eq(d6.spawns.size(), 1)
 	assert_eq(d6.spawns[0]["id"], "taratect")
 
@@ -89,16 +89,44 @@ func test_a_player_can_walk_d2s_floor_under_the_chimney() -> void:
 	Input.action_release("move_right")
 	assert_gte(best, 1150.0, "walked from x 100 to the east door along the floor (reached %.0f)" % best)
 
-## The Taratect must hang clear of D6's floor hole (a stunned or dying hanging creature falls straight down: over the hole it would fall out of the
-## room and could not be eaten) and within a creature's sight of a place the player can stand (it is alerted under CHASE_RANGE, and drops when the
-## player is under it), or it never drops on anyone.
-func test_the_taratect_hangs_clear_of_the_floor_hole_and_within_sight_of_a_perch() -> void:
+## The arena has no hole in its floor (nothing may fall out), and the Taratect hangs from the ceiling with the room to drop.
+func test_the_arena_has_no_floor_hole_and_the_taratect_hangs_from_the_ceiling() -> void:
 	var d6: RoomDef = rooms["D6"]
-	var hole: Dictionary = d6.exits.filter(func(e): return e["edge"] == "bottom")[0]
+	assert_eq(d6.exits.filter(func(e): return e["edge"] == "bottom").size(), 0)
 	var spawn: Vector2 = d6.spawns[0]["pos"]
-	assert_true(spawn.x <= float(hole["from"]) - 40.0 or spawn.x >= float(hole["to"]) + 40.0, "at least 40 px from the hole's span")
-	var perch := d6.solids.any(func(s):
-		var r: Rect2 = s
-		return r.size.y <= 12.0 and absf(spawn.x - (r.position.x + r.size.x * 0.5)) <= r.size.x * 0.5 \
-			and r.position.y > spawn.y and (r.position.y - 12.0 - spawn.y) < Enemy.CHASE_RANGE)
-	assert_true(perch, "a ledge under it that a standing player is within CHASE_RANGE of")
+	assert_lt(spawn.y, 120.0, "up by the ceiling")
+	assert_eq(RoomLint.creature_kind("taratect"), "ceiling")
+
+## A floor-bound player in the arena draws the awake Taratect down: hunting, it creeps along its ceiling until it is over them, then drops.
+class StubPlayer extends Node2D:
+	var team := "player"
+	var facing := 1
+	func receive_hit(_raw: int, _type: String, _from: Vector2 = Vector2.INF, _cause: String = "") -> void:
+		pass
+
+func test_a_floor_bound_player_in_the_arena_draws_the_awake_taratect_down() -> void:
+	var floor_body := StaticBody2D.new()
+	floor_body.position = Vector2(0, 16)
+	var shape := CollisionShape2D.new()
+	var box := RectangleShape2D.new()
+	box.size = Vector2(4000, 20)
+	shape.shape = box
+	floor_body.add_child(shape)
+	add_child_autofree(floor_body)
+	var p := StubPlayer.new()
+	add_child_autofree(p)
+	p.add_to_group("player")
+	p.global_position = Vector2(300, 0)
+	var e := Enemy.new()
+	e.use_sheet = false
+	e.setup(creatures["taratect"], skills_by_id)
+	e.position = Vector2(0, -240)  # on its ceiling, 240 px up and 300 px to the side
+	e.hunting = true
+	add_child_autofree(e)
+	assert_true(e._on_ceiling)
+	for _k in 600:
+		await get_tree().physics_frame
+		if not e._on_ceiling:
+			break
+	assert_false(e._on_ceiling, "it dropped")
+	assert_lt(absf(e.global_position.x - 300.0), 60.0, "over the player when it did")

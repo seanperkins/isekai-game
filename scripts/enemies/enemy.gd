@@ -535,6 +535,9 @@ func _act(player: Node2D, delta: float) -> void:
 		Kind.DROPPER:
 			if _on_ceiling:
 				velocity = Vector2.ZERO
+				if hunting and to_player.y > 0.0 and absf(to_player.x) >= 40.0:
+					velocity.x = signf(to_player.x) * _speed()  # a hunter (a boss) creeps along its ceiling until it is over its prey
+					facing = 1 if to_player.x > 0.0 else -1
 				if is_alert() and absf(to_player.x) < 40.0 and to_player.y > 0.0:
 					_on_ceiling = false  # drop on prey: it walks from the next tick
 			else:
