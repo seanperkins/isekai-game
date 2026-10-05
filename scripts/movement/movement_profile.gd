@@ -90,6 +90,13 @@ const IDS := ["biped", "slime", "wolf", "spider"]
 @export var verbs := PackedStringArray()
 @export var bursts: Array = []
 
+## The movement profile each species moves with: the goblin and the undead share the biped's.
+const SPECIES_PROFILE := {"slime": "slime", "wolf": "wolf", "goblin": "biped", "undead": "biped", "spider": "spider"}
+
+## The profile a species moves with, or null for a species nobody knows.
+static func for_species(species: String) -> MovementProfile:
+	return of(SPECIES_PROFILE[species]) if SPECIES_PROFILE.has(species) else null
+
 ## The profile with this id, or null for an unknown one (never loads a path that does not exist).
 static func of(profile_id: String) -> MovementProfile:
 	var path := "res://data/movement/%s.tres" % profile_id

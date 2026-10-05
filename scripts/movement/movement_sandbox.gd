@@ -25,8 +25,6 @@ const ONEWAY_LEDGE := Rect2(160, -50, 100, 6)
 ## floor: it marks contact, it does not block).
 const STEP_LOW := Rect2(20, -16, 25, 16)
 const DUMMY := Rect2(120, -50, 20, 40)
-## How far from a wall (px) still counts as touching it for the wall verbs.
-const WALL_RANGE := 6.0
 const START := Vector2(100, 0)
 ## The sprite's tint while a verb runs.
 const VERB_TINT := Color(1.5, 1.3, 0.7)
@@ -42,24 +40,12 @@ const CRAWL_EASE := 8.0
 const THREAD_FADE := 0.15
 const CORNER_EASE := 0.04
 const PIVOT_SECONDS := 0.10
-## The wolf's vault probe looks this many seconds of travel ahead of its leading edge (never under VAULT_MIN_REACH px) so the hop
-## has the time to lift the feet over the step, and from VAULT_HEADROOM px above the tallest step it clears.
-const VAULT_LOOKAHEAD := 0.12
-const VAULT_MIN_REACH := 6.0
-const VAULT_HEADROOM := 20.0
 ## The skid's dust puffs live this long (s); the wolf leans back this much (rad) in a skid, and its pose eases over LEAN_EASE;
 ## the leaping pose is stretched along the velocity.
 const DUST_LIFE := 0.3
 const SKID_LEAN := 0.25
 const LEAN_EASE := 0.03
 const POUNCE_STRETCH := Vector2(1.2, 0.85)
-## The biped's mantle probe: how far inside the ledge (px past the wall's face) its top is read, how far above the feet the
-## ray starts, and how much shorter than the standing box the room check is (so a body flush on the lip is not an overlap).
-const MANTLE_INSET := 4.0
-const MANTLE_HEADROOM := 40.0
-const MANTLE_ROOM_SHRINK := 2.0
-## The mantle's pull is swept with the box lifted this much (px), so sliding flush along a ledge's top is not a collision.
-const MANTLE_LIFT := 1.0
 ## The placeholder's alpha while the body is invulnerable (the roll and slide's first 0.2 s).
 const INVULNERABLE_ALPHA := 0.6
 
@@ -68,6 +54,8 @@ const INVULNERABLE_ALPHA := 0.6
 var scripted: MoveInput = null
 var profile: MovementProfile
 var state := MoveState.new()
+## The movement logic, shared with the Player (built once the body exists).
+var _sb: SpeciesBody
 var body: CharacterBody2D
 var boosted := false
 
@@ -134,6 +122,9 @@ func _ready() -> void:
 	body.add_child(_shape)
 	body.position = START + Vector2(0, -BodyConfig.BOTTOM)
 	add_child(body)
+	_sb = SpeciesBody.new(body, _shape, _box)
+	_sb.set_profile(profile)
+	state = _sb.state
 	_rect = ColorRect.new()
 	_rect.size = BodyConfig.size()
 	_rect.pivot_offset = Vector2(_rect.size.x / 2.0, _rect.size.y)
@@ -164,7 +155,11 @@ func set_profile(id: String) -> void:
 	if p == null:
 		return
 	profile = p
-	state = MoveState.new()  # no momentum or timers carry over a switch
+	if _sb != null:
+		_sb.set_profile(p)  # no momentum or timers carry over a switch
+		state = _sb.state
+	else:
+		state = MoveState.new()
 	_ball = false
 	_ball_roll = 0.0
 	_landing = false
@@ -218,46 +213,14 @@ func _physics_process(delta: float) -> void:
 	_dt = delta
 	var i := _read_input()
 	var was_on_floor := body.is_on_floor()
-	i.on_floor = was_on_floor
-	i.clearance_above = _clearance()
-	i.wall_side = _wall_side(i.dir)
-	i.on_ceiling = body.is_on_ceiling()
-	i.on_oneway_floor = was_on_floor and _stands_on_oneway()
-	if profile.verbs.has("crawl"):
-		i.sweep = _sweep
-		i.ray = _ray
-	if profile.verbs.has("zip"):
-		i.cast = _cast
-	if profile.id == "wolf":
-		i.step_ahead = _step_ahead()
-		i.touching_hostile = _dummy.overlaps_body(body)
-	if profile.verbs.has("mantle"):
-		i.mantle = _mantle(i.wall_side)
-	VerbRunner.step(state, i, profile, delta, 1.0, sqrt(BOOST_JUMP_HEIGHT) if boosted else 1.0)
-	body.set_collision_mask_value(2, state.fall_through <= 0.0)  # a press of down on a one-way ledge drops through it
+	_sb.fill_input(i, func() -> bool: return _dummy.overlaps_body(body))
+	_sb.think(i, delta, sqrt(BOOST_JUMP_HEIGHT) if boosted else 1.0)
 	_update_thread(delta)
 	if state.skidding:
 		_puff_dust()
-	if state.surface_n != Vector2.ZERO:
+	if _sb.move(_before_move):
 		_crawl(delta)
 		return
-	if profile.verbs.has("mantle") and state.surface_shift != Vector2.ZERO \
-			and body.test_move(body.global_transform.translated(Vector2(0.0, -MANTLE_LIFT)), state.surface_shift):
-		state.surface_shift = Vector2.ZERO  # something is in the way of the pull (a ceiling over the approach): it stops
-		state.mantle_left = 0.0
-		state.mantle_event = "blocked"
-	body.global_position += state.surface_shift  # a zip or a mantle pulls the body while it is on no surface
-	_apply_box()
-	_judge_landing()
-	if state.launched != "":
-		_in_jump = true  # the take-off height is the position before this frame's move, as MovementSim measures it
-		_takeoff_y = body.global_position.y
-		_top_y = _takeoff_y
-		_air_ticks = 0
-	var fall_speed := state.velocity.y
-	body.velocity = state.velocity
-	body.move_and_slide()
-	state.velocity = body.velocity
 	if _in_jump:
 		_air_ticks += 1
 		_top_y = minf(_top_y, body.global_position.y)
@@ -267,12 +230,23 @@ func _physics_process(delta: float) -> void:
 	_land_timer = maxf(0.0, _land_timer - delta)
 	if not was_on_floor and body.is_on_floor():
 		_landing = true  # judged next tick, once the step has said whether this landing bounced
-		_landing_speed = fall_speed
+		_landing_speed = _sb.fall_speed
 	if absf(state.velocity.x) > 1.0:
 		_facing = 1 if state.velocity.x > 0.0 else -1
 	_spring.update(state.velocity.y, delta)
 	_cam.position.x = clampf(body.position.x, 320.0, FLOOR.size.x - 320.0)
 	_draw_body(delta)
+
+## Just before the body moves: judge the landing the last move made, and note a take-off (its height is the position before this
+## frame's move, as MovementSim measures it).
+func _before_move(velocity: Vector2) -> Vector2:
+	_judge_landing()
+	if state.launched != "":
+		_in_jump = true
+		_takeoff_y = body.global_position.y
+		_top_y = _takeoff_y
+		_air_ticks = 0
+	return velocity
 
 ## A bounce (timed rebound, hold bounce, wall bounce) is a ball, not a squash: it drops any squash a landing started and
 ## stays a ball, eyes rolling, until it stops being one: a landing that does not bounce again (which squashes and shows the
@@ -315,37 +289,20 @@ func _read_input() -> MoveInput:
 	i.signature_pressed = Input.is_action_just_pressed("tackle")
 	return i
 
-## The spider on a surface: the step says how far to move and which way is up; this moves the body by it, shapes the box to the
-## surface (24 wide on a wall) and lets physics push it out of any overlap the box swap leaves.
+## The collision box and the zip's cast live in SpeciesBody; the sandbox's tests reach them through these.
+func _apply_box() -> void:
+	_sb.apply_box()
+
+func _cast(from: Vector2, to: Vector2, include_oneway: bool) -> Dictionary:
+	return _sb._cast(from, to, include_oneway)
+
+## The spider on a surface (SpeciesBody moved it): no landing, no jump measure, the camera and the drawing.
 func _crawl(delta: float) -> void:
-	body.global_position += state.surface_shift
-	_box.size = SurfaceStep.box_size(state.surface_n)
-	_shape.position = Vector2.ZERO
-	body.move_and_collide(Vector2.ZERO)
-	body.velocity = Vector2.ZERO
-	state.velocity = Vector2.ZERO
 	_landing = false
 	_land_timer = 0.0
 	_in_jump = false
 	_cam.position.x = clampf(body.position.x, 320.0, FLOOR.size.x - 320.0)
 	_draw_body(delta)
-
-## The zip's cast: the first hard solid along the segment (a one-way ledge's top only for a downward cast), relative to the body.
-## A ledge's side or underside is not an anchor: the ray looks past it.
-func _cast(from: Vector2, to: Vector2, include_oneway: bool) -> Dictionary:
-	var exclude: Array[RID] = [body.get_rid()]
-	for _k in 4:
-		var q := PhysicsRayQueryParameters2D.create(body.global_position + from, body.global_position + to, 7 if include_oneway else 5, exclude)
-		var hit := get_world_2d().direct_space_state.intersect_ray(q)
-		if hit.is_empty():
-			return {}
-		var collider := hit["collider"] as CollisionObject2D
-		var oneway := collider.collision_layer == 2
-		if oneway and (hit["normal"] as Vector2).dot(Vector2.UP) < 0.9:
-			exclude.append(collider.get_rid())
-			continue
-		return {"point": (hit["position"] as Vector2) - body.global_position, "normal": hit["normal"], "oneway": oneway, "slick": collider.collision_layer == 4}
-	return {}
 
 ## The thread from behind the spider to its anchor while it pulls or it slides down it, and for a moment after.
 func _update_thread(delta: float) -> void:
@@ -363,100 +320,6 @@ func _update_thread(delta: float) -> void:
 	_thread.modulate.a = _thread_alpha
 	_thread.points = PackedVector2Array([body.global_position - _thread_dir * 8.0, _thread_anchor])
 
-## Whether the floor the body just slid on is a one-way ledge: its contacts, not a ray under the centre, so a body standing on a
-## ledge's edge (the centre past the end, the box still on it) counts.
-func _stands_on_oneway() -> bool:
-	if not body.is_on_floor():
-		return false
-	for k in body.get_slide_collision_count():
-		var col := body.get_slide_collision(k)
-		if col.get_normal().dot(Vector2.UP) > 0.7 and (col.get_collider() as CollisionObject2D).collision_layer == 2:
-			return true
-	return false
-
-## The crawl's forward probe: how far the box can move along `motion` and what it meets.
-func _sweep(motion: Vector2) -> Dictionary:
-	var col := KinematicCollision2D.new()
-	if not body.test_move(body.global_transform, motion, col):
-		return {}
-	return {"travel": col.get_travel(), "normal": col.get_normal(), "slick": (col.get_collider() as CollisionObject2D).collision_layer == 4}
-
-## The crawl's ray probe, from the body's centre: what a one-way-aware ray meets (SurfaceStep.NONE, HARD or ONEWAY).
-func _ray(from: Vector2, to: Vector2, hard_only: bool) -> int:
-	var q := PhysicsRayQueryParameters2D.create(body.global_position + from, body.global_position + to, 5 if hard_only else 7, [body.get_rid()])
-	var hit := get_world_2d().direct_space_state.intersect_ray(q)
-	if hit.is_empty():
-		return SurfaceStep.NONE
-	var layer := (hit["collider"] as CollisionObject2D).collision_layer
-	return SurfaceStep.SLICK if layer == 4 else (SurfaceStep.ONEWAY if layer == 2 else SurfaceStep.HARD)
-
-## Which side a wall is on within WALL_RANGE (the side the input points to first), 0 for none or on the floor, except for a
-## species whose burst ends at a wall (the wolf's pounce runs along the floor into one).
-func _wall_side(dir: float) -> int:
-	if body.is_on_floor() and not _walls_on_floor():
-		return 0
-	var first := 1 if dir >= 0.0 else -1
-	for side in [first, -first]:
-		if body.test_move(body.global_transform, Vector2(side * WALL_RANGE, 0.0)):
-			return side
-	return 0
-
-func _walls_on_floor() -> bool:
-	for row in profile.bursts:
-		if (row as BurstDef).ends_at_wall:
-			return true
-	return false
-
-## The wolf's vault probe: the height of the hard step (a hard or slick solid, never a one-way ledge) at the end of a ray down
-## from above the tallest step it clears, VAULT_LOOKAHEAD seconds of travel ahead of the leading edge. 0 for none, when
-## it is not running along the floor, or for a hit under 1 px (the floor itself). A wall taller than the ray starts inside
-## it, which the ray does not hit: that is a wall too.
-func _step_ahead() -> float:
-	var way := signf(state.velocity.x)
-	if way == 0.0 or not body.is_on_floor():
-		return 0.0
-	var x := body.global_position.x + way * (_box.size.x / 2.0 + maxf(VAULT_MIN_REACH, absf(state.velocity.x) * VAULT_LOOKAHEAD))
-	var feet := body.global_position.y + BodyConfig.BOTTOM
-	var q := PhysicsRayQueryParameters2D.create(Vector2(x, feet - profile.vault_step - VAULT_HEADROOM), Vector2(x, feet + 2.0), 5, [body.get_rid()])
-	var hit := get_world_2d().direct_space_state.intersect_ray(q)
-	if hit.is_empty():
-		return 0.0
-	var height := feet - (hit["position"] as Vector2).y
-	return height if height >= 1.0 else 0.0
-
-## The biped's mantle probe: the displacement from the centre to standing on the hard ledge whose wall is within WALL_RANGE on
-## `side`, or ZERO. The ledge's top is the first hit of a ray down, a few px inside the ledge (hard and slick solids, never a
-## one-way ledge; a wall taller than the ray starts inside it, which is no hit); the target sits on the top, inset past the
-## wall's face, and is reported only when the standing box fits there.
-func _mantle(side: int) -> Vector2:
-	if side == 0 or body.is_on_floor():
-		return Vector2.ZERO
-	var half := _box.size.x / 2.0
-	var col := KinematicCollision2D.new()
-	if not body.test_move(body.global_transform, Vector2(side * WALL_RANGE, 0.0), col):
-		return Vector2.ZERO
-	var gap := absf(col.get_travel().x)
-	var feet := body.global_position.y + BodyConfig.BOTTOM
-	var x := body.global_position.x + side * (gap + half + MANTLE_INSET)
-	var q := PhysicsRayQueryParameters2D.create(Vector2(x, feet - MANTLE_HEADROOM), Vector2(x, feet + 2.0), 5, [body.get_rid()])
-	var hit := get_world_2d().direct_space_state.intersect_ray(q)
-	if hit.is_empty():
-		return Vector2.ZERO
-	var rise := feet - (hit["position"] as Vector2).y
-	if rise <= 0.0:
-		return Vector2.ZERO
-	var target := Vector2(side * (gap + 2.0 * half + 2.0), -rise)
-	var room := RectangleShape2D.new()
-	room.size = BodyConfig.size() - Vector2(MANTLE_ROOM_SHRINK, MANTLE_ROOM_SHRINK)  # the standing box, whatever the pose now
-	var shape_q := PhysicsShapeQueryParameters2D.new()
-	shape_q.shape = room
-	shape_q.transform = Transform2D(0.0, body.global_position + target)
-	shape_q.collision_mask = 5
-	shape_q.exclude = [body.get_rid()]
-	if not get_world_2d().direct_space_state.intersect_shape(shape_q, 1).is_empty():
-		return Vector2.ZERO
-	return target
-
 ## A puff of dust at the paws, drifting up and fading (the skid's).
 func _puff_dust() -> void:
 	var puff := ColorRect.new()
@@ -470,16 +333,6 @@ func _puff_dust() -> void:
 	tween.tween_property(puff, "position:y", puff.position.y - 10.0, DUST_LIFE)
 	tween.tween_property(puff, "modulate:a", 0.0, DUST_LIFE)
 	tween.chain().tween_callback(puff.queue_free)
-
-## Free px above the body: 0 when it could not rise STAND_RISE (a low ceiling), else plenty.
-func _clearance() -> float:
-	return 0.0 if body.test_move(body.global_transform, Vector2(0.0, -VerbRunner.STAND_RISE)) else 1000.0
-
-## The collision box: flat while spread or sliding, its bottom always on the floor.
-func _apply_box() -> void:
-	var size := BodyConfig.spread_size() if VerbRunner.is_flat(state, profile) else BodyConfig.size()
-	_box.size = size
-	_shape.position.y = BodyConfig.BOTTOM - size.y / 2.0
 
 func _draw_body(delta: float) -> void:
 	if _sheet != null and profile.id == "spider":
