@@ -1,7 +1,7 @@
 """Writes the world twins and the support monsters as creature data, so every form can be met in the world.
 
   data/creatures/twin_<form>.tres   one per form whose twin is a new creature (140)
-  data/creatures/<id>.tres          the design doc's support monsters (28)
+  data/creatures/<id>.tres          the design doc's support monsters (29)
   scripts/core/menagerie_ids.gd     their ids, for Sources.ALL
 
 Run from the repo root:  python3 tools/build_creatures.py
