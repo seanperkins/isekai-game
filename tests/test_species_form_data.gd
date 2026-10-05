@@ -46,7 +46,7 @@ func test_every_new_form_says_what_it_reads_where_it_is_found_and_what_it_does()
 		assert_false(f.host.is_empty(), "%s has no host" % f.id)
 		for s in [f.source, f.verb_text, f.gives_up, f.opened_by, f.blurb]:
 			assert_ne(s, "", f.id)
-		assert_eq(f.grants, [], "%s: no verb exists yet" % f.id)
+		assert_eq(f.grants, ["verb_" + f.id], "%s: its verb and nothing else" % f.id)
 		assert_eq(f.traits, [], f.id)
 
 func test_later_elements_are_read_by_twenty_forms_and_never_by_a_stage_two_form() -> void:
