@@ -125,7 +125,9 @@ An agent builds rooms with the same rules as the editor through an MCP server, `
 | Persist | `save`, `revert` |
 
 - The server keeps a working set in memory. Nothing reaches disk until `save`, which writes only `data/rooms/*.tres` and refuses a
-  room whose file changed on disk since it was loaded (`force` overrides). `revert` drops every unsaved edit.
+  room whose file changed on disk since it was loaded, and the deletion of a room you created, saved and undid if its file changed
+  since (`force` overrides both). That check is best-effort, not a lock: two saves in the same instant can still race.
+  `revert` drops every unsaved edit.
 - An element is addressed by `{room, kind, index}`; the index is its position in the room's array, so a `delete` shifts the ones
   after it. Fetch `get_room` again after a delete.
 - Edits use the editor's rules and its error text. Add tools snap to the 4 px grid like a drag; `apply_room_spec` and `set_field`

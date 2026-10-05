@@ -154,3 +154,14 @@ func test_only_limits_the_write_to_the_named_rooms() -> void:
 	assert_true(model.dirty.has("C1"), "C1 was not named, so it is still unsaved")
 	assert_false(FileAccess.file_exists("%s/C1.tres" % TMP))
 	assert_true(FileAccess.file_exists("%s/C2.tres" % TMP))
+
+func test_a_room_id_with_path_characters_is_never_written() -> void:
+	var r := RoomDef.new()
+	r.id = "../escape"
+	model.rooms["../escape"] = r
+	model.dirty["../escape"] = true
+	var result := model.save_dirty(TMP)
+	assert_true(result["errors"].has("../escape"))
+	assert_eq(result["saved"], [])
+	assert_false(FileAccess.file_exists("res://.tmp/escape.tres"), "nothing landed outside the directory")
+	assert_true(model.dirty.has("../escape"))

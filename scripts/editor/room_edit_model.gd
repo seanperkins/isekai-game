@@ -1219,6 +1219,9 @@ func _replay(room_id: String, content: Dictionary, trusted := {}) -> Array:
 func _feature_error(room_id: String, f: Dictionary) -> String:
 	if not FEATURE_KINDS.has(f.get("kind", "")):
 		return "unknown feature '%s'" % f.get("kind", "")
+	var fields := _feature_fields_error(f)
+	if fields != "":
+		return fields
 	var base = _feature_base(room_id, f["pos"], f["kind"])
 	if base is String:
 		return base
@@ -1226,10 +1229,42 @@ func _feature_error(room_id: String, f: Dictionary) -> String:
 		return "nothing to stand on at y %s: the surface below is at y %s" % [f["pos"].y, base.y]
 	return ""
 
+## Why a feature's optional fields cannot be saved ("" when they can): the rules set_field applies, because the game assigns these to
+## typed Strings when the room is built, and a wrong type aborts that feature's setup.
+func _feature_fields_error(f: Dictionary) -> String:
+	for key: String in ["id", "title", "text", "hint", "shortcut", "perk", "area"]:
+		if f.has(key) and not f[key] is String:
+			return "%s: expected a string" % key
+	var kind: String = f["kind"]
+	for key: String in ["title", "text", "hint"]:
+		if f.has(key) and kind != "tablet":
+			return "a %s has no %s" % [kind, key]
+	if f.has("shortcut") and kind != "switch":
+		return "a %s has no shortcut" % kind
+	if f.has("perk") and kind != "altar":
+		return "a %s has no perk" % kind
+	if f.has("id") and not valid_id(f["id"]):
+		return "id: an id is letters, digits and underscore"
+	match kind:
+		"tablet":
+			if f.has("title") and f["title"] == "":
+				return "a tablet needs a title"
+			if f.get("hint", "") != "" and not RoomLint.hintable_skill_ids().has(f["hint"]):
+				return "'%s' is not a skill the Compendium holds" % f["hint"]
+		"switch":
+			if f.has("shortcut") and not valid_id(f["shortcut"]):
+				return "a shortcut id is letters, digits and underscore (and not empty)"
+		"altar":
+			if f.get("perk", "") != "" and not perk_ids().has(f["perk"]):
+				return "'%s' is not a perk" % f["perk"]
+	return ""
+
 ## Why decor `d` (id, pos, optional anchor) cannot stand or hang where it says ("" when it can).
 func _decor_error(room_id: String, d: Dictionary) -> String:
 	if not DecorLib.CATALOG.has(d["id"]):
 		return "unknown decor '%s'" % d["id"]
+	if d.has("anchor") and not (d["anchor"] is String and ["top", "bottom"].has(d["anchor"])):
+		return "anchor: expected top or bottom"
 	var hangs := str(d.get("anchor", DecorLib.CATALOG[d["id"]].get("anchor", "bottom"))) == "top"
 	var base = _decor_base(room_id, d["pos"], hangs)
 	if base is String:
@@ -1238,13 +1273,19 @@ func _decor_error(room_id: String, d: Dictionary) -> String:
 		return "nothing to %s at y %s: the surface is at y %s" % ["hang from" if hangs else "stand on", d["pos"].y, base.y]
 	return ""
 
+## The ids of rooms this session created and saved, then undid: their files are deleted on the next save.
+func pending_removals() -> Array:
+	return _removed_on_save.keys()
+
 # --- save ---
 
 ## Writes each dirty room to `<dir>/<id>.tres` with ResourceSaver (the call the generator used). Rooms save independently: a
 ## failure leaves that room dirty and the others written. A room this session created, saved and then undid has its file
 ## removed (never a room that was on disk when the editor opened). Returns {"saved": [ids], "errors": {id: message},
-## "removed": [ids]}. A non-empty `only` limits the write to those ids (a dirty room not named stays dirty); removals are not limited.
-func save_dirty(dir: String, only: Array = []) -> Dictionary:
+## "removed": [ids]}. `only` (null: every dirty room) limits the write to those ids, so [] writes none; a dirty room not named stays
+## dirty. A queued removal runs unless its id is in `keep`, where it stays queued. A room whose id is not a plain id (letters, digits,
+## underscore) is never written: the id is part of the file path, and "../x" would land outside `dir`.
+func save_dirty(dir: String, only: Variant = null, keep: Array = []) -> Dictionary:
 	var saved: Array = []
 	var removed: Array = []
 	var errors := {}
@@ -1253,7 +1294,10 @@ func save_dirty(dir: String, only: Array = []) -> Dictionary:
 		if not rooms.has(id):
 			dirty.erase(id)
 			continue
-		if not only.is_empty() and not only.has(id):
+		if only != null and not only.has(id):
+			continue
+		if not valid_id(id):
+			errors[id] = "'%s' is not a valid room id (letters, digits, underscore): not written" % id
 			continue
 		if not dir_ok:
 			errors[id] = "no such directory: %s" % dir
@@ -1267,6 +1311,8 @@ func save_dirty(dir: String, only: Array = []) -> Dictionary:
 		else:
 			errors[id] = error_string(err)
 	for id in _removed_on_save.keys():
+		if keep.has(id) or not valid_id(id):
+			continue
 		if _source_ids.has(id) or rooms.has(id):
 			_removed_on_save.erase(id)
 			continue

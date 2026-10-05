@@ -114,3 +114,35 @@ func test_revert_drops_everything_and_reads_the_disk() -> void:
 	assert_eq(session.state()["dirty"], [])
 	assert_eq(session.model.undo_depth(), 0)
 	assert_true(RoomEditModel.same_room(session.model.rooms["C1"], _disk("C1")))
+
+func test_a_pending_deletion_of_a_file_changed_on_disk_is_refused_then_forced() -> void:
+	assert_eq(session.model.new_room_beside("C6", "left", "Fresh", "cave", Vector2i(1, 1)), "")
+	assert_eq(session.save()["saved"].size(), 2, "Fresh and its neighbour")
+	var theirs := RoomEditModel.copy_room(session.model.rooms["Fresh"])
+	theirs.solids.append(Rect2(100, 100, 40, 12))
+	ResourceSaver.save(theirs, "%s/Fresh.tres" % TMP)  # another process edits the room this session created
+	session.model.undo()  # removes Fresh from the working set and queues its file for deletion
+	var refused := session.save()
+	assert_eq(refused["errors"]["Fresh"], "changed on disk since this session saved it: not deleted")
+	assert_eq(refused["removed"], [])
+	assert_true(FileAccess.file_exists("%s/Fresh.tres" % TMP), "their file survives")
+	var forced := session.save([], true)
+	assert_eq(forced["removed"], ["Fresh"])
+	assert_false(FileAccess.file_exists("%s/Fresh.tres" % TMP))
+
+func test_an_unchanged_pending_deletion_goes_through() -> void:
+	assert_eq(session.model.new_room_beside("C6", "left", "Fresh", "cave", Vector2i(1, 1)), "")
+	session.save()
+	session.model.undo()
+	var result := session.save()
+	assert_eq(result["removed"], ["Fresh"])
+	assert_false(FileAccess.file_exists("%s/Fresh.tres" % TMP))
+
+func test_a_room_id_that_is_not_an_id_is_not_saved() -> void:
+	var r := RoomDef.new()
+	r.id = "../escape"
+	session.model.rooms["../escape"] = r
+	session.model.dirty["../escape"] = true
+	var result := session.save()
+	assert_true(result["errors"].has("../escape"))
+	assert_false(FileAccess.file_exists("res://.tmp/escape.tres"))

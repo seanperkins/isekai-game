@@ -61,3 +61,14 @@ func test_decor_keys_pass_through() -> void:
 	assert_eq(back["content"]["decor"], [{"id": "rubble", "pos": Vector2(1, 2), "light": Color(1, 0.5, 0.25, 1), "anchor": "top"}])
 	assert_eq(back["content"]["features"], [{"kind": "altar", "pos": Vector2(4, 8), "perk": "x"}])
 	assert_false(back["content"]["features"][0].has("id"))
+
+func test_transport_only_keys_are_dropped() -> void:
+	var back := RoomSpec.content_from_json({
+		"decor": [{"piece": "rubble", "pos": [1, 2], "index": 3}],
+		"features": [{"kind": "glow_pool", "pos": [4, 8], "id": "x", "index": 1}],
+		"solids": [{"rect": [0, 0, 8, 8], "index": 0}],
+	})
+	assert_eq(back["errors"], [])
+	assert_false(back["content"]["decor"][0].has("index"))
+	assert_false(back["content"]["features"][0].has("index"))
+	assert_eq(back["content"]["solids"], [{"rect": Rect2(0, 0, 8, 8), "hard": false}])

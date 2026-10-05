@@ -60,3 +60,14 @@ func test_a_large_spec_applies_and_answers() -> void:
 	var res := _call({"room": "Big", "spec": spec})
 	assert_false(res["isError"], str(res).left(300))
 	assert_eq(int(_json(res)["counts"]["solids"]), 3000)
+
+func test_what_get_room_returns_applies_back_unchanged_for_every_shipped_room() -> void:
+	for id in ShippedRooms.IDS:
+		var got: Dictionary = JSON.parse_string(tools.call_tool("get_room", {"room": id})["content"][0]["text"])["spec"]
+		var res := _call({"room": id, "spec": got})
+		assert_false(res["isError"], "%s: %s" % [id, str(res).left(300)])
+	assert_eq(session.model.undo_depth(), 0, "an unchanged room adds no undo step")
+	assert_eq(session.model.dirty.size(), 0)
+	var c1: RoomDef = session.model.rooms["C1"]
+	for f: Dictionary in c1.features:
+		assert_false(f.has("index"), "response metadata never reaches the room")

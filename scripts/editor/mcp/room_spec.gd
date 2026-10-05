@@ -87,6 +87,7 @@ static func _element(kind: String, e) -> Variant:
 			return {"id": e["creature"], "pos": Vector2(p[0], p[1])} if p != null else "pos: expected an array of 2 numbers"
 		"feature", "decor":
 			var out: Dictionary = e.duplicate(true)
+			out.erase("index")  # get_room's own metadata (an element's position in its list), never part of the room
 			var p = _nums(e.get("pos"), 2)
 			if p == null:
 				return "pos: expected an array of 2 numbers"

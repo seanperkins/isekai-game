@@ -93,3 +93,59 @@ func test_decor_is_known_and_stands_on_a_surface() -> void:
 
 func test_an_unknown_room_is_reported() -> void:
 	assert_eq(model.apply_content("Z9", _content()), [{"kind": "room", "index": -1, "error": "no room 'Z9'"}])
+
+# --- found by the final review: malformed optional fields must not reach a saved room ---
+
+func test_feature_fields_must_be_the_right_type_and_value() -> void:
+	var pos := Vector2(300, 320)
+	var cases := [
+		[{"kind": "tablet", "pos": pos, "title": []}, "title"],
+		[{"kind": "tablet", "pos": pos, "title": "T", "hint": [1]}, "hint"],
+		[{"kind": "tablet", "pos": pos, "title": "T", "hint": "no_such_skill"}, "not a skill"],
+		[{"kind": "tablet", "pos": pos, "title": ""}, "needs a title"],
+		[{"kind": "switch", "pos": pos, "shortcut": []}, "shortcut"],
+		[{"kind": "switch", "pos": pos, "shortcut": "a b"}, "shortcut"],
+		[{"kind": "altar", "pos": pos, "perk": "no_such_perk"}, "not a perk"],
+		[{"kind": "altar", "pos": pos, "perk": 3}, "perk"],
+		[{"kind": "glow_pool", "pos": pos, "title": "x"}, "has no title"],
+		[{"kind": "glow_pool", "pos": pos, "id": []}, "id"],
+	]
+	for c: Array in cases:
+		var errors := model.apply_content("C1", _content([], [], [], [c[0]]))
+		assert_eq(errors.size(), 1, str(c[0]))
+		assert_eq(errors[0]["kind"], "feature", str(c[0]))
+		assert_true(errors[0]["error"].contains(c[1]), "%s -> %s" % [c[0], errors[0]["error"]])
+	assert_eq(model.undo_depth(), 0, "nothing was applied")
+
+func test_good_feature_fields_are_accepted_and_a_tablet_gets_a_default_title() -> void:
+	var pos := Vector2(300, 320)
+	assert_eq(model.apply_content("C1", _content([], [], [], [{"kind": "tablet", "pos": pos}])), [])
+	assert_eq(model.rooms["C1"].features[0]["title"], "Tablet")
+	assert_eq(model.apply_content("C1", _content([], [], [], [{"kind": "switch", "pos": pos, "shortcut": "gate_1"}])), [])
+	assert_eq(model.apply_content("C1", _content([], [], [], [{"kind": "altar", "pos": pos, "perk": ""}])), [])
+
+func test_decor_anchor_must_be_top_or_bottom() -> void:
+	var bad := model.apply_content("C1", _content([], [], [], [], [{"id": "rubble", "pos": Vector2(250, 320), "anchor": "sideways"}]))
+	assert_eq(bad.size(), 1)
+	assert_true(bad[0]["error"].contains("anchor"), bad[0]["error"])
+	var bad_type := model.apply_content("C1", _content([], [], [], [], [{"id": "rubble", "pos": Vector2(250, 320), "anchor": []}]))
+	assert_true(bad_type[0]["error"].contains("anchor"), bad_type[0]["error"])
+
+# --- found by the final review: queued deletions ---
+
+func test_save_dirty_with_an_empty_only_writes_nothing_but_still_removes() -> void:
+	var tmp := "res://.tmp/room_edit_apply_test"
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(tmp))
+	assert_eq(model.new_room_beside("C6", "left", "Fresh", "cave", Vector2i(1, 1)), "")
+	assert_eq(model.save_dirty(tmp)["saved"].size(), 2)
+	model.undo()
+	var result := model.save_dirty(tmp, [], ["Fresh"])
+	assert_eq(result["removed"], [], "a spared removal stays queued")
+	assert_true(FileAccess.file_exists("%s/Fresh.tres" % tmp))
+	result = model.save_dirty(tmp, [])
+	assert_eq(result["saved"], [], "an empty `only` writes no room")
+	assert_eq(result["removed"], ["Fresh"])
+	assert_true(model.dirty.has("C6"), "C6 was not named, so it is still unsaved")
+	for f in DirAccess.get_files_at(tmp):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path("%s/%s" % [tmp, f]))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(tmp))

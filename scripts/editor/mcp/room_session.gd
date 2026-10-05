@@ -58,19 +58,25 @@ func save(ids: Array = [], force := false) -> Dictionary:
 	for id: String in (ids if not ids.is_empty() else model.dirty.keys()):
 		if not model.rooms.has(id):
 			errors[id] = "no room '%s'" % id
+		elif not RoomEditModel.valid_id(id):
+			errors[id] = "'%s' is not a valid room id (letters, digits, underscore): not written" % id
 		elif not model.dirty.has(id):
 			errors[id] = "no unsaved changes"
 		elif not force and file_hash(id) != _hashes.get(id, ""):
 			errors[id] = "changed on disk since loaded"
 		else:
 			only.append(id)
-	var saved: Array = []
-	var removed: Array = []
-	if not only.is_empty():  # an empty `only` would mean every dirty room
-		var written := model.save_dirty(dir, only)
-		saved = written["saved"]
-		removed = written["removed"]
-		errors.merge(written["errors"])
+	# A room this session created, saved and then undid has its file deleted by the next save: that is a write too, so the same guard
+	# applies (someone may have edited the file since), and a refused deletion stays queued.
+	var keep: Array = []
+	for id: String in model.pending_removals():
+		if not force and FileAccess.file_exists(path_of(id)) and file_hash(id) != _hashes.get(id, ""):
+			errors[id] = "changed on disk since this session saved it: not deleted"
+			keep.append(id)
+	var written := model.save_dirty(dir, only, keep)
+	var saved: Array = written["saved"]
+	var removed: Array = written["removed"]
+	errors.merge(written["errors"])
 	for id: String in saved:
 		_hashes[id] = file_hash(id)
 	for id: String in removed:
