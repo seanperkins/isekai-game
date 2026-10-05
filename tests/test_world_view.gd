@@ -68,3 +68,12 @@ func test_a_left_click_event_reaches_click() -> void:
 func test_every_biome_has_a_colour_on_the_overview() -> void:
 	for biome in TerrainArt.biomes():
 		assert_true(WorldView.AREA_FILL.has(biome), "%s needs an AREA_FILL entry" % biome)
+
+func test_the_rooms_are_laid_out_between_the_size_header_and_the_area_footer() -> void:
+	var v := WorldView.new()
+	add_child_autofree(v)
+	v.setup(_rooms(), "C1")
+	for item in v.layout_items():
+		var rect: Rect2 = item["rect"]
+		assert_gte(rect.position.y, WorldView.HEADER - 0.01, item["id"])
+		assert_lte(rect.end.y, v.size.y - WorldView.FOOTER + 0.01, item["id"])
