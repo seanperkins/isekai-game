@@ -1112,8 +1112,8 @@ func _shift_content(r: RoomDef, d: Vector2) -> void:
 ## Writes each dirty room to `<dir>/<id>.tres` with ResourceSaver (the call the generator used). Rooms save independently: a
 ## failure leaves that room dirty and the others written. A room this session created, saved and then undid has its file
 ## removed (never a room that was on disk when the editor opened). Returns {"saved": [ids], "errors": {id: message},
-## "removed": [ids]}.
-func save_dirty(dir: String) -> Dictionary:
+## "removed": [ids]}. A non-empty `only` limits the write to those ids (a dirty room not named stays dirty); removals are not limited.
+func save_dirty(dir: String, only: Array = []) -> Dictionary:
 	var saved: Array = []
 	var removed: Array = []
 	var errors := {}
@@ -1121,6 +1121,8 @@ func save_dirty(dir: String) -> Dictionary:
 	for id in dirty.keys():
 		if not rooms.has(id):
 			dirty.erase(id)
+			continue
+		if not only.is_empty() and not only.has(id):
 			continue
 		if not dir_ok:
 			errors[id] = "no such directory: %s" % dir

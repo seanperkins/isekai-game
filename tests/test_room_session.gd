@@ -50,3 +50,67 @@ func test_reload_clears_dirty_history_and_reads_the_disk_again() -> void:
 	assert_eq(session.model.undo_depth(), 0)
 	assert_eq(session.changed_on_disk(), [])
 	assert_true((session.model.rooms["C1"] as RoomDef).solids.has(Rect2(100, 100, 40, 12)), "the rewritten C1 was read, not the cache")
+
+# --- saving and reverting ---
+
+func _edit(id: String, at := 100) -> void:
+	assert_eq(session.model.add_solid(id, Vector2(at, 100), Vector2(at + 100, 116)), "")
+
+func _disk(id: String) -> RoomDef:
+	return ResourceLoader.load("%s/%s.tres" % [TMP, id], "", ResourceLoader.CACHE_MODE_IGNORE) as RoomDef
+
+func test_save_writes_only_dirty_rooms() -> void:
+	var c2_before := session.file_hash("C2")
+	_edit("C1")
+	var result := session.save()
+	assert_eq(result["saved"], ["C1"])
+	assert_eq(result["errors"], {})
+	assert_true(RoomEditModel.same_room(_disk("C1"), session.model.rooms["C1"]))
+	assert_eq(session.file_hash("C2"), c2_before, "an untouched room's file is not rewritten")
+	assert_eq(session.state()["dirty"], [])
+	assert_eq(session.changed_on_disk(), [])
+
+func test_a_file_changed_on_disk_is_refused_then_forced() -> void:
+	_rewrite_c1_on_disk()
+	var theirs := session.file_hash("C1")
+	_edit("C1", 300)
+	var refused := session.save()
+	assert_eq(refused["saved"], [])
+	assert_eq(refused["errors"]["C1"], "changed on disk since loaded")
+	assert_eq(session.file_hash("C1"), theirs, "the file they wrote is untouched")
+	assert_true(session.state()["dirty"].has("C1"))
+	var forced := session.save([], true)
+	assert_eq(forced["saved"], ["C1"])
+	assert_ne(session.file_hash("C1"), theirs)
+	_edit("C1", 450)
+	assert_eq(session.save()["saved"], ["C1"], "after a save the recorded hash is current")
+
+func test_a_new_room_whose_file_has_appeared_is_stale() -> void:
+	assert_eq(session.model.new_room_beside("C6", "left", "Fresh", "cave", Vector2i(1, 1)), "")
+	var theirs := RoomDef.new()
+	theirs.id = "Fresh"
+	ResourceSaver.save(theirs, "%s/Fresh.tres" % TMP)
+	var result := session.save()
+	assert_eq(result["errors"]["Fresh"], "changed on disk since loaded")
+	assert_eq(result["saved"], ["C6"], "the neighbour's exit is still saved")
+
+func test_save_a_subset_and_report_problems_for_those_rooms() -> void:
+	_edit("C1")
+	_edit("C2")
+	var result := session.save(["C2"])
+	assert_eq(result["saved"], ["C2"])
+	assert_eq(session.state()["dirty"], ["C1"])
+	for p: Dictionary in result["problems"]:
+		assert_eq(p["room"], "C2")
+
+func test_save_names_what_it_was_asked_to_save_but_could_not() -> void:
+	assert_eq(session.save(["C3"])["errors"], {"C3": "no unsaved changes"})
+	assert_eq(session.save(["Z9"])["errors"], {"Z9": "no room 'Z9'"})
+
+func test_revert_drops_everything_and_reads_the_disk() -> void:
+	_edit("C1")
+	_edit("C2")
+	session.revert()
+	assert_eq(session.state()["dirty"], [])
+	assert_eq(session.model.undo_depth(), 0)
+	assert_true(RoomEditModel.same_room(session.model.rooms["C1"], _disk("C1")))

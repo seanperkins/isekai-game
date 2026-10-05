@@ -145,3 +145,12 @@ func test_after_a_save_the_saved_state_is_the_new_baseline() -> void:
 	assert_false(model.dirty.has("C1"), "undoing to the saved state clears it")
 	model.undo()
 	assert_true(model.dirty.has("C1"), "undoing past the saved state marks it again")
+
+func test_only_limits_the_write_to_the_named_rooms() -> void:
+	model.add_solid("C1", Vector2(100, 100), Vector2(200, 116))
+	model.add_solid("C2", Vector2(100, 100), Vector2(200, 116))
+	var result := model.save_dirty(TMP, ["C2"])
+	assert_eq(result["saved"], ["C2"])
+	assert_true(model.dirty.has("C1"), "C1 was not named, so it is still unsaved")
+	assert_false(FileAccess.file_exists("%s/C1.tres" % TMP))
+	assert_true(FileAccess.file_exists("%s/C2.tres" % TMP))

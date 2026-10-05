@@ -15,6 +15,7 @@ func _init(p_session: RoomSession = null) -> void:
 	_register_read()
 	_register_add()
 	_register_change()
+	_register_persist()
 
 func tool_list() -> Array:
 	var out: Array = []
@@ -353,3 +354,18 @@ func _step(done: bool, nothing: String) -> Dictionary:
 	if not done:
 		return fail(nothing)
 	return ok({"ok": true, "undo_depth": _session.model.undo_depth(), "redo_depth": _session.model.redo_depth()})
+
+# --- save and revert ---
+
+func _register_persist() -> void:
+	_add("save", "Write rooms with unsaved edits to data/rooms. A room whose file changed on disk since it was loaded is refused unless force is true. "
+		+ "Returns saved, removed, errors and the current problems of the saved rooms (informational).",
+		obj({"rooms": {"type": "array", "items": {"type": "string"}, "description": "Only these rooms (default: every room with unsaved edits)."},
+			"force": {"type": "boolean", "description": "Overwrite a file that changed on disk."}}), _save)
+	_add("revert", "Discard every unsaved edit and the undo history and reload the rooms from disk.", obj(), func(_a: Dictionary) -> Dictionary:
+		_session.revert()
+		return ok({"ok": true, "state": _session.state()}))
+
+func _save(args: Dictionary) -> Dictionary:
+	var out := _session.save(args.get("rooms", []), bool(args.get("force", false)))
+	return result([{"type": "text", "text": JSON.stringify(RoomSpec.plain(out))}], out["saved"].is_empty() and not out["errors"].is_empty())
