@@ -3,7 +3,7 @@ extends GutTest
 
 ## The deeds something emits today (the rest of Deeds.EVENTS is in Deeds.RESERVED).
 const EMITTED := ["defeated", "guard_broken", "room_cleared", "room_entered", "skill_hit", "skill_missed", "switch_hit",
-	"part_harvested", "graft_attached", "graft_shed", "item_carried", "corpse_left"]
+	"part_harvested", "graft_attached", "graft_shed", "item_carried", "corpse_left", "lesson_learned"]
 const TOTAL := {2: 26, 3: 34, 4: 44}
 
 var forms: Dictionary
@@ -135,3 +135,64 @@ func test_a_wolf_that_carries_the_same_parts_does_not_open_an_undead_gate() -> v
 	p.collect_part("ribs")
 	p.collect_part("flesh")
 	assert_eq(SkillRules.condition_value({"kind": "counter", "event": "graft_attached", "tags": {}, "n": 1}), 0, "carried is not attached")
+
+func _goblin() -> Array:
+	var rules: SkillRulesEngine = autofree(SkillRulesEngine.new())
+	rules.setup(DefLoader.load_dir("res://data/skills"))
+	var p := Player.new()
+	p.species = "goblin"
+	p.use_sheet = false
+	p.setup(rules, CompendiumModel.new([], []), [], func(n: String, t: Dictionary) -> void: rules.handle_event(n, t))
+	add_child_autofree(p)
+	rules.start_run()
+	return [p, rules]
+
+func _real_enemy(id: String) -> Enemy:
+	var skills_by_id := {}
+	for d in SkillRules.skill_defs:
+		skills_by_id[d.id] = d
+	var def: CreatureDef
+	for c in DefLoader.load_dir("res://data/creatures"):
+		if c.id == id:
+			def = c
+	var e := Enemy.new()
+	e.setup(def, skills_by_id)
+	add_child_autofree(e)
+	return e
+
+func test_a_goblin_that_has_learned_from_a_wolf_a_spider_and_a_bat_is_offered_the_beastcaller() -> void:
+	var made := _goblin()
+	var p: Player = made[0]
+	var rules: SkillRulesEngine = made[1]
+	p.progression.add_xp(Progression.stage_total(p.progression.stage))
+	for essence in ["earth", "air"]:
+		for i in 13:
+			rules.handle_event("absorbed", {"essence": essence, "source": "test"})
+	var offered := func() -> Array: return p.form_offers().map(func(f: FormDef) -> String: return f.id)
+	assert_false(offered.call().has("goblin_beastcaller"), "the essence alone is not the gate")
+	p.learn_from(_real_enemy("gloom_wolf"))
+	p.learn_from(_real_enemy("spider"))
+	assert_false(offered.call().has("goblin_beastcaller"), "two of the three lessons")
+	p.learn_from(_real_enemy("bat"))
+	assert_true(offered.call().has("goblin_beastcaller"), "a wolf, a spider and a bat taught it")
+
+func test_the_pucks_lessons_are_a_wisp_and_a_moth() -> void:
+	var made := _goblin()
+	var p: Player = made[0]
+	var rules: SkillRulesEngine = made[1]
+	for essence in ["air", "dark"]:
+		for i in 17:
+			rules.handle_event("absorbed", {"essence": essence, "source": "test"})
+	var puck: FormDef = forms["goblin_puck"]
+	assert_false(FormGate.met(puck, rules))
+	p.learn_from(_real_enemy("bog_wisp"))
+	assert_false(FormGate.met(puck, rules), "a wisp is not enough")
+	p.learn_from(_real_enemy("pale_moth"))
+	assert_true(FormGate.met(puck, rules))
+
+func test_the_tinkers_junk_lesson_has_a_creature_to_learn_from() -> void:
+	var ids: Array = DefLoader.load_dir("res://data/creatures").map(func(c: CreatureDef) -> String: return c.id)
+	for f: FormDef in gated:
+		for a in _atoms(f):
+			if a.get("event", "") == "lesson_learned" and a.get("tags", {}).has("creature"):
+				assert_true(ids.has(a["tags"]["creature"]), "%s asks for a lesson from '%s'" % [f.id, a["tags"]["creature"]])

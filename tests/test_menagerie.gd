@@ -16,15 +16,15 @@ func _ids(defs: Array) -> Array:
 
 func test_the_order_is_shipped_then_support_then_twins_by_species_and_stage() -> void:
 	var order := Menagerie.order(creatures)
-	assert_eq(order.size(), 186, "every creature but the water pool, which is terrain")
+	assert_eq(order.size(), creatures.size() - 1, "every creature but the water pool, which is terrain")
 	var ids := _ids(order)
 	assert_false(ids.has("water_pool"))
 	var shipped := Sources.SHIPPED.filter(func(id: String) -> bool: return id != "water_pool")
 	assert_eq(ids.slice(0, shipped.size()), shipped)
-	assert_eq(ids.slice(shipped.size(), shipped.size() + 28), MenagerieIds.SUPPORT)
+	assert_eq(ids.slice(shipped.size(), shipped.size() + MenagerieIds.SUPPORT.size()), MenagerieIds.SUPPORT)
 	var last_species := -1
 	var last_stage := 0
-	for c in order.slice(shipped.size() + 28):
+	for c in order.slice(shipped.size() + MenagerieIds.SUPPORT.size()):
 		var s := Form.SPECIES.find(c.species)
 		assert_gte(s, last_species, "%s: species in order" % c.id)
 		if s != last_species:
@@ -118,7 +118,7 @@ func test_a_game_started_with_the_flag_is_in_the_menagerie() -> void:
 	add_child_autofree(game)
 	await wait_physics_frames(5)
 	assert_eq(game.world.current_id, Menagerie.ROOM_ID)
-	assert_eq(game.world.room.get_children().filter(func(n: Node) -> bool: return n is Enemy).size(), 186)
+	assert_eq(game.world.room.get_children().filter(func(n: Node) -> bool: return n is Enemy).size(), creatures.size() - 1)
 	assert_not_null(game.get_node_or_null("MenagerieKeeper"))
 	assert_eq(Compendium.progress.forms_reached.size(), 0, "nothing reaches the real profile")
 	assert_null(game.world.ctx.get("compendium"), "looking is not seeing: no sighting reaches the bestiary")
