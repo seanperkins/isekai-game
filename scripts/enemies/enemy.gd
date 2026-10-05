@@ -90,6 +90,8 @@ const VERB_WINDUP := 0.35
 const VERB_RECOVER := 0.3
 const VERB_POWER_CAP := 2
 const IMPULSE_SECONDS := 0.25
+## What a creature whose art is missing wears, so it is never invisible.
+const PLACEHOLDER_LOOK := "lizard"
 
 var def: CreatureDef
 var stats: Stats
@@ -136,6 +138,7 @@ var dormant := false:
 ## A hunting enemy is always alert: it ignores CHASE_RANGE and line of sight (a boss in its own arena).
 var hunting := false
 var _sheet: SpriteSheet
+var _still: SpriteSheet  # the sheet of a creature that is one still (a twin), null for the rest
 var _animator: SlimeAnimator
 var _shapes: SlimeShapes
 var _hurt_t := 0.0
@@ -496,9 +499,27 @@ func _confine() -> void:
 	global_position = c
 
 ## Which sprite to draw for this creature right now. All sheets face right.
+## The creature whose frames and clips this one draws: the one it `wears`, the placeholder when its own still is missing, else itself.
+func _look_id() -> String:
+	if def.wears != "":
+		return def.wears
+	if def.sprite_set != "" and _still == null:
+		return PLACEHOLDER_LOOK
+	return def.id
+
+func _still_frame() -> String:
+	return def.sprite_frame if def.sprite_frame != "" else "idle_1"
+
+## The sheet of the still this creature wears, or null when it has none or the sheet or frame is missing.
+func _load_still() -> SpriteSheet:
+	if def.sprite_set == "":
+		return null
+	var sheet := SpriteSheet.load_set(def.sprite_set)
+	return sheet if sheet != null and sheet.has_frame(_still_frame()) else null
+
 func frame_name() -> String:
 	var alternate := int(_anim_t / ANIM_SECONDS) % 2 == 1
-	match def.id:
+	match _look_id():
 		"bat":
 			return "bat_2" if alternate else "bat_1"
 		"toad":
@@ -507,7 +528,7 @@ func frame_name() -> String:
 			return "lizard_2" if alternate and absf(velocity.x) > 1.0 else "lizard_1"
 		"spider":
 			return "spider_hang" if _on_ceiling else "spider_crawl"
-	return def.id
+	return _look_id()
 
 func _update_visual(delta: float = 0.0) -> void:
 	if _sprite == null:
@@ -517,7 +538,9 @@ func _update_visual(delta: float = 0.0) -> void:
 	_update_web()  # after the draw, so it fits this frame
 
 func _draw_creature(delta: float) -> void:
-	if _sheet != null:
+	if _still != null:
+		_draw_still()
+	elif _sheet != null:
 		_draw_sheet_frame(delta)
 	else:
 		Art.set_frame(_sprite, frame_name(), BODY_BOTTOM)
@@ -528,7 +551,17 @@ func _draw_creature(delta: float) -> void:
 	elif telegraphing() and int(_anim_t / 0.08) % 2 == 0:
 		_sprite.modulate = TELEGRAPH_TINT
 	else:
-		_sprite.modulate = Color.WHITE
+		_sprite.modulate = def.sprite_tint
+
+## A still: one frame at the creature's size, turned with it. It has no animation and its hurt box stays the body's.
+func _draw_still() -> void:
+	var frame := _still_frame()
+	var size := def.sprite_size
+	_sprite.texture = _still.frame_texture(frame)
+	_sprite.scale = Vector2.ONE * size
+	_sprite.position.y = BODY_BOTTOM - _still.frame_size(frame).y * size / 2.0
+	_sprite.flip_h = facing < 0
+	_sprite.flip_v = status.state == EnemyStatus.DOWNED
 
 ## Strands while a thread slows it, the cocoon while a thread holds it, nothing once either ends or it is down.
 func _update_web() -> void:
@@ -544,10 +577,10 @@ func _update_web() -> void:
 		_web.visible = false
 
 func _draw_sheet_frame(delta: float) -> void:
-	var state := EnemyState.pick(def.id, status.state, charge_state(), swoop_state(), _state == "puff",
+	var state := EnemyState.pick(_look_id(), status.state, charge_state(), swoop_state(), _state == "puff",
 		_spit_cd > _spit_cooldown() - SPIT_POSE_SECONDS, _on_ceiling, is_on_floor(), absf(velocity.x) > 1.0, _hurt_t > 0.0)
 	if dormant:  # the resting pose whatever it was doing, and it does not animate
-		state = EnemyState.pick(def.id, EnemyStatus.ACTIVE, "", "idle", false, false, _on_ceiling, true, false, false)
+		state = EnemyState.pick(_look_id(), EnemyStatus.ACTIVE, "", "idle", false, false, _on_ceiling, true, false, false)
 	_anim_state = state
 	_animator.play(state)
 	if not dormant:
@@ -874,6 +907,7 @@ func _build_body() -> void:
 	shape.shape = rect
 	add_child(shape)
 	if def != null:
+		_still = _load_still()
 		_sprite = Art.sprite(frame_name(), BODY_BOTTOM)
 		add_child(_sprite)
 		_web = WebCover.new()
@@ -883,15 +917,16 @@ func _build_body() -> void:
 
 ## The creature's own frames, when its sheet and clips exist; otherwise the old single sprites stay.
 func _load_sheet() -> void:
-	if not use_sheet or not SpriteSheet.available(def.id):
+	var look := _look_id()
+	if _still != null or not use_sheet or not SpriteSheet.available(look):
 		return
 	var clips := SlimeAnimator.load_clips(CLIPS)
-	if not clips.has(def.id):
+	if not clips.has(look):
 		return
-	_sheet = SpriteSheet.load_set(def.id)
+	_sheet = SpriteSheet.load_set(look)
 	if _sheet == null:
 		return
-	_animator = SlimeAnimator.new(clips[def.id])
+	_animator = SlimeAnimator.new(clips[look])
 	for first in ["idle", "fly", "swim", "drift", "hide"]:  # the clip a creature starts on: its resting loop
 		if _animator.clips.has(first):
 			_animator.play(first)
