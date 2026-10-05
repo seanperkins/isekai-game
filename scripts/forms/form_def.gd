@@ -5,7 +5,9 @@ extends Resource
 
 @export var id := ""
 @export var display_name := ""
-## 2 to 4; stage 1 is the base slime (not a FormDef).
+## Which species this body belongs to (Form.SPECIES). A file with no `species` line is a slime form.
+@export var species := "slime"
+## 2 to 4; stage 1 is the species' base (not a FormDef).
 @export var stage := 2
 ## weaver | tide | toxic | bulwark | echo | greater (the neutral fallback)
 @export var lineage := ""
