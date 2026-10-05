@@ -37,6 +37,7 @@ func setup(p_rooms: Dictionary, p_player: CharacterBody2D, p_ctx: Dictionary) ->
 	rooms = p_rooms
 	player = p_player
 	ctx = p_ctx
+	ctx["shake"] = Callable(self, "shake")  # the boss arena's slam and the tremor rooms jolt the camera through this
 	camera.name = "Camera"
 	camera.zoom = Vector2(1, 1)  # the 640x360 internal resolution is scaled to the window
 	add_child(camera)
@@ -110,7 +111,7 @@ func _physics_process(_delta: float) -> void:
 	if sliding or room == null or player == null:
 		return
 	var e := exit_beyond(player.global_position)
-	if not e.is_empty():
+	if not e.is_empty() and not _arena_locked():
 		_transition(e)
 		return
 	_follow()
@@ -153,6 +154,22 @@ func _transition(e: Dictionary) -> void:
 	player.set_physics_process(true)
 	sliding = false
 	room_entered.emit(current_id)
+
+## True while the room's boss arena is in its intro or its fight: nobody leaves.
+func _arena_locked() -> bool:
+	for n in room.get_children():
+		if n is BossArena:
+			return (n as BossArena).locked()
+	return false
+
+## Jolts the camera: a few random offsets that decay to nothing over `seconds`.
+func shake(amount: float, seconds: float) -> void:
+	var tw := create_tween()
+	var steps := 8
+	for k in steps:
+		var strength := amount * (1.0 - float(k) / float(steps))
+		tw.tween_property(camera, "offset", Vector2(randf_range(-strength, strength), randf_range(-strength, strength)), seconds / float(steps))
+	tw.tween_property(camera, "offset", Vector2.ZERO, 0.0)
 
 ## A shortcut was opened in this room: its gate solids go at once.
 func _open_gate(id: String) -> void:

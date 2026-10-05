@@ -71,6 +71,19 @@ static func edge_walls(size: Vector2, exits: Array) -> Array:
 	out.append_array(_cut("right", Rect2(size.x - RoomDef.WALL, 0, RoomDef.WALL, size.y), exits, "wall"))
 	return out
 
+## The solid that fills an exit's gap, in `room` and in `group`: a closed shortcut's gate when the room is built, and a boss arena's doors
+## when it seals. `solids` is the room's boundary and interior solids as build_room lists them ({"rect", "kind", "hard"}), which the
+## painted art needs; it is painted as a child of the gate body, so freeing the gate frees its art with it.
+static func make_gate(room: Node2D, def: RoomDef, e: Dictionary, solids: Array, painted: bool, group: String) -> StaticBody2D:
+	var size := def.pixel_size()
+	var g := gate_rect(size, e)
+	var gate := add_solid(room, g, "ground" if e["edge"] == "bottom" else "wall", not painted)
+	gate.add_to_group(group)
+	if painted:
+		var art := TerrainPainter.paint(gate, solids, Rect2(Vector2.ZERO, size), def.area, [g])
+		art.position = -gate.position
+	return gate
+
 ## The solid that fills an exit's gap while its shortcut is closed.
 static func gate_rect(size: Vector2, e: Dictionary) -> Rect2:
 	var from := float(e["from"])
@@ -143,24 +156,15 @@ static func build_room(def: RoomDef, ctx: Dictionary) -> Node2D:
 	for w in edge_walls(size, def.exits):
 		add_solid(node, w["rect"], w["kind"], not painted)
 		solids.append(w)
-	var gates: Array = []
 	var progress = ctx.get("progress")
-	for e in def.exits:
-		if not is_exit_open(e, progress):
-			var g := gate_rect(size, e)
-			var gate := add_solid(node, g, "ground" if e["edge"] == "bottom" else "wall", not painted)
-			gate.add_to_group("gate_" + str(e["shortcut"]))
-			gates.append({"body": gate, "rect": g})
 	for r in def.solids:
 		add_solid(node, r, visual_kind(r, size.x), not painted, is_one_way(r, def.hard_ledges))
 		solids.append({"rect": r, "kind": visual_kind(r, size.x), "hard": def.hard_ledges.has(r)})
+	for e in def.exits:
+		if not is_exit_open(e, progress):
+			make_gate(node, def, e, solids, painted, "gate_" + str(e["shortcut"]))
 	if painted:
-		var bounds := Rect2(Vector2.ZERO, size)
-		TerrainPainter.paint(node, solids, bounds, def.area)
-		for g in gates:
-			# Painted as a child of the gate body, so opening the shortcut removes the art with it.
-			var art := TerrainPainter.paint(g["body"], solids, bounds, def.area, [g["rect"]])
-			art.position = -g["body"].position
+		TerrainPainter.paint(node, solids, Rect2(Vector2.ZERO, size), def.area)
 	# Painted stone is pale, so point lights are gentler there or they blow it out to white.
 	build_decor(node, {"decor": def.decor}, PAINTED_LIGHT if painted else 1.0)
 	var spawn: Callable = ctx.get("spawn", Callable())
