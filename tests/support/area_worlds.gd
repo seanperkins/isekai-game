@@ -13,6 +13,13 @@ class Without extends AreaModule:
 	func prefix() -> String:
 		return _prefix
 
+## The areas' prefixes in the order the builder builds them (tools/areas/areas.gd): a new area adds its prefix at the end.
+const ORDER := ["FO", "SW", "VI", "CM", "CA", "CR"]
+
+## The world as it was once the area with prefix `last` was built: every area after it taken out. "" is the hand-authored world.
+static func upto(last: String) -> Dictionary:
+	return without(ORDER.slice(ORDER.find(last) + 1))
+
 static func without(prefixes: Array) -> Dictionary:
 	var mods: Array = []
 	for p: String in prefixes:

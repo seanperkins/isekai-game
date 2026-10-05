@@ -11,8 +11,8 @@ var world: Dictionary
 var shipped: Dictionary
 
 func before_all() -> void:
-	world = AreaWorlds.without(["SW", "VI"])  # the world as it was when the forest was built: the later areas are tests of their own
-	shipped = AreaWorlds.without(["FO", "SW", "VI"])  # the hand-authored world as it was before the builder
+	world = AreaWorlds.upto("FO")  # the world as it was when the forest was built: the later areas are tests of their own
+	shipped = AreaWorlds.upto("")  # the hand-authored world as it was before the builder
 
 func test_the_forest_is_nine_rooms_at_their_cells_and_sizes() -> void:
 	for id in CELLS:

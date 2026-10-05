@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
+
+[resource]
+script = ExtResource("1_roomdef")
+id = "CM3"
+area = "cemetery"
+cell = Vector2i(21, 4)
+solids = [Rect2(240, 268, 140, 12)]
+decor = [{
+"id": "stalagmite",
+"pos": Vector2(120, 320)
+}, {
+"id": "rubble",
+"pos": Vector2(560, 320)
+}, {
+"anchor": "top",
+"id": "vine",
+"pos": Vector2(320, 20)
+}]
+spawns = [{
+"id": "ghost",
+"pos": Vector2(420, 184)
+}, {
+"id": "skeleton",
+"pos": Vector2(520, 314)
+}]
+exits = [{
+"edge": "left",
+"from": 200.0,
+"room": "CM2",
+"to": 320.0
+}]

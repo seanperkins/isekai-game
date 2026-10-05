@@ -1,9 +1,9 @@
 [gd_resource type="Resource" script_class="RoomDef" format=3]
 
-[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_t2g7r"]
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
 
 [resource]
-script = ExtResource("1_t2g7r")
+script = ExtResource("1_roomdef")
 id = "D7"
 area = "deep"
 cell = Vector2i(18, 5)
@@ -29,6 +29,12 @@ exits = [{
 "from": 240.0,
 "room": "D6",
 "to": 320.0
+}, {
+"edge": "top",
+"from": 300.0,
+"gate": "wall_cling",
+"room": "CM1",
+"to": 460.0
 }]
 features = [{
 "id": "d7_glow_pool_1",

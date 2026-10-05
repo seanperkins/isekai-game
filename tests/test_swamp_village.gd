@@ -14,12 +14,12 @@ const VILLAGE_SUPPORT := ["village_goblin", "cave_rat", "junk", "goblin_shaman"]
 
 var world: Dictionary  # the swamp built, the village not yet
 var before: Dictionary  # the forest's world
-var full: Dictionary  # everything checked in
+var full: Dictionary  # the village built, the sacred cluster not yet
 
 func before_all() -> void:
-	world = AreaWorlds.without(["VI"])
-	before = AreaWorlds.without(["SW", "VI"])
-	full = World.load_rooms(AreaBuilder.ROOMS_DIR)
+	world = AreaWorlds.upto("SW")
+	before = AreaWorlds.upto("FO")
+	full = AreaWorlds.upto("VI")
 
 func test_the_swamp_is_five_rooms_at_their_cells_and_sizes() -> void:
 	for id in SWAMP:

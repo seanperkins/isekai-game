@@ -121,7 +121,7 @@ func test_d7_is_the_antechamber_a_glow_pool_a_tablet_no_spawns_and_tremor_0_6() 
 	assert_eq(d7.spawns.size(), 0)
 	assert_eq(d7.tremor, 0.6)
 	assert_eq(d7.glimpse["creature"], "taratect")
-	assert_eq(d7.exits.map(func(e): return e["room"]), ["D2", "D6"])
+	assert_eq(d7.exits.map(func(e): return e["room"]).filter(func(id: String) -> bool: return ShippedRooms.IDS.has(id)), ["D2", "D6"])
 
 func test_d2_climbs_to_d7_through_a_wall_cling_chimney_and_trembles_0_3() -> void:
 	var d2: RoomDef = rooms["D2"]

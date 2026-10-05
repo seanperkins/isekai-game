@@ -1,0 +1,55 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
+
+[resource]
+script = ExtResource("1_roomdef")
+id = "CM2"
+area = "cemetery"
+cell = Vector2i(19, 4)
+size = Vector2i(2, 1)
+solids = [Rect2(1000, 268, 120, 12)]
+decor = [{
+"id": "flowers",
+"pos": Vector2(560, 320)
+}, {
+"id": "flowers",
+"pos": Vector2(960, 320)
+}, {
+"id": "stalagmite",
+"pos": Vector2(120, 320)
+}, {
+"id": "stalagmite",
+"pos": Vector2(1200, 320)
+}, {
+"anchor": "top",
+"id": "root_hang",
+"pos": Vector2(640, 20)
+}, {
+"anchor": "top",
+"id": "vine",
+"pos": Vector2(1100, 20)
+}]
+exits = [{
+"edge": "left",
+"from": 200.0,
+"room": "CM1",
+"to": 320.0
+}, {
+"edge": "right",
+"from": 200.0,
+"room": "CM3",
+"to": 320.0
+}]
+features = [{
+"area": "cemetery",
+"id": "CM2_pool",
+"kind": "glow_pool",
+"pos": Vector2(700, 320)
+}, {
+"id": "CM2_tablet",
+"kind": "tablet",
+"pos": Vector2(860, 320),
+"text": "The living and the dead keep this ground in truce. Beyond the lych gate the dead keep their own counsel.",
+"title": "Weathered tablet"
+}]
