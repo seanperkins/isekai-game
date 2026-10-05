@@ -17,6 +17,7 @@ var saved_pad: Array
 var saved_paused: bool
 var hits := [0]
 var done := [0]
+var heard: Array = []  # every world event [name, tags] since before_each
 var _on_event := func(_name: String, _tags: Dictionary) -> void: pass
 
 func _def() -> OpeningDef:
@@ -46,7 +47,9 @@ func before_each() -> void:
 	saved_paused = get_tree().paused
 	hits[0] = 0
 	done[0] = 0
-	_on_event = func(event_name: String, _tags: Dictionary) -> void:
+	heard = []
+	_on_event = func(event_name: String, tags: Dictionary) -> void:
+		heard.append([event_name, tags])
 		if event_name == "opening_hit":
 			hits[0] += 1
 	EventBus.world_event.connect(_on_event)
@@ -632,3 +635,155 @@ func test_saving_works_whatever_the_old_lady_is_called() -> void:
 	assert_eq(scene.grandma().clip(), "safe")
 	assert_eq(scene.commuter().position.x, OpeningScene.GRANDMA_X)
 	assert_gt(scene.grandma().position.x, OpeningScene.HERO_REST.x)
+
+
+# --- what the scene says happened, for Audio to turn into sound ---
+
+func _names() -> Array:
+	return heard.map(func(h: Array) -> String: return h[0])
+
+func _count(event_name: String) -> int:
+	return _names().count(event_name)
+
+func _tags_of(event_name: String) -> Array:
+	return heard.filter(func(h: Array) -> bool: return h[0] == event_name).map(func(h: Array) -> Dictionary: return h[1])
+
+func test_the_start_the_first_truck_and_your_turn_are_announced_in_order() -> void:
+	scene.play(_def())
+	assert_eq(_names(), ["opening_started"])
+	scene.skip()
+	assert_eq(_names(), ["opening_started", "opening_truck_arrive", "opening_turn"])
+	assert_eq(_tags_of("opening_truck_arrive"), [{"index": 0}])
+	assert_eq(_tags_of("opening_turn"), [{"who": "player"}])
+
+func test_each_round_the_trucks_arrive_again() -> void:
+	scene.play(_def())
+	_choose(2)
+	_take_the_hit()
+	scene.skip()
+	assert_eq(_count("opening_truck_arrive"), 2, "one truck, two rounds")
+
+func test_the_second_truck_is_announced_with_its_own_index() -> void:
+	scene.play(_def_full())
+	_choose(1)
+	_take_the_hit()
+	scene.skip()
+	var indexes: Array = _tags_of("opening_truck_arrive").map(func(t: Dictionary) -> int: return t["index"])
+	assert_eq(indexes, [0, 0, 1], "the first round's truck, then both after the dodge")
+
+func test_the_truck_turn_is_announced_once_however_many_trucks_there_are() -> void:
+	scene.play(_def_full())
+	_choose(1)
+	_take_the_hit()
+	scene.skip()
+	_choose(2)
+	_take_the_hit()
+	var who: Array = _tags_of("opening_turn").map(func(t: Dictionary) -> String: return t["who"])
+	assert_eq(who, ["player", "truck", "player", "truck"], "the dodge round and the next, one truck turn each")
+
+func test_a_command_is_confirmed_and_its_action_announced() -> void:
+	scene.play(_def())
+	scene.skip()
+	heard = []
+	_press(KEY_ENTER)  # Fight
+	assert_eq(_names(), ["menu_confirm", "opening_action"])
+	assert_eq(_tags_of("opening_action"), [{"id": "fight"}])
+	scene.skip()
+	assert_eq(_count("opening_umbrella_hit"), 1, "the swing lands")
+
+func test_every_command_announces_its_own_id() -> void:
+	var ids := ["fight", "dodge", "jump", "pray", "run"]
+	for row in ids.size():
+		var one := OpeningScene.new()
+		add_child_autofree(one)
+		get_tree().paused = false
+		one.play(_def())
+		one.skip()
+		heard = []
+		one.move(row)
+		one.act()
+		assert_eq(_tags_of("opening_action"), [{"id": ids[row]}], ids[row])
+		get_tree().paused = false
+
+func test_moving_the_cursor_ticks_only_when_it_moves() -> void:
+	scene.play(_def())
+	scene.skip()
+	heard = []
+	scene.move(1)
+	assert_eq(_names(), ["menu_move"])
+	scene.move(-1)
+	assert_eq(_count("menu_move"), 2)
+	scene.move(-1)  # already at the top
+	assert_eq(_count("menu_move"), 2, "the end of the list is silent")
+	assert_eq(_count("denied"), 0)
+
+func test_trying_to_leave_the_old_ladys_row_is_denied() -> void:
+	scene.play(_def_full())
+	_to_the_last_round()
+	scene.skip()
+	heard = []
+	scene.move(1)
+	scene.move(-1)
+	assert_eq(_names(), ["denied", "denied"])
+	assert_eq(_count("menu_move"), 0)
+
+func test_the_old_lady_arrives_is_shoved_and_lands_safe() -> void:
+	scene.play(_def_full())
+	_to_the_last_round()
+	assert_eq(_count("opening_grandma_arrive"), 0, "not until she walks in")
+	scene.skip()
+	assert_eq(_count("opening_grandma_arrive"), 1)
+	heard = []
+	_press(KEY_ENTER)
+	scene.skip()
+	assert_eq(_tags_of("opening_action"), [{"id": "grandma"}])
+	assert_eq(_count("opening_shove"), 1)
+	assert_eq(_count("opening_grandma_safe"), 1)
+
+func test_saving_is_announced_as_grandma_whatever_her_own_id() -> void:
+	var d := _def_full()
+	d.grandma["id"] = "save_grandma"
+	scene.play(d)
+	_to_the_last_round()
+	scene.skip()
+	heard = []
+	_press(KEY_ENTER)
+	assert_eq(_tags_of("opening_action"), [{"id": "grandma"}])
+
+func test_a_calm_truck_and_an_angry_one_charge_differently() -> void:
+	scene.play(_def())
+	_choose(2)  # Jump: nothing to be angry about
+	_take_the_hit()
+	assert_eq(_tags_of("opening_charge"), [{"rage": false}])
+	scene.skip()
+	_choose(0)  # Fight
+	_take_the_hit()
+	assert_eq(_tags_of("opening_charge"), [{"rage": false}, {"rage": true}])
+
+func test_a_miss_says_the_truck_went_by_and_nothing_hit() -> void:
+	scene.play(_def_full())
+	_choose(1)
+	_take_the_hit()
+	assert_eq(_count("opening_pass"), 1)
+	assert_eq(_count("opening_hit"), 0)
+	assert_eq(_count("opening_charge"), 1)
+
+func test_the_knock_out_ends_the_music_and_the_white_is_announced_after() -> void:
+	scene.play(_def())
+	for i in 3:
+		_choose(2)
+		_take_the_hit()
+	assert_eq(scene.beat(), "ko")
+	assert_eq(_count("opening_ko"), 1)
+	assert_eq(_count("opening_ended"), 1, "the battle music fades as he goes down")
+	assert_eq(_count("opening_whiteout"), 0, "the swell waits for the white")
+	_press(KEY_ENTER)  # finish the wait and the fade
+	assert_eq(_count("opening_whiteout"), 1)
+	assert_lt(_names().find("opening_ended"), _names().find("opening_whiteout"))
+
+func test_each_hit_is_still_announced_once() -> void:
+	scene.play(_def())
+	for i in 3:
+		_choose(2)
+		_take_the_hit()
+	assert_eq(_count("opening_hit"), 3)

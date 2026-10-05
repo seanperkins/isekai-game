@@ -10,7 +10,8 @@ extends CanvasLayer
 ## charge) and does nothing to its life bar. In the last round an old lady is in the road: every command but saving her is grayed
 ## out, you shove her clear and the trucks run you over. It pauses the game (the live world underneath must not touch the player),
 ## drives an OpeningModel from keys, the D-pad and the left stick (through NavStep), and marks every key and pad event handled while
-## it plays, so there is no skip of the scene itself. Enter during an animation finishes it, and Enter while you read a result lets
+## it plays, so there is no skip of the scene itself. It says what happens (world events: the trucks arriving, a command, the swing, a
+## charge, a hit, the knock-out and so on) and never names a sound: Audio turns them into the battle music and the effects. Enter during an animation finishes it, and Enter while you read a result lets
 ## the trucks go at once. When the last fade-to-white is full it hides the battle, emits `finished` (the goddess's menu opens
 ## beneath, with the tree still paused) and fades the white away over her menu. Layer 45, added last so it sees input first.
 
@@ -309,11 +310,16 @@ func play(def: OpeningDef) -> bool:
 	visible = true
 	_nav.reset()
 	get_tree().paused = true
+	_emit("opening_started")
 	_begin_intro()
 	return true
 
 func is_playing() -> bool:
 	return _playing
+
+## Says what just happened; Audio decides what it sounds like.
+func _emit(event_name: String, tags := {}) -> void:
+	EventBus.world_event.emit(event_name, tags)
 
 ## The beat now playing: "intro", "command", "action", "result", "hit", "ko", or "" when it is not playing.
 func beat() -> String:
@@ -382,7 +388,12 @@ func row_enabled(i: int) -> bool:
 
 func move(step: int) -> void:
 	if _playing and _beat == Beat.COMMAND:
+		var before := _model.row()
 		_model.move(step)
+		if _model.row() != before:
+			_emit("menu_move")
+		elif _model.grandma_here():
+			_emit("denied")  # the highlight is stuck on the one thing you can do
 		_redraw()
 
 ## Enter. At the command window it takes the highlighted command; once you have read the result it sends the trucks now (they go by
@@ -392,6 +403,7 @@ func act() -> void:
 		return
 	match _beat:
 		Beat.COMMAND:
+			_emit("menu_confirm")
 			_model.act()
 			_start_action(_model.chosen())
 		Beat.RESULT:
@@ -440,13 +452,17 @@ func _begin_intro() -> void:
 	for i in count:
 		if i > 0:
 			tw.parallel()
-		var step := tw.tween_property(_trucks[i], "position:x", _slot_x(i, count), INTRO_SECONDS).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		var arrive := tw.tween_callback(_arrive.bind(i))
+		if i > 0:
+			arrive.set_delay(INTRO_STAGGER)
+		var step := tw.parallel().tween_property(_trucks[i], "position:x", _slot_x(i, count), INTRO_SECONDS).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 		if i > 0:
 			step.set_delay(INTRO_STAGGER)
 	if _model.grandma_here():
 		_grandma.visible = true
 		_grandma.position = Vector2(GRANDMA_START_X, FLOOR_Y)
 		_grandma.play("idle")
+		tw.parallel().tween_callback(_grandma_arrives).set_delay(0.2)
 		tw.parallel().tween_property(_grandma, "position:x", GRANDMA_X, GRANDMA_SECONDS).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tw.tween_callback(_enter_command)
 	_redraw()
@@ -462,6 +478,18 @@ func _show_trucks(count: int) -> void:
 		t.play("idle_angry" if _angry[i] else "idle")
 	_update_enemy(count)
 
+func _arrive(index: int) -> void:
+	_emit("opening_truck_arrive", {"index": index})
+
+func _grandma_arrives() -> void:
+	_emit("opening_grandma_arrive")
+
+func _grandma_safe() -> void:
+	_emit("opening_grandma_safe")
+
+func _whiteout() -> void:
+	_emit("opening_whiteout")
+
 func _enter_command() -> void:
 	_beat = Beat.COMMAND
 	_nav.reset()
@@ -473,6 +501,7 @@ func _start_action(choice_id: String) -> void:
 	_set_turn("")
 	_set_message(_model.result_line())
 	var id := "grandma" if _model.grandma_chosen() else choice_id  # her own id in the data may be anything
+	_emit("opening_action", {"id": id})
 	_hero.play(ACTION_CLIPS.get(id, "idle"))
 	var home := _hero_home
 	var tw := _new_tween()
@@ -506,6 +535,7 @@ func _start_action(choice_id: String) -> void:
 
 ## The umbrella lands: the front truck gets angry for the rest of the fight, a zero floats up, and its life bar does not move.
 func _umbrella_hit() -> void:
+	_emit("opening_umbrella_hit")
 	var truck: OpeningActor = _trucks[0]
 	_angry[0] = true
 	truck.play("idle_angry")
@@ -521,6 +551,7 @@ func _umbrella_hit() -> void:
 
 ## She is thrown clear onto the pavement behind him, and he stands in the road where she stood.
 func _shove_grandma() -> void:
+	_emit("opening_shove")
 	_hero_home = GRANDMA_X
 	_grandma.play("safe")
 	_kill(_fx)
@@ -528,6 +559,7 @@ func _shove_grandma() -> void:
 	_fx.tween_property(_grandma, "position:x", SAFE_X, 0.6).set_ease(Tween.EASE_OUT)
 	_fx.tween_property(_grandma, "position:y", FLOOR_Y - 40.0, 0.25).set_ease(Tween.EASE_OUT)
 	_fx.chain().tween_property(_grandma, "position:y", FLOOR_Y - 12.0, 0.3).set_ease(Tween.EASE_IN)
+	_fx.chain().tween_callback(_grandma_safe)
 
 ## Your result stays up for a moment (Enter sends the trucks at once), then the trucks' turn starts on its own.
 func _action_done() -> void:
@@ -581,6 +613,7 @@ func _queue_attack(tw: Tween, i: int, miss: bool, target_hp: int) -> void:
 
 func _attack_begin(i: int, rage: bool) -> void:
 	_set_turn("truck", _trucks[i])
+	_emit("opening_charge", {"rage": rage})
 	var truck: OpeningActor = _trucks[i]
 	truck.play("charge_angry" if rage else "charge")
 	if rage:
@@ -597,6 +630,7 @@ func _rev(t: float, i: int) -> void:
 	truck.modulate = _tint(i).lerp(RAGE_TINT, 0.5 + 0.5 * sin(t * 40.0))
 
 func _hero_leap() -> void:
+	_emit("opening_pass")
 	_hero.play("dodge")
 	_kill(_fx)
 	_fx = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
@@ -613,7 +647,7 @@ func _recover() -> void:
 	_hero_reset()
 
 func _impact(target_hp: int, rage: bool) -> void:
-	EventBus.world_event.emit("opening_hit", {})
+	_emit("opening_hit")
 	var before := _hp
 	_hp = clampi(target_hp, 0, before)
 	_set_message("You take %d damage!" % maxi(1, before - _hp))
@@ -651,8 +685,11 @@ func _start_ko() -> void:
 	_hero.position = Vector2(_hero_home + 60.0, FLOOR_Y)
 	_hero.play("ko")
 	_set_message("")
+	_emit("opening_ko")
+	_emit("opening_ended")  # the battle music fades out as he goes down
 	var tw := _new_tween()
 	tw.tween_interval(0.8)
+	tw.tween_callback(_whiteout)
 	tw.tween_property(_flash, "modulate:a", 1.0, FADE_SECONDS)
 	tw.tween_callback(_finish)
 	_redraw()
@@ -723,6 +760,8 @@ func _unhandled_input(event: InputEvent) -> void:
 
 ## Highlights whose turn it is: the arrow bobs over `actor` and the tag says whose. "" puts it away.
 func _set_turn(who: String, actor: OpeningActor = null) -> void:
+	if who != "" and who != _turn:
+		_emit("opening_turn", {"who": who})
 	_turn = who
 	_turn_actor = actor
 	_marker.visible = who != "" and actor != null
