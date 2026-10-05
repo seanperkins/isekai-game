@@ -196,7 +196,8 @@ static func _mark(a: Ability, spec: Dictionary) -> void:
 		return
 	var target = foes[0]
 	var power := Damage.skill_power(a.value(), a.actor_atk())
-	Vfx.puffs(a.actor, Art.texture("spit_glob"), [target.global_position], _color(spec), float(spec.get("delay", MARK_DELAY)))
+	var marker := Vfx.puffs(a.actor, Art.texture("spit_glob"), [target.global_position], _color(spec), float(spec.get("delay", MARK_DELAY)))
+	marker.add_to_group("verb_marks")
 	a.actor.get_tree().create_timer(float(spec.get("delay", MARK_DELAY))).timeout.connect(_mark_lands.bind(a.actor, target, power, spec))
 
 static func _mark_lands(caster, target, power: int, spec: Dictionary) -> void:
@@ -421,6 +422,7 @@ static func _strike(a: Ability, targets: Array, spec: Dictionary, ignore_def := 
 
 static func _hit(t, power: int, spec: Dictionary, from: Vector2, ignore_def := false, caster = null) -> void:
 	var type := str(spec.get("damage_type", "physical"))
+	var before := _hp(t)
 	if ignore_def and t is Enemy:
 		t.receive_hit(power, type, from, "", true)
 	else:
@@ -428,9 +430,15 @@ static func _hit(t, power: int, spec: Dictionary, from: Vector2, ignore_def := f
 	_apply_status(t, spec.get("status", {}))
 	var drain := float(spec.get("drain", 0.0))
 	if drain > 0.0 and caster != null and is_instance_valid(caster):
+		var dealt := power if before < 0 else maxi(0, before - _hp(t))  # what the target actually lost; a target with no HP of its own takes the power
 		var health = caster.get("health")
-		if health != null:
-			health.heal(maxi(1, int(float(power) * drain)))  # the caster takes back some of what it dealt
+		if health != null and dealt > 0:
+			health.heal(maxi(1, int(float(dealt) * drain)))  # the caster takes back some of what it dealt
+
+## The target's HP, -1 for one that has none (a switch, a stub).
+static func _hp(t) -> int:
+	var health = t.get("health")
+	return health.hp if health != null else -1
 
 ## slow: any actor that can be slowed. stun: an Enemy that can be eaten (the serpent cannot be stunned). root: any Enemy, a boss included.
 static func _apply_status(t, status: Dictionary) -> void:
@@ -467,6 +475,8 @@ static func validate(spec: Dictionary) -> PackedStringArray:
 			out.append("%s: unknown key '%s'" % [kind, key])
 		elif not _fits(spec[key], keys[key]):
 			out.append("%s: %s" % [kind, _expects(key, keys[key])])
+		elif key == "drain" and (float(spec[key]) < 0.0 or float(spec[key]) > 1.0):
+			out.append("%s: drain must be from 0 to 1" % kind)
 	if kind == "buff" and not spec.has("stats"):
 		out.append("buff: stats must be a dictionary of stat id to number")
 	return out

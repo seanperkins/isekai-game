@@ -16,6 +16,21 @@ class Faller extends CharacterBody2D:
 		move_and_slide()
 
 var caster: Actor
+var creatures := {}
+var skills_by_id := {}
+
+func before_all() -> void:
+	for c in DefLoader.load_dir("res://data/creatures"):
+		creatures[c.id] = c
+	for d in DefLoader.load_dir("res://data/skills"):
+		skills_by_id[d.id] = d
+
+func _enemy(id: String, pos: Vector2) -> Enemy:
+	var e := Enemy.new()
+	e.setup(creatures[id], skills_by_id)
+	e.position = pos
+	add_child_autofree(e)
+	return e
 
 func before_each() -> void:
 	caster = Actor.new()
@@ -60,6 +75,32 @@ func test_a_drain_never_heals_above_the_maximum_and_heals_at_least_one() -> void
 	_verb({"kind": "bolt", "drain": 0.01}, 1).activate()
 	assert_eq(caster.health.hp, 11, "at least 1 for a hit that drains")
 
+func test_a_drain_heals_by_the_damage_actually_dealt_not_the_power() -> void:
+	var crab := _enemy("mushroom_crab", Vector2(40, 0))
+	crab.health.max_hp = 100
+	crab.health.hp = 100
+	caster.health.hp = 10
+	_verb({"kind": "bolt", "drain": 0.5}, 10).activate()
+	var dealt := 100 - crab.health.hp
+	assert_lt(dealt, _power(10), "its armour took some")
+	assert_eq(caster.health.hp, 10 + maxi(1, int(float(dealt) * 0.5)), "the fraction of what it lost")
+
+func test_a_drain_on_an_almost_dead_enemy_heals_only_what_was_left() -> void:
+	var crab := _enemy("mushroom_crab", Vector2(40, 0))
+	crab.health.max_hp = 100
+	crab.health.hp = 2
+	caster.health.hp = 10
+	_verb({"kind": "bolt", "drain": 1.0}, 20).activate()
+	assert_eq(caster.health.hp, 12, "two points were left to take")
+
+func test_a_drain_on_an_enemy_that_cannot_be_hit_heals_nothing() -> void:
+	var lizard := _enemy("lizard", Vector2(40, 0))
+	lizard.dormant = true
+	caster.health.hp = 10
+	_verb({"kind": "bolt", "drain": 1.0}, 20).activate()
+	assert_eq(caster.health.hp, 10)
+	assert_eq(lizard.health.hp, lizard.health.max_hp)
+
 func test_a_drain_with_no_foe_heals_nothing() -> void:
 	caster.health.hp = 10
 	_verb({"kind": "bolt", "drain": 1.0}, 10).activate()
@@ -85,6 +126,11 @@ func test_a_delayed_mark_survives_its_caster_going_first() -> void:
 	caster.free()
 	await wait_seconds(0.3)
 	assert_eq(foe.hits.size(), 1, "it still lands, and nothing tried to heal a freed caster")
+
+func test_a_mark_lays_a_marker_on_its_target() -> void:
+	_foe(50)
+	_verb({"kind": "mark", "delay": 5.0}).activate()
+	assert_eq(get_tree().get_nodes_in_group("verb_marks").size(), 1)
 
 # --- reveal ---
 
@@ -147,5 +193,9 @@ func test_validate_knows_drain_reveal_and_bridge() -> void:
 	assert_eq(Array(VerbKinds.validate({"kind": "dash", "drain": 0.5})), [])
 	assert_eq(Array(VerbKinds.validate({"kind": "zone", "drain": 0.5})), ["zone: unknown key 'drain'"])
 	assert_eq(Array(VerbKinds.validate({"kind": "bolt", "drain": "lots"})), ["bolt: drain must be a number"])
+	assert_eq(Array(VerbKinds.validate({"kind": "bolt", "drain": -0.1})), ["bolt: drain must be from 0 to 1"])
+	assert_eq(Array(VerbKinds.validate({"kind": "bolt", "drain": 1.5})), ["bolt: drain must be from 0 to 1"])
+	assert_eq(Array(VerbKinds.validate({"kind": "bolt", "drain": 0})), [])
+	assert_eq(Array(VerbKinds.validate({"kind": "bolt", "drain": 1})), [])
 	assert_eq(Array(VerbKinds.validate({"kind": "reveal", "radius": 100})), [])
 	assert_eq(Array(VerbKinds.validate({"kind": "bridge", "length": 120, "seconds": 10})), [])

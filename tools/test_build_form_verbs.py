@@ -63,9 +63,6 @@ class RowsTest(unittest.TestCase):
                                 list(self.slime) + list(self.others))
 
 
-if __name__ == "__main__":
-    unittest.main()
-
 
 class SpeciesRowsTest(unittest.TestCase):
     @classmethod
@@ -88,8 +85,16 @@ class SpeciesRowsTest(unittest.TestCase):
         for r in self.rows.values():
             self.assertEqual(r["note"] == "", r["fidelity"] == "full", r["form"])
 
+    def test_no_row_names_a_form_that_is_not_generated(self):
+        ids = [f["dataId"] for f in self.forms + bsf.slime_forms()]
+        bsf.check_verb_rows(bfv.load_rows(), ids)  # raises on an unknown form, a duplicate or a bad row
+
     def test_a_form_is_named_once_and_its_skill_id_follows_it(self):
         self.assertEqual(len(self.rows), len(bfv.load_rows()))
         for f in self.forms:
             if f["dataId"] in self.rows:
                 self.assertEqual(f["verbId"], bfv.skill_id(f["dataId"]))
+
+
+if __name__ == "__main__":
+    unittest.main()

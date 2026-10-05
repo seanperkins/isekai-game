@@ -38,9 +38,6 @@ class IconsTest(unittest.TestCase):
             self.assertEqual(sorted(f[:-4] for f in os.listdir(tmp)), sorted(names))
 
 
-if __name__ == "__main__":
-    unittest.main()
-
 
 class KindsTest(unittest.TestCase):
     def test_every_kind_the_framework_has_a_glyph(self):
@@ -49,3 +46,7 @@ class KindsTest(unittest.TestCase):
         kinds = re.search(r"const KINDS := \[(.*?)\]", text, re.S).group(1)
         for kind in re.findall(r'"(\w+)"', kinds):
             self.assertIn(kind, vi.GLYPHS, kind)
+
+
+if __name__ == "__main__":
+    unittest.main()

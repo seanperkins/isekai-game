@@ -7,7 +7,7 @@ func _rows() -> Array:
 	return JSON.parse_string(FileAccess.get_file_as_string("res://tools/form_verbs.json"))
 
 func _rows_of(species: Array) -> Array:
-	return _rows().filter(func(r: Dictionary) -> bool: return species.has(load("res://data/forms/%s.tres" % r["form"]).species))
+	return _rows().filter(func(r: Dictionary) -> bool: return ResourceLoader.exists("res://data/forms/%s.tres" % r["form"]) and species.has(load("res://data/forms/%s.tres" % r["form"]).species))
 
 func _forms_of(species: Array) -> Array:
 	return FormLoader.load_all().values().filter(func(f: FormDef) -> bool: return species.has(f.species))
@@ -60,6 +60,10 @@ func test_every_form_but_the_built_slime_ones_has_a_verb_and_they_have_none() ->
 	assert_eq(with_verb, 99 + 17, "99 for the other species and the slime's 17")
 
 # --- every row ---
+
+func test_every_row_names_a_form_that_exists() -> void:
+	for row in _rows():
+		assert_true(ResourceLoader.exists("res://data/forms/%s.tres" % row["form"]), "%s is a form" % row["form"])
 
 func test_the_data_validates_with_every_verb() -> void:
 	var skills := DefLoader.load_dir("res://data/skills")

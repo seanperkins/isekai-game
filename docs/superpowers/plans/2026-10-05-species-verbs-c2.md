@@ -45,7 +45,7 @@
 ### Task 2: The wolf's and the undead's verbs
 
 **Files:**
-- Modify: `tools/form_verbs.json` (49 rows), generated `data/skills/verb_*.tres`, `data/forms/*.tres`, icons
+- Modify: `tools/form_verbs.json` (50 rows), generated `data/skills/verb_*.tres`, `data/forms/*.tres`, icons
 - Create: `tests/test_species_verbs.gd`, Python tests in `tools/test_build_form_verbs.py`
 - Test: `tests/test_species_verbs.gd`
 
@@ -58,7 +58,7 @@
 ### Task 3: The spider's and the goblin's verbs
 
 **Files:**
-- Modify: `tools/form_verbs.json` (48 rows), generated data and icons
+- Modify: `tools/form_verbs.json` (49 rows), generated data and icons
 - Test: `tests/test_species_verbs.gd`, `tools/test_build_form_verbs.py`
 
 - [ ] **Step 1: Write failing tests:** the Task 2 tests extended to the spider and the goblin, and `test_every_form_but_the_four_bases_has_a_verb` (all 99 non-slime forms and the slime's 17, none on the 24 built slime forms or on Quicksilver).
