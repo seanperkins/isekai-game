@@ -231,22 +231,21 @@
     const maxSupply = Math.max(...D.essences.map((e) => e.shippedSupply), 1);
     const maxRead = Math.max(...D.essences.map((e) => e.formsReadingTotal), 1);
     const table = h('div', { class: 'table-scroll' }, h('table', {},
-      h('thead', {}, h('tr', {}, ['Essence', 'Arrives in', 'Units in the shipped rooms', 'Forms that read it', 'New monsters that carry it', 'Form twins that carry it'].map((x) => h('th', {}, x)))),
+      h('thead', {}, h('tr', {}, ['Essence', 'Arrives in', 'Units in the shipped rooms', 'Units in the world', 'Forms that read it', 'New monsters that carry it', 'Form twins that carry it'].map((x) => h('th', {}, x)))),
       h('tbody', {}, D.essences.map((e) => h('tr', {},
         h('td', {}, chip(e.id)), h('td', {}, e.arrives),
         h('td', {}, h('div', {}, String(e.shippedSupply)), h('div', { class: 'bar', title: e.shippedSupply + ' units' }, h('i', { style: 'width:' + Math.round(100 * e.shippedSupply / maxSupply) + '%;background:var(--' + e.id + ')' }))),
+        h('td', {}, String(e.worldSupply)),
         h('td', {}, h('div', {}, String(e.formsReadingTotal)), h('div', { class: 'bar', title: e.formsReadingTotal + ' forms' }, h('i', { style: 'width:' + Math.round(100 * e.formsReadingTotal / maxRead) + '%;background:var(--' + e.id + ')' }))),
         h('td', {}, e.support.length), h('td', {}, e.twinTypes + ' types, ' + e.twinUnits + ' units'))))));
-    const hot = D.essences.filter((e) => !e.later && e.formsReadingTotal > e.shippedSupply).map((e) => e.id);
-    const note = h('p', { class: 'note' }, 'Dashed essences (fire, mind, blood) are carried by no shipped creature; their forms are stubs until the volcano, sacred hall and cemetery arrive. ' +
-      (hot.length ? 'Forms read ' + hot.join(', ') + ' more often than the shipped rooms supply it, so those areas need more of it (dark especially: the world holds 31 units) or the thresholds need recalibrating once the twins are placed.' : ''));
+    const note = h('p', { class: 'note' }, 'The shipped-rooms column counts the creatures the original rooms were made with; the world column counts every creature of every room as built (the new areas, the placed twins and support monsters). Fire, mind and blood are carried by no shipped creature: the volcano, the sacred hall and the cemetery carry them. The thresholds were recalibrated on the full world and hold on a diet of the common creatures (the design doc, section 8, "The full world").');
     const cards = h('div', { class: 'es-grid' }, D.essences.map((e) => {
       const per = Object.keys(e.formsReading).filter((s) => e.formsReading[s]).map((s) => species[s].name + ' ' + e.formsReading[s]).join(' · ');
       return h('section', { class: 'es-card el-' + e.id + (e.later ? ' later' : '') },
         h('h3', {}, e.id + (e.later ? ' (later)' : '')),
         h('dl', {},
           dlRow('Arrives in', e.arrives), dlRow('First sources', e.sources), dlRow('Note', e.note),
-          dlRow('In the shipped rooms', e.shippedSupply + ' units'),
+          dlRow('In the shipped rooms', e.shippedSupply + ' units'), dlRow('In the world', e.worldSupply + ' units'),
           dlRow('Forms that read it', e.formsReadingTotal + (per ? ' (' + per + ')' : '')),
           dlRow('Shipped creatures', e.existing.length ? e.existing.map((c) => c.name + ' ' + c.amount).join(', ') : 'none'),
           dlRow('New monsters', e.support.length ? e.support.map((c) => c.name + ' ' + c.amount).join(', ') : 'none')));
@@ -346,7 +345,7 @@
     const items = [
       [D.summary.forms, 'forms in five species, ' + D.summary.inData + ' in the game\u2019s data'],
       [D.summary.newCreatureTypes, 'new creature types (' + D.summary.support + ' support, ' + D.summary.newTwins + ' form twins)'],
-      [D.essences.length, 'essences, ' + later.size + ' not carried by any creature yet'],
+      [D.essences.length, 'essences, ' + (later.size ? later.size + ' not carried by any creature yet' : 'all carried by creatures of the world')],
       [D.species.reduce((a, s) => a + s.lines.length, 0), 'evolution lines'],
       [clips, 'moveset GIFs'],
     ];
