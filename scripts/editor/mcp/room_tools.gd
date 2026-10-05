@@ -415,12 +415,12 @@ func _preview(args: Dictionary) -> Dictionary:
 func _register_shot() -> void:
 	_add("menagerie_shot", "A real picture from the game: its Menagerie room, where every creature in the game (shipped, support monster and the 140 form "
 		+ "twins) stands asleep with its name on the floor, drawn with the game's own art. Name creatures to see them, or give x positions "
-		+ "(the room runs from about 260 to 10600, one creature every 56 px). Slow: it starts a second Godot with a tiny off-screen window, "
-		+ "so it takes a few seconds a picture and needs a display; nothing takes over the screen. Unlike preview, this is the real game.",
+		+ "(the room runs from about 260 to 10700, one creature every 56 px). Slow: it starts a second Godot with a tiny off-screen window, "
+		+ "so it takes a few seconds a picture and needs a display (written and tested on macOS); nothing takes over the screen. Unlike preview, this is the real game.",
 		obj({"creatures": {"type": "array", "items": {"type": "string"}, "maxItems": ShotRunner.MAX_STOPS,
 				"description": "Creature ids (twin_wolf_fenrir, bat, chapel_priest ...), each shown from just left of where it stands, with its neighbours."},
-			"x": {"type": "array", "items": {"type": "number", "minimum": 0, "maximum": ShotRunner.MAX_X}, "maxItems": ShotRunner.MAX_STOPS,
-				"description": "Positions along the room to look from. Creatures and x together make at most four pictures."},
+			"x": {"type": "array", "items": {"type": "integer", "minimum": 0, "maximum": ShotRunner.MAX_X}, "maxItems": ShotRunner.MAX_STOPS,
+				"description": "Whole-number positions along the room to look from; past the end of the room is refused. Creatures and x together make at most four pictures."},
 			"scale": {"type": "number", "minimum": 0.25, "maximum": 1.0, "description": "Picture size, 0.5 (640x360, the game's own pixels) by default; 1 is 1280x720."}}),
 		_menagerie_shot)
 

@@ -48,6 +48,11 @@ static func order(creatures: Array) -> Array:
 static func _hangs(c: CreatureDef) -> bool:
 	return c.skills.any(func(s: Dictionary) -> bool: return s.get("id", "") == "ceiling_walk")
 
+## How far the room's contents reach for `count` creatures: the last one, a gap, and the wall. The room itself is a whole number of
+## screens, so it ends at or after this.
+static func width(count: int) -> float:
+	return spawn_x(count - 1) + SPACING + RoomDef.WALL
+
 ## Where `id` stands in the room, -1 for a creature that is not in it.
 static func x_of(id: String, creatures: Array) -> float:
 	var shown := order(creatures)
@@ -66,8 +71,7 @@ static func request(creatures: Array) -> Dictionary:
 	room.id = ROOM_ID
 	room.area = "cave"  # borrows the cave's light and music
 	room.cell = Vector2i.ZERO
-	var width := spawn_x(shown.size() - 1) + SPACING + RoomDef.WALL
-	room.size = Vector2i(int(ceil(width / RoomDef.SCREEN.x)), 1)
+	room.size = Vector2i(int(ceil(width(shown.size()) / RoomDef.SCREEN.x)), 1)
 	room.start = START
 	var floor_y := room.pixel_size().y - RoomDef.FLOOR
 	for i in shown.size():

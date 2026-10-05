@@ -18,12 +18,20 @@ class FakeRunner extends RefCounted:
 		dir = p_dir
 	func run(argv: Array) -> Dictionary:
 		calls.append(argv)
-		var stops := argv.size() - 3  # env GODOT=.., bash, script, then the stops
+		var stops := argv.size() - 4  # GODOT=.., SHOTS_OUT=.., bash, script, then the stops
+		var out := ""
+		for a in argv:
+			if str(a).begins_with("SHOTS_OUT="):
+				out = str(a).trim_prefix("SHOTS_OUT=")
 		if written:
+			DirAccess.make_dir_recursive_absolute(out)
 			for i in stops:
 				var img := Image.create(1280, 720, false, Image.FORMAT_RGBA8)
 				img.fill(Color(0.2, 0.3, 0.5))
-				img.save_png("%s/stop_%d.png" % [ProjectSettings.globalize_path(dir), i])
+				img.save_png("%s/stop_%d.png" % [out, i])
+		var log := FileAccess.open(out + ".log", FileAccess.WRITE)  # the wrapper leaves a log beside its frames
+		log.store_string("log")
+		log.close()
 		return {"code": code, "output": "%d of %d frames" % [stops, stops] if code == 0 else "the window was fullscreen"}
 
 var fake: FakeRunner
@@ -62,13 +70,13 @@ func test_a_creature_is_shown_from_just_left_of_where_it_stands() -> void:
 	var x := Menagerie.x_of("twin_wolf_fenrir", creatures)
 	assert_gt(x, 0.0)
 	assert_eq(calls.size(), 1)
-	assert_eq(calls[0].slice(3), [str(int(x - ShotRunner.VIEW_LEAD))], "the player stands left of it, so the slime is not drawn over it")
+	assert_eq(calls[0].slice(4), [str(int(x - ShotRunner.VIEW_LEAD))], "the player stands left of it, so the slime is not drawn over it")
 
 func test_raw_positions_are_used_as_given_and_combine_with_creatures() -> void:
 	var r := tools.call_tool("menagerie_shot", {"x": [1000, 2500], "creatures": ["bat"]})
 	assert_false(r["isError"], _text(r))
 	assert_eq(_images(r).size(), 3)
-	assert_eq(calls[0].slice(3), ["170", "1000", "2500"], "the creature's stop comes first, then the positions")
+	assert_eq(calls[0].slice(4), ["170", "1000", "2500"], "the creature's stop comes first, then the positions")
 
 func test_the_images_are_scaled_and_each_has_a_caption() -> void:
 	var r := tools.call_tool("menagerie_shot", {"x": [1000], "scale": 0.5})
@@ -109,8 +117,46 @@ func test_a_run_that_wrote_no_frames_is_an_error_not_an_empty_answer() -> void:
 	assert_eq(_images(r).size(), 0)
 
 func test_the_command_is_an_argv_with_numbers_only() -> void:
-	var argv := ShotRunner.command("/Applications/Godot.app/Contents/MacOS/Godot", "/proj/tools/menagerie_shots.sh", [1000.0, 2500.5])
-	assert_eq(argv, ["GODOT=/Applications/Godot.app/Contents/MacOS/Godot", "bash", "/proj/tools/menagerie_shots.sh", "1000", "2500"])
+	var argv := ShotRunner.command("/Applications/Godot.app/Contents/MacOS/Godot", "/out/run_1", "/proj/tools/menagerie_shots.sh", [1000, 2500])
+	assert_eq(argv, ["GODOT=/Applications/Godot.app/Contents/MacOS/Godot", "SHOTS_OUT=/out/run_1", "bash", "/proj/tools/menagerie_shots.sh", "1000", "2500"])
+
+func test_each_call_gets_its_own_directory_and_leaves_nothing_behind() -> void:
+	tools.call_tool("menagerie_shot", {"x": [1000]})
+	tools.call_tool("menagerie_shot", {"x": [1000]})
+	var outs := calls.map(func(argv: Array) -> String: return str(argv[1]).trim_prefix("SHOTS_OUT="))
+	assert_ne(outs[0], outs[1], "two calls never share frames")
+	var abs_tmp := ProjectSettings.globalize_path(TMP)
+	for out: String in outs:
+		assert_true(out.begins_with(abs_tmp), "frames are under the tool's own root")
+	assert_eq(DirAccess.get_directories_at(abs_tmp).size(), 0, "the frame directories are removed")
+	assert_eq(DirAccess.get_files_at(abs_tmp).size(), 0, "and so are the logs")
+
+func test_a_failed_run_leaves_nothing_behind_either() -> void:
+	fake.code = 1
+	tools.call_tool("menagerie_shot", {"x": [1000]})
+	assert_eq(DirAccess.get_directories_at(ProjectSettings.globalize_path(TMP)).size(), 0)
+	assert_eq(DirAccess.get_files_at(ProjectSettings.globalize_path(TMP)).size(), 0)
+
+func test_frames_left_by_an_earlier_run_are_never_returned() -> void:
+	var stale := Image.create(1280, 720, false, Image.FORMAT_RGBA8)
+	stale.save_png(ProjectSettings.globalize_path(TMP) + "/stop_0.png")  # the old fixed place
+	fake.written = false
+	var r := tools.call_tool("menagerie_shot", {"x": [1000]})
+	assert_true(r["isError"])
+	assert_eq(_images(r).size(), 0)
+
+func test_positions_are_whole_numbers_and_stay_inside_the_room() -> void:
+	assert_true(tools.call_tool("menagerie_shot", {"x": [2500.5]})["isError"], "a fraction would be silently rounded down")
+	var far := tools.call_tool("menagerie_shot", {"x": [11500]})
+	assert_true(far["isError"], "past the end of the room")
+	assert_string_contains(_text(far), "10")
+	assert_eq(calls.size(), 0)
+	assert_false(tools.call_tool("menagerie_shot", {"x": [10000]})["isError"], "inside it")
+
+func test_the_room_width_matches_the_room_it_builds() -> void:
+	var room: RoomDef = Menagerie.request(creatures)["rooms"][Menagerie.ROOM_ID]
+	assert_gte(room.pixel_size().x, Menagerie.width(Menagerie.order(creatures).size()))
+	assert_lt(room.pixel_size().x - Menagerie.width(Menagerie.order(creatures).size()), RoomDef.SCREEN.x, "to the screen")
 
 func test_x_of_follows_the_rooms_order() -> void:
 	var order := Menagerie.order(creatures)

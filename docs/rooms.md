@@ -121,7 +121,7 @@ An agent builds rooms with the same rules as the editor through an MCP server, `
 | Add | `new_room`, `grow_room`, `add_solid`, `add_water`, `add_spawn`, `add_feature`, `add_decor`, `add_exit`, `stamp_prefab` |
 | Change | `set_field`, `move`, `delete`, `undo`, `redo` |
 | Replace | `apply_room_spec`: a room's solids, water, spawns, features and decor in one undo step, all or nothing, every refusal listed |
-| See | `preview`: a schematic picture of a room or the world, a legend and a text map (no game art, no letters in the picture). `menagerie_shot`: a real picture from the game, the Menagerie room with every creature in it (name creature ids or x positions, up to four pictures). The server is headless, so this runs `tools/menagerie_shots.sh`, which starts a second Godot with a tiny off-screen window; it needs a display and takes a few seconds a picture |
+| See | `preview`: a schematic picture of a room or the world, a legend and a text map (no game art, no letters in the picture). `menagerie_shot`: a real picture from the game, the Menagerie room with every creature in it (name creature ids or x positions, up to four pictures). The server is headless, so this runs `tools/menagerie_shots.sh`, which starts a second Godot with a tiny off-screen window; it needs a display (written and tested on macOS) and takes a few seconds a picture; each call has its own frames directory under `.tmp/mcp-shots`, removed afterwards |
 | Persist | `save`, `revert` |
 
 - The server keeps a working set in memory. Nothing reaches disk until `save`, which writes only `data/rooms/*.tres` and refuses a
