@@ -1,6 +1,6 @@
 # Boss arenas: big creatures in big rooms, a boss room that seals, and a world that warns you — Design
 
-Status: draft for Sean's review (2026-10-04). Builds on the room system (`docs/rooms.md`), the species work (`2026-10-04-species-movesets-design.md`, its creature size ladder) and the research in `docs/research/level-design-reference.md` (arena and foreshadowing rules).
+Status: built (2026-10-04, plan `docs/superpowers/plans/2026-10-04-boss-arenas.md`; ledger `docs/ledgers/boss-arenas-ledger.md`). It was a draft for Sean's review, and he approved it. Builds on the room system (`docs/rooms.md`), the species work (`2026-10-04-species-movesets-design.md`, its creature size ladder) and the research in `docs/research/level-design-reference.md` (arena and foreshadowing rules).
 
 ## Intent
 
@@ -104,6 +104,7 @@ The enemies' terrain body is a fixed 16x12 box whatever the sprite is (`Enemy.BO
 
 ## Known gaps and open
 
+- Built beyond the spec: a `hunting` boss creeps along its ceiling until it is over the player and then drops (a dropper otherwise hangs until someone stands under it, so the arena's boss would never fight), and the world's camera has a `shake`. D7 and the larger D6 are in the shipped room list (24 rooms, 47 screens).
 - No boss health bar, music, phases or attack tuning yet: the Taratect fights with its ordinary behaviour (crawl, drop) until a combat pass gives it a pattern. Its stats (HP 24, ATK 9) are the creature's today.
 - The terrain body of big creatures (see above) and the per-species reach model are the next structural plan; the arena is built to survive both.
 - **A second altar by the arena (Sean's call).** With one altar per area, dying to the boss means the walk back from D1. A second Deep altar in D7 would be a checkpoint, at the cost of relaxing `WorldValidator`'s one-altar-per-area rule and deciding what attuning two altars means.
