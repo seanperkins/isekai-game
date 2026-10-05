@@ -39,3 +39,17 @@ func test_an_unknown_element_is_still_refused() -> void:
 	(creatures[0] as CreatureDef).essences = {"ether": 1}
 	var errors := "\n".join(DefValidator.validate(DefLoader.load_dir("res://data/skills"), creatures))
 	assert_string_contains(errors, "unknown essence 'ether'")
+
+# --- Task 2: SkillRulesEngine.absorbed ---
+
+func test_absorbed_counts_every_element_including_the_later_ones() -> void:
+	_absorb("mind", 3)
+	assert_eq(rules.absorbed("mind"), 3)
+	assert_eq(rules.held("mind"), 3)
+	assert_eq(rules.absorbed("fire"), 0)
+
+func test_absorbed_never_goes_down_when_essence_is_spent() -> void:
+	_absorb("blood", 4)
+	assert_true(rules.spend_essence("blood", 3))
+	assert_eq(rules.held("blood"), 1)
+	assert_eq(rules.absorbed("blood"), 4)

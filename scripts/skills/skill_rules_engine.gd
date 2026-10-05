@@ -134,10 +134,13 @@ func is_evolution_ready(id: String) -> bool:
 func ready_evolutions() -> Array:
 	return _ready_evolutions.keys()
 
-## Essence of one element still held: what was absorbed this life minus what evolutions have spent. Recipes read what was
-## absorbed, so spending never undoes an unlock.
+## Essence of one element absorbed this life: the count recipes and lineage gates read. Spending never lowers it.
+func absorbed(element: String) -> int:
+	return _ledger.counter(Events.ABSORBED, {"essence": element})
+
+## Essence of one element still held: what was absorbed this life minus what evolutions and altars have spent.
 func held(element: String) -> int:
-	return _ledger.counter(Events.ABSORBED, {"essence": element}) - _ledger.counter(ESSENCE_SPENT, {"essence": element})
+	return absorbed(element) - _ledger.counter(ESSENCE_SPENT, {"essence": element})
 
 ## The price of evolving into `id`: its parent's evolution_price (empty for a skill that is not an evolution).
 func evolution_price(id: String) -> Dictionary:
