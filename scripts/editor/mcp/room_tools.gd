@@ -14,6 +14,7 @@ func _init(p_session: RoomSession = null) -> void:
 	_session = p_session
 	_register_read()
 	_register_add()
+	_register_change()
 
 func tool_list() -> Array:
 	var out: Array = []
@@ -280,3 +281,75 @@ func _add_exit(args: Dictionary) -> Dictionary:
 		opts["shortcut"] = args["shortcut"]
 	return _added(args["room"], func() -> String:
 		return _session.model.add_exit(args["room"], args["edge"], float(args["from"]), float(args["to"]), opts))
+
+# --- the change tools ---
+# A ref is {room, kind, index}. The index is the element's position in the room's array (get_room lists them), so a delete shifts the
+# ones after it; a ref that no longer points at anything is refused rather than landing on a neighbour.
+
+const KINDS := ["solid", "water", "spawn", "feature", "decor", "exit"]
+
+func _register_change() -> void:
+	var ref := obj({"room": {"type": "string"}, "kind": {"type": "string", "enum": KINDS}, "index": {"type": "integer", "minimum": 0}},
+		["room", "kind", "index"])
+	ref["description"] = "The element: {room, kind, index}, as returned by an add tool or listed by get_room."
+	_add("set_field", "Set one field of an element. Exit: shortcut, gate (both halves). Feature: tablet title, text, hint; switch shortcut; altar perk. "
+		+ "Solid and water: x, y, w, h (exact numbers, not snapped); solid: hard (rock from below, thin solids only). \"\" or 0 removes an optional key.",
+		obj({"ref": ref, "key": {"type": "string"}, "value": {"description": "A string, number or boolean, as the field needs."}}, ["ref", "key", "value"]),
+		_set_field)
+	_add("move", "Move an element by [dx, dy] px (snapped to the 4 px grid). A spot the editor would refuse leaves it where it was.",
+		obj({"ref": ref, "delta": vec2()}, ["ref", "delta"]), _move)
+	_add("delete", "Delete an element (deleting an exit deletes its partner too). Later elements of that kind shift down by one.",
+		obj({"ref": ref}, ["ref"]), _delete)
+	_add("undo", "Undo the last edit step.", obj(), func(_a: Dictionary) -> Dictionary: return _step(_session.model.undo(), "nothing to undo"))
+	_add("redo", "Redo the last undone step.", obj(), func(_a: Dictionary) -> Dictionary: return _step(_session.model.redo(), "nothing to redo"))
+
+## Selects the element `ref` names on the model; "" when it did, else why not.
+func _select(ref: Dictionary) -> String:
+	var r := _room(ref["room"])
+	if r == null:
+		return "no room '%s'" % ref["room"]
+	var list: Array = {"solid": r.solids, "water": r.water, "spawn": r.spawns, "feature": r.features, "decor": r.decor, "exit": r.exits}[ref["kind"]]
+	var i := int(ref["index"])
+	if i >= list.size():
+		return "no such element: %s %s %d" % [ref["room"], ref["kind"], i]
+	_session.model.select({"room": ref["room"], "kind": ref["kind"], "index": i})
+	return ""
+
+func _ref_of(ref: Dictionary) -> Dictionary:
+	return {"room": ref["room"], "kind": ref["kind"], "index": int(ref["index"])}
+
+func _set_field(args: Dictionary) -> Dictionary:
+	var err := _select(args["ref"])
+	if err != "":
+		return fail(err)
+	var model := _session.model
+	err = model.set_field(model.selection, args["key"], args["value"])
+	if err != "":
+		return fail(err)
+	return ok({"ok": true, "ref": _ref_of(args["ref"]), "value": RoomSpec.plain(model.get_field(_ref_of(args["ref"]), args["key"]))})
+
+func _move(args: Dictionary) -> Dictionary:
+	var err := _select(args["ref"])
+	if err != "":
+		return fail(err)
+	var model := _session.model
+	var serial_before := model.serial
+	if not model.begin_move(model.selection):
+		return fail("cannot move this element")
+	model.move_to(_v(args["delta"]))
+	model.end_move()
+	if model.serial == serial_before:
+		return fail("nothing moved: that spot is refused, or the move rounds to nothing on the 4 px grid")
+	return ok({"ok": true, "ref": _ref_of(args["ref"])})
+
+func _delete(args: Dictionary) -> Dictionary:
+	var err := _select(args["ref"])
+	if err != "":
+		return fail(err)
+	err = _session.model.delete_selection()
+	return fail(err) if err != "" else ok({"ok": true, "deleted": _ref_of(args["ref"])})
+
+func _step(done: bool, nothing: String) -> Dictionary:
+	if not done:
+		return fail(nothing)
+	return ok({"ok": true, "undo_depth": _session.model.undo_depth(), "redo_depth": _session.model.redo_depth()})
