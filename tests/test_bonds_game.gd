@@ -32,13 +32,13 @@ func test_the_companion_is_not_a_child_of_the_room_so_a_room_change_cannot_free_
 	assert_eq(pal.get_parent(), game.player.get_parent())
 	assert_false(game.world.room.is_ancestor_of(pal))
 
-func test_a_companion_follows_the_player_across_the_world() -> void:
+func test_a_companion_catches_up_with_a_player_who_moves_off() -> void:
 	var game = await _game()
 	game.player.set_species("wolf")
 	var e: Enemy = _stunned_wolf_beside(game)
 	game.player.do_inspect()
 	var pal: Companion = game.player.companions[0]
-	game.player.global_position += Vector2(1500, 0)
+	game.player.global_position += Vector2(Companion.TELEPORT_DISTANCE + 20.0, 0)  # within the room: a farther move would start a room change
 	await wait_physics_frames(3)
 	assert_lt(pal.global_position.distance_to(game.player.global_position), Companion.TELEPORT_DISTANCE)
 
@@ -51,3 +51,27 @@ func test_the_player_dying_in_the_game_frees_the_companion() -> void:
 	game.player.receive_hit(game.player.health.max_hp * 5, "fire")
 	await wait_physics_frames(2)
 	assert_false(is_instance_valid(pal))
+
+func _count(event: String, tags := {}) -> int:
+	return SkillRules.condition_value({"kind": "counter", "event": event, "tags": tags, "n": 1})
+
+func test_a_room_cleared_with_a_companion_beside_you_is_not_alone() -> void:
+	var game = await _game()
+	game.player.set_species("wolf")
+	var e: Enemy = _stunned_wolf_beside(game)
+	game.player.do_inspect()
+	for n in game.world.room.get_children():
+		if n is Enemy:
+			n.receive_hit(999, "physical", game.player.global_position)
+	await wait_physics_frames(3)
+	assert_eq(_count(Deeds.ROOM_CLEARED, {"room": game.world.current_id}), 1)
+	assert_eq(_count(Deeds.ROOM_CLEARED, {"alone": true}), 0)
+
+func test_a_room_cleared_with_no_companion_is_still_alone() -> void:
+	var game = await _game()
+	game.player.set_species("wolf")
+	for n in game.world.room.get_children():
+		if n is Enemy:
+			n.receive_hit(999, "physical", game.player.global_position)
+	await wait_physics_frames(3)
+	assert_eq(_count(Deeds.ROOM_CLEARED, {"alone": true, "room": game.world.current_id}), 1)

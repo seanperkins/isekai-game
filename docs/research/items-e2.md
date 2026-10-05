@@ -31,7 +31,7 @@ Built 2026-10-05: `CreatureDef.bonds`, `Enemy.can_be_bonded`, `Companion`, `Play
 - A **companion** is a creature that follows the player and fights beside it with its own stats. It has HP and is hurt by the contact hits of enemies near it; it is **lost for good** when it dies, and with the player's death or a new run. It follows through room changes. Cap one at a time, two for the Lord of Beasts form.
 - `CreatureDef.bonds: Array` names the bonds a creature accepts (`pack`, `tame`). Wolf-kind creatures take `pack`; vermin, wolves and boars take `tame`.
 - A bond says `bond_formed {kind, creature}`. A creature whose `bonds` list `large` also says it with `kind: large`. A bond that has lasted `LONG_BOND_SECONDS` of play says it once more with `kind: long`.
-- A goblin's companion grows with the goblin's lessons of its type (+1 ATK per three trickles, up to +3).
+- A goblin's companion grows with the goblin's lessons of its type (+1 ATK per three dealings with its type, the first included, up to +3).
 - Taming is also a lesson (E2a), and a bond is not a kill: the creature is not downed and says no `defeated`.
 
 ## E2c: the goblin's hands

@@ -310,7 +310,7 @@ func _check_room_cleared() -> void:
 		return
 	room.set_meta("cleared", true)
 	var tags := {"room": world.current_id}
-	if get_tree().get_nodes_in_group("verb_allies").is_empty():
+	if get_tree().get_nodes_in_group("verb_allies").is_empty() and get_tree().get_nodes_in_group("companions").is_empty():
 		tags["alone"] = true
 	player.emit_deed(Deeds.ROOM_CLEARED, tags)
 

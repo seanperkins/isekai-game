@@ -55,6 +55,8 @@ func _physics_process(delta: float) -> void:
 	if not is_instance_valid(caster):
 		queue_free()
 		return
+	if not caster.is_physics_processing():
+		return  # a room change freezes the player; nothing that follows it plays meanwhile
 	_age += delta
 	if not _long_said and _age >= LONG_BOND_SECONDS:
 		_long_said = true
@@ -84,13 +86,13 @@ func _follow(delta: float) -> void:
 	if d > FOLLOW_GAP:
 		global_position += to / d * minf(FOLLOW_SPEED * delta, d - FOLLOW_GAP)
 
-## The foes of the owner's other team within reach of the chase, awake and not stunned (a stunned creature is the owner's prey to eat or bond).
+## The enemies within reach of the chase, awake and not stunned (a stunned creature is the owner's prey to eat or bond).
 func _nearest_foe() -> Node2D:
 	var best: Node2D = null
 	var best_d := CHASE_RANGE
 	for n in get_tree().get_nodes_in_group("actors"):
-		if n == caster or not n.has_method("receive_hit") or n.get("team") == caster.get("team"):
-			continue
+		if n == caster or not n.has_method("receive_hit") or n.get("team") != "enemy":
+			continue  # enemies only: a switch is in `actors` too, with a team of its own
 		if n.has_method("can_be_hit") and not n.can_be_hit():
 			continue
 		var status = n.get("status")
@@ -107,7 +109,7 @@ func _take_contact_hit() -> void:
 	if _hurt_in > 0.0:
 		return
 	for n in get_tree().get_nodes_in_group("actors"):
-		if not (n is Enemy) or n.dormant or n.status.state != EnemyStatus.ACTIVE:
+		if not (n is Enemy) or n.dormant or n.is_rooted() or n.status.state != EnemyStatus.ACTIVE:
 			continue
 		var d: Vector2 = n.global_position - global_position
 		if absf(d.x) <= HURT_REACH.x and absf(d.y) <= HURT_REACH.y:

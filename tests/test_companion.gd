@@ -7,6 +7,8 @@ class Owner extends Node2D:
 	var deeds: Array = []
 	func emit_deed(event_name: String, tags := {}) -> void:
 		deeds.append([event_name, tags])
+	func _physics_process(_delta: float) -> void:
+		pass  # a real owner is a processing node; set_physics_process(false) is how a room change freezes it
 
 class Foe extends Node2D:
 	var team := "enemy"
@@ -134,6 +136,14 @@ func test_it_ignores_its_own_team_and_foes_that_cannot_be_hit() -> void:
 	assert_eq(friend.hits.size(), 0)
 	assert_eq(ghost.hits.size(), 0)
 
+func test_it_does_not_go_for_a_terrain_switch_or_anything_that_is_not_an_enemy() -> void:
+	var o := _owner()
+	var c := _companion(o, _def(), Vector2(100, 0))
+	var switch := _foe(Vector2(100, 0))
+	switch.team = "terrain"
+	c._physics_process(0.016)
+	assert_eq(switch.hits.size(), 0)
+
 func test_it_spares_a_stunned_creature_the_player_means_to_eat_or_bond() -> void:
 	var o := _owner()
 	var c := _companion(o, _def(), Vector2(100, 0))
@@ -171,6 +181,29 @@ func test_an_active_enemy_in_contact_hurts_it_once_a_second() -> void:
 	assert_eq(c.hp, 7, "once a second")
 	c._physics_process(Companion.HURT_SECONDS)
 	assert_eq(c.hp, 4)
+
+func test_a_rooted_enemy_does_not_hurt_it() -> void:
+	var o := _owner()
+	var c := _companion(o, _def(10, 1), Vector2(50, 0))
+	var e := _enemy(3, Vector2(50, 0))
+	e.root_for(5.0)
+	assert_true(e.is_rooted())
+	c._physics_process(0.016)
+	assert_eq(c.hp, 10, "a rooted enemy's contact attack is off")
+
+func test_it_does_nothing_while_its_owner_is_frozen() -> void:
+	var o := _owner(Vector2(300, 0))
+	var c := _companion(o, _def(10, 2), Vector2(50, 0))
+	var foe := _foe(Vector2(50, 0))
+	_enemy(3, Vector2(50, 0))
+	o.set_physics_process(false)  # a room change freezes the player: nothing around it plays
+	c._physics_process(Companion.HURT_SECONDS * 2.0)
+	assert_eq(c.hp, 10)
+	assert_eq(foe.hits.size(), 0)
+	assert_eq(c.global_position, Vector2(50, 0))
+	o.set_physics_process(true)
+	c._physics_process(0.016)
+	assert_lt(c.hp, 10, "and it carries on when the owner does")
 
 func test_a_stunned_enemy_does_not_hurt_it() -> void:
 	var o := _owner()
