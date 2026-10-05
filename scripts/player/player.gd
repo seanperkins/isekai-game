@@ -119,6 +119,8 @@ var _part_defs := PartLoader.load_all()
 var inventory := Inventory.new(_part_defs)
 ## What the goblin has learned this life: its essence comes from lessons, not from devouring (see learn_from).
 var lessons := Lessons.new()
+## The bonded creatures that follow and fight beside the body (Companion), at most companion_cap() at a time.
+var companions: Array = []
 var _ceiling_t := 0.0
 ## True while become_form runs: the forced line is neither announced nor recorded as reached.
 var _debug_silent := false
@@ -757,6 +759,8 @@ func do_inspect() -> void:
 	if thing != null:
 		thing.interact(self)
 		return
+	if try_bond():
+		return
 	var target = _nearest_in_group("inspectable", INSPECT_RANGE, func(_n): return true)
 	if target == null:
 		sensors.inspected("self", true)
@@ -897,6 +901,48 @@ func on_enemy_downed(def: CreatureDef, spawn_key := "") -> void:
 ## Says a deed (Deeds) to the run: the abilities and the world report what the player did through here.
 func emit_deed(event_name: String, tags := {}) -> void:
 	_emit.call(event_name, tags)
+
+## How many companions the body keeps: the Lord of Beasts two, everyone else one.
+func companion_cap() -> int:
+	return 2 if form.form_id == "goblin_lord_of_beasts" else 1
+
+## The species action on the inspect button. A wolf bonds with a stunned creature that joins a pack; a goblin tames a stunned creature
+## that can be tamed by offering it one carried part (and learns it). The creature leaves the room and follows as a Companion. True when
+## a bond was made; a refused bond (no one in reach, the cap, nothing to offer, the wrong species) costs nothing.
+func try_bond() -> bool:
+	if health.is_dead() or companions.size() >= companion_cap() or get_parent() == null:
+		return false
+	var kind := "pack" if species == "wolf" else ("tame" if species == "goblin" else "")
+	if kind == "":
+		return false
+	var target = _nearest_in_group("predatable", PREDATE_RANGE, func(n) -> bool: return n.has_method("can_be_bonded") and n.can_be_bonded() and n.def.bonds.has(kind))
+	if target == null:
+		return false
+	if kind == "tame":
+		if inventory.carried().is_empty():
+			return false
+		inventory.take_carried()
+		learn_from(target)
+	var def: CreatureDef = target.consume()
+	_emit.call(Deeds.BOND_FORMED, {"kind": kind, "creature": def.id})
+	if def.bonds.has("large"):
+		_emit.call(Deeds.BOND_FORMED, {"kind": "large", "creature": def.id})
+	var pal := Companion.new()
+	get_parent().add_child(pal)
+	pal.launch(self, def, target.global_position)
+	pal.died.connect(_on_companion_died)
+	companions.append(pal)
+	return true
+
+func _on_companion_died(pal: Companion) -> void:
+	companions.erase(pal)
+
+## Every companion is lost with the body that had them: its death, or a new life.
+func _release_companions() -> void:
+	for pal in companions:
+		if is_instance_valid(pal):
+			pal.queue_free()
+	companions = []
 
 ## The goblin has dealt with a creature (downed or eaten it): the first of its type in a life is a lesson, `lesson_learned`, and pays all
 ## of that creature's essence; a repeat pays a trickle of one unit. A creature pays once however it ends. Other species learn nothing.
@@ -1488,10 +1534,12 @@ func _on_run_started() -> void:
 	end_channel()
 	inventory = Inventory.new(_part_defs)  # a life starts with nothing; stats.reset_run() clears the graft passives
 	lessons.reset()
+	_release_companions()
 	stats.reset_run()
 	_sync_max_hp()
 
 func _on_health_died() -> void:
+	_release_companions()
 	audio_events.reset()
 	EventBus.world_event.emit("player_died", {})
 	cancel_predate()

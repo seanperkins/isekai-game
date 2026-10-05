@@ -28,6 +28,12 @@ func shed_one() -> String:
 		return ""
 	return _worn.pop_back()
 
+## One carried part (the first), taken out: what a goblin offers a creature it tames. "" when nothing is carried; a worn graft is never taken.
+func take_carried() -> String:
+	if _carried.is_empty():
+		return ""
+	return _carried.pop_front()
+
 func carried() -> Array:
 	return _carried.duplicate()
 

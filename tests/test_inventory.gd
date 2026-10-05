@@ -89,6 +89,18 @@ func test_a_shed_frees_the_slot() -> void:
 	inv.shed_one()
 	assert_eq(inv.add("ribs", true)["worn"], true)
 
+func test_take_carried_takes_the_first_carried_part_and_never_a_worn_one() -> void:
+	var inv := _inv()
+	inv.add("ribs", true)
+	inv.add("moonstone", true)
+	inv.add("skull", false)
+	assert_eq(inv.take_carried(), "moonstone")
+	assert_eq(inv.carried(), ["skull"])
+	assert_eq(inv.worn(), ["ribs"])
+	assert_eq(inv.take_carried(), "skull")
+	assert_eq(inv.take_carried(), "", "nothing carried: nothing taken, the worn graft stays")
+	assert_eq(inv.worn(), ["ribs"])
+
 func test_take_all_returns_everything_and_empties_it() -> void:
 	var inv := _inv()
 	inv.add("ribs", true)
