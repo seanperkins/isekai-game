@@ -72,6 +72,19 @@ it in the file (for example `mana_spent` is one event per MP point and would mac
 `radius` is the distance in pixels from the player at which a one-shot can appear. The catalog
 validates that every biome file and one-shot cue exists.
 
+`themes` (added 2026-10-04) maps a theme id to a track that takes the music over from the room's
+bed for a while (the opening's battle):
+
+```json
+"themes": { "opening_battle": { "music": "music/opening_battle.ogg", "fade_in": 0.6, "fade_out": 1.8 } }
+```
+
+An event starts or ends a theme the way it plays a cue: `{"theme": "opening_battle"}` starts it,
+`{"theme_stop": "opening_battle"}` fades it out. While a theme plays the biome beds are held
+silent under it (equal-power crossfade both ways), a room change meanwhile waits until it ends,
+and `Audio.reset()` ends it at once. The catalog validates that each theme's file exists, its
+fades are 0 to 10 s, and every event names a theme that exists.
+
 ### Buses
 
 `default_bus_layout.tres` is committed:
@@ -138,6 +151,13 @@ entry in `events`: a cue, or an explicit `null` with a `_why`.
   random offset up to `radius` px from the player.
 - `deep` is reserved: it gets a dark, sparse bed, but no room uses it yet.
 - Biomes: `cave`, `grotto`, `flooded`, `deep`.
+- A theme (see `themes`) is a separate track that fades the beds out and back; the opening's battle
+  music is the first. Its bed spec is `art_source/audio/beds/opening_battle.json`, whose provider is
+  `score`: a chiptune score (`art_source/audio/scores/opening_battle.json`) rendered in-repo by
+  `tools/audio/score.py`. A score is a bar-exact loop, so it skips the trim and the crossfade a recorded
+  bed gets. (The ElevenLabs music API needs a paid plan; the bed spec keeps the prompt for when there is one.)
+- `tools/audio/build_cues.py` keeps any cue no recipe makes (a stand-in that reuses another cue's files)
+  as long as its files exist, and keeps `events`, `biomes` and `themes` as authored.
 
 ## Asset pipeline
 

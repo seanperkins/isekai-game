@@ -32,14 +32,14 @@ His answers to the three questions asked first: automatic turns with a bouncing 
 - Ruling: with two trucks the round's damage is shared (5 + 5) so the HP budget stays a third a round; the last hit of the last round is the knock-out. Cost if wrong: `per_hit` in `_start_truck_turn`.
 - Ruling: the old lady's round has no free-dodge replay and no choice but her; her entry in the def is optional (an empty `grandma` means a plain five-command last round). Cost if wrong: one def field.
 - Ruling: the angry truck's life bar and the floating zero show on every Fight, once per swing. Cost if wrong: `_umbrella_hit`.
-- Ruling: no horn or rev sound: the project has no such file and cues need an authored sound. The impact keeps `opening_impact`. Cost if wrong: add a cue and an event.
+- Ruling: no horn or rev sound in this change: the project had no such file. (Added afterwards: see `docs/ledgers/opening-sound-ledger.md`.)
 
 ## Follow-ups
 
-- Battle music, a horn/rev sound for the road rage.
+- ~~Battle music, a horn/rev sound for the road rage~~: done, see `docs/ledgers/opening-sound-ledger.md`.
 - Sean's rewrite of the placeholder copy; the second-truck prompt reads best before round 2's "Another truck is coming."
 - Her menu is still dark navy after the white fade.
-- Two trucks overlap (the rear one is mostly hidden behind the front one's box); tune slots if it reads badly.
+- ~~Two trucks overlap~~: Sean says the two trucks are fine as they are.
 
 ## Final review (debate:run, changeset against main, seats executor, auditor, cartographer, pentester)
 
