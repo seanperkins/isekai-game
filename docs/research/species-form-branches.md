@@ -480,11 +480,11 @@ Every base needs a world creature, and the essences the forms read (light, mind,
 
 ### 10.5 Parts
 
-Parts come from corpses (design doc). These are the ones the forms above ask for.
+Parts come from corpses (design doc). These are the ones the forms above ask for. **Built (E1):** the ten parts are data (`tools/parts.json`, `data/parts/`). A creature that is downed leaves each of its drops with its chance, where it fell, as a pickup the player takes by standing on it (`CreatureDef.drops`, `Drops.roll`, `PartPickup`); any large predatable corpse (`max_hp >= DeedTags.HEAVY_HP`) may also leave ribs and flesh at 0.2. Any species carries a part (`part_harvested`, `item_carried`); only the undead wear the grafts (`graft_attached`), at most four at once, claws and wrappings two each, and a graft's passive is a stat modifier while it is worn. A single hit of a quarter of max HP or more knocks the latest graft off (`graft_shed`). A death leaves everything carried or worn as one remains pile where the body fell, in that room, for the next life to recover; a later death with parts replaces it, and it is gone after three more deaths unrecovered. A downed creature whose eat window runs out uneaten is a `corpse_left` deed. The chances are 0.3 unless the table says otherwise: skeleton ribs 0.25 and skull 0.4, village_goblin bow arm 0.25, moon_hare Moonstone 0.15, Lich twin phylactery shard 0.1.
 
 | Part | Dropped by | Used for |
 |---|---|---|
-| ribs and flesh | zombie and ghoul twins, any large corpse | steers a skeleton toward Zombie (U2A) |
+| ribs and flesh | zombie and ghoul twins, skeleton (ribs), any large corpse | steers a skeleton toward Zombie (U2A) |
 | claws | gloom_wolf, bog_lizardman, ghoul twins | steers a Zombie toward Ghoul (U3A1) |
 | weapon arm | shield_guard, Bone Warrior and Draugr twins | Bone Warrior (U2B) and Draugr (U3A2) |
 | bow arm | skeleton archer twins, village_goblin hunters | steers a skeleton toward Skeletal Archer (U2C) |

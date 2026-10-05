@@ -495,7 +495,7 @@
     "kind": "counter",
     "event": "part_harvested",
     "tags": {
-     "part": "phylactery"
+     "part": "phylactery_shard"
     },
     "n": 1,
     "text": "a phylactery shard"

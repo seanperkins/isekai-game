@@ -2,7 +2,8 @@ extends GutTest
 ## The shipped gates: every wolf, undead, spider and goblin form has one, it is valid, and the deeds it waits for are listed.
 
 ## The deeds something emits today (the rest of Deeds.EVENTS is in Deeds.RESERVED).
-const EMITTED := ["defeated", "guard_broken", "room_cleared", "room_entered", "skill_hit", "skill_missed", "switch_hit"]
+const EMITTED := ["defeated", "guard_broken", "room_cleared", "room_entered", "skill_hit", "skill_missed", "switch_hit",
+	"part_harvested", "graft_attached", "graft_shed", "item_carried", "corpse_left"]
 const TOTAL := {2: 26, 3: 34, 4: 44}
 
 var forms: Dictionary
@@ -91,5 +92,46 @@ func test_the_gates_that_wait_on_a_later_piece_are_known() -> void:
 					needs.append(Deeds.RESERVED["%s.%s" % [event, tag]])
 		for piece in needs:
 			waiting[piece] = int(waiting.get(piece, 0)) + 1
-	assert_true(waiting.has("E1") and waiting.has("E2") and waiting.has("F2"), str(waiting))
+	assert_false(waiting.has("E1"), "E1 is built: " + str(waiting))
+	assert_true(waiting.has("E2") and waiting.has("F2"), str(waiting))
 	gut.p("gate atoms waiting on a later piece: %s" % waiting)
+
+func test_a_gate_that_asks_for_a_part_names_a_part_that_exists() -> void:
+	var parts := PartLoader.load_all()
+	for f: FormDef in gated:
+		for a in _atoms(f):
+			if ["part_harvested", "graft_attached", "graft_shed"].has(a.get("event", "")) and a.get("tags", {}).has("part"):
+				assert_true(parts.has(a["tags"]["part"]), "%s asks for part '%s'" % [f.id, a["tags"]["part"]])
+
+func test_an_undead_run_meets_the_zombies_gate_through_a_real_player() -> void:
+	var rules: SkillRulesEngine = autofree(SkillRulesEngine.new())
+	rules.setup(DefLoader.load_dir("res://data/skills"))
+	var p := Player.new()
+	p.species = "undead"
+	p.use_sheet = false
+	p.setup(rules, CompendiumModel.new([], []), [], func(n: String, t: Dictionary) -> void: rules.handle_event(n, t))
+	add_child_autofree(p)
+	rules.start_run()
+	p.progression.add_xp(Progression.stage_total(p.progression.stage))
+	for essence in ["earth", "dark"]:
+		for i in 13:
+			rules.handle_event("absorbed", {"essence": essence, "source": "test"})
+	var offered := func() -> Array: return p.form_offers().map(func(f: FormDef) -> String: return f.id)
+	assert_false(offered.call().has("undead_zombie"), "the essence alone is not the gate")
+	p.collect_part("ribs")
+	assert_false(offered.call().has("undead_zombie"), "a rib without flesh is not the gate")
+	p.collect_part("flesh")
+	assert_true(offered.call().has("undead_zombie"), "ribs, flesh and the essence open the Zombie")
+
+func test_a_wolf_that_carries_the_same_parts_does_not_open_an_undead_gate() -> void:
+	var rules: SkillRulesEngine = autofree(SkillRulesEngine.new())
+	rules.setup(DefLoader.load_dir("res://data/skills"))
+	var p := Player.new()
+	p.species = "wolf"
+	p.use_sheet = false
+	p.setup(rules, CompendiumModel.new([], []), [], func(n: String, t: Dictionary) -> void: rules.handle_event(n, t))
+	add_child_autofree(p)
+	rules.start_run()
+	p.collect_part("ribs")
+	p.collect_part("flesh")
+	assert_eq(SkillRules.condition_value({"kind": "counter", "event": "graft_attached", "tags": {}, "n": 1}), 0, "carried is not attached")

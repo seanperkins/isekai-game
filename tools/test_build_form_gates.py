@@ -9,6 +9,7 @@ import unittest
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import build_form_gates as bfg  # noqa: E402
+import build_parts as bp  # noqa: E402
 import build_species_forms as bsf  # noqa: E402
 
 
@@ -72,6 +73,13 @@ class RowsTest(unittest.TestCase):
             self.assertTrue(f["gate"], f["dataId"])
             for a in f["gate"]:
                 self.assertTrue(a["text"], f["dataId"])
+
+    def test_a_gate_that_asks_for_a_part_names_a_part_that_exists(self):
+        parts = {r["id"] for r in bp.load_rows()}
+        for r in self.rows:
+            for atom in r["atoms"]:
+                if atom.get("event") in ("part_harvested", "graft_attached", "graft_shed") and "part" in atom.get("tags", {}):
+                    self.assertIn(atom["tags"]["part"], parts, r["form"])
 
     def test_a_no_damage_streak_names_what_resets_it(self):
         form = next(f for f in self.forms if f["dataId"] == "wolf_beast_of_gevaudan")

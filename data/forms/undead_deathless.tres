@@ -29,4 +29,4 @@ source = "Koschei the Deathless: his soul sits in a needle in an egg in a duck i
 verb_text = "Hidden soul: place an anchor; if you die in range you rise there once per life"
 gives_up = "the anchor can be destroyed"
 opened_by = "Lich, plus a phylactery shard, plus mind (later)"
-gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 22, "text": "dark essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "mind"}, "n": 22, "text": "mind essence"}, {"kind": "counter", "event": "part_harvested", "tags": {"part": "phylactery"}, "n": 1, "text": "a phylactery shard"}]
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 22, "text": "dark essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "mind"}, "n": 22, "text": "mind essence"}, {"kind": "counter", "event": "part_harvested", "tags": {"part": "phylactery_shard"}, "n": 1, "text": "a phylactery shard"}]
