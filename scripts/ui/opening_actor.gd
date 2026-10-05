@@ -44,6 +44,12 @@ func clip() -> String:
 func frame() -> String:
 	return _animator.frame() if _animator != null else ""
 
+## How tall the frame on screen is, scale included (0 when nothing is loaded).
+func height() -> float:
+	if _sheet == null or _animator == null or not _sheet.has_frame(_animator.frame()):
+		return 0.0
+	return _sheet.frame_size(_animator.frame()).y * scale.y
+
 func clip_names() -> Array:
 	return _animator.clips.keys() if _animator != null else []
 

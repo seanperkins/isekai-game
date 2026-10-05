@@ -96,23 +96,29 @@ func _to_command() -> void:
 			return
 		_push(KEY_ENTER)
 
-## One round: take the command `row` steps down the list, finish its animation, read the result, and let the truck hit.
-func _round(def: OpeningDef, truck: int, row: int, id: String) -> void:
+## One round: take the command `row` steps down the list, finish its animation, read the result (`line` is what it must say), and
+## let the trucks go: Enter sends them at once, and the next Enter plays their turn out.
+func _round(line: String, row: int) -> void:
 	_to_command()
 	assert_eq(game.opening.beat(), "command")
 	_push(KEY_DOWN, row)
 	_push(KEY_ENTER)
-	assert_eq(game.opening.text_lines(), [def.result_for(truck, id)])
+	assert_eq(game.opening.text_lines(), [line])
 	_push(KEY_ENTER)  # finish the action's animation
 	assert_eq(game.opening.beat(), "result")
-	_push(KEY_ENTER)  # the truck charges
-	_push(KEY_ENTER)  # and the hit plays out
+	_push(KEY_ENTER)  # the trucks charge
+	_push(KEY_ENTER)  # and their turn plays out
 
-## Three trucks: Fight, then Dodge, then Pray; after the third hit he is knocked out and the white is full, so her menu opens.
+## The whole fight: Fight angers the truck; the first Dodge works and brings a second truck; a Pray fails against both; then the
+## old lady is in the road and saving her is the only command, after which the last hit knocks him out and the white is full, so
+## her menu opens.
 func _play_the_trucks(def: OpeningDef) -> void:
-	_round(def, 0, 0, "fight")
-	_round(def, 1, 1, "dodge")
-	_round(def, 2, 3, "pray")
+	_round(def.result_for(0, "fight"), 0)
+	_round(def.dodge_success, 1)
+	assert_eq(game.opening.hp(), OpeningScene.MAX_HP - 10, "the dodge cost nothing, the first round a third")
+	_round(def.result_for(1, "pray"), 3)
+	assert_eq(game.opening.hp(), OpeningScene.MAX_HP - 20)
+	_round(def.grandma["result"], 0)
 	assert_eq(game.opening.beat(), "ko")
 	_push(KEY_ENTER)  # skip the rest of the fade to white
 
