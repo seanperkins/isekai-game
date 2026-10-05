@@ -3,6 +3,9 @@
 # Raw Codex images behind the terrain art (~100 MB, regenerable with tools/art/terrain_gen.py). The built assets in assets/ are committed.
 art_source/terrain/
 
+# Raw Codex image behind the opening's backdrop (regenerable with tools/art/opening_gen.py). The built assets/opening/backdrop.png is committed.
+art_source/opening/
+
 # Raw provider output behind the music and ambience beds (regenerable with tools/audio/gen_bed.py). The built assets in assets/audio are committed.
 art_source/audio/raw/
 

@@ -1,0 +1,87 @@
+{
+  "commuter": {
+    "idle": {
+      "frames": [
+        "idle_1",
+        "idle_2"
+      ],
+      "fps": 2.0,
+      "loop": true
+    },
+    "fight": {
+      "frames": [
+        "fight_1",
+        "fight_2",
+        "fight_3"
+      ],
+      "fps": 5.0,
+      "loop": false
+    },
+    "dodge": {
+      "frames": [
+        "dodge_1",
+        "dodge_2"
+      ],
+      "fps": 4.0,
+      "loop": false
+    },
+    "jump": {
+      "frames": [
+        "jump_1",
+        "jump_2"
+      ],
+      "fps": 6.0,
+      "loop": false
+    },
+    "pray": {
+      "frames": [
+        "pray_1",
+        "pray_2"
+      ],
+      "fps": 1.5,
+      "loop": true
+    },
+    "run": {
+      "frames": [
+        "run_1",
+        "run_2",
+        "run_3",
+        "run_2"
+      ],
+      "fps": 10.0,
+      "loop": true
+    },
+    "hurt": {
+      "frames": [
+        "hurt"
+      ],
+      "fps": 1.0,
+      "loop": false
+    },
+    "ko": {
+      "frames": [
+        "ko"
+      ],
+      "fps": 1.0,
+      "loop": false
+    }
+  },
+  "truck": {
+    "idle": {
+      "frames": [
+        "idle_1",
+        "idle_2"
+      ],
+      "fps": 3.0,
+      "loop": true
+    },
+    "charge": {
+      "frames": [
+        "charge_1",
+        "charge_2"
+      ],
+      "fps": 8.0,
+      "loop": true
+    }
+  }
+}
