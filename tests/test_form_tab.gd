@@ -323,3 +323,27 @@ func test_a_card_never_shows_an_empty_line() -> void:
 		var node := {"id": id, "kind": "form", "state": "named", "name": id}
 		for l in SkillScreenModel.tree_card(rules, node, {}, forms, ActiveSlots.new())["lines"]:
 			assert_ne(str(l).strip_edges(), "", id)
+
+func test_the_form_tab_card_shows_the_verb_and_what_it_gives_up() -> void:
+	_eat_everything()
+	_to_cap()
+	var odd: FormDef = player.forms["tide"].duplicate()
+	odd.verb = "verb_gleipnir"  # a form with a verb, whatever the slime's own forms lack
+	odd.gives_up = "long cooldown"
+	player.forms["tide"] = odd
+	screen.open()
+	screen.switch_tab(5)
+	_select_form("tide")
+	var text := "\n".join(screen.detail_texts())
+	assert_string_contains(text, "Verb: Bind, 8 MP, 8 s")
+	assert_string_contains(text, "Gives up: long cooldown")
+
+func test_the_form_tab_card_of_a_form_with_no_verb_has_neither_line() -> void:
+	_eat_everything()
+	_to_cap()
+	screen.open()
+	screen.switch_tab(5)
+	_select_form("tide")
+	var text := "\n".join(screen.detail_texts())
+	assert_false(text.contains("Verb:"))
+	assert_false(text.contains("Gives up:"))

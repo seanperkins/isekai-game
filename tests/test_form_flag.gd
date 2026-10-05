@@ -61,3 +61,37 @@ func test_an_unknown_form_flag_starts_a_plain_slime() -> void:
 	add_child_autofree(game)
 	await wait_physics_frames(5)
 	assert_eq(game.player.form.form_id, "slime")
+
+func test_the_debug_start_does_not_record_the_forms_as_reached() -> void:
+	var p := _player()
+	watch_signals(p)
+	assert_true(p.become_form("wolf_fenrir"))
+	assert_signal_not_emitted(p, "form_advanced")
+	p.free()
+
+func test_the_game_does_not_save_the_forced_line_as_reached() -> void:
+	# The suite's profile outlives a run, so start from a profile with nothing reached.
+	Compendium.progress.forms_reached.clear()
+	Game.launch_override = {"headless": true, "args": ["--form=wolf_fenrir"]}
+	var game = load("res://scenes/main.tscn").instantiate()
+	add_child_autofree(game)
+	await wait_physics_frames(5)
+	assert_false(Compendium.progress.is_form_reached("wolf_fenrir"))
+	assert_false(Compendium.progress.is_form_reached("wolf_dire_wolf"))
+
+func test_a_form_flag_wins_over_the_species_flag() -> void:
+	Game.launch_override = {"headless": true, "args": ["--species=wolf", "--form=weaver"]}
+	var game = load("res://scenes/main.tscn").instantiate()
+	add_child_autofree(game)
+	await wait_physics_frames(5)
+	assert_eq(game.player.species, "slime")
+	assert_eq(game.player.form.form_id, "weaver")
+
+func test_a_form_flag_wins_over_the_goddess_pick() -> void:
+	Compendium.progress.pending_start = {"altar": "", "species": "spider", "kit": {}}
+	Game.launch_override = {"headless": true, "args": ["--form=goblin_hob"]}
+	var game = load("res://scenes/main.tscn").instantiate()
+	add_child_autofree(game)
+	await wait_physics_frames(5)
+	assert_eq(game.player.species, "goblin")
+	assert_eq(game.player.form.form_id, "goblin_hob")

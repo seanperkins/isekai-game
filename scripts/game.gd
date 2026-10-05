@@ -103,6 +103,9 @@ func _ready() -> void:
 	var start := {"default": false, "room": request["room"], "pos": request["pos"], "kit": request.get("kit", {})} if _editor_play \
 		else Game.resolve_start(altars, progress.take_pending(), progress.is_attuned)
 	var species := Game.species_arg(args)
+	var flagged: FormDef = player.forms.get(Game.form_arg(args))
+	if flagged != null:
+		species = flagged.species  # a form is of one species, whatever the species flag or the goddess's pick said
 	player.set_species(species if species != "" else str(start.get("species", WorldProgress.DEFAULT_SPECIES)))
 	if start["default"]:
 		world.enter_start()

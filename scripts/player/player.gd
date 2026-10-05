@@ -99,6 +99,8 @@ var species_body: SpeciesBody
 var species_sheet_loader := Callable()
 ## The horizontal speed an ability's push or a hit's knockback holds for `_dash` seconds on a species body.
 var _dash_vx := 0.0
+## True while become_form runs: the forced line is neither announced nor recorded as reached.
+var _debug_silent := false
 var _pounce_applied := false
 var _last_verb := ""
 ## Where a species body ended its last tick: a different position at the next one means something moved it (Recall, a placement).
@@ -932,8 +934,9 @@ func advance_form(id: String, force := false) -> bool:
 	skillset.refresh()
 	_sync_max_hp()
 	_begin_evolve_moment(def)
-	EventBus.world_event.emit("evolved_body", {"id": id, "stage": form.stage})
-	form_advanced.emit(id)
+	if not _debug_silent:
+		EventBus.world_event.emit("evolved_body", {"id": id, "stage": form.stage})
+		form_advanced.emit(id)
 	return true
 
 func evolving() -> bool:
@@ -991,11 +994,15 @@ func become_form(id: String) -> bool:
 		chain.push_front(current)
 		current = str((forms[current] as FormDef).parents[0])
 	set_species((forms[id] as FormDef).species)
+	_debug_silent = true
+	var reached := true
 	for f in chain:
 		if not advance_form(f, true):
-			return false
+			reached = false
+			break
+	_debug_silent = false
 	_evolve_time = 0.0
-	return true
+	return reached
 
 func debug_grant_xp(amount: int) -> void:
 	progression.add_xp(amount)

@@ -808,6 +808,12 @@ func _build_form() -> void:
 		dy += 22.0
 	if card["grants"] != "":
 		_label(_detail, card["grants"], Vector2(DETAIL_X, dy), Vector2(190, 24), FONT_SMALL, Color.WHITE, true)
+		dy += 24.0
+	if card["verb"] != "":
+		_label(_detail, "Verb: " + card["verb"], Vector2(DETAIL_X, dy), Vector2(190, 12), FONT_SMALL, COL_TITLE)
+		dy += 12.0
+	if card["gives_up"] != "":
+		_label(_detail, "Gives up: " + card["gives_up"], Vector2(DETAIL_X, dy), Vector2(190, 24), FONT_SMALL, COL_DIM, true)
 
 func _skill_name(id: String) -> String:
 	var sd = _defs.get(id)
