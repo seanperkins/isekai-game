@@ -55,6 +55,34 @@
         "sfx/amb_spore_3.ogg"
       ]
     },
+    "boss_doors": {
+      "bus": "SFX_Enemy",
+      "volume_db": -1,
+      "files": [
+        "sfx/slime_land_hard_2.ogg"
+      ]
+    },
+    "boss_roar": {
+      "bus": "SFX_Enemy",
+      "volume_db": -3,
+      "files": [
+        "sfx/skill_tail_swipe_1.ogg"
+      ]
+    },
+    "boss_rumble": {
+      "bus": "SFX_Enemy",
+      "volume_db": -4,
+      "files": [
+        "sfx/slime_land_hard_1.ogg"
+      ]
+    },
+    "boss_victory": {
+      "bus": "SFX_Enemy",
+      "volume_db": -2,
+      "files": [
+        "sfx/skill_unlock_1.ogg"
+      ]
+    },
     "eat_absorb": {
       "bus": "SFX_Player",
       "volume_db": -10,
@@ -82,48 +110,6 @@
       "volume_db": -6,
       "files": [
         "sfx/eat_predated_1.ogg"
-      ]
-    },
-    "ground_rumble_far": {
-      "bus": "SFX_Enemy",
-      "volume_db": -14,
-      "files": [
-        "sfx/slime_land_hard_1.ogg"
-      ]
-    },
-    "ground_rumble_near": {
-      "bus": "SFX_Enemy",
-      "volume_db": -7,
-      "files": [
-        "sfx/slime_land_hard_2.ogg"
-      ]
-    },
-    "boss_rumble": {
-      "bus": "SFX_Enemy",
-      "volume_db": -4,
-      "files": [
-        "sfx/slime_land_hard_1.ogg"
-      ]
-    },
-    "boss_doors": {
-      "bus": "SFX_Enemy",
-      "volume_db": -1,
-      "files": [
-        "sfx/slime_land_hard_2.ogg"
-      ]
-    },
-    "boss_roar": {
-      "bus": "SFX_Enemy",
-      "volume_db": -3,
-      "files": [
-        "sfx/skill_tail_swipe_1.ogg"
-      ]
-    },
-    "boss_victory": {
-      "bus": "SFX_Enemy",
-      "volume_db": -2,
-      "files": [
-        "sfx/skill_unlock_1.ogg"
       ]
     },
     "enemy_death_beast": {
@@ -169,21 +155,180 @@
         "sfx/enemy_impact_3.ogg"
       ]
     },
-    "opening_impact": {
-      "bus": "UI",
-      "volume_db": -4,
-      "files": [
-        "sfx/enemy_impact_1.ogg",
-        "sfx/enemy_impact_2.ogg",
-        "sfx/enemy_impact_3.ogg"
-      ]
-    },
     "enemy_stun": {
       "bus": "SFX_Enemy",
       "volume_db": -7,
       "cooldown": 0.2,
       "files": [
         "sfx/enemy_stun_1.ogg"
+      ]
+    },
+    "ground_rumble_far": {
+      "bus": "SFX_Enemy",
+      "volume_db": -14,
+      "files": [
+        "sfx/slime_land_hard_1.ogg"
+      ]
+    },
+    "ground_rumble_near": {
+      "bus": "SFX_Enemy",
+      "volume_db": -7,
+      "files": [
+        "sfx/slime_land_hard_2.ogg"
+      ]
+    },
+    "op_arrive": {
+      "bus": "UI",
+      "volume_db": -5,
+      "pitch_jitter": 0.04,
+      "cooldown": 0.1,
+      "files": [
+        "sfx/op_arrive_1.ogg",
+        "sfx/op_arrive_2.ogg"
+      ]
+    },
+    "op_arrive_horn": {
+      "bus": "UI",
+      "volume_db": -5,
+      "pitch_jitter": 0.04,
+      "cooldown": 0.1,
+      "files": [
+        "sfx/op_arrive_horn_1.ogg",
+        "sfx/op_arrive_horn_2.ogg"
+      ]
+    },
+    "op_bonk": {
+      "bus": "UI",
+      "volume_db": -5,
+      "files": [
+        "sfx/op_bonk_1.ogg"
+      ]
+    },
+    "op_charge": {
+      "bus": "UI",
+      "volume_db": -5,
+      "pitch_jitter": 0.04,
+      "cooldown": 0.1,
+      "files": [
+        "sfx/op_charge_1.ogg",
+        "sfx/op_charge_2.ogg"
+      ]
+    },
+    "op_crash": {
+      "bus": "UI",
+      "volume_db": -3,
+      "pitch_jitter": 0.06,
+      "cooldown": 0.06,
+      "files": [
+        "sfx/op_crash_1.ogg",
+        "sfx/op_crash_2.ogg",
+        "sfx/op_crash_3.ogg"
+      ]
+    },
+    "op_dash": {
+      "bus": "UI",
+      "volume_db": -6,
+      "files": [
+        "sfx/op_dash_1.ogg"
+      ]
+    },
+    "op_dodge": {
+      "bus": "UI",
+      "volume_db": -7,
+      "files": [
+        "sfx/op_dodge_1.ogg"
+      ]
+    },
+    "op_jump": {
+      "bus": "UI",
+      "volume_db": -7,
+      "files": [
+        "sfx/op_jump_1.ogg"
+      ]
+    },
+    "op_ko_fall": {
+      "bus": "UI",
+      "volume_db": -4,
+      "files": [
+        "sfx/op_ko_fall_1.ogg"
+      ]
+    },
+    "op_pass": {
+      "bus": "UI",
+      "volume_db": -6,
+      "files": [
+        "sfx/op_pass_1.ogg"
+      ]
+    },
+    "op_pray": {
+      "bus": "UI",
+      "volume_db": -9,
+      "files": [
+        "sfx/op_pray_1.ogg"
+      ]
+    },
+    "op_rage": {
+      "bus": "UI",
+      "volume_db": -4,
+      "files": [
+        "sfx/op_rage_1.ogg"
+      ]
+    },
+    "op_run": {
+      "bus": "UI",
+      "volume_db": -7,
+      "pitch_jitter": 0.05,
+      "files": [
+        "sfx/op_run_1.ogg",
+        "sfx/op_run_2.ogg"
+      ]
+    },
+    "op_safe": {
+      "bus": "UI",
+      "volume_db": -8,
+      "files": [
+        "sfx/op_safe_1.ogg"
+      ]
+    },
+    "op_shove": {
+      "bus": "UI",
+      "volume_db": -5,
+      "pitch_jitter": 0.05,
+      "files": [
+        "sfx/op_shove_1.ogg",
+        "sfx/op_shove_2.ogg"
+      ]
+    },
+    "op_steps": {
+      "bus": "UI",
+      "volume_db": -5,
+      "pitch_jitter": 0.05,
+      "files": [
+        "sfx/op_steps_1.ogg",
+        "sfx/op_steps_2.ogg"
+      ]
+    },
+    "op_swing": {
+      "bus": "UI",
+      "volume_db": -7,
+      "pitch_jitter": 0.06,
+      "files": [
+        "sfx/op_swing_1.ogg",
+        "sfx/op_swing_2.ogg"
+      ]
+    },
+    "op_turn": {
+      "bus": "UI",
+      "volume_db": -6,
+      "files": [
+        "sfx/op_turn_1.ogg"
+      ]
+    },
+    "op_whiteout": {
+      "bus": "UI",
+      "volume_db": -6,
+      "files": [
+        "sfx/op_whiteout_1.ogg"
       ]
     },
     "pool_rest": {
@@ -592,7 +737,43 @@
     "menu_closed": "ui_close",
     "menu_move": "ui_move",
     "menu_confirm": "ui_confirm",
-    "opening_hit": "opening_impact",
+    "opening_started": {
+      "theme": "opening_battle"
+    },
+    "opening_ended": {
+      "theme_stop": "opening_battle"
+    },
+    "opening_turn": {
+      "by": "who",
+      "player": "op_turn"
+    },
+    "opening_truck_arrive": {
+      "by": "index",
+      "0": "op_arrive",
+      "1": "op_arrive_horn"
+    },
+    "opening_grandma_arrive": "op_steps",
+    "opening_action": {
+      "by": "id",
+      "fight": "op_swing",
+      "dodge": "op_dodge",
+      "jump": "op_jump",
+      "pray": "op_pray",
+      "run": "op_run",
+      "grandma": "op_dash"
+    },
+    "opening_umbrella_hit": "op_bonk",
+    "opening_shove": "op_shove",
+    "opening_grandma_safe": "op_safe",
+    "opening_charge": {
+      "by": "rage",
+      "true": "op_rage",
+      "false": "op_charge"
+    },
+    "opening_pass": "op_pass",
+    "opening_hit": "op_crash",
+    "opening_ko": "op_ko_fall",
+    "opening_whiteout": "op_whiteout",
     "denied": "ui_denied",
     "ticker_shown": {
       "by": "kind",
@@ -664,6 +845,13 @@
         ],
         "radius": 260
       }
+    }
+  },
+  "themes": {
+    "opening_battle": {
+      "music": "music/opening_battle.ogg",
+      "fade_in": 0.6,
+      "fade_out": 1.8
     }
   }
 }

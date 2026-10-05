@@ -11,7 +11,7 @@ func _biomes() -> Dictionary:
 			"oneshots": {"cues": ["a"], "interval": [4.0, 8.0], "radius": 200}}
 	return out
 
-func _catalog(events := {}) -> CueCatalog:
+func _catalog(events := {}, themes := {}) -> CueCatalog:
 	return CueCatalog.from_dict({
 		"cues": {
 			"a": {"files": ["sfx/a_1.ogg", "sfx/a_2.ogg"], "bus": "SFX_Player", "volume_db": -6},
@@ -20,6 +20,7 @@ func _catalog(events := {}) -> CueCatalog:
 		},
 		"events": events,
 		"biomes": _biomes(),
+		"themes": themes,
 	})
 
 func test_a_plain_event_routes_to_its_cue() -> void:
@@ -126,6 +127,8 @@ func test_no_audio_file_is_orphaned() -> void:
 	for area in c.biomes:
 		used[c.biomes[area]["music"]] = true
 		used[c.biomes[area]["ambience"]] = true
+	for id in c.themes:
+		used[c.themes[id]["music"]] = true
 	for sub in ["sfx", "music", "ambience"]:
 		for f in DirAccess.get_files_at("res://assets/audio/" + sub):
 			if f.ends_with(".ogg"):
@@ -133,7 +136,73 @@ func test_no_audio_file_is_orphaned() -> void:
 
 func test_the_opening_hit_cue_is_on_the_ui_bus_and_not_positional() -> void:
 	var c := CueCatalog.load_file("res://data/audio/cues.json")
-	assert_eq(c.route("opening_hit", {}), {"cue": "opening_impact"})
-	var rule: Dictionary = c.cues["opening_impact"]
+	assert_eq(c.route("opening_hit", {}), {"cue": "op_crash"})
+	var rule: Dictionary = c.cues["op_crash"]
 	assert_eq(rule["bus"], "UI", "Audio keeps only UI voices alive while the tree is paused, and the opening pauses it")
 	assert_false(bool(rule.get("positional", false)))
+	assert_false(c.cues.has("opening_impact"), "the stand-in that borrowed the enemy hit is gone")
+
+# --- themes: a track that takes the music over from the room's bed ---
+
+func test_a_theme_event_routes_to_its_theme_and_a_stop_event_to_its_end() -> void:
+	var c := _catalog({"fight": {"theme": "battle"}, "peace": {"theme_stop": "battle"}},
+		{"battle": {"music": "music/battle.ogg", "fade_in": 0.5, "fade_out": 1.5}})
+	assert_eq(c.route("fight", {}), {"theme": "battle"})
+	assert_eq(c.route("peace", {}), {"theme_stop": "battle"})
+	assert_eq(c.themes["battle"]["fade_out"], 1.5)
+
+func test_valid_theme_data_validates_clean() -> void:
+	var c := _catalog({"fight": {"theme": "battle"}, "peace": {"theme_stop": "battle"}},
+		{"battle": {"music": "music/battle.ogg", "fade_in": 0.5, "fade_out": 1.5}})
+	assert_eq(c.validate(_exists), [], "a theme's name in an event is not read as a cue id")
+
+func test_theme_mistakes_are_named() -> void:
+	var themes := {"battle": {"music": "music/battle.ogg", "fade_in": 0.5, "fade_out": 1.5}}
+	var gone := func(p: String) -> bool: return not p.ends_with("battle.ogg")
+	assert_true(str(_catalog({}, themes).validate(gone)).contains("theme battle: missing music file"))
+	assert_true(str(_catalog({"fight": {"theme": "nope"}}, themes).validate(_exists)).contains("event fight: unknown theme nope"))
+	assert_true(str(_catalog({"peace": {"theme_stop": "nope"}}, themes).validate(_exists)).contains("event peace: unknown theme nope"))
+	var slow := {"battle": {"music": "music/battle.ogg", "fade_in": 99.0, "fade_out": -1.0}}
+	var errors := str(_catalog({}, slow).validate(_exists))
+	assert_true(errors.contains("theme battle: fade_in must be 0..10"))
+	assert_true(errors.contains("theme battle: fade_out must be 0..10"))
+
+func test_the_shipped_opening_events_route_to_their_sounds() -> void:
+	var c := CueCatalog.load_file("res://data/audio/cues.json")
+	assert_eq(c.validate(func(p: String) -> bool: return ResourceLoader.exists(p)), [])
+	assert_eq(c.route("opening_started", {}), {"theme": "opening_battle"})
+	assert_eq(c.route("opening_ended", {}), {"theme_stop": "opening_battle"})
+	assert_eq(c.route("opening_turn", {"who": "player"}), {"cue": "op_turn"})
+	assert_eq(c.route("opening_turn", {"who": "truck"}), {}, "the truck's turn has no chime: its engine says it")
+	assert_eq(c.route("opening_truck_arrive", {"index": 0}), {"cue": "op_arrive"})
+	assert_eq(c.route("opening_truck_arrive", {"index": 1}), {"cue": "op_arrive_horn"})
+	assert_eq(c.route("opening_grandma_arrive", {}), {"cue": "op_steps"})
+	var actions := {"fight": "op_swing", "dodge": "op_dodge", "jump": "op_jump", "pray": "op_pray", "run": "op_run", "grandma": "op_dash"}
+	for id in actions:
+		assert_eq(c.route("opening_action", {"id": id}), {"cue": actions[id]}, id)
+	assert_eq(c.route("opening_umbrella_hit", {}), {"cue": "op_bonk"})
+	assert_eq(c.route("opening_shove", {}), {"cue": "op_shove"})
+	assert_eq(c.route("opening_grandma_safe", {}), {"cue": "op_safe"})
+	assert_eq(c.route("opening_charge", {"rage": false}), {"cue": "op_charge"})
+	assert_eq(c.route("opening_charge", {"rage": true}), {"cue": "op_rage"})
+	assert_eq(c.route("opening_pass", {}), {"cue": "op_pass"})
+	assert_eq(c.route("opening_hit", {}), {"cue": "op_crash"})
+	assert_eq(c.route("opening_ko", {}), {"cue": "op_ko_fall"})
+	assert_eq(c.route("opening_whiteout", {}), {"cue": "op_whiteout"})
+
+func test_every_opening_cue_plays_on_the_ui_bus_so_it_sounds_while_the_tree_is_paused() -> void:
+	var c := CueCatalog.load_file("res://data/audio/cues.json")
+	var found := 0
+	for id in c.cues:
+		if str(id).begins_with("op_"):
+			found += 1
+			assert_eq(c.cues[id]["bus"], "UI", id)
+			assert_false(bool(c.cues[id].get("positional", false)), id)
+	assert_eq(found, 19)
+
+func test_the_shipped_battle_theme_is_a_music_file_with_fades() -> void:
+	var c := CueCatalog.load_file("res://data/audio/cues.json")
+	var theme: Dictionary = c.themes["opening_battle"]
+	assert_eq(theme["music"], "music/opening_battle.ogg")
+	assert_gt(float(theme["fade_in"]), 0.0)
+	assert_gt(float(theme["fade_out"]), 0.0)

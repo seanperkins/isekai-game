@@ -72,9 +72,11 @@ func adjust_setting(key: String, direction: int) -> void:
 	settings.adjust(key, direction)
 	settings.apply()
 
-## Silences everything and forgets cooldowns and combos: every voice stops, every loop ends and
-## the duck lets go. A new run, a death and a scene reload all start from here.
+## Silences everything and forgets cooldowns and combos: every voice stops, every loop ends, a theme
+## ends and gives the room's music back, and the duck lets go. A new run, a death and a scene reload
+## all start from here.
 func reset() -> void:
+	director.end_theme()
 	for cue_id in _loops.keys():
 		stop_loop(cue_id)
 	for pair in _voices:
@@ -148,6 +150,10 @@ func _on_event(event_name: String, tags: Dictionary) -> void:
 		play_cue(routed["cue"], tags.get("pos", Vector2.INF))
 	elif routed.has("stop"):
 		stop_loop(routed["stop"])
+	elif routed.has("theme"):
+		director.start_theme(str(routed["theme"]))
+	elif routed.has("theme_stop"):
+		director.stop_theme()
 
 func _on_voice_finished(slot: int) -> void:
 	_pool.release(slot)

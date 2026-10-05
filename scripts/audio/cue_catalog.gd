@@ -1,7 +1,7 @@
 class_name CueCatalog
 extends RefCounted
-## data/audio/cues.json: playback rules per cue, which event plays which cue, and each biome's beds.
-## Pure data logic; Audio owns the players.
+## data/audio/cues.json: playback rules per cue, which event plays which cue, each biome's beds, and the themes: tracks that take
+## the music over from the room's bed for a while (the opening's battle). Pure data logic; Audio owns the players.
 
 const ASSET_DIR := "res://assets/audio/"
 const BUSES := ["Music", "Ambience", "SFX_Player", "SFX_Enemy", "SFX_World", "UI"]
@@ -10,6 +10,7 @@ const BIOMES := ["cave", "grotto", "flooded", "deep"]
 var cues := {}
 var events := {}
 var biomes := {}
+var themes := {}  # theme id -> {"music": file, "fade_in": seconds, "fade_out": seconds}
 var _last := {}  # cue id -> index of the variant played last
 
 static func load_file(path: String) -> CueCatalog:
@@ -21,10 +22,11 @@ static func from_dict(data: Dictionary) -> CueCatalog:
 	c.cues = data.get("cues", {})
 	c.events = data.get("events", {})
 	c.biomes = data.get("biomes", {})
+	c.themes = data.get("themes", {})
 	return c
 
-## What an event does: {"cue": id} to play, {"stop": id} to end a looping cue, {} for silence
-## or an event the catalog does not know.
+## What an event does: {"cue": id} to play, {"stop": id} to end a looping cue, {"theme": id} to start a theme,
+## {"theme_stop": id} to end it, {} for silence or an event the catalog does not know.
 func route(event_name: String, tags: Dictionary) -> Dictionary:
 	var entry = events.get(event_name)
 	if entry == null:
@@ -35,6 +37,10 @@ func route(event_name: String, tags: Dictionary) -> Dictionary:
 		return {}
 	if entry.has("stop"):
 		return {"stop": entry["stop"]}
+	if entry.has("theme"):
+		return {"theme": entry["theme"]}
+	if entry.has("theme_stop"):
+		return {"theme_stop": entry["theme_stop"]}
 	# JSON keys are strings, so a bool tag selects through its string form ("true" / "false").
 	var picked = entry.get(str(tags.get(str(entry.get("by", "")), "")), entry.get("default"))
 	return {"cue": picked} if typeof(picked) == TYPE_STRING else {}
@@ -86,9 +92,25 @@ func validate(file_exists: Callable) -> Array:
 			if not bool(cues.get(entry["stop"], {}).get("loop", false)):
 				errors.append("event %s: stop target %s is not a looping cue" % [name, entry["stop"]])
 			continue
+		if typeof(entry) == TYPE_DICTIONARY and (entry.has("theme") or entry.has("theme_stop")):
+			var named = entry.get("theme", entry.get("theme_stop"))
+			if not themes.has(named):
+				errors.append("event %s: unknown theme %s" % [name, named])
+			continue
 		for target in _targets(entry):
 			if not cues.has(target):
 				errors.append("event %s: unknown cue %s" % [name, target])
+	for id in themes:
+		var theme = themes[id]
+		if typeof(theme) != TYPE_DICTIONARY:
+			errors.append("theme %s: must be an object" % id)
+			continue
+		if not file_exists.call(ASSET_DIR + str(theme.get("music", ""))):
+			errors.append("theme %s: missing music file" % id)
+		for key in ["fade_in", "fade_out"]:
+			var seconds := float(theme.get(key, -1.0))
+			if seconds < 0.0 or seconds > 10.0:
+				errors.append("theme %s: %s must be 0..10" % [id, key])
 	for area in BIOMES:
 		var b = biomes.get(area)
 		if typeof(b) != TYPE_DICTIONARY:
