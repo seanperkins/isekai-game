@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "spider_venomspinner"
+display_name = "Venomspinner"
+species = "spider"
+stage = 3
+lineage = "stalker"
+parents = ["spider_stalker"]
+stats = {
+"atk": 2,
+"max_hp": 12,
+"max_mp": 6,
+"mp_regen": 40
+}
+tint = Color(0.625, 0.7, 0.925, 1)
+size = 1.25
+blurb = "webs apply poison that spreads through trap webs"
+reads = ["water", "dark"]
+host = ["swamp"]
+source = "(guide)"
+verb_text = "webs apply poison that spreads through trap webs"
+gives_up = "lower direct damage"
+opened_by = "Stalker, plus Venom Fang and a poison power"

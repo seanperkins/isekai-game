@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "goblin_pied_piper"
+display_name = "Pied Piper"
+species = "goblin"
+stage = 3
+lineage = "beastcaller"
+parents = ["goblin_beastcaller"]
+stats = {
+"atk": 1,
+"jump_height": 15,
+"max_hp": 12,
+"max_mp": 9,
+"spd": 12
+}
+tint = Color(0.875, 0.825, 0.975, 1)
+size = 1.25
+blurb = "Tune: a pipe call commands a small group and draws vermin"
+reads = ["air", "mind"]
+host = ["village"]
+source = "Hamelin's piper, who led the rats away and then the children"
+verb_text = "Tune: a pipe call commands a small group and draws vermin"
+gives_up = "cannot throw while playing"
+opened_by = "Beastcaller, plus lessons from vermin, plus mind (later)"

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "spider_cave_matriarch"
+display_name = "Cave Matriarch"
+species = "spider"
+stage = 3
+lineage = "broodmother"
+parents = ["spider_broodmother"]
+stats = {
+"atk": 2,
+"def": 2,
+"max_hp": 12,
+"max_mp": 6
+}
+tint = Color(0.8, 0.69, 0.725, 1)
+size = 1.25
+blurb = "a huge lone hunter: heavy bite, a web wall"
+reads = ["earth", "dark"]
+host = ["deep"]
+source = "the giant cave spiders of epic fantasy: Shelob, Ungoliant"
+verb_text = "a huge lone hunter: heavy bite, a web wall"
+gives_up = "slow; no small gaps"
+opened_by = "Broodmother, plus the Taratect eaten"

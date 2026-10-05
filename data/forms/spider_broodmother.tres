@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "spider_broodmother"
+display_name = "Broodmother"
+species = "spider"
+stage = 2
+lineage = "broodmother"
+parents = ["spider"]
+stats = {
+"atk": 1,
+"def": 1,
+"max_hp": 5,
+"max_mp": 3
+}
+tint = Color(0.8, 0.69, 0.725, 1)
+size = 1.12
+blurb = "Brood: cocoons hatch spiderlings that carry and harass"
+reads = ["earth", "dark"]
+host = ["forest"]
+source = "wolf spiders carry their young; the spiderlings of Spider, So What?"
+verb_text = "Brood: cocoons hatch spiderlings that carry and harass"
+gives_up = "slow; fewer solo kills"
+opened_by = "earth + dark, plus the Cocoon power"

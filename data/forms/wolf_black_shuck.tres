@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "wolf_black_shuck"
+display_name = "Black Shuck"
+species = "wolf"
+stage = 4
+lineage = "black_dog"
+parents = ["wolf_barghest"]
+stats = {
+"atk": 3,
+"def": 1,
+"max_hp": 22,
+"max_mp": 10
+}
+tint = Color(0.75, 0.65, 0.9, 1)
+size = 1.4
+blurb = "Omen: mark one enemy; it dies in ten seconds unless it cleanses"
+reads = ["dark"]
+host = ["crypt", "deep"]
+source = "East Anglia's giant black dog with one burning red eye; the Bungay church story of 1577"
+verb_text = "Omen: mark one enemy; it dies in ten seconds unless it cleanses"
+gives_up = "one mark at a time"
+opened_by = "Barghest, plus a marked kill"

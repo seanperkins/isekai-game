@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "goblin_boggart"
+display_name = "Boggart"
+species = "goblin"
+stage = 4
+lineage = "hob"
+parents = ["goblin_tomte"]
+stats = {
+"atk": 3,
+"def": 1,
+"max_hp": 22,
+"max_mp": 10
+}
+tint = Color(0.75, 0.65, 0.9, 1)
+size = 1.4
+blurb = "Curse-stone and a fear aura (a corrupted Tomte)"
+reads = ["dark"]
+host = ["swamp"]
+source = "the fallen hob: a house spirit that turns spiteful when wronged"
+verb_text = "Curse-stone and a fear aura (a corrupted Tomte)"
+gives_up = "allies fear you too"
+opened_by = "Tomte, plus dark"

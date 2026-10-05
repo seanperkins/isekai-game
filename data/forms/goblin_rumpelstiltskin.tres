@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "goblin_rumpelstiltskin"
+display_name = "Rumpelstiltskin"
+species = "goblin"
+stage = 4
+lineage = "tinker"
+parents = ["goblin_knocker"]
+stats = {
+"atk": 2,
+"def": 3,
+"max_hp": 22,
+"max_mp": 13
+}
+tint = Color(0.975, 0.79, 0.825, 1)
+size = 1.4
+blurb = "Spin: transmute junk into a better part, two for one"
+reads = ["earth", "mind"]
+host = ["village"]
+source = "Grimm: spins straw into gold at a price"
+verb_text = "Spin: transmute junk into a better part, two for one"
+gives_up = "wasteful"
+opened_by = "Knocker, plus mind (later)"

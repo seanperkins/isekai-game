@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "wolf_fenrir"
+display_name = "Fenrir"
+species = "wolf"
+stage = 4
+lineage = "warg"
+parents = ["wolf_dire_wolf"]
+stats = {
+"atk": 2,
+"def": 3,
+"max_hp": 22,
+"max_mp": 10
+}
+tint = Color(0.95, 0.83, 0.65, 1)
+size = 1.4
+blurb = "Unbound: breaks barriers and grates (a gate-breaking verb)"
+reads = ["earth"]
+host = ["deep"]
+source = "Norse: bound by Gleipnir, breaks all chains"
+verb_text = "Unbound: breaks barriers and grates (a gate-breaking verb)"
+gives_up = "too big for small gaps"
+opened_by = "Dire Wolf, plus barriers broken"

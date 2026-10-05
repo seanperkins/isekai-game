@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "goblin_changeling"
+display_name = "Changeling"
+species = "goblin"
+stage = 4
+lineage = "skulker"
+parents = ["goblin_puck"]
+stats = {
+"atk": 3,
+"def": 1,
+"max_hp": 22,
+"max_mp": 10
+}
+tint = Color(0.75, 0.65, 0.9, 1)
+size = 1.4
+blurb = "Swap: trade places with a decoy; look like a creature to scout"
+reads = ["dark"]
+host = ["village"]
+source = "the fairy swap of a child"
+verb_text = "Swap: trade places with a decoy; look like a creature to scout"
+gives_up = "the swap takes a beat"
+opened_by = "Puck, plus decoys used"

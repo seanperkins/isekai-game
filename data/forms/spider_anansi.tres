@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "spider_anansi"
+display_name = "Anansi"
+species = "spider"
+stage = 4
+lineage = "weavermaid"
+parents = ["spider_loom_weaver"]
+stats = {
+"atk": 3,
+"def": 1,
+"jump_height": 15,
+"max_hp": 22,
+"max_mp": 10,
+"spd": 12
+}
+tint = Color(0.8, 0.825, 0.975, 1)
+size = 1.4
+blurb = "Steal: take a power or essence from a living enemy without killing it (the decided future method)"
+reads = ["air", "dark"]
+host = ["village"]
+source = "the Akan trickster spider who bought all the stories from the sky god"
+verb_text = "Steal: take a power or essence from a living enemy without killing it (the decided future method)"
+gives_up = "weak direct damage"
+opened_by = "Loom-Weaver, plus snaring and freeing a creature"

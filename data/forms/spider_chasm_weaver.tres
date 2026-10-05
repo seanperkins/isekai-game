@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "spider_chasm_weaver"
+display_name = "Chasm-Weaver"
+species = "spider"
+stage = 4
+lineage = "broodmother"
+parents = ["spider_cave_matriarch"]
+stats = {
+"atk": 2,
+"def": 3,
+"jump_height": 15,
+"max_hp": 22,
+"max_mp": 10,
+"spd": 12
+}
+tint = Color(0.9, 0.915, 0.85, 1)
+size = 1.4
+blurb = "Span: spin a permanent web bridge across a gap (a traversal gate)"
+reads = ["earth", "air"]
+host = ["deep"]
+source = "Atlach-Nacha (Clark Ashton Smith, \"The Seven Geases\"): the spider spinning a web bridge across a chasm"
+verb_text = "Span: spin a permanent web bridge across a gap (a traversal gate)"
+gives_up = "slow; both ends need anchors"
+opened_by = "Cave Matriarch, plus gaps crossed"

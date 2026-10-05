@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "undead_bone_warrior"
+display_name = "Bone Warrior"
+species = "undead"
+stage = 2
+lineage = "bone_warrior"
+parents = ["undead"]
+stats = {
+"atk": 1,
+"def": 1,
+"max_hp": 5,
+"max_mp": 3
+}
+tint = Color(0.8, 0.69, 0.725, 1)
+size = 1.12
+blurb = "Heft: a slow overhead cleave and a shield"
+reads = ["earth", "dark"]
+host = ["crypt", "cave"]
+source = "the sown warriors of Cadmus and Jason, grown from dragon's teeth"
+verb_text = "Heft: a slow overhead cleave and a shield"
+gives_up = "slow"
+opened_by = "skeleton, plus a weapon arm graft and earth"

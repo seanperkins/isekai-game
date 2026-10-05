@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "undead_banshee"
+display_name = "Banshee"
+species = "undead"
+stage = 4
+lineage = "skeletal_archer"
+parents = ["undead_corpse_candle"]
+stats = {
+"atk": 3,
+"def": 1,
+"jump_height": 15,
+"max_hp": 22,
+"max_mp": 10,
+"spd": 12
+}
+tint = Color(0.8, 0.825, 0.975, 1)
+size = 1.4
+blurb = "Wail: a cone that stuns and frightens"
+reads = ["air", "dark"]
+host = ["crypt"]
+source = "the Irish bean sídhe: her wail foretells a death"
+verb_text = "Wail: a cone that stuns and frightens"
+gives_up = "wakes sleeping enemies"
+opened_by = "Corpse Candle, plus a held wail"

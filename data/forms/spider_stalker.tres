@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "spider_stalker"
+display_name = "Stalker"
+species = "spider"
+stage = 2
+lineage = "stalker"
+parents = ["spider"]
+stats = {
+"atk": 1,
+"jump_height": 10,
+"max_hp": 5,
+"max_mp": 3,
+"spd": 8
+}
+tint = Color(0.75, 0.775, 0.925, 1)
+size = 1.12
+blurb = "Ambush: a ceiling drop and a web zip"
+reads = ["dark", "air"]
+host = ["crypt", "cave"]
+source = "trapdoor and huntsman spiders: the ambush hunter"
+verb_text = "Ambush: a ceiling drop and a web zip"
+gives_up = "weak in lit rooms"
+opened_by = "air + dark, plus kills from the ceiling"

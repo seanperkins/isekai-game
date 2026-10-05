@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "spider_nightstalker"
+display_name = "Nightstalker"
+species = "spider"
+stage = 4
+lineage = "stalker"
+parents = ["spider_shadow_stalker"]
+stats = {
+"atk": 3,
+"def": 1,
+"max_hp": 22,
+"max_mp": 10
+}
+tint = Color(0.75, 0.65, 0.9, 1)
+size = 1.4
+blurb = "kills reset the zip; unseen in shadow"
+reads = ["dark"]
+host = ["crypt"]
+source = "(guide)"
+verb_text = "kills reset the zip; unseen in shadow"
+gives_up = "needs shadow"
+opened_by = "Shadow-stalker, plus an unseen kill streak"

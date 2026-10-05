@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "goblin_mastersmith"
+display_name = "Mastersmith"
+species = "goblin"
+stage = 4
+lineage = "tinker"
+parents = ["goblin_smith"]
+stats = {
+"atk": 3,
+"def": 3,
+"max_hp": 22,
+"max_mp": 10
+}
+tint = Color(1, 0.74, 0.575, 1)
+size = 1.4
+blurb = "a second gear slot; flawless upgrades"
+reads = ["earth", "fire"]
+host = ["volcano"]
+source = "the same smiths at the height of their craft"
+verb_text = "a second gear slot; flawless upgrades"
+gives_up = "high cost"
+opened_by = "Smith, plus a forged weapon"

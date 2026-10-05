@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "goblin_giant_killer"
+display_name = "Giant-Killer"
+species = "goblin"
+stage = 4
+lineage = "hob"
+parents = ["goblin_paladin"]
+stats = {
+"atk": 2,
+"def": 3,
+"max_hp": 22,
+"max_mp": 12
+}
+tint = Color(1, 0.915, 0.7, 1)
+size = 1.4
+blurb = "damage scales with the target's size"
+reads = ["light", "earth"]
+host = ["deep"]
+source = "Jack the Giant-Killer, Cornish folk tale; David and Goliath"
+verb_text = "damage scales with the target's size"
+gives_up = "weak against small foes"
+opened_by = "Paladin, plus a large foe beaten"

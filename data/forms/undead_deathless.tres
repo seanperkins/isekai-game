@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "undead_deathless"
+display_name = "Deathless"
+species = "undead"
+stage = 4
+lineage = "adept"
+parents = ["undead_lich"]
+stats = {
+"atk": 3,
+"def": 1,
+"max_hp": 22,
+"max_mp": 13
+}
+tint = Color(0.875, 0.7, 0.95, 1)
+size = 1.4
+blurb = "Hidden soul: place an anchor; if you die in range you rise there once per life"
+reads = ["dark", "mind"]
+host = ["deep"]
+source = "Koschei the Deathless: his soul sits in a needle in an egg in a duck in a hare in a chest under an oak"
+verb_text = "Hidden soul: place an anchor; if you die in range you rise there once per life"
+gives_up = "the anchor can be destroyed"
+opened_by = "Lich, plus a phylactery shard, plus mind (later)"

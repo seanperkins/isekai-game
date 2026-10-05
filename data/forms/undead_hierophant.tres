@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "undead_hierophant"
+display_name = "Hierophant"
+species = "undead"
+stage = 4
+lineage = "adept"
+parents = ["undead_lich"]
+stats = {
+"atk": 3,
+"def": 1,
+"max_hp": 22,
+"max_mp": 15
+}
+tint = Color(0.933, 0.8, 0.883, 1)
+size = 1.4
+blurb = "Consecrate: a ring of light that heals you and your summons and burns the living"
+reads = ["light", "dark", "mind"]
+host = ["sacred"]
+source = "the arch-priest: the Dewa Sanzan monks who mummified themselves in life, incorrupt saints, the Greek hierophant"
+verb_text = "Consecrate: a ring of light that heals you and your summons and burns the living"
+gives_up = "no life-drain (you absolve, you do not drain); weak dark powers"
+opened_by = "Lich, plus held light essence and a Vigil (section 5), plus mind (later)"

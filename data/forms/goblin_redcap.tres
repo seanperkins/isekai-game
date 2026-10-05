@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "goblin_redcap"
+display_name = "Redcap"
+species = "goblin"
+stage = 3
+lineage = "skulker"
+parents = ["goblin_skulker"]
+stats = {
+"atk": 3,
+"max_hp": 12,
+"max_mp": 6
+}
+tint = Color(0.8, 0.525, 0.675, 1)
+size = 1.25
+blurb = "Dye: each kill refreshes a blood-cap timer for speed and damage; if it dries you lose it"
+reads = ["dark", "blood"]
+host = ["crypt"]
+source = "the Border legend: a goblin who dyes his cap in his victims' blood and must keep it wet"
+verb_text = "Dye: each kill refreshes a blood-cap timer for speed and damage; if it dries you lose it"
+gives_up = "idle play wastes it; holy words repel"
+opened_by = "Skulker, plus a stealth kill chain, plus blood (later)"

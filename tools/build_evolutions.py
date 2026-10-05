@@ -219,6 +219,18 @@ BUILT_SLIME = {"J2W": "weaver", "J3W1": "snare", "J4W1a": "silkbound", "J3W2": "
                "J4T1a": "tidal", "J3T2": "tempest", "J2X": "toxic", "J3X1": "acid", "J4X1a": "venom", "J3X2": "blight",
                "J2B": "bulwark", "J3B1": "golem", "J4B1a": "stone", "J3B2": "crystal", "J2E": "echo", "J3E1": "phantom",
                "J4E2a": "storm", "J3E2": "sky", "J2G": "greater_slime", "J3G1": "vast", "J4G1a": "prime", "J3G2": "radiant"}
+def in_game_data(f):
+    """Whether the form has a data file (data/forms/<id>.tres): the slime's built forms, and the other species' since A3."""
+    import build_species_forms as bsf  # a late import: that module imports this one
+    if f["id"] in BUILT_SLIME:
+        fid = BUILT_SLIME[f["id"]]
+    elif f["species"] == "slime":
+        fid = bsf.slug(f["name"])
+    else:
+        fid = "%s_%s" % (f["species"], bsf.slug(f["name"]))
+    return os.path.exists("data/forms/%s.tres" % fid)
+
+
 BASE_SPRITE = {"J1": "slime", "W1": "gloom_wolf", "S1": "spider", "G1": "goblin"}
 
 
@@ -277,6 +289,7 @@ def build():
                 "essence": split_essence(els, t["essence"]), "xp": t["xp"], "note": ov["note"] if ov else t["spawn"]}
 
     for f in forms:
+        f["inData"] = in_game_data(f)
         f["twin"] = twin_for(f)
         f["children"] = [c["id"] for c in forms if c["parent"] == f["id"]]
         if f["id"] in BUILT_SLIME:
@@ -372,7 +385,8 @@ def build():
     data = {"species": species, "forms": forms, "bases": list(bases.values()), "creatures": creatures, "essences": essences, "areas": areas,
             "parts": parts, "tiers": {str(k): v for k, v in tiers.items()}, "elements": ELEMENTS,
             "summary": {"forms": len(forms), "newTwins": new_twins, "support": len(support), "existing": len(existing),
-                        "newCreatureTypes": new_twins + len(support), "built": sum(1 for f in forms if f["built"])},
+                        "newCreatureTypes": new_twins + len(support), "built": sum(1 for f in forms if f["built"]),
+                        "inData": sum(1 for f in forms if f["inData"])},
             "built": {"date": time.strftime("%Y-%m-%d"), "sha": sha}}
     # The moveset and art GIFs are made by tools/moveset_gifs.gd and tools/art/sprite_gifs.py; their manifests ride along.
     for key, rel in (("movesets", "movesets/movesets.json"), ("art", "art/art.json")):

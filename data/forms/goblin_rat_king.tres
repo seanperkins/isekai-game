@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "goblin_rat_king"
+display_name = "Rat King"
+species = "goblin"
+stage = 4
+lineage = "beastcaller"
+parents = ["goblin_pied_piper"]
+stats = {
+"atk": 2,
+"def": 3,
+"max_hp": 22,
+"max_mp": 10
+}
+tint = Color(0.95, 0.83, 0.65, 1)
+size = 1.4
+blurb = "Knot: a mobile swarm of tamed vermin acts as one big companion with area damage"
+reads = ["earth"]
+host = ["cave", "village"]
+source = "the German Rattenkönig: rats whose tails are knotted into one"
+verb_text = "Knot: a mobile swarm of tamed vermin acts as one big companion with area damage"
+gives_up = "stays one companion"
+opened_by = "Pied Piper, plus a tamed rat"

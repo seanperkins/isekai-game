@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "undead_mummy_priest"
+display_name = "Mummy-Priest"
+species = "undead"
+stage = 3
+lineage = "adept"
+parents = ["undead_adept"]
+stats = {
+"atk": 2,
+"def": 2,
+"max_hp": 12,
+"max_mp": 6
+}
+tint = Color(0.8, 0.69, 0.725, 1)
+size = 1.25
+blurb = "Wrap: bandages bind enemies; a sand gust"
+reads = ["dark", "earth"]
+host = ["crypt", "deep"]
+source = "the Egyptian embalmed priest-magician; the mummy's curse"
+verb_text = "Wrap: bandages bind enemies; a sand gust"
+gives_up = "fire hurts"
+opened_by = "Adept, plus earth and bandage grafts"

@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "wolf_cu_sith"
+display_name = "Cù Sìth"
+species = "wolf"
+stage = 4
+lineage = "black_dog"
+parents = ["wolf_cwn_annwn"]
+stats = {
+"atk": 2,
+"def": 3,
+"jump_height": 15,
+"max_hp": 22,
+"max_mp": 10,
+"spd": 12
+}
+tint = Color(0.9, 0.915, 0.85, 1)
+size = 1.4
+blurb = "Three barks: two warnings, then a lunge you cannot dodge from range"
+reads = ["earth", "air"]
+host = ["forest"]
+source = "Scottish fairy hound, dark green and the size of a calf; it barks three times"
+verb_text = "Three barks: two warnings, then a lunge you cannot dodge from range"
+gives_up = "stand still to bark"
+opened_by = "Cŵn Annwn, plus a ranged kill"

@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "goblin_hob"
+display_name = "Hob"
+species = "goblin"
+stage = 2
+lineage = "hob"
+parents = ["goblin"]
+stats = {
+"max_hp": 5,
+"max_mp": 5
+}
+tint = Color(1, 0.95, 0.7, 1)
+size = 1.12
+blurb = "Offer and Ward: protects an area"
+reads = ["light"]
+host = ["village", "sacred"]
+source = "the brownie, the hob and the household spirit repaid in porridge"
+verb_text = "Offer and Ward: protects an area"
+gives_up = "passive, weak damage"
+opened_by = "light, plus lessons from light creatures"

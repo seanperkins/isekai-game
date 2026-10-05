@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "undead_demilich"
+display_name = "Demilich"
+species = "undead"
+stage = 4
+lineage = "adept"
+parents = ["undead_lich"]
+stats = {
+"atk": 3,
+"def": 1,
+"max_hp": 22,
+"max_mp": 10
+}
+tint = Color(0.75, 0.65, 0.9, 1)
+size = 1.4
+blurb = "a floating skull, very frail, very strong"
+reads = ["dark"]
+host = ["deep"]
+source = "tabletop lore: a lich reduced to a skull (guide's Skull)"
+verb_text = "a floating skull, very frail, very strong"
+gives_up = "the frailest form"
+opened_by = "Lich, plus every limb graft shed"

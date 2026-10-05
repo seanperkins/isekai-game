@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "goblin_orpheus"
+display_name = "Orpheus"
+species = "goblin"
+stage = 4
+lineage = "beastcaller"
+parents = ["goblin_pied_piper"]
+stats = {
+"atk": 2,
+"def": 1,
+"max_hp": 22,
+"max_mp": 15
+}
+tint = Color(1, 0.875, 0.875, 1)
+size = 1.4
+blurb = "Lull: calm a hostile creature so it stops attacking and can be tamed"
+reads = ["light", "mind"]
+host = ["sacred"]
+source = "Greek: the lyre that charmed beasts, trees and Hades"
+verb_text = "Lull: calm a hostile creature so it stops attacking and can be tamed"
+gives_up = "fails on bosses"
+opened_by = "Pied Piper, plus light, plus mind (later)"

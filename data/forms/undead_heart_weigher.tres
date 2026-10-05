@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "undead_heart_weigher"
+display_name = "Heart-Weigher"
+species = "undead"
+stage = 4
+lineage = "adept"
+parents = ["undead_mummy_priest"]
+stats = {
+"atk": 4,
+"def": 1,
+"max_hp": 22,
+"max_mp": 10
+}
+tint = Color(0.85, 0.575, 0.725, 1)
+size = 1.4
+blurb = "Weigh: if a creature's essence is lower than yours, drain it at once"
+reads = ["dark", "blood"]
+host = ["deep"]
+source = "Ammit, who eats hearts that weigh heavier than the feather"
+verb_text = "Weigh: if a creature's essence is lower than yours, drain it at once"
+gives_up = "useless against stronger foes"
+opened_by = "Mummy-Priest, plus drains of stronger prey, plus blood (later)"

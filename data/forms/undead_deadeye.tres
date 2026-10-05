@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "undead_deadeye"
+display_name = "Deadeye"
+species = "undead"
+stage = 3
+lineage = "skeletal_archer"
+parents = ["undead_skeletal_archer"]
+stats = {
+"atk": 2,
+"max_hp": 12,
+"max_mp": 6
+}
+tint = Color(0.7, 0.6, 0.85, 1)
+size = 1.25
+blurb = "six sure shots, then a cursed seventh"
+reads = ["dark"]
+host = ["crypt"]
+source = "Der Freischütz: magic bullets; six hit true, the seventh is the Devil's"
+verb_text = "six sure shots, then a cursed seventh"
+gives_up = "the seventh costs HP"
+opened_by = "Archer, plus a perfect-hit streak"

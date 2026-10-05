@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "wolf_wolfskin_champion"
+display_name = "Wolfskin Champion"
+species = "wolf"
+stage = 4
+lineage = "moonbound"
+parents = ["wolf_ulfhedinn"]
+stats = {
+"atk": 2,
+"def": 3,
+"max_hp": 22,
+"max_mp": 10
+}
+tint = Color(0.95, 0.83, 0.65, 1)
+size = 1.4
+blurb = "Shield-bite: breaks guards; the berserk window refills on kills"
+reads = ["earth"]
+host = ["cave"]
+source = "the same warriors at their peak: they howl and bite their shields"
+verb_text = "Shield-bite: breaks guards; the berserk window refills on kills"
+gives_up = "still crashes if it ends dry"
+opened_by = "Úlfheðinn, plus broken guards"

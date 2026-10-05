@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "wolf_amarok"
+display_name = "Amarok"
+species = "wolf"
+stage = 4
+lineage = "warg"
+parents = ["wolf_dire_wolf"]
+stats = {
+"atk": 2,
+"def": 3,
+"max_hp": 22,
+"max_mp": 10,
+"mp_regen": 40
+}
+tint = Color(0.775, 0.84, 0.85, 1)
+size = 1.4
+blurb = "Lone hunter: strongest with no packmate, hunts isolated prey"
+reads = ["earth", "water"]
+host = ["deep"]
+source = "Inuit: a giant lone wolf that hunts those who hunt alone at night"
+verb_text = "Lone hunter: strongest with no packmate, hunts isolated prey"
+gives_up = "the bond is disabled"
+opened_by = "Dire Wolf, plus rooms cleared alone"

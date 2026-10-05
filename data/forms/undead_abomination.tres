@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "undead_abomination"
+display_name = "Abomination"
+species = "undead"
+stage = 4
+lineage = "zombie"
+parents = ["undead_draugr"]
+stats = {
+"atk": 3,
+"def": 3,
+"max_hp": 22,
+"max_mp": 10
+}
+tint = Color(0.85, 0.74, 0.775, 1)
+size = 1.4
+blurb = "Heft cleaver; extra graft slots (a stitched body)"
+reads = ["earth", "dark"]
+host = ["deep"]
+source = "Shelley's Frankenstein creature; the Warcraft abomination (guide)"
+verb_text = "Heft cleaver; extra graft slots (a stitched body)"
+gives_up = "stench; slow"
+opened_by = "Draugr, plus four grafts held"

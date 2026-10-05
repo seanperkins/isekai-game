@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "spider_tarantella"
+display_name = "Tarantella"
+species = "spider"
+stage = 4
+lineage = "stalker"
+parents = ["spider_venomspinner"]
+stats = {
+"atk": 2,
+"def": 1,
+"jump_height": 15,
+"max_hp": 22,
+"max_mp": 10,
+"mp_regen": 40,
+"spd": 12
+}
+tint = Color(0.725, 0.925, 1, 1)
+size = 1.4
+blurb = "Dance-venom: a bitten enemy staggers erratically into hazards"
+reads = ["water", "air"]
+host = ["swamp"]
+source = "tarantism in southern Italy: the tarantula's bite thought to cause frenzied dancing"
+verb_text = "Dance-venom: a bitten enemy staggers erratically into hazards"
+gives_up = "slow to take hold"
+opened_by = "Venomspinner, plus air"

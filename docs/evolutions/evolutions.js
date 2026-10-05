@@ -46,6 +46,7 @@
     const t = [];
     if (n.ask) t.push(tag('ask', '★ ask'));
     if (n.built) t.push(tag('built', 'built'));
+    else if (n.inData) t.push(tag('built', 'in data'));
     if (n.decided) t.push(tag('decided', 'decided'));
     if (n.secret) t.push(tag('secret', 'secret'));
     return t;
@@ -343,7 +344,7 @@
   function stats() {
     const clips = D.movesets ? D.movesets.species.reduce((a, s) => a + s.clips.length, 0) : 0;
     const items = [
-      [D.summary.forms, 'forms in five species, ' + D.summary.built + ' already built'],
+      [D.summary.forms, 'forms in five species, ' + D.summary.inData + ' in the game\u2019s data'],
       [D.summary.newCreatureTypes, 'new creature types (' + D.summary.support + ' support, ' + D.summary.newTwins + ' form twins)'],
       [D.essences.length, 'essences, ' + later.size + ' not carried by any creature yet'],
       [D.species.reduce((a, s) => a + s.lines.length, 0), 'evolution lines'],

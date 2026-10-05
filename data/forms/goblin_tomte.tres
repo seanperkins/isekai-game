@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "goblin_tomte"
+display_name = "Tomte"
+species = "goblin"
+stage = 3
+lineage = "hob"
+parents = ["goblin_hob"]
+stats = {
+"atk": 1,
+"def": 2,
+"max_hp": 12,
+"max_mp": 8
+}
+tint = Color(0.95, 0.865, 0.65, 1)
+size = 1.25
+blurb = "Hearth: plant a ward-stone; creatures near it are slowed and you heal"
+reads = ["light", "earth"]
+host = ["village"]
+source = "the Scandinavian farm guardian: kind if respected, vicious if insulted"
+verb_text = "Hearth: plant a ward-stone; creatures near it are slowed and you heal"
+gives_up = "static"
+opened_by = "Hob, plus a kept village"

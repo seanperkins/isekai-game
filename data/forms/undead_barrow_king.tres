@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "undead_barrow_king"
+display_name = "Barrow-King"
+species = "undead"
+stage = 4
+lineage = "zombie"
+parents = ["undead_draugr"]
+stats = {
+"atk": 2,
+"def": 3,
+"max_hp": 22,
+"max_mp": 10
+}
+tint = Color(0.95, 0.83, 0.65, 1)
+size = 1.4
+blurb = "Barrow slam: a ground-pound shockwave; armour while carrying items"
+reads = ["earth"]
+host = ["deep"]
+source = "the haugbúi, a mound-dweller sitting on its hoard"
+verb_text = "Barrow slam: a ground-pound shockwave; armour while carrying items"
+gives_up = "stuck to the room's hoard"
+opened_by = "Draugr, plus carried items"

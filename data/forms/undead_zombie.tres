@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "undead_zombie"
+display_name = "Zombie"
+species = "undead"
+stage = 2
+lineage = "zombie"
+parents = ["undead"]
+stats = {
+"atk": 1,
+"def": 1,
+"max_hp": 5,
+"max_mp": 3
+}
+tint = Color(0.8, 0.69, 0.725, 1)
+size = 1.12
+blurb = "Devour corpses to heal; heft: slow, heavy swings"
+reads = ["earth", "dark"]
+host = ["swamp", "cemetery"]
+source = "Haitian zombi; the shambling dead of film"
+verb_text = "Devour corpses to heal; heft: slow, heavy swings"
+gives_up = "slow, a low jump"
+opened_by = "ribs and flesh grafts, plus earth + dark"

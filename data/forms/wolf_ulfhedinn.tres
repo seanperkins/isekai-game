@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "wolf_ulfhedinn"
+display_name = "Úlfheðinn"
+species = "wolf"
+stage = 3
+lineage = "moonbound"
+parents = ["wolf_moonbound"]
+stats = {
+"atk": 2,
+"def": 2,
+"max_hp": 12,
+"max_mp": 6
+}
+tint = Color(0.8, 0.69, 0.725, 1)
+size = 1.25
+blurb = "Skin: you choose the change; a berserk window with no flinch and iron-proof"
+reads = ["dark", "earth"]
+host = ["forest", "cave"]
+source = "Norse wolf-skin warriors, paired with the berserkers in the sagas (the Ynglinga saga says of Odin's berserk men that neither fire nor iron bit them)"
+verb_text = "Skin: you choose the change; a berserk window with no flinch and iron-proof"
+gives_up = "a crash after the window"
+opened_by = "Moonbound, plus earth"

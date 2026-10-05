@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "goblin_skulker"
+display_name = "Skulker"
+species = "goblin"
+stage = 2
+lineage = "skulker"
+parents = ["goblin"]
+stats = {
+"atk": 1,
+"jump_height": 10,
+"max_hp": 5,
+"max_mp": 3,
+"spd": 8
+}
+tint = Color(0.75, 0.775, 0.925, 1)
+size = 1.12
+blurb = "sneak strike, smoke bomb"
+reads = ["dark", "air"]
+host = ["crypt", "demon"]
+source = "the redcap; Puck; Alberich's Tarnhelm"
+verb_text = "sneak strike, smoke bomb"
+gives_up = "weak in melee"
+opened_by = "dark + air, plus lessons from bats and shadows"

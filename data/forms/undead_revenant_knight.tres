@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "undead_revenant_knight"
+display_name = "Revenant Knight"
+species = "undead"
+stage = 3
+lineage = "bone_warrior"
+parents = ["undead_bone_warrior"]
+stats = {
+"atk": 2,
+"def": 2,
+"max_hp": 12,
+"max_mp": 6
+}
+tint = Color(0.8, 0.69, 0.725, 1)
+size = 1.25
+blurb = "Vengeance: hits harder against the creature that killed your last life; heavy swings"
+reads = ["earth", "dark"]
+host = ["crypt"]
+source = "the revenant: the dead who return to take vengeance (medieval chronicles)"
+verb_text = "Vengeance: hits harder against the creature that killed your last life; heavy swings"
+gives_up = "slow turning; no ranged"
+opened_by = "Bone Warrior, plus killing what killed you"

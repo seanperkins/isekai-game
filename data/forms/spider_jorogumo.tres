@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "spider_jorogumo"
+display_name = "Jorōgumo"
+species = "spider"
+stage = 3
+lineage = "weavermaid"
+parents = ["spider_weavermaid"]
+stats = {
+"atk": 2,
+"jump_height": 15,
+"max_hp": 12,
+"max_mp": 6,
+"spd": 12
+}
+tint = Color(0.75, 0.775, 0.925, 1)
+size = 1.25
+blurb = "Veil: pass as a goblin or villager (village standing reads you as welcome); revealing it bursts the veil"
+reads = ["air", "dark"]
+host = ["village"]
+source = "Japanese: a spider that takes a woman's shape and lures men; her true form is revealed later"
+verb_text = "Veil: pass as a goblin or villager (village standing reads you as welcome); revealing it bursts the veil"
+gives_up = "the veil drops when hit; no webbing while veiled"
+opened_by = "Weavermaid, plus a visit to the village unseen"

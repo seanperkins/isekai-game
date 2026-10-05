@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "goblin_lord_of_beasts"
+display_name = "Lord of Beasts"
+species = "goblin"
+stage = 4
+lineage = "beastcaller"
+parents = ["goblin_beast_rider"]
+stats = {
+"atk": 2,
+"def": 3,
+"jump_height": 15,
+"max_hp": 22,
+"max_mp": 10,
+"spd": 12
+}
+tint = Color(0.9, 0.915, 0.85, 1)
+size = 1.4
+blurb = "Two companions at once (a decided capstone exception to the one-at-a-time rule)"
+reads = ["earth", "air"]
+host = ["deep"]
+source = "the Master of Animals motif: Pashupati, Potnia Theron"
+verb_text = "Two companions at once (a decided capstone exception to the one-at-a-time rule)"
+gives_up = "fragile companions"
+opened_by = "Beast-Rider, plus lessons from many types"

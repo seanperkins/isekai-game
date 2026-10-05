@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "goblin_gremlin"
+display_name = "Gremlin"
+species = "goblin"
+stage = 4
+lineage = "tinker"
+parents = ["goblin_knocker"]
+stats = {
+"atk": 2,
+"def": 3,
+"jump_height": 15,
+"max_hp": 22,
+"max_mp": 10,
+"spd": 12
+}
+tint = Color(0.9, 0.915, 0.85, 1)
+size = 1.4
+blurb = "Sabotage: disable an enemy device or turn a trap against its owner"
+reads = ["earth", "air"]
+host = ["village"]
+source = "the RAF's gremlins, the saboteurs of machinery"
+verb_text = "Sabotage: disable an enemy device or turn a trap against its owner"
+gives_up = "backfires sometimes"
+opened_by = "Knocker, plus rigged traps sprung"

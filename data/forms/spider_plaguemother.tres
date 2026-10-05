@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "spider_plaguemother"
+display_name = "Plaguemother"
+species = "spider"
+stage = 4
+lineage = "stalker"
+parents = ["spider_venomspinner"]
+stats = {
+"atk": 3,
+"def": 1,
+"max_hp": 22,
+"max_mp": 10,
+"mp_regen": 40
+}
+tint = Color(0.675, 0.75, 0.975, 1)
+size = 1.4
+blurb = "a poison cloud that spreads on death"
+reads = ["water", "dark"]
+host = ["swamp"]
+source = "(guide)"
+verb_text = "a poison cloud that spreads on death"
+gives_up = "slow"
+opened_by = "Venomspinner, plus a poison kill streak"

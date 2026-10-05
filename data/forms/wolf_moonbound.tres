@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "wolf_moonbound"
+display_name = "Moonbound"
+species = "wolf"
+stage = 2
+lineage = "moonbound"
+parents = ["wolf"]
+stats = {
+"atk": 1,
+"max_hp": 5,
+"max_mp": 3
+}
+tint = Color(0.7, 0.6, 0.85, 1)
+size = 1.12
+blurb = "Rise: stand on two legs for claws and items, drop to four to gallop"
+reads = ["dark"]
+host = ["forest"]
+source = "the werewolf: Ovid's Lycaon, the French loup-garou"
+verb_text = "Rise: stand on two legs for claws and items, drop to four to gallop"
+gives_up = "rising costs a beat; no pounce while up"
+opened_by = "dark essence, plus a kill taken in moonlight (a moonlit forest room) or a rare Moonstone drop"

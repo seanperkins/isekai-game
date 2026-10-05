@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "undead_wild_huntsman"
+display_name = "Wild Huntsman"
+species = "undead"
+stage = 4
+lineage = "skeletal_archer"
+parents = ["undead_deadeye"]
+stats = {
+"atk": 3,
+"def": 1,
+"jump_height": 15,
+"max_hp": 22,
+"max_mp": 10,
+"spd": 12
+}
+tint = Color(0.8, 0.825, 0.975, 1)
+size = 1.4
+blurb = "Mark: arrows home on one marked prey"
+reads = ["dark", "air"]
+host = ["forest", "crypt"]
+source = "the Wild Hunt (Odin, Herne, the Gabriel hounds): the rider who runs prey down"
+verb_text = "Mark: arrows home on one marked prey"
+gives_up = "one mark at a time"
+opened_by = "Deadeye, plus a long chase"

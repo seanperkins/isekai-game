@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "wolf_lycaon"
+display_name = "Lycaon"
+species = "wolf"
+stage = 4
+lineage = "moonbound"
+parents = ["wolf_loup_garou"]
+stats = {
+"atk": 3,
+"def": 1,
+"max_hp": 22,
+"max_mp": 10
+}
+tint = Color(0.75, 0.65, 0.9, 1)
+size = 1.4
+blurb = "First Wolf's roar: wild wolves in the room join you briefly"
+reads = ["dark"]
+host = ["forest"]
+source = "Ovid: the king who fed Zeus human flesh and was made the first wolf"
+verb_text = "First Wolf's roar: wild wolves in the room join you briefly"
+gives_up = "weak alone"
+opened_by = "Loup-Garou, plus a bonded packmate"

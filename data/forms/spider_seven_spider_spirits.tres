@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "spider_seven_spider_spirits"
+display_name = "Seven Spider Spirits"
+species = "spider"
+stage = 4
+lineage = "weavermaid"
+parents = ["spider_jorogumo"]
+stats = {
+"atk": 3,
+"def": 1,
+"max_hp": 22,
+"max_mp": 10
+}
+tint = Color(0.75, 0.65, 0.9, 1)
+size = 1.4
+blurb = "Sisters: split into seven decoys that web"
+reads = ["dark"]
+host = ["deep"]
+source = "the spider demons of Pansi Cave in Journey to the West"
+verb_text = "Sisters: split into seven decoys that web"
+gives_up = "each decoy dies in one hit"
+opened_by = "Jorōgumo, plus a veiled kill"

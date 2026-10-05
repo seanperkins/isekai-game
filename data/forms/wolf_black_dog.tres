@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "wolf_black_dog"
+display_name = "Black Dog"
+species = "wolf"
+stage = 2
+lineage = "black_dog"
+parents = ["wolf"]
+stats = {
+"atk": 1,
+"jump_height": 10,
+"max_hp": 5,
+"max_mp": 3,
+"spd": 8
+}
+tint = Color(0.75, 0.775, 0.925, 1)
+size = 1.12
+blurb = "Slink: a silent gait in dark rooms; unseen until the pounce"
+reads = ["dark", "air"]
+host = ["cemetery", "crypt"]
+source = "the British black dog omen: Black Shuck, the Barghest"
+verb_text = "Slink: a silent gait in dark rooms; unseen until the pounce"
+gives_up = "weak in lit rooms"
+opened_by = "dark + air, plus kills from behind"

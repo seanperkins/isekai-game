@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "undead_skeletal_archer"
+display_name = "Skeletal Archer"
+species = "undead"
+stage = 2
+lineage = "skeletal_archer"
+parents = ["undead"]
+stats = {
+"atk": 1,
+"jump_height": 10,
+"max_hp": 5,
+"max_mp": 3,
+"spd": 8
+}
+tint = Color(0.75, 0.775, 0.925, 1)
+size = 1.12
+blurb = "returning bone throws, bow arm"
+reads = ["air", "dark"]
+host = ["cemetery", "crypt"]
+source = "the bone-ranged path in the design doc"
+verb_text = "returning bone throws, bow arm"
+gives_up = "frail"
+opened_by = "bow-arm graft, plus air"

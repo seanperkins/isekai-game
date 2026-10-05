@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "wolf_wepwawet"
+display_name = "Wepwawet"
+species = "wolf"
+stage = 4
+lineage = "warg"
+parents = ["wolf_church_grim"]
+stats = {
+"atk": 2,
+"def": 1,
+"jump_height": 15,
+"max_hp": 22,
+"max_mp": 12,
+"spd": 12
+}
+tint = Color(0.95, 1, 0.9, 1)
+size = 1.4
+blurb = "Opener: reveals hidden exits and shortcuts in a room"
+reads = ["light", "air"]
+host = ["sacred"]
+source = "Egypt's wolf (or jackal) \"Opener of the Ways\", who leads the army and the dead"
+verb_text = "Opener: reveals hidden exits and shortcuts in a room"
+gives_up = "low damage"
+opened_by = "Church Grim, plus a hidden room found"

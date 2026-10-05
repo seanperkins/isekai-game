@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "undead_spartoi_hoplite"
+display_name = "Spartoi Hoplite"
+species = "undead"
+stage = 3
+lineage = "bone_warrior"
+parents = ["undead_bone_warrior"]
+stats = {
+"atk": 2,
+"def": 2,
+"max_hp": 12,
+"max_mp": 6
+}
+tint = Color(0.8, 0.69, 0.725, 1)
+size = 1.25
+blurb = "Shield wall: block and spear thrust; sow two bone soldiers"
+reads = ["earth", "dark"]
+host = ["crypt", "deep"]
+source = "Cadmus's sown men"
+verb_text = "Shield wall: block and spear thrust; sow two bone soldiers"
+gives_up = "rooted while sowing"
+opened_by = "Bone Warrior, plus a summon power"

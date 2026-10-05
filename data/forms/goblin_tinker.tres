@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "goblin_tinker"
+display_name = "Tinker"
+species = "goblin"
+stage = 2
+lineage = "tinker"
+parents = ["goblin"]
+stats = {
+"def": 1,
+"max_hp": 5,
+"max_mp": 3
+}
+tint = Color(0.9, 0.78, 0.6, 1)
+size = 1.12
+blurb = "crafted throwables, rigged traps, more recipe slots"
+reads = ["earth"]
+host = ["village", "volcano"]
+source = "the kobold and the knocker; the dwarf-smiths Brokkr and Sindri"
+verb_text = "crafted throwables, rigged traps, more recipe slots"
+gives_up = "weak in melee"
+opened_by = "earth, plus lessons from junk and ants"

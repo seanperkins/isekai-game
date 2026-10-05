@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "wolf_warg"
+display_name = "Warg"
+species = "wolf"
+stage = 2
+lineage = "warg"
+parents = ["wolf"]
+stats = {
+"def": 1,
+"max_hp": 5,
+"max_mp": 3
+}
+tint = Color(0.9, 0.78, 0.6, 1)
+size = 1.12
+blurb = "Bond: a heavier pounce, knockback, one bonded packmate"
+reads = ["earth"]
+host = ["forest", "grotto"]
+source = "Norse vargr, \"wolf\" and \"outlaw\"; the war-wolf of fantasy"
+verb_text = "Bond: a heavier pounce, knockback, one bonded packmate"
+gives_up = "slow gallop"
+opened_by = "earth, plus a bonded packmate"

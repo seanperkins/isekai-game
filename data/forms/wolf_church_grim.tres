@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "wolf_church_grim"
+display_name = "Church Grim"
+species = "wolf"
+stage = 3
+lineage = "warg"
+parents = ["wolf_warg"]
+stats = {
+"atk": 1,
+"def": 2,
+"max_hp": 12,
+"max_mp": 8
+}
+tint = Color(0.95, 0.865, 0.65, 1)
+size = 1.25
+blurb = "Guardian: wards a packmate, holds holy ground, unharmed in holy zones"
+reads = ["light", "earth"]
+host = ["sacred", "cemetery"]
+source = "the black dog buried at the church wall to guard the churchyard"
+verb_text = "Guardian: wards a packmate, holds holy ground, unharmed in holy zones"
+gives_up = "tethered to a sacred spot"
+opened_by = "Warg, plus light"

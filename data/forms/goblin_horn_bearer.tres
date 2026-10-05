@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "goblin_horn_bearer"
+display_name = "Horn-Bearer"
+species = "goblin"
+stage = 4
+lineage = "hob"
+parents = ["goblin_paladin"]
+stats = {
+"atk": 2,
+"def": 1,
+"jump_height": 15,
+"max_hp": 22,
+"max_mp": 12,
+"spd": 12
+}
+tint = Color(0.95, 1, 0.9, 1)
+size = 1.4
+blurb = "Horn: a blast that stuns and rallies allies"
+reads = ["light", "air"]
+host = ["sacred"]
+source = "Roland blowing the Olifant at Roncesvalles"
+verb_text = "Horn: a blast that stuns and rallies allies"
+gives_up = "loud"
+opened_by = "Paladin, plus a rally"

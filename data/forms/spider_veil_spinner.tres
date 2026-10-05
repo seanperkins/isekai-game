@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "spider_veil_spinner"
+display_name = "Veil-Spinner"
+species = "spider"
+stage = 4
+lineage = "stalker"
+parents = ["spider_shadow_stalker"]
+stats = {
+"atk": 2,
+"def": 3,
+"jump_height": 15,
+"max_hp": 22,
+"max_mp": 10,
+"spd": 12
+}
+tint = Color(0.9, 0.915, 0.85, 1)
+size = 1.4
+blurb = "Veil: spin a web over a doorway that hides you and allies"
+reads = ["air", "earth"]
+host = ["cave", "sacred"]
+source = "the spider that hid a fugitive in a cave: David from Saul (Jewish midrash), the Prophet at the Cave of Thawr (Islamic tradition)"
+verb_text = "Veil: spin a web over a doorway that hides you and allies"
+gives_up = "the veil breaks on any attack"
+opened_by = "Shadow-stalker, plus time spent hidden"

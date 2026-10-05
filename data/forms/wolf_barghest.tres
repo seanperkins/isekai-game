@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "wolf_barghest"
+display_name = "Barghest"
+species = "wolf"
+stage = 3
+lineage = "black_dog"
+parents = ["wolf_black_dog"]
+stats = {
+"atk": 2,
+"max_hp": 12,
+"max_mp": 6
+}
+tint = Color(0.7, 0.6, 0.85, 1)
+size = 1.25
+blurb = "Fear howl: enemies falter and flee"
+reads = ["dark"]
+host = ["crypt", "deep"]
+source = "Yorkshire's spectral black hound, an omen of death"
+verb_text = "Fear howl: enemies falter and flee"
+gives_up = "cannot pounce while howling"
+opened_by = "Black Dog, plus a Howl power"

@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "wolf_gabriel_hound"
+display_name = "Gabriel Hound"
+species = "wolf"
+stage = 4
+lineage = "black_dog"
+parents = ["wolf_cwn_annwn"]
+stats = {
+"atk": 3,
+"def": 1,
+"jump_height": 15,
+"max_hp": 22,
+"max_mp": 10,
+"spd": 12
+}
+tint = Color(0.8, 0.825, 0.975, 1)
+size = 1.4
+blurb = "Hunt's passage: the pack carries you over one gap (a short glide)"
+reads = ["air", "dark"]
+host = ["deep"]
+source = "northern England's Gabriel Ratchets and Devon's Wisht hounds: a ghost pack heard overhead, an omen"
+verb_text = "Hunt's passage: the pack carries you over one gap (a short glide)"
+gives_up = "glide only after a kill"
+opened_by = "Cŵn Annwn, plus air"

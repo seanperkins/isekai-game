@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "undead_draugr"
+display_name = "Draugr"
+species = "undead"
+stage = 3
+lineage = "zombie"
+parents = ["undead_zombie"]
+stats = {
+"atk": 2,
+"def": 2,
+"max_hp": 12,
+"max_mp": 6
+}
+tint = Color(0.8, 0.69, 0.725, 1)
+size = 1.25
+blurb = "Heft: huge barrow-blade swings; it swells as it kills"
+reads = ["earth", "dark"]
+host = ["cemetery", "crypt", "deep"]
+source = "the Norse barrow-dweller: swells huge, guards a hoard"
+verb_text = "Heft: huge barrow-blade swings; it swells as it kills"
+gives_up = "no jump; slowest of all"
+opened_by = "Zombie, plus an arm graft with a weapon"

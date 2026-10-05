@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "wolf_beast_of_gevaudan"
+display_name = "Beast of Gévaudan"
+species = "wolf"
+stage = 4
+lineage = "moonbound"
+parents = ["wolf_loup_garou"]
+stats = {
+"atk": 4,
+"def": 1,
+"max_hp": 22,
+"max_mp": 10
+}
+tint = Color(0.85, 0.575, 0.725, 1)
+size = 1.4
+blurb = "Stalk-kill: a stealth opener that deals huge damage to the first target, shrugs off ranged hits"
+reads = ["dark", "blood"]
+host = ["forest"]
+source = "the man-eater that terrorised the Gévaudan, 1764 to 1767; musket shot seemed not to hurt it"
+verb_text = "Stalk-kill: a stealth opener that deals huge damage to the first target, shrugs off ranged hits"
+gives_up = "helpless against crowds"
+opened_by = "Loup-Garou, plus a no-damage kill streak, plus blood (later)"

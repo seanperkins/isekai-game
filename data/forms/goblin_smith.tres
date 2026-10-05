@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "goblin_smith"
+display_name = "Smith"
+species = "goblin"
+stage = 3
+lineage = "tinker"
+parents = ["goblin_tinker"]
+stats = {
+"atk": 2,
+"def": 2,
+"max_hp": 12,
+"max_mp": 6
+}
+tint = Color(0.95, 0.69, 0.525, 1)
+size = 1.25
+blurb = "Forge: craft a named weapon from parts at a forge"
+reads = ["earth", "fire"]
+host = ["volcano"]
+source = "Brokkr and Sindri forging Mjölnir and Draupnir"
+verb_text = "Forge: craft a named weapon from parts at a forge"
+gives_up = "needs a forge and time"
+opened_by = "Tinker, plus fire (later)"
