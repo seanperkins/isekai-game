@@ -164,10 +164,16 @@ def g_bridge(d, fg):
     d.line([(3, 12), (29, 12)], fill=fg, width=1)
 
 
+def g_trap(d, fg):
+    d.line([(4, 22), (28, 22)], fill=fg, width=2)
+    for x in (6, 12, 18, 24):
+        d.polygon([(x, 22), (x + 3, 11), (x + 6, 22)], fill=fg)
+
+
 GLYPHS = {"bolt": g_bolt, "burst": g_burst, "ring": g_ring, "dash": g_dash, "zone": g_zone, "mark": g_mark, "heal": g_heal,
           "ward": g_ward, "buff": g_buff, "pull": g_pull, "aura": g_aura, "chain": g_chain, "engulf": g_engulf,
           "dissolve": g_dissolve, "glide": g_glide, "anchor": g_anchor, "decoy": g_decoy, "summon": g_summon, "vine": g_vine,
-          "transmute": g_transmute, "copy": g_copy, "reveal": g_reveal, "bridge": g_bridge}
+          "transmute": g_transmute, "copy": g_copy, "reveal": g_reveal, "bridge": g_bridge, "trap": g_trap}
 
 
 def form_tint(form):

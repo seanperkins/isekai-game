@@ -1503,17 +1503,17 @@
   },
   {
     "form": "goblin_tinker",
-    "name": "Throwable",
+    "name": "Rig",
     "mp": 3,
     "value": 5,
     "fidelity": "approx",
-    "note": "A thrown device; crafting, traps and recipe slots are not modeled.",
-    "text": "Crafted throwables, rigged traps, more recipe slots.",
+    "note": "One kind of trap, a spring that hurts and stuns; crafted throwables and recipe slots wait for the item wheel.",
+    "text": "Rig a trap that hurts and stuns the first enemy to step on it.",
     "spec": {
-      "kind": "bolt",
-      "range": 180,
-      "pierce": false,
-      "cooldown": 1.5
+      "kind": "trap",
+      "seconds": 30.0,
+      "stun": 2.0,
+      "cooldown": 2.0
     }
   },
   {

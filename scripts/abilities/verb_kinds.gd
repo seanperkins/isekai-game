@@ -5,7 +5,7 @@ extends RefCounted
 
 ## The scene every data-defined verb uses.
 const SCENE := "res://scenes/abilities/verb.tscn"
-const KINDS := ["bolt", "burst", "ring", "dash", "zone", "mark", "heal", "ward", "buff", "pull", "aura", "chain", "engulf", "dissolve", "glide", "anchor", "decoy", "summon", "vine", "transmute", "copy", "reveal", "bridge"]
+const KINDS := ["bolt", "burst", "ring", "dash", "zone", "mark", "heal", "ward", "buff", "pull", "aura", "chain", "engulf", "dissolve", "glide", "anchor", "decoy", "summon", "vine", "transmute", "copy", "reveal", "bridge", "trap"]
 ## Each kind's keys and what they hold (validate() checks them). Every kind also takes `cooldown` (seconds, in place of the default);
 ## the kinds in TYPED also take damage_type, and those in STRIKES a status and `drain` (the fraction of the damage the caster heals).
 const SCHEMA := {
@@ -32,6 +32,7 @@ const SCHEMA := {
 	"copy": {"seconds": "number"},
 	"reveal": {"radius": "number"},
 	"bridge": {"length": "number", "seconds": "number"},
+	"trap": {"seconds": "number", "stun": "number"},
 }
 ## The kinds that hurt, which take a `damage_type`; STRIKES are the instant ones, which also take a `status`.
 ## The kinds an enemy casts (at the player, or on itself). The rest need a player's hands: a summon, a bridge, a vine, a reveal, a copy.
@@ -87,6 +88,10 @@ const REVEAL_RADIUS := 160.0
 const BRIDGE_LENGTH := 160.0
 const BRIDGE_SECONDS := 15.0
 const BRIDGE_REACH := 8.0
+const TRAP_SECONDS := 30.0
+const TRAP_STUN := 2.0
+## How many of one caster's traps stand at once: a cast beyond it takes the place of the oldest.
+const TRAP_MAX := 3
 const BUFF_SOURCE := "verb_buff"
 const BUFF_GENERATION := "verb_buff_generation"
 const BOLT_RANGE := 260.0
@@ -145,6 +150,8 @@ static func run(ability: Ability, spec: Dictionary) -> void:
 			_reveal(ability, spec)
 		"bridge":
 			_bridge(ability, spec)
+		"trap":
+			_trap(ability, spec)
 	if spec.has("deed"):
 		_deed(ability, str(spec["deed"]))
 
@@ -421,6 +428,16 @@ static func _bridge(a: Ability, spec: Dictionary) -> void:
 	var bridge := VerbBridge.new()
 	a.actor.get_parent().add_child(bridge)
 	bridge.launch(a.actor, Vector2(from.x + way * (BRIDGE_REACH + length / 2.0), from.y + BodyConfig.BOTTOM), length, float(spec.get("seconds", BRIDGE_SECONDS)))
+
+## A trap at the caster's feet that the first awake enemy to step on it springs for the skill's damage and a stun (Rig). A fourth
+## standing trap of the caster's takes the place of the oldest.
+static func _trap(a: Ability, spec: Dictionary) -> void:
+	var mine: Array = a.actor.get_tree().get_nodes_in_group("verb_traps").filter(func(t) -> bool: return t.caster == a.actor)
+	if mine.size() >= TRAP_MAX:
+		mine[0].free()
+	var trap := VerbTrap.new()
+	a.actor.get_parent().add_child(trap)
+	trap.launch(a.actor, a.actor.global_position, a.power(), float(spec.get("seconds", TRAP_SECONDS)), float(spec.get("stun", TRAP_STUN)))
 
 ## The skill's damage to each target, then the spec's status. `ignore_def` skips an Enemy's DEF.
 static func _strike(a: Ability, targets: Array, spec: Dictionary, ignore_def := false, counts := true) -> void:
