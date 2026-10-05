@@ -44,12 +44,12 @@ Each class has one job and is testable without a process: `mcp_protocol` takes a
 
 ### Transport and bootstrap (what the spike showed)
 
-- `godot --headless --quiet -s script.gd`. `--quiet` silences all stdout including `print()`, which is what we want on a protocol channel. Responses go through `FileAccess.open("/dev/stdout", FileAccess.WRITE)` with `flush()` after each line. Logs go to stderr only.
+- `godot --headless --no-header --path . -s script.gd`. `--no-header` removes the only line the engine itself writes to stdout, so `print(reply)` (one line, flushed by the engine at once) is the protocol channel and everything else the engine says goes to stderr. Not `--quiet`, which silences `print()` too, and not `FileAccess.open("/dev/stdout")`, which works when stdout is a file but fails when it is a pipe or socket (Godot refuses to open anything but a regular file), which is what a client gives us. Project code must not call `print()` while the server runs; the smoke test requires every stdout line to be JSON.
 - `OS.read_string_from_stdin(n)` blocks, so it runs on a `Thread`. The main loop drains a queue each frame. On EOF the thread ends and the process quits; the bootstrap calls `wait_to_finish()` so Godot prints no thread warning.
 - Autoloads (EventBus and others) do not exist yet when the `-s` script compiles, so a script that names a project class fails to parse. The bootstrap therefore contains no project class names: after the first frame it calls `load("res://scripts/editor/mcp/mcp_protocol.gd")` and hands lines to it.
 - Measured on this machine: loading the model about 11 ms, drawing a PNG about 5 ms, `problems()` about 41 ms.
 - Framing is newline-delimited JSON (the MCP stdio rule), so a message has no embedded newline. `read_string_from_stdin` takes a buffer size, so the reader keeps reading until it sees a newline and accepts lines up to 4 MiB; a longer line gets a -32600 error and is discarded. A test sends a 200 KB `apply_room_spec` to prove a large line survives.
-- macOS and Linux only (`/dev/stdout`). The launcher says so and exits if `/dev/stdout` is missing.
+- The launcher is a bash script, so Windows needs another one; the server itself uses nothing Unix-specific.
 
 ### Protocol
 
@@ -204,4 +204,4 @@ Each one leaves the full suite green and is committed on its own.
 - A headless playtest or reachability model. When one exists it plugs into `problems`.
 - Dressing (background scenery) tools and a rewritten-exits bulk spec.
 - Real art for the new biomes, which retires the alias entries one by one.
-- Windows support.
+- A Windows launcher.

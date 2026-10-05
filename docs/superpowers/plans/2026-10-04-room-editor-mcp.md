@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Godot 4.7, headless: `godot --headless --quiet --path . -s res://tools/mcp/room_mcp_boot.gd`; macOS and Linux only (`/dev/stdout`). stdout carries protocol lines only; logs go to stderr.
+- Godot 4.7, headless: `godot --headless --no-header --path . -s res://tools/mcp/room_mcp_boot.gd`; replies leave through `print()` (Task 2 ruling: `--quiet` silences it and `/dev/stdout` cannot be opened as a file when it is a pipe). stdout carries protocol lines only; logs go to stderr.
 - JSON-RPC 2.0, newline-delimited. Errors: -32700 parse, -32600 invalid request, -32601 unknown method, -32602 bad params, -32603 internal. Lines up to 4 MiB (`McpProtocol.MAX_LINE = 4194304`). A failed tool is a normal result with `isError: true` and the model's own error string.
 - Room-local pixels, y down; grid 4; `MAX_SCREENS` 6; `MIN_SOLID` 4; `MIN_WATER` 32; door 80; screen 640x360; wall 20; floor 40.
 - `save` writes only `res://data/rooms/*.tres` (the tool takes no path). The launcher sets `HOME=$PWD/.tmp/editor-home`. Nothing reaches disk before `save`.
