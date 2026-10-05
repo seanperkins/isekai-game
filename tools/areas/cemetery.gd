@@ -1,8 +1,9 @@
 class_name CemeteryArea
 extends AreaModule
-## The cemetery above the Deep (docs/research/area-level-design.md section 11): three rooms. D7, the antechamber of the Taratect's arena, opens
-## upward onto the Gate Tunnel (the way up wants the wall cling, the label D7's own way in carries); the Churchyard is the truce, a pool and a
-## tablet and nothing hostile; the Lych Gate leads east to the crypt. The cathedral opens above the Churchyard and the crypt beyond the Lych Gate
+## The cemetery above the Deep (docs/research/area-level-design.md section 11): four rooms. D7, the antechamber of the Taratect's arena, opens by
+## a door in its west wall onto the Gate Stair, which climbs a screen to the Gate Tunnel (D7 has no ledge to climb to a hole in its ceiling, and
+## the cemetery is as far behind the wall cling as D7 is); the Churchyard is the truce, a pool and a tablet and nothing hostile; the Lych Gate
+## leads east to the crypt. The cathedral opens above the Churchyard and the crypt beyond the Lych Gate
 ## (the later modules make those exits). Art is the cave's. Holy and safe zones are art and text until a later piece gives them rules.
 
 func area() -> String:
@@ -15,16 +16,18 @@ func build(world: Dictionary) -> void:
 	var tunnel := _tunnel()
 	var churchyard := _churchyard()
 	var lych := _lych()
-	for r in [tunnel, churchyard, lych]:
+	var stair := _stair()
+	for r in [tunnel, churchyard, lych, stair]:
 		world[r.id] = r
-	link(world["D7"], tunnel, "top", 11820.0, 11980.0, {"gate": "wall_cling"})  # x: 300 to 460 in both (cell 18 starts at 11520)
-	link(tunnel, churchyard, "right", 1640.0, 1760.0)  # y: row 4 starts at 1440
+	link(world["D7"], stair, "left", 2000.0, 2120.0)  # y: row 5 starts at 1800; 560 to 680 in the Stair (rows 4 and 5, from 1440)
+	link(stair, tunnel, "right", 1640.0, 1760.0)  # y: row 4 starts at 1440
+	link(tunnel, churchyard, "right", 1640.0, 1760.0)
 	link(churchyard, lych, "right", 1640.0, 1760.0)
 
-# --- CM1 the Gate Tunnel: a short tunnel over D7; the climb out of D7 lands beside its hole ---
+# --- CM1 the Gate Tunnel: a short tunnel over D7 and the first creatures of the cemetery ---
 func _tunnel() -> RoomDef:
 	var r := AreaKit.room("CM1", "cemetery", Vector2i(18, 4))
-	AreaKit.flank(r, 300.0, 460.0)
+	AreaKit.ledge(r, 300.0, 268.0, 140.0)
 	AreaKit.spawn(r, "skeleton", 540.0, 320.0)
 	AreaKit.spawn(r, "carrion_crow", 120.0, 320.0)
 	AreaKit.decor(r, "root_hang", 160.0, 20.0)
@@ -55,4 +58,15 @@ func _lych() -> RoomDef:
 	AreaKit.decor(r, "stalagmite", 120.0, 320.0)
 	AreaKit.decor(r, "rubble", 560.0, 320.0)
 	AreaKit.decor(r, "vine", 320.0, 20.0)
+	return r
+
+# --- CM4 the Gate Stair: a screen of ledges from D7's door at the floor up to the Gate Tunnel's door; a threshold, no creatures ---
+func _stair() -> RoomDef:
+	var r := AreaKit.room("CM4", "cemetery", Vector2i(17, 4), Vector2i(1, 2))
+	for i in 6:  # 45 a step, zigzagging along the right half, the first a hop above the floor
+		AreaKit.ledge(r, 330.0 + 120.0 * (i % 2), 634.0 - 45.0 * i, 110.0)
+	AreaKit.ledge(r, 430.0, 364.0, 180.0)  # the last, out to the door (a hop up of 44)
+	AreaKit.decor(r, "root_hang", 200.0, 20.0)
+	AreaKit.decor(r, "rubble", 150.0, 680.0)
+	AreaKit.decor(r, "stalagmite", 250.0, 680.0)
 	return r

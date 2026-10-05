@@ -30,11 +30,10 @@ exits = [{
 "room": "D6",
 "to": 320.0
 }, {
-"edge": "top",
-"from": 300.0,
-"gate": "wall_cling",
-"room": "CM1",
-"to": 460.0
+"edge": "left",
+"from": 200.0,
+"room": "CM4",
+"to": 320.0
 }]
 features = [{
 "id": "d7_glow_pool_1",

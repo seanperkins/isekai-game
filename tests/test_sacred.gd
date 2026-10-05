@@ -2,7 +2,8 @@ extends GutTest
 ## The sacred cluster above and east of the Deep: a cemetery, a cathedral and a crypt, their rooms at their cells, the exits that join them to
 ## the world, and nothing else of the world changed.
 
-const CEMETERY := {"CM1": [Vector2i(18, 4), Vector2i(1, 1)], "CM2": [Vector2i(19, 4), Vector2i(2, 1)], "CM3": [Vector2i(21, 4), Vector2i(1, 1)]}
+const CEMETERY := {"CM1": [Vector2i(18, 4), Vector2i(1, 1)], "CM2": [Vector2i(19, 4), Vector2i(2, 1)], "CM3": [Vector2i(21, 4), Vector2i(1, 1)],
+	"CM4": [Vector2i(17, 4), Vector2i(1, 2)]}
 ## The creatures the design table gives the cemetery's open rooms (the churchyard itself is a truce).
 const CEMETERY_SUPPORT := ["skeleton", "ghost", "carrion_crow"]
 
@@ -27,7 +28,7 @@ func before_all() -> void:
 	nave = AreaWorlds.upto("CA")
 	crypt = AreaWorlds.upto("CR")
 
-func test_the_cemetery_is_three_rooms_at_their_cells_and_sizes() -> void:
+func test_the_cemetery_is_four_rooms_at_their_cells_and_sizes() -> void:
 	for id in CEMETERY:
 		assert_true(graveyard.has(id), id)
 		var r: RoomDef = graveyard[id]
@@ -54,8 +55,9 @@ func test_d7_gains_one_exit_and_nothing_else_and_the_arena_is_untouched() -> voi
 	var was: RoomDef = before["D7"]
 	var now: RoomDef = graveyard["D7"]
 	assert_eq(now.exits.size(), was.exits.size() + 1)
-	var e: Dictionary = now.exits.filter(func(x: Dictionary) -> bool: return x["room"] == "CM1")[0]
-	assert_eq([e["edge"], e["gate"]], ["top", "wall_cling"])
+	var e: Dictionary = now.exits.filter(func(x: Dictionary) -> bool: return x["room"] == "CM4")[0]
+	assert_eq(e["edge"], "left", "a door in D7's west wall: the antechamber has no ledge to climb to a hole in its ceiling")
+	assert_false(e.has("gate") or e.has("shortcut"), "the way in is D7's own, which is behind the wall cling")
 	for p in now.get_property_list():
 		if (int(p["usage"]) & PROPERTY_USAGE_STORAGE) != 0 and p["name"] != "script" and p["name"] != "exits":
 			assert_eq(now.get(p["name"]), was.get(p["name"]), "D7.%s is as shipped" % p["name"])
@@ -82,14 +84,20 @@ func test_the_gate_tunnel_and_the_lych_gate_hold_the_cemeterys_creatures() -> vo
 	for c in CEMETERY_SUPPORT:
 		assert_true(seen.has(c), "%s lives in the cemetery" % c)
 
-func test_the_gate_tunnels_flanks_stand_either_side_of_its_floor_hole() -> void:
-	var tunnel := graveyard["CM1"] as RoomDef
-	var hole: Dictionary = tunnel.exits.filter(func(e: Dictionary) -> bool: return e["edge"] == "bottom")[0]
-	var flanks := tunnel.solids.filter(func(s: Rect2) -> bool: return s.position.y == 268.0)
-	assert_eq(flanks.size(), 2)
-	flanks.sort_custom(func(a: Rect2, b: Rect2) -> bool: return a.position.x < b.position.x)
-	assert_lt((flanks[0] as Rect2).end.x, float(hole["from"]))
-	assert_gt((flanks[1] as Rect2).position.x, float(hole["to"]))
+func test_the_gate_stair_climbs_from_d7s_door_to_the_tunnels_door_on_ledges_a_hop_apart() -> void:
+	var stair := graveyard["CM4"] as RoomDef
+	var low: Dictionary = stair.exits.filter(func(e: Dictionary) -> bool: return e["room"] == "D7")[0]
+	var high: Dictionary = stair.exits.filter(func(e: Dictionary) -> bool: return e["room"] == "CM1")[0]
+	assert_eq([low["edge"], high["edge"]], ["right", "right"])
+	assert_gt(float(low["from"]), float(high["to"]), "D7's door is at the floor, the tunnel's a screen above")
+	var ledges := stair.solids.duplicate()
+	ledges.sort_custom(func(a: Rect2, b: Rect2) -> bool: return a.position.y > b.position.y)
+	assert_lte(AreaKit.floor_y(stair) - (ledges[0] as Rect2).position.y, RoomLint.REACH_RISE, "the lowest ledge is a hop above the floor")
+	assert_lte((ledges[-1] as Rect2).position.y - float(high["to"]), RoomLint.REACH_RISE, "the highest is a hop below the upper door's sill")
+	assert_gte((ledges[-1] as Rect2).end.x, 600.0, "and reaches the door's wall")
+	for i in range(1, ledges.size()):
+		assert_lte((ledges[i - 1] as Rect2).position.y - (ledges[i] as Rect2).position.y, 52.0 + 0.001)
+	assert_eq(stair.spawns, [], "a threshold: no creatures")
 
 # --- the cathedral ---
 

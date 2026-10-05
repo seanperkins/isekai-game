@@ -7,7 +7,7 @@ script = ExtResource("1_roomdef")
 id = "CM1"
 area = "cemetery"
 cell = Vector2i(18, 4)
-solids = [Rect2(160, 268, 100, 12), Rect2(480, 268, 100, 12)]
+solids = [Rect2(300, 268, 140, 12)]
 decor = [{
 "anchor": "top",
 "id": "root_hang",
@@ -28,11 +28,10 @@ spawns = [{
 "pos": Vector2(120, 314)
 }]
 exits = [{
-"edge": "bottom",
-"from": 300.0,
-"gate": "wall_cling",
-"room": "D7",
-"to": 460.0
+"edge": "left",
+"from": 200.0,
+"room": "CM4",
+"to": 320.0
 }, {
 "edge": "right",
 "from": 200.0,
