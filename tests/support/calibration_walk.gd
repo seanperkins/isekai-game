@@ -25,6 +25,23 @@ static func order(rooms: Dictionary, start_area: String) -> Array:
 		out.append_array(ids)
 	return out
 
+## Copies of `rooms` whose spawns keep only the creatures whose class in `plan` (tools/creature_areas.json) is one of `classes`: "common",
+## "elite", "rare", or "old" for a creature the plan does not list (the hand-made ones). `["old", "common"]` is the diet of an eater that
+## downs only what a stage-1 body can: the hand-made creatures and the new commons.
+static func diet(rooms: Dictionary, plan: Dictionary, classes: Array) -> Dictionary:
+	var out := {}
+	for id in rooms:
+		var r: RoomDef = rooms[id]
+		var copy := RoomDef.new()
+		copy.id = r.id
+		copy.area = r.area
+		copy.cell = r.cell
+		copy.size = r.size
+		copy.spawns = r.spawns.filter(func(s: Dictionary) -> bool:
+			return classes.has(plan["creatures"][s["id"]]["class"] if plan["creatures"].has(s["id"]) else "old"))
+		out[id] = copy
+	return out
+
 static func eat(rules: SkillRulesEngine, c: CreatureDef) -> void:
 	rules.handle_event("predated", {"source": c.id, "kind": "creature" if c.id != "water_pool" else "terrain"})
 	for e in c.essences:
