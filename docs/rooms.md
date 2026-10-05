@@ -109,6 +109,32 @@ These are the choices in the data that a test does not catch and a casual edit w
   (y 320), so the shaft between it and the west wall can only be climbed with Wall Cling. It is the one thing that makes the G5
   exit need Wall Cling physically, and no test catches moving it: leave it where it is unless the design of G5 changes.
 
+## Level making with the MCP
+
+An agent builds rooms with the same rules as the editor through an MCP server, `rooms`, registered in `.mcp.json` and started by
+`tools/mcp/room_mcp.sh` (Godot, headless, on this checkout's `data/rooms`; design in
+`docs/superpowers/specs/2026-10-04-room-editor-mcp-design.md`). `python3 tools/mcp/smoke.py` talks to the real server.
+
+| To | Tools |
+|---|---|
+| Read | `list_rooms`, `get_room` (a spec with an `index` on every element), `catalog` (creatures, decor, prefabs, perks, gates, areas, limits), `problems`, `world_size`, `state` |
+| Add | `new_room`, `grow_room`, `add_solid`, `add_water`, `add_spawn`, `add_feature`, `add_decor`, `add_exit`, `stamp_prefab` |
+| Change | `set_field`, `move`, `delete`, `undo`, `redo` |
+| Replace | `apply_room_spec`: a room's solids, water, spawns, features and decor in one undo step, all or nothing, every refusal listed |
+| See | `preview`: a schematic picture of a room or the world, a legend and a text map (no game art, no letters in the picture) |
+| Persist | `save`, `revert` |
+
+- The server keeps a working set in memory. Nothing reaches disk until `save`, which writes only `data/rooms/*.tres` and refuses a
+  room whose file changed on disk since it was loaded (`force` overrides). `revert` drops every unsaved edit.
+- An element is addressed by `{room, kind, index}`; the index is its position in the room's array, so a `delete` shifts the ones
+  after it. Fetch `get_room` again after a delete.
+- Edits use the editor's rules and its error text. Add tools snap to the 4 px grid like a drag; `apply_room_spec` and `set_field`
+  keep numbers exactly (most shipped rooms are off the grid). `problems` is informational: `save` never blocks on it.
+- A new area (forest, swamp, village ...) borrows an existing biome's art through `data/area_art.json` until it has its own;
+  `TerrainArt.art_biome(area)` is the one place that looks it up.
+- For agents: connect new rooms with `new_room` and `add_exit`, do not reshape shipped rooms, run `problems` before `save`, run
+  `tools/run_tests.sh` after it, and review the `.tres` diff in git before committing.
+
 ## The rooms
 
 | Id | Size, cell | What it is |
