@@ -18,6 +18,7 @@ essences = {
 xp = 10
 pack = true
 charges = true
+bonds = ["pack"]
 origin = "twin"
 stage = 3
 form = "wolf_barghest"

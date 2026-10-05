@@ -16,6 +16,7 @@ essences = {
 "earth": 3
 }
 xp = 4
+bonds = ["tame", "large"]
 origin = "support"
 role = "common"
 wears = "stone_drake"

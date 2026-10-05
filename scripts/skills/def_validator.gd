@@ -171,6 +171,18 @@ static func _check_drops(w: String, c: CreatureDef, errors: PackedStringArray) -
 		if chance <= 0.0 or chance > 1.0:
 			errors.append("%s: drop chance %s is outside 0 to 1" % [w, str(chance)])
 
+## The bonds a creature accepts are known, each once, and "large" rides on a bond a creature can actually be given.
+static func _check_bonds(w: String, c: CreatureDef, errors: PackedStringArray) -> void:
+	var seen := []
+	for b in c.bonds:
+		if not ["pack", "tame", "large"].has(b):
+			errors.append("%s: unknown bond '%s'" % [w, str(b)])
+		elif seen.has(b):
+			errors.append("%s: bond '%s' is listed twice" % [w, b])
+		seen.append(b)
+	if seen.has("large") and not seen.has("pack") and not seen.has("tame"):
+		errors.append("%s: bond 'large' needs 'pack' or 'tame' too" % w)
+
 ## A creature's verb, origin and art: the verb is a data verb, a twin names its form, a still is a real frame, and `wears` is a shipped creature.
 static func _check_creature_look(w: String, c: CreatureDef, by_id: Dictionary, errors: PackedStringArray) -> void:
 	if not ["", "twin", "support"].has(c.origin):
@@ -273,6 +285,7 @@ static func _check_creatures(creatures: Array, by_id: Dictionary, errors: Packed
 			errors.append("%s: appraisal_target may be false only on non-predatable sources" % w)
 		_check_creature_look(w, c, by_id, errors)
 		_check_drops(w, c, errors)
+		_check_bonds(w, c, errors)
 	for sid in Sources.ALL:
 		if not seen.has(sid):
 			errors.append("missing CreatureDef for source '%s'" % sid)

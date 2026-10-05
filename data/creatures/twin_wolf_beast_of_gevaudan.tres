@@ -19,6 +19,7 @@ essences = {
 xp = 20
 pack = true
 charges = true
+bonds = ["pack"]
 origin = "twin"
 stage = 4
 form = "wolf_beast_of_gevaudan"

@@ -46,6 +46,9 @@ extends Resource
 ## What it leaves when it goes down: [{"part": part id, "chance": 0..1}], each rolled once (Drops). A large creature also leaves ribs or
 ## flesh at a small chance whatever it lists.
 @export var drops: Array = []
+## The bonds it accepts when it is stunned: "pack" (a wolf bonds with it), "tame" (a goblin tames it with a part), and "large" (a bond with it
+## also counts as a large companion). Only the first two make it bondable; "large" rides on one of them.
+@export var bonds: Array = []
 ## The species of the form it twins ("" for a creature that is not one), and its place in the world ("common", "elite", "rare", ...).
 @export var species: String = ""
 @export var role: String = ""

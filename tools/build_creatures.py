@@ -48,6 +48,9 @@ FLAG_ORDER = ["armored_charger", "drifter", "pack", "charges"]
 # What the creatures leave (design doc, the parts table). The two shipped creatures that leave claws are edited by hand in their files.
 SUPPORT_DROPS = {"skeleton": [("ribs", 0.25), ("skull", 0.4)], "village_goblin": [("bow_arm", 0.25)], "shield_guard": [("weapon_arm", 0.3)],
                  "goblin_shaman": [("focus", 0.3)], "chapel_priest": [("focus", 0.3)], "moon_hare": [("moonstone", 0.15)]}
+# The bonds a creature accepts (see CreatureDef.bonds). Every wolf twin accepts the pack; gloom_wolf and stone_drake, which are shipped
+# creatures, are edited by hand in their files.
+SUPPORT_BONDS = {"bone_hound": ["pack"], "cave_rat": ["tame"], "tusker_boar": ["tame", "large"]}
 TWIN_DROPS = {"twin_undead_zombie": [("ribs", 0.3), ("flesh", 0.3)], "twin_undead_ghoul": [("ribs", 0.3), ("flesh", 0.3), ("claw", 0.3)],
               "twin_undead_bone_warrior": [("weapon_arm", 0.3)], "twin_undead_draugr": [("weapon_arm", 0.3)],
               "twin_undead_skeletal_archer": [("bow_arm", 0.3)], "twin_undead_mummy_priest": [("wrappings", 0.3)],
@@ -82,7 +85,7 @@ def twin_rows(data):
                      "role": t["role"], "form": form_id, "verb": verb, "stats": stats, "essences": dict(t["essence"]), "xp": t["xp"],
                      "flags": dict(SPECIES_FLAGS.get(f["species"], {})), "areas": t["areas"],
                      # a form with a still wears it; one without (the slime's) is the slime tinted, as the player draws it
-                     "drops": TWIN_DROPS.get("twin_" + form_id, []),
+                     "drops": TWIN_DROPS.get("twin_" + form_id, []), "bonds": ["pack"] if f["species"] == "wolf" else [],
                      "sprite_set": sheet or "slime", "sprite_frame": frame or "idle_1", "wears": "",
                      "sprite_size": size, "sprite_tint": [1.0, 1.0, 1.0] if sheet else tint})
     return rows
@@ -97,7 +100,7 @@ def support_rows(data):
         dominant = max(c["essence"], key=lambda e: c["essence"][e])
         row = {"id": c["id"], "name": c["name"], "origin": "support", "species": SUPPORT_SPECIES.get(c["id"], ""), "stage": 0, "role": c["role"], "form": "", "verb": "",
                "stats": dict(ROLE_STATS[role]), "essences": dict(c["essence"]), "xp": c["xp"], "flags": dict(SUPPORT_FLAGS.get(c["id"], {})),
-               "areas": c["areas"], "drops": SUPPORT_DROPS.get(c["id"], []),
+               "areas": c["areas"], "drops": SUPPORT_DROPS.get(c["id"], []), "bonds": list(SUPPORT_BONDS.get(c["id"], [])),
                "sprite_set": "", "sprite_frame": "", "wears": "", "sprite_size": 1.0, "sprite_tint": [1.0, 1.0, 1.0]}
         if c["id"] in SUPPORT_SET:
             row["sprite_set"], row["sprite_frame"] = SUPPORT_SET[c["id"]]
@@ -137,6 +140,8 @@ def tres(row):
             lines.append("%s = true" % flag)
     if row["drops"]:
         lines.append("drops = [%s]" % ", ".join('{"part": %s, "chance": %s}' % (q(p), num(c)) for p, c in row["drops"]))
+    if row["bonds"]:
+        lines.append("bonds = [%s]" % ", ".join(q(b) for b in row["bonds"]))
     lines.append("origin = %s" % q(row["origin"]))
     if row["stage"]:
         lines.append("stage = %d" % row["stage"])

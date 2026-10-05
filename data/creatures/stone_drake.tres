@@ -21,5 +21,6 @@ eat_bonus = {
 "stat": "max_hp"
 }
 xp = 12
+bonds = ["tame", "large"]
 armored_charger = true
 stomper = true

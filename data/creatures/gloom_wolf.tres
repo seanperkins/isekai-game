@@ -23,5 +23,6 @@ eat_bonus = {
 }
 xp = 6
 drops = [{"part": "claw", "chance": 0.3}]
+bonds = ["pack", "tame"]
 pack = true
 charges = true

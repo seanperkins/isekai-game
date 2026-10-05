@@ -49,6 +49,22 @@ class RowsTest(unittest.TestCase):
         self.assertEqual(junk["role"], "common")
         self.assertIn("village", [a.lower() for a in junk["areas"]])
 
+    def test_the_bonds_are_the_design_tables(self):
+        bonds = {r["id"]: r["bonds"] for r in self.rows if r["bonds"]}
+        self.assertEqual(bonds["bone_hound"], ["pack"])
+        self.assertEqual(bonds["cave_rat"], ["tame"])
+        self.assertEqual(bonds["tusker_boar"], ["tame", "large"])
+        wolf_twins = [r for r in self.twins if r["species"] == "wolf"]
+        self.assertEqual(len(wolf_twins), 21)
+        for r in wolf_twins:
+            self.assertEqual(r["bonds"], ["pack"], r["id"])
+        self.assertEqual(len(bonds), 24)
+
+    def test_the_tres_writes_the_bonds(self):
+        text = bc.tres(next(r for r in self.rows if r["id"] == "tusker_boar"))
+        self.assertIn('bonds = ["tame", "large"]', text)
+        self.assertNotIn("bonds", bc.tres(next(r for r in self.rows if r["id"] == "wild_slime")))
+
     def test_a_twin_is_twin_plus_its_form_id_and_the_form_exists(self):
         for r in self.twins:
             self.assertEqual(r["id"], "twin_" + r["form"])
