@@ -3,13 +3,13 @@ extends RefCounted
 ## What a goblin has learned in a life. The first dealing with a creature type pays all of its essence, a repeat a trickle: one unit of
 ## its largest essence. A goblin learns instead of devouring (design doc), so this is where its essence comes from.
 
-var _known := {}
+var _known := {}  # creature id -> how many dealings
 
 ## What dealing with `def` is worth: {"first": whether it is the first with this id, "element": its largest essence ("" for none),
 ## "essences": the essences paid, one entry per unit, in Essences.ALL order for a first dealing}.
 func learn(def: CreatureDef) -> Dictionary:
 	var first := not _known.has(def.id)
-	_known[def.id] = true
+	_known[def.id] = int(_known.get(def.id, 0)) + 1
 	var element := Lessons.primary(def)
 	var paid := []
 	if first:
@@ -22,6 +22,10 @@ func learn(def: CreatureDef) -> Dictionary:
 
 func known(id: String) -> bool:
 	return _known.has(id)
+
+## How many dealings this life with creatures of this id.
+func times(id: String) -> int:
+	return int(_known.get(id, 0))
 
 func count() -> int:
 	return _known.size()

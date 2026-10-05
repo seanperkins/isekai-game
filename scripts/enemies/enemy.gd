@@ -334,6 +334,10 @@ func is_rooted() -> bool:
 func can_be_predated() -> bool:
 	return not dormant and _root <= 0.0 and def.predatable and status.predatable()
 
+## Whether a wolf or a goblin can bond with it now: alive, awake and stunned, and it accepts a bond at all (CreatureDef.bonds).
+func can_be_bonded() -> bool:
+	return not dormant and not def.bonds.is_empty() and status.state == EnemyStatus.STUNNED
+
 func set_held(v: bool) -> void:
 	status.held = v
 

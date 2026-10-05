@@ -36,6 +36,18 @@ func test_known_and_count_follow_the_types_met() -> void:
 	assert_true(l.known("b"))
 	assert_eq(l.count(), 2)
 
+func test_times_counts_every_dealing_with_a_type() -> void:
+	var l := Lessons.new()
+	assert_eq(l.times("a"), 0)
+	l.learn(_def("a", {"water": 1}))
+	assert_eq(l.times("a"), 1)
+	l.learn(_def("a", {"water": 1}))
+	l.learn(_def("b", {"water": 1}))
+	assert_eq(l.times("a"), 2)
+	assert_eq(l.times("b"), 1)
+	l.reset()
+	assert_eq(l.times("a"), 0)
+
 func test_reset_forgets_everything() -> void:
 	var l := Lessons.new()
 	l.learn(_def("a", {"water": 1}))
