@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
+
+[resource]
+script = ExtResource("1_roomdef")
+id = "CA5"
+area = "sacred"
+cell = Vector2i(20, 0)
+size = Vector2i(2, 1)
+solids = [Rect2(200, 268, 160, 12), Rect2(460, 268, 160, 12), Rect2(720, 268, 160, 12), Rect2(980, 268, 160, 12)]
+decor = [{
+"id": "crystal_prism",
+"light": Color(0.95, 0.85, 1, 1),
+"pos": Vector2(300, 268)
+}, {
+"id": "crystal_rose",
+"light": Color(1, 0.55, 0.75, 1),
+"pos": Vector2(820, 268)
+}, {
+"anchor": "top",
+"id": "root_hang",
+"pos": Vector2(640, 20)
+}, {
+"anchor": "top",
+"id": "vine",
+"pos": Vector2(1100, 20)
+}]
+spawns = [{
+"id": "ghost",
+"pos": Vector2(600, 184)
+}, {
+"id": "candle_wisp",
+"pos": Vector2(1000, 174)
+}]
+exits = [{
+"edge": "right",
+"from": 200.0,
+"room": "CA4",
+"to": 320.0
+}]

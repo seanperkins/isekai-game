@@ -8,7 +8,7 @@ id = "CM2"
 area = "cemetery"
 cell = Vector2i(19, 4)
 size = Vector2i(2, 1)
-solids = [Rect2(1000, 268, 120, 12)]
+solids = [Rect2(1000, 268, 120, 12), Rect2(240, 274, 90, 12), Rect2(310, 222, 90, 12), Rect2(240, 170, 90, 12), Rect2(310, 118, 90, 12), Rect2(240, 66, 90, 12), Rect2(310, 14, 90, 12)]
 decor = [{
 "id": "flowers",
 "pos": Vector2(560, 320)
@@ -40,6 +40,11 @@ exits = [{
 "from": 200.0,
 "room": "CM3",
 "to": 320.0
+}, {
+"edge": "top",
+"from": 240.0,
+"room": "CA1",
+"to": 400.0
 }]
 features = [{
 "area": "cemetery",

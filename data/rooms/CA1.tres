@@ -1,0 +1,62 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
+
+[resource]
+script = ExtResource("1_roomdef")
+id = "CA1"
+area = "sacred"
+cell = Vector2i(19, 3)
+size = Vector2i(3, 1)
+solids = [Rect2(100, 268, 100, 12), Rect2(420, 268, 100, 12), Rect2(560, 268, 190, 12), Rect2(890, 268, 190, 12), Rect2(1220, 268, 190, 12), Rect2(1550, 268, 190, 12)]
+decor = [{
+"id": "crystal_rose",
+"light": Color(1, 0.55, 0.75, 1),
+"pos": Vector2(700, 268)
+}, {
+"id": "crystal_gold",
+"light": Color(1, 0.85, 0.4, 1),
+"pos": Vector2(1360, 268)
+}, {
+"id": "crystal_prism",
+"light": Color(0.95, 0.85, 1, 1),
+"pos": Vector2(1030, 268)
+}, {
+"id": "stalagmite",
+"pos": Vector2(120, 320)
+}, {
+"anchor": "top",
+"id": "root_hang",
+"pos": Vector2(900, 20)
+}, {
+"anchor": "top",
+"id": "root_hang",
+"pos": Vector2(1600, 20)
+}]
+spawns = [{
+"id": "candle_wisp",
+"pos": Vector2(640, 184)
+}, {
+"id": "candle_wisp",
+"pos": Vector2(1300, 164)
+}, {
+"id": "stained_glass_moth",
+"pos": Vector2(960, 114)
+}, {
+"id": "shield_guard",
+"pos": Vector2(1500, 314)
+}, {
+"id": "gargoyle",
+"pos": Vector2(800, 314)
+}]
+exits = [{
+"edge": "bottom",
+"from": 240.0,
+"room": "CM2",
+"to": 400.0
+}, {
+"edge": "right",
+"from": 200.0,
+"room": "CA2",
+"to": 320.0
+}]

@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
+
+[resource]
+script = ExtResource("1_roomdef")
+id = "CA3"
+area = "sacred"
+cell = Vector2i(23, 3)
+solids = [Rect2(120, 268, 110, 12)]
+decor = [{
+"id": "crystal_rose",
+"light": Color(1, 0.55, 0.75, 1),
+"pos": Vector2(250, 320)
+}, {
+"id": "flowers",
+"pos": Vector2(520, 320)
+}, {
+"anchor": "top",
+"id": "vine",
+"pos": Vector2(300, 20)
+}]
+spawns = [{
+"id": "ghost",
+"pos": Vector2(480, 184)
+}]
+exits = [{
+"edge": "left",
+"from": 200.0,
+"room": "CA2",
+"to": 320.0
+}]
+features = [{
+"area": "sacred",
+"id": "CA3_pool",
+"kind": "glow_pool",
+"pos": Vector2(360, 320)
+}]

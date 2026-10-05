@@ -6,12 +6,19 @@ const CEMETERY := {"CM1": [Vector2i(18, 4), Vector2i(1, 1)], "CM2": [Vector2i(19
 ## The creatures the design table gives the cemetery's open rooms (the churchyard itself is a truce).
 const CEMETERY_SUPPORT := ["skeleton", "ghost", "carrion_crow"]
 
+## The cathedral: the Nave, the Transept, the Font Chapel, the Bell Shaft and the Loft.
+const CATHEDRAL := {"CA1": [Vector2i(19, 3), Vector2i(3, 1)], "CA2": [Vector2i(22, 3), Vector2i(1, 1)], "CA3": [Vector2i(23, 3), Vector2i(1, 1)],
+	"CA4": [Vector2i(22, 0), Vector2i(1, 3)], "CA5": [Vector2i(20, 0), Vector2i(2, 1)]}
+const SACRED_SUPPORT := ["candle_wisp", "chapel_priest", "stained_glass_moth", "shield_guard", "gargoyle", "ghost"]
+
 var graveyard: Dictionary  # the cemetery built, the rest of the cluster not yet
+var nave: Dictionary  # the cathedral built, the crypt not yet
 var before: Dictionary  # the world before the cluster: the forest, the swamp and the village
 
 func before_all() -> void:
 	graveyard = AreaWorlds.upto("CM")
 	before = AreaWorlds.upto("VI")
+	nave = AreaWorlds.upto("CA")
 
 func test_the_cemetery_is_three_rooms_at_their_cells_and_sizes() -> void:
 	for id in CEMETERY:
@@ -76,6 +83,70 @@ func test_the_gate_tunnels_flanks_stand_either_side_of_its_floor_hole() -> void:
 	flanks.sort_custom(func(a: Rect2, b: Rect2) -> bool: return a.position.x < b.position.x)
 	assert_lt((flanks[0] as Rect2).end.x, float(hole["from"]))
 	assert_gt((flanks[1] as Rect2).position.x, float(hole["to"]))
+
+# --- the cathedral ---
+
+func test_the_cathedral_is_five_rooms_at_their_cells_sizes_and_area() -> void:
+	for id in CATHEDRAL:
+		assert_true(nave.has(id), id)
+		var r: RoomDef = nave[id]
+		assert_eq(r.area, "sacred", id)
+		assert_eq(r.cell, CATHEDRAL[id][0], id)
+		assert_eq(r.size, CATHEDRAL[id][1], id)
+
+func test_the_world_with_the_cathedral_has_no_problems() -> void:
+	assert_eq(Array(AreaBuilder.problems(nave)), [])
+
+func test_every_cathedral_room_is_reachable_and_only_through_the_wall_cling() -> void:
+	var reached := WorldValidator.reachable(nave)
+	var ungated := WorldValidator.reachable(nave, true)
+	for id in CATHEDRAL:
+		assert_true(reached.has(id), "%s: no way in from the start room" % id)
+		assert_false(ungated.has(id), "%s is behind the wall cling" % id)
+
+func test_the_cathedral_holds_the_sacred_creatures_and_only_them() -> void:
+	var seen := {}
+	for id in CATHEDRAL:
+		for s in (nave[id] as RoomDef).spawns:
+			assert_true(SACRED_SUPPORT.has(s["id"]), "%s: %s" % [id, s["id"]])
+			seen[s["id"]] = true
+	for c in SACRED_SUPPORT:
+		assert_true(seen.has(c), "%s lives in the cathedral" % c)
+
+func test_the_churchyard_gains_one_exit_and_a_climb_and_is_still_a_truce() -> void:
+	var was := graveyard["CM2"] as RoomDef
+	var now := nave["CM2"] as RoomDef
+	assert_eq(now.exits.size(), was.exits.size() + 1)
+	assert_eq(now.spawns, [])
+	var hole: Dictionary = now.exits.filter(func(e: Dictionary) -> bool: return e["room"] == "CA1")[0]
+	assert_eq(hole["edge"], "top")
+	var in_hole := now.solids.filter(func(l: Rect2) -> bool: return l.position.y == 14.0 and l.position.x >= float(hole["from"]) and l.end.x <= float(hole["to"]))
+	assert_eq(in_hole.size(), 1, "the climb ends in the opening")
+
+func test_the_transepts_climb_and_the_nave_and_bell_shaft_landings_stand_beside_their_holes() -> void:
+	var transept := nave["CA2"] as RoomDef
+	var up: Dictionary = transept.exits.filter(func(e: Dictionary) -> bool: return e["edge"] == "top")[0]
+	assert_eq(transept.solids.filter(func(l: Rect2) -> bool: return l.position.y == 14.0 and l.position.x >= float(up["from"]) and l.end.x <= float(up["to"])).size(), 1)
+	for id in ["CA1", "CA4"]:
+		var r := nave[id] as RoomDef
+		var hole: Dictionary = r.exits.filter(func(e: Dictionary) -> bool: return e["edge"] == "bottom")[0]
+		var landings := r.solids.filter(func(l: Rect2) -> bool: return l.position.y == AreaKit.floor_y(r) - 52.0)
+		assert_gte(landings.size(), 2, id)
+		assert_true(landings.any(func(l: Rect2) -> bool: return l.end.x < float(hole["from"])), "%s: a landing left of the hole" % id)
+		assert_true(landings.any(func(l: Rect2) -> bool: return l.position.x > float(hole["to"])), "%s: a landing right of the hole" % id)
+
+func test_the_bell_shafts_last_ledge_is_a_hop_below_its_door() -> void:
+	var bell := nave["CA4"] as RoomDef
+	var door: Dictionary = bell.exits.filter(func(e: Dictionary) -> bool: return e["edge"] == "left")[0]
+	var top := bell.solids.filter(func(l: Rect2) -> bool: return l.position.y > float(door["to"]))
+	top.sort_custom(func(a: Rect2, b: Rect2) -> bool: return a.position.y < b.position.y)
+	assert_lte(float((top[0] as Rect2).position.y) - float(door["to"]), RoomLint.REACH_RISE, "the highest ledge below the door is within a hop of its sill")
+	assert_lte((top[0] as Rect2).position.x, 40.0, "and it reaches the door's wall")
+
+func test_the_font_chapel_has_a_pool_and_no_altar() -> void:
+	var feats := (nave["CA3"] as RoomDef).features
+	assert_eq(feats.filter(func(f: Dictionary) -> bool: return f["kind"] == "glow_pool").size(), 1)
+	assert_eq(feats.filter(func(f: Dictionary) -> bool: return f["kind"] == "altar").size(), 0)
 
 func test_the_checked_in_rooms_are_what_the_builder_writes() -> void:
 	assert_eq(AreaBuilder.stale(AreaBuilder.build()), [])
