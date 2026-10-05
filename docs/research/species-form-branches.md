@@ -360,6 +360,25 @@ Two things to know:
 - **The other four always open by 270 XP.** Echo, Tide, Toxic and Bulwark all open at or before the Grotto, because the Cave opens three of them (the "two or three" target), and by 270 XP every start has absorbed far more than those reveal numbers. The offer thresholds below fix that: they decide what the stage-2 menu actually shows.
 - The numbers depend on the world's creatures and rooms: a new creature or room moves them. Build it like the unlock table: print this table from `tools/calibrate_essences.gd` and pin the Cave-start column in `tests/test_content.gd`.
 
+### The full world (calibrated 2026-10-05, F3) [built]
+
+The tables above are the hand-made world: 23 shipped rooms and their 98 creatures. The world now has eight more areas and 169 placed creatures (`docs/research/areas-f2.md`), and 59 of those stand in the four shipped areas' rooms (the Cave alone went from 22 creatures to 37). The question F3 answers is whether the numbers above still hold. They do, **on the right diet**.
+
+**The diet.** A walk that eats every spawn is no longer one life's reach: the new elites (14 HP) and rares (mostly the evolved forms' twins, up to 26 HP) are dangerous, optional and the rares mostly in dead ends, so a stage-1 body does not down them. `tools/calibrate_essences.gd` now walks four diets (`CalibrationWalk.diet`, with the class of each creature from `tools/creature_areas.json`): `old` (the hand-made creatures), `common` (those and the new commons: the diet a stage-1 body can eat, and the one this calibration is about), `elite` and `all`.
+
+| Diet | Creatures in the four areas | Cave start, end of the Cave: revealed / offered | Tremor unlocks at eat (Cave start) |
+|---|---|---|---|
+| old | 98 | Tide, Toxic, Echo / Toxic | 73 |
+| **common** | 108 | Tide, Toxic, Echo / Toxic | 74 |
+| elite | 119 | Tide, Toxic, Bulwark, Echo / Tide, Toxic | 52 |
+| all | 157 | Tide, Toxic, Bulwark, Echo / all four | 35 |
+
+On the old diet the walk reproduces the tables above exactly (Toxic 15, Tide 17, Echo 18, Bulwark 43, Weaver 45). On the common diet every pinned property holds on all four starts: the reveal after each first area, the offer at the first evolution (all five on a Cave start, four without Weaver on the others, nothing offered on a Deep start), and every power's unlock within one eat of its Cave-start pin (Jolt, which waits for the Flooded's light, moves nine eats later because the Grotto's new commons come first). The Cave's three lineages now open at eats 14, 19 and 20 instead of 15, 17 and 18. **No threshold changed.** A bolder eater is rewarded and not broken: each richer diet reveals a superset of the lineages at the end of every area (pinned), so an eater who downs the Cave's elites opens Bulwark in the Cave and the whole menu sooner, and Tremor, a Deep power, at eat 35 on the all-diet instead of 73.
+
+**The other species' gates.** A form's gate is its essence (a stage's total of 26, 34 or 44 units split over its reads: `tools/build_form_gates.py`) and the deeds of its row. The world holds, over every spawn a tackle can down, air 323, dark 564, water 152, earth 477, light 149, mind 97, blood 65, fire 78. The scarcest ask is 22 blood (the Vampire, the Heart-Weigher, Beast of Gévaudan, the Bloodcap): three times over; every other is more. Every gate atom that names a creature, a species, a part, a bond or an element is met by something in the world (`tests/test_gate_feasibility.gd`); 53 atoms ask for a deed, a streak or a verb used and name nothing in the world. No gate changed.
+
+**What F3 did not change, and says so.** The XP a creature pays is the table's (a stage-2 twin 4, stage 3 10, stage 4 20), and the first evolution is still at 270 XP: on the common diet it lands at about the 80th eat of a Cave start instead of the 77th, and on the all-diet at the 51st. The numbers are pinned in `tests/test_world_calibration.gd` and `tests/test_gate_feasibility.gd`; the hand-made world's pins (`tests/test_lineage_gate_calibration.gd`, `tests/test_content.gd`, the pacing tests) read the world without the placed creatures (`AreaWorlds.upto("DM")`) and say so.
+
 ### Two thresholds per lineage: reveal and offer (calibrated 2026-10-04) [proposal]
 
 Sean asked for the second, higher threshold. **Reveal** is the number above: it shows the lineage in the tree with its progress meter, so a Cave run still reveals two or three. **Offer** is what the stage-2 menu needs. Offer is never below reveal.
@@ -418,7 +437,7 @@ The design doc's principle is that every enemy is a potential you. So every form
 
   Essence splits evenly across the form's Reads (the remainder goes to the first element). These tiers match what ships: a bat, toad or crab carries 2 to 3, and the Grotto's pale moth and the Flooded's storm eel carry 8 at 8 to 10 XP.
 - Some twins are NPCs or neutral, not enemies (10.6).
-- **Calibration moves.** Twins and the extra monsters add essence to the world, and section 8's thresholds were calibrated on the 23 shipped rooms and 19 creatures. Re-run `tools/calibrate_essences.gd` when areas and twins are authored.
+- **Calibration moves.** Twins and the extra monsters add essence to the world, and section 8's thresholds were calibrated on the 23 shipped rooms and 19 creatures. Re-run `tools/calibrate_essences.gd` when areas and twins are authored: done (section 8, "The full world"): no threshold moved.
 
 ### 10.2 Creatures that already exist and are a twin
 
@@ -534,4 +553,4 @@ Sean's answers, 2026-10-04:
 15. **The review page:** `docs/evolutions/index.html` shows every form, its world twin, the essences, the monsters to add, the art that exists and a GIF of each species' moveset. `tools/build_evolutions.py` builds its data from this document; `tools/publish_evolutions.sh` publishes it to GitHub Pages at `/evolutions/`, at Sean's request.
 16. **More mind and blood forms:** the guide's grid wanted mind and blood readings, so fifteen forms gained a later element (the Lich line, the Pied Piper, Orpheus, Norn, Lupa, the Loup-Garou, the Redcap and others): twelve read mind and six read blood.
 
-Still open: how the same reveal and offer calibration is done for the wolf, spider, goblin and undead once their areas and essences are authored, and a recalibration of the slime numbers once twins and the new areas change the world's totals.
+Done in section 8, "The full world": the slime numbers hold on the common diet, and the other species' gates are met by the world with room to spare. Still open: the XP economy (the first-time XP of the placed creatures is far above a stage's cost on a diet that eats them) and a recalibration if the design later puts the elites and rares on the stage-1 diet.
