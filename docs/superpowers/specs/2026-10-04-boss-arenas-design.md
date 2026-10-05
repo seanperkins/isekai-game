@@ -95,7 +95,7 @@ The enemies' terrain body is a fixed 16x12 box whatever the sprite is (`Enemy.BO
 ## Testing
 
 - The editor's preview builds a boss room with no progress and no spawn callable (`RoomView` passes `{"progress": null}`): no arena and no boss, no error; a `tremor` with no shake callable still plays its sound.
-- `BossArenaModel`: the four states and their transitions, the intro timer, exactly one transition per event, a win while `waiting` ignored.
+- `BossArenaModel`: the four states and their transitions, the intro timer, exactly one transition per event, a win before the fight held and resolved when the fight begins (the doors still shut and open, never stay shut on a dead boss).
 - Real collision: crossing the threshold seals every exit after the intro (the player cannot pass a gate; a room's ordinary exits had none before), the boss is dormant until the intro ends (it does not move or fall, deals no contact damage, and an area skill's `receive_hit` does nothing), its death frees only the arena's gates, and the defeat survives a profile save and load.
 - Ordering and failure: the Bestiary has the defeat before the profile does (stop between them and the boss is still alive next run); a failed profile write leaves the boss dead for the session and is retried by the next progress save.
 - Rebirth: a lost fight rebuilds the arena `waiting`, the boss at full health.
