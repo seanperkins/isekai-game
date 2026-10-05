@@ -126,3 +126,27 @@ func test_the_theme_keeps_playing_while_the_tree_is_paused() -> void:
 	get_tree().paused = true
 	EventBus.world_event.emit("opening_started", {})
 	assert_false(Audio.director.theme_player().stream_paused, "the opening pauses the game; its music must not")
+
+# --- the panel's finding: a reset in the middle of a biome change must not disturb the crossfade ---
+
+func test_a_reset_between_a_biome_change_and_its_first_fade_step_leaves_the_crossfade_alone() -> void:
+	# A rebirth in another biome: the new bed has just been started (silent), the old one is still playing at its level, and
+	# the run's reset (which ends any theme) lands before the crossfade has taken a step.
+	var d := _director()
+	d.set_biome("cave")
+	_finish_crossfade(d)
+	d.set_biome("grotto")
+	d.end_theme()
+	assert_lt(d.bed_volume_db(), -60.0, "the incoming bed has not begun to fade in; it must not jump to full volume")
+	var outgoing: AudioStreamPlayer = d._music[1 - d._front]
+	assert_gt(outgoing.volume_db, -3.0, "and the outgoing bed keeps playing at its level")
+
+func test_the_audio_autoload_survives_a_reset_during_a_biome_change() -> void:
+	Audio.director.current_area = ""
+	Audio.set_biome("cave")
+	_finish_crossfade(Audio.director)
+	Audio.set_biome("grotto")
+	Audio.reset()
+	assert_lt(Audio.director.bed_volume_db(), -60.0)
+	_finish_crossfade(Audio.director)
+	Audio.director.current_area = ""

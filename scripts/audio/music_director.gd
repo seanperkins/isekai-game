@@ -85,6 +85,7 @@ func set_biome(area: String) -> bool:
 	current_area = area
 	current_music = ASSET_DIR + str(bed["music"])
 	_front = 1 - _front
+	_xfade_t = 0.0  # a new crossfade starts here, so anything that refreshes the beds before its first step (a reset) sees t = 0, not the last one's end
 	_start(_music[_front], music)
 	_start(_ambience[_front], ambience)
 	scheduler.set_biome(bed["oneshots"])
