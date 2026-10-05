@@ -122,15 +122,17 @@ func test_a_generated_rooms_attach_is_not_added_twice() -> void:
 	assert_eq((second["C3"] as RoomDef).exits.size(), (first["C3"] as RoomDef).exits.size())
 
 func test_building_does_not_change_the_rooms_other_code_holds() -> void:
-	AreaBuilder.build_with([TestArea.new()])
 	var held: RoomDef = World.load_rooms(AreaBuilder.ROOMS_DIR)["C3"]
-	assert_eq(held.exits.filter(func(e: Dictionary) -> bool: return e["room"] == "ZZ1"), [], "the cached C3 is as shipped")
+	var before := held.exits.size()
+	AreaBuilder.build_with([TestArea.new()])
+	assert_eq(held.exits.size(), before, "the C3 another holder has is as shipped")
 
 func test_a_module_that_adds_to_a_shipped_room_adds_to_a_copy() -> void:
-	var before: int = World.load_rooms(AreaBuilder.ROOMS_DIR)["C6"].spawns.size()
+	var held: RoomDef = World.load_rooms(AreaBuilder.ROOMS_DIR)["C6"]  # held, so the loader's cache returns this very instance
+	var before := held.spawns.size()
 	var world := AreaBuilder.build_with([AddsASpawn.new()])
 	assert_eq((world["C6"] as RoomDef).spawns.size(), before + 1)
-	assert_eq(World.load_rooms(AreaBuilder.ROOMS_DIR)["C6"].spawns.size(), before, "the cached C6 is untouched")
+	assert_eq(held.spawns.size(), before, "the room another holder has is untouched")
 
 func test_a_generated_room_no_module_builds_any_more_is_gone_and_a_hand_made_one_stays() -> void:
 	var first := AreaBuilder.build_with([TestArea.new()])
