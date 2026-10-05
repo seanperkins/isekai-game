@@ -13,7 +13,7 @@ Inspirations: *That Time I Got Reincarnated as a Slime*, *So I'm a Spider, So Wh
 - **Essence and evolution.** Essence is elemental (water, earth, air, light, dark). Eating creatures fills it, powers evolve by spending it, and the mix you hold decides which evolutions are offered.
 - **Skills level up through use.** Some unlock by essence, others by doing something (eat a spider N times, dodge N times).
 - **Souls and altars.** Altars (one per area) let you attune a respawn point, bank essence into soul points, and meet the goddess, who offers your next body. Soul points buy species and permanent perks.
-- **Areas:** the Cave, Grotto, Flooded Tunnels and the Deep, with boss arenas, and the new areas built by `tools/build_areas.sh` from `tools/areas/`: the forest above the cave, the swamp and goblin village east of it, and a cemetery, cathedral and crypt above and east of the Deep (the volcano and the demon area are still to come).
+- **Areas:** the Cave, Grotto, Flooded Tunnels and the Deep, with boss arenas, and the new areas built by `tools/build_areas.sh` from `tools/areas/`: the forest above the cave, the swamp and goblin village east of it, a cemetery, cathedral and crypt above and east of the Deep, a volcano under it and a demon area past the crypt.
 
 The design is written up in [`docs/isekai-chronicles-design-doc.md`](docs/isekai-chronicles-design-doc.md). Two visual guides are published online: [area design](https://seanperkins.github.io/isekai-game/guides/area-design.html) and [species evolution](https://seanperkins.github.io/isekai-game/guides/species-evolution.html) (all guides: [index](https://seanperkins.github.io/isekai-game/guides/)).
 
