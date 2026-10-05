@@ -130,7 +130,7 @@ One JSON shape in both directions (`get_room` out, `apply_room_spec` in):
 
 ## Session, saving and safety
 
-- The session loads `World.load_rooms("res://data/rooms")` and the creature ids from `SkillRules.creature_defs`, exactly as `room_editor.gd` does. Whether `SkillRules` loads without the autoloads in a headless run is checked first in milestone 1; if not, the session reads the creature ids from `data/creatures` with `DefLoader`.
+- The session loads `World.load_rooms("res://data/rooms")` and takes the creature ids from `DefLoader.load_dir("res://data/creatures")` (the model's own tests do the same), so it does not depend on the `SkillRules` autoload.
 - At load, the session records each room file's SHA-256 (not its modified time, which has one-second resolution). `save` recomputes it before writing and records the new hash after. A new room whose file has appeared on disk counts as changed. This is the guard against two agents, or an agent and the editor window, writing the same room.
 - `save` writes only under `res://data/rooms/`. The tool takes no path.
 - One server process is one working set. Two agents get two processes with separate sets; the stale-file check keeps them from overwriting each other.
@@ -141,19 +141,19 @@ One JSON shape in both directions (`get_room` out, `apply_room_spec` in):
 
 `RoomEditModel.new_room_beside` refuses any area without terrain art (`TerrainArt.has_biome`), and only cave, deep, flooded and grotto have art. New areas would be unusable. The fix is an alias, not new art:
 
-- `data/area_art.json` maps an area name to the existing biome whose art it borrows, for example `{"forest": "grotto", "swamp": "flooded", "village": "cave", "sacred": "cave", "cemetery": "cave", "crypt": "deep", "volcano": "cave", "demon": "deep"}`. The values are placeholders you will change when the real art lands; the file is data, not code.
+- `data/area_art.json` maps an area name to the existing biome whose art it borrows, for example `{"forest": "grotto", "swamp": "flooded", "village": "cave", "sacred": "cave", "cemetery": "cave", "crypt": "deep", "volcano": "cave", "demon": "deep", "last": "deep", "serpent": "deep"}`. The values are placeholders you will change when the real art lands; the file is data, not code.
 - One function, `TerrainArt.art_biome(area) -> String`, returns the aliased biome (or the area itself for the four that have art, or "" for an unknown area). `TerrainArt.known_area(area)` is `art_biome(area) != ""`.
 - Every place that turns a room's area into an art key goes through `art_biome`. The call sites found so far: `RoomBuilder` (the `TerrainArt.has_biome(def.area)` branch and the `TerrainLayers`, `TerrainMotes`, `SetDressing` and `TerrainPainter` calls it makes), `TerrainArt.ambient` (called from `game.gd` and `room_view.gd`), `DressingLib.has_biome/has_piece/size` (from `world_validator.gd` and `room_lint.gd`), `DecorLib.ids_for_biome` (from `room_editor.gd`), and `RoomEditModel.new_room_beside`. The plan's first task greps for every use of `.area` and `has_biome`, lists them, and routes each. If the list reaches beyond these into art generation or the shipped-room tests, it becomes its own plan and the MCP ships with the four existing areas first.
 - `world_view.gd`'s `AREA_FILL` only has colours for four areas. It gets one entry per aliased area so the world map and the size meter can tell them apart.
-- A test asserts that every area in `WorldSize.TARGETS` has an `art_biome`, so a new area cannot be added to the targets without a place to draw it.
+- A test asserts that every area in `WorldSize.TARGETS` (cave, grotto, flooded, deep, forest, swamp, village, sacred, volcano, demon, last, serpent) has an `art_biome`, so a new area cannot be added to the targets without a place to draw it.
 
 ## Preview
 
 The headless renderer has no texture to read back, so previews are drawn on the CPU into an `Image` and encoded as PNG. They are schematics, not the game's art.
 
-- Room preview: one pixel is `1 / scale` world pixels (default 0.5, so a screen is 320x180 and the largest room, 6x6 screens, is 1920x1080). Solids dark, hard ledges outlined, water blue, spawns red with the creature's first letter, features gold, decor green ticks, exits as door marks with the room they lead to, the start as a cross, screen boundaries as a faint grid. A legend is returned as text.
+- Room preview: one pixel is `1 / scale` world pixels (default 0.5, so a screen is 320x180). `scale` is clamped so the longest side is at most 2000 px, which keeps a 6x6-screen room readable. Solids dark, hard ledges outlined, water blue, spawns red squares, features gold squares, decor green ticks, exits as gaps in the wall tinted by gate, the start as a cross, screen boundaries as a faint grid. A CPU `Image` has no font, so there are no letters in the picture: a text legend lists each spawn, feature and exit with its index, position and name.
 - Text map: one character per 40 px cell, `#` solid, `~` water, `S` spawn, `F` feature, `d` decor, `=` exit gap, `.` empty, with a ruler. Cells become 80 px when the room is over 3 screens wide so the map stays under 100 columns.
-- World preview: `WorldView.layout` places each room's rectangle (the same function the editor uses), filled by area colour, dirty rooms outlined, ids labelled, with the size meter's totals as text.
+- World preview: `WorldView.layout` places each room's rectangle (the same function the editor uses), filled by area colour, dirty rooms outlined. Ids cannot be drawn, so the text half is a grid with one cell per screen showing the id of the room that covers it, plus the size meter's totals.
 
 ## Failure modes
 
@@ -165,7 +165,7 @@ The headless renderer has no texture to read back, so previews are drawn on the 
 | `apply_room_spec` has refusals | `isError` listing every `{kind, index, error}`, nothing applied |
 | File changed on disk before `save` | that room is in `errors` with "changed on disk since loaded", others still save |
 | Save fails for one room | that room stays dirty, the others are written (the model already works this way) |
-| A handler throws a script error | the server returns a JSON-RPC internal error for that call, logs to stderr and stays up |
+| A handler hits a script error | GDScript has no exceptions: the engine logs the error to stderr, the handler returns null, and the protocol answers that call with a JSON-RPC internal error (-32603) and stays up |
 | stdin closes | the process exits 0 |
 | Process killed | the working set is lost by design; nothing was on disk |
 
@@ -179,7 +179,7 @@ GUT, run through `tools/run_tests.sh`:
 - `test_room_preview.gd`: PNG decodes to the expected size, a solid's pixels are the solid colour, the text map has the expected rows.
 - `test_room_session.gd`: stale-file refusal, `force`, `revert`, `save` writes only dirty rooms.
 - `test_area_art.gd`: the alias table and every `WorldSize.TARGETS` area resolve.
-- `tools/mcp/smoke.sh`: starts the real launcher, sends `initialize`, `tools/list`, `list_rooms`, `get_room C1`, `preview C1` and `problems`, and checks the replies parse and carry the right fields. It also checks that `.mcp.json` parses and names a launcher that exists and is executable. The plan has one manual step: `claude mcp list` from the repo root and from a worktree, which settles how the relative launcher path resolves.
+- `tools/mcp/smoke.py` (Python, because it needs a JSON client): starts the real launcher, sends `initialize`, `tools/list`, `list_rooms`, `get_room C1`, `preview C1` and `problems`, and checks the replies parse and carry the right fields. It also checks that `.mcp.json` parses and names a launcher that exists and is executable. The plan has one manual step: `claude mcp list` from the repo root and from a worktree, which settles how the relative launcher path resolves.
 
 ## Milestones
 
