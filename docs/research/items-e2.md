@@ -34,7 +34,9 @@ Built 2026-10-05: `CreatureDef.bonds`, `Enemy.can_be_bonded`, `Companion`, `Play
 - A goblin's companion grows with the goblin's lessons of its type (+1 ATK per three dealings with its type, the first included, up to +3).
 - Taming is also a lesson (E2a), and a bond is not a kill: the creature is not downed and says no `defeated`.
 
-## E2c: the goblin's hands
+## E2c: the goblin's hands (built)
+
+Built 2026-10-05: a verb spec's `deed` key (the Tomte's and Hearth God's zones say `ward_stone_placed`), the `trap` kind and `VerbTrap` (the Tinker's verb is now "Rig"), the `forge` kind with `Player.forge` (the Smith's verb), and `Player.try_pickpocket` with `Enemy.can_be_robbed`. A trap hurts for the cast's power, stuns for 2 seconds, stands 30 seconds, and three of a caster's stand at once. A refused forge is not ready, so it costs no MP. The Tinker's old thrown bolt is gone until the item wheel brings throwables back.
 
 - **Pickpocket** (Y near a living, not-stunned creature with drops): rolls the creature's drops once (`Drops.roll`); a part found is taken without a fight (`part_harvested`, `item_stolen`), and the creature cannot be robbed twice. An empty pocket costs nothing and says nothing.
 - **Traps**: the Tinker's verb becomes `trap`: it rigs a trap at the player's feet that an enemy springs by stepping in (damage and a stun). A sprung trap says `trap_sprung`. Traps outlive evolution, so rigging three as a Tinker opens the Gremlin from the Knocker.

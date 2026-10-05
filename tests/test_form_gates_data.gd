@@ -3,7 +3,8 @@ extends GutTest
 
 ## The deeds something emits today (the rest of Deeds.EVENTS is in Deeds.RESERVED).
 const EMITTED := ["defeated", "guard_broken", "room_cleared", "room_entered", "skill_hit", "skill_missed", "switch_hit",
-	"part_harvested", "graft_attached", "graft_shed", "item_carried", "corpse_left", "lesson_learned", "bond_formed"]
+	"part_harvested", "graft_attached", "graft_shed", "item_carried", "corpse_left", "lesson_learned", "bond_formed",
+	"trap_sprung", "weapon_forged", "item_stolen", "ward_stone_placed"]
 const TOTAL := {2: 26, 3: 34, 4: 44}
 
 var forms: Dictionary
@@ -240,3 +241,93 @@ func test_a_bond_that_lasts_meets_the_long_bond_atom() -> void:
 	assert_eq(_bond_atom(rules, {"kind": "long"}), 0)
 	(p.companions[0] as Companion)._physics_process(Companion.LONG_BOND_SECONDS + 1.0)
 	assert_eq(_bond_atom(rules, {"kind": "long"}), 1)
+
+func _count(rules: SkillRulesEngine, event: String) -> int:
+	return rules.condition_value({"kind": "counter", "event": event, "tags": {}, "n": 1})
+
+func _slot_of(p: Player, verb_id: String) -> int:
+	return p.skillset.slots.slots.find(verb_id)
+
+func _skill(id: String) -> SkillDef:
+	for d in SkillRules.skill_defs:
+		if d.id == id:
+			return d
+	return null
+
+func _cast(p: Player, verb_id: String) -> void:
+	var d := _skill(verb_id)
+	var a: VerbAbility = load(SkillEffects.active_scene(d)).instantiate()
+	p.add_child(a)
+	a.spec = SkillEffects.active_spec(d)
+	a.setup(p, SkillEffects.active_values(d), 1)
+	VerbKinds.run(a, a.spec)
+
+func test_a_goblin_smith_that_forges_meets_the_mastersmiths_atom() -> void:
+	var made := _species_player("goblin")
+	var p: Player = made[0]
+	var rules: SkillRulesEngine = made[1]
+	assert_true(p.become_form("goblin_smith"))
+	var slot := _slot_of(p, "verb_goblin_smith")
+	assert_gte(slot, 0, "the Smith's verb is in a slot")
+	p.use_active(slot)
+	assert_eq(_count(rules, "weapon_forged"), 0, "no parts, no forge")
+	p.collect_part("claw")
+	p.collect_part("skull")
+	var atk := p.stats.get_stat("atk")
+	p.use_active(slot)
+	assert_eq(_count(rules, "weapon_forged"), 1)
+	assert_eq(p.stats.get_stat("atk"), atk + 2)
+
+func test_a_goblin_tomte_that_plants_three_stones_meets_the_hearth_gods_atom() -> void:
+	var made := _species_player("goblin")
+	var p: Player = made[0]
+	var rules: SkillRulesEngine = made[1]
+	assert_true(p.become_form("goblin_tomte"))
+	var slot := _slot_of(p, "verb_goblin_tomte")
+	assert_gte(slot, 0)
+	p.use_active(slot)
+	assert_eq(_count(rules, "ward_stone_placed"), 1)
+	_cast(p, "verb_goblin_tomte")
+	_cast(p, "verb_goblin_tomte")
+	assert_eq(_count(rules, "ward_stone_placed"), 3)
+	for c in get_tree().get_nodes_in_group("player_clouds"):
+		c.free()
+
+func test_a_goblin_tinker_whose_traps_are_sprung_three_times_meets_the_gremlins_atom() -> void:
+	var made := _species_player("goblin")
+	var p: Player = made[0]
+	var rules: SkillRulesEngine = made[1]
+	assert_true(p.become_form("goblin_tinker"))
+	var slot := _slot_of(p, "verb_goblin_tinker")
+	assert_gte(slot, 0)
+	for i in 3:
+		p.global_position = Vector2(200.0 * i, 0)
+		if i == 0:
+			p.use_active(slot)
+		else:
+			_cast(p, "verb_goblin_tinker")
+	var traps := get_tree().get_nodes_in_group("verb_traps")
+	assert_eq(traps.size(), 3)
+	for t in traps:
+		var e := _real_enemy("lizard")
+		e.global_position = t.global_position
+		t._physics_process(VerbTrap.ARM_SECONDS + 0.1)
+	assert_eq(_count(rules, "trap_sprung"), 3)
+	for t in get_tree().get_nodes_in_group("verb_traps"):
+		t.free()
+
+func test_a_goblin_that_picks_three_pockets_meets_the_leprechauns_atom() -> void:
+	var made := _species_player("goblin")
+	var p: Player = made[0]
+	var rules: SkillRulesEngine = made[1]
+	for i in 3:
+		var d := TestDefs.creature("t_mark_%d" % i, {"drops": [{"part": "claw", "chance": 1.0}]})
+		var skills_by_id := {}
+		for sd in SkillRules.skill_defs:
+			skills_by_id[sd.id] = sd
+		var e := Enemy.new()
+		e.setup(d, skills_by_id)
+		e.position = p.position + Vector2(10, 0)
+		add_child_autofree(e)
+		assert_true(p.try_pickpocket())
+	assert_eq(_count(rules, "item_stolen"), 3)
