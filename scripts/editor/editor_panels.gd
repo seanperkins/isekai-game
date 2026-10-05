@@ -23,9 +23,9 @@ signal play_pressed
 signal new_room_requested(edge: String, id: String, area: String, size: Vector2i)
 
 const FONT := 8
-## The areas New room offers: every biome the terrain art supports.
+## The areas New room offers: every biome the terrain art supports, and the new areas that borrow one.
 static func areas() -> Array:
-	return TerrainArt.biomes()
+	return TerrainArt.areas()
 const EDGES := ["left", "right", "top", "bottom"]
 ## The tools in toolbar row one; Creature, Feature and Decor also show their palette at the left.
 const TOOLS := ["Select", "Solid", "Water", "Creature", "Feature", "Decor", "Exit"]

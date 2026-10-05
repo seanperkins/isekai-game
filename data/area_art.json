@@ -1,0 +1,12 @@
+{
+	"forest": "grotto",
+	"swamp": "flooded",
+	"village": "cave",
+	"sacred": "cave",
+	"cemetery": "cave",
+	"crypt": "deep",
+	"volcano": "cave",
+	"demon": "deep",
+	"last": "deep",
+	"serpent": "deep"
+}

@@ -43,10 +43,11 @@ var _editor_play := false
 ## Each biome sets its own ambient light and sound: the bright Cave, a darker deep, and so on.
 func _on_room_entered(id: String) -> void:
 	var area: String = world.rooms[id].area
-	var target: Color = TerrainArt.ambient(area, AMBIENT)
+	var biome := TerrainArt.art_key(area)  # a new area borrows its biome's light and music bed
+	var target: Color = TerrainArt.ambient(biome, AMBIENT)
 	var tw := create_tween()
 	tw.tween_property(ambient, "color", target, 0.6)
-	Audio.set_biome(area)
+	Audio.set_biome(biome)
 
 func _ready() -> void:
 	Controls.ensure_actions()

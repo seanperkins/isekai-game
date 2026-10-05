@@ -55,7 +55,7 @@ func test_catalog() -> void:
 	assert_eq(int(all["prefabs"]["library"]["mound"]["width"]), 160)
 	assert_true(all["decor"]["cave"].size() > 0)
 	assert_eq(all["creatures"], session.model.creature_ids)
-	assert_eq(all["areas"], TerrainArt.biomes())
+	assert_eq(all["areas"], TerrainArt.areas())
 	assert_true(all["perks"].size() > 0)
 	assert_eq(_data(_call("catalog", {"section": "gates"})), ["wall_cling", "swim"])
 

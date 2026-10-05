@@ -159,7 +159,8 @@ static func _check_dressing(r: RoomDef) -> PackedStringArray:
 	var out := PackedStringArray()
 	if r.dressing.is_empty():
 		return out
-	if not DressingLib.has_biome(r.area):
+	var biome := TerrainArt.art_key(r.area)  # a new area's dressing comes from the biome whose art it borrows
+	if not DressingLib.has_biome(biome):
 		out.append("%s: dressing needs a piece library for biome '%s'" % [r.id, r.area])
 		return out
 	if r.dressing.size() > SetDressing.MAX_PROPS:
@@ -170,7 +171,7 @@ static func _check_dressing(r: RoomDef) -> PackedStringArray:
 		if typeof(e) != TYPE_DICTIONARY or not e.has("piece") or not e.has("pos") or not e.has("factor"):
 			out.append("%s: dressing[%d] needs piece, pos and factor" % [r.id, i])
 			continue
-		if not DressingLib.has_piece(r.area, str(e["piece"])):
+		if not DressingLib.has_piece(biome, str(e["piece"])):
 			out.append("%s: dressing[%d] unknown piece '%s'" % [r.id, i, e["piece"]])
 		var f := float(e["factor"])
 		if f < SetDressing.FACTOR_MIN or f > SetDressing.FACTOR_MAX:

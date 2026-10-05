@@ -61,6 +61,47 @@ static func ambient(biome: String, fallback: Color) -> Color:
 static func has_biome(biome: String) -> bool:
 	return ResourceLoader.exists(TILE % [biome, "fill_a"])
 
+## A new area has no terrain art of its own yet, so it borrows an existing biome's: data/area_art.json maps area -> biome. Everything that
+## turns a room's area into an art key (background, painted solids, motes, dressing, decor palette, ambient light, music bed) asks here.
+const AREA_ART := "res://data/area_art.json"
+
+static var _aliases := {}
+static var _aliases_loaded := false
+
+static func _alias_table() -> Dictionary:
+	if not _aliases_loaded:
+		var json := JSON.new()
+		if FileAccess.file_exists(AREA_ART) and json.parse(FileAccess.get_file_as_string(AREA_ART)) == OK and json.data is Dictionary:
+			_aliases = json.data
+		_aliases_loaded = true
+	return _aliases
+
+## The biome whose art `area` uses: the area itself when it has terrain art, else its alias, else "" (an unknown area keeps the flat
+## backdrop).
+static func art_biome(area: String) -> String:
+	if has_biome(area):
+		return area
+	var alias := str(_alias_table().get(area, ""))
+	return alias if has_biome(alias) else ""
+
+## The key art is looked up by: the borrowed biome, or the area itself when it borrows none (so a dressing library keyed by an area name
+## still answers for it).
+static func art_key(area: String) -> String:
+	var biome := art_biome(area)
+	return biome if biome != "" else area
+
+static func known_area(area: String) -> bool:
+	return art_biome(area) != ""
+
+## Every area a room may be in: the biomes with art, then the aliased new areas, sorted.
+static func areas() -> Array:
+	var out := biomes()
+	for a: String in _alias_table():
+		if known_area(a) and not out.has(a):
+			out.append(a)
+	out.sort()
+	return out
+
 ## The biomes with terrain art: the directory names under res://assets/tiles/ that has_biome accepts, sorted.
 static func biomes() -> Array:
 	var out: Array = []

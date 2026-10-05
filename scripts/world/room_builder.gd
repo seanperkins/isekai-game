@@ -80,7 +80,7 @@ static func make_gate(room: Node2D, def: RoomDef, e: Dictionary, solids: Array, 
 	var gate := add_solid(room, g, "ground" if e["edge"] == "bottom" else "wall", not painted)
 	gate.add_to_group(group)
 	if painted:
-		var art := TerrainPainter.paint(gate, solids, Rect2(Vector2.ZERO, size), def.area, [g])
+		var art := TerrainPainter.paint(gate, solids, Rect2(Vector2.ZERO, size), TerrainArt.art_biome(def.area), [g])
 		art.position = -gate.position
 	return gate
 
@@ -139,15 +139,16 @@ static func build_room(def: RoomDef, ctx: Dictionary) -> Node2D:
 	var size := def.pixel_size()
 	# A biome with terrain art gets a background and painted solids (and, with simple_layers off, the parallax
 	# stack, motes and dressing too); any other room keeps the flat backdrop and stretched tiles.
-	var painted := TerrainArt.has_biome(def.area)
+	var biome := TerrainArt.art_biome(def.area)  # a new area borrows an existing biome's art (data/area_art.json)
+	var painted := biome != ""
 	if painted:
 		if simple_layers:
-			TerrainLayers.simple_background(node, def.area, size)
+			TerrainLayers.simple_background(node, biome, size)
 		else:
-			TerrainLayers.build(node, def.area, size)
-			TerrainLayers.back_wall(node, def.area, size)
-			TerrainMotes.build(node, size, def.area)
-			SetDressing.build(node, def.area, def.dressing, size)
+			TerrainLayers.build(node, biome, size)
+			TerrainLayers.back_wall(node, biome, size)
+			TerrainMotes.build(node, size, biome)
+			SetDressing.build(node, biome, def.dressing, size)
 	else:
 		_backdrop(node, size)
 	if not def.glimpse.is_empty():
@@ -168,7 +169,7 @@ static func build_room(def: RoomDef, ctx: Dictionary) -> Node2D:
 		if not is_exit_open(e, progress):
 			make_gate(node, def, e, solids, painted, "gate_" + str(e["shortcut"]))
 	if painted:
-		TerrainPainter.paint(node, solids, Rect2(Vector2.ZERO, size), def.area)
+		TerrainPainter.paint(node, solids, Rect2(Vector2.ZERO, size), biome)
 	# Painted stone is pale, so point lights are gentler there or they blow it out to white.
 	build_decor(node, {"decor": def.decor}, PAINTED_LIGHT if painted else 1.0)
 	var spawn: Callable = ctx.get("spawn", Callable())

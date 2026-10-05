@@ -969,7 +969,7 @@ func new_room_beside(a_id: String, edge: String, new_id: String, area: String, s
 	var err := id_error(new_id)
 	if err != "":
 		return err
-	if not TerrainArt.has_biome(area):
+	if not TerrainArt.known_area(area):
 		return "unknown area '%s'" % area
 	if size.x < 1 or size.y < 1 or size.x > MAX_SCREENS or size.y > MAX_SCREENS:
 		return "a room is 1 to %d screens each way" % MAX_SCREENS

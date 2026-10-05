@@ -5,7 +5,13 @@ extends Control
 
 signal room_chosen(id: String)
 
-const AREA_FILL := {"cave": Color(0.42, 0.33, 0.58), "grotto": Color(0.62, 0.4, 0.2), "deep": Color(0.3, 0.35, 0.55), "flooded": Color(0.2, 0.5, 0.6)}
+const AREA_FILL := {
+	"cave": Color(0.42, 0.33, 0.58), "grotto": Color(0.62, 0.4, 0.2), "deep": Color(0.3, 0.35, 0.55), "flooded": Color(0.2, 0.5, 0.6),
+	# the areas still to come, each with its own colour so the map and the size meter can tell them apart
+	"forest": Color(0.25, 0.55, 0.3), "swamp": Color(0.4, 0.5, 0.25), "village": Color(0.7, 0.55, 0.35), "sacred": Color(0.85, 0.82, 0.7),
+	"cemetery": Color(0.55, 0.58, 0.62), "crypt": Color(0.35, 0.3, 0.42), "volcano": Color(0.75, 0.3, 0.15), "demon": Color(0.6, 0.15, 0.2),
+	"last": Color(0.2, 0.2, 0.28), "serpent": Color(0.15, 0.45, 0.4),
+}
 const FILL_UNKNOWN := Color(0.4, 0.4, 0.4)
 const MARGIN := 16.0
 const FONT := 10

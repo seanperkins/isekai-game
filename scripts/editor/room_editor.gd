@@ -201,7 +201,7 @@ func open_room(id: String) -> void:
 ## palette does not list is dropped, so the tool never places a piece nobody can see
 ## selected; one it does list stays chosen and highlighted.
 func _refresh_decor_palette() -> void:
-	var ids := DecorLib.ids_for_biome(model.rooms[room_id].area)
+	var ids := DecorLib.ids_for_biome(TerrainArt.art_key(model.rooms[room_id].area))
 	var keep: String = view.decor_id if ids.has(view.decor_id) else ""
 	panels.set_decor_ids(ids)
 	if keep == "":

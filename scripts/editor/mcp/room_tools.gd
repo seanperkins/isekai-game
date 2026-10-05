@@ -188,7 +188,7 @@ func _catalog(args: Dictionary) -> Dictionary:
 		"prefabs": {"library": prefabs, "sets": Prefabs.SETS},
 		"perks": DefLoader.load_dir("res://data/perks", "PerkDef").map(func(p: PerkDef) -> String: return p.id),
 		"gates": WorldValidator.GATES,
-		"areas": TerrainArt.biomes(),
+		"areas": TerrainArt.areas(),
 		"limits": {
 			"screen": RoomSpec.plain(RoomDef.SCREEN), "wall": RoomDef.WALL, "floor": RoomDef.FLOOR, "grid": RoomEditModel.GRID,
 			"door": RoomEditModel.DOOR, "max_screens": RoomEditModel.MAX_SCREENS, "min_solid": RoomEditModel.MIN_SOLID,

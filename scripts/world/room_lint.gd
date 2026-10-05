@@ -254,7 +254,7 @@ static func _over_hole(r: RoomDef) -> Array:
 		if e.has("gate"):
 			continue
 		for p in r.dressing:
-			if _over(span, floor_y, p["pos"], DressingLib.size(r.area, p["piece"])):
+			if _over(span, floor_y, p["pos"], DressingLib.size(TerrainArt.art_key(r.area), p["piece"])):
 				out.append(_f(r, "over_hole", "dressing %s is over its floor hole" % p["piece"]))
 	return out
 

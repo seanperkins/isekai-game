@@ -59,7 +59,7 @@ func show_room(model: RoomEditModel, room_id: String) -> void:
 	_room.position = Vector2.ZERO
 	_ignore_mouse(_room)
 	add_child(_room)
-	_tint.color = TerrainArt.ambient(def.area, Game.AMBIENT)
+	_tint.color = TerrainArt.ambient(TerrainArt.art_key(def.area), Game.AMBIENT)
 	fit()
 	_redraw_overlay()
 
