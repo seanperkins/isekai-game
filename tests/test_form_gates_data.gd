@@ -1,10 +1,11 @@
 extends GutTest
 ## The shipped gates: every wolf, undead, spider and goblin form has one, it is valid, and the deeds it waits for are listed.
 
-## The deeds something emits today (the rest of Deeds.EVENTS is in Deeds.RESERVED).
+## The deeds something emits today: every one of Deeds.EVENTS (Deeds.RESERVED is empty).
 const EMITTED := ["defeated", "guard_broken", "room_cleared", "room_entered", "skill_hit", "skill_missed", "switch_hit",
 	"part_harvested", "graft_attached", "graft_shed", "item_carried", "corpse_left", "lesson_learned", "bond_formed",
-	"trap_sprung", "weapon_forged", "item_stolen", "ward_stone_placed", "prey_cocooned", "prey_freed"]
+	"trap_sprung", "weapon_forged", "item_stolen", "ward_stone_placed", "prey_cocooned", "prey_freed",
+	"barrier_broken", "hidden_found", "gap_crossed", "lamp_drunk", "vigil_kept", "room_held", "village_visited_unseen", "village_kept"]
 const TOTAL := {2: 26, 3: 34, 4: 44}
 
 var forms: Dictionary
@@ -80,7 +81,7 @@ func test_the_reserved_list_is_exactly_the_deeds_the_gates_still_wait_for() -> v
 	for e in EMITTED:
 		assert_false(Deeds.RESERVED.has(e), "%s is emitted now" % e)
 
-func test_the_gates_that_wait_on_a_later_piece_are_known() -> void:
+func test_no_gate_waits_on_a_piece_that_is_not_built() -> void:
 	var waiting := {}
 	for f: FormDef in gated:
 		var needs: Array = []
@@ -93,10 +94,8 @@ func test_the_gates_that_wait_on_a_later_piece_are_known() -> void:
 					needs.append(Deeds.RESERVED["%s.%s" % [event, tag]])
 		for piece in needs:
 			waiting[piece] = int(waiting.get(piece, 0)) + 1
-	assert_false(waiting.has("E1"), "E1 is built: " + str(waiting))
-	assert_false(waiting.has("E2"), "E2 is built: " + str(waiting))
-	assert_true(waiting.has("F2"), str(waiting))
-	gut.p("gate atoms waiting on a later piece: %s" % waiting)
+	assert_eq(waiting, {}, "every deed has an emitter: nothing waits")
+	assert_eq(Deeds.RESERVED, {})
 
 func test_a_gate_that_asks_for_a_part_names_a_part_that_exists() -> void:
 	var parts := PartLoader.load_all()
