@@ -16,6 +16,7 @@ func _init(p_session: RoomSession = null) -> void:
 	_register_add()
 	_register_change()
 	_register_bulk()
+	_register_stamp()
 	_register_persist()
 	_register_preview()
 
@@ -431,3 +432,40 @@ func _apply_room_spec(args: Dictionary) -> Dictionary:
 	var content: Dictionary = parsed["content"]
 	return ok({"ok": true, "counts": {"solids": content["solids"].size(), "water": content["water"].size(),
 		"spawns": content["spawns"].size(), "features": content["features"].size(), "decor": content["decor"].size()}})
+
+# --- prefabs ---
+
+func _register_stamp() -> void:
+	_add("stamp_prefab", "Stamp a prefab (a mound, an arch, stalactites ... see catalog prefabs) into a room as plain solids and decor, in one undo step. "
+		+ "A floor prefab stands on `origin` (its y is the floor top, e.g. 320 in a one-screen room); a ceiling prefab hangs from it. "
+		+ "Decor art comes from the room's biome. Nothing changes if any piece is refused.",
+		obj({"room": {"type": "string"}, "prefab": {"type": "string", "enum": Prefabs.library().keys()}, "origin": vec2("Anchor, room-local px."),
+			"flip": {"type": "boolean", "description": "Mirror it in x."}}, ["room", "prefab", "origin"]), _stamp_prefab)
+
+func _stamp_prefab(args: Dictionary) -> Dictionary:
+	var r := _room(args["room"])
+	if r == null:
+		return _no_room(args["room"])
+	var biome := TerrainArt.art_biome(r.area)
+	if biome == "":
+		biome = "cave"
+	var scratch := {"solids": r.solids.duplicate(), "decor": r.decor.duplicate(true)}
+	var content := RoomSpec.content_of(r)
+	var bounds := Prefabs.stamp(scratch, args["prefab"], _v(args["origin"]), bool(args.get("flip", false)), biome)
+	var added_solids: Array = scratch["solids"].slice(r.solids.size())
+	var added_decor: Array = scratch["decor"].slice(r.decor.size())
+	for rect: Rect2 in added_solids:
+		content["solids"].append({"rect": rect, "hard": false})
+	for d: Dictionary in added_decor:
+		if not DecorLib.CATALOG.has(d["id"]):
+			d["id"] = str(d["id"]).trim_prefix(biome + "_")  # a biome without this piece's art uses the cave's
+		content["decor"].append(d)
+	var errors := _session.model.apply_content(args["room"], content, {"decor": added_decor})  # the prefab's decor is its author's placement
+	if not errors.is_empty():
+		var kept := {"solid": r.solids.size(), "decor": r.decor.size()}
+		var said: Array = []
+		for e: Dictionary in errors:
+			var own: bool = e["index"] >= kept.get(e["kind"], 0)
+			said.append("the prefab's %s %d: %s" % [e["kind"], e["index"] - kept.get(e["kind"], 0), e["error"]] if own else "%s %d: %s" % [e["kind"], e["index"], e["error"]])
+		return fail("; ".join(said))
+	return ok({"ok": true, "bounds": RoomSpec.plain(bounds), "added": {"solids": added_solids.size(), "decor": added_decor.size()}})

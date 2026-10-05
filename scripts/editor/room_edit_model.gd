@@ -1116,12 +1116,13 @@ func _shift_content(r: RoomDef, d: Vector2) -> void:
 ## feature or decor piece on a surface) but its numbers are kept exactly, never snapped or clipped: most of the shipped rooms are off
 ## the 4 px grid, which the editor's mouse snaps to and the data does not need. A feature, decor piece or spawn that is exactly one
 ## the room already holds is not re-checked, so a room's own spec applies back unchanged even where shipped decor stands in an exit's
-## gap (three pieces do); only what is new or changed meets the rules.
-func apply_content(room_id: String, content: Dictionary) -> Array:
+## gap (three pieces do); only what is new or changed meets the rules. `trusted` ({"decor": [...], "features": [...]}) names more
+## elements to skip the surface rule for: a prefab's own decor, which its author placed (some stand a little past a ledge's end).
+func apply_content(room_id: String, content: Dictionary, trusted := {}) -> Array:
 	if not rooms.has(room_id):
 		return [{"kind": "room", "index": -1, "error": "no room '%s'" % room_id}]
 	var scratch := RoomEditModel.new(rooms, creature_ids)
-	var errors := scratch._replay(room_id, content)
+	var errors := scratch._replay(room_id, content, trusted)
 	if not errors.is_empty():
 		return errors
 	var before := _snap([room_id])
@@ -1139,7 +1140,7 @@ func apply_content(room_id: String, content: Dictionary) -> Array:
 
 ## Empties the room's six content lists and adds `content` back element by element, collecting what each check refuses. Solids go
 ## first, then water, spawns, features and decor, because the later checks look at the solids already placed.
-func _replay(room_id: String, content: Dictionary) -> Array:
+func _replay(room_id: String, content: Dictionary, trusted := {}) -> Array:
 	var r: RoomDef = rooms[room_id]
 	var held := RoomEditModel.copy_room(r)  # what the room holds now: an element identical to one of these is not re-checked
 	r.solids = []
@@ -1187,7 +1188,7 @@ func _replay(room_id: String, content: Dictionary) -> Array:
 	var features: Array = content.get("features", [])
 	for i in features.size():
 		var f: Dictionary = features[i].duplicate(true)
-		var err := "" if held.features.has(features[i]) else _feature_error(room_id, f)
+		var err := "" if held.features.has(features[i]) or trusted.get("features", []).has(features[i]) else _feature_error(room_id, f)
 		if err != "":
 			refuse.call("feature", i, err)
 			continue
@@ -1205,7 +1206,7 @@ func _replay(room_id: String, content: Dictionary) -> Array:
 	var decor: Array = content.get("decor", [])
 	for i in decor.size():
 		var d: Dictionary = decor[i].duplicate(true)
-		var err := "" if held.decor.has(decor[i]) else _decor_error(room_id, d)
+		var err := "" if held.decor.has(decor[i]) or trusted.get("decor", []).has(decor[i]) else _decor_error(room_id, d)
 		if err != "":
 			refuse.call("decor", i, err)
 			continue
