@@ -13,6 +13,8 @@ extends CharacterBody2D
 
 ## Reaches 0 HP. The game awards the player XP for it (a direct signal, not an EventBus event).
 signal downed(def: CreatureDef)
+## The corpse's eat window ran out with nobody eating it.
+signal corpse_left(def: CreatureDef)
 
 const GRAVITY := 900.0
 const BASE_SPEED := 60.0
@@ -374,9 +376,12 @@ func _physics_process(delta: float) -> void:
 	if dormant:
 		velocity = Vector2.ZERO
 		return
+	var was_downed := status.state == EnemyStatus.DOWNED
 	status.update(delta)
 	_anim_t += delta
 	if status.state == EnemyStatus.GONE:
+		if was_downed:
+			corpse_left.emit(def)
 		queue_free()
 		return
 	_spit_cd = maxf(0.0, _spit_cd - delta)

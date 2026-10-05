@@ -38,6 +38,8 @@ var _opening_def: OpeningDef
 var ambient: CanvasModulate
 var _skills_by_id := {}
 var _creatures := {}
+var _parts := {}
+var _drop_rng := RandomNumberGenerator.new()
 var _editor_play := false
 ## Started with `-- --room=menagerie`: an editor-Play-like run in the room of every creature, with no editor to go back to.
 var _menagerie := false
@@ -66,6 +68,7 @@ func _ready() -> void:
 		_skills_by_id[d.id] = d
 	for c in SkillRules.creature_defs:
 		_creatures[c.id] = c
+	_parts = PartLoader.load_all()
 	player = Player.new()
 	player.setup(SkillRules, Compendium.model, SkillRules.creature_defs, _emit_game_event)
 	world = World.new()
@@ -231,8 +234,21 @@ func _spawn(id: String, pos: Vector2) -> Node2D:
 		node.downed.connect(func(_d: CreatureDef) -> void: _check_room_cleared())
 		node.tree_exiting.connect(_check_room_cleared)  # an enemy eaten alive leaves without ever going down
 		node.downed.connect(func(d: CreatureDef) -> void: Compendium.model.on_creature_defeated(d.id))
+		node.downed.connect(func(d: CreatureDef) -> void: _leave_parts(d, node))
+		node.corpse_left.connect(func(d: CreatureDef) -> void: player.emit_deed(Deeds.CORPSE_LEFT, {"source": d.id}))
 	node.position = pos
 	return node
+
+## What a downed creature drops lies where it fell, side by side when there is more than one.
+func _leave_parts(def: CreatureDef, enemy: Node2D) -> void:
+	var room := enemy.get_parent()
+	if room == null:
+		return
+	var ids := Drops.roll(def, _drop_rng)
+	for i in ids.size():
+		var pickup := PartPickup.new()
+		pickup.setup(_parts[ids[i]], enemy.position + Vector2((i - (ids.size() - 1) / 2.0) * 10.0, 0.0))
+		room.add_child(pickup)
 
 ## The room is cleared when its last enemy goes down: a deed, once per room, and alone when no ally is out.
 func _check_room_cleared() -> void:
