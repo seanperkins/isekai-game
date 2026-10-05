@@ -96,21 +96,35 @@ func test_the_gate_shrine_is_neutral_ground_a_pool_and_no_creatures_and_no_altar
 		for f in (full[id] as RoomDef).features:
 			assert_ne(f["kind"], "altar", id)
 
-func test_the_sump_joins_the_flooded_tunnels_by_a_swim_gate_on_both_ends() -> void:
+func test_the_sump_joins_f6_by_a_shortcut_that_is_closed_until_a_swimmer_opens_it_from_f6() -> void:
 	var down: Dictionary = (full["VI5"] as RoomDef).exits.filter(func(e: Dictionary) -> bool: return e["room"] == "F6")[0]
-	assert_eq(down["edge"], "bottom")
-	assert_eq(down["gate"], "swim")
 	var up: Dictionary = (full["F6"] as RoomDef).exits.filter(func(e: Dictionary) -> bool: return e["room"] == "VI5")[0]
-	assert_eq(up["edge"], "top")
-	assert_eq(up["gate"], "swim")
+	assert_eq([down["edge"], up["edge"]], ["bottom", "top"])
+	for e in [down, up]:
+		assert_eq(e["shortcut"], "sump_drop")
+		assert_false(e.has("gate"), "a drop cannot be gated by a label: a walker sinks through it, so the hole is shut until the swim has opened it")
+		assert_false(RoomBuilder.is_exit_open(e, null), "closed in play until the shortcut is opened")
 	assert_eq((full["VI5"] as RoomDef).water.size(), 1, "a flooded shaft")
 
-func test_f6_gains_exactly_one_exit_and_nothing_else_of_it_changes() -> void:
+func test_the_switch_that_opens_it_stands_on_f6s_highest_ledge_where_only_a_swimmer_comes() -> void:
+	var f6 := full["F6"] as RoomDef
+	var switches := f6.features.filter(func(f: Dictionary) -> bool: return f["kind"] == "switch")
+	assert_eq(switches.size(), 1)
+	assert_eq(switches[0]["shortcut"], "sump_drop")
+	var top: Rect2 = f6.solids[0]
+	for l: Rect2 in f6.solids:
+		if l.position.y < top.position.y:
+			top = l
+	assert_eq((switches[0]["pos"] as Vector2).y, top.position.y, "on the highest ledge")
+	assert_true(top.position.x <= (switches[0]["pos"] as Vector2).x - 9.0 and top.end.x >= (switches[0]["pos"] as Vector2).x + 9.0, "wholly on it")
+
+func test_f6_gains_exactly_one_exit_and_one_switch_and_nothing_else_of_it_changes() -> void:
 	var was: RoomDef = world["F6"]
 	var now: RoomDef = full["F6"]
 	assert_eq(now.exits.size(), was.exits.size() + 1)
+	assert_eq(now.features.size(), was.features.size() + 1)
 	for p in now.get_property_list():
-		if (int(p["usage"]) & PROPERTY_USAGE_STORAGE) != 0 and p["name"] != "script" and p["name"] != "exits":
+		if (int(p["usage"]) & PROPERTY_USAGE_STORAGE) != 0 and p["name"] != "script" and p["name"] != "exits" and p["name"] != "features":
 			assert_eq(now.get(p["name"]), was.get(p["name"]), "F6.%s is as shipped" % p["name"])
 
 func test_the_village_adds_no_ungated_way_into_the_flooded_tunnels() -> void:

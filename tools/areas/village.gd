@@ -3,7 +3,7 @@ extends AreaModule
 ## The goblin village below the swamp (docs/research/area-level-design.md section 12): four rooms and the Sump, ten screens. The Bog Flat's
 ## floor opens onto the Gate Shrine, a neutral gatehouse with a pool and nothing hostile in it; the Palisade Roofs lie west of it and the
 ## Yard below both; the Chieftain Hall is a dead end off the Yard, and the Yard's floor opens onto the Sump, a flooded shaft that is the
-## swamp's second link to the Flooded Tunnels (its F6, behind `swim`). Art is the cave's, the Sump's the flooded tunnels'. Standing, trust,
+## swamp's second link to the Flooded Tunnels: a shortcut hole into F6 that a swimmer opens from F6's own highest ledge. Art is the cave's, the Sump's the flooded tunnels'. Standing, trust,
 ## the trial, the tame pen and the tinker's bench are not built: the village's creatures fight like any creature for now.
 
 func area() -> String:
@@ -26,7 +26,10 @@ func build(world: Dictionary) -> void:
 	link(shrine, yard, "bottom", 10000.0, 10160.0)  # 400 to 560 in the Shrine, 1040 to 1200 in the Yard
 	link(yard, hall, "left", 920.0, 1040.0)  # row 2 starts at 720
 	link(yard, sump, "bottom", 9700.0, 9860.0)  # 740 to 900 in the Yard, 100 to 260 in the Sump
-	link(sump, world["F6"], "bottom", 10040.0, 10200.0, {"gate": "swim"})  # 440 to 600 in both; the way out of the swamp that wants the swim
+	# 440 to 600 in both. A drop: a walker sinks through a hole in water, so a label would not hold it. The hole is a shortcut, shut until a
+	# swimmer opens it from F6's side (area-level-design.md section 11: a link from an early area would bypass the Swim door).
+	link(sump, world["F6"], "bottom", 10040.0, 10200.0, {"shortcut": "sump_drop"})
+	attach_feature(world["F6"], "switch", "f6_switch", 105.0, 158.0, {"shortcut": "sump_drop"})  # on F6's highest ledge
 
 # --- VI1 the Gate Shrine: neutral ground, a pool and no creatures for any species ---
 func _shrine() -> RoomDef:

@@ -33,8 +33,8 @@ exits = [{
 }, {
 "edge": "bottom",
 "from": 440.0,
-"gate": "swim",
 "room": "F6",
+"shortcut": "sump_drop",
 "to": 600.0
 }]
 water = [Rect2(0, 300, 640, 420)]

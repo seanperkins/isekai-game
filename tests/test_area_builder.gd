@@ -20,6 +20,13 @@ class AddsASpawn extends AreaModule:
 	func build(world: Dictionary) -> void:
 		AreaKit.spawn(world["C6"], "bat", 100.0, 320.0)
 
+## A module that puts a feature in a shipped room: it is marked as the module's, so the next run strips it before it builds again.
+class AddsASwitch extends AreaModule:
+	func prefix() -> String:
+		return "QS"
+	func build(world: Dictionary) -> void:
+		attach_feature(world["C6"], "switch", "qs_switch", 100.0, 320.0, {"shortcut": "qs_drop"})
+
 var dir: String
 
 func before_each() -> void:
@@ -121,6 +128,22 @@ func test_a_generated_rooms_attach_is_not_added_twice() -> void:
 	_write(first)
 	var second := AreaBuilder.build_with([TestArea.new()], dir)
 	assert_eq((second["C3"] as RoomDef).exits.size(), (first["C3"] as RoomDef).exits.size())
+
+func test_a_feature_a_module_attached_is_not_added_twice_and_is_marked_as_its_own() -> void:
+	var first := AreaBuilder.build_with([AddsASwitch.new()])
+	var added := (first["C6"] as RoomDef).features.filter(func(f: Dictionary) -> bool: return f["id"] == "qs_switch")
+	assert_eq(added.size(), 1)
+	assert_eq(added[0]["by"], "QS")
+	assert_eq(added[0]["shortcut"], "qs_drop")
+	_write(first)
+	var second := AreaBuilder.build_with([AddsASwitch.new()], dir)
+	assert_eq((second["C6"] as RoomDef).features.size(), (first["C6"] as RoomDef).features.size())
+	assert_eq(AreaBuilder.stale(second, dir), [])
+
+func test_a_feature_nobody_attached_is_never_stripped() -> void:
+	var before := (World.load_rooms(AreaBuilder.ROOMS_DIR)["C6"] as RoomDef).features.size()
+	var world := AreaBuilder.build_with([AddsASwitch.new()])
+	assert_eq((world["C6"] as RoomDef).features.size(), before + 1, "C6's own pool, tablet and switch stay")
 
 func test_building_does_not_change_the_rooms_other_code_holds() -> void:
 	var held: RoomDef = World.load_rooms(AreaBuilder.ROOMS_DIR)["C3"]

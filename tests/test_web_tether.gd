@@ -182,6 +182,7 @@ func test_a_hold_stuns_the_enemy_shows_the_strand_and_ends_at_three_seconds() ->
 
 func test_the_cooldown_still_runs_after_a_channel_and_recasting_works() -> void:
 	_real_player()
+	_solid(Rect2(-200, BodyConfig.BOTTOM, 600, 20))  # a floor: with none the player falls out of the thread's range while the cooldown runs
 	_real_enemy(60)
 	Input.action_press("active_1")
 	await wait_physics_frames(3)

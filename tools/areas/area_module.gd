@@ -18,3 +18,10 @@ func build(_world: Dictionary) -> void:
 func link(a: RoomDef, b: RoomDef, edge: String, from_world: float, to_world: float, extra := {}) -> void:
 	if not AreaKit.link(a, b, edge, from_world, to_world, extra):
 		push_error("%s: %s to %s on %s %s..%s does not link" % [area(), a.id, b.id, edge, from_world, to_world])
+
+## A feature the module puts in an existing room (a shipped one). It is marked with the module's prefix (`by`) so that the next run strips it
+## from the room before the module builds again, as it strips the exits to the module's rooms.
+func attach_feature(r: RoomDef, kind: String, id: String, x: float, surface_y: float, extra := {}) -> void:
+	var f := extra.duplicate()
+	f["by"] = prefix()
+	AreaKit.feature(r, kind, id, x, surface_y, f)
