@@ -104,6 +104,18 @@ var _sprite: Sprite2D
 var spawn_key := ""
 ## Set false before adding to the tree to draw the old single sprites instead of the creature's own frames.
 var use_sheet := true
+## A dormant enemy is frozen where it spawned: no gravity, movement or AI, no contact damage, and it refuses every blow, stun,
+## thread, slow and bite (a boss before its arena wakes it). The setter freezes the status and redraws the resting frame, so it is
+## right whether it is set before or after the enemy enters the tree.
+var dormant := false:
+	set(v):
+		dormant = v
+		status.frozen = v
+		if v:
+			velocity = Vector2.ZERO
+		_update_visual()
+## A hunting enemy is always alert: it ignores CHASE_RANGE and line of sight (a boss in its own arena).
+var hunting := false
 var _sheet: SpriteSheet
 var _animator: SlimeAnimator
 var _shapes: SlimeShapes
@@ -189,7 +201,7 @@ static func cause_for(damage_type: String) -> String:
 	return "poison" if damage_type == "poison" else "other"
 
 func _untouchable() -> bool:
-	return status.state == EnemyStatus.DOWNED or status.state == EnemyStatus.GONE or status.state == EnemyStatus.DYING
+	return dormant or status.state == EnemyStatus.DOWNED or status.state == EnemyStatus.GONE or status.state == EnemyStatus.DYING
 
 ## `cause` names the blow for the death effect; it is stored before the hit because _on_died() takes
 ## no arguments.
@@ -237,10 +249,12 @@ func receive_thread(tier: int) -> void:
 ## The one writer for the slow: a thread (Sticky Thread, Swing Thread) and every player zone (Spore Cloud, Binding Web's
 ## patch, Healing Spores, Puffball) call it.
 func slow_for(seconds: float) -> void:
+	if dormant:
+		return
 	_slow = maxf(_slow, seconds)
 
 func can_be_predated() -> bool:
-	return def.predatable and status.predatable()
+	return not dormant and def.predatable and status.predatable()
 
 func set_held(v: bool) -> void:
 	status.held = v
@@ -283,6 +297,9 @@ func _start_death_fx() -> void:
 	fx.begin(self, _cause, _killed_from)
 
 func _physics_process(delta: float) -> void:
+	if dormant:
+		velocity = Vector2.ZERO
+		return
 	status.update(delta)
 	_anim_t += delta
 	if status.state == EnemyStatus.GONE:
@@ -387,7 +404,7 @@ func can_see(target: Node2D) -> bool:
 	return get_world_2d().direct_space_state.intersect_ray(query).is_empty()
 
 func _sense(player: Node2D, delta: float) -> void:
-	var sees := global_position.distance_to(player.global_position) < CHASE_RANGE and can_see(player)
+	var sees := hunting or (global_position.distance_to(player.global_position) < CHASE_RANGE and can_see(player))
 	if sees and def.swimmer and _home_water != null and not _home_water.world_rect().has_point(player.global_position):
 		sees = false  # an eel is stirred only by a player in its own water
 	if sees:
@@ -475,9 +492,12 @@ func _update_web() -> void:
 func _draw_sheet_frame(delta: float) -> void:
 	var state := EnemyState.pick(def.id, status.state, charge_state(), swoop_state(), _state == "puff",
 		_spit_cd > _spit_cooldown() - SPIT_POSE_SECONDS, _on_ceiling, is_on_floor(), absf(velocity.x) > 1.0, _hurt_t > 0.0)
+	if dormant:  # the resting pose whatever it was doing, and it does not animate
+		state = EnemyState.pick(def.id, EnemyStatus.ACTIVE, "", "idle", false, false, _on_ceiling, true, false, false)
 	_anim_state = state
 	_animator.play(state)
-	_animator.advance(delta)
+	if not dormant:
+		_animator.advance(delta)
 	var frame := _animator.frame()
 	_sprite.texture = _sheet.frame_texture(frame)
 	_sprite.position.y = BODY_BOTTOM - _sheet.frame_size(frame).y / 2.0

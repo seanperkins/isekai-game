@@ -13,10 +13,14 @@ const DOWNED_SECONDS := 5.0
 
 var state := ACTIVE
 var held := false
+## A dormant enemy's status is frozen: nothing stuns it (the Tremor ability calls stun() itself after a refused hit).
+var frozen := false
 var _timer := 0.0
 
 ## Stuns for `seconds`; on a creature already stunned the longer timer stays (a short stun never shortens a long one).
 func stun(seconds: float = STUN_SECONDS) -> void:
+	if frozen:
+		return
 	if state == ACTIVE or state == STUNNED:
 		_timer = seconds if state == ACTIVE else maxf(_timer, seconds)
 		state = STUNNED
