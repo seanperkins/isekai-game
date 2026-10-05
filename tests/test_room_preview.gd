@@ -126,5 +126,5 @@ func test_the_preview_tool() -> void:
 	assert_eq(no_text["content"].size(), 1)
 	var world := tools.call_tool("preview", {})
 	assert_eq(world["content"][0]["type"], "image")
-	assert_true(world["content"][1]["text"].contains("23 rooms"))
+	assert_true(world["content"][1]["text"].contains("%d rooms" % ShippedRooms.IDS.size()))
 	assert_eq(tools.call_tool("preview", {"room": "Z9"})["content"][0]["text"], "no room 'Z9'")

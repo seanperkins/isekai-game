@@ -6,7 +6,7 @@ func _roundtrip(r: RoomDef) -> Dictionary:
 
 func test_every_shipped_room_round_trips() -> void:
 	var rooms := ShippedRooms.load_all()
-	assert_eq(rooms.size(), 23)
+	assert_eq(rooms.size(), ShippedRooms.IDS.size())
 	for id in rooms:
 		var back := _roundtrip(rooms[id])
 		assert_eq(back["errors"], [], id)

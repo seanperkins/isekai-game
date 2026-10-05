@@ -29,7 +29,7 @@ func test_the_tools_are_listed_with_schemas() -> void:
 
 func test_list_rooms() -> void:
 	var all: Array = _data(_call("list_rooms"))["rooms"]
-	assert_eq(all.size(), 23)
+	assert_eq(all.size(), ShippedRooms.IDS.size())
 	var c1: Dictionary = all.filter(func(r: Dictionary) -> bool: return r["id"] == "C1")[0]
 	var def: RoomDef = session.model.rooms["C1"]
 	assert_eq(c1["area"], "cave")
@@ -70,13 +70,14 @@ func test_problems() -> void:
 
 func test_world_size() -> void:
 	var d: Dictionary = _data(_call("world_size"))
-	assert_eq(int(d["measure"]["rooms"]), 23)
-	assert_eq(int(d["measure"]["screens"]), 45)
+	var m := WorldSize.measure(ShippedRooms.load_all())
+	assert_eq(int(d["measure"]["rooms"]), m["rooms"])
+	assert_eq(int(d["measure"]["screens"]), m["screens"])
 	assert_eq(d["yardsticks"].size(), 3)
 	assert_true(d["areas"].size() > 0)
 
 func test_state() -> void:
-	assert_eq(_data(_call("state"))["rooms"], 23.0)
+	assert_eq(int(_data(_call("state"))["rooms"]), ShippedRooms.IDS.size())
 
 func test_bad_arguments_are_refused_and_change_nothing() -> void:
 	assert_eq(_error(_call("get_room", {})), "room: required")

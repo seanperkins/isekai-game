@@ -26,12 +26,12 @@ func _rewrite_c1_on_disk() -> void:
 	ResourceSaver.save(r, "%s/C1.tres" % TMP)
 
 func test_a_session_loads_the_rooms_and_nothing_is_dirty() -> void:
-	assert_eq(session.model.rooms.size(), 23)
+	assert_eq(session.model.rooms.size(), ShippedRooms.IDS.size())
 	assert_eq(session.model.dirty.size(), 0)
 	assert_eq(session.changed_on_disk(), [])
 	assert_true(session.model.creature_ids.size() > 0)
 	var s := session.state()
-	assert_eq(s["rooms"], 23)
+	assert_eq(s["rooms"], ShippedRooms.IDS.size())
 	assert_eq(s["dirty"], [])
 	assert_eq([s["undo_depth"], s["redo_depth"]], [0, 0])
 	assert_eq(s["changed_on_disk"], [])
