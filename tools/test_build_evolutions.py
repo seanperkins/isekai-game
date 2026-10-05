@@ -120,11 +120,23 @@ class BuildEvolutionsTest(unittest.TestCase):
         cave = next(a for a in self.data["areas"] if a["id"] == "cave")["shippedEssence"]
         self.assertEqual((cave["water"], cave["earth"], cave["air"], cave["dark"]), (19, 8, 12, 10))
 
-    def test_a_later_element_only_appears_where_it_arrives(self):
-        # fire, mind and blood have no shipped supply, so every carrier is a new creature in a planned area.
+    def test_every_element_is_carried_and_every_area_is_built(self):
+        self.assertEqual([e["id"] for e in self.data["essences"] if e["later"]], [], "fire, mind and blood arrived with their areas")
+        self.assertTrue(all(a["built"] for a in self.data["areas"]))
         for e in self.data["essences"]:
-            if e["later"]:
-                self.assertEqual(e["existing"], [], e["id"])
+            self.assertGreater(e["worldSupply"], 0, e["id"])
+
+    def test_the_world_supply_counts_every_room_and_the_shipped_supply_only_the_original_ones(self):
+        by = {e["id"]: e for e in self.data["essences"]}
+        for e in by.values():
+            self.assertGreaterEqual(e["worldSupply"], e["shippedSupply"], e["id"])
+        self.assertEqual(by["fire"]["shippedSupply"], 0)
+        self.assertGreater(by["fire"]["worldSupply"], 0)
+        cave = next(a for a in self.data["areas"] if a["id"] == "cave")
+        self.assertGreater(cave["worldEssence"]["earth"], cave["shippedEssence"]["earth"], "the Cave's placed creatures carry earth")
+        volcano = next(a for a in self.data["areas"] if a["id"] == "volcano")
+        self.assertEqual(sum(volcano["shippedEssence"].values()), 0)
+        self.assertGreater(volcano["worldEssence"]["fire"], 0)
 
     def test_the_data_file_is_a_script_that_holds_the_same_json(self):
         path = os.path.join(be.OUT, "evolutions-data.js")

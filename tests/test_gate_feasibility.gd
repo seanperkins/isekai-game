@@ -5,6 +5,8 @@ extends GutTest
 
 ## How many gate atoms in the data this test cannot check against the world (they ask for a deed, a streak or a verb used).
 const UNCHECKED := 53
+## The `any` groups whose checkable alternatives are all unmet and that also have an alternative the world cannot speak to.
+const UNVERIFIED := 0
 
 ## A gate's essence must be this many times in the world, for a life that will not eat all of it.
 const MARGIN := 2.5
@@ -58,27 +60,42 @@ func _met(a: Dictionary):
 			if event == "bond_formed" and tags.has("kind"):
 				return bonds.has(tags["kind"]) or (tags["kind"] == "long" and not bonds.is_empty())  # a long bond is any bond kept a while
 			if event == "lesson_learned" and tags.has("element"):
-				var kinds := 0
-				for id in present:
-					if int((defs[id] as CreatureDef).essences.get(tags["element"], 0)) > 0:
-						kinds += 1
-				return kinds >= int(a["n"])
+				return _lesson_kinds(tags["element"]).size() >= int(a["n"])
 	return null
+
+## The creatures of the world a lesson of `element` can be learned from: a lesson is of the creature's primary element (Lessons.primary), not of
+## every element it carries.
+func _lesson_kinds(element: String) -> Array:
+	var out: Array = []
+	for id in present:
+		if Lessons.primary(defs[id]) == element:
+			out.append(id)
+	return out
+
+func test_a_lesson_counts_only_creatures_whose_primary_element_it_is() -> void:
+	assert_eq(Lessons.primary(defs["storm_eel"]), "air", "the Storm Eel carries light 3 tied with air 3: its lesson is air")
+	assert_false(_lesson_kinds("light").has("storm_eel"))
+	assert_true(_lesson_kinds("air").has("storm_eel"))
 
 func test_every_atom_that_names_a_thing_can_be_met_by_the_world() -> void:
 	var unchecked := 0
-	var checked := 0
+	var unverified := 0
+	var verified := 0
 	for f: FormDef in forms.values():
 		for a in f.gate:
 			var alts: Array = a["of"] if a.get("kind", "") == "any" else [a]
 			var verdicts := alts.map(func(x: Dictionary): return _met(x))
-			if verdicts.all(func(v) -> bool: return v == null):
+			if verdicts.any(func(v) -> bool: return v == true):
+				verified += 1
+			elif verdicts.all(func(v) -> bool: return v == null):
 				unchecked += alts.size()
-				continue
-			checked += 1
-			assert_true(verdicts.any(func(v) -> bool: return v == true) or verdicts.any(func(v) -> bool: return v == null), "%s: no alternative of %s can be met by the world" % [f.id, str(a)])
-	assert_gt(checked, 30, "a good part of the gates name something")
-	assert_eq(unchecked, UNCHECKED, "the atoms the world has nothing to say about")
+			elif verdicts.any(func(v) -> bool: return v == null):
+				unverified += 1  # an alternative the world cannot say, beside ones it says cannot be met: a group nothing here can vouch for
+			else:
+				fail_test("%s: no alternative of %s can be met by the world" % [f.id, str(a)])
+	assert_gt(verified, 30, "a good part of the gates name something the world holds")
+	assert_eq(unchecked, UNCHECKED, "the atoms the world has nothing to say about (a deed, a streak, a verb used)")
+	assert_eq(unverified, UNVERIFIED, "the groups with an alternative the world cannot say beside ones it says are not met")
 
 func test_the_scarcest_essence_a_gate_asks_for_is_in_the_world_three_times_over() -> void:
 	var scarcest := INF

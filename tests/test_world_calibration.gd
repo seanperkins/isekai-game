@@ -61,7 +61,8 @@ func _at_first_evolution(rooms: Dictionary, start_area: String) -> Array:
 			xp += c.xp
 			if xp >= Progression.stage_total(1):
 				return [FormOffers.revealed_lineages(forms, rules), FormOffers.offered_lineages(forms, rules)]
-	return []
+	fail_test("the %s start never reaches the first evolution's %d XP on this diet" % [start_area if start_area != "" else "cave", Progression.stage_total(1)])
+	return [[], []]
 
 ## [[lineage, the eat at which what was absorbed first meets its reveal], ...] in the order they open on the walk from `start_area`: the design doc's
 ## numbers, which leave the +3 of an owned power out.

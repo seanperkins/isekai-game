@@ -17,11 +17,11 @@ import time
 DOC = "docs/research/species-form-branches.md"
 OUT = "docs/evolutions"
 ELEMENTS = ["water", "earth", "air", "light", "dark", "fire", "mind", "blood"]
-LATER = {"fire", "mind", "blood"}  # elements no shipped creature carries yet
-AREAS = [  # id, name, built (a shipped area with rooms)
+LATER = set()  # elements no creature carries yet: none now (fire, mind and blood arrived with the volcano, the sacred hall and the cemetery)
+AREAS = [  # id, name, built (an area with rooms: all twelve now)
     ("cave", "Cave", True), ("grotto", "Grotto", True), ("flooded", "Flooded Tunnels", True), ("deep", "The Deep", True),
-    ("forest", "Forest", False), ("swamp", "Swamp", False), ("village", "Goblin village", False), ("sacred", "Sacred hall", False),
-    ("cemetery", "Cemetery", False), ("crypt", "Crypt", False), ("volcano", "Volcano", False), ("demon", "Demon area", False),
+    ("forest", "Forest", True), ("swamp", "Swamp", True), ("village", "Goblin village", True), ("sacred", "Sacred hall", True),
+    ("cemetery", "Cemetery", True), ("crypt", "Crypt", True), ("volcano", "Volcano", True), ("demon", "Demon area", True),
 ]
 AREA_IDS = [a[0] for a in AREAS]
 # The rooms the calibration walks (tools/calibrate_essences.gd): a room the editor adds later is not part of the supply numbers.
@@ -181,6 +181,20 @@ def read_spawns():
         for spawn in re.findall(r"\{(.*?)\}", m.group(1), re.S) if m else []:
             if '"by":' in spawn:  # a creature the placement put there (tools/areas/placement.gd), not one the rooms were made with
                 continue
+            cid = re.search(r'"id": "(\w+)"', spawn).group(1)
+            out.setdefault(area, {}).setdefault(cid, 0)
+            out[area][cid] += 1
+    return out
+
+
+def read_world_spawns():
+    """area -> creature id -> count, over every room the game has (the placed creatures and the area modules' own included)."""
+    out = {}
+    for path in sorted(glob.glob("data/rooms/*.tres")):
+        text = read(path)
+        area = re.search(r'^area = "(\w+)"', text, re.M).group(1)
+        m = re.search(r"\nspawns = \[(.*?)\n?\]\n", text, re.S)
+        for spawn in re.findall(r"\{(.*?)\}", m.group(1), re.S) if m else []:
             cid = re.search(r'"id": "(\w+)"', spawn).group(1)
             out.setdefault(area, {}).setdefault(cid, 0)
             out[area][cid] += 1
@@ -371,6 +385,21 @@ def collect():
             for e, v in existing[cid]["essence"].items():
                 existing_supply[e] += v * n
                 existing_by_area[a][e] += v * n
+    every = {c["id"]: c for c in creatures}  # the shipped creatures and the new ones, for the world's supply
+    twin_file = {f["id"]: data_id(f) for f in forms}
+    for c in creatures:
+        if c["kind"] == "twin":  # a twin's file is twin_<its form's data id>, the row's id is twin_<the document's form id>
+            every["twin_" + twin_file[c["twinOf"]]] = c
+    world_supply = {e: 0 for e in ELEMENTS}
+    world_by_area = {a: {e: 0 for e in ELEMENTS} for a in AREA_IDS}
+    for a, counts in read_world_spawns().items():
+        for cid, n in counts.items():
+            c = every.get(cid)
+            if c is None or (c["kind"] == "existing" and existing[cid]["untackleable"]):
+                continue
+            for e, v in c["essence"].items():
+                world_supply[e] += v * n
+                world_by_area[a][e] += v * n
     essences = []
     arrive = {a["essence"]: a for a in arrival}
     for e in ELEMENTS:
@@ -383,13 +412,13 @@ def collect():
         twin_units = sum(units(c).get(e, 0) for c in creatures if c["kind"] == "twin")
         twin_count = sum(1 for c in creatures if c["kind"] == "twin" and e in c["essence"])
         essences.append({"id": e, "later": e in LATER, "arrives": arrive[e]["arrives"], "sources": arrive[e]["sources"], "note": arrive[e]["note"],
-                         "shippedSupply": existing_supply[e], "formsReading": reading, "formsReadingTotal": sum(reading.values()),
+                         "shippedSupply": existing_supply[e], "worldSupply": world_supply[e], "formsReading": reading, "formsReadingTotal": sum(reading.values()),
                          "existing": carriers_existing, "support": carriers_support, "twinTypes": twin_count, "twinUnits": twin_units})
 
     # Areas.
     areas = []
     for aid, name, built in AREAS:
-        areas.append({"id": aid, "name": name, "built": built, "shippedEssence": existing_by_area[aid],
+        areas.append({"id": aid, "name": name, "built": built, "shippedEssence": existing_by_area[aid], "worldEssence": world_by_area[aid],
                       "existing": [c["id"] for c in creatures if c["kind"] == "existing" and aid in c["areas"]],
                       "support": [c["id"] for c in creatures if c["kind"] == "support" and aid in c["areas"]],
                       "twins": [c["id"] for c in creatures if c["kind"] == "twin" and aid in c["areas"]]})
