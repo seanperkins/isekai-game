@@ -90,7 +90,7 @@ func test_stage_two_offers_its_two_children_stage_three_its_sovereign_stage_four
 	f.advance("weaver", forms)
 	assert_eq(FormOffers.offers(forms, f, none), ["arachne", "snare"])
 	f.advance("snare", forms)
-	assert_eq(FormOffers.offers(forms, f, none), ["silkbound"])
+	assert_eq(FormOffers.offers(forms, f, none), ["gleipnir", "silkbound"])
 	f.advance("silkbound", forms)
 	assert_eq(FormOffers.offers(forms, f, none), [])
 
@@ -100,7 +100,7 @@ func test_greater_slime_leads_to_vast_and_radiant_then_prime() -> void:
 	f.advance("greater_slime", forms)
 	assert_eq(FormOffers.offers(forms, f, none), ["radiant", "vast"])
 	f.advance("vast", forms)
-	assert_eq(FormOffers.offers(forms, f, none), ["prime"])
+	assert_eq(FormOffers.offers(forms, f, none), ["prime", "shoggoth"])
 
 func test_a_real_engine_reveals_a_lineage_from_absorbed_essence() -> void:
 	var rules: SkillRulesEngine = autofree(SkillRulesEngine.new())

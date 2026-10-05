@@ -47,4 +47,4 @@ func test_an_unknown_area_in_host_is_reported() -> void:
 
 func test_load_species_filters() -> void:
 	assert_eq(FormLoader.load_species("wolf").size(), 21, "the wolf's forms are in the data since A3")
-	assert_eq(FormLoader.load_species().size(), 24)
+	assert_eq(FormLoader.load_species().size(), 42)

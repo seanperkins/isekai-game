@@ -8,7 +8,7 @@ id = "tidal"
 display_name = "Tidal Sovereign"
 stage = 4
 lineage = "tide"
-parents = ["brook", "tempest"]
+parents = ["brook"]
 stats = {
 "atk": 2,
 "def": 1,

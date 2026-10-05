@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "alkahest"
+display_name = "Alkahest"
+species = "slime"
+stage = 4
+lineage = "toxic"
+parents = ["acid"]
+stats = {
+"atk": 2,
+"def": 3,
+"max_hp": 22,
+"max_mp": 10,
+"mp_regen": 40
+}
+traits = ["venom_blood"]
+grants = ["poison_breath"]
+tint = Color(0.7, 1, 0.6, 1)
+size = 1.4
+blurb = "Dissolve: eat through a weak gate, grate or armour plate"
+reads = ["water", "earth"]
+host = ["flooded", "deep"]
+source = "the alchemists' universal solvent that dissolves every substance"
+verb_text = "Dissolve: eat through a weak gate, grate or armour plate"
+gives_up = "corrodes your own held parts"
+opened_by = "Acid, plus a gate eaten"

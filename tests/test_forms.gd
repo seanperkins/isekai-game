@@ -1,5 +1,5 @@
 extends GutTest
-## The form tree: 24 static forms, the legal transitions between stages, and the stage caps.
+## The slime's form tree: 42 forms, the legal transitions between stages, and the stage caps.
 
 var forms := {}
 var skill_ids: Array = []
@@ -10,12 +10,12 @@ func before_all() -> void:
 		if d.source != "enemy_only":
 			skill_ids.append(d.id)
 
-func test_there_are_24_forms_across_stages_two_to_four() -> void:
-	assert_eq(forms.size(), 24)
+func test_there_are_42_slime_forms_across_stages_two_to_four() -> void:
+	assert_eq(forms.size(), 42)
 	var per_stage := {2: 0, 3: 0, 4: 0}
 	for id in forms:
 		per_stage[(forms[id] as FormDef).stage] += 1
-	assert_eq(per_stage, {2: 6, 3: 12, 4: 6})
+	assert_eq(per_stage, {2: 6, 3: 12, 4: 24})
 
 func test_the_data_passes_its_validator() -> void:
 	var errs := FormValidator.validate(forms, skill_ids)
@@ -27,27 +27,20 @@ func test_every_stage_two_form_grows_from_the_base_slime() -> void:
 	for f in roots:
 		assert_eq((f as FormDef).parents, ["slime"])
 
-func test_a_stage_two_form_has_exactly_two_children_and_a_stage_three_form_exactly_one() -> void:
+func test_a_stage_two_or_three_form_has_exactly_two_children() -> void:
 	for id in forms:
 		var f: FormDef = forms[id]
 		var kids := FormLoader.children_of(forms, id)
-		if f.stage == 2:
-			assert_eq(kids.size(), 2, "%s: two stage-3 children" % id)
-		elif f.stage == 3:
-			assert_eq(kids.size(), 1, "%s: one Sovereign" % id)
+		if f.stage < 4:
+			assert_eq(kids.size(), 2, "%s: two children" % id)
 		else:
 			assert_eq(kids.size(), 0, "%s: the last stage" % id)
 
-func test_both_stage_three_forms_of_a_lineage_lead_to_the_same_sovereign() -> void:
+func test_no_branch_rejoins_every_stage_three_and_four_form_has_one_parent() -> void:
 	for id in forms:
 		var f: FormDef = forms[id]
-		if f.stage != 2:
-			continue
-		var kids := FormLoader.children_of(forms, id)
-		var sovereigns := {}
-		for k in kids:
-			sovereigns[FormLoader.children_of(forms, (k as FormDef).id)[0].id] = true
-		assert_eq(sovereigns.size(), 1, "%s: both children share a Sovereign" % id)
+		if f.stage > 2:
+			assert_eq(f.parents.size(), 1, "%s: one parent" % id)
 
 func test_every_branch_reaches_stage_four() -> void:
 	var frontier: Array = ["slime"]
@@ -59,9 +52,18 @@ func test_every_branch_reaches_stage_four() -> void:
 			reached[id] = (forms[id] as FormDef).stage
 		for k in kids:
 			frontier.append((k as FormDef).id)
-	assert_eq(reached.size(), 6, "six Sovereigns")
+	assert_eq(reached.size(), 24, "twenty-four form-4s, each its own ending")
 	for id in reached:
 		assert_eq(reached[id], 4, id)
+
+func test_the_eighteen_new_forms_hang_where_the_design_puts_them() -> void:
+	var expected := {"snare": ["gleipnir", "silkbound"], "arachne": ["ariadne", "beanstalk"], "brook": ["selkie", "tidal"],
+		"tempest": ["kraken", "tiamat"], "acid": ["alkahest", "venom"], "blight": ["pestilence", "slime_mold"],
+		"golem": ["stone", "talos"], "crystal": ["cube", "philosophers_stone"], "phantom": ["mimic", "poltergeist"],
+		"sky": ["cloud_rider", "storm"], "vast": ["prime", "shoggoth"], "radiant": ["king_slime", "quicksilver_slime"]}
+	for parent in expected:
+		var ids: Array = FormLoader.children_of(forms, parent).map(func(f: FormDef) -> String: return f.id)
+		assert_eq(ids, expected[parent], parent)
 
 func test_advance_only_takes_legal_steps() -> void:
 	var f := Form.new()
@@ -72,7 +74,8 @@ func test_advance_only_takes_legal_steps() -> void:
 	assert_true(f.advance("weaver", forms))
 	assert_eq([f.stage, f.form_id], [2, "weaver"])
 	assert_false(f.advance("brook", forms), "a child of Tide, not of Weaver")
-	assert_true(f.advance("arachne", forms))
+	assert_true(f.advance("snare", forms))
+	assert_false(f.advance("arachne", forms), "Arachne is Snare's sibling, not its child")
 	assert_true(f.advance("silkbound", forms))
 	assert_eq([f.stage, f.form_id], [4, "silkbound"])
 	assert_false(f.advance("prime", forms), "no stage five")

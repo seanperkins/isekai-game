@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "beanstalk"
+display_name = "Beanstalk"
+species = "slime"
+stage = 4
+lineage = "weaver"
+parents = ["arachne"]
+stats = {
+"atk": 2,
+"def": 3,
+"jump_height": 15,
+"max_hp": 22,
+"max_mp": 10,
+"spd": 12
+}
+traits = ["spinner"]
+grants = ["sticky_thread", "wall_cling"]
+tint = Color(0.83, 0.75, 1, 1)
+size = 1.4
+blurb = "Stalk: grow a climbable vine from the floor"
+reads = ["earth", "air"]
+host = ["forest"]
+source = "Jack and the Beanstalk, the English folk tale"
+verb_text = "Stalk: grow a climbable vine from the floor"
+gives_up = "one at a time, slow to grow"
+opened_by = "Arachne, plus earth"

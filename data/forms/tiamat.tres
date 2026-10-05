@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "tiamat"
+display_name = "Tiamat"
+species = "slime"
+stage = 4
+lineage = "tide"
+parents = ["tempest"]
+stats = {
+"atk": 3,
+"def": 1,
+"max_hp": 22,
+"max_mp": 10,
+"mp_regen": 40
+}
+traits = ["water_thrift"]
+grants = ["hydraulic_propulsion"]
+tint = Color(0.6, 0.85, 1, 1)
+size = 1.4
+blurb = "Flood: fills the room's low ground with water for a while"
+reads = ["water", "dark"]
+host = ["flooded"]
+source = "the Babylonian primordial sea, mother of monsters (Enūma Eliš)"
+verb_text = "Flood: fills the room's low ground with water for a while"
+gives_up = "it slows you too unless you swim"
+opened_by = "Tempest, plus a flooded room cleared"

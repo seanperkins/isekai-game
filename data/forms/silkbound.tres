@@ -8,7 +8,7 @@ id = "silkbound"
 display_name = "Silkbound Sovereign"
 stage = 4
 lineage = "weaver"
-parents = ["snare", "arachne"]
+parents = ["snare"]
 stats = {
 "atk": 2,
 "def": 2,

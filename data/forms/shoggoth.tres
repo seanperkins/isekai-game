@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "shoggoth"
+display_name = "Shoggoth"
+species = "slime"
+stage = 4
+lineage = "greater"
+parents = ["vast"]
+stats = {
+"atk": 3,
+"def": 1,
+"max_hp": 22,
+"max_mp": 10
+}
+traits = ["adaptable"]
+grants = ["regeneration", "toughness"]
+tint = Color(1, 0.97, 0.75, 1)
+size = 1.4
+blurb = "Pseudopod: extrude long limbs for reach"
+reads = ["dark"]
+host = ["deep"]
+source = "Lovecraft's shapeless protoplasm servants (\"At the Mountains of Madness\")"
+verb_text = "Pseudopod: extrude long limbs for reach"
+gives_up = "shapeless: no steady form"
+opened_by = "Vast, plus dark"

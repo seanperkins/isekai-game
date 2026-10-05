@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "ariadne"
+display_name = "Ariadne"
+species = "slime"
+stage = 4
+lineage = "weaver"
+parents = ["arachne"]
+stats = {
+"atk": 2,
+"def": 1,
+"jump_height": 15,
+"max_hp": 22,
+"max_mp": 13,
+"spd": 12
+}
+traits = ["spinner"]
+grants = ["sticky_thread", "wall_cling"]
+tint = Color(0.83, 0.75, 1, 1)
+size = 1.4
+blurb = "Recall: lay a trail, then return along it to its start"
+reads = ["air", "mind"]
+host = ["deep"]
+source = "the thread that led Theseus out of the labyrinth"
+verb_text = "Recall: lay a trail, then return along it to its start"
+gives_up = "the trail must be laid first"
+opened_by = "Arachne, plus a long route walked, plus mind (later)"

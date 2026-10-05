@@ -8,7 +8,7 @@ id = "prime"
 display_name = "Prime Sovereign"
 stage = 4
 lineage = "greater"
-parents = ["vast", "radiant"]
+parents = ["vast"]
 stats = {
 "atk": 2,
 "def": 1,

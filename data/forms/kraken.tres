@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "kraken"
+display_name = "Kraken"
+species = "slime"
+stage = 4
+lineage = "tide"
+parents = ["tempest"]
+stats = {
+"atk": 3,
+"def": 1,
+"max_hp": 22,
+"max_mp": 10,
+"mp_regen": 40
+}
+traits = ["water_thrift"]
+grants = ["hydraulic_propulsion"]
+tint = Color(0.6, 0.85, 1, 1)
+size = 1.4
+blurb = "Maelstrom: a whirlpool that pulls enemies in"
+reads = ["water", "dark"]
+host = ["flooded", "deep"]
+source = "the Norwegian sea monster of Pontoppidan's 1752 account"
+verb_text = "Maelstrom: a whirlpool that pulls enemies in"
+gives_up = "pulls loose parts too"
+opened_by = "Tempest, plus dark"

@@ -90,7 +90,7 @@ func test_the_evolve_launch_argument_is_recognised() -> void:
 	assert_false(Game.wants_evolve(["--evolved"]))
 
 func test_a_scripted_run_takes_the_slime_through_the_whole_weaver_line() -> void:
-	var path := ["weaver", "arachne", "silkbound"]
+	var path := ["weaver", "snare", "silkbound"]
 	for i in path.size():
 		_to_cap()
 		assert_true(player.progression.can_evolve(), "stage %d at the cap" % (i + 1))
@@ -104,22 +104,23 @@ func test_a_scripted_run_takes_the_slime_through_the_whole_weaver_line() -> void
 	_to_cap()
 	assert_false(player.progression.can_evolve(), "the last stage")
 
-func test_every_branch_of_the_tree_can_be_walked_to_its_sovereign() -> void:
-	var sovereigns := {}
+func test_every_branch_of_the_tree_can_be_walked_to_its_ending() -> void:
+	var endings := {}
 	for lineage in ["weaver", "tide", "toxic", "bulwark", "echo", "greater_slime"]:
 		for child_index in [0, 1]:
-			rules.start_run()
-			_to_cap()
-			assert_true(player.advance_form(lineage), lineage)
-			var kids: Array = FormLoader.children_of(player.forms, lineage)
-			_to_cap()
-			assert_true(player.advance_form((kids[child_index] as FormDef).id), (kids[child_index] as FormDef).id)
-			var last: Array = FormLoader.children_of(player.forms, player.form.form_id)
-			_to_cap()
-			assert_true(player.advance_form((last[0] as FormDef).id))
-			sovereigns[player.form.form_id] = true
-			assert_eq(player.form.stage, 4)
-	assert_eq(sovereigns.size(), 6)
+			for last_index in [0, 1]:
+				rules.start_run()
+				_to_cap()
+				assert_true(player.advance_form(lineage), lineage)
+				var kids: Array = FormLoader.children_of(player.forms, lineage)
+				_to_cap()
+				assert_true(player.advance_form((kids[child_index] as FormDef).id), (kids[child_index] as FormDef).id)
+				var last: Array = FormLoader.children_of(player.forms, player.form.form_id)
+				_to_cap()
+				assert_true(player.advance_form((last[last_index] as FormDef).id))
+				endings[player.form.form_id] = true
+				assert_eq(player.form.stage, 4)
+	assert_eq(endings.size(), 24, "every stage-4 form is its own ending")
 
 func test_the_weaver_lineage_eats_using_its_own_cover_frames() -> void:
 	await wait_physics_frames(14)

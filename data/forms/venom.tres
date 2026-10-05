@@ -8,7 +8,7 @@ id = "venom"
 display_name = "Venom Sovereign"
 stage = 4
 lineage = "toxic"
-parents = ["acid", "blight"]
+parents = ["acid"]
 stats = {
 "atk": 4,
 "def": 1,

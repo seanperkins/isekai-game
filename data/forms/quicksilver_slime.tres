@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "quicksilver_slime"
+display_name = "Quicksilver Slime"
+species = "slime"
+stage = 4
+lineage = "greater"
+parents = ["radiant"]
+stats = {
+"atk": 2,
+"def": 3,
+"jump_height": 15,
+"max_hp": 22,
+"max_mp": 10,
+"spd": 12
+}
+traits = ["adaptable"]
+grants = ["regeneration", "mana_recovery"]
+tint = Color(1, 0.97, 0.75, 1)
+size = 1.4
+blurb = "fast and near-immune to damage but it flees; a tiny attack"
+reads = ["earth", "air"]
+host = ["cave"]
+source = "alchemy's Mercurius; the metal slime gag"
+verb_text = "fast and near-immune to damage but it flees; a tiny attack"
+gives_up = "cannot hold ground"
+opened_by = "Radiant, plus air"

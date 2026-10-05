@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "gleipnir"
+display_name = "Gleipnir"
+species = "slime"
+stage = 4
+lineage = "weaver"
+parents = ["snare"]
+stats = {
+"atk": 3,
+"def": 1,
+"max_hp": 22,
+"max_mp": 10
+}
+traits = ["spinner"]
+grants = ["sticky_thread"]
+tint = Color(0.83, 0.75, 1, 1)
+size = 1.4
+blurb = "Bind: roots one big enemy or boss for a few seconds"
+reads = ["dark"]
+host = ["deep"]
+source = "Norse: the ribbon of six impossible things that held Fenrir"
+verb_text = "Bind: roots one big enemy or boss for a few seconds"
+gives_up = "long cooldown"
+opened_by = "Snare, plus a heavy enemy snared"

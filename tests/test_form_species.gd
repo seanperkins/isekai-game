@@ -84,7 +84,7 @@ func _all() -> Dictionary:
 func test_of_species_splits_a_mixed_dictionary() -> void:
 	var all := _all()
 	assert_eq(FormLoader.of_species(all, "wolf").size(), 4)
-	assert_eq(FormLoader.of_species(all, "slime").size(), 24)
+	assert_eq(FormLoader.of_species(all, "slime").size(), 42)
 	assert_eq(FormLoader.of_species(all, "goblin").size(), 0)
 
 func test_stage2_forms_default_to_the_slime() -> void:
@@ -285,3 +285,46 @@ func test_the_form_note_names_a_wolf_body() -> void:
 	var note := screen.form_note()
 	assert_true(note.begins_with("Wolf, stage 1"), note)
 	assert_false(note.contains("Slime"), note)
+
+# --- the Tree tab's layout for several stage-4 forms per lineage ---
+
+func _positions(model: Dictionary) -> Dictionary:
+	var out := {}
+	for id in model["nodes"]:
+		if model["nodes"][id]["kind"] == "form":
+			out[id] = model["nodes"][id]["pos"]
+	return out
+
+func _every_form_reached(species: String) -> Array:
+	var forms := FormLoader.of_species(FormLoader.load_all(), species)
+	return forms.keys()
+
+func test_no_two_form_nodes_overlap_in_a_slime_tree_with_every_form_reached() -> void:
+	var model := _tree(FormLoader.load_all(), "storm", _every_form_reached("slime"))
+	var pos := _positions(model)
+	var ids := pos.keys()
+	assert_eq(ids.size(), 43, "the slime and its 42 forms")
+	for i in ids.size():
+		for j in range(i + 1, ids.size()):
+			assert_false(Rect2(pos[ids[i]], SkillTreeModel.NODE_SIZE).intersects(Rect2(pos[ids[j]], SkillTreeModel.NODE_SIZE)), "%s overlaps %s" % [ids[i], ids[j]])
+
+func test_no_two_form_nodes_overlap_in_a_wolf_tree_with_every_form_reached() -> void:
+	var model := _tree(FormLoader.load_all(), "wolf_fenrir", _every_form_reached("wolf"))
+	var pos := _positions(model)
+	var ids := pos.keys()
+	assert_eq(ids.size(), 22, "the wolf and its 21 forms")
+	for i in ids.size():
+		for j in range(i + 1, ids.size()):
+			assert_false(Rect2(pos[ids[i]], SkillTreeModel.NODE_SIZE).intersects(Rect2(pos[ids[j]], SkillTreeModel.NODE_SIZE)), "%s overlaps %s" % [ids[i], ids[j]])
+
+func test_stage_four_siblings_are_one_row_apart_and_the_parent_sits_between() -> void:
+	var pos := _positions(_tree(FormLoader.load_all(), "snare", ["weaver", "snare"]))
+	assert_eq(absf(pos["gleipnir"].y - pos["silkbound"].y), SkillTreeModel.ROW_PITCH)
+	assert_eq(pos["snare"].y, (pos["gleipnir"].y + pos["silkbound"].y) / 2.0)
+
+func test_every_form_edge_joins_adjacent_columns() -> void:
+	var model := _tree(FormLoader.load_all(), "storm", _every_form_reached("slime"))
+	var pos := _positions(model)
+	for e in model["edges"]:
+		if e["kind"] == "grows":
+			assert_eq(pos[e["to"]].x - pos[e["from"]].x, SkillTreeModel.COL_PITCH, "%s to %s" % [e["from"], e["to"]])

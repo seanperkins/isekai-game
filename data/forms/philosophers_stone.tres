@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "philosophers_stone"
+display_name = "Philosopher's Stone"
+species = "slime"
+stage = 4
+lineage = "bulwark"
+parents = ["crystal"]
+stats = {
+"atk": 2,
+"def": 3,
+"max_hp": 22,
+"max_mp": 12
+}
+traits = ["hard_shell"]
+grants = ["body_armor"]
+tint = Color(0.95, 0.83, 0.65, 1)
+size = 1.4
+blurb = "Transmute: convert held essence of one element into another at a loss; digest parts faster"
+reads = ["earth", "light"]
+host = ["deep"]
+source = "alchemy's stone that turns base metal to gold"
+verb_text = "Transmute: convert held essence of one element into another at a loss; digest parts faster"
+gives_up = "the conversion loss"
+opened_by = "Crystal, plus a mixed essence held"

@@ -8,7 +8,7 @@ id = "stone"
 display_name = "Stone Sovereign"
 stage = 4
 lineage = "bulwark"
-parents = ["golem", "crystal"]
+parents = ["golem"]
 stats = {
 "atk": 2,
 "def": 4,

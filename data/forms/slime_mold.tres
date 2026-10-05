@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "slime_mold"
+display_name = "Slime Mold"
+species = "slime"
+stage = 4
+lineage = "toxic"
+parents = ["blight"]
+stats = {
+"atk": 2,
+"def": 3,
+"max_hp": 22,
+"max_mp": 13
+}
+traits = ["venom_blood"]
+grants = ["poison_breath", "poison_resistance"]
+tint = Color(0.7, 1, 0.6, 1)
+size = 1.4
+blurb = "Network: a growth spreads along the floor, slows enemies on it and shows the shortest route to a mark (a map aid)"
+reads = ["earth", "mind"]
+host = ["forest", "swamp"]
+source = "the real Physarum, which finds the shortest route through a maze"
+verb_text = "Network: a growth spreads along the floor, slows enemies on it and shows the shortest route to a mark (a map aid)"
+gives_up = "creeps slowly"
+opened_by = "Blight, plus spores (air + dark), plus mind (later)"

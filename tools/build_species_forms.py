@@ -114,6 +114,45 @@ def species_forms():
     return forms
 
 
+SLIME_LINEAGE = {"W": "weaver", "T": "tide", "X": "toxic", "B": "bulwark", "E": "echo", "G": "greater"}
+
+
+def read_parent(parent_id):
+    """A built slime form's traits, grants and tint, read from its file: a new form-4 inherits them."""
+    text = be.read("data/forms/%s.tres" % parent_id)
+
+    def arr(key):
+        m = re.search(r"^%s = \[(.*?)\]$" % key, text, re.M)
+        return re.findall(r'"([^"]+)"', m.group(1)) if m else []
+
+    rgb = re.search(r"^tint = Color\(([^)]*)\)", text, re.M).group(1).split(",")[:3]
+    return arr("traits"), arr("grants"), [float(c) for c in rgb]
+
+
+def slime_forms():
+    """The slime's new stage-4 forms of the doc (every slime form that is not one of the 24 built), ready to write."""
+    doc = be.parse_tables(be.read(be.DOC))
+    forms = []
+    for header, rows in doc:
+        if header[:2] == ["ID", "Form"]:
+            forms.extend(be.parse_form_rows(rows))
+    out = [f for f in forms if f["species"] == "slime" and f["id"] not in be.BUILT_SLIME]
+    for f in out:
+        f["dataId"] = slug(f["name"])
+        check_raw(f)
+        parent = be.BUILT_SLIME[f["parent"]]
+        traits, grants, rgb = read_parent(parent)
+        f["parents"] = [parent]
+        f["lineage"] = SLIME_LINEAGE[f["line"]]
+        f["traits"], f["grants"] = traits, grants
+        f["stats"] = flavour(f["reads"], f["stage"])
+        f["tint"] = [round(min(1.0, c + 0.05), 3) for c in rgb]
+        f["size"] = STAGE_SIZE[f["stage"]]
+        check_row(f)
+    check_unique(out)
+    return out
+
+
 def q(text):
     return '"%s"' % text.replace("\\", "\\\\").replace('"', '\\"')
 
@@ -137,6 +176,12 @@ def tres(f):
         "id = %s" % q(f["dataId"]), "display_name = %s" % q(f["name"]), "species = %s" % q(f["species"]),
         "stage = %d" % f["stage"], "lineage = %s" % q(f["lineage"]), "parents = %s" % arr(f["parents"]),
         "stats = {\n%s\n}" % stats,
+    ]
+    if f.get("traits"):
+        lines.append("traits = %s" % arr(f["traits"]))
+    if f.get("grants"):
+        lines.append("grants = %s" % arr(f["grants"]))
+    lines += [
         "tint = Color(%s, %s, %s, 1)" % (num(r), num(g), num(b)), "size = %s" % num(f["size"]),
         "blurb = %s" % q(f["verb"]),
         "reads = %s" % arr(f["reads"]), "host = %s" % arr(f["host"]), "source = %s" % q(f["source"]),
@@ -146,6 +191,7 @@ def tres(f):
 
 
 def build(out_dir=OUT):
+    """Writes the other species' forms (the slime's new ones are build_slime)."""
     forms = species_forms()
     os.makedirs(out_dir, exist_ok=True)
     for f in forms:
@@ -154,5 +200,14 @@ def build(out_dir=OUT):
     return [f["dataId"] for f in forms]
 
 
+def build_slime(out_dir=OUT):
+    forms = slime_forms()
+    os.makedirs(out_dir, exist_ok=True)
+    for f in forms:
+        with open(os.path.join(out_dir, f["dataId"] + ".tres"), "w", encoding="utf-8") as fh:
+            fh.write(tres(f))
+    return [f["dataId"] for f in forms]
+
+
 if __name__ == "__main__":
-    print("wrote %d forms to %s" % (len(build()), OUT))
+    print("wrote %d forms and %d new slime forms to %s" % (len(build()), len(build_slime()), OUT))

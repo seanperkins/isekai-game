@@ -118,15 +118,11 @@ func test_choosing_an_offer_evolves_the_body() -> void:
 	assert_eq(player.form.stage, 2)
 
 func test_a_lone_offer_is_a_confirmation_that_says_so() -> void:
-	_to_cap()
-	player.advance_form("weaver")
-	_to_cap()
-	player.advance_form("snare")
-	_to_cap()
+	_to_cap()  # nothing absorbed, so only the Greater Slime is on offer
 	screen.open()
 	screen.switch_tab(5)
 	assert_eq(screen._selectable.size(), 1)
-	assert_eq(screen.selected_id(), "silkbound")
+	assert_eq(screen.selected_id(), "greater_slime")
 	assert_true(screen.form_note().contains("only one path"))
 
 func test_below_the_cap_the_tab_shows_the_current_body_and_no_offers() -> void:

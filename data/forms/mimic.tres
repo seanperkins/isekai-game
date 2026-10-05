@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "mimic"
+display_name = "Mimic"
+species = "slime"
+stage = 4
+lineage = "echo"
+parents = ["phantom"]
+stats = {
+"atk": 2,
+"def": 1,
+"jump_height": 15,
+"max_hp": 22,
+"max_mp": 13,
+"spd": 12
+}
+traits = ["sonar"]
+grants = ["echolocation", "leap"]
+tint = Color(1, 0.7, 1, 1)
+size = 1.4
+blurb = "Copy: take the shape and one move of the last creature you inspected, for a short time"
+reads = ["air", "mind"]
+host = ["deep"]
+source = "the tabletop mimic; the absorb-and-copy slime of anime"
+verb_text = "Copy: take the shape and one move of the last creature you inspected, for a short time"
+gives_up = "the copy fades"
+opened_by = "Phantom, plus mind (later)"

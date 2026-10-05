@@ -92,6 +92,33 @@ class FormsTest(unittest.TestCase):
             with self.assertRaises(ValueError):
                 bsf.species_forms()
 
+    def test_the_slime_has_eighteen_new_forms_with_their_parents_traits_and_grants(self):
+        forms = bsf.slime_forms()
+        by = {f["dataId"]: f for f in forms}
+        self.assertEqual(len(forms), 18)
+        g = by["gleipnir"]
+        self.assertEqual((g["parents"], g["lineage"], g["traits"], g["grants"]), (["snare"], "weaver", ["spinner"], ["sticky_thread"]))
+        self.assertEqual(by["ariadne"]["parents"], ["arachne"])
+        self.assertEqual(by["ariadne"]["grants"], ["sticky_thread", "wall_cling"])
+        k = by["king_slime"]
+        self.assertEqual((k["parents"], k["lineage"], k["traits"]), (["radiant"], "greater", ["adaptable"]))
+        self.assertEqual(by["talos"]["parents"], ["golem"])
+        self.assertEqual(by["selkie"]["parents"], ["brook"])
+
+    def test_every_new_slime_form_is_stage_four_and_has_a_distinct_id(self):
+        forms = bsf.slime_forms()
+        self.assertEqual(len({f["dataId"] for f in forms}), 18)
+        for f in forms:
+            self.assertEqual((f["stage"], f["size"]), (4, 1.4))
+            self.assertEqual(f["species"], "slime")
+            self.assertFalse(os.path.exists("data/forms/%s.tres" % f["dataId"]) and f["dataId"] in ("weaver", "tide"), f["dataId"])
+
+    def test_a_slime_tres_writes_its_traits_and_grants_and_the_others_do_not(self):
+        text = bsf.tres(next(f for f in bsf.slime_forms() if f["dataId"] == "ariadne"))
+        self.assertIn('traits = ["spinner"]', text)
+        self.assertIn('grants = ["sticky_thread", "wall_cling"]', text)
+        self.assertNotIn("traits =", bsf.tres(self.by_id["wolf_moonbound"]))
+
     def test_the_tres_text_lists_the_new_fields(self):
         text = bsf.tres(self.by_id["wolf_moonbound"])
         for needle in ['id = "wolf_moonbound"', 'species = "wolf"', 'parents = ["wolf"]', 'reads = ["dark"]', 'host = ["forest"]',

@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "talos"
+display_name = "Talos"
+species = "slime"
+stage = 4
+lineage = "bulwark"
+parents = ["golem"]
+stats = {
+"atk": 3,
+"def": 3,
+"max_hp": 22,
+"max_mp": 10
+}
+traits = ["hard_shell"]
+grants = ["body_armor", "toughness"]
+tint = Color(0.95, 0.83, 0.65, 1)
+size = 1.4
+blurb = "Guardian: a patrol aura; if the visible nail is hit it drains you"
+reads = ["earth", "fire"]
+host = ["volcano"]
+source = "the Greek bronze giant whose one vein was sealed by a nail"
+verb_text = "Guardian: a patrol aura; if the visible nail is hit it drains you"
+gives_up = "the nail is a weak point"
+opened_by = "Golem, plus fire (later)"

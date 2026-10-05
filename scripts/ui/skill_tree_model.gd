@@ -276,25 +276,46 @@ static func _form_node(f: FormDef, named: bool, reached: Array, current: String)
 	var state := CURRENT if f.id == current else (REACHED if reached.has(f.id) else NAMED)
 	return {"id": f.id, "kind": "form", "state": state, "name": f.display_name}
 
-## The form band from canvas y `top`: the stage across (the species' base in column 0, then stages 2 to 4), two rows per
-## lineage down (FormOffers.lineage_order). The stage-3 pair fills the two rows, stages 2 and 4 sit between them, and the base
-## sits level with the middle of the band. Every edge joins adjacent columns. The layout assumes the slime's shape (two
-## stage-3 forms and one Sovereign per lineage); the new shape is laid out by the slime rebuild (B2).
+## The form band from canvas y `top`: the stage across (the species' base in column 0, then stages 2 to 4). In each lineage the
+## stage-4 forms take one row each (grouped by parent, then by id), a stage-3 form sits at the mean row of its children and a
+## stage-2 form at the mean of its stage-3 forms; the next lineage starts below. The base sits level with the middle of the band.
+## Every edge joins adjacent columns, so a lineage with any number of stage-4 forms lays out without overlap.
 static func _form_slots(forms: Dictionary, top: float, species := Form.DEFAULT_SPECIES) -> Dictionary:
-	var lineages: Array = FormOffers.lineage_order(forms, species)
-	var slots := {species: Vector2(0, top + (lineages.size() - 0.5) * ROW_PITCH)}
-	for li in lineages.size():
-		var row := li * 2
-		var thirds := 0
+	var slots := {}
+	var next_row := 0.0
+	for lineage in FormOffers.lineage_order(forms, species):
+		var mine: Array = []
 		for id in _sorted_keys(forms):
 			var f: FormDef = forms[id]
-			if f.species != species or f.lineage != lineages[li]:
-				continue
-			if f.stage == 3:
-				slots[id] = Vector2(2 * COL_PITCH, top + (row + thirds) * ROW_PITCH)
-				thirds += 1
-			else:
-				slots[id] = Vector2((f.stage - 1) * COL_PITCH, top + (row + 0.5) * ROW_PITCH)
+			if f.species == species and f.lineage == lineage:
+				mine.append(f)
+		var row := next_row
+		var row_of := {}
+		var fours: Array = mine.filter(func(f: FormDef) -> bool: return f.stage == 4)
+		fours.sort_custom(func(a: FormDef, b: FormDef) -> bool:
+			var pa: String = a.parents[0] if not a.parents.is_empty() else ""
+			var pb: String = b.parents[0] if not b.parents.is_empty() else ""
+			return pa < pb or (pa == pb and a.id < b.id))
+		for f: FormDef in fours:
+			row_of[f.id] = row
+			row += 1.0
+		for stage in [3, 2]:
+			for f: FormDef in mine:
+				if f.stage != stage:
+					continue
+				var kids: Array = []
+				for k: FormDef in mine:
+					if k.parents.has(f.id) and row_of.has(k.id):
+						kids.append(float(row_of[k.id]))
+				if kids.is_empty():
+					row_of[f.id] = row
+					row += 1.0
+				else:
+					row_of[f.id] = kids.reduce(func(a: float, b: float) -> float: return a + b, 0.0) / kids.size()
+		for f: FormDef in mine:
+			slots[f.id] = Vector2((f.stage - 1) * COL_PITCH, top + float(row_of[f.id]) * ROW_PITCH)
+		next_row = maxf(row, next_row + 1.0)
+	slots[species] = Vector2(0, top + (next_row / 2.0 - 0.5) * ROW_PITCH)
 	return slots
 
 static func _sorted_keys(d: Dictionary) -> Array:

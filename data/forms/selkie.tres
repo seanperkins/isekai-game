@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "selkie"
+display_name = "Selkie"
+species = "slime"
+stage = 4
+lineage = "tide"
+parents = ["brook"]
+stats = {
+"atk": 2,
+"def": 3,
+"max_hp": 22,
+"max_mp": 10,
+"mp_regen": 40
+}
+traits = ["water_thrift"]
+grants = ["hydraulic_propulsion"]
+tint = Color(0.6, 0.85, 1, 1)
+size = 1.4
+blurb = "Shed: leave a husk decoy and slip away"
+reads = ["water", "earth"]
+host = ["flooded"]
+source = "Scottish and Irish seal-folk who shed a skin to walk on land"
+verb_text = "Shed: leave a husk decoy and slip away"
+gives_up = "the husk is gone until you rest"
+opened_by = "Brook, plus a decoy hit"

@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="FormDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/forms/form_def.gd" id="1_h3eka"]
+
+[resource]
+script = ExtResource("1_h3eka")
+id = "poltergeist"
+display_name = "Poltergeist"
+species = "slime"
+stage = 4
+lineage = "echo"
+parents = ["phantom"]
+stats = {
+"atk": 2,
+"def": 3,
+"jump_height": 15,
+"max_hp": 22,
+"max_mp": 10,
+"spd": 12
+}
+traits = ["sonar"]
+grants = ["echolocation", "leap"]
+tint = Color(1, 0.7, 1, 1)
+size = 1.4
+blurb = "Hurl: throw loose rubble in the room at enemies"
+reads = ["air", "earth"]
+host = ["cave", "deep"]
+source = "the German \"noisy ghost\" that hurls objects"
+verb_text = "Hurl: throw loose rubble in the room at enemies"
+gives_up = "needs loose objects"
+opened_by = "Phantom, plus earth"

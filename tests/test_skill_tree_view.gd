@@ -123,6 +123,13 @@ func test_with_the_forms_band_every_group_is_no_taller_than_the_box_and_shares_t
 	model = SkillTreeModel.build(rules, compendium, forms, forms.keys(), "slime")
 	for id in model["nodes"]:
 		var group := SkillTreeView.neighborhood(model, id)
+		var opens_a_lineage: bool = model["edges"].any(func(e: Dictionary) -> bool: return e["kind"] == "opens" and e["from"] == id)
+		if id == "slime" or opens_a_lineage or (forms.has(id) and (forms[id] as FormDef).stage == 2):
+			# The base touches every lineage, a stage-2 form its powers above and the base beside it, and a power its lineage: with
+			# 24 stage-4 forms the form band is taller than the box, so the camera keeps just the selection in view.
+			var wide := SkillTreeView.camera(model, id, false)
+			assert_true(_box().encloses(Rect2(wide["offset"] + model["nodes"][id]["pos"], SkillTreeModel.NODE_SIZE)), id + " stays in view")
+			continue
 		assert_lte(group.size.y, _box().size.y, id + " and its neighbors stack within one box")
 		if group.size.x > _box().size.x:
 			continue  # a stage-2 or stage-3 form's neighbors span three columns: see the Self-Review

@@ -17,9 +17,9 @@ func _others() -> Array:
 	return forms.values().filter(func(f: FormDef) -> bool: return f.species != "slime")
 
 func test_the_species_have_their_forms() -> void:
-	for pair in [["slime", 24], ["wolf", 21], ["undead", 29], ["spider", 21], ["goblin", 28]]:
+	for pair in [["slime", 42], ["wolf", 21], ["undead", 29], ["spider", 21], ["goblin", 28]]:
 		assert_eq(FormLoader.of_species(forms, pair[0]).size(), pair[1], pair[0])
-	assert_eq(forms.size(), 123)
+	assert_eq(forms.size(), 141)
 
 func test_the_data_passes_the_validator() -> void:
 	assert_eq(Array(FormValidator.validate(forms, _skill_ids())), [])

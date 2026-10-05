@@ -8,7 +8,7 @@ id = "storm"
 display_name = "Storm Sovereign"
 stage = 4
 lineage = "echo"
-parents = ["phantom", "sky"]
+parents = ["sky"]
 stats = {
 "atk": 2,
 "def": 1,
