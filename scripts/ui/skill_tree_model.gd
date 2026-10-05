@@ -250,7 +250,7 @@ static func _band_rows(defs: Array, row_powers: Array) -> int:
 ## - A stage-2 form shows once a power that opens it shows, or once reached. It is named when reached or when its lineage
 ##   is open this life (FormOffers.open_lineages, the same function that decides the Form tab's first offers). Another
 ##   species has no gates yet, so all its lineages count as open.
-## - Greater Slime has no opening power. It is always there, named when reached or on offer (fewer than two lineages open).
+## - Greater Slime has no opening power. It is always there, named when reached or on offer (fewer than two lineages offered).
 ## - A stage-3 or stage-4 form is a stub once a parent is named, and named only when reached.
 static func _form_nodes(rules, forms: Dictionary, reached: Array, current: String, skill_nodes: Dictionary, species := Form.DEFAULT_SPECIES) -> Dictionary:
 	var out := {}
@@ -258,9 +258,11 @@ static func _form_nodes(rules, forms: Dictionary, reached: Array, current: Strin
 		return out
 	out[species] = {"id": species, "kind": "form", "state": CURRENT if current == species else REACHED, "name": base_name(species)}
 	var open: Array = FormOffers.open_lineages(forms, rules) if species == Form.DEFAULT_SPECIES else FormOffers.lineage_order(forms, species)
+	# Greater Slime is named when the Form menu would offer it: fewer than two lineages OFFERED (not merely revealed).
+	var offered: Array = FormOffers.offered_lineages(forms, rules) if species == Form.DEFAULT_SPECIES else open
 	for f in FormLoader.stage2_forms(forms, species):
 		var greater: bool = species == Form.DEFAULT_SPECIES and f.lineage == GREATER
-		var named: bool = reached.has(f.id) or f.id == current or (open.size() < 2 if greater else open.has(f.lineage))
+		var named: bool = reached.has(f.id) or f.id == current or (offered.size() < 2 if greater else open.has(f.lineage))
 		if named or greater or f.powers.any(func(p): return skill_nodes.has(p)):
 			out[f.id] = _form_node(f, named, reached, current)
 	for stage in [3, 4]:

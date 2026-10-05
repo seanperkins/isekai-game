@@ -367,13 +367,20 @@ func test_a_power_known_but_not_reached_this_life_shows_its_lineage_as_a_stub() 
 	assert_eq(nodes["echo"]["state"], SkillTreeModel.STUB)
 	assert_false(nodes.has("phantom"), "a stub's children stay hidden")
 
-func test_greater_slime_is_a_stub_once_two_lineages_open_unless_it_was_reached() -> void:
+func test_greater_slime_is_a_stub_once_two_lineages_are_offered_unless_it_was_reached() -> void:
 	rules.grant("sticky_thread")
 	rules.grant("hydraulic_propulsion")
-	_absorb("dark", 21)  # Weaver: 21 and Sticky Thread's 3 make 24
-	_absorb("water", 13)  # Tide: 13 and Hydraulic Propulsion's 3 make 16
+	_absorb("dark", 23)  # Weaver on offer: 23 and Sticky Thread's 3 make 26
+	_absorb("water", 23)  # Tide on offer: 23 and Hydraulic Propulsion's 3 make 26
 	assert_eq(_build(_forms())["nodes"]["greater_slime"]["state"], SkillTreeModel.STUB)
 	assert_eq(_build(_forms(), ["greater_slime"])["nodes"]["greater_slime"]["state"], SkillTreeModel.REACHED)
+
+func test_greater_slime_is_named_when_the_menu_offers_it_even_with_two_lineages_revealed() -> void:
+	_absorb("air", 10)  # Echo is revealed (air 10) but not offered (air 34)
+	_absorb("earth", 30)  # Bulwark is revealed (earth 30) but not offered (earth 56)
+	assert_eq(FormOffers.revealed_lineages(_forms(), rules), ["bulwark", "echo"])
+	assert_eq(FormOffers.offers(_forms(), Form.new(), rules), ["greater_slime"], "the Form menu offers only Greater Slime")
+	assert_eq(_build(_forms())["nodes"]["greater_slime"]["state"], SkillTreeModel.NAMED, "so the Tree names it")
 
 func test_forms_reached_in_earlier_lives_stay_on_the_tree() -> void:
 	var nodes: Dictionary = _build(_forms(), ["weaver", "snare"])["nodes"]

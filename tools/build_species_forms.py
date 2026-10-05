@@ -1,9 +1,11 @@
 """Write data/forms/*.tres for the wolf, undead, spider and goblin forms of docs/research/species-form-branches.md.
 
 The design doc is the source: this reads its form tables (through tools/build_evolutions.py's parser) and writes one FormDef
-file per form that is not a slime form. The files may be edited by hand afterwards, like the slime's. Run from the project root:
+file per form that is not one of the slime's 24 built forms: the other species' 99 and the slime's 18 new form-4s. It overwrites
+those 117 files on every run, so a hand edit to one is lost when it runs again (edit the doc, or stop running this). Run from the
+project root:
   python3 tools/build_species_forms.py
-The 24 slime files and the slime's 18 planned form-4s are not written here.
+The slime's 24 built files (and the five lineage forms' reveal and offer) are never written here.
 """
 import os
 import re
