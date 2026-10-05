@@ -1,6 +1,6 @@
 # Species evolutions: the roadmap, in pieces
 
-Status: proposal (2026-10-05). Source design: `docs/research/species-form-branches.md` (every form, its world twin, the essences, the monsters to add) and the review page `docs/evolutions/` (live at `/evolutions/`). This file splits building it into pieces. Each piece gets its own short spec or plan, test-first, in its own worktree and branch, reviewed and merged on its own, and ends with something the player can see or play. Built so far: A1 (species-aware forms), on its branch. The 24 slime forms already existed.
+Status: proposal (2026-10-05). Source design: `docs/research/species-form-branches.md` (every form, its world twin, the essences, the monsters to add) and the review page `docs/evolutions/` (live at `/evolutions/`). This file splits building it into pieces. Each piece gets its own short spec or plan, test-first, in its own worktree and branch, reviewed and merged on its own, and ends with something the player can see or play. Built so far: A1 (species-aware forms), A2 (fire, mind and blood) and A3 (the other four species' 99 forms as data). The 24 slime forms already existed.
 
 ## What exists and what is missing
 
@@ -33,7 +33,7 @@ Sizes are relative (S, M, L, XL), not time. "Playable" says what you can do when
 | # | Piece | Scope | Depends on | Done when | Size |
 |---|---|---|---|---|---|
 | B1 | **Slime lineage gate** | reveal and offer thresholds on absorbed essence, powers counting +3, Weaver at dark 24, the Greater fallback; the tree screen shows reveal progress | A1, A2 | the stage-2 menu follows the diet table in the design doc; the Cave-start numbers are pinned in `tests/test_content.gd` | M |
-| B2 | **Slime tree rebuild** | each Sovereign to one parent; the 18 new form-4s as data (tinted slime art); evolution tests rewritten test-first | A3, B1 | all 42 slime forms are reachable and evolvable in a run | M |
+| B2 | **Slime tree rebuild** | each Sovereign to one parent; the 18 new form-4s as data (tinted slime art); evolution tests rewritten test-first; the Tree tab's layout (`SkillTreeModel._form_slots`) for several stage-4 siblings per lineage, which every species now has (siblings share one slot today) | A3, B1 | all 42 slime forms are reachable and evolvable in a run | M |
 | B3 | **Slime verbs** | the form-4 verbs: Bind, Recall, Stalk, Shed, Maelstrom, Flood, Dissolve, Contagion, Network, Guardian, Transmute, Engulf, Copy, Hurl, Ride, Pseudopod, Court and the Quicksilver form (needs C1) | C1 | each slime form-4 verb works on an enemy in a test and in the sandbox | L |
 
 ### C. The verb system
