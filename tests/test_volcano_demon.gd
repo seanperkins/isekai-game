@@ -196,5 +196,15 @@ func test_the_throne_door_is_at_the_floor_so_the_middle_spoke_is_walked_not_clim
 	var door: Dictionary = throne.exits.filter(func(e: Dictionary) -> bool: return e["room"] == "DM4")[0]
 	assert_eq(float(door["to"]), AreaKit.floor_y(throne), "the sill of the door is the floor of the throne")
 
+func test_no_tablet_in_the_new_areas_promises_a_seal_or_a_gate_that_is_not_built() -> void:
+	for id in hell:
+		var r := hell[id] as RoomDef
+		if not (VOLCANO.has(id) or DEMON.has(id)):
+			continue
+		for f in r.features:
+			if f["kind"] == "tablet":
+				var text := str(f.get("text", "")).to_lower()
+				assert_false(text.contains("seal") or text.contains("break "), "%s: '%s' sends the player after something that cannot be done yet" % [id, f["text"]])
+
 func test_the_checked_in_rooms_are_what_the_builder_writes() -> void:
 	assert_eq(AreaBuilder.stale(AreaBuilder.build()), [])

@@ -34,6 +34,6 @@ features = [{
 "id": "DM1_tablet",
 "kind": "tablet",
 "pos": Vector2(320, 320),
-"text": "Three seals keep the hall. Break the middle one, and the throne will open.",
+"text": "The stone is warm, and red where the lamplight touches it. Whatever keeps the hall beyond has kept it a long time.",
 "title": "Scorched tablet"
 }]

@@ -33,7 +33,7 @@ func build(world: Dictionary) -> void:
 # --- DM1 the Threshold: a tablet and the first red-black stone; no creatures ---
 func _threshold() -> RoomDef:
 	var r := AreaKit.room("DM1", "demon", Vector2i(29, 5))
-	AreaKit.feature(r, "tablet", "DM1_tablet", 320.0, 320.0, {"title": "Scorched tablet", "text": "Three seals keep the hall. Break the middle one, and the throne will open."})
+	AreaKit.feature(r, "tablet", "DM1_tablet", 320.0, 320.0, {"title": "Scorched tablet", "text": "The stone is warm, and red where the lamplight touches it. Whatever keeps the hall beyond has kept it a long time."})
 	AreaKit.decor(r, "deep_bones", 150.0, 320.0)
 	AreaKit.decor(r, "deep_glow_fungus", 480.0, 320.0)
 	AreaKit.decor(r, "deep_root_hang", 300.0, 20.0)
