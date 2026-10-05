@@ -347,3 +347,31 @@ func test_the_form_tab_card_of_a_form_with_no_verb_has_neither_line() -> void:
 	var text := "\n".join(screen.detail_texts())
 	assert_false(text.contains("Verb:"))
 	assert_false(text.contains("Gives up:"))
+
+# --- the gates of the other species ---
+
+func test_a_wolfs_form_tab_lists_the_locked_forms_with_what_is_missing() -> void:
+	player.set_species("wolf")
+	_to_cap()
+	screen.open()
+	screen.switch_tab(5)
+	assert_eq(screen.tab(), "form")
+	assert_eq(player.form_offers().size(), 0)
+	assert_eq(player.form_locked().size(), 3)
+	var text := "\n".join(screen.list_texts())
+	assert_string_contains(text, "Black Dog")
+	assert_string_contains(text, "dark essence 0/13")
+	assert_string_contains(text, "kills from behind 0/5")
+
+func test_an_offered_wolf_form_is_selectable_and_a_locked_one_is_not() -> void:
+	player.set_species("wolf")
+	for i in 13:
+		rules.handle_event("absorbed", {"essence": "dark", "source": "bat"})
+		rules.handle_event("absorbed", {"essence": "air", "source": "bat"})
+	for i in 5:
+		rules.handle_event("defeated", {"behind": true, "source": "bat"})
+	_to_cap()
+	screen.open()
+	screen.switch_tab(5)
+	assert_eq(screen._selectable.size(), 1, "only the Black Dog is open")
+	assert_string_contains("\n".join(screen.list_texts()), "Locked")

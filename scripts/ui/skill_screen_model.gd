@@ -209,6 +209,10 @@ static func _form_tree_card(rules, node: Dictionary, forms: Dictionary) -> Dicti
 		lines.append("Gives up: " + c["gives_up"])
 	if c["opened_by"] != "":
 		lines.append("Opened by: " + c["opened_by"])
+	if c["opened_progress"] == "ready":
+		lines.append("Its gate is met")
+	elif c["opened_progress"] != "":
+		lines.append("Needs: " + c["opened_progress"])
 	lines.append_array(c["stats"])
 	lines.append_array(c["traits"])
 	if c["grants"] != "":
@@ -234,7 +238,8 @@ static func gate_lines(def: FormDef, rules) -> Array:
 	return out
 
 ## A form's card, shared by the Form tab and the Tree tab: {"name", "stage", "blurb", "stats", "traits", "grants", "verb", "gives_up",
-## "opened_by"}.
+## "opened_by", "opened_progress"}: the last is what a gated form still needs ("dark essence 8/26, kills from behind 2/5"), "ready" when it
+## is met, "" for a form with no gate.
 ## "grants" lists only the grants the player can still receive: a grant whose skill has retired is hidden.
 static func form_card(def: FormDef, rules) -> Dictionary:
 	var names: Array = []
@@ -246,7 +251,8 @@ static func form_card(def: FormDef, rules) -> Dictionary:
 	return {"name": def.display_name, "stage": def.stage, "blurb": def.blurb, "stats": FormEffects.stat_lines(def),
 		"traits": def.traits.map(func(t): return FormEffects.TRAITS.get(t, str(t))),
 		"grants": "" if names.is_empty() else "Grants: " + ", ".join(names),
-		"verb": verb_line(def, rules), "gives_up": def.gives_up, "opened_by": def.opened_by}
+		"verb": verb_line(def, rules), "gives_up": def.gives_up, "opened_by": def.opened_by,
+		"opened_progress": FormGate.summary(def, rules) if not def.gate.is_empty() else ""}
 
 ## A form's verb as one line: "Bind, 8 MP, 8 s" (name, cost, cooldown), "" for a form with none or one the rules do not know.
 static func verb_line(def: FormDef, rules) -> String:

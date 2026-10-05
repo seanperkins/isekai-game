@@ -3,8 +3,10 @@ extends RefCounted
 ## Which bodies a species is offered when it can evolve. Pure functions over data.
 ##   Stage 1 to 2, the slime: every lineage whose offer threshold its diet has met (offered_lineages), in LINEAGE_ORDER, plus the
 ##     Greater Slime fallback when fewer than two are offered. No ranking and no cap.
-##   Stage 1 to 2, any other species: every one of its stage-2 forms, until it has gates of its own.
-##   Stage 2 to 3: the form's two children. Stage 3 to 4: the lineage's one Sovereign. Stage 4: none.
+##   Stage 1 to 2, any other species: its stage-2 forms whose gates the run has met (FormGate).
+##   Stage 2 to 3: the form's two children, the slime's always, another species' when their gates are met. Stage 3 to 4: the
+##   lineage's Sovereign, or its two stage-4 forms the same way. Stage 4: none.
+## `locked` is the other half: the candidates whose gates are not met, for the Form tab to show with what is missing.
 
 const LINEAGE_ORDER := ["weaver", "tide", "toxic", "bulwark", "echo"]
 const FALLBACK := "greater_slime"
@@ -72,12 +74,19 @@ static func offers(forms: Dictionary, form: Form, rules) -> Array:
 		return _first_offers(forms, form.species, rules)
 	var out: Array = []
 	for k in FormLoader.children_of(forms, form.form_id):
-		out.append((k as FormDef).id)
+		if form.species == Form.DEFAULT_SPECIES or FormGate.met(k, rules):
+			out.append((k as FormDef).id)
 	return out
+
+## The forms `form` could grow into whose gates are not met yet. The slime's forms have no gate (its lineages use `reveal` and `offer`), so
+## nothing of the slime's is ever locked.
+static func locked(forms: Dictionary, form: Form, rules) -> Array:
+	var candidates: Array = FormLoader.stage2_forms(forms, form.species) if form.stage == 1 else FormLoader.children_of(forms, form.form_id)
+	return candidates.filter(func(f: FormDef) -> bool: return not FormGate.met(f, rules))
 
 static func _first_offers(forms: Dictionary, species: String, rules) -> Array:
 	if species != Form.DEFAULT_SPECIES:
-		return FormLoader.stage2_forms(forms, species).map(func(f: FormDef) -> String: return f.id)
+		return FormLoader.stage2_forms(forms, species).filter(func(f: FormDef) -> bool: return FormGate.met(f, rules)).map(func(f: FormDef) -> String: return f.id)
 	var out := offered_lineages(forms, rules)
 	if out.size() < 2 and forms.has(FALLBACK):
 		out.append(FALLBACK)

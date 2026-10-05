@@ -274,6 +274,9 @@ func hint_text() -> String:
 func detail_texts() -> Array:
 	return _detail.find_children("*", "Label", true, false).map(func(l): return l.text)
 
+func list_texts() -> Array:
+	return _list.find_children("*", "Label", true, false).map(func(l): return l.text)
+
 ## The selection step for a stick reading (see NavStep).
 func nav_step(stick: Vector2, delta: float) -> Vector2i:
 	return _nav.step(stick, delta)
@@ -767,6 +770,7 @@ func _build_form() -> void:
 			y += 11.0
 		y += 8.0
 	if _selectable.is_empty():
+		_build_locked(y)
 		return
 	for i in _selectable.size():
 		var row: Dictionary = _rows[_selectable[i]]
@@ -784,6 +788,7 @@ func _build_form() -> void:
 		_list.add_child(thumb)
 		_label(_list, row["name"], Vector2(LIST_X + 26, y + 4), Vector2(200, 12), FONT_MAIN, Color.WHITE)
 		y += ROW_H
+	_build_locked(y + 4.0)
 	# the selected offer's card
 	var sel: FormDef = _player.forms[_rows[_selectable[_sel]]["id"]]
 	var look2 := FormEffects.look(sel, _base_sheet())
@@ -814,6 +819,24 @@ func _build_form() -> void:
 		dy += 12.0
 	if card["gives_up"] != "":
 		_label(_detail, "Gives up: " + card["gives_up"], Vector2(DETAIL_X, dy), Vector2(190, 24), FONT_SMALL, COL_DIM, true)
+
+## The forms whose gates are not met, under the offers: each with what it still needs.
+func _build_locked(top: float) -> void:
+	var locked := _player.form_locked()
+	if locked.is_empty():
+		return
+	var y := top
+	_label(_list, "Locked", Vector2(LIST_X, y), Vector2(LIST_W, 12), FONT_SMALL, COL_TITLE)
+	y += 13.0
+	for f: FormDef in locked:
+		if y > 280.0:
+			break
+		_label(_list, f.display_name, Vector2(LIST_X + 4, y), Vector2(LIST_W - 8, 12), FONT_SMALL, Color.WHITE)
+		var need := _label(_list, FormGate.summary(f, _rules), Vector2(LIST_X + 10, y + 11), Vector2(LIST_W - 14, 24), FONT_SMALL, COL_DIM, true)
+		var lines := float(need.get_line_count())
+		var h := maxf(12.0, lines * need.get_line_height() + (lines - 1.0) * need.get_theme_constant("line_spacing"))
+		need.size = Vector2(LIST_W - 14, h)
+		y += 12.0 + h + 3.0
 
 func _skill_name(id: String) -> String:
 	var sd = _defs.get(id)

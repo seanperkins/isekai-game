@@ -917,6 +917,10 @@ func form_offers() -> Array:
 		out.append(forms[id])
 	return out
 
+## The forms the body could grow into whose gates are not met yet (FormOffers.locked), whether or not it can evolve now.
+func form_locked() -> Array:
+	return FormOffers.locked(forms, form, _rules)
+
 ## The form's definition, or null for the base slime.
 func form_def() -> FormDef:
 	return forms.get(form.form_id)
