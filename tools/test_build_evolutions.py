@@ -30,6 +30,12 @@ class BuildEvolutionsTest(unittest.TestCase):
         os.chdir(cls.old_cwd)
         cls.tmp.cleanup()
 
+    def test_only_the_shipped_creatures_are_existing(self):
+        # the twins and support monsters are data/creatures files too, but they are this page's subject, not shipped creatures
+        self.assertEqual(len(be.read_creatures()), 19)
+        self.assertEqual(sum(1 for c in self.data["creatures"] if c["kind"] == "existing"), 19)
+        self.assertEqual(self.data["summary"]["existing"], 19)
+
     def test_form_counts_per_species_are_pinned(self):
         counts = {s["id"]: sum(s["counts"].values()) for s in self.data["species"]}
         self.assertEqual(counts, {"slime": 42, "wolf": 21, "undead": 29, "spider": 21, "goblin": 28})

@@ -152,10 +152,13 @@ def parse_form_rows(rows):
 
 
 def read_creatures():
-    """data/creatures/*.tres -> id -> {name, essences, xp, untackleable}."""
+    """data/creatures/*.tres of the shipped creatures -> id -> {name, essences, xp, untackleable}. The twins and support monsters
+    (those with an origin) are this page's own subject, written by build_creatures.py, so they are not read back as existing."""
     out = {}
     for path in sorted(glob.glob("data/creatures/*.tres")):
         text = read(path)
+        if re.search(r'^origin = "', text, re.M):
+            continue
         cid = os.path.basename(path)[:-5]
         name = re.search(r'display_name = "([^"]+)"', text)
         ess = {}
