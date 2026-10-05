@@ -37,7 +37,7 @@
 <thead><tr><th>Topic</th><th>Status</th><th>In one line</th></tr></thead>
 <tbody>
 <tr data-status="built"><td><a href="#s-concept">1. Concept</a></td><td><span class="chip built">Built</span></td><td>Die, reincarnate, evolve by eating: running today, with the slime as the only playable species.</td></tr>
-<tr data-status="partly"><td><a href="#s-opening">2. Opening</a></td><td><span class="chip partly">Partly built</span></td><td>The truck dodge and the goddess's first meeting are built, with placeholder copy and art; what teaches movement now is open.</td></tr>
+<tr data-status="partly"><td><a href="#s-opening">2. Opening</a></td><td><span class="chip partly">Partly built</span></td><td>The truck battle (a JRPG scene in the game's art style) and the goddess's first meeting are built, with placeholder copy; what teaches movement now is open.</td></tr>
 <tr data-status="partly"><td><a href="#s-creatures">3. Creature design</a></td><td><span class="chip partly">Partly built</span></td><td>Slime only; the spider is next. Its ingredients exist as enemies and skills, and a movement sandbox with four species profiles sits beside the game; goblin and undead do not exist.</td></tr>
 <tr data-status="partly"><td><a href="#s-methods">4. Essence methods</a></td><td><span class="chip partly">Partly built</span></td><td>Only "devour" exists. Decided: each species has its own method (devour, drain, learn) and a shared item system the game does not have yet.</td></tr>
 <tr data-status="partly"><td><a href="#s-essences">5. Essence types</a></td><td><span class="chip partly">Partly built</span></td><td>Built: five elements (water, earth, air, light, dark) replaced the ten trait essences; poison and spore are mixes. Fire, mind and blood come with new creatures.</td></tr>
@@ -94,7 +94,7 @@
 <div class="block game">
 <h3>In the game today</h3>
 <ul>
-<li>A brand-new profile opens with the truck dodge (<code>scripts/ui/opening_scene.gd</code>, copy in <code>data/opening/opening.tres</code>): a black screen, three trucks and a menu of Dodge, Jump, Pray and Run where every choice fails, then the goddess's menu with her first words. It plays once. Old saves count as seen; <code>-- --opening</code> replays it and <code>-- --skip-opening</code> skips it. The art and the copy are placeholders.</li>
+<li>A brand-new profile opens with a JRPG battle against a truck (<code>scripts/ui/opening_scene.gd</code>, copy in <code>data/opening/opening.tres</code>): a sunny pixel-art street, an animated commuter and truck, the game's blue windows, and a menu of Fight, Dodge, Jump, Pray and Run where every command fails. Three trucks, a hit each, then a fade to white and the goddess's menu with her first words. It plays once. Old saves count as seen; <code>-- --opening</code> replays it and <code>-- --skip-opening</code> skips it. The copy is a placeholder.</li>
 <li>After the opening, and on every later launch, a run starts in room C1 as a slime.</li>
 <li>Death shows a card, "You dissolve. A new life begins.", for 1.5 seconds, then restarts (<code>scripts/run.gd</code>).</li>
 <li>The only narrator is "A voice": the translucent pop-ups for skill unlocks and evolutions (code name Great Sage).</li>
@@ -104,7 +104,7 @@
 </div>
 <div class="block decide">
 <h3>Decision needed</h3>
-<p>Working direction: the goddess and "A voice" are separate characters. The voice is the voice of the world (it already announces skills and evolutions), and she owns the death and rebirth moment, which already has a card and a menu to hang on. Decided and built: the truck scene is three trucks and four choices that all fail. Still open: the real copy and art, and what teaches movement now that the dodging is turn-based. The scene is a scripted one-off, not a battle system.</p>
+<p>Working direction: the goddess and "A voice" are separate characters. The voice is the voice of the world (it already announces skills and evolutions), and she owns the death and rebirth moment, which already has a card and a menu to hang on. Decided and built: the truck scene is three trucks and five commands that all fail, staged as a JRPG battle. Still open: the real copy, and what teaches movement now that the dodging is turn-based. The scene is a scripted one-off, not a battle system.</p>
 </div>
 </section>
 
@@ -295,7 +295,7 @@
 <li>Only the Cave altar sells a perk so far: stronger base stats (+2 max HP and +1 max MP a purchase, from the next life, 5 soul points and rising by 3). The other three altars have none yet. There are no free kits: the goddess's menu sells a head start (starting levels and Compendium-owned powers) for soul points.</li>
 <li>The stage is always 1 on rebirth, and a head start banks no XP.</li>
 <li>Persisted: Compendium, Bestiary, map, shortcuts, tablets, attuned altars, soul points and perks bought, last choice, species id and the body forms reached. Not persisted: essence counters, which reset each life.</li>
-<li>Soul points, the perk purchase at an altar, the species list, species unlocks and the opening scene (with placeholder copy and art) are built.</li>
+<li>Soul points, the perk purchase at an altar, the species list, species unlocks and the opening scene (with placeholder copy) are built.</li>
 <li>Useful plumbing: <code>WorldProgress</code> and <code>SoulProgress</code> save their sections through the Profile.</li>
 </ul>
 </div>

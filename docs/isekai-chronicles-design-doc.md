@@ -21,7 +21,7 @@ The first time you play, the game opens with an unavoidable truck death, then a 
 3. After dying, the player meets a god or goddess who apologizes: the death was an accident.
 4. She offers to reincarnate them and presents the options. At first there is only one: slime.
 
-Built (2026-10-04): the truck scene is three trucks on a black screen with a small road and a menu of Dodge, Jump, Pray and Run; every choice fails with its own line, Enter moves on and nothing skips it. Then her usual menu opens with her first words, offering only the slime and the Cave mouth altar, and one confirm begins the first life. The copy (`data/opening/opening.tres`) and the art (drawn in code) are placeholders. It plays once, on a brand-new profile: a save from before the opening existed counts as seen, `-- --opening` replays it, and `-- --skip-opening` skips it (a headless run never plays it). The trucks are not a death, so the first real death is death 1.
+Built (2026-10-04, redone as a JRPG battle the same day): the truck scene is a side-view JRPG battle on a sunny, blossom-lined street, in the game's own pixel style. The commuter stands on the right, the truck rolls in from the left, a message window runs along the top and the command and status windows (the same blue window style as the voice's pop-ups) along the bottom. Each of the three trucks is one round: pick Fight, Dodge, Jump, Pray or Run, watch your animation and its result line, and the truck charges and hits (HP 30 drops by a third each time). Every command fails; Enter finishes any animation and nothing skips the scene. After the third hit he is knocked out and the screen fades to white, then her usual menu opens with her first words, offering only the slime and the Cave mouth altar, and one confirm begins the first life. The art is generated with the Codex pipeline (the commuter and truck frames and the street backdrop); the copy (`data/opening/opening.tres`) is placeholder. It plays once, on a brand-new profile: a save from before the opening existed counts as seen, `-- --opening` replays it, and `-- --skip-opening` skips it (a headless run never plays it). The trucks are not a death, so the first real death is death 1.
 
 The goddess is a recurring character. She remembers every previous life, reacts to how you died, and her reincarnation menu grows over the course of the game.
 
@@ -249,4 +249,4 @@ The combination here is novel, but several games cover pieces of it — worth st
 - [x] After the reveal — held soul points are kept and spendable; her fight is fixed, not scaled by what you banked
 - [x] The route to confront her — a last area past the Deep, unlocked by the reveal
 - [ ] What the last area holds
-- [x] The opening truck scene — a short, rigged, turn-based dodge, three trucks, plays once (built, with placeholder copy and art)
+- [x] The opening truck scene — a short, rigged, turn-based dodge, three trucks, plays once (built as a JRPG battle, with placeholder copy)
