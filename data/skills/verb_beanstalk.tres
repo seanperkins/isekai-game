@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_beanstalk"
+display_name = "Stalk"
+description = "Grow a climbable vine from the floor."
+announce = "New verb. Acquired [Stalk]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "vine", "height": 160, "seconds": 10.0, "cooldown": 6.0}}]
+mp_cost = 6

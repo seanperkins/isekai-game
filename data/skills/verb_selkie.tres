@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_selkie"
+display_name = "Shed"
+description = "Leave a husk decoy and slip away."
+announce = "New verb. Acquired [Shed]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "decoy", "seconds": 1.2, "speed": 360, "ward": 0.6, "cooldown": 10.0}}]
+mp_cost = 6

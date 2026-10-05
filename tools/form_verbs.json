@@ -157,5 +157,80 @@
       "seconds": 3.0,
       "cooldown": 6.0
     }
+  },
+  {
+    "form": "cloud_rider",
+    "name": "Ride",
+    "mp": 3,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "A plain glide: the fall slows for a moment; no cloud is drawn and it does not carry you sideways.",
+    "text": "A short glide on a cloud.",
+    "spec": {
+      "kind": "glide",
+      "seconds": 1.5,
+      "fall": 40,
+      "cooldown": 3.0
+    }
+  },
+  {
+    "form": "ariadne",
+    "name": "Recall",
+    "mp": 4,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "The first cast lays a mark; the second puts you back on it in one step, not along a walked trail.",
+    "text": "Lay a trail, then return along it to its start.",
+    "spec": {
+      "kind": "anchor",
+      "seconds": 30,
+      "cooldown": 1.0
+    }
+  },
+  {
+    "form": "selkie",
+    "name": "Shed",
+    "mp": 6,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "A husk is left and you slip away untouchable for a moment; enemies are not drawn to the husk, and it is not gone until you rest.",
+    "text": "Leave a husk decoy and slip away.",
+    "spec": {
+      "kind": "decoy",
+      "seconds": 1.2,
+      "speed": 360,
+      "ward": 0.6,
+      "cooldown": 10.0
+    }
+  },
+  {
+    "form": "king_slime",
+    "name": "Court",
+    "mp": 8,
+    "value": 2,
+    "fidelity": "approx",
+    "note": "Three allies fight for ten seconds; they cannot be hurt, so the court does not die in one hit.",
+    "text": "Spawns a few lesser slimes that fight for you.",
+    "spec": {
+      "kind": "summon",
+      "count": 3,
+      "seconds": 10.0,
+      "cooldown": 12.0
+    }
+  },
+  {
+    "form": "beanstalk",
+    "name": "Stalk",
+    "mp": 6,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "A stack of one-way steps appears at once; it is not a vine you hold, and it does not grow slowly.",
+    "text": "Grow a climbable vine from the floor.",
+    "spec": {
+      "kind": "vine",
+      "height": 160,
+      "seconds": 10.0,
+      "cooldown": 6.0
+    }
   }
 ]

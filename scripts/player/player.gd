@@ -28,6 +28,7 @@ const INSPECT_RANGE := 96.0
 ## Glow Pools, tablets and other interactables answer Inspect within this range, before creatures.
 const INTERACT_RANGE := 24.0
 const INVULN_SECONDS := 1.0
+const GLIDE_FALL := 40.0
 const KNOCKBACK := Vector2(160.0, -140.0)
 ## A shock hit locks input this long (the same lock a hit's knockback uses, so it only adds the difference).
 const SHOCK_STUN := 0.3
@@ -78,6 +79,9 @@ var _emit: Callable
 var _invuln := 0.0
 ## A verb's ward: no damage while it lasts. Apart from _invuln, which also draws the hurt flash and the evolve hold.
 var _ward := 0.0
+## A verb's glide (Ride): while it runs a falling body falls no faster than _glide_fall.
+var _glide := 0.0
+var _glide_fall := GLIDE_FALL
 var _dash := 0.0
 ## The water model: whether the body centre is in a DeepWater, the submerged clock, the edges (see PlayerWater).
 var _water := PlayerWater.new()
@@ -178,6 +182,8 @@ func _physics_process(delta: float) -> void:
 		velocity.x = dir * _walk_speed()
 	if not is_on_floor():
 		velocity.y += GRAVITY * delta
+		if _glide > 0.0 and velocity.y > _glide_fall:
+			velocity.y = _glide_fall
 	if rope != null:
 		_swing(dir, delta)
 	if _water.in_water:
@@ -786,6 +792,11 @@ func receive_poison(application: int, tick_amount: int, seconds: float) -> void:
 	_poison_tick = tick_amount
 	_poison_acc = 0.0
 
+## Falls no faster than `fall` px/s for `seconds`.
+func glide(seconds: float, fall := GLIDE_FALL) -> void:
+	_glide = maxf(_glide, seconds)
+	_glide_fall = fall
+
 ## Untouchable for `seconds` (a longer ward already running is kept).
 func ward(seconds: float) -> void:
 	_ward = maxf(_ward, seconds)
@@ -793,6 +804,7 @@ func ward(seconds: float) -> void:
 func tick(delta: float) -> void:
 	_invuln = maxf(0.0, _invuln - delta)
 	_ward = maxf(0.0, _ward - delta)
+	_glide = maxf(0.0, _glide - delta)
 	if health.is_dead():
 		return
 	if _poison_left > 0.0:

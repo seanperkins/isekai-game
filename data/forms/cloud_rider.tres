@@ -19,7 +19,8 @@ stats = {
 "spd": 12
 }
 traits = ["sonar"]
-grants = ["echolocation", "leap"]
+grants = ["echolocation", "leap", "verb_cloud_rider"]
+verb = "verb_cloud_rider"
 tint = Color(1, 0.7, 1, 1)
 size = 1.4
 blurb = "Ride: a short glide on a cloud"

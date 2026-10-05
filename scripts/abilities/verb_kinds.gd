@@ -5,7 +5,7 @@ extends RefCounted
 
 ## The scene every data-defined verb uses.
 const SCENE := "res://scenes/abilities/verb.tscn"
-const KINDS := ["bolt", "burst", "ring", "dash", "zone", "mark", "heal", "ward", "buff", "pull", "aura", "chain", "engulf", "dissolve"]
+const KINDS := ["bolt", "burst", "ring", "dash", "zone", "mark", "heal", "ward", "buff", "pull", "aura", "chain", "engulf", "dissolve", "glide", "anchor", "decoy", "summon", "vine"]
 ## Each kind's keys and what they hold (validate() checks them). Every kind also takes `cooldown` (seconds, in place of the default);
 ## the kinds in STRIKES also take damage_type and status.
 const SCHEMA := {
@@ -23,6 +23,11 @@ const SCHEMA := {
 	"chain": {"range": "number", "jump": "number", "hops": "number", "half_width": "number"},
 	"engulf": {"range": "number", "seconds": "number"},
 	"dissolve": {"range": "number", "half_width": "number"},
+	"glide": {"seconds": "number", "fall": "number"},
+	"anchor": {"seconds": "number"},
+	"decoy": {"seconds": "number", "speed": "number", "ward": "number"},
+	"summon": {"count": "number", "seconds": "number"},
+	"vine": {"height": "number", "seconds": "number"},
 }
 ## The kinds that hurt, which take a `damage_type`; STRIKES are the instant ones, which also take a `status`.
 const TYPED := ["bolt", "burst", "ring", "dash", "mark", "zone", "pull", "aura", "chain", "engulf", "dissolve"]
@@ -54,6 +59,19 @@ const ENGULF_SECONDS := 3.0
 const ENGULF_RADIUS := 6.0
 const DISSOLVE_RANGE := 60.0
 const DISSOLVE_HALF_WIDTH := 40.0
+const GLIDE_SECONDS := 1.5
+const GLIDE_FALL := 40.0
+const ANCHOR_SECONDS := 30.0
+const ANCHOR_META := "verb_anchor"
+const DECOY_SECONDS := 1.2
+const DECOY_SPEED := 360.0
+const DECOY_WARD := 0.6
+const SUMMON_COUNT := 3
+const SUMMON_SECONDS := 10.0
+const SUMMON_SPACING := 14.0
+const VINE_HEIGHT := 160.0
+const VINE_SECONDS := 10.0
+const VINE_FLOOR_PROBE := 400.0
 const BUFF_SOURCE := "verb_buff"
 const BUFF_GENERATION := "verb_buff_generation"
 const BOLT_RANGE := 260.0
@@ -94,6 +112,16 @@ static func run(ability: Ability, spec: Dictionary) -> void:
 			_engulf(ability, spec)
 		"dissolve":
 			_dissolve(ability, spec)
+		"glide":
+			_glide(ability, spec)
+		"anchor":
+			_anchor(ability, spec)
+		"decoy":
+			_decoy(ability, spec)
+		"summon":
+			_summon(ability, spec)
+		"vine":
+			_vine(ability, spec)
 
 static func _bolt(a: Ability, spec: Dictionary) -> void:
 	var dir := a.aim_dir()
@@ -259,6 +287,60 @@ static func _dissolve(a: Ability, spec: Dictionary) -> void:
 		if d.dot(dir) >= -4.0 and d.dot(dir) <= reach and absf(d.cross(dir)) <= half and n.has_method("dissolve"):
 			n.dissolve()
 	Vfx.line(a.actor, from, from + dir * reach, _color(spec), 6.0, 0.2)
+
+## A falling body falls slowly for a while (Ride).
+static func _glide(a: Ability, spec: Dictionary) -> void:
+	if a.actor.has_method("glide"):
+		a.actor.glide(float(spec.get("seconds", GLIDE_SECONDS)), float(spec.get("fall", GLIDE_FALL)))
+
+## The first cast lays a mark where the caster stands; a cast before it expires puts the caster back on it (Recall).
+static func _anchor(a: Ability, spec: Dictionary) -> void:
+	var now := float(Engine.get_physics_frames()) / float(Engine.physics_ticks_per_second)  # game time, not the wall clock
+	var mark = a.actor.get_meta(ANCHOR_META) if a.actor.has_meta(ANCHOR_META) else null
+	if mark != null and now <= float(mark["until"]):
+		a.actor.global_position = mark["at"]
+		if "velocity" in a.actor:
+			a.actor.velocity = Vector2.ZERO
+		a.actor.remove_meta(ANCHOR_META)
+		return
+	a.actor.set_meta(ANCHOR_META, {"at": a.actor.global_position, "until": now + float(spec.get("seconds", ANCHOR_SECONDS))})
+	Vfx.puffs(a.actor, Art.texture("spit_glob"), [a.actor.global_position], Color(1, 1, 1, 0.7), 2.0)
+
+## Leaves a husk of the caster's own look where it stood, is untouchable for a moment and throws itself away from where it faces (Shed).
+static func _decoy(a: Ability, spec: Dictionary) -> void:
+	var sprite = a.actor.get_node_or_null("Sprite")
+	var texture: Texture2D = sprite.texture if sprite is Sprite2D else Art.texture("spit_glob")
+	var husk := Vfx.puffs(a.actor, texture, [Vector2.ZERO], Color(1, 1, 1, 0.8), float(spec.get("seconds", DECOY_SECONDS)))
+	husk.global_position = a.actor.global_position
+	husk.add_to_group("verb_husks")
+	if sprite is Sprite2D:
+		husk.get_child(0).position = sprite.position
+		husk.get_child(0).scale = sprite.scale
+	if a.actor.has_method("ward"):
+		a.actor.ward(float(spec.get("ward", DECOY_WARD)))
+	if a.actor.has_method("apply_impulse"):
+		a.actor.apply_impulse(Vector2(-float(a.actor.get("facing") if a.actor.get("facing") != null else 1) * float(spec.get("speed", DECOY_SPEED)), 0.0))
+
+## Calls `count` small allies that fight for a while; a second call replaces the first (Court).
+static func _summon(a: Ability, spec: Dictionary) -> void:
+	for old in a.actor.get_tree().get_nodes_in_group("verb_allies"):
+		if old.caster == a.actor:
+			old.free()
+	var count := maxi(1, int(spec.get("count", SUMMON_COUNT)))
+	var power := Damage.skill_power(a.value(), a.actor_atk())
+	for i in count:
+		var ally := VerbAlly.new()
+		a.actor.get_parent().add_child(ally)
+		ally.launch(a.actor, a.actor.global_position + Vector2((float(i) - float(count - 1) / 2.0) * SUMMON_SPACING, 0.0), power,
+			float(spec.get("seconds", SUMMON_SECONDS)), Color(0.8, 1.0, 0.8, 0.9))
+
+## One-way steps stacked up from the floor under the caster (Stalk).
+static func _vine(a: Ability, spec: Dictionary) -> void:
+	var from: Vector2 = a.actor.global_position
+	var floor_point = a.terrain_hit(from, from + Vector2(0.0, VINE_FLOOR_PROBE))
+	var vine := VerbVine.new()
+	a.actor.get_parent().add_child(vine)
+	vine.launch(floor_point if floor_point != null else from, float(spec.get("height", VINE_HEIGHT)), float(spec.get("seconds", VINE_SECONDS)))
 
 ## The skill's damage to each target, then the spec's status. `ignore_def` skips an Enemy's DEF.
 static func _strike(a: Ability, targets: Array, spec: Dictionary, ignore_def := false) -> void:

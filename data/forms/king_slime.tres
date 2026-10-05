@@ -17,7 +17,8 @@ stats = {
 "max_mp": 12
 }
 traits = ["adaptable"]
-grants = ["regeneration", "mana_recovery"]
+grants = ["regeneration", "mana_recovery", "verb_king_slime"]
+verb = "verb_king_slime"
 tint = Color(1, 0.97, 0.75, 1)
 size = 1.4
 blurb = "Court: spawns a few lesser slimes that fight for you"

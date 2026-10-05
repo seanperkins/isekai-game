@@ -19,7 +19,8 @@ stats = {
 "spd": 12
 }
 traits = ["spinner"]
-grants = ["sticky_thread", "wall_cling"]
+grants = ["sticky_thread", "wall_cling", "verb_beanstalk"]
+verb = "verb_beanstalk"
 tint = Color(0.83, 0.75, 1, 1)
 size = 1.4
 blurb = "Stalk: grow a climbable vine from the floor"
