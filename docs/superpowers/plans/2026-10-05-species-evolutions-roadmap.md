@@ -1,6 +1,6 @@
 # Species evolutions: the roadmap, in pieces
 
-Status: proposal (2026-10-05). Source design: `docs/research/species-form-branches.md` (every form, its world twin, the essences, the monsters to add) and the review page `docs/evolutions/` (live at `/evolutions/`). This file splits building it into pieces. Each piece gets its own short spec or plan, test-first, in its own worktree and branch, reviewed and merged on its own, and ends with something the player can see or play. Nothing here is built yet except the 24 slime forms that already exist.
+Status: proposal (2026-10-05). Source design: `docs/research/species-form-branches.md` (every form, its world twin, the essences, the monsters to add) and the review page `docs/evolutions/` (live at `/evolutions/`). This file splits building it into pieces. Each piece gets its own short spec or plan, test-first, in its own worktree and branch, reviewed and merged on its own, and ends with something the player can see or play. Built so far: A1 (species-aware forms), on its branch. The 24 slime forms already existed.
 
 ## What exists and what is missing
 
@@ -24,7 +24,7 @@ Sizes are relative (S, M, L, XL), not time. "Playable" says what you can do when
 
 | # | Piece | Scope | Depends on | Done when | Size |
 |---|---|---|---|---|---|
-| A1 | **Species-aware forms** | `FormDef.species`; a base form per species instead of `Form.BASE`; per-species lineages and stage caps; `FormLoader`, `FormValidator`, `FormOffers` and the skill tree screen take a species; the persisted form state migrates. No new content. | none | every existing slime test still passes unchanged, and a fixture second species passes the same validator and offers tests | M |
+| A1 | **Species-aware forms** (built on `feat/species-forms`, plan `2026-10-05-species-forms-a1.md`) | `FormDef.species`; a base form per species instead of `Form.BASE`; per-species lineages and stage caps; `FormLoader`, `FormValidator`, `FormOffers` and the skill tree screen take a species; the persisted form state migrates. No new content. | none | every existing slime test still passes unchanged, and a fixture second species passes the same validator and offers tests | M |
 | A2 | **Fire, mind and blood** | the three elements in the vocabulary, the validator, the HUD and the skill rules; per-element "absorbed this life" counters | none | an essence event of each new element is counted, shown and validated; a form may read them (as a stub until a creature carries them) | S |
 | A3 | **Form data for all 141** | a generator from the design doc's tables to `data/forms/*.tres`: stats by tier, traits, tint, size, host, "opened by" as data, the verb id each form grants (the verb itself is piece C); the validator learns the new fields | A1, A2 | all 141 forms load and validate; the review page's counts equal the data's | L |
 
