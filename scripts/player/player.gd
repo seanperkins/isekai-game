@@ -1402,7 +1402,7 @@ func _shed_graft(from: Vector2) -> void:
 	_refresh_grafts()
 	var away := 1.0 if from == Vector2.INF or global_position.x >= from.x else -1.0
 	_emit.call(Deeds.GRAFT_SHED, {"part": id})
-	part_dropped.emit(id, global_position + Vector2(-away * 14.0, -4.0), SHED_PICKUP_DELAY)
+	part_dropped.emit(id, global_position + Vector2(away * 14.0, -4.0), SHED_PICKUP_DELAY)
 
 ## A dying body lets go of everything it carried and wore (the ids), and the passives go with it.
 func release_parts() -> Array:

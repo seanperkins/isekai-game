@@ -120,6 +120,20 @@ func test_a_hit_of_a_quarter_of_max_hp_sheds_the_latest_graft() -> void:
 	assert_signal_emitted(player, "part_dropped")
 	assert_eq(get_signal_parameters(player, "part_dropped")[0], "claw")
 
+func _shed_from(blow_x: float) -> Vector2:
+	_make("undead")
+	player.collect_part("claw")
+	player.global_position = Vector2(100.0, 0.0)
+	watch_signals(player)
+	player.receive_hit(_quarter(), "fire", Vector2(blow_x, 0.0))
+	return get_signal_parameters(player, "part_dropped")[1]
+
+func test_a_graft_knocked_off_by_a_blow_from_the_left_falls_to_the_right() -> void:
+	assert_gt(_shed_from(80.0).x, 100.0)
+
+func test_a_graft_knocked_off_by_a_blow_from_the_right_falls_to_the_left() -> void:
+	assert_lt(_shed_from(120.0).x, 100.0)
+
 func _worn_body_with_max_hp(max_hp: int) -> void:
 	_make("undead")
 	player.collect_part("ribs")
