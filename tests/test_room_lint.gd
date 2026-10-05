@@ -219,3 +219,28 @@ func test_the_g4_tablet_hints_a_real_skill() -> void:
 	var g4: RoomDef = load("res://data/rooms/G4.tres")
 	var tablet: Dictionary = g4.features.filter(func(f): return f["kind"] == "tablet")[0]
 	assert_true(RoomLint.hintable_skill_ids().has(tablet["hint"]), "was 'spore shell', which hinted nothing")
+
+# --- spawn_findings: what the placement asks of a spot ---
+
+func _plain_room() -> RoomDef:
+	var r := _room("T1")
+	r.exits = [{"edge": "bottom", "from": 200.0, "to": 320.0, "room": "T2"}]
+	r.solids = [Rect2(400, 200, 100, 40)]
+	return r
+
+func test_spawn_findings_name_a_spawn_over_its_floor_hole_one_in_rock_and_one_outside() -> void:
+	var r := _plain_room()
+	r.spawns = [{"id": "toad", "pos": Vector2(250, 310)}, {"id": "toad", "pos": Vector2(450, 220)}, {"id": "toad", "pos": Vector2(900, 310)}]
+	var found := RoomLint.spawn_findings(r)
+	var by_index := {}
+	for f in found:
+		by_index[int(f["pick"]["index"])] = f["rule"]
+		assert_eq(f["pick"]["kind"], "spawn")
+	assert_eq(by_index.get(0), "over_hole")
+	assert_eq(by_index.get(1), "in_rock")
+	assert_eq(by_index.get(2), "outside")
+
+func test_spawn_findings_are_empty_for_a_good_spot() -> void:
+	var r := _plain_room()
+	r.spawns = [{"id": "toad", "pos": Vector2(100, 308)}]
+	assert_eq(RoomLint.spawn_findings(r), [])

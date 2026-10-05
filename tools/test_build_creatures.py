@@ -2,6 +2,7 @@
   python3 -m unittest tools/test_build_creatures.py
 """
 import glob
+import json
 import os
 import re
 import sys
@@ -171,13 +172,46 @@ class WriteTest(unittest.TestCase):
     def test_build_writes_one_file_per_row_and_the_id_list(self):
         with tempfile.TemporaryDirectory() as out:
             ids_path = os.path.join(out, "menagerie_ids.gd")
-            bc.build(out, ids_path)
+            bc.build(out, ids_path, os.path.join(out, "creature_areas.json"))
             self.assertEqual(len(glob.glob(os.path.join(out, "*.tres"))), 169)
             text = open(ids_path, encoding="utf-8").read()
             self.assertIn("class_name MenagerieIds", text)
             self.assertIn('"twin_wolf_fenrir"', text)
             self.assertIn('"wild_slime"', text)
             self.assertIn("const ALL := TWINS + SUPPORT", text)
+
+    def test_the_areas_file_gives_every_creature_its_areas_and_a_class(self):
+        data = bc.areas_json(self.rows)
+        self.assertEqual(len(data["creatures"]), 169)
+        classes = {}
+        for cid, row in data["creatures"].items():
+            self.assertIn(row["class"], ("common", "elite", "rare"), cid)
+            self.assertTrue(row["areas"], cid)
+            classes[row["class"]] = classes.get(row["class"], 0) + 1
+        self.assertEqual(classes, {"rare": 80, "elite": 41, "common": 48})
+        self.assertEqual(data["creatures"]["chapel_priest"]["class"], "elite")
+        self.assertEqual(data["creatures"]["twin_wolf_beast_of_gevaudan"]["class"], "rare")
+        self.assertEqual(data["creatures"]["twin_wolf_moonbound"]["class"], "common")
+        self.assertEqual(bc.placement_class("miniboss"), "rare")
+        self.assertEqual(bc.placement_class("merchant NPC"), "common")
+
+    def test_every_lair_and_quiet_room_is_a_room_and_no_lair_is_quiet(self):
+        for room in bc.LAIRS + bc.QUIET:
+            self.assertTrue(os.path.exists("data/rooms/%s.tres" % room), room)
+        self.assertFalse(set(bc.LAIRS) & set(bc.QUIET))
+
+    def test_every_area_a_creature_names_is_the_area_of_some_room(self):
+        areas = set()
+        for path in glob.glob("data/rooms/*.tres"):
+            with open(path, encoding="utf-8") as fh:
+                areas.add(re.search(r'^area = "(\w+)"', fh.read(), re.M).group(1))
+        for cid, row in bc.areas_json(self.rows)["creatures"].items():
+            for a in row["areas"]:
+                self.assertIn(a, areas, "%s lives in %s" % (cid, a))
+
+    def test_the_checked_in_areas_file_is_what_the_generator_writes(self):
+        with open("tools/creature_areas.json", encoding="utf-8") as fh:
+            self.assertEqual(json.load(fh), bc.areas_json(self.rows))
 
     def test_the_checked_in_data_is_what_the_generator_writes(self):
         for r in self.rows:

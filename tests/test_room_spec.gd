@@ -72,3 +72,25 @@ func test_transport_only_keys_are_dropped() -> void:
 	assert_false(back["content"]["decor"][0].has("index"))
 	assert_false(back["content"]["features"][0].has("index"))
 	assert_eq(back["content"]["solids"], [{"rect": Rect2(0, 0, 8, 8), "hard": false}])
+
+func test_a_spawns_by_marker_survives_a_spec_round_trip() -> void:
+	var r := RoomDef.new()
+	r.id = "T1"
+	r.area = "cave"
+	r.spawns = [{"id": "toad", "pos": Vector2(100, 300), "by": "PL"}, {"id": "bat", "pos": Vector2(200, 100)}]
+	var spec := RoomSpec.to_json(r)
+	assert_eq(spec["spawns"][0]["by"], "PL")
+	assert_false(spec["spawns"][1].has("by"))
+	var back := RoomSpec.content_from_json(JSON.parse_string(JSON.stringify(spec)))
+	assert_eq(back["errors"], [])
+	assert_eq(back["content"]["spawns"], r.spawns)
+
+func test_the_editor_applying_a_spec_keeps_a_placed_spawns_marker() -> void:
+	var r := RoomDef.new()
+	r.id = "T1"
+	r.area = "cave"
+	r.spawns = [{"id": "toad", "pos": Vector2(100, 308), "by": "PL"}]
+	var model := RoomEditModel.new({"T1": r}, ["toad"])
+	var parsed := RoomSpec.content_from_json(JSON.parse_string(JSON.stringify(RoomSpec.to_json(r))))
+	assert_eq(model.apply_content("T1", parsed["content"]), [])
+	assert_eq((model.rooms["T1"] as RoomDef).spawns, [{"id": "toad", "pos": Vector2(100, 308), "by": "PL"}])

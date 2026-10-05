@@ -102,6 +102,15 @@ static func check_room(r: RoomDef, rooms: Dictionary) -> Array:
 	out.append_array(_water_exit(r))
 	return out
 
+## The findings that name a spawn of `r` (a spawn outside the room, in rock, over a floor hole, near an altar, or without the footing and
+## clear height its drawn size needs): each carries `pick` {kind: "spawn", index}. What a spot must pass before a creature is put there.
+static func spawn_findings(r: RoomDef) -> Array:
+	var out: Array = []
+	for f in _outside(r) + _in_rock(r) + _over_hole(r) + _altar_clearance(r) + _creature_fit(r):
+		if f["pick"].get("kind", "") == "spawn":
+			out.append(f)
+	return out
+
 ## The findings of the named rules, one per line; "" when there are none.
 static func text(findings: Array, rules: Array) -> String:
 	var lines: Array = []

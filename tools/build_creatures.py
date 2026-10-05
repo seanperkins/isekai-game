@@ -3,10 +3,12 @@
   data/creatures/twin_<form>.tres   one per form whose twin is a new creature (140)
   data/creatures/<id>.tres          the design doc's support monsters (29)
   scripts/core/menagerie_ids.gd     their ids, for Sources.ALL
+  tools/creature_areas.json         each one's areas and class, the lairs and the quiet rooms (tools/areas/placement.gd)
 
 Run from the repo root:  python3 tools/build_creatures.py
 The rows come from the design doc through build_evolutions.collect() (tiers, essences, roles) and from data/forms (verb, art).
 """
+import json
 import os
 import re
 import sys
@@ -17,6 +19,7 @@ import build_evolutions as be  # noqa: E402
 
 OUT = "data/creatures"
 IDS = "scripts/core/menagerie_ids.gd"
+AREAS = "tools/creature_areas.json"
 SCRIPT_ID = "1_hf3fk"  # the ext_resource id the shipped creature files use
 
 # Stats by stage, calibrated on lizard 5/5/1/80, taratect 24/9/2/120 and the stone drake 28/7/5/40; speed shifts by species.
@@ -166,7 +169,29 @@ def ids_gd(rows):
             + block("SUPPORT", [r["id"] for r in rows if r["origin"] == "support"]) + "\nconst ALL := TWINS + SUPPORT\n")
 
 
-def build(out_dir=OUT, ids_path=IDS):
+# Where each new creature may stand (tools/areas/placement.gd reads the file this makes). A creature's `class` is the design table's role:
+# rare for the table's rare, boss, optional boss, miniboss and guardian, elite for elite, and common for the rest (the NPCs too: the game has no
+# neutral creature yet, so they fight like any other).
+RARE_ROLES = {"rare or boss", "rare", "boss", "optional boss", "miniboss", "guardian"}
+# The rooms a rare may stand in, one or two to an area: dead ends and optional rooms, so a rare is never met on the way through.
+LAIRS = ["C6", "G5", "F6", "D5", "FO7", "FO9", "SW4", "SW5", "VI4", "CM3", "CA3", "CA5", "CR4", "VO5", "VO6", "DM3", "DM6", "DM7"]
+# Rooms nothing is placed in: the thresholds, the truce and the rests (a boss arena and the start room are skipped by the placement itself).
+QUIET = ["FO1", "SW1", "VI1", "CM2", "DM1", "DM2", "VO1", "D7", "F5"]
+
+
+def placement_class(role):
+    if role in RARE_ROLES:
+        return "rare"
+    return "elite" if role == "elite" else "common"
+
+
+def areas_json(rows):
+    """tools/creature_areas.json: each creature's areas and class, the lairs and the quiet rooms."""
+    return {"creatures": {r["id"]: {"areas": list(r["areas"]), "class": placement_class(r["role"])} for r in rows},
+            "lairs": LAIRS, "quiet": QUIET}
+
+
+def build(out_dir=OUT, ids_path=IDS, areas_path=AREAS):
     """Writes every creature file and the id list; returns the rows."""
     rows = creature_rows()
     os.makedirs(out_dir, exist_ok=True)
@@ -175,6 +200,9 @@ def build(out_dir=OUT, ids_path=IDS):
             fh.write(tres(r))
     with open(ids_path, "w", encoding="utf-8") as fh:
         fh.write(ids_gd(rows))
+    with open(areas_path, "w", encoding="utf-8") as fh:
+        json.dump(areas_json(rows), fh, indent=1, sort_keys=True)
+        fh.write("\n")
     return rows
 
 

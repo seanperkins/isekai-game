@@ -23,7 +23,10 @@ static func to_json(r: RoomDef, indexed := false) -> Dictionary:
 	for i in r.water.size():
 		out["water"].append(_tag({"rect": plain(r.water[i])}, i, indexed))
 	for i in r.spawns.size():
-		out["spawns"].append(_tag({"creature": r.spawns[i]["id"], "pos": plain(r.spawns[i]["pos"])}, i, indexed))
+		var spawn := {"creature": r.spawns[i]["id"], "pos": plain(r.spawns[i]["pos"])}
+		if r.spawns[i].has("by"):  # the module that placed it (tools/areas): a round trip must not lose it, or the next build adds it twice
+			spawn["by"] = r.spawns[i]["by"]
+		out["spawns"].append(_tag(spawn, i, indexed))
 	for i in r.features.size():
 		out["features"].append(_tag(plain(r.features[i]), i, indexed))
 	for i in r.decor.size():
@@ -84,7 +87,12 @@ static func _element(kind: String, e) -> Variant:
 			if not e.get("creature") is String or e["creature"] == "":
 				return "creature: expected a creature id"
 			var p = _nums(e.get("pos"), 2)
-			return {"id": e["creature"], "pos": Vector2(p[0], p[1])} if p != null else "pos: expected an array of 2 numbers"
+			if p == null:
+				return "pos: expected an array of 2 numbers"
+			var placed := {"id": e["creature"], "pos": Vector2(p[0], p[1])}
+			if e.get("by") is String and e["by"] != "":
+				placed["by"] = e["by"]
+			return placed
 		"feature", "decor":
 			var out: Dictionary = e.duplicate(true)
 			out.erase("index")  # get_room's own metadata (an element's position in its list), never part of the room

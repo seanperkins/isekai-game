@@ -27,6 +27,13 @@ class AddsASwitch extends AreaModule:
 	func build(world: Dictionary) -> void:
 		attach_feature(world["C6"], "switch", "qs_switch", 100.0, 320.0, {"shortcut": "qs_drop"})
 
+## A module that places a marked spawn in a shipped room, as the placement does.
+class PlacesASpawn extends AreaModule:
+	func prefix() -> String:
+		return "QP"
+	func build(world: Dictionary) -> void:
+		(world["C6"] as RoomDef).spawns.append({"id": "bat", "pos": Vector2(100, 300), "by": "QP"})
+
 var dir: String
 
 func before_each() -> void:
@@ -144,6 +151,22 @@ func test_a_feature_nobody_attached_is_never_stripped() -> void:
 	var before := (World.load_rooms(AreaBuilder.ROOMS_DIR)["C6"] as RoomDef).features.size()
 	var world := AreaBuilder.build_with([AddsASwitch.new()])
 	assert_eq((world["C6"] as RoomDef).features.size(), before + 1, "C6's own pool, tablet and switch stay")
+
+func test_a_marked_spawn_is_stripped_and_placed_once_and_an_unmarked_one_is_never_touched() -> void:
+	var hand := (World.load_rooms(AreaBuilder.ROOMS_DIR)["C6"] as RoomDef).spawns.size()
+	var first := AreaBuilder.build_with([PlacesASpawn.new()])
+	assert_eq((first["C6"] as RoomDef).spawns.size(), hand + 1)
+	_write(first)
+	var second := AreaBuilder.build_with([PlacesASpawn.new()], dir)
+	assert_eq((second["C6"] as RoomDef).spawns.size(), hand + 1, "stripped, then placed again: not twice")
+	assert_eq(AreaBuilder.stale(second, dir), [])
+	var without := AreaBuilder.build_with([AddsASpawn.new()])  # a module with another prefix leaves the QP spawn alone
+	assert_eq((without["C6"] as RoomDef).spawns.size(), hand + 1, "its own spawn, unmarked")
+
+func test_the_shipped_rooms_helper_leaves_off_placed_spawns() -> void:
+	var hand := (World.load_rooms(AreaBuilder.ROOMS_DIR)["C6"] as RoomDef).spawns.size()
+	var world := AreaBuilder.build_with([PlacesASpawn.new()])
+	assert_eq((ShippedRooms.only(world)["C6"] as RoomDef).spawns.size(), hand)
 
 func test_building_does_not_change_the_rooms_other_code_holds() -> void:
 	var held: RoomDef = World.load_rooms(AreaBuilder.ROOMS_DIR)["C3"]

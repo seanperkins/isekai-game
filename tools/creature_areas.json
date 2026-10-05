@@ -1,0 +1,1105 @@
+{
+ "creatures": {
+  "ash_moth": {
+   "areas": [
+    "volcano"
+   ],
+   "class": "common"
+  },
+  "blinker": {
+   "areas": [
+    "demon"
+   ],
+   "class": "common"
+  },
+  "blood_leech": {
+   "areas": [
+    "swamp"
+   ],
+   "class": "common"
+  },
+  "bog_wisp": {
+   "areas": [
+    "swamp"
+   ],
+   "class": "common"
+  },
+  "bone_hound": {
+   "areas": [
+    "crypt"
+   ],
+   "class": "common"
+  },
+  "caller": {
+   "areas": [
+    "demon"
+   ],
+   "class": "elite"
+  },
+  "candle_wisp": {
+   "areas": [
+    "sacred"
+   ],
+   "class": "common"
+  },
+  "carrion_crow": {
+   "areas": [
+    "cemetery"
+   ],
+   "class": "common"
+  },
+  "cave_rat": {
+   "areas": [
+    "cave",
+    "grotto",
+    "village"
+   ],
+   "class": "common"
+  },
+  "chapel_priest": {
+   "areas": [
+    "sacred"
+   ],
+   "class": "elite"
+  },
+  "demon_hound": {
+   "areas": [
+    "demon"
+   ],
+   "class": "common"
+  },
+  "ember_beetle": {
+   "areas": [
+    "volcano"
+   ],
+   "class": "common"
+  },
+  "firefly_swarm": {
+   "areas": [
+    "forest",
+    "swamp"
+   ],
+   "class": "common"
+  },
+  "gargoyle": {
+   "areas": [
+    "sacred"
+   ],
+   "class": "common"
+  },
+  "ghost": {
+   "areas": [
+    "cemetery",
+    "sacred"
+   ],
+   "class": "common"
+  },
+  "goblin_shaman": {
+   "areas": [
+    "village"
+   ],
+   "class": "elite"
+  },
+  "imp": {
+   "areas": [
+    "demon"
+   ],
+   "class": "common"
+  },
+  "junk": {
+   "areas": [
+    "village",
+    "crypt"
+   ],
+   "class": "common"
+  },
+  "lava_salamander": {
+   "areas": [
+    "volcano"
+   ],
+   "class": "common"
+  },
+  "moon_hare": {
+   "areas": [
+    "forest"
+   ],
+   "class": "rare"
+  },
+  "rider": {
+   "areas": [
+    "demon"
+   ],
+   "class": "elite"
+  },
+  "shield_guard": {
+   "areas": [
+    "sacred"
+   ],
+   "class": "common"
+  },
+  "skeleton": {
+   "areas": [
+    "cemetery",
+    "crypt"
+   ],
+   "class": "common"
+  },
+  "stained_glass_moth": {
+   "areas": [
+    "sacred"
+   ],
+   "class": "common"
+  },
+  "tusker_boar": {
+   "areas": [
+    "forest"
+   ],
+   "class": "common"
+  },
+  "twin_acid": {
+   "areas": [
+    "grotto"
+   ],
+   "class": "elite"
+  },
+  "twin_alkahest": {
+   "areas": [
+    "flooded",
+    "deep"
+   ],
+   "class": "rare"
+  },
+  "twin_arachne": {
+   "areas": [
+    "grotto"
+   ],
+   "class": "elite"
+  },
+  "twin_ariadne": {
+   "areas": [
+    "deep"
+   ],
+   "class": "rare"
+  },
+  "twin_beanstalk": {
+   "areas": [
+    "forest"
+   ],
+   "class": "rare"
+  },
+  "twin_blight": {
+   "areas": [
+    "grotto",
+    "swamp"
+   ],
+   "class": "elite"
+  },
+  "twin_brook": {
+   "areas": [
+    "flooded"
+   ],
+   "class": "elite"
+  },
+  "twin_bulwark": {
+   "areas": [
+    "cave"
+   ],
+   "class": "common"
+  },
+  "twin_cloud_rider": {
+   "areas": [
+    "sacred"
+   ],
+   "class": "rare"
+  },
+  "twin_crystal": {
+   "areas": [
+    "cave",
+    "sacred"
+   ],
+   "class": "elite"
+  },
+  "twin_cube": {
+   "areas": [
+    "cave"
+   ],
+   "class": "rare"
+  },
+  "twin_echo": {
+   "areas": [
+    "cave"
+   ],
+   "class": "common"
+  },
+  "twin_gleipnir": {
+   "areas": [
+    "deep"
+   ],
+   "class": "rare"
+  },
+  "twin_goblin_beast_rider": {
+   "areas": [
+    "forest"
+   ],
+   "class": "elite"
+  },
+  "twin_goblin_beastcaller": {
+   "areas": [
+    "forest",
+    "village"
+   ],
+   "class": "common"
+  },
+  "twin_goblin_bloodcap": {
+   "areas": [
+    "demon"
+   ],
+   "class": "rare"
+  },
+  "twin_goblin_boggart": {
+   "areas": [
+    "swamp"
+   ],
+   "class": "rare"
+  },
+  "twin_goblin_changeling": {
+   "areas": [
+    "village"
+   ],
+   "class": "rare"
+  },
+  "twin_goblin_giant_killer": {
+   "areas": [
+    "deep"
+   ],
+   "class": "rare"
+  },
+  "twin_goblin_gremlin": {
+   "areas": [
+    "village"
+   ],
+   "class": "rare"
+  },
+  "twin_goblin_hearth_god": {
+   "areas": [
+    "sacred"
+   ],
+   "class": "rare"
+  },
+  "twin_goblin_hob": {
+   "areas": [
+    "village",
+    "sacred"
+   ],
+   "class": "common"
+  },
+  "twin_goblin_horn_bearer": {
+   "areas": [
+    "sacred"
+   ],
+   "class": "rare"
+  },
+  "twin_goblin_ironboot": {
+   "areas": [
+    "crypt"
+   ],
+   "class": "rare"
+  },
+  "twin_goblin_knocker": {
+   "areas": [
+    "cave",
+    "village"
+   ],
+   "class": "elite"
+  },
+  "twin_goblin_leprechaun": {
+   "areas": [
+    "forest"
+   ],
+   "class": "common"
+  },
+  "twin_goblin_lord_of_beasts": {
+   "areas": [
+    "deep"
+   ],
+   "class": "rare"
+  },
+  "twin_goblin_mastersmith": {
+   "areas": [
+    "volcano"
+   ],
+   "class": "rare"
+  },
+  "twin_goblin_orpheus": {
+   "areas": [
+    "sacred"
+   ],
+   "class": "rare"
+  },
+  "twin_goblin_paladin": {
+   "areas": [
+    "sacred"
+   ],
+   "class": "elite"
+  },
+  "twin_goblin_pied_piper": {
+   "areas": [
+    "village"
+   ],
+   "class": "elite"
+  },
+  "twin_goblin_puck": {
+   "areas": [
+    "forest",
+    "swamp"
+   ],
+   "class": "elite"
+  },
+  "twin_goblin_rat_king": {
+   "areas": [
+    "cave",
+    "village"
+   ],
+   "class": "rare"
+  },
+  "twin_goblin_redcap": {
+   "areas": [
+    "crypt"
+   ],
+   "class": "elite"
+  },
+  "twin_goblin_ring_maker": {
+   "areas": [
+    "demon"
+   ],
+   "class": "rare"
+  },
+  "twin_goblin_rumpelstiltskin": {
+   "areas": [
+    "village"
+   ],
+   "class": "common"
+  },
+  "twin_goblin_skulker": {
+   "areas": [
+    "crypt",
+    "demon"
+   ],
+   "class": "common"
+  },
+  "twin_goblin_smith": {
+   "areas": [
+    "volcano"
+   ],
+   "class": "elite"
+  },
+  "twin_goblin_tinker": {
+   "areas": [
+    "village",
+    "volcano"
+   ],
+   "class": "common"
+  },
+  "twin_goblin_tomte": {
+   "areas": [
+    "village"
+   ],
+   "class": "common"
+  },
+  "twin_goblin_wolf_lord": {
+   "areas": [
+    "forest"
+   ],
+   "class": "rare"
+  },
+  "twin_golem": {
+   "areas": [
+    "cave",
+    "deep"
+   ],
+   "class": "elite"
+  },
+  "twin_greater_slime": {
+   "areas": [
+    "cave"
+   ],
+   "class": "common"
+  },
+  "twin_king_slime": {
+   "areas": [
+    "cave",
+    "grotto"
+   ],
+   "class": "rare"
+  },
+  "twin_kraken": {
+   "areas": [
+    "flooded",
+    "deep"
+   ],
+   "class": "rare"
+  },
+  "twin_mimic": {
+   "areas": [
+    "deep"
+   ],
+   "class": "rare"
+  },
+  "twin_pestilence": {
+   "areas": [
+    "swamp"
+   ],
+   "class": "rare"
+  },
+  "twin_phantom": {
+   "areas": [
+    "deep"
+   ],
+   "class": "elite"
+  },
+  "twin_philosophers_stone": {
+   "areas": [
+    "deep"
+   ],
+   "class": "rare"
+  },
+  "twin_poltergeist": {
+   "areas": [
+    "cave",
+    "deep"
+   ],
+   "class": "rare"
+  },
+  "twin_prime": {
+   "areas": [
+    "deep"
+   ],
+   "class": "rare"
+  },
+  "twin_quicksilver_slime": {
+   "areas": [
+    "cave"
+   ],
+   "class": "rare"
+  },
+  "twin_radiant": {
+   "areas": [
+    "sacred"
+   ],
+   "class": "elite"
+  },
+  "twin_selkie": {
+   "areas": [
+    "flooded"
+   ],
+   "class": "rare"
+  },
+  "twin_shoggoth": {
+   "areas": [
+    "deep"
+   ],
+   "class": "rare"
+  },
+  "twin_silkbound": {
+   "areas": [
+    "grotto"
+   ],
+   "class": "rare"
+  },
+  "twin_sky": {
+   "areas": [
+    "cave"
+   ],
+   "class": "elite"
+  },
+  "twin_slime_mold": {
+   "areas": [
+    "forest",
+    "swamp"
+   ],
+   "class": "rare"
+  },
+  "twin_snare": {
+   "areas": [
+    "grotto"
+   ],
+   "class": "elite"
+  },
+  "twin_spider_anansi": {
+   "areas": [
+    "village"
+   ],
+   "class": "common"
+  },
+  "twin_spider_brood_queen": {
+   "areas": [
+    "forest",
+    "grotto"
+   ],
+   "class": "elite"
+  },
+  "twin_spider_broodmother": {
+   "areas": [
+    "forest"
+   ],
+   "class": "common"
+  },
+  "twin_spider_chasm_weaver": {
+   "areas": [
+    "deep"
+   ],
+   "class": "rare"
+  },
+  "twin_spider_cocoon_mother": {
+   "areas": [
+    "forest"
+   ],
+   "class": "rare"
+  },
+  "twin_spider_jorogumo": {
+   "areas": [
+    "village"
+   ],
+   "class": "common"
+  },
+  "twin_spider_light_eater": {
+   "areas": [
+    "deep",
+    "sacred"
+   ],
+   "class": "rare"
+  },
+  "twin_spider_loom_weaver": {
+   "areas": [
+    "forest",
+    "sacred"
+   ],
+   "class": "elite"
+  },
+  "twin_spider_nightstalker": {
+   "areas": [
+    "crypt"
+   ],
+   "class": "rare"
+  },
+  "twin_spider_norn": {
+   "areas": [
+    "sacred"
+   ],
+   "class": "rare"
+  },
+  "twin_spider_plaguemother": {
+   "areas": [
+    "swamp"
+   ],
+   "class": "rare"
+  },
+  "twin_spider_seven_spider_spirits": {
+   "areas": [
+    "deep"
+   ],
+   "class": "rare"
+  },
+  "twin_spider_shadow_stalker": {
+   "areas": [
+    "crypt"
+   ],
+   "class": "elite"
+  },
+  "twin_spider_stalker": {
+   "areas": [
+    "crypt",
+    "cave"
+   ],
+   "class": "common"
+  },
+  "twin_spider_swarm_sovereign": {
+   "areas": [
+    "deep"
+   ],
+   "class": "rare"
+  },
+  "twin_spider_tarantella": {
+   "areas": [
+    "swamp"
+   ],
+   "class": "rare"
+  },
+  "twin_spider_tsuchigumo": {
+   "areas": [
+    "deep"
+   ],
+   "class": "rare"
+  },
+  "twin_spider_veil_spinner": {
+   "areas": [
+    "cave",
+    "sacred"
+   ],
+   "class": "rare"
+  },
+  "twin_spider_venomspinner": {
+   "areas": [
+    "swamp"
+   ],
+   "class": "elite"
+  },
+  "twin_spider_weavermaid": {
+   "areas": [
+    "village",
+    "forest"
+   ],
+   "class": "common"
+  },
+  "twin_stone": {
+   "areas": [
+    "deep"
+   ],
+   "class": "rare"
+  },
+  "twin_storm": {
+   "areas": [
+    "cave",
+    "deep"
+   ],
+   "class": "rare"
+  },
+  "twin_talos": {
+   "areas": [
+    "volcano"
+   ],
+   "class": "rare"
+  },
+  "twin_tempest": {
+   "areas": [
+    "flooded"
+   ],
+   "class": "elite"
+  },
+  "twin_tiamat": {
+   "areas": [
+    "flooded"
+   ],
+   "class": "rare"
+  },
+  "twin_tidal": {
+   "areas": [
+    "flooded"
+   ],
+   "class": "rare"
+  },
+  "twin_tide": {
+   "areas": [
+    "cave",
+    "flooded"
+   ],
+   "class": "common"
+  },
+  "twin_toxic": {
+   "areas": [
+    "grotto"
+   ],
+   "class": "common"
+  },
+  "twin_undead_abomination": {
+   "areas": [
+    "deep"
+   ],
+   "class": "rare"
+  },
+  "twin_undead_adept": {
+   "areas": [
+    "crypt",
+    "deep"
+   ],
+   "class": "common"
+  },
+  "twin_undead_arash": {
+   "areas": [
+    "deep"
+   ],
+   "class": "rare"
+  },
+  "twin_undead_banshee": {
+   "areas": [
+    "crypt"
+   ],
+   "class": "rare"
+  },
+  "twin_undead_barrow_king": {
+   "areas": [
+    "deep"
+   ],
+   "class": "rare"
+  },
+  "twin_undead_bone_colossus": {
+   "areas": [
+    "deep"
+   ],
+   "class": "rare"
+  },
+  "twin_undead_bone_warrior": {
+   "areas": [
+    "crypt",
+    "cave"
+   ],
+   "class": "common"
+  },
+  "twin_undead_corpse_candle": {
+   "areas": [
+    "swamp"
+   ],
+   "class": "elite"
+  },
+  "twin_undead_deadeye": {
+   "areas": [
+    "crypt"
+   ],
+   "class": "elite"
+  },
+  "twin_undead_deathless": {
+   "areas": [
+    "deep"
+   ],
+   "class": "rare"
+  },
+  "twin_undead_demilich": {
+   "areas": [
+    "deep"
+   ],
+   "class": "rare"
+  },
+  "twin_undead_draugr": {
+   "areas": [
+    "cemetery",
+    "crypt",
+    "deep"
+   ],
+   "class": "elite"
+  },
+  "twin_undead_dullahan": {
+   "areas": [
+    "crypt",
+    "deep"
+   ],
+   "class": "rare"
+  },
+  "twin_undead_ghoul": {
+   "areas": [
+    "cemetery",
+    "crypt"
+   ],
+   "class": "elite"
+  },
+  "twin_undead_heart_weigher": {
+   "areas": [
+    "deep"
+   ],
+   "class": "rare"
+  },
+  "twin_undead_hierophant": {
+   "areas": [
+    "sacred"
+   ],
+   "class": "rare"
+  },
+  "twin_undead_jiangshi": {
+   "areas": [
+    "village",
+    "cemetery"
+   ],
+   "class": "rare"
+  },
+  "twin_undead_lich": {
+   "areas": [
+    "crypt"
+   ],
+   "class": "rare"
+  },
+  "twin_undead_master_of_the_dance": {
+   "areas": [
+    "cemetery"
+   ],
+   "class": "rare"
+  },
+  "twin_undead_mummy_priest": {
+   "areas": [
+    "crypt",
+    "deep"
+   ],
+   "class": "elite"
+  },
+  "twin_undead_pharaoh": {
+   "areas": [
+    "deep"
+   ],
+   "class": "rare"
+  },
+  "twin_undead_revenant_knight": {
+   "areas": [
+    "crypt"
+   ],
+   "class": "elite"
+  },
+  "twin_undead_skeletal_archer": {
+   "areas": [
+    "cemetery",
+    "crypt"
+   ],
+   "class": "common"
+  },
+  "twin_undead_sower_of_teeth": {
+   "areas": [
+    "crypt"
+   ],
+   "class": "rare"
+  },
+  "twin_undead_spartoi_hoplite": {
+   "areas": [
+    "crypt",
+    "deep"
+   ],
+   "class": "elite"
+  },
+  "twin_undead_stingy_jack": {
+   "areas": [
+    "swamp"
+   ],
+   "class": "rare"
+  },
+  "twin_undead_vampire": {
+   "areas": [
+    "demon"
+   ],
+   "class": "elite"
+  },
+  "twin_undead_wild_huntsman": {
+   "areas": [
+    "forest",
+    "crypt"
+   ],
+   "class": "rare"
+  },
+  "twin_undead_zombie": {
+   "areas": [
+    "swamp",
+    "cemetery"
+   ],
+   "class": "common"
+  },
+  "twin_vast": {
+   "areas": [
+    "cave",
+    "deep"
+   ],
+   "class": "elite"
+  },
+  "twin_venom": {
+   "areas": [
+    "grotto"
+   ],
+   "class": "rare"
+  },
+  "twin_weaver": {
+   "areas": [
+    "cave",
+    "grotto"
+   ],
+   "class": "common"
+  },
+  "twin_wolf_amarok": {
+   "areas": [
+    "deep"
+   ],
+   "class": "rare"
+  },
+  "twin_wolf_barghest": {
+   "areas": [
+    "crypt",
+    "deep"
+   ],
+   "class": "elite"
+  },
+  "twin_wolf_beast_of_gevaudan": {
+   "areas": [
+    "forest"
+   ],
+   "class": "rare"
+  },
+  "twin_wolf_black_dog": {
+   "areas": [
+    "cemetery",
+    "crypt"
+   ],
+   "class": "common"
+  },
+  "twin_wolf_black_shuck": {
+   "areas": [
+    "crypt",
+    "deep"
+   ],
+   "class": "rare"
+  },
+  "twin_wolf_church_grim": {
+   "areas": [
+    "sacred",
+    "cemetery"
+   ],
+   "class": "rare"
+  },
+  "twin_wolf_cu_sith": {
+   "areas": [
+    "forest"
+   ],
+   "class": "rare"
+  },
+  "twin_wolf_cwn_annwn": {
+   "areas": [
+    "cemetery",
+    "sacred"
+   ],
+   "class": "elite"
+  },
+  "twin_wolf_dire_wolf": {
+   "areas": [
+    "cave",
+    "grotto"
+   ],
+   "class": "elite"
+  },
+  "twin_wolf_fenrir": {
+   "areas": [
+    "deep"
+   ],
+   "class": "rare"
+  },
+  "twin_wolf_gabriel_hound": {
+   "areas": [
+    "deep"
+   ],
+   "class": "rare"
+  },
+  "twin_wolf_hellhound": {
+   "areas": [
+    "volcano",
+    "demon"
+   ],
+   "class": "rare"
+  },
+  "twin_wolf_loup_garou": {
+   "areas": [
+    "forest",
+    "swamp"
+   ],
+   "class": "elite"
+  },
+  "twin_wolf_lupa": {
+   "areas": [
+    "forest"
+   ],
+   "class": "rare"
+  },
+  "twin_wolf_lycaon": {
+   "areas": [
+    "forest"
+   ],
+   "class": "rare"
+  },
+  "twin_wolf_moonbound": {
+   "areas": [
+    "forest"
+   ],
+   "class": "common"
+  },
+  "twin_wolf_skoll": {
+   "areas": [
+    "deep"
+   ],
+   "class": "rare"
+  },
+  "twin_wolf_ulfhedinn": {
+   "areas": [
+    "forest",
+    "cave"
+   ],
+   "class": "elite"
+  },
+  "twin_wolf_warg": {
+   "areas": [
+    "forest",
+    "grotto"
+   ],
+   "class": "common"
+  },
+  "twin_wolf_wepwawet": {
+   "areas": [
+    "sacred"
+   ],
+   "class": "rare"
+  },
+  "twin_wolf_wolfskin_champion": {
+   "areas": [
+    "cave"
+   ],
+   "class": "rare"
+  },
+  "vampire_bat": {
+   "areas": [
+    "crypt"
+   ],
+   "class": "common"
+  },
+  "village_goblin": {
+   "areas": [
+    "village",
+    "forest"
+   ],
+   "class": "common"
+  },
+  "ward_bearer": {
+   "areas": [
+    "demon"
+   ],
+   "class": "elite"
+  },
+  "wild_slime": {
+   "areas": [
+    "cave",
+    "grotto",
+    "flooded"
+   ],
+   "class": "common"
+  }
+ },
+ "lairs": [
+  "C6",
+  "G5",
+  "F6",
+  "D5",
+  "FO7",
+  "FO9",
+  "SW4",
+  "SW5",
+  "VI4",
+  "CM3",
+  "CA3",
+  "CA5",
+  "CR4",
+  "VO5",
+  "VO6",
+  "DM3",
+  "DM6",
+  "DM7"
+ ],
+ "quiet": [
+  "FO1",
+  "SW1",
+  "VI1",
+  "CM2",
+  "DM1",
+  "DM2",
+  "VO1",
+  "D7",
+  "F5"
+ ]
+}

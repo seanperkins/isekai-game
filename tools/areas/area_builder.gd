@@ -2,7 +2,7 @@ class_name AreaBuilder
 extends RefCounted
 ## Builds the world's new areas in code. It loads the hand-authored rooms (every room that is not one a module makes), lets each module
 ## build and attach, and hands back the whole world to be checked and written. Generated rooms are made afresh on every run and the exits
-## to them, and the features the modules attached (marked `by`), are stripped from the hand-authored rooms before the modules attach them again, so a run from what a run wrote gives the same world.
+## to them, and the features and spawns the modules attached (marked `by`), are stripped from the hand-authored rooms before the modules attach them again, so a run from what a run wrote gives the same world.
 
 const ROOMS_DIR := "res://data/rooms"
 ## Godot picks a fresh random id for the script resource on every save; pinning it makes a save reproducible.
@@ -31,6 +31,7 @@ static func build_with(mods: Array, dir := ROOMS_DIR) -> Dictionary:
 		var r: RoomDef = world[id]
 		r.exits = r.exits.filter(func(e: Dictionary) -> bool: return not _generated(str(e.get("room", "")), prefixes))
 		r.features = r.features.filter(func(f: Dictionary) -> bool: return not prefixes.has(str(f.get("by", ""))))
+		r.spawns = r.spawns.filter(func(sp: Dictionary) -> bool: return not prefixes.has(str(sp.get("by", ""))))
 	for m in mods:
 		m.build(world)
 	return world

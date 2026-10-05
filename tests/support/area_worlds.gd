@@ -14,7 +14,7 @@ class Without extends AreaModule:
 		return _prefix
 
 ## The areas' prefixes in the order the builder builds them (tools/areas/areas.gd): a new area adds its prefix at the end.
-const ORDER := ["FO", "SW", "VI", "CM", "CA", "CR", "VO", "DM"]
+const ORDER := ["FO", "SW", "VI", "CM", "CA", "CR", "VO", "DM", "PL"]
 
 ## The world as it was once the area with prefix `last` was built: every area after it taken out. "" is the hand-authored world.
 static func upto(last: String) -> Dictionary:
