@@ -76,6 +76,8 @@ var _compendium: CompendiumModel
 var _creatures := {}
 var _emit: Callable
 var _invuln := 0.0
+## A verb's ward: no damage while it lasts. Apart from _invuln, which also draws the hurt flash and the evolve hold.
+var _ward := 0.0
 var _dash := 0.0
 ## The water model: whether the body centre is in a DeepWater, the submerged clock, the edges (see PlayerWater).
 var _water := PlayerWater.new()
@@ -747,7 +749,7 @@ func can_cast() -> bool:
 
 ## `from` is the attacker's position for contact hits; the slime is knocked away from it.
 func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, cause: String = "") -> void:
-	if _invuln > 0.0 or health.is_dead():
+	if _invuln > 0.0 or _ward > 0.0 or health.is_dead():
 		return
 	last_hit_cause = cause if cause != "" else damage_type  # before take_hit: a lethal hit fires `died`
 	end_channel()  # a hit ends any channel, including a poison hit that carries no `from`
@@ -773,15 +775,20 @@ func _step_water(delta: float) -> Dictionary:
 	return out
 
 func receive_poison(application: int, tick_amount: int, seconds: float) -> void:
-	if _invuln > 0.0 or health.is_dead():
+	if _invuln > 0.0 or _ward > 0.0 or health.is_dead():
 		return
 	receive_hit(application, "poison")
 	_poison_left = seconds
 	_poison_tick = tick_amount
 	_poison_acc = 0.0
 
+## Untouchable for `seconds` (a longer ward already running is kept).
+func ward(seconds: float) -> void:
+	_ward = maxf(_ward, seconds)
+
 func tick(delta: float) -> void:
 	_invuln = maxf(0.0, _invuln - delta)
+	_ward = maxf(0.0, _ward - delta)
 	if health.is_dead():
 		return
 	if _poison_left > 0.0:

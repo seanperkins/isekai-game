@@ -98,3 +98,102 @@ func test_an_unknown_kind_does_nothing_and_does_not_crash() -> void:
 	var foe := _foe(40)
 	_verb({"kind": "nonsense"}).activate()
 	assert_eq(foe.hits, [])
+
+# --- Task 2: the other six kinds and spec validation ---
+
+func _real_player() -> Player:
+	var skills := DefLoader.load_dir("res://data/skills")
+	var rules: SkillRulesEngine = autofree(SkillRulesEngine.new())
+	rules.setup(skills)
+	var p := Player.new()
+	p.setup(rules, CompendiumModel.new(skills, []), [], func(n: String, t: Dictionary) -> void: rules.handle_event(n, t))
+	add_child_autofree(p)
+	rules.start_run()
+	return p
+
+func test_a_dash_launches_the_caster_and_hits_what_is_in_its_way() -> void:
+	var foe := _foe(30)
+	var far := _foe(100)
+	_verb({"kind": "dash"}).activate()
+	assert_eq(player.impulses, [Vector2(500, 0)])
+	assert_eq(foe.hits.size(), 1)
+	assert_eq(far.hits, [])
+
+func test_a_zone_spawns_a_cloud_that_slows() -> void:
+	_verb({"kind": "zone", "radius": 50.0, "seconds": 2.0}).activate()
+	var clouds := get_children().filter(func(n: Node) -> bool: return n is SporeCloudArea)
+	assert_eq(clouds.size(), 1)
+	assert_eq(clouds[0].radius, 50.0)
+
+func test_a_mark_hits_the_nearest_foe_after_its_delay() -> void:
+	var near := _foe(50)
+	var far := _foe(150)
+	_verb({"kind": "mark", "delay": 0.1}).activate()
+	assert_eq(near.hits, [], "not yet")
+	await wait_seconds(0.3)
+	assert_eq(near.hits.size(), 1)
+	assert_eq(far.hits, [])
+
+func test_a_mark_survives_its_target_dying_first() -> void:
+	var foe := _foe(50)
+	_verb({"kind": "mark", "delay": 0.1}).activate()
+	foe.free()
+	await wait_seconds(0.3)
+	assert_true(true, "no crash")
+
+func test_heal_restores_hp_and_mp() -> void:
+	var p := _real_player()
+	p.health.take_hit(10, "physical")
+	p.mana.spend(5)
+	var hp := p.health.hp
+	var mp := p.mana.mp
+	var a: VerbAbility = load("res://scenes/abilities/verb.tscn").instantiate()
+	p.add_child(a)
+	a.spec = {"kind": "heal", "hp": 6, "mp": 3}
+	a.setup(p, [1], 1)
+	a.activate()
+	assert_eq(p.health.hp, hp + 6)
+	assert_eq(p.mana.mp, mp + 3)
+
+func test_ward_makes_the_caster_untouchable() -> void:
+	var p := _real_player()
+	var a: VerbAbility = load("res://scenes/abilities/verb.tscn").instantiate()
+	p.add_child(a)
+	a.spec = {"kind": "ward", "seconds": 1.0}
+	a.setup(p, [1], 1)
+	a.activate()
+	var hp := p.health.hp
+	p.receive_hit(5, "physical")
+	assert_eq(p.health.hp, hp, "warded")
+	p.tick(1.1)
+	p.receive_hit(5, "physical")
+	assert_lt(p.health.hp, hp, "the ward ended")
+
+func test_buff_adds_a_stat_modifier_and_removes_it_when_it_ends() -> void:
+	var p := _real_player()
+	var before := p.stats.get_stat("spd")
+	var a: VerbAbility = load("res://scenes/abilities/verb.tscn").instantiate()
+	p.add_child(a)
+	a.spec = {"kind": "buff", "stats": {"spd": 20}, "seconds": 0.1}
+	a.setup(p, [1], 1)
+	a.activate()
+	assert_gt(p.stats.get_stat("spd"), before)
+	await wait_seconds(0.3)
+	assert_eq(p.stats.get_stat("spd"), before)
+
+func test_validate_accepts_a_minimal_spec_of_every_kind() -> void:
+	for k in VerbKinds.KINDS:
+		var spec := {"kind": k}
+		if k == "buff":
+			spec["stats"] = {"spd": 20}
+		assert_eq(Array(VerbKinds.validate(spec)), [], k)
+
+func test_validate_reports_the_exact_messages() -> void:
+	assert_eq(Array(VerbKinds.validate({"kind": "x"})), ["unknown verb kind 'x'"])
+	assert_eq(Array(VerbKinds.validate({})), ["unknown verb kind ''"])
+	assert_eq(Array(VerbKinds.validate({"kind": "bolt", "range": "far"})), ["bolt: range must be a number"])
+	assert_eq(Array(VerbKinds.validate({"kind": "bolt", "pierce": 1})), ["bolt: pierce must be true or false"])
+	assert_eq(Array(VerbKinds.validate({"kind": "ring", "width": 3})), ["ring: unknown key 'width'"])
+	assert_eq(Array(VerbKinds.validate({"kind": "buff", "stats": {"spd": "fast"}})), ["buff: stats must be a dictionary of stat id to number"])
+	assert_eq(Array(VerbKinds.validate({"kind": "buff", "stats": {"luck": 3}})), ["buff: stats must be a dictionary of stat id to number"])
+	assert_eq(Array(VerbKinds.validate({"kind": "bolt", "status": {"burn": 2}})), ["bolt: status must be slow and stun seconds"])
