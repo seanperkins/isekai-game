@@ -240,7 +240,9 @@ func test_spawn_findings_name_a_spawn_over_its_floor_hole_one_in_rock_and_one_ou
 	assert_eq(by_index.get(1), "in_rock")
 	assert_eq(by_index.get(2), "outside")
 
-func test_spawn_findings_are_empty_for_a_good_spot() -> void:
+func test_spawn_findings_are_empty_for_a_good_spot_and_leave_a_features_findings_out() -> void:
 	var r := _plain_room()
+	r.features = [{"kind": "tablet", "id": "t1", "pos": Vector2(450, 220), "title": "x", "text": ""}]  # stuck in the solid: a finding, but not a spawn's
+	assert_gt(RoomLint.check_room(r, {"T1": r}).size(), 0)
 	r.spawns = [{"id": "toad", "pos": Vector2(100, 308)}]
 	assert_eq(RoomLint.spawn_findings(r), [])
