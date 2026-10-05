@@ -31,3 +31,4 @@ source = "Norse: Sköll chases the sun and Hati the moon until Ragnarök"
 verb_text = "Chaser: gallop never slows; mark a fleeing enemy and the pounce is free when you catch it"
 gives_up = "no stand-and-fight tools"
 opened_by = "Úlfheðinn, plus catching fleeing prey"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "air"}, "n": 22, "text": "air essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 22, "text": "dark essence"}, {"kind": "counter", "event": "defeated", "tags": {"fleeing": true}, "n": 3, "text": "fleeing prey caught"}]

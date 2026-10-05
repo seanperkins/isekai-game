@@ -30,3 +30,4 @@ source = "the jorōgumo; the seven spider spirits of Journey to the West; the dr
 verb_text = "Hands: a person's torso on a spider body; uses items, tools and bows"
 gives_up = "a slower wall crawl"
 opened_by = "air + dark, plus eating goblins (the guide's Lure condition)"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "air"}, "n": 13, "text": "air essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 13, "text": "dark essence"}, {"kind": "counter", "event": "predated", "tags": {"species": "goblin"}, "n": 3, "text": "goblins eaten"}]

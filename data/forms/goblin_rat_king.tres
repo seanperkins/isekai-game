@@ -29,3 +29,4 @@ source = "the German Rattenkönig: rats whose tails are knotted into one"
 verb_text = "Knot: a mobile swarm of tamed vermin acts as one big companion with area damage"
 gives_up = "stays one companion"
 opened_by = "Pied Piper, plus a tamed rat"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 44, "text": "earth essence"}, {"kind": "counter", "event": "bond_formed", "tags": {"kind": "tame", "creature": "cave_rat"}, "n": 1, "text": "a tamed rat"}]

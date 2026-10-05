@@ -29,3 +29,4 @@ source = "Rome's Capitoline she-wolf who nursed Romulus and Remus"
 verb_text = "Suckle: heals packmates and grows a pup into a second packmate"
 gives_up = "weak pounce"
 opened_by = "Church Grim, plus a long bond, plus mind (later)"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "light"}, "n": 22, "text": "light essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "mind"}, "n": 22, "text": "mind essence"}, {"kind": "counter", "event": "bond_formed", "tags": {"kind": "long"}, "n": 1, "text": "a long bond"}]

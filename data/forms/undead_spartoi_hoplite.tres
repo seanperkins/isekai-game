@@ -29,3 +29,4 @@ source = "Cadmus's sown men"
 verb_text = "Shield wall: block and spear thrust; sow two bone soldiers"
 gives_up = "rooted while sowing"
 opened_by = "Bone Warrior, plus a summon power"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 17, "text": "earth essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 17, "text": "dark essence"}, {"kind": "counter", "event": "corpse_left", "tags": {}, "n": 3, "text": "corpses left to raise"}]

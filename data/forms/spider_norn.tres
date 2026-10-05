@@ -29,3 +29,4 @@ source = "the Norns (Urðr, Verðandi, Skuld) weaving fate; the Greek Moirai"
 verb_text = "Fate thread: tie a thread to an enemy; the next hit it lands on you is sent back"
 gives_up = "fragile"
 opened_by = "Loom-Weaver, plus light, plus mind (later)"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "light"}, "n": 22, "text": "light essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "mind"}, "n": 22, "text": "mind essence"}]

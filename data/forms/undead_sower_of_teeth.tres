@@ -29,3 +29,4 @@ source = "Cadmus sowing the dragon's teeth"
 verb_text = "a squad of four sown soldiers"
 gives_up = "weak alone"
 opened_by = "Spartoi Hoplite, plus corpses"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 22, "text": "earth essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 22, "text": "dark essence"}, {"kind": "counter", "event": "corpse_left", "tags": {}, "n": 3, "text": "corpses"}]

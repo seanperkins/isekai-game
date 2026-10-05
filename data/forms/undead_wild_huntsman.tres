@@ -31,3 +31,4 @@ source = "the Wild Hunt (Odin, Herne, the Gabriel hounds): the rider who runs pr
 verb_text = "Mark: arrows home on one marked prey"
 gives_up = "one mark at a time"
 opened_by = "Deadeye, plus a long chase"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 22, "text": "dark essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "air"}, "n": 22, "text": "air essence"}, {"kind": "counter", "event": "defeated", "tags": {"fleeing": true, "ranged": true}, "n": 3, "text": "fleeing prey brought down at range"}]

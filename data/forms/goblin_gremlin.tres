@@ -31,3 +31,4 @@ source = "the RAF's gremlins, the saboteurs of machinery"
 verb_text = "Sabotage: disable an enemy device or turn a trap against its owner"
 gives_up = "backfires sometimes"
 opened_by = "Knocker, plus rigged traps sprung"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 22, "text": "earth essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "air"}, "n": 22, "text": "air essence"}, {"kind": "counter", "event": "trap_sprung", "tags": {}, "n": 3, "text": "rigged traps sprung"}]

@@ -29,3 +29,4 @@ source = "the Roman Lares, guardians of the household"
 verb_text = "Lar: ward-stones link into one wider aura"
 gives_up = "immobile when it counts"
 opened_by = "Tomte, plus ward-stones placed"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "light"}, "n": 44, "text": "light essence"}, {"kind": "counter", "event": "ward_stone_placed", "tags": {}, "n": 3, "text": "ward-stones placed"}]

@@ -29,3 +29,4 @@ source = "tabletop lore: a lich reduced to a skull (guide's Skull)"
 verb_text = "a floating skull, very frail, very strong"
 gives_up = "the frailest form"
 opened_by = "Lich, plus every limb graft shed"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 44, "text": "dark essence"}, {"kind": "counter", "event": "graft_shed", "tags": {}, "n": 4, "text": "every limb graft shed"}]

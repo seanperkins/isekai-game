@@ -29,3 +29,4 @@ source = "the revenant: the dead who return to take vengeance (medieval chronicl
 verb_text = "Vengeance: hits harder against the creature that killed your last life; heavy swings"
 gives_up = "slow turning; no ranged"
 opened_by = "Bone Warrior, plus killing what killed you"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 17, "text": "earth essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 17, "text": "dark essence"}, {"kind": "counter", "event": "defeated", "tags": {"avenged": true}, "n": 1, "text": "what killed you, killed"}]

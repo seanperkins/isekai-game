@@ -29,3 +29,4 @@ source = "Brokkr and Sindri forging Mjölnir and Draupnir"
 verb_text = "Forge: craft a named weapon from parts at a forge"
 gives_up = "needs a forge and time"
 opened_by = "Tinker, plus fire (later)"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 17, "text": "earth essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "fire"}, "n": 17, "text": "fire essence"}]

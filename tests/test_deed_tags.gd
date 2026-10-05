@@ -60,6 +60,10 @@ func test_every_tag_it_makes_is_one_a_gate_may_name() -> void:
 	for key in all:
 		assert_true((Deeds.TAGS[Deeds.DEFEATED] as Array).has(key), key)
 
+func test_avenged_comes_from_the_players_memory_of_what_killed_it() -> void:
+	assert_true(_tags({}, {"avenged": true}).has("avenged"))
+	assert_false(_tags({}, {"avenged": false}).has("avenged"))
+
 func test_the_dark_areas() -> void:
 	assert_true(DeedTags.is_dark_area("deep"))
 	assert_false(DeedTags.is_dark_area("cave"))

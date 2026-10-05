@@ -29,3 +29,4 @@ source = "Ovid: the king who fed Zeus human flesh and was made the first wolf"
 verb_text = "First Wolf's roar: wild wolves in the room join you briefly"
 gives_up = "weak alone"
 opened_by = "Loup-Garou, plus a bonded packmate"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 44, "text": "dark essence"}, {"kind": "counter", "event": "bond_formed", "tags": {"kind": "pack"}, "n": 1, "text": "a bonded packmate"}]

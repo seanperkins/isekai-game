@@ -30,3 +30,4 @@ source = "the redcap; Puck; Alberich's Tarnhelm"
 verb_text = "sneak strike, smoke bomb"
 gives_up = "weak in melee"
 opened_by = "dark + air, plus lessons from bats and shadows"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 13, "text": "dark essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "air"}, "n": 13, "text": "air essence"}, {"kind": "counter", "event": "lesson_learned", "tags": {"creature": "bat"}, "n": 1, "text": "a lesson from a bat"}, {"kind": "counter", "event": "lesson_learned", "tags": {"element": "dark"}, "n": 1, "text": "a lesson from a shadow"}]

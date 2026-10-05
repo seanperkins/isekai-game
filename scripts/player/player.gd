@@ -106,6 +106,8 @@ const SLOW_SPD := -50
 var _slow := 0.0
 ## In a dark area (set by the game on entering a room): a kill here is a kill in the dark.
 var in_dark := false
+## The creature id that killed the last life ("" for none): killing one is an avenged defeat. Set by the game at a life's start.
+var avenge_target := ""
 var _ceiling_t := 0.0
 ## True while become_form runs: the forced line is neither announced nor recorded as reached.
 var _debug_silent := false
@@ -889,7 +891,8 @@ func emit_deed(event_name: String, tags := {}) -> void:
 func note_defeat(enemy) -> void:
 	if health.is_dead():
 		return
-	_emit.call(Deeds.DEFEATED, DeedTags.for_defeat(enemy.def, enemy.last_blow, {"ceiling": _ceiling_t > 0.0, "dark": in_dark}))
+	_emit.call(Deeds.DEFEATED, DeedTags.for_defeat(enemy.def, enemy.last_blow, {"ceiling": _ceiling_t > 0.0, "dark": in_dark,
+		"avenged": enemy.def.id == avenge_target}))
 
 ## Keeps the ceiling window open while a crawler hangs from one, and lets it close after.
 func track_ceiling(delta: float) -> void:

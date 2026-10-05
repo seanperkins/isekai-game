@@ -32,23 +32,25 @@ const ROOM_HELD := "room_held"
 const VIGIL_KEPT := "vigil_kept"
 const CORPSE_LEFT := "corpse_left"
 const ITEM_CARRIED := "item_carried"
+const VILLAGE_VISITED_UNSEEN := "village_visited_unseen"
+const PREY_FREED := "prey_freed"
 
 const EVENTS := [DEFEATED, GUARD_BROKEN, BARRIER_BROKEN, HIDDEN_FOUND, ROOM_CLEARED, ROOM_ENTERED, SKILL_HIT, SKILL_MISSED, SWITCH_HIT,
 	PART_HARVESTED, GRAFT_ATTACHED, GRAFT_SHED, BOND_FORMED, LESSON_LEARNED, TRAP_SPRUNG, WEAPON_FORGED, ITEM_STOLEN, WARD_STONE_PLACED,
-	PREY_COCOONED, GAP_CROSSED, LAMP_DRUNK, VILLAGE_KEPT, ROOM_HELD, VIGIL_KEPT, CORPSE_LEFT, ITEM_CARRIED]
+	PREY_COCOONED, GAP_CROSSED, LAMP_DRUNK, VILLAGE_KEPT, ROOM_HELD, VIGIL_KEPT, CORPSE_LEFT, ITEM_CARRIED, VILLAGE_VISITED_UNSEEN, PREY_FREED]
 
 ## Every event a gate may count, and the tag keys it may name. Tags are true or absent (a false flag is left out), so a gate asks for
 ## `{"behind": true}`. The first block are the events the game already had.
 const TAGS := {
 	"jumped": [], "wall_touched": [], "damaged": ["damage_type"], "stunned_enemy": ["source"], "submerged": [],
 	"predated": ["source", "kind", "species"], "absorbed": ["essence", "source"], "skill_used": ["id"],
-	DEFEATED: ["source", "species", "behind", "ranged", "marked", "poison", "heavy", "ceiling", "dark", "unseen", "fleeing", "moonlit"],
+	DEFEATED: ["source", "species", "behind", "ranged", "marked", "poison", "heavy", "ceiling", "dark", "unseen", "fleeing", "moonlit", "avenged"],
 	GUARD_BROKEN: ["source"], BARRIER_BROKEN: [], HIDDEN_FOUND: [], ROOM_CLEARED: ["room", "alone"], ROOM_ENTERED: ["room", "area"],
 	SKILL_HIT: ["id"], SKILL_MISSED: ["id"], SWITCH_HIT: ["far"],
 	PART_HARVESTED: ["part"], GRAFT_ATTACHED: ["part"], GRAFT_SHED: ["part"], BOND_FORMED: ["kind", "creature"],
-	LESSON_LEARNED: ["creature", "species"], TRAP_SPRUNG: [], WEAPON_FORGED: [], ITEM_STOLEN: [], WARD_STONE_PLACED: [],
+	LESSON_LEARNED: ["creature", "species", "element"], TRAP_SPRUNG: [], WEAPON_FORGED: [], ITEM_STOLEN: [], WARD_STONE_PLACED: [],
 	PREY_COCOONED: [], GAP_CROSSED: [], LAMP_DRUNK: [], VILLAGE_KEPT: [], ROOM_HELD: ["room"], VIGIL_KEPT: [], CORPSE_LEFT: [],
-	ITEM_CARRIED: [],
+	ITEM_CARRIED: [], VILLAGE_VISITED_UNSEEN: [], PREY_FREED: [],
 }
 
 ## Deeds, and deed tags written `event.tag`, that nothing emits yet -> the piece that will. A later piece removes its own entries; the
@@ -56,9 +58,9 @@ const TAGS := {
 const RESERVED := {
 	PART_HARVESTED: "E1", GRAFT_ATTACHED: "E1", GRAFT_SHED: "E1", CORPSE_LEFT: "E1", ITEM_CARRIED: "E1",
 	BOND_FORMED: "E2", LESSON_LEARNED: "E2", TRAP_SPRUNG: "E2", WEAPON_FORGED: "E2", ITEM_STOLEN: "E2", WARD_STONE_PLACED: "E2",
-	PREY_COCOONED: "E2",
+	PREY_COCOONED: "E2", PREY_FREED: "E2",
 	BARRIER_BROKEN: "F2", HIDDEN_FOUND: "F2",  # the verbs report them; the rooms have nothing to dissolve or reveal yet
-	GAP_CROSSED: "F2", LAMP_DRUNK: "F2", VILLAGE_KEPT: "F2", ROOM_HELD: "F2", VIGIL_KEPT: "F2", "defeated.moonlit": "F2",
+	VILLAGE_VISITED_UNSEEN: "F2", GAP_CROSSED: "F2", LAMP_DRUNK: "F2", VILLAGE_KEPT: "F2", ROOM_HELD: "F2", VIGIL_KEPT: "F2", "defeated.moonlit": "F2",
 }
 
 ## A deed or an event the game always had.

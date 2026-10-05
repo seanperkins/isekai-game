@@ -29,3 +29,4 @@ source = "the Norse barrow-dweller: swells huge, guards a hoard"
 verb_text = "Heft: huge barrow-blade swings; it swells as it kills"
 gives_up = "no jump; slowest of all"
 opened_by = "Zombie, plus an arm graft with a weapon"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 17, "text": "earth essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 17, "text": "dark essence"}, {"kind": "counter", "event": "graft_attached", "tags": {"part": "weapon_arm"}, "n": 1, "text": "an arm graft with a weapon"}]

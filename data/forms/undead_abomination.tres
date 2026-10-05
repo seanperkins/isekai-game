@@ -29,3 +29,4 @@ source = "Shelley's Frankenstein creature; the Warcraft abomination (guide)"
 verb_text = "Heft cleaver; extra graft slots (a stitched body)"
 gives_up = "stench; slow"
 opened_by = "Draugr, plus four grafts held"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 22, "text": "earth essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 22, "text": "dark essence"}, {"kind": "counter", "event": "graft_attached", "tags": {}, "n": 4, "text": "four grafts held"}]

@@ -16,6 +16,7 @@ import unicodedata
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build_evolutions as be  # noqa: E402
 import build_form_verbs as bfv  # noqa: E402
+import build_form_gates as bfg  # noqa: E402
 
 OUT = "data/forms"
 STAGE_BASE = {2: {"max_hp": 5, "max_mp": 3}, 3: {"max_hp": 12, "max_mp": 6, "atk": 1}, 4: {"max_hp": 22, "max_mp": 10, "atk": 2, "def": 1}}
@@ -116,6 +117,7 @@ def species_forms():
         check_row(f)
     check_unique(forms)
     attach_verbs(forms)
+    attach_gates(forms)
     return forms
 
 
@@ -157,6 +159,15 @@ def slime_forms():
     check_unique(out)
     attach_verbs(out)
     return out
+
+
+def attach_gates(forms, rows=None):
+    """Every non-slime form gets its `gate`: its essence atoms and the deed atoms of its row in tools/form_gates.json."""
+    rows = bfg.load_rows() if rows is None else rows
+    bfg.check_rows(rows, [f["dataId"] for f in forms])
+    by_form = {r["form"]: r for r in rows}
+    for f in forms:
+        f["gate"] = bfg.gate_for(f, by_form)
 
 
 def attach_verbs(forms, rows=None):
@@ -244,6 +255,8 @@ def tres(f):
         "reads = %s" % arr(f["reads"]), "host = %s" % arr(f["host"]), "source = %s" % q(f["source"]),
         "verb_text = %s" % q(f["verb"]), "gives_up = %s" % q(f["givesUp"]), "opened_by = %s" % q(f["openedBy"]),
     ]
+    if f.get("gate"):
+        lines.append("gate = %s" % bfg.variant(f["gate"]))
     return "\n".join(lines) + "\n"
 
 

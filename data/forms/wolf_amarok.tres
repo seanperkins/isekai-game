@@ -30,3 +30,4 @@ source = "Inuit: a giant lone wolf that hunts those who hunt alone at night"
 verb_text = "Lone hunter: strongest with no packmate, hunts isolated prey"
 gives_up = "the bond is disabled"
 opened_by = "Dire Wolf, plus rooms cleared alone"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 22, "text": "earth essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "water"}, "n": 22, "text": "water essence"}, {"kind": "counter", "event": "room_cleared", "tags": {"alone": true}, "n": 3, "text": "rooms cleared alone"}]

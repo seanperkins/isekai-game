@@ -28,3 +28,4 @@ source = "the lic is the corpse; Koschei's hidden soul"
 verb_text = "bouncing bone beams, a blink; a phylactery anchors remains"
 gives_up = "frail"
 opened_by = "Adept, plus a focus graft, plus mind (later)"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 17, "text": "dark essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "mind"}, "n": 17, "text": "mind essence"}, {"kind": "counter", "event": "graft_attached", "tags": {"part": "focus"}, "n": 1, "text": "a focus graft"}]

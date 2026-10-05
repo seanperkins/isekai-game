@@ -1,0 +1,1249 @@
+[
+ {
+  "form": "wolf_black_dog",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "defeated",
+    "tags": {
+     "behind": true
+    },
+    "n": 5,
+    "text": "kills from behind"
+   }
+  ]
+ },
+ {
+  "form": "wolf_moonbound",
+  "atoms": [
+   {
+    "kind": "any",
+    "text": "a kill in moonlight, or a Moonstone",
+    "of": [
+     {
+      "kind": "counter",
+      "event": "defeated",
+      "tags": {
+       "moonlit": true
+      },
+      "n": 3,
+      "text": "kills in moonlight"
+     },
+     {
+      "kind": "counter",
+      "event": "part_harvested",
+      "tags": {
+       "part": "moonstone"
+      },
+      "n": 1,
+      "text": "a Moonstone"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "form": "wolf_warg",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "bond_formed",
+    "tags": {
+     "kind": "pack"
+    },
+    "n": 1,
+    "text": "a bonded packmate"
+   }
+  ]
+ },
+ {
+  "form": "wolf_barghest",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "skill_used",
+    "tags": {
+     "id": "verb_wolf_black_dog"
+    },
+    "n": 6,
+    "text": "Slink used"
+   }
+  ],
+  "note": "no Howl skill exists: the parent's verb stands for the Howl power"
+ },
+ {
+  "form": "wolf_church_grim",
+  "atoms": []
+ },
+ {
+  "form": "wolf_cwn_annwn",
+  "atoms": []
+ },
+ {
+  "form": "wolf_dire_wolf",
+  "atoms": []
+ },
+ {
+  "form": "wolf_loup_garou",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "skill_used",
+    "tags": {
+     "id": "verb_wolf_moonbound"
+    },
+    "n": 8,
+    "text": "Rise used"
+   }
+  ]
+ },
+ {
+  "form": "wolf_ulfhedinn",
+  "atoms": []
+ },
+ {
+  "form": "wolf_amarok",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "room_cleared",
+    "tags": {
+     "alone": true
+    },
+    "n": 3,
+    "text": "rooms cleared alone"
+   }
+  ]
+ },
+ {
+  "form": "wolf_beast_of_gevaudan",
+  "atoms": [
+   {
+    "kind": "reset_counter",
+    "event": "defeated",
+    "tags": {},
+    "reset_on": "damaged",
+    "n": 5,
+    "text": "kills without taking a hit"
+   }
+  ]
+ },
+ {
+  "form": "wolf_black_shuck",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "defeated",
+    "tags": {
+     "marked": true
+    },
+    "n": 3,
+    "text": "marked kills"
+   }
+  ],
+  "note": "a marked kill is one on an enemy the mark verb is aiming at or the player has appraised"
+ },
+ {
+  "form": "wolf_cu_sith",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "defeated",
+    "tags": {
+     "ranged": true
+    },
+    "n": 5,
+    "text": "ranged kills"
+   }
+  ]
+ },
+ {
+  "form": "wolf_fenrir",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "barrier_broken",
+    "tags": {},
+    "n": 2,
+    "text": "barriers broken"
+   }
+  ]
+ },
+ {
+  "form": "wolf_gabriel_hound",
+  "atoms": []
+ },
+ {
+  "form": "wolf_hellhound",
+  "atoms": []
+ },
+ {
+  "form": "wolf_lupa",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "bond_formed",
+    "tags": {
+     "kind": "long"
+    },
+    "n": 1,
+    "text": "a long bond"
+   }
+  ]
+ },
+ {
+  "form": "wolf_lycaon",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "bond_formed",
+    "tags": {
+     "kind": "pack"
+    },
+    "n": 1,
+    "text": "a bonded packmate"
+   }
+  ]
+ },
+ {
+  "form": "wolf_skoll",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "defeated",
+    "tags": {
+     "fleeing": true
+    },
+    "n": 3,
+    "text": "fleeing prey caught"
+   }
+  ]
+ },
+ {
+  "form": "wolf_wepwawet",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "hidden_found",
+    "tags": {},
+    "n": 1,
+    "text": "a hidden room found"
+   }
+  ]
+ },
+ {
+  "form": "wolf_wolfskin_champion",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "guard_broken",
+    "tags": {},
+    "n": 3,
+    "text": "guards broken"
+   }
+  ]
+ },
+ {
+  "form": "undead_adept",
+  "atoms": [
+   {
+    "kind": "any",
+    "text": "a skull or a focus graft",
+    "of": [
+     {
+      "kind": "counter",
+      "event": "graft_attached",
+      "tags": {
+       "part": "skull"
+      },
+      "n": 1,
+      "text": "a skull graft"
+     },
+     {
+      "kind": "counter",
+      "event": "graft_attached",
+      "tags": {
+       "part": "focus"
+      },
+      "n": 1,
+      "text": "a focus graft"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "form": "undead_bone_warrior",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "graft_attached",
+    "tags": {
+     "part": "weapon_arm"
+    },
+    "n": 1,
+    "text": "a weapon-arm graft"
+   }
+  ]
+ },
+ {
+  "form": "undead_skeletal_archer",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "graft_attached",
+    "tags": {
+     "part": "bow_arm"
+    },
+    "n": 1,
+    "text": "a bow-arm graft"
+   }
+  ]
+ },
+ {
+  "form": "undead_zombie",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "graft_attached",
+    "tags": {
+     "part": "ribs"
+    },
+    "n": 1,
+    "text": "a rib graft"
+   },
+   {
+    "kind": "counter",
+    "event": "graft_attached",
+    "tags": {
+     "part": "flesh"
+    },
+    "n": 1,
+    "text": "a flesh graft"
+   }
+  ]
+ },
+ {
+  "form": "undead_corpse_candle",
+  "atoms": []
+ },
+ {
+  "form": "undead_deadeye",
+  "atoms": [
+   {
+    "kind": "reset_counter",
+    "event": "skill_hit",
+    "tags": {},
+    "reset_on": "skill_missed",
+    "n": 5,
+    "text": "hits without a miss"
+   }
+  ]
+ },
+ {
+  "form": "undead_draugr",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "graft_attached",
+    "tags": {
+     "part": "weapon_arm"
+    },
+    "n": 1,
+    "text": "an arm graft with a weapon"
+   }
+  ]
+ },
+ {
+  "form": "undead_ghoul",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "graft_attached",
+    "tags": {
+     "part": "claw"
+    },
+    "n": 2,
+    "text": "claw grafts"
+   }
+  ]
+ },
+ {
+  "form": "undead_lich",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "graft_attached",
+    "tags": {
+     "part": "focus"
+    },
+    "n": 1,
+    "text": "a focus graft"
+   }
+  ]
+ },
+ {
+  "form": "undead_mummy_priest",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "graft_attached",
+    "tags": {
+     "part": "wrappings"
+    },
+    "n": 2,
+    "text": "bandage grafts"
+   }
+  ]
+ },
+ {
+  "form": "undead_revenant_knight",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "defeated",
+    "tags": {
+     "avenged": true
+    },
+    "n": 1,
+    "text": "what killed you, killed"
+   }
+  ]
+ },
+ {
+  "form": "undead_spartoi_hoplite",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "corpse_left",
+    "tags": {},
+    "n": 3,
+    "text": "corpses left to raise"
+   }
+  ],
+  "note": "a Bone Warrior holds no summon power: corpses left to raise stand for it"
+ },
+ {
+  "form": "undead_abomination",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "graft_attached",
+    "tags": {},
+    "n": 4,
+    "text": "four grafts held"
+   }
+  ]
+ },
+ {
+  "form": "undead_arash",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "switch_hit",
+    "tags": {
+     "far": true
+    },
+    "n": 1,
+    "text": "a far switch hit"
+   }
+  ]
+ },
+ {
+  "form": "undead_banshee",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "skill_used",
+    "tags": {
+     "id": "verb_undead_corpse_candle"
+    },
+    "n": 6,
+    "text": "Lure-light used"
+   }
+  ],
+  "note": "the held wail is the parent's verb used many times"
+ },
+ {
+  "form": "undead_barrow_king",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "item_carried",
+    "tags": {},
+    "n": 3,
+    "text": "items carried"
+   }
+  ]
+ },
+ {
+  "form": "undead_bone_colossus",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "graft_attached",
+    "tags": {},
+    "n": 5,
+    "text": "many bone grafts"
+   }
+  ]
+ },
+ {
+  "form": "undead_deathless",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "part_harvested",
+    "tags": {
+     "part": "phylactery"
+    },
+    "n": 1,
+    "text": "a phylactery shard"
+   }
+  ]
+ },
+ {
+  "form": "undead_demilich",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "graft_shed",
+    "tags": {},
+    "n": 4,
+    "text": "every limb graft shed"
+   }
+  ]
+ },
+ {
+  "form": "undead_dullahan",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "defeated",
+    "tags": {
+     "ranged": true
+    },
+    "n": 4,
+    "text": "kills at whip reach"
+   }
+  ]
+ },
+ {
+  "form": "undead_heart_weigher",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "defeated",
+    "tags": {
+     "heavy": true
+    },
+    "n": 3,
+    "text": "stronger prey drained"
+   }
+  ]
+ },
+ {
+  "form": "undead_hierophant",
+  "atoms": [
+   {
+    "kind": "held",
+    "element": "light",
+    "n": 10,
+    "text": "light essence held"
+   },
+   {
+    "kind": "counter",
+    "event": "vigil_kept",
+    "tags": {},
+    "n": 1,
+    "text": "a Vigil kept"
+   }
+  ]
+ },
+ {
+  "form": "undead_jiangshi",
+  "atoms": []
+ },
+ {
+  "form": "undead_master_of_the_dance",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "corpse_left",
+    "tags": {},
+    "n": 5,
+    "text": "bodies left"
+   }
+  ]
+ },
+ {
+  "form": "undead_pharaoh",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "room_held",
+    "tags": {},
+    "n": 3,
+    "text": "rooms held"
+   }
+  ]
+ },
+ {
+  "form": "undead_sower_of_teeth",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "corpse_left",
+    "tags": {},
+    "n": 3,
+    "text": "corpses"
+   }
+  ]
+ },
+ {
+  "form": "undead_stingy_jack",
+  "atoms": []
+ },
+ {
+  "form": "undead_vampire",
+  "atoms": []
+ },
+ {
+  "form": "undead_wild_huntsman",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "defeated",
+    "tags": {
+     "fleeing": true,
+     "ranged": true
+    },
+    "n": 3,
+    "text": "fleeing prey brought down at range"
+   }
+  ]
+ },
+ {
+  "form": "spider_broodmother",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "prey_cocooned",
+    "tags": {},
+    "n": 1,
+    "text": "the Cocoon power used"
+   }
+  ]
+ },
+ {
+  "form": "spider_stalker",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "defeated",
+    "tags": {
+     "ceiling": true
+    },
+    "n": 4,
+    "text": "kills from the ceiling"
+   }
+  ]
+ },
+ {
+  "form": "spider_weavermaid",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "predated",
+    "tags": {
+     "species": "goblin"
+    },
+    "n": 3,
+    "text": "goblins eaten"
+   }
+  ]
+ },
+ {
+  "form": "spider_brood_queen",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "skill_used",
+    "tags": {
+     "id": "verb_spider_broodmother"
+    },
+    "n": 6,
+    "text": "Brood used"
+   }
+  ],
+  "note": "the Brood Sac power is the parent's verb"
+ },
+ {
+  "form": "spider_cave_matriarch",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "predated",
+    "tags": {
+     "source": "taratect"
+    },
+    "n": 1,
+    "text": "the Taratect eaten"
+   }
+  ]
+ },
+ {
+  "form": "spider_jorogumo",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "village_visited_unseen",
+    "tags": {},
+    "n": 1,
+    "text": "the village visited unseen"
+   }
+  ]
+ },
+ {
+  "form": "spider_loom_weaver",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "skill_used",
+    "tags": {
+     "id": "verb_spider_weavermaid"
+    },
+    "n": 6,
+    "text": "Hands used"
+   }
+  ],
+  "note": "Web Shot and Ground Web are the parent's verb"
+ },
+ {
+  "form": "spider_shadow_stalker",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "defeated",
+    "tags": {
+     "dark": true
+    },
+    "n": 4,
+    "text": "kills in the dark"
+   }
+  ]
+ },
+ {
+  "form": "spider_venomspinner",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "defeated",
+    "tags": {
+     "poison": true
+    },
+    "n": 3,
+    "text": "poison kills"
+   }
+  ],
+  "note": "Venom Fang and a poison power: poison kills stand for them"
+ },
+ {
+  "form": "spider_anansi",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "prey_freed",
+    "tags": {},
+    "n": 1,
+    "text": "a creature snared and freed"
+   }
+  ]
+ },
+ {
+  "form": "spider_chasm_weaver",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "gap_crossed",
+    "tags": {},
+    "n": 4,
+    "text": "gaps crossed"
+   }
+  ]
+ },
+ {
+  "form": "spider_cocoon_mother",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "prey_cocooned",
+    "tags": {},
+    "n": 1,
+    "text": "a live prey cocooned"
+   }
+  ]
+ },
+ {
+  "form": "spider_light_eater",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "lamp_drunk",
+    "tags": {},
+    "n": 3,
+    "text": "lamps drunk"
+   }
+  ]
+ },
+ {
+  "form": "spider_nightstalker",
+  "atoms": [
+   {
+    "kind": "reset_counter",
+    "event": "defeated",
+    "tags": {
+     "unseen": true
+    },
+    "reset_on": "damaged",
+    "n": 4,
+    "text": "unseen kills in a row"
+   }
+  ]
+ },
+ {
+  "form": "spider_norn",
+  "atoms": []
+ },
+ {
+  "form": "spider_plaguemother",
+  "atoms": [
+   {
+    "kind": "reset_counter",
+    "event": "defeated",
+    "tags": {
+     "poison": true
+    },
+    "reset_on": "damaged",
+    "n": 3,
+    "text": "poison kills in a row"
+   }
+  ]
+ },
+ {
+  "form": "spider_seven_spider_spirits",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "defeated",
+    "tags": {
+     "unseen": true
+    },
+    "n": 3,
+    "text": "veiled kills"
+   }
+  ]
+ },
+ {
+  "form": "spider_swarm_sovereign",
+  "atoms": []
+ },
+ {
+  "form": "spider_tarantella",
+  "atoms": []
+ },
+ {
+  "form": "spider_tsuchigumo",
+  "atoms": []
+ },
+ {
+  "form": "spider_veil_spinner",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "defeated",
+    "tags": {
+     "unseen": true
+    },
+    "n": 6,
+    "text": "unseen kills"
+   }
+  ],
+  "note": "time spent hidden is counted as kills made unseen"
+ },
+ {
+  "form": "goblin_beastcaller",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "lesson_learned",
+    "tags": {
+     "creature": "gloom_wolf"
+    },
+    "n": 1,
+    "text": "a lesson from a wolf"
+   },
+   {
+    "kind": "counter",
+    "event": "lesson_learned",
+    "tags": {
+     "creature": "spider"
+    },
+    "n": 1,
+    "text": "a lesson from a spider"
+   },
+   {
+    "kind": "counter",
+    "event": "lesson_learned",
+    "tags": {
+     "creature": "bat"
+    },
+    "n": 1,
+    "text": "a lesson from a bat"
+   }
+  ]
+ },
+ {
+  "form": "goblin_hob",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "lesson_learned",
+    "tags": {
+     "element": "light"
+    },
+    "n": 2,
+    "text": "lessons from light creatures"
+   }
+  ]
+ },
+ {
+  "form": "goblin_skulker",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "lesson_learned",
+    "tags": {
+     "creature": "bat"
+    },
+    "n": 1,
+    "text": "a lesson from a bat"
+   },
+   {
+    "kind": "counter",
+    "event": "lesson_learned",
+    "tags": {
+     "element": "dark"
+    },
+    "n": 1,
+    "text": "a lesson from a shadow"
+   }
+  ]
+ },
+ {
+  "form": "goblin_tinker",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "lesson_learned",
+    "tags": {
+     "creature": "armed_ant"
+    },
+    "n": 1,
+    "text": "a lesson from an ant"
+   },
+   {
+    "kind": "counter",
+    "event": "lesson_learned",
+    "tags": {
+     "creature": "junk"
+    },
+    "n": 1,
+    "text": "a lesson from junk"
+   }
+  ]
+ },
+ {
+  "form": "goblin_beast_rider",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "bond_formed",
+    "tags": {
+     "kind": "large"
+    },
+    "n": 1,
+    "text": "a bonded large companion"
+   }
+  ]
+ },
+ {
+  "form": "goblin_knocker",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "lesson_learned",
+    "tags": {
+     "creature": "armed_ant"
+    },
+    "n": 1,
+    "text": "a lesson from an ant"
+   },
+   {
+    "kind": "counter",
+    "event": "lesson_learned",
+    "tags": {
+     "creature": "bat"
+    },
+    "n": 1,
+    "text": "a lesson from a bat"
+   }
+  ]
+ },
+ {
+  "form": "goblin_paladin",
+  "atoms": []
+ },
+ {
+  "form": "goblin_pied_piper",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "lesson_learned",
+    "tags": {
+     "creature": "cave_rat"
+    },
+    "n": 1,
+    "text": "a lesson from vermin"
+   }
+  ]
+ },
+ {
+  "form": "goblin_puck",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "lesson_learned",
+    "tags": {
+     "creature": "bog_wisp"
+    },
+    "n": 1,
+    "text": "a lesson from a wisp"
+   },
+   {
+    "kind": "counter",
+    "event": "lesson_learned",
+    "tags": {
+     "creature": "pale_moth"
+    },
+    "n": 1,
+    "text": "a lesson from a moth"
+   }
+  ]
+ },
+ {
+  "form": "goblin_redcap",
+  "atoms": [
+   {
+    "kind": "reset_counter",
+    "event": "defeated",
+    "tags": {
+     "unseen": true
+    },
+    "reset_on": "damaged",
+    "n": 3,
+    "text": "a stealth kill chain"
+   }
+  ]
+ },
+ {
+  "form": "goblin_smith",
+  "atoms": []
+ },
+ {
+  "form": "goblin_tomte",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "village_kept",
+    "tags": {},
+    "n": 1,
+    "text": "a village kept"
+   }
+  ]
+ },
+ {
+  "form": "goblin_bloodcap",
+  "atoms": [
+   {
+    "kind": "held",
+    "element": "blood",
+    "n": 10,
+    "text": "a full cap of blood held"
+   }
+  ]
+ },
+ {
+  "form": "goblin_boggart",
+  "atoms": []
+ },
+ {
+  "form": "goblin_changeling",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "skill_used",
+    "tags": {
+     "id": "verb_goblin_puck"
+    },
+    "n": 5,
+    "text": "Mislead used"
+   }
+  ],
+  "note": "the decoys are the parent's verb"
+ },
+ {
+  "form": "goblin_giant_killer",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "defeated",
+    "tags": {
+     "heavy": true
+    },
+    "n": 2,
+    "text": "large foes beaten"
+   }
+  ]
+ },
+ {
+  "form": "goblin_gremlin",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "trap_sprung",
+    "tags": {},
+    "n": 3,
+    "text": "rigged traps sprung"
+   }
+  ]
+ },
+ {
+  "form": "goblin_hearth_god",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "ward_stone_placed",
+    "tags": {},
+    "n": 3,
+    "text": "ward-stones placed"
+   }
+  ]
+ },
+ {
+  "form": "goblin_horn_bearer",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "skill_used",
+    "tags": {
+     "id": "verb_goblin_paladin"
+    },
+    "n": 6,
+    "text": "Blessed throw used"
+   }
+  ],
+  "note": "no rally exists before the Horn: the parent's verb stands for it"
+ },
+ {
+  "form": "goblin_ironboot",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "defeated",
+    "tags": {
+     "heavy": true
+    },
+    "n": 3,
+    "text": "heavy kills"
+   }
+  ]
+ },
+ {
+  "form": "goblin_leprechaun",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "item_stolen",
+    "tags": {},
+    "n": 3,
+    "text": "items stolen"
+   }
+  ]
+ },
+ {
+  "form": "goblin_lord_of_beasts",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "lesson_learned",
+    "tags": {},
+    "n": 6,
+    "text": "lessons from many types"
+   }
+  ]
+ },
+ {
+  "form": "goblin_mastersmith",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "weapon_forged",
+    "tags": {},
+    "n": 1,
+    "text": "a forged weapon"
+   }
+  ]
+ },
+ {
+  "form": "goblin_orpheus",
+  "atoms": []
+ },
+ {
+  "form": "goblin_rat_king",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "bond_formed",
+    "tags": {
+     "kind": "tame",
+     "creature": "cave_rat"
+    },
+    "n": 1,
+    "text": "a tamed rat"
+   }
+  ]
+ },
+ {
+  "form": "goblin_ring_maker",
+  "atoms": []
+ },
+ {
+  "form": "goblin_rumpelstiltskin",
+  "atoms": []
+ },
+ {
+  "form": "goblin_wolf_lord",
+  "atoms": [
+   {
+    "kind": "counter",
+    "event": "bond_formed",
+    "tags": {
+     "creature": "gloom_wolf"
+    },
+    "n": 1,
+    "text": "a wolf bond"
+   }
+  ]
+ }
+]

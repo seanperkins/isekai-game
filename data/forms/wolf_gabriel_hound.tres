@@ -31,3 +31,4 @@ source = "northern England's Gabriel Ratchets and Devon's Wisht hounds: a ghost 
 verb_text = "Hunt's passage: the pack carries you over one gap (a short glide)"
 gives_up = "glide only after a kill"
 opened_by = "Cŵn Annwn, plus air"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "air"}, "n": 22, "text": "air essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 22, "text": "dark essence"}]

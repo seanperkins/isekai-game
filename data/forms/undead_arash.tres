@@ -31,3 +31,4 @@ source = "Persian: the archer whose arrow marked the border and who died of the 
 verb_text = "Life-arrow: spend most of your HP on one arrow that crosses the room and pierces"
 gives_up = "leaves you at 1 HP"
 opened_by = "Deadeye, plus a far switch hit"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "air"}, "n": 44, "text": "air essence"}, {"kind": "counter", "event": "switch_hit", "tags": {"far": true}, "n": 1, "text": "a far switch hit"}]

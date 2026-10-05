@@ -29,3 +29,4 @@ source = "the Arabic ghūl: a desert corpse-eater and shapeshifter"
 verb_text = "claws, a paralysing touch, a stench cloud"
 gives_up = "frail to light"
 opened_by = "Zombie, plus claw grafts"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 17, "text": "dark essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 17, "text": "earth essence"}, {"kind": "counter", "event": "graft_attached", "tags": {"part": "claw"}, "n": 2, "text": "claw grafts"}]

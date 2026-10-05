@@ -31,3 +31,4 @@ source = "Scottish fairy hound, dark green and the size of a calf; it barks thre
 verb_text = "Three barks: two warnings, then a lunge you cannot dodge from range"
 gives_up = "stand still to bark"
 opened_by = "Cŵn Annwn, plus a ranged kill"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 22, "text": "earth essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "air"}, "n": 22, "text": "air essence"}, {"kind": "counter", "event": "defeated", "tags": {"ranged": true}, "n": 5, "text": "ranged kills"}]

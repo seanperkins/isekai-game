@@ -29,3 +29,4 @@ source = "the medieval Danse Macabre: Death leads every rank in a dance"
 verb_text = "Rise: downed enemies stand up as dancers for ten seconds"
 gives_up = "only works near bodies"
 opened_by = "Spartoi Hoplite, plus bodies left"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 44, "text": "dark essence"}, {"kind": "counter", "event": "corpse_left", "tags": {}, "n": 5, "text": "bodies left"}]

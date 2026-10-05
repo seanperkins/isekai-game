@@ -29,3 +29,4 @@ source = "Garmr at Hel's gate (Norse); Cerberus (Greek)"
 verb_text = "Burning pounce and a flame trail; a gate-guard verb"
 gives_up = "fire hurts your own packmate"
 opened_by = "Barghest, plus fire (later)"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "fire"}, "n": 22, "text": "fire essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 22, "text": "dark essence"}]

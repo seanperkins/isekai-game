@@ -30,3 +30,4 @@ source = "the Welsh canwyll corff: a light seen before a death; the will-o'-the-
 verb_text = "Lure-light: enemies follow a drifting light into hazards"
 gives_up = "the light shows where you are"
 opened_by = "Archer, plus air"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 17, "text": "dark essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "air"}, "n": 17, "text": "air essence"}]

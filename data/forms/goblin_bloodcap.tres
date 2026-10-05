@@ -29,3 +29,4 @@ source = "the redcap's cap, fed to the full"
 verb_text = "Cap-throw: a boomerang cap that returns, dyed"
 gives_up = "needs blood to dye it"
 opened_by = "Redcap, plus a full cap held, plus blood (later)"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 22, "text": "dark essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "blood"}, "n": 22, "text": "blood essence"}, {"kind": "held", "element": "blood", "n": 10, "text": "a full cap of blood held"}]

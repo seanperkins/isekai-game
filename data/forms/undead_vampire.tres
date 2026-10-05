@@ -29,3 +29,4 @@ source = "European vampire lore"
 verb_text = "uses items; devours blood"
 gives_up = "holy and speed trade (guide SA2)"
 opened_by = "Ghoul, plus blood (later)"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 22, "text": "dark essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "blood"}, "n": 22, "text": "blood essence"}]

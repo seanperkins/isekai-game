@@ -29,3 +29,4 @@ source = "(decided: a cocoon can hold living prey)"
 verb_text = "prey cocooned alive hatch into stronger young"
 gives_up = "takes time"
 opened_by = "Brood Queen, plus a cocooned live prey"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 22, "text": "earth essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 22, "text": "dark essence"}, {"kind": "counter", "event": "prey_cocooned", "tags": {}, "n": 1, "text": "a live prey cocooned"}]

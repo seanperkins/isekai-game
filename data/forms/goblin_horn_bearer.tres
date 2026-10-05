@@ -31,3 +31,4 @@ source = "Roland blowing the Olifant at Roncesvalles"
 verb_text = "Horn: a blast that stuns and rallies allies"
 gives_up = "loud"
 opened_by = "Paladin, plus a rally"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "light"}, "n": 22, "text": "light essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "air"}, "n": 22, "text": "air essence"}, {"kind": "counter", "event": "skill_used", "tags": {"id": "verb_goblin_paladin"}, "n": 6, "text": "Blessed throw used"}]

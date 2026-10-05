@@ -29,3 +29,4 @@ source = "(guide)"
 verb_text = "webs apply poison that spreads through trap webs"
 gives_up = "lower direct damage"
 opened_by = "Stalker, plus Venom Fang and a poison power"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "water"}, "n": 17, "text": "water essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 17, "text": "dark essence"}, {"kind": "counter", "event": "defeated", "tags": {"poison": true}, "n": 3, "text": "poison kills"}]

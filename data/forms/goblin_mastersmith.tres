@@ -29,3 +29,4 @@ source = "the same smiths at the height of their craft"
 verb_text = "a second gear slot; flawless upgrades"
 gives_up = "high cost"
 opened_by = "Smith, plus a forged weapon"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 22, "text": "earth essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "fire"}, "n": 22, "text": "fire essence"}, {"kind": "counter", "event": "weapon_forged", "tags": {}, "n": 1, "text": "a forged weapon"}]

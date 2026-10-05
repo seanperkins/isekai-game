@@ -204,6 +204,7 @@ func _open_altar_menu(altar: Altar) -> void:
 ## start_run() clears everything a kit would set, and the perks last so the stats they raise are filled.
 func begin_life(start: Dictionary) -> void:
 	SkillRules.start_run()
+	player.avenge_target = Compendium.soul.last_death_cause
 	if world.current_id != "":  # the run's first room was entered before the run began: say so now
 		player.emit_deed(Deeds.ROOM_ENTERED, {"room": world.current_id, "area": world.rooms[world.current_id].area})
 	if not start["kit"].is_empty():

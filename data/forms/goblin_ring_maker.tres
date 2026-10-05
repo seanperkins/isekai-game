@@ -29,3 +29,4 @@ source = "Alberich, who forged the cursed Ring of the Nibelungs"
 verb_text = "Cursed gear: huge stats with a real cost"
 gives_up = "the curse"
 opened_by = "Smith, plus dark"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 22, "text": "dark essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "fire"}, "n": 22, "text": "fire essence"}]

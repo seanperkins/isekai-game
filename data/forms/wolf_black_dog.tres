@@ -30,3 +30,4 @@ source = "the British black dog omen: Black Shuck, the Barghest"
 verb_text = "Slink: a silent gait in dark rooms; unseen until the pounce"
 gives_up = "weak in lit rooms"
 opened_by = "dark + air, plus kills from behind"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 13, "text": "dark essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "air"}, "n": 13, "text": "air essence"}, {"kind": "counter", "event": "defeated", "tags": {"behind": true}, "n": 5, "text": "kills from behind"}]

@@ -29,3 +29,4 @@ source = "the haugbúi, a mound-dweller sitting on its hoard"
 verb_text = "Barrow slam: a ground-pound shockwave; armour while carrying items"
 gives_up = "stuck to the room's hoard"
 opened_by = "Draugr, plus carried items"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 44, "text": "earth essence"}, {"kind": "counter", "event": "item_carried", "tags": {}, "n": 3, "text": "items carried"}]

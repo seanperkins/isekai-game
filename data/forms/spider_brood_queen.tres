@@ -29,3 +29,4 @@ source = "the guide's S4 name, moved here"
 verb_text = "Command: spiderlings follow your lead"
 gives_up = "fewer solo kills"
 opened_by = "Broodmother, plus Brood Sac, plus mind (later)"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 12, "text": "earth essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 12, "text": "dark essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "mind"}, "n": 12, "text": "mind essence"}, {"kind": "counter", "event": "skill_used", "tags": {"id": "verb_spider_broodmother"}, "n": 6, "text": "Brood used"}]

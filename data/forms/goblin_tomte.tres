@@ -29,3 +29,4 @@ source = "the Scandinavian farm guardian: kind if respected, vicious if insulted
 verb_text = "Hearth: plant a ward-stone; creatures near it are slowed and you heal"
 gives_up = "static"
 opened_by = "Hob, plus a kept village"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "light"}, "n": 17, "text": "light essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 17, "text": "earth essence"}, {"kind": "counter", "event": "village_kept", "tags": {}, "n": 1, "text": "a village kept"}]

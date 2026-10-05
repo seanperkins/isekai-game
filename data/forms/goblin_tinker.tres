@@ -28,3 +28,4 @@ source = "the kobold and the knocker; the dwarf-smiths Brokkr and Sindri"
 verb_text = "crafted throwables, rigged traps, more recipe slots"
 gives_up = "weak in melee"
 opened_by = "earth, plus lessons from junk and ants"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 26, "text": "earth essence"}, {"kind": "counter", "event": "lesson_learned", "tags": {"creature": "armed_ant"}, "n": 1, "text": "a lesson from an ant"}, {"kind": "counter", "event": "lesson_learned", "tags": {"creature": "junk"}, "n": 1, "text": "a lesson from junk"}]

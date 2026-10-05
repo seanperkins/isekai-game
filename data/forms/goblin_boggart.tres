@@ -29,3 +29,4 @@ source = "the fallen hob: a house spirit that turns spiteful when wronged"
 verb_text = "Curse-stone and a fear aura (a corrupted Tomte)"
 gives_up = "allies fear you too"
 opened_by = "Tomte, plus dark"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 44, "text": "dark essence"}]

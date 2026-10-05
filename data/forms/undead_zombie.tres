@@ -29,3 +29,4 @@ source = "Haitian zombi; the shambling dead of film"
 verb_text = "Devour corpses to heal; heft: slow, heavy swings"
 gives_up = "slow, a low jump"
 opened_by = "ribs and flesh grafts, plus earth + dark"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 13, "text": "earth essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 13, "text": "dark essence"}, {"kind": "counter", "event": "graft_attached", "tags": {"part": "ribs"}, "n": 1, "text": "a rib graft"}, {"kind": "counter", "event": "graft_attached", "tags": {"part": "flesh"}, "n": 1, "text": "a flesh graft"}]

@@ -29,3 +29,4 @@ source = "the same warriors at their peak: they howl and bite their shields"
 verb_text = "Shield-bite: breaks guards; the berserk window refills on kills"
 gives_up = "still crashes if it ends dry"
 opened_by = "Úlfheðinn, plus broken guards"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 44, "text": "earth essence"}, {"kind": "counter", "event": "guard_broken", "tags": {}, "n": 3, "text": "guards broken"}]

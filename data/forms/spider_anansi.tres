@@ -31,3 +31,4 @@ source = "the Akan trickster spider who bought all the stories from the sky god"
 verb_text = "Steal: take a power or essence from a living enemy without killing it (the decided future method)"
 gives_up = "weak direct damage"
 opened_by = "Loom-Weaver, plus snaring and freeing a creature"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "air"}, "n": 22, "text": "air essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 22, "text": "dark essence"}, {"kind": "counter", "event": "prey_freed", "tags": {}, "n": 1, "text": "a creature snared and freed"}]

@@ -29,3 +29,4 @@ source = "the giant cave spiders of epic fantasy: Shelob, Ungoliant"
 verb_text = "a huge lone hunter: heavy bite, a web wall"
 gives_up = "slow; no small gaps"
 opened_by = "Broodmother, plus the Taratect eaten"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 17, "text": "earth essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 17, "text": "dark essence"}, {"kind": "counter", "event": "predated", "tags": {"source": "taratect"}, "n": 1, "text": "the Taratect eaten"}]

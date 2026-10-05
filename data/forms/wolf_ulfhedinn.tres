@@ -29,3 +29,4 @@ source = "Norse wolf-skin warriors, paired with the berserkers in the sagas (the
 verb_text = "Skin: you choose the change; a berserk window with no flinch and iron-proof"
 gives_up = "a crash after the window"
 opened_by = "Moonbound, plus earth"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 17, "text": "dark essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 17, "text": "earth essence"}]

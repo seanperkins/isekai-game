@@ -32,3 +32,4 @@ source = "tarantism in southern Italy: the tarantula's bite thought to cause fre
 verb_text = "Dance-venom: a bitten enemy staggers erratically into hazards"
 gives_up = "slow to take hold"
 opened_by = "Venomspinner, plus air"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "water"}, "n": 22, "text": "water essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "air"}, "n": 22, "text": "air essence"}]

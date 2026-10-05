@@ -29,3 +29,4 @@ source = "the redcap's iron-shod boots"
 verb_text = "Stomp: a heavy kick with heft"
 gives_up = "slow to sneak"
 opened_by = "Redcap, plus heavy kills"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 22, "text": "earth essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 22, "text": "dark essence"}, {"kind": "counter", "event": "defeated", "tags": {"heavy": true}, "n": 3, "text": "heavy kills"}]

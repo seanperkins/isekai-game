@@ -29,3 +29,4 @@ source = "Ungoliant, who devours light"
 verb_text = "Drink: eat lamps and glow pools to darken a room and heal"
 gives_up = "hurt by sacred light"
 opened_by = "Cave Matriarch, plus lamps drunk"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 44, "text": "dark essence"}, {"kind": "counter", "event": "lamp_drunk", "tags": {}, "n": 3, "text": "lamps drunk"}]

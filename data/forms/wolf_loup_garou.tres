@@ -28,3 +28,4 @@ source = "cursed French and Canadian werewolf, bound by the moon and by breaking
 verb_text = "Frenzy: each kill stokes a bloodlust meter (faster, bleeding bites); at full you cannot stop"
 gives_up = "no guard, no items while frenzied"
 opened_by = "Moonbound, plus Rise used many times, plus blood (later)"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 17, "text": "dark essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "blood"}, "n": 17, "text": "blood essence"}, {"kind": "counter", "event": "skill_used", "tags": {"id": "verb_wolf_moonbound"}, "n": 8, "text": "Rise used"}]

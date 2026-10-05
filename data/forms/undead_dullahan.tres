@@ -29,3 +29,4 @@ source = "the Irish headless rider with a spine whip; no lock holds against it"
 verb_text = "Herald: a long whip, a thrown head"
 gives_up = "no shield"
 opened_by = "Revenant Knight, plus whip-reach kills"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 44, "text": "dark essence"}, {"kind": "counter", "event": "defeated", "tags": {"ranged": true}, "n": 4, "text": "kills at whip reach"}]

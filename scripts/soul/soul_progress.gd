@@ -14,6 +14,9 @@ var session_points := 0
 ## when the profile already holds progress (a save from before the opening existed, which includes one migrated from the old
 ## compendium file), so only a brand-new profile ever sees it.
 var opening_seen := false
+## What dealt the last blow of the last life (a creature id, or a damage type), "" when none: killing a creature of that id in the
+## next life is an `avenged` defeat.
+var last_death_cause := ""
 
 var _unknown_perks := {}  # saved counts for perk ids the data does not hold; written back as they were
 
@@ -29,6 +32,8 @@ func _init(p_profile = null, known_perks: Array = []) -> void:
 	opening_seen = flag if typeof(flag) == TYPE_BOOL else _holds_progress(profile)
 	points = _count(saved.get("points"))
 	deaths = _count(saved.get("deaths"))
+	var cause = saved.get("last_death_cause")
+	last_death_cause = cause if typeof(cause) == TYPE_STRING else ""
 	var raw = saved.get("perks")
 	if typeof(raw) == TYPE_DICTIONARY:
 		for id in raw:
@@ -67,8 +72,9 @@ func buy_perk(def: PerkDef) -> bool:
 func perk_count(id: String) -> int:
 	return int(perks.get(id, 0))
 
-func note_death() -> void:
+func note_death(cause := "") -> void:
 	deaths += 1
+	last_death_cause = cause
 	_save()
 
 ## Writes the flag as it stands, so a profile that never finishes the opening holds an explicit false and replays it (without
@@ -103,5 +109,5 @@ func _save() -> void:
 		return
 	var saved_perks := _unknown_perks.duplicate()
 	saved_perks.merge(perks, true)
-	profile.set_section("soul", {"points": points, "perks": saved_perks, "deaths": deaths, "opening_seen": opening_seen})
+	profile.set_section("soul", {"points": points, "perks": saved_perks, "deaths": deaths, "opening_seen": opening_seen, "last_death_cause": last_death_cause})
 	profile.save()

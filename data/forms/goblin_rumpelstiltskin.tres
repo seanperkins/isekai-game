@@ -29,3 +29,4 @@ source = "Grimm: spins straw into gold at a price"
 verb_text = "Spin: transmute junk into a better part, two for one"
 gives_up = "wasteful"
 opened_by = "Knocker, plus mind (later)"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 22, "text": "earth essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "mind"}, "n": 22, "text": "mind essence"}]

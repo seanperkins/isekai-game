@@ -29,3 +29,4 @@ source = "Ammit, who eats hearts that weigh heavier than the feather"
 verb_text = "Weigh: if a creature's essence is lower than yours, drain it at once"
 gives_up = "useless against stronger foes"
 opened_by = "Mummy-Priest, plus drains of stronger prey, plus blood (later)"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 22, "text": "dark essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "blood"}, "n": 22, "text": "blood essence"}, {"kind": "counter", "event": "defeated", "tags": {"heavy": true}, "n": 3, "text": "stronger prey drained"}]

@@ -29,3 +29,4 @@ source = "the spider demons of Pansi Cave in Journey to the West"
 verb_text = "Sisters: split into seven decoys that web"
 gives_up = "each decoy dies in one hit"
 opened_by = "Jorōgumo, plus a veiled kill"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 44, "text": "dark essence"}, {"kind": "counter", "event": "defeated", "tags": {"unseen": true}, "n": 3, "text": "veiled kills"}]

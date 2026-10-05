@@ -29,3 +29,4 @@ source = "Jack the Giant-Killer, Cornish folk tale; David and Goliath"
 verb_text = "damage scales with the target's size"
 gives_up = "weak against small foes"
 opened_by = "Paladin, plus a large foe beaten"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "light"}, "n": 22, "text": "light essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 22, "text": "earth essence"}, {"kind": "counter", "event": "defeated", "tags": {"heavy": true}, "n": 2, "text": "large foes beaten"}]

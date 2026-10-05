@@ -29,3 +29,4 @@ source = "goblin wolf-riders (fantasy)"
 verb_text = "Mount: fuse with the companion for a ride (the guide's Rider)"
 gives_up = "the companion is exposed"
 opened_by = "Beastcaller, plus a bonded large companion"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 34, "text": "earth essence"}, {"kind": "counter", "event": "bond_formed", "tags": {"kind": "large"}, "n": 1, "text": "a bonded large companion"}]

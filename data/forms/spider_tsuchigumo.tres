@@ -29,3 +29,4 @@ source = "Japanese \"earth spider\": the giant that Minamoto no Raikō fought"
 verb_text = "True form: drop the veil into a giant; burrow a lair; call lesser spiders"
 gives_up = "too big for small gaps"
 opened_by = "Jorōgumo, plus earth"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 22, "text": "earth essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 22, "text": "dark essence"}]

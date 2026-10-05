@@ -31,7 +31,7 @@ static func load_default(p_soul: SoulProgress, p_compendium: CompendiumModel, p_
 
 ## Counts this death, then her line for `cause` (a creature id, "spear", or a damage type). Call once per death.
 func line_for_death(cause: String) -> String:
-	soul.note_death()
+	soul.note_death(cause)
 	return _lines.line_for(cause, soul.deaths, rules.many_deaths)
 
 ## The scene's state: the attuned places (the default when none), the species the Bestiary has unlocked, the powers worth a head

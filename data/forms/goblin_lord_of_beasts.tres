@@ -31,3 +31,4 @@ source = "the Master of Animals motif: Pashupati, Potnia Theron"
 verb_text = "Two companions at once (a decided capstone exception to the one-at-a-time rule)"
 gives_up = "fragile companions"
 opened_by = "Beast-Rider, plus lessons from many types"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 22, "text": "earth essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "air"}, "n": 22, "text": "air essence"}, {"kind": "counter", "event": "lesson_learned", "tags": {}, "n": 6, "text": "lessons from many types"}]

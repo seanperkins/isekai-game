@@ -29,3 +29,4 @@ source = "giants made of bone: Ymir, whose bones were the mountains"
 verb_text = "Juggernaut: double size, stomp and heft cleave; walks through hazards"
 gives_up = "too big for narrow gaps"
 opened_by = "Revenant Knight, plus many bone grafts"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 44, "text": "earth essence"}, {"kind": "counter", "event": "graft_attached", "tags": {}, "n": 5, "text": "many bone grafts"}]

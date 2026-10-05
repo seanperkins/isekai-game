@@ -31,3 +31,4 @@ source = "goblin wolf-rider chiefs (fantasy)"
 verb_text = "a spear charge and gallop while mounted"
 gives_up = "on foot you are weak"
 opened_by = "Beast-Rider, plus a wolf bond"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 22, "text": "earth essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "air"}, "n": 22, "text": "air essence"}, {"kind": "counter", "event": "bond_formed", "tags": {"creature": "gloom_wolf"}, "n": 1, "text": "a wolf bond"}]

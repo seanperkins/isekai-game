@@ -31,3 +31,4 @@ source = "the spider that hid a fugitive in a cave: David from Saul (Jewish midr
 verb_text = "Veil: spin a web over a doorway that hides you and allies"
 gives_up = "the veil breaks on any attack"
 opened_by = "Shadow-stalker, plus time spent hidden"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "air"}, "n": 22, "text": "air essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 22, "text": "earth essence"}, {"kind": "counter", "event": "defeated", "tags": {"unseen": true}, "n": 6, "text": "unseen kills"}]

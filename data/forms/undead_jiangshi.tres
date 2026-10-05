@@ -31,3 +31,4 @@ source = "the Chinese hopping corpse, stopped by talismans, sticky rice and peac
 verb_text = "Hop: bounding straight-line leaps that drain on touch"
 gives_up = "cannot turn mid-hop; talisman rooms stop it"
 opened_by = "Ghoul, plus air"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 22, "text": "dark essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "air"}, "n": 22, "text": "air essence"}]

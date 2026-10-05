@@ -29,3 +29,4 @@ source = "the black dog buried at the church wall to guard the churchyard"
 verb_text = "Guardian: wards a packmate, holds holy ground, unharmed in holy zones"
 gives_up = "tethered to a sacred spot"
 opened_by = "Warg, plus light"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "light"}, "n": 17, "text": "light essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 17, "text": "earth essence"}]

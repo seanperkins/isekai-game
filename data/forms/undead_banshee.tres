@@ -31,3 +31,4 @@ source = "the Irish bean sídhe: her wail foretells a death"
 verb_text = "Wail: a cone that stuns and frightens"
 gives_up = "wakes sleeping enemies"
 opened_by = "Corpse Candle, plus a held wail"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "air"}, "n": 22, "text": "air essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 22, "text": "dark essence"}, {"kind": "counter", "event": "skill_used", "tags": {"id": "verb_undead_corpse_candle"}, "n": 6, "text": "Lure-light used"}]

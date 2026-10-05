@@ -30,3 +30,4 @@ source = "trapdoor and huntsman spiders: the ambush hunter"
 verb_text = "Ambush: a ceiling drop and a web zip"
 gives_up = "weak in lit rooms"
 opened_by = "air + dark, plus kills from the ceiling"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 13, "text": "dark essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "air"}, "n": 13, "text": "air essence"}, {"kind": "counter", "event": "defeated", "tags": {"ceiling": true}, "n": 4, "text": "kills from the ceiling"}]

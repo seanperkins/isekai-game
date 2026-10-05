@@ -30,3 +30,4 @@ source = "Robin Goodfellow, the shapeshifter who leads travellers astray"
 verb_text = "Mislead: illusions and decoys; reverse an enemy's facing"
 gives_up = "low damage"
 opened_by = "Skulker, plus lessons from wisps and moths"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "air"}, "n": 17, "text": "air essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 17, "text": "dark essence"}, {"kind": "counter", "event": "lesson_learned", "tags": {"creature": "bog_wisp"}, "n": 1, "text": "a lesson from a wisp"}, {"kind": "counter", "event": "lesson_learned", "tags": {"creature": "pale_moth"}, "n": 1, "text": "a lesson from a moth"}]

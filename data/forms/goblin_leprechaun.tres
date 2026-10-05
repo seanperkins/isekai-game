@@ -31,3 +31,4 @@ source = "the Irish cobbler with a pot of gold"
 verb_text = "Pocket: pickpocket items from a living creature without killing it; a short teleport"
 gives_up = "low damage"
 opened_by = "Puck, plus items stolen"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "air"}, "n": 22, "text": "air essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 22, "text": "dark essence"}, {"kind": "counter", "event": "item_stolen", "tags": {}, "n": 3, "text": "items stolen"}]

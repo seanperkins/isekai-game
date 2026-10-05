@@ -29,3 +29,4 @@ source = "the arch-priest: the Dewa Sanzan monks who mummified themselves in lif
 verb_text = "Consecrate: a ring of light that heals you and your summons and burns the living"
 gives_up = "no life-drain (you absolve, you do not drain); weak dark powers"
 opened_by = "Lich, plus held light essence and a Vigil (section 5), plus mind (later)"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "light"}, "n": 15, "text": "light essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 15, "text": "dark essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "mind"}, "n": 15, "text": "mind essence"}, {"kind": "held", "element": "light", "n": 10, "text": "light essence held"}, {"kind": "counter", "event": "vigil_kept", "tags": {}, "n": 1, "text": "a Vigil kept"}]

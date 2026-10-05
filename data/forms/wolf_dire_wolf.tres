@@ -29,3 +29,4 @@ source = "a fantasy staple, not folklore"
 verb_text = "Tank: the pounce knocks down heavy targets; knockback-proof"
 gives_up = "slow"
 opened_by = "Warg, plus earth"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 34, "text": "earth essence"}]

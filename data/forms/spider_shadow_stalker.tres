@@ -30,3 +30,4 @@ source = "(guide)"
 verb_text = "Silent drop: a bonus strike in dim light"
 gives_up = "weak in lit rooms"
 opened_by = "Stalker, plus kills in the dark"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 17, "text": "dark essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "air"}, "n": 17, "text": "air essence"}, {"kind": "counter", "event": "defeated", "tags": {"dark": true}, "n": 4, "text": "kills in the dark"}]

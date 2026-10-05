@@ -27,3 +27,4 @@ source = "the brownie, the hob and the household spirit repaid in porridge"
 verb_text = "Offer and Ward: protects an area"
 gives_up = "passive, weak damage"
 opened_by = "light, plus lessons from light creatures"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "light"}, "n": 26, "text": "light essence"}, {"kind": "counter", "event": "lesson_learned", "tags": {"element": "light"}, "n": 2, "text": "lessons from light creatures"}]

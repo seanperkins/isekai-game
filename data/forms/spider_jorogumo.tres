@@ -30,3 +30,4 @@ source = "Japanese: a spider that takes a woman's shape and lures men; her true 
 verb_text = "Veil: pass as a goblin or villager (village standing reads you as welcome); revealing it bursts the veil"
 gives_up = "the veil drops when hit; no webbing while veiled"
 opened_by = "Weavermaid, plus a visit to the village unseen"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "air"}, "n": 17, "text": "air essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 17, "text": "dark essence"}, {"kind": "counter", "event": "village_visited_unseen", "tags": {}, "n": 1, "text": "the village visited unseen"}]

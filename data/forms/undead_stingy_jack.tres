@@ -29,3 +29,4 @@ source = "Irish: the man who tricked the Devil and wanders with a coal in a turn
 verb_text = "Trick: an enemy that touches your lure is held fast"
 gives_up = "needs the lure placed first"
 opened_by = "Corpse Candle, plus fire (later)"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 22, "text": "dark essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "fire"}, "n": 22, "text": "fire essence"}]

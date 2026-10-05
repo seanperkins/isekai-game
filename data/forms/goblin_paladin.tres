@@ -28,3 +28,4 @@ source = "Charlemagne's paladins; Roland's horn, the Olifant"
 verb_text = "blessed throwables and a shield"
 gives_up = "slow"
 opened_by = "Hob, plus light"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "light"}, "n": 34, "text": "light essence"}]

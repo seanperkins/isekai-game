@@ -28,3 +28,4 @@ source = "Yorkshire's spectral black hound, an omen of death"
 verb_text = "Fear howl: enemies falter and flee"
 gives_up = "cannot pounce while howling"
 opened_by = "Black Dog, plus a Howl power"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 34, "text": "dark essence"}, {"kind": "counter", "event": "skill_used", "tags": {"id": "verb_wolf_black_dog"}, "n": 6, "text": "Slink used"}]

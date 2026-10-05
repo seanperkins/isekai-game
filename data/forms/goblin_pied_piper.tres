@@ -30,3 +30,4 @@ source = "Hamelin's piper, who led the rats away and then the children"
 verb_text = "Tune: a pipe call commands a small group and draws vermin"
 gives_up = "cannot throw while playing"
 opened_by = "Beastcaller, plus lessons from vermin, plus mind (later)"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "air"}, "n": 17, "text": "air essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "mind"}, "n": 17, "text": "mind essence"}, {"kind": "counter", "event": "lesson_learned", "tags": {"creature": "cave_rat"}, "n": 1, "text": "a lesson from vermin"}]

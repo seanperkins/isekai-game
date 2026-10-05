@@ -28,3 +28,4 @@ source = "necromancy: the Witch of Endor raising Samuel; the Nekyia in the Odyss
 verb_text = "a few bone minions; a focus"
 gives_up = "frail"
 opened_by = "skull or focus graft, plus dark"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 26, "text": "dark essence"}, {"kind": "any", "text": "a skull or a focus graft", "of": [{"kind": "counter", "event": "graft_attached", "tags": {"part": "skull"}, "n": 1, "text": "a skull graft"}, {"kind": "counter", "event": "graft_attached", "tags": {"part": "focus"}, "n": 1, "text": "a focus graft"}]}]

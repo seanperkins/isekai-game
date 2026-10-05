@@ -29,3 +29,4 @@ source = "the Egyptian embalmed priest-magician; the mummy's curse"
 verb_text = "Wrap: bandages bind enemies; a sand gust"
 gives_up = "fire hurts"
 opened_by = "Adept, plus earth and bandage grafts"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 17, "text": "dark essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 17, "text": "earth essence"}, {"kind": "counter", "event": "graft_attached", "tags": {"part": "wrappings"}, "n": 2, "text": "bandage grafts"}]

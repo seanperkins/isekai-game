@@ -29,3 +29,4 @@ source = "the Cornish and Welsh mine spirits (knockers, bluecaps), whose taps wa
 verb_text = "Tap: senses hidden walls, weak floors and traps in a room"
 gives_up = "low damage"
 opened_by = "Tinker, plus lessons from ants and bats"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 34, "text": "earth essence"}, {"kind": "counter", "event": "lesson_learned", "tags": {"creature": "armed_ant"}, "n": 1, "text": "a lesson from an ant"}, {"kind": "counter", "event": "lesson_learned", "tags": {"creature": "bat"}, "n": 1, "text": "a lesson from a bat"}]

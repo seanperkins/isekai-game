@@ -29,3 +29,4 @@ source = "wolf spiders carry their young; the spiderlings of Spider, So What?"
 verb_text = "Brood: cocoons hatch spiderlings that carry and harass"
 gives_up = "slow; fewer solo kills"
 opened_by = "earth + dark, plus the Cocoon power"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 13, "text": "earth essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 13, "text": "dark essence"}, {"kind": "counter", "event": "prey_cocooned", "tags": {}, "n": 1, "text": "the Cocoon power used"}]

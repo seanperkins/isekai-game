@@ -28,3 +28,4 @@ source = "Norse vargr, \"wolf\" and \"outlaw\"; the war-wolf of fantasy"
 verb_text = "Bond: a heavier pounce, knockback, one bonded packmate"
 gives_up = "slow gallop"
 opened_by = "earth, plus a bonded packmate"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 26, "text": "earth essence"}, {"kind": "counter", "event": "bond_formed", "tags": {"kind": "pack"}, "n": 1, "text": "a bonded packmate"}]

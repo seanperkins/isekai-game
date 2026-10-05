@@ -28,3 +28,4 @@ source = "the werewolf: Ovid's Lycaon, the French loup-garou"
 verb_text = "Rise: stand on two legs for claws and items, drop to four to gallop"
 gives_up = "rising costs a beat; no pounce while up"
 opened_by = "dark essence, plus a kill taken in moonlight (a moonlit forest room) or a rare Moonstone drop"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 26, "text": "dark essence"}, {"kind": "any", "text": "a kill in moonlight, or a Moonstone", "of": [{"kind": "counter", "event": "defeated", "tags": {"moonlit": true}, "n": 3, "text": "kills in moonlight"}, {"kind": "counter", "event": "part_harvested", "tags": {"part": "moonstone"}, "n": 1, "text": "a Moonstone"}]}]

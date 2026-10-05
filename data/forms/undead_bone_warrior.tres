@@ -29,3 +29,4 @@ source = "the sown warriors of Cadmus and Jason, grown from dragon's teeth"
 verb_text = "Heft: a slow overhead cleave and a shield"
 gives_up = "slow"
 opened_by = "skeleton, plus a weapon arm graft and earth"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 13, "text": "earth essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 13, "text": "dark essence"}, {"kind": "counter", "event": "graft_attached", "tags": {"part": "weapon_arm"}, "n": 1, "text": "a weapon-arm graft"}]

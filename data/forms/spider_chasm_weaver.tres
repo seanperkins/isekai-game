@@ -31,3 +31,4 @@ source = "Atlach-Nacha (Clark Ashton Smith, \"The Seven Geases\"): the spider sp
 verb_text = "Span: spin a permanent web bridge across a gap (a traversal gate)"
 gives_up = "slow; both ends need anchors"
 opened_by = "Cave Matriarch, plus gaps crossed"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 22, "text": "earth essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "air"}, "n": 22, "text": "air essence"}, {"kind": "counter", "event": "gap_crossed", "tags": {}, "n": 4, "text": "gaps crossed"}]

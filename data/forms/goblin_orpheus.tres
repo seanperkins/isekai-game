@@ -29,3 +29,4 @@ source = "Greek: the lyre that charmed beasts, trees and Hades"
 verb_text = "Lull: calm a hostile creature so it stops attacking and can be tamed"
 gives_up = "fails on bosses"
 opened_by = "Pied Piper, plus light, plus mind (later)"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "light"}, "n": 22, "text": "light essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "mind"}, "n": 22, "text": "mind essence"}]

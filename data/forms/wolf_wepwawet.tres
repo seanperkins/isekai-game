@@ -31,3 +31,4 @@ source = "Egypt's wolf (or jackal) \"Opener of the Ways\", who leads the army an
 verb_text = "Opener: reveals hidden exits and shortcuts in a room"
 gives_up = "low damage"
 opened_by = "Church Grim, plus a hidden room found"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "light"}, "n": 22, "text": "light essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "air"}, "n": 22, "text": "air essence"}, {"kind": "counter", "event": "hidden_found", "tags": {}, "n": 1, "text": "a hidden room found"}]

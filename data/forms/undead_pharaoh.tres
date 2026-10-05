@@ -29,3 +29,4 @@ source = "the Egyptian king buried with a household of the dead"
 verb_text = "Decree: a curse ring marks everything in the room; tomb guards rise"
 gives_up = "slow"
 opened_by = "Mummy-Priest, plus a long reign (rooms held)"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 44, "text": "dark essence"}, {"kind": "counter", "event": "room_held", "tags": {}, "n": 3, "text": "rooms held"}]

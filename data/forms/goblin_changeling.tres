@@ -29,3 +29,4 @@ source = "the fairy swap of a child"
 verb_text = "Swap: trade places with a decoy; look like a creature to scout"
 gives_up = "the swap takes a beat"
 opened_by = "Puck, plus decoys used"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 44, "text": "dark essence"}, {"kind": "counter", "event": "skill_used", "tags": {"id": "verb_goblin_puck"}, "n": 5, "text": "Mislead used"}]

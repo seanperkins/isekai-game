@@ -29,3 +29,4 @@ source = "Norse: bound by Gleipnir, breaks all chains"
 verb_text = "Unbound: breaks barriers and grates (a gate-breaking verb)"
 gives_up = "too big for small gaps"
 opened_by = "Dire Wolf, plus barriers broken"
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "earth"}, "n": 44, "text": "earth essence"}, {"kind": "counter", "event": "barrier_broken", "tags": {}, "n": 2, "text": "barriers broken"}]
