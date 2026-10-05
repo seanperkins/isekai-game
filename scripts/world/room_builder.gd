@@ -150,6 +150,10 @@ static func build_room(def: RoomDef, ctx: Dictionary) -> Node2D:
 			SetDressing.build(node, def.area, def.dressing, size)
 	else:
 		_backdrop(node, size)
+	if not def.glimpse.is_empty():
+		var glimpse := Glimpse.make(def.glimpse)  # over the background, behind the water and the solids
+		if glimpse != null:
+			node.add_child(glimpse)
 	for w in def.water:
 		node.add_child(DeepWater.make(w))  # behind the solids and the creatures, over the background
 	var solids: Array = []
@@ -190,6 +194,14 @@ static func build_room(def: RoomDef, ctx: Dictionary) -> Node2D:
 		var feature := RoomFeatures.make(f, ctx)
 		if feature != null:
 			node.add_child(feature)
+	if def.tremor > 0.0 and ctx.has("shake"):  # only in a World, which supplies the shake: the editor's preview stays quiet
+		var tremor := RoomTremor.new()
+		var rng: RandomNumberGenerator = ctx.get("rng", null)
+		if rng == null:
+			rng = RandomNumberGenerator.new()
+			rng.randomize()
+		tremor.setup(def, ctx, rng)
+		node.add_child(tremor)
 	if arena_wanted and not boss_beaten and boss_node != null:
 		var arena := BossArena.new()
 		arena.setup(def, ctx, boss_node, solids, painted)

@@ -84,6 +84,20 @@
         "sfx/eat_predated_1.ogg"
       ]
     },
+    "ground_rumble_far": {
+      "bus": "SFX_Enemy",
+      "volume_db": -14,
+      "files": [
+        "sfx/slime_land_hard_1.ogg"
+      ]
+    },
+    "ground_rumble_near": {
+      "bus": "SFX_Enemy",
+      "volume_db": -7,
+      "files": [
+        "sfx/slime_land_hard_2.ogg"
+      ]
+    },
     "boss_rumble": {
       "bus": "SFX_Enemy",
       "volume_db": -4,
@@ -555,7 +569,13 @@
       "toad": "enemy_death_beast",
       "lizard": "enemy_death_beast",
       "serpent": "enemy_death_boss",
+      "taratect": "enemy_death_boss",
       "default": "enemy_death_beast"
+    },
+    "boss_tremor": {
+      "by": "near",
+      "true": "ground_rumble_near",
+      "false": "ground_rumble_far"
     },
     "boss_intro": "boss_rumble",
     "boss_slam": "boss_doors",
