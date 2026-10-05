@@ -42,7 +42,7 @@ One `BossArena` node per arena room, driven by a pure `BossArenaModel` (a `RefCo
 | State | Meaning | Leaves it when |
 |---|---|---|
 | `waiting` | the boss is dormant, exits open | the player's body overlaps the threshold |
-| `intro` | `INTRO_SECONDS` (0.8): a rumble cue, the doors slam, the boss turns and wakes | the timer ends |
+| `intro` | `INTRO_SECONDS` (0.8): a rumble cue at once, the doors slam halfway (`SEAL_AT` 0.4), the boss wakes at the end | the timer ends |
 | `fight` | exits sealed, the boss acts | the boss dies |
 | `won` | the seals open, the boss is recorded as defeated | (final) |
 
@@ -64,7 +64,7 @@ All three are data on rooms, so every boss gets the same grammar:
 
 1. **The antechamber.** An arena has exactly one exit, and it leads to a room with a glow pool and no spawns. The glow pool is the existing feature that restores HP and MP (D5 pairs one with a tablet), so the player can arrive at the fight rested, and the quiet pause before the door is the warning. It is a glow pool and not an altar because the world validator allows one altar per area and the Deep's is D1's (an altar is also the place the player is reborn, and a rest is not). The cost is that dying in the arena sends the player back to D1; whether the Deep gets a second altar by the arena, with the validator's rule relaxed, is Sean's call and is listed in the open items. (Research rule: a safe room immediately before the arena.)
 2. **Sound and screen cues.** A room with `tremor` shakes the screen and drops dust from the ceiling every 5 to 9 seconds (a random gap) and plays a `boss_tremor` cue, scaled by the value: about 0.3 in the rooms leading up, 0.6 in the antechamber. The arena adds `boss_slam` (the doors) and `boss_wake` (the roar), and the death cue routing in `data/audio/cues.json` gets `"taratect": "enemy_death_boss"` (only the serpent has it; anything else falls to `enemy_death_beast`). Files come from the audio pipeline, with the nearest existing sounds as stand-ins until then.
-3. **Traces and a glimpse.** The approach rooms carry decor of the creature (web strands, husks, claw marks on the walls; `deep_bones` exists, the web and claw pieces are new art from the art pipeline). The antechamber has a gap in its wall behind translucent web in which a large dark silhouette of the boss moves slowly: the room's `glimpse`, a sprite of the creature's own sheet frame tinted dark and scaled up, drawn by `RoomBuilder` behind the solids (not through `SetDressing`, which `RoomBuilder.simple_layers` switches off today), so no new art. Lint checks that the creature has a sheet and the position is inside the room.
+3. **Traces and a glimpse.** The approach rooms carry decor of the creature: `deep_bones` and the hanging pieces exist and are used first; web strands and claw marks on the walls are new decor art that comes from the terrain art pipeline later, so the first build ships without them. The antechamber has a gap in its wall behind translucent web in which a large dark silhouette of the boss moves slowly: the room's `glimpse`, a sprite of the creature's own sheet frame tinted dark and scaled up, drawn by `RoomBuilder` behind the solids (not through `SetDressing`, which `RoomBuilder.simple_layers` switches off today), so no new art. Lint checks that the creature has a sheet and the position is inside the room.
 
 ### The Deep
 
@@ -109,3 +109,4 @@ The enemies' terrain body is a fixed 16x12 box whatever the sprite is (`Enemy.BO
 - A way out of a fight that cannot be won (a "give up") is not offered: rebirth is the way out, and a fight where the boss cannot be damaged would be a bug, covered by the tests.
 - Which other creatures become bosses, and whether the deep areas each get one, is open.
 - The map does not mark a boss room.
+- The room editor does not edit `boss`, `tremor` or `glimpse` yet (they are saved and loaded with the room, so editing the `.tres` is how they are set); a round-trip test pins that they survive a save.
