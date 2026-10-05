@@ -53,16 +53,17 @@ func move(step: int) -> void:
 
 ## Left (negative) or right (positive) on an element row: one soul point's worth of that essence less or more, within what is held.
 func adjust(step: int) -> void:
-	var element := _element_at(_row)
+	var element := _element_at(row())
 	if element == "":
 		return
 	_units[element] = clampi(_units_of(element) + step * _rules.bank_rate, 0, Banking.max_units(_rules, _engine, element))
 
 ## The highlighted row's action. False when nothing happened; `message` says why.
 func act() -> bool:
-	if _row == 0:
+	var at := row()
+	if at == 0:
 		return _attune()
-	var element := _element_at(_row)
+	var element := _element_at(at)
 	if element != "":
 		return _bank(element)
 	return _buy()
@@ -90,6 +91,8 @@ func _bank(element: String) -> bool:
 	return true
 
 func _buy() -> bool:
+	if _perk == null:
+		return false
 	if not attuned():
 		message = "Attune first."
 		return false

@@ -146,7 +146,7 @@ def parse_form_rows(rows):
             "decided": any("decided" in n for n in notes), "secret": any("secret" in n for n in notes),
             "source": clean(source), "reads": els, "readsText": clean(reads), "mixed": mixed,
             "later": [e for e in els if e in LATER], "verb": clean(verb), "givesUp": clean(gives_up), "openedBy": clean(opened),
-            "host": parse_areas(host), "profile": clean(profile),
+            "host": parse_areas(host), "hostText": host, "profile": clean(profile),
         })
     return forms
 

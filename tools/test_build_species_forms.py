@@ -5,6 +5,7 @@ import os
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -69,6 +70,27 @@ class FormsTest(unittest.TestCase):
         bad = dict(self.forms[0], reads=["ether"])
         with self.assertRaises(ValueError):
             bsf.check_row(bad)
+
+    def _doc_with(self, doc_id, index, value):
+        lines = bsf.be.read(bsf.be.DOC).split("\n")
+        for n, line in enumerate(lines):
+            if line.startswith("| %s |" % doc_id):
+                cells = [c.strip() for c in line.strip().strip("|").split("|")]
+                if len(cells) == 9:
+                    cells[index] = value
+                    lines[n] = "| " + " | ".join(cells) + " |"
+        return "\n".join(lines)
+
+    def test_a_bad_element_in_the_doc_fails_even_beside_a_good_one(self):
+        for reads in ("dark + ether", "ether"):
+            with mock.patch.object(bsf.be, "read", return_value=self._doc_with("W2A", 3, reads)):
+                with self.assertRaises(ValueError, msg=reads):
+                    bsf.species_forms()
+
+    def test_a_bad_area_in_the_doc_fails_even_beside_a_good_one(self):
+        with mock.patch.object(bsf.be, "read", return_value=self._doc_with("W2A", 7, "forest, moon")):
+            with self.assertRaises(ValueError):
+                bsf.species_forms()
 
     def test_the_tres_text_lists_the_new_fields(self):
         text = bsf.tres(self.by_id["wolf_moonbound"])

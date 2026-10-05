@@ -116,3 +116,15 @@ func test_banking_a_later_element_works_and_its_row_goes_when_empty() -> void:
 	assert_eq(rules.held("blood"), 0)
 	assert_eq(_altar_kinds(m), ["attune", "water", "earth", "air", "light", "dark", "perk"])
 	assert_lt(m.row(), m.rows().size(), "the highlighted row is still a row")
+
+# --- Final review: a stale row, after the list of rows shrinks, never reaches the perk or crashes ---
+
+func test_a_stale_row_after_a_later_element_is_spent_elsewhere_is_clamped() -> void:
+	var m := AltarModel.new("C1", null, WorldProgress.new(), SoulProgress.new(null, []), SoulRules.new(), rules)
+	_absorb("blood", 2)
+	m.move(6)
+	assert_eq(m.rows()[6]["element"], "blood")
+	assert_true(rules.spend_essence("blood", 2))
+	assert_eq(m.rows().size(), 6, "attune and the five first-pass elements")
+	assert_eq(m.row(), 5, "the highlighted row is the last one that exists")
+	assert_false(m.act(), "nothing to bank on the dark row, and no perk to buy: no crash")

@@ -62,6 +62,16 @@ def tint(reads, stage):
     return [round(min(1.0, c), 3) for c in rgb]
 
 
+def check_raw(f):
+    """The doc's own cells, before the parser filters them to known names: an element or area it does not know is an error."""
+    for part in f["readsText"].split("+"):
+        if part.strip() not in be.ELEMENTS:
+            raise ValueError("%s: reads %r, which is not an element" % (f["dataId"], part.strip()))
+    for part in f["hostText"].split(","):
+        if part.strip().lower() not in be.AREA_IDS:
+            raise ValueError("%s: host names unknown area %r" % (f["dataId"], part.strip()))
+
+
 def check_row(f):
     for e in f["reads"]:
         if e not in be.ELEMENTS:
@@ -93,6 +103,7 @@ def species_forms():
     line_name = {(f["species"], f["line"]): slug(f["name"]) for f in forms if f["stage"] == 2}
     for f in forms:
         f["dataId"] = ids[f["id"]]
+        check_raw(f)
         f["parents"] = [f["species"]] if f["stage"] == 2 else [ids[f["parent"]]]
         f["lineage"] = line_name[(f["species"], f["line"])]
         f["stats"] = flavour(f["reads"], f["stage"])
