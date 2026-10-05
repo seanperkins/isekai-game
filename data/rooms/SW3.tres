@@ -1,0 +1,57 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
+
+[resource]
+script = ExtResource("1_roomdef")
+id = "SW3"
+area = "swamp"
+cell = Vector2i(14, 0)
+size = Vector2i(2, 1)
+solids = [Rect2(540, 268, 100, 12), Rect2(960, 274, 90, 12), Rect2(1030, 222, 90, 12), Rect2(960, 170, 90, 12), Rect2(1030, 118, 90, 12), Rect2(960, 66, 90, 12), Rect2(1030, 14, 90, 12)]
+decor = [{
+"id": "flooded_puddle_glow",
+"light": Color(0.3, 1, 0.9, 1),
+"pos": Vector2(400, 320)
+}, {
+"id": "flooded_rubble",
+"pos": Vector2(180, 320)
+}, {
+"id": "flooded_glow_fungus",
+"light": Color(0.5, 1, 0.6, 1),
+"pos": Vector2(1200, 320)
+}, {
+"anchor": "top",
+"id": "flooded_root_hang",
+"pos": Vector2(300, 20)
+}, {
+"anchor": "top",
+"id": "flooded_root_hang",
+"pos": Vector2(800, 20)
+}]
+spawns = [{
+"id": "blood_leech",
+"pos": Vector2(260, 314)
+}, {
+"id": "bog_wisp",
+"pos": Vector2(520, 184)
+}, {
+"id": "firefly_swarm",
+"pos": Vector2(1000, 114)
+}]
+exits = [{
+"edge": "left",
+"from": 200.0,
+"room": "SW2",
+"to": 320.0
+}, {
+"edge": "top",
+"from": 960.0,
+"room": "SW4",
+"to": 1120.0
+}, {
+"edge": "right",
+"from": 200.0,
+"room": "SW5",
+"to": 320.0
+}]

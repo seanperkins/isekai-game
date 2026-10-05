@@ -7,17 +7,12 @@ const CELLS := {"FO1": [Vector2i(3, 0), Vector2i(1, 1)], "FO2": [Vector2i(4, 0),
 ## The creatures the design table says live in the forest and that exist as data before F2f places the twins.
 const FOREST_SUPPORT := ["village_goblin", "firefly_swarm", "moon_hare", "tusker_boar"]
 
-## The forest taken out: the hand-authored world as it was before the builder.
-class NoForest extends AreaModule:
-	func prefix() -> String:
-		return "FO"
-
 var world: Dictionary
 var shipped: Dictionary
 
 func before_all() -> void:
-	world = World.load_rooms(AreaBuilder.ROOMS_DIR)
-	shipped = AreaBuilder.build_with([NoForest.new()])
+	world = AreaWorlds.without(["SW", "VI"])  # the world as it was when the forest was built: the later areas are tests of their own
+	shipped = AreaWorlds.without(["FO", "SW", "VI"])  # the hand-authored world as it was before the builder
 
 func test_the_forest_is_nine_rooms_at_their_cells_and_sizes() -> void:
 	for id in CELLS:

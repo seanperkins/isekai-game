@@ -22,20 +22,16 @@ func build(world: Dictionary) -> void:
 	var den := _den()
 	for r in [mouth, treeline, clearing, hollow, trunk, canopy, nest, trail, den]:
 		world[r.id] = r
-	_link(world["C3"], mouth, "right", 200.0, 320.0)
-	_link(mouth, treeline, "right", 200.0, 320.0)
-	_link(treeline, clearing, "right", 200.0, 320.0)
-	_link(treeline, hollow, "bottom", 2860.0, 2980.0)
-	_link(hollow, world["C4"], "bottom", 3000.0, 3120.0, {"gate": "wall_cling"})  # a drop down; the way back up is a climb that wants the wall cling
-	_link(clearing, trunk, "top", 4080.0, 4240.0)  # x: the hole is 240 to 400 in both rooms (cell 6 starts at 3840)
-	_link(trunk, canopy, "right", -880.0, -760.0)
-	_link(canopy, nest, "right", -880.0, -760.0)
-	_link(clearing, trail, "right", 200.0, 320.0)
-	_link(trail, den, "right", 200.0, 320.0)
-
-func _link(a: RoomDef, b: RoomDef, edge: String, from_world: float, to_world: float, extra := {}) -> void:
-	if not AreaKit.link(a, b, edge, from_world, to_world, extra):
-		push_error("forest: %s to %s on %s %s..%s does not link" % [a.id, b.id, edge, from_world, to_world])
+	link(world["C3"], mouth, "right", 200.0, 320.0)
+	link(mouth, treeline, "right", 200.0, 320.0)
+	link(treeline, clearing, "right", 200.0, 320.0)
+	link(treeline, hollow, "bottom", 2860.0, 2980.0)
+	link(hollow, world["C4"], "bottom", 3000.0, 3120.0, {"gate": "wall_cling"})  # a drop down; the way back up is a climb that wants the wall cling
+	link(clearing, trunk, "top", 4080.0, 4240.0)  # x: the hole is 240 to 400 in both rooms (cell 6 starts at 3840)
+	link(trunk, canopy, "right", -880.0, -760.0)
+	link(canopy, nest, "right", -880.0, -760.0)
+	link(clearing, trail, "right", 200.0, 320.0)
+	link(trail, den, "right", 200.0, 320.0)
 
 # --- FO1 the Cave Mouth: the threshold, no creatures ---
 func _mouth() -> RoomDef:

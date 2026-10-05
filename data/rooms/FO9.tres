@@ -24,4 +24,9 @@ exits = [{
 "from": 200.0,
 "room": "FO8",
 "to": 320.0
+}, {
+"edge": "right",
+"from": 200.0,
+"room": "SW1",
+"to": 320.0
 }]

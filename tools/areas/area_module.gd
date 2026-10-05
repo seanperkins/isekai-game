@@ -13,3 +13,8 @@ func prefix() -> String:
 
 func build(_world: Dictionary) -> void:
 	pass
+
+## AreaKit.link, reporting a join that does not hold (a module's layout is wrong, not the player's input).
+func link(a: RoomDef, b: RoomDef, edge: String, from_world: float, to_world: float, extra := {}) -> void:
+	if not AreaKit.link(a, b, edge, from_world, to_world, extra):
+		push_error("%s: %s to %s on %s %s..%s does not link" % [area(), a.id, b.id, edge, from_world, to_world])

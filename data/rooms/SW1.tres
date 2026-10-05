@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
+
+[resource]
+script = ExtResource("1_roomdef")
+id = "SW1"
+area = "swamp"
+cell = Vector2i(11, 0)
+solids = [Rect2(240, 268, 140, 12)]
+decor = [{
+"anchor": "top",
+"id": "flooded_root_hang",
+"pos": Vector2(160, 20)
+}, {
+"anchor": "top",
+"id": "flooded_root_hang",
+"pos": Vector2(480, 20)
+}, {
+"id": "flooded_puddle_glow",
+"light": Color(0.3, 1, 0.9, 1),
+"pos": Vector2(120, 320)
+}, {
+"id": "flooded_glow_fungus",
+"light": Color(0.5, 1, 0.6, 1),
+"pos": Vector2(440, 320)
+}]
+exits = [{
+"edge": "left",
+"from": 200.0,
+"room": "FO9",
+"to": 320.0
+}, {
+"edge": "right",
+"from": 200.0,
+"room": "SW2",
+"to": 320.0
+}]
