@@ -6,6 +6,8 @@ extends Node2D
 const COOLDOWN_SECONDS := 0.8
 
 var actor: Node2D
+## The skill this is the ability of ("" for a bare ability), so the deeds a cast earns can name it.
+var skill_id := ""
 var values: Array = []
 var level := 1
 ## Verb parameters from the skill's active effect (a data-defined verb: see VerbKinds). Empty for a scripted ability.

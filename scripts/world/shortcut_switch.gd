@@ -32,7 +32,12 @@ func receive_tackle(_atk: int, _from_behind: bool, _from: Vector2 = Vector2.INF)
 	open()
 	return false
 
-func receive_hit(_raw: int, _damage_type: String, _from: Vector2 = Vector2.INF, _cause: String = "") -> void:
+## A hit from this far away is a far switch hit (a deed: a bolt or a throw, not a tackle).
+const FAR_PX := 200.0
+
+func receive_hit(_raw: int, _damage_type: String, from: Vector2 = Vector2.INF, _cause: String = "") -> void:
+	var far: bool = from != Vector2.INF and global_position.distance_to(from) >= FAR_PX
+	EventBus.game_event.emit(Deeds.SWITCH_HIT, {"far": true} if far else {})
 	open()
 
 func open() -> void:

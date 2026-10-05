@@ -208,6 +208,7 @@ func _build_verb(sd: SkillDef) -> Ability:
 			values = e.get("values", [])
 	var ability: Ability = load(SkillEffects.active_scene(sd)).instantiate()
 	ability.spec = spec
+	ability.skill_id = sd.id
 	ability.setup(self, values, 1)
 	ability.power_cap = VERB_POWER_CAP * int(stats.get_stat("atk"))
 	_verb_kind = spec["kind"]
@@ -288,6 +289,8 @@ func receive_tackle(atk: int, from_behind: bool, from: Vector2 = Vector2.INF) ->
 	if _untouchable():
 		return false
 	var weak := def.armored_charger and (from_behind or status.state == EnemyStatus.STUNNED)
+	if weak:
+		EventBus.game_event.emit(Deeds.GUARD_BROKEN, {"source": def.id})  # a tackle is the player's: the rules take it from the bus
 	_blow_from_behind = from_behind
 	receive_hit(atk * WEAK_POINT_MULT if weak else atk, "physical", from, "tackle", weak)
 	if status.state == EnemyStatus.DYING or status.state == EnemyStatus.DOWNED:
@@ -450,6 +453,10 @@ func hurt_polygon() -> PackedVector2Array:
 
 ## False for a creature that is dying, downed or gone: blows and tackles do nothing to it, so a target
 ## selector must look past it to a living one.
+## Alive and able to fight: not downed, dying or gone. A room is cleared when none is left.
+func is_threat() -> bool:
+	return status.state == EnemyStatus.ACTIVE or status.state == EnemyStatus.STUNNED
+
 func can_be_hit() -> bool:
 	return not _untouchable()
 

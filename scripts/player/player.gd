@@ -881,6 +881,10 @@ func on_enemy_downed(def: CreatureDef, spawn_key := "") -> void:
 	if not health.is_dead():
 		progression.award(spawn_key, "down", def.xp)
 
+## Says a deed (Deeds) to the run: the abilities and the world report what the player did through here.
+func emit_deed(event_name: String, tags := {}) -> void:
+	_emit.call(event_name, tags)
+
 ## An enemy was downed: say how, as a `defeated` deed (DeedTags). Nothing when the player is dead.
 func note_defeat(enemy) -> void:
 	if health.is_dead():
@@ -1279,6 +1283,7 @@ func _ability(id: String) -> Ability:
 		node.free()
 		return null
 	node.spec = SkillEffects.active_spec(d)
+	node.skill_id = id
 	node.setup(self, SkillEffects.active_values(d), _rules.level_of(id))
 	add_child(node)
 	_abilities[id] = node

@@ -328,11 +328,12 @@ static func _dissolve(a: Ability, spec: Dictionary) -> void:
 	var half := float(spec.get("half_width", DISSOLVE_HALF_WIDTH))
 	var dir: Vector2 = a.aim_dir()
 	var from: Vector2 = a.actor.global_position
-	_strike(a, a.targets_in_front(reach, half), spec, true)
+	_strike(a, a.targets_in_front(reach, half), spec, true, false)
 	for n in a.actor.get_tree().get_nodes_in_group("dissolvable"):
 		var d: Vector2 = n.global_position - from
 		if d.dot(dir) >= -4.0 and d.dot(dir) <= reach and absf(d.cross(dir)) <= half and n.has_method("dissolve"):
 			n.dissolve()
+			_deed(a, Deeds.BARRIER_BROKEN)
 	Vfx.line(a.actor, from, from + dir * reach, _color(spec), 6.0, 0.2)
 
 ## A falling body falls slowly for a while (Ride).
@@ -401,6 +402,7 @@ static func _reveal(a: Ability, spec: Dictionary) -> void:
 	for n in a.actor.get_tree().get_nodes_in_group("hidden"):
 		if n.has_method("reveal") and n.global_position.distance_to(a.actor.global_position) <= radius:
 			n.reveal()
+			_deed(a, Deeds.HIDDEN_FOUND)
 	var spots: Array = []
 	for i in 12:
 		spots.append(a.actor.global_position + Vector2.from_angle(TAU * float(i) / 12.0) * radius * 0.6)
@@ -419,10 +421,17 @@ static func _bridge(a: Ability, spec: Dictionary) -> void:
 	bridge.launch(a.actor, Vector2(from.x + way * (BRIDGE_REACH + length / 2.0), from.y + BodyConfig.BOTTOM), length, float(spec.get("seconds", BRIDGE_SECONDS)))
 
 ## The skill's damage to each target, then the spec's status. `ignore_def` skips an Enemy's DEF.
-static func _strike(a: Ability, targets: Array, spec: Dictionary, ignore_def := false) -> void:
+static func _strike(a: Ability, targets: Array, spec: Dictionary, ignore_def := false, counts := true) -> void:
 	var power := a.power()
 	for t in targets:
 		_hit(t, power, spec, a.actor.global_position, ignore_def, a.actor)
+	if counts and a.skill_id != "":  # a strike that found something is a hit, one that found nothing is a miss
+		_deed(a, Deeds.SKILL_HIT if not targets.is_empty() else Deeds.SKILL_MISSED, {"id": a.skill_id})
+
+## A deed the caster did, if the caster is the player (an enemy casting the same verb earns nothing).
+static func _deed(a: Ability, event_name: String, tags := {}) -> void:
+	if a.actor.has_method("emit_deed"):
+		a.actor.emit_deed(event_name, tags)
 
 static func _hit(t, power: int, spec: Dictionary, from: Vector2, ignore_def := false, caster = null) -> void:
 	var type := str(spec.get("damage_type", "physical"))

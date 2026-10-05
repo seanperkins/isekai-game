@@ -51,6 +51,7 @@ func _on_room_entered(id: String) -> void:
 	var area: String = world.rooms[id].area
 	var biome := TerrainArt.art_key(area)  # a new area borrows its biome's light and music bed
 	player.in_dark = DeedTags.is_dark_area(area)
+	player.emit_deed(Deeds.ROOM_ENTERED, {"room": id, "area": area})
 	var target: Color = TerrainArt.ambient(biome, AMBIENT)
 	var tw := create_tween()
 	tw.tween_property(ambient, "color", target, 0.6)
@@ -203,6 +204,8 @@ func _open_altar_menu(altar: Altar) -> void:
 ## start_run() clears everything a kit would set, and the perks last so the stats they raise are filled.
 func begin_life(start: Dictionary) -> void:
 	SkillRules.start_run()
+	if world.current_id != "":  # the run's first room was entered before the run began: say so now
+		player.emit_deed(Deeds.ROOM_ENTERED, {"room": world.current_id, "area": world.rooms[world.current_id].area})
 	if not start["kit"].is_empty():
 		# an editor Play passes no compendium: the kit grant must not raise slots in the (persistent) profile
 		HeadStart.apply(player, SkillRules, null if _editor_play else Compendium.model, start["kit"])
@@ -224,9 +227,29 @@ func _spawn(id: String, pos: Vector2) -> Node2D:
 		node.setup(def, _skills_by_id)
 		node.downed.connect(func(d: CreatureDef) -> void: player.on_enemy_downed(d, node.spawn_key))
 		node.downed.connect(func(_d: CreatureDef) -> void: player.note_defeat(node))
+		node.downed.connect(func(_d: CreatureDef) -> void: _check_room_cleared())
 		node.downed.connect(func(d: CreatureDef) -> void: Compendium.model.on_creature_defeated(d.id))
 	node.position = pos
 	return node
+
+## The room is cleared when its last enemy goes down: a deed, once per room, and alone when no ally is out.
+func _check_room_cleared() -> void:
+	var room := world.room
+	if room == null or room.has_meta("cleared"):
+		return
+	var any := false
+	for n in room.get_children():
+		if n is Enemy:
+			any = true
+			if (n as Enemy).is_threat():
+				return
+	if not any:
+		return
+	room.set_meta("cleared", true)
+	var tags := {"room": world.current_id}
+	if get_tree().get_nodes_in_group("verb_allies").is_empty():
+		tags["alone"] = true
+	player.emit_deed(Deeds.ROOM_CLEARED, tags)
 
 func _emit_game_event(event_name: String, tags: Dictionary) -> void:
 	EventBus.game_event.emit(event_name, tags)

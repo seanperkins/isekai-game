@@ -57,6 +57,7 @@ const RESERVED := {
 	PART_HARVESTED: "E1", GRAFT_ATTACHED: "E1", GRAFT_SHED: "E1", CORPSE_LEFT: "E1", ITEM_CARRIED: "E1",
 	BOND_FORMED: "E2", LESSON_LEARNED: "E2", TRAP_SPRUNG: "E2", WEAPON_FORGED: "E2", ITEM_STOLEN: "E2", WARD_STONE_PLACED: "E2",
 	PREY_COCOONED: "E2",
+	BARRIER_BROKEN: "F2", HIDDEN_FOUND: "F2",  # the verbs report them; the rooms have nothing to dissolve or reveal yet
 	GAP_CROSSED: "F2", LAMP_DRUNK: "F2", VILLAGE_KEPT: "F2", ROOM_HELD: "F2", VIGIL_KEPT: "F2", "defeated.moonlit": "F2",
 }
 
