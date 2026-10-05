@@ -5,10 +5,6 @@ const COUNTS := {"wolf": 21, "spider": 21, "goblin": 28, "undead": 29}
 const NEW_SLIME := ["gleipnir", "ariadne", "beanstalk", "selkie", "kraken", "tiamat", "alkahest", "pestilence", "slime_mold", "talos",
 	"philosophers_stone", "cube", "mimic", "poltergeist", "cloud_rider", "shoggoth", "king_slime", "quicksilver_slime"]
 
-func after_each() -> void:
-	SkillRules.reset_run()
-	Announcer.queue.clear()
-
 func _about(f: FormDef) -> Array:
 	return Array(FormValidator.validate({f.id: f}, [], true)).filter(func(m: String) -> bool: return m.begins_with(f.id + ":"))
 
@@ -59,3 +55,137 @@ func test_look_uses_the_frame_when_there_is_one() -> void:
 	assert_eq(_region(warg["texture"]), _region(SpriteSheet.load_set("forms_wolf").frame_texture("warg")))
 	var weaver: Dictionary = FormEffects.look(forms["weaver"], null)
 	assert_eq(_region(weaver["texture"]), _region(SpriteSheet.load_set(forms["weaver"].sprite_set).frame_texture("idle_1")))
+
+# --- drawn as the still (Task 2) ---
+
+var rules: SkillRulesEngine
+var player: Player
+
+func _spawn(species: String) -> void:
+	rules = autofree(SkillRulesEngine.new())
+	rules.setup(DefLoader.load_dir("res://data/skills"))
+	player = Player.new()
+	player.species = species
+	player.setup(rules, CompendiumModel.new([], []), [], func(n: String, t: Dictionary) -> void: rules.handle_event(n, t))
+	add_child_autofree(player)
+	rules.start_run()
+	_block(Rect2(-2000.0, BodyConfig.BOTTOM, 4000.0, 20.0))
+	await wait_physics_frames(6)
+
+func _block(r: Rect2) -> StaticBody2D:
+	var b := StaticBody2D.new()
+	b.position = r.position + r.size / 2.0
+	var s := CollisionShape2D.new()
+	var rect := RectangleShape2D.new()
+	rect.size = r.size
+	s.shape = rect
+	b.add_child(s)
+	add_child_autofree(b)
+	return b
+
+func _settle() -> void:
+	await wait_seconds(Player.EVOLVE_SECONDS + 0.3)
+	await wait_physics_frames(3)
+
+func _tex_region(sprite: Sprite2D) -> Rect2:
+	return (sprite.texture as AtlasTexture).region
+
+func after_each() -> void:
+	for a in ["move_right", "move_left", "tackle"]:
+		Input.action_release(a)
+	SkillRules.reset_run()
+	Announcer.queue.clear()
+
+func test_a_wolf_form_is_drawn_as_its_still_and_mirrored_when_it_faces_left() -> void:
+	await _spawn("wolf")
+	assert_true(player.advance_form("wolf_warg", true))
+	await _settle()
+	var sprite: Sprite2D = player.get_node("Sprite")
+	var still := SpriteSheet.load_set("forms_wolf")
+	assert_eq(player.still_frame(), "warg")
+	assert_eq(_tex_region(sprite), (still.frame_texture("warg") as AtlasTexture).region)
+	assert_false(sprite.flip_h)
+	Input.action_press("move_left")
+	await wait_physics_frames(8)
+	assert_true(sprite.flip_h, "facing left")
+	assert_eq(_tex_region(sprite), (still.frame_texture("warg") as AtlasTexture).region, "still the same frame, mirrored")
+	assert_gte(player.hurt_polygon().size(), 3)
+	assert_eq(player.body_scale(), 1.0, "drawn at the sheet's own size")
+
+func test_a_slime_form_with_a_still_is_drawn_as_it() -> void:
+	await _spawn("slime")
+	for id in ["weaver", "snare", "gleipnir"]:
+		assert_true(player.advance_form(id, true), id)
+	await _settle()
+	var sprite: Sprite2D = player.get_node("Sprite")
+	assert_eq(player.still_frame(), "gleipnir")
+	assert_eq(_tex_region(sprite), (SpriteSheet.load_set("forms_slime").frame_texture("gleipnir") as AtlasTexture).region)
+	assert_gte(player.hurt_polygon().size(), 3)
+
+func test_a_form_with_no_still_keeps_the_animated_look() -> void:
+	await _spawn("slime")
+	assert_true(player.advance_form("weaver", true))
+	await _settle()
+	assert_eq(player.still_frame(), "")
+	assert_true(player.body_sheet().has_frame("idle_1"), "its own animated sheet")
+	await _spawn("wolf")
+	assert_eq(player.still_frame(), "", "the base wolf animates")
+
+func test_a_still_spider_on_a_wall_is_turned_to_it_and_keeps_its_thread() -> void:
+	await _spawn("spider")
+	var forms := FormLoader.load_all()
+	var stage2: Array = forms.values().filter(func(f: FormDef) -> bool: return f.species == "spider" and f.stage == 2)
+	assert_true(player.advance_form(stage2[0].id, true))
+	await _settle()
+	assert_ne(player.still_frame(), "")
+	_block(Rect2(60.0, -600.0, 40, 600.0 + BodyConfig.BOTTOM))
+	await wait_physics_frames(2)
+	Input.action_press("move_right")
+	await wait_physics_frames(100)
+	var sprite: Sprite2D = player.get_node("Sprite")
+	assert_gt(absf(sprite.rotation), 1.0, "a quarter turn to the wall")
+	assert_eq(_tex_region(sprite), (SpriteSheet.load_set("forms_spider").frame_texture(player.still_frame()) as AtlasTexture).region)
+
+func test_a_form_whose_sheet_cannot_be_found_falls_back_to_the_base_look() -> void:
+	await _spawn("wolf")
+	var broken: FormDef = player.forms["wolf_warg"].duplicate()
+	broken.sprite_set = "no_such_sheet"
+	player.forms["wolf_warg"] = broken
+	assert_true(player.advance_form("wolf_warg", true))
+	await _settle()
+	assert_eq(player.still_frame(), "")
+	assert_true(player.get_node("Sprite").visible)
+
+func test_a_form_whose_frame_is_missing_keeps_the_base_look_even_on_a_species_body() -> void:
+	await _spawn("wolf")
+	var broken: FormDef = player.forms["wolf_warg"].duplicate()
+	broken.sprite_frame = "no_such_frame"
+	player.forms["wolf_warg"] = broken
+	assert_true(player.advance_form("wolf_warg", true))
+	await _settle()
+	assert_eq(player.still_frame(), "")
+	assert_true(player.body_sheet().has_frame("idle_1") or player.body_sheet().frame_names().size() > 0)
+
+func test_evolving_from_a_still_form_to_an_animated_one_swaps_the_look_back() -> void:
+	await _spawn("slime")
+	for id in ["weaver", "snare", "gleipnir"]:
+		assert_true(player.advance_form(id, true), id)
+	await _settle()
+	assert_eq(player.still_frame(), "gleipnir")
+	player._use_form_sheet(player.forms["weaver"])
+	assert_eq(player.still_frame(), "")
+	assert_true(player.body_sheet().has_frame("idle_1"))
+
+func test_a_species_body_does_not_take_an_animated_form_sheet_with_no_still() -> void:
+	await _spawn("wolf")
+	var odd: FormDef = player.forms["wolf_warg"].duplicate()
+	odd.sprite_set = "form_weaver"  # the slime's animated sheet: its clips are not the wolf's
+	odd.sprite_frame = ""
+	player.forms["wolf_warg"] = odd
+	assert_true(player.advance_form("wolf_warg", true))
+	await _settle()
+	assert_eq(player.still_frame(), "")
+	assert_eq(player.body_sheet().frame_names(), SpriteSheet.load_set("gloom_wolf").frame_names(), "still the wolf's own sheet")
+	Input.action_press("move_right")
+	await wait_physics_frames(20)  # it runs on without a bad frame lookup
+	assert_true(player.get_node("Sprite").visible)

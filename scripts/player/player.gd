@@ -141,6 +141,7 @@ var use_sheet := true
 var _sheet: SpriteSheet         # the sheet being drawn: the form's own, or the base sheet
 var _base_sheet: SpriteSheet    # the plain slime's sheet, also worn (tinted, scaled) by forms without art
 var _form_sheet: SpriteSheet    # the current form's own sheet, or null
+var _still := ""                # the frame of that sheet drawn as the form's body ("" for a form that animates)
 ## The evolved body: stage and form (Form.advance is the only way they change) and the form definitions.
 ## Which species this body is (Form.SPECIES): set before setup(), which builds `form` for it. Only the form tree follows it so
 ## far; the body, the movement and the sheet are the slime's until the species are wired into the player.
@@ -394,6 +395,9 @@ func _update_visual(delta: float) -> void:
 	if _sheet == null:
 		_draw_fallback_sprite()
 		return
+	if _still != "":
+		_draw_still()
+		return
 	var state := SlimeState.pick(predation.active(), _invuln > INVULN_SECONDS - HURT_FLASH and not evolving(), rope != null,
 		_clinging(), _tackle_time > 0.0, spreading, on_floor, velocity.y, _land_timer, velocity.x)
 	_animator.play(state)
@@ -453,6 +457,9 @@ func _update_visual_species(delta: float) -> void:
 	if look == "spider":
 		_draw_spider(delta)
 		return
+	if _still != "":
+		_draw_still()
+		return
 	var clip := SpeciesLook.clip_for(look, on_floor, velocity.y, velocity.x, _land_timer, st.verb, VerbRunner.is_flat(st, species_body.profile), st.clinging)
 	if clip == "" or not _sheet.has_frame(_animator_first_frame(clip)):
 		clip = "idle"
@@ -470,6 +477,24 @@ func _update_visual_species(delta: float) -> void:
 	_sprite.modulate = tint
 	_sprite.flip_h = (st.wall_side < 0) if clip == "wall" else facing < 0
 	_shapes.refresh(_sheet, frame, _sprite.flip_h)
+
+## A form with a still: that frame at the sheet's own size, mirrored when it faces left, swelling and glowing through the evolution
+## moment, red for a moment when hurt. The hurt shape is the frame's traced one.
+func _draw_still() -> void:
+	var glow := evolve_glow()
+	var scale := body_scale() * (1.0 + EVOLVE_SWELL * glow)
+	var size := _sheet.frame_size(_still)
+	_sprite.texture = _sheet.frame_texture(_still)
+	_sprite.position.y = BODY_BOTTOM - size.y * scale / 2.0
+	_sprite.scale = Vector2.ONE * scale
+	_sprite.rotation = 0.0
+	var tint := body_tint().lerp(Color(2.2, 2.2, 2.2), glow * 0.8)
+	if _invuln > INVULN_SECONDS - HURT_FLASH and not evolving():
+		tint = tint.lerp(Color(1.0, 0.45, 0.45), 0.6)
+	_sprite.modulate = tint
+	_sprite.flip_h = facing < 0
+	if _shapes != null:
+		_shapes.refresh(_sheet, _still, _sprite.flip_h)
 
 ## The spider, after how spiders move: the legs follow the distance travelled (so they freeze the instant it stops), the body is
 ## rigid, the sprite turns to the surface and eases through a corner (the body changes surface in one tick; the sprite starts where
@@ -494,6 +519,8 @@ func _draw_spider(delta: float) -> void:
 	if (attached and not corner) or dropping:
 		_spider_stride = SpeciesLook.stride_advance(_spider_stride, st.surface_shift.length())
 	var clip := "crawl_%d" % (SpeciesLook.stride_frame(_spider_stride) + 1) if (attached or dropping) and not zipping else "drop"
+	if _still != "":
+		clip = _still  # a form's one still stands in for every pose; the turning, the legs' timing and the thread are unchanged
 	var vx := st.drop_vx if dropping else velocity.x
 	var sense := st.surface_sigma if attached else (signf(vx) if absf(vx) > 20.0 else _spider_sense)
 	if sense != _spider_sense:
@@ -675,7 +702,7 @@ func cancel_predate() -> void:
 	_end_cover()
 
 func _start_cover(target: Node2D) -> void:
-	if _sheet == null or species_body != null:
+	if _sheet == null or species_body != null or _still != "":
 		return  # the cover is the slime's own frames; the other species eat without one until they have their own art
 	_end_cover()
 	_cover = EatCover.new()
@@ -944,16 +971,32 @@ func fill_vitals() -> void:
 func debug_grant_xp(amount: int) -> void:
 	progression.add_xp(amount)
 
+## A form's own sheet: its still (the art track's one frame per form) or, for the slime, an animated sheet of its own. A frame the
+## sheet lacks, a sheet that is missing, or a species body with an animated sheet (a species' clips are its base's) keeps the base look.
 func _use_form_sheet(def: FormDef) -> void:
 	if _animator == null:
 		return  # no sheet drawing at all (use_sheet false): there is nothing to swap
+	var sheet: SpriteSheet = null
 	if def.sprite_set != "" and SpriteSheet.available(def.sprite_set):
-		_form_sheet = SpriteSheet.load_set(def.sprite_set)
-		_sheet = _form_sheet
+		sheet = SpriteSheet.load_set(def.sprite_set)
+		if def.sprite_frame != "":
+			if not sheet.has_frame(def.sprite_frame):
+				sheet = null
+		elif species_body != null:
+			sheet = null
+	if sheet != null:
+		_form_sheet = sheet
+		_sheet = sheet
+		_still = def.sprite_frame
 	else:
 		_form_sheet = null
+		_still = ""
 		if _base_sheet != null:
 			_sheet = _base_sheet
+
+## The frame of the form's sheet drawn as its body, "" when the form animates.
+func still_frame() -> String:
+	return _still
 
 func _on_leveled_up(level: int) -> void:
 	if not _kit_starting:  # a rebirth kit's starting level makes no fanfare
@@ -1253,6 +1296,7 @@ func _on_run_started() -> void:
 	progression.leveled_up.connect(_on_leveled_up)
 	form.reset()
 	_form_sheet = null
+	_still = ""
 	if _base_sheet != null:
 		_sheet = _base_sheet
 	skillset.reset()
