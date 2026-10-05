@@ -136,3 +136,74 @@ func test_give_all_skips_an_unknown_part() -> void:
 	var inv := _inv()
 	inv.give_all(["no_such_part", "ribs"], true)
 	assert_eq(inv.worn(), ["ribs"])
+
+# --- cocoons ---
+
+func test_is_cocoon_reads_the_prefix() -> void:
+	assert_true(Inventory.is_cocoon("cocoon:bat"))
+	assert_false(Inventory.is_cocoon("claw"))
+	assert_false(Inventory.is_cocoon("cocoon"))
+	assert_false(Inventory.is_cocoon("cocoon:"), "a cocoon of no one")
+
+func test_a_cocoon_is_carried_never_worn_even_by_a_body_that_can_graft() -> void:
+	var inv := _inv()
+	assert_true(inv.add_cocoon("bat"))
+	assert_eq(inv.carried(), ["cocoon:bat"])
+	assert_eq(inv.worn(), [])
+	assert_eq(inv.stat_mods(), [])
+
+func test_two_cocoons_fit_and_a_third_is_refused() -> void:
+	var inv := _inv()
+	assert_true(inv.add_cocoon("bat"))
+	assert_true(inv.add_cocoon("toad"))
+	assert_false(inv.add_cocoon("lizard"))
+	assert_eq(inv.cocoons(), ["bat", "toad"])
+	assert_eq(Inventory.COCOON_COUNT_MAX, 2)
+
+func test_take_cocoon_gives_the_first_creature_and_leaves_the_rest() -> void:
+	var inv := _inv()
+	inv.add_cocoon("bat")
+	inv.add_cocoon("toad")
+	assert_eq(inv.take_cocoon(), "bat")
+	assert_eq(inv.cocoons(), ["toad"])
+	assert_eq(inv.take_cocoon(), "toad")
+	assert_eq(inv.take_cocoon(), "", "none left")
+
+func test_carried_parts_leaves_the_cocoons_out() -> void:
+	var inv := _inv()
+	inv.add("claw", false)
+	inv.add_cocoon("bat")
+	inv.add("skull", false)
+	assert_eq(inv.carried_parts(), ["claw", "skull"])
+	assert_eq(inv.carried(), ["claw", "cocoon:bat", "skull"])
+
+func test_take_carried_never_takes_a_cocoon() -> void:
+	var inv := _inv()
+	inv.add_cocoon("bat")
+	assert_eq(inv.take_carried(), "", "only a cocoon is carried")
+	assert_eq(inv.cocoons(), ["bat"])
+	inv.add("claw", false)
+	assert_eq(inv.take_carried(), "claw")
+	assert_eq(inv.cocoons(), ["bat"])
+
+func test_add_with_a_cocoon_id_adds_a_cocoon_and_the_cap_still_holds() -> void:
+	var inv := _inv()
+	assert_eq(inv.add("cocoon:bat", true), {"ok": true, "worn": false})
+	assert_eq(inv.add("cocoon:toad", true), {"ok": true, "worn": false})
+	assert_eq(inv.add("cocoon:lizard", true), {"ok": false, "worn": false})
+	assert_eq(inv.cocoons(), ["bat", "toad"])
+
+func test_take_all_and_give_all_carry_cocoons_with_the_parts() -> void:
+	var inv := _inv()
+	inv.add("ribs", true)
+	inv.add_cocoon("bat")
+	inv.add("claw", true)
+	var all := inv.take_all()
+	assert_eq(all.size(), 3)
+	assert_true(all.has("cocoon:bat"))
+	assert_eq(inv.cocoons(), [])
+	var again := _inv()
+	again.give_all(all, true)
+	assert_eq(again.cocoons(), ["bat"])
+	assert_eq(again.worn(), ["ribs", "claw"], "both grafts are worn again")
+	assert_eq(again.carried_parts(), [])

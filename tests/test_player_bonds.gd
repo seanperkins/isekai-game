@@ -83,6 +83,14 @@ func test_a_goblin_with_nothing_to_offer_tames_nothing() -> void:
 	assert_false(e.is_queued_for_deletion())
 	assert_eq(_named(Deeds.BOND_FORMED).size(), 0)
 
+func test_a_goblin_never_offers_a_cocoon() -> void:
+	_make("goblin")
+	player.collect_part("cocoon:bat")
+	var e := _stunned(_def("t_pal", ["tame"]))
+	assert_false(player.try_bond())
+	assert_false(e.is_queued_for_deletion())
+	assert_eq(player.inventory.cocoons(), ["bat"])
+
 func test_a_goblin_offers_one_part_and_tames_the_creature() -> void:
 	_make("goblin")
 	player.collect_part("claw")

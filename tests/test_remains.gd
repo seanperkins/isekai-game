@@ -194,6 +194,35 @@ func test_a_game_starting_with_stale_remains_cleans_them() -> void:
 	assert_eq(game._progress.remains["parts"], ["ribs"])
 	game._progress.remains = {}
 
+func test_a_cocoon_in_the_remains_comes_back_as_a_cocoon() -> void:
+	var game = await _game()
+	game.player.set_species("spider")
+	var here: String = game.world.current_id
+	game._progress.leave_remains(here, Vector2(60, 60), ["cocoon:bat", "claw"])
+	game._on_room_entered(here)
+	await wait_physics_frames(2)
+	var found := _remains_nodes(game)
+	assert_eq(found.size(), 1)
+	game.player.global_position = found[0].global_position
+	await wait_physics_frames(3)
+	assert_eq(game.player.inventory.cocoons(), ["bat"])
+	assert_eq(game.player.inventory.carried_parts(), ["claw"])
+
+func test_dying_with_a_cocoon_leaves_it_in_the_remains() -> void:
+	var game = await _game()
+	game.player.set_species("spider")
+	game.player.collect_part("cocoon:bat")
+	game.player.receive_hit(game.player.health.max_hp * 5, "fire")
+	assert_eq(game._progress.remains["parts"], ["cocoon:bat"])
+
+func test_a_saved_cocoon_of_a_creature_the_data_no_longer_holds_is_dropped() -> void:
+	Compendium.progress.remains = {"room": "C1", "pos": [1.0, 2.0], "parts": ["cocoon:no_such_creature", "cocoon:bat", "claw"], "deaths_left": 3}
+	var game = load("res://scenes/main.tscn").instantiate()
+	add_child_autofree(game)
+	await wait_physics_frames(3)
+	assert_eq(game._progress.remains["parts"], ["cocoon:bat", "claw"])
+	game._progress.remains = {}
+
 func test_dying_with_parts_leaves_them_where_you_fell_and_empties_the_pack() -> void:
 	var game = await _game()
 	game.player.set_species("undead")

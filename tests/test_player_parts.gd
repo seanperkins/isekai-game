@@ -104,6 +104,39 @@ func test_releasing_the_parts_gives_up_all_of_them_and_the_passives() -> void:
 	assert_eq(player.inventory.count("ribs") + player.inventory.count("moonstone"), 0)
 	assert_eq(player.stats.get_stat("def"), def)
 
+# --- cocoons ---
+
+func test_a_cocoon_is_carried_and_says_only_that_something_was_carried() -> void:
+	_make("spider")
+	player.collect_part("cocoon:bat")
+	assert_eq(player.inventory.cocoons(), ["bat"])
+	assert_eq(_named(Deeds.ITEM_CARRIED).size(), 1)
+	assert_eq(_named(Deeds.PART_HARVESTED).size(), 0, "a cocoon is not a part")
+	assert_eq(_named(Deeds.GRAFT_ATTACHED).size(), 0)
+
+func test_a_third_cocoon_is_refused_and_says_nothing() -> void:
+	_make("spider")
+	player.collect_part("cocoon:bat")
+	player.collect_part("cocoon:toad")
+	events.clear()
+	player.collect_part("cocoon:lizard")
+	assert_eq(events, [])
+	assert_eq(player.inventory.cocoons(), ["bat", "toad"])
+
+func test_parts_carried_does_not_count_cocoons() -> void:
+	_make("spider")
+	player.collect_part("cocoon:bat")
+	player.collect_part("claw")
+	assert_eq(player.parts_carried(), 1)
+
+func test_the_part_lines_show_a_cocoon_by_its_creature() -> void:
+	_make("spider")
+	player.collect_part("cocoon:gloom_wolf")
+	player.collect_part("claw")
+	assert_eq(player.part_lines(), ["Carrying: Cocoon (Gloom Wolf), Claw"])
+	player.collect_part("cocoon:gloom_wolf")
+	assert_eq(player.part_lines(), ["Carrying: Cocoon (Gloom Wolf) x2, Claw"])
+
 # --- shedding ---
 
 func test_a_hit_of_a_quarter_of_max_hp_sheds_the_latest_graft() -> void:

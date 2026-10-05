@@ -54,6 +54,13 @@ func test_too_few_parts_forge_nothing_and_spend_nothing() -> void:
 	assert_eq(player.parts_carried(), 1)
 	assert_eq(player.stats.get_stat("atk"), atk)
 
+func test_a_cocoon_is_not_a_part_to_forge_with() -> void:
+	_make()
+	player.collect_part("cocoon:bat")
+	player.collect_part("claw")
+	assert_false(player.forge("atk", 2, 2), "one part and a cocoon")
+	assert_eq(player.inventory.cocoons(), ["bat"])
+
 func test_forges_stack() -> void:
 	_make()
 	var atk := player.stats.get_stat("atk")

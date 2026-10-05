@@ -909,7 +909,7 @@ func emit_deed(event_name: String, tags := {}) -> void:
 
 ## How many parts are carried, not worn: what a forge can spend.
 func parts_carried() -> int:
-	return inventory.carried().size()
+	return inventory.carried_parts().size()
 
 ## Spends `parts` carried parts (never a worn graft) on `amount` more of `stat` for the rest of the life; forges stack. False, and nothing
 ## spent, when too few are carried.
@@ -943,7 +943,7 @@ func try_bond() -> bool:
 	if target == null:
 		return false
 	if kind == "tame":
-		if inventory.carried().is_empty():
+		if inventory.carried_parts().is_empty():
 			return false
 		inventory.take_carried()
 		learn_from(target)
@@ -1504,7 +1504,8 @@ func collect_part(id: String) -> void:
 		return
 	if r["worn"]:
 		_refresh_grafts()
-	_emit.call(Deeds.PART_HARVESTED, {"part": id})
+	if not Inventory.is_cocoon(id):  # a cocoon is something carried, not a part harvested
+		_emit.call(Deeds.PART_HARVESTED, {"part": id})
 	_emit.call(Deeds.ITEM_CARRIED, {})
 	if r["worn"]:
 		_emit.call(Deeds.GRAFT_ATTACHED, {"part": id})
@@ -1546,7 +1547,7 @@ func _part_names(ids: Array) -> String:
 		counts[id] = int(counts.get(id, 0)) + 1
 	var names := []
 	for id in counts:
-		var part_name: String = _part_defs[id].display_name
+		var part_name: String = "Cocoon (%s)" % id.trim_prefix(Inventory.COCOON_PREFIX).capitalize() if Inventory.is_cocoon(id) else _part_defs[id].display_name
 		names.append(part_name if counts[id] == 1 else "%s x%d" % [part_name, counts[id]])
 	return ", ".join(names)
 

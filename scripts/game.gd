@@ -123,7 +123,10 @@ func _ready() -> void:
 	world.room_entered.connect(_on_room_entered)
 	var altars := RebirthChoice.altars(rooms)
 	progress.sanitize(altars.map(func(p: Dictionary) -> String: return p["id"]))
-	progress.sanitize_remains(_parts.keys(), rooms.keys())
+	var carried_ids: Array = _parts.keys()  # parts and cocoons: a saved cocoon of a creature the data no longer holds is dropped
+	for creature_id in _creatures:
+		carried_ids.append(Inventory.COCOON_PREFIX + creature_id)
+	progress.sanitize_remains(carried_ids, rooms.keys())
 	var start := {"default": false, "room": request["room"], "pos": request["pos"], "kit": request.get("kit", {})} if _editor_play \
 		else Game.resolve_start(altars, progress.take_pending(), progress.is_attuned)
 	var species := Game.species_arg(args)
