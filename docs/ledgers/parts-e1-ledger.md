@@ -1,0 +1,27 @@
+# SDD ledger — plan: docs/superpowers/plans/2026-10-05-parts-e1.md
+Baseline 3049 (main 07e694e).
+Pre-flight: T1 PartDef -> T2 drops name parts (consumes PartDef ids) -> T3 Inventory (consumes PartDef) -> T4 pickups (consume Drops, Inventory via Player.collect_part defined in T5: T4's tests use a stub collector, T5 wires the real Player) -> T5 Player (consumes T3, T4) -> T6 remains (consumes T3, T5's Player and Game wiring). T4 and T5 both edit game.gd and player.gd: T5 reads T4's code first.
+Plan not panel-reviewed: the branch review at the end covers it.
+Task 1: complete (commits 3ab8c5a..23ab880, tests: tools/run_tests.sh test_part_def → PASS: 8 tests)
+Task 2: complete (commits 23ab880..3f7d66f, tests: tools/run_tests.sh test_drops → PASS: 11 tests)
+Task 3: complete (commits 3f7d66f..d755f4c, tests: tools/run_tests.sh test_inventory → PASS: 15 tests)
+Task 4: Ruling: no _eaten flag on Enemy; corpse_left fires only on the DOWNED->GONE timer transition (consume() jumps straight to GONE and frees) — the same guarantee with no extra state — cost if wrong: one flag to add. Deed corpse_left now carries tag source (the plan said {source}; Deeds.TAGS had none)
+Task 4: complete (commits d755f4c..0604923, tests: tools/run_tests.sh test_part_pickup → PASS: 13 tests)
+Task 5: Ruling: a shed graft is a Player signal part_dropped (id, pos, delay) that Game turns into a pickup in the current room, with a 0.8 s delay before it can be taken back; the plan said only 'drops it beside the player' — it keeps the graft in the room it was lost in and stops the player re-taking it the same frame — cost if wrong: a field and a signal
+Task 5: Ruling: graft passives are timed modifiers (Stats.set_timed_modifiers 'graft'), not set_modifiers, because skillset.refresh() calls clear_modifiers() and would wipe plain ones; reset_run clears both — cost if wrong: the passives would vanish on a skill level-up
+Task 5: Ruling: PartPickup asks a body with can_collect_parts() (Player: not dead) before taking, so a dead body does not swallow a part; collect_part stays void as planned — cost if wrong: one method
+Task 5: complete (commits 0604923..0320030, tests: tools/run_tests.sh test_player_parts → PASS: 18 tests)
+Final: minor (deferred): SpeciesBody._stands_on_oneway casts get_collider() with no null check, so a species body standing on a one-way ledge whose room is freed that frame (World.enter mid-life, a freed ledge) errors in its physics tick; seen only from tests that call World.enter twice
+Task 6: Ruling: remains outlast REMAINS_DEATHS = 3 further deaths (the death that leaves them does not count); a death with nothing to leave counts against older remains; a death with parts replaces them — the plan said 'after three deaths unrecovered' without saying whether the leaving death counts — cost if wrong: one constant
+Task 6: Ruling: recovering remains goes through Player.collect_part for each part, so the deeds (part_harvested, item_carried, graft_attached) fire again this life; the ledger resets every run and the gates count per life, so a recovered graft must count as attached — cost if wrong: a gate can be re-met by dying and recovering
+Task 6: Ruling: the remains position is stored local to the room and clamped 8 px inside its rect, so a death over a pit is still reachable; Remains is its own node (not a PartPickup) since it carries a bundle — cost if wrong: a pile can sit over a hazard
+Task 6: complete (commits 0320030..7a86f68, tests: tools/run_tests.sh test_remains → PASS: 26 tests)
+Task 7: Ruling: the Deathless gate asked for part 'phylactery' but the part is 'phylactery_shard' (H1 wrote the gate before the parts existed), so it could never open; fixed in tools/form_gates.json, regenerated data/forms/undead_deathless.tres, pinned by a GUT and a Python test that every part tag in a gate names a real part — cost if wrong: none
+Task 7: full suite: TEST_TIMEOUT=1700 tools/run_tests.sh -> PASS: 3146 tests; python unittest discover tools -> OK
+Task 7: complete (commits 7a86f68..475245f, tests: tools/run_tests.sh test_form_gates_data → PASS: 9 tests)
+Final: review: debate panel (executor, auditor, cartographer, pentester; antigravity, deepseek, executor-b, simplifier not configured) — 5 raw findings, 4 survived verification, 1 refuted
+Final: fixed a shed graft fell toward the attacker, against its own comment — test_a_graft_knocked_off_by_a_blow_from_the_left_falls_to_the_right and ..._from_the_right_falls_to_the_left RED→GREEN, suite 3148/3148
+Final: fixed the design doc still said creatures leave no corpse, the game has no drops or inventory, and remains decay on timers — docs/isekai-chronicles-design-doc.md now says what E1 built and what is still planned (docs only, no test applies)
+Final: refuted (not a defect): the cartographer said regenerating creatures would drop the claws of gloom_wolf and bog_lizardman — the generator never writes those two shipped files (confirmed by running tools/build_creatures.py: both unchanged)
+Final: minor (deferred): Game loads the parts but never runs PartValidator at startup; a malformed part file would silently skip its pickups (the shipped data is validated by tests/test_part_def.gd)
+Final: minor (deferred): tools/build_parts.py writes data/parts/<id>.tres with the id from tools/parts.json unchecked, so an id like ../creatures/bat would write outside the parts directory; only someone who already controls the repo can set it
