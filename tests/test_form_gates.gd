@@ -22,7 +22,7 @@ func _lineage(fields := {}) -> FormDef:
 	return f
 
 func _errors(f: FormDef) -> Array:
-	return Array(FormValidator.validate({f.id: f}, _skill_ids()))
+	return Array(FormValidator.validate({f.id: f}, _skill_ids(), false, TestDefs.real_verb_ids()))
 
 func test_the_fields_default_to_empty() -> void:
 	assert_eq(FormDef.new().reveal, {})

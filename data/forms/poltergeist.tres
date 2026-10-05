@@ -19,7 +19,8 @@ stats = {
 "spd": 12
 }
 traits = ["sonar"]
-grants = ["echolocation", "leap"]
+grants = ["echolocation", "leap", "verb_poltergeist"]
+verb = "verb_poltergeist"
 tint = Color(1, 0.7, 1, 1)
 size = 1.4
 blurb = "Hurl: throw loose rubble in the room at enemies"

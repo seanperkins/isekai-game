@@ -6,7 +6,8 @@ extends RefCounted
 ## The scene every data-defined verb uses.
 const SCENE := "res://scenes/abilities/verb.tscn"
 const KINDS := ["bolt", "burst", "ring", "dash", "zone", "mark", "heal", "ward", "buff"]
-## Each kind's keys and what they hold (validate() checks them). The kinds in STRIKES also take damage_type and status.
+## Each kind's keys and what they hold (validate() checks them). Every kind also takes `cooldown` (seconds, in place of the default);
+## the kinds in STRIKES also take damage_type and status.
 const SCHEMA := {
 	"bolt": {"range": "number", "half_width": "number", "pierce": "bool"},
 	"burst": {"range": "number", "half_width": "number"},
@@ -19,7 +20,7 @@ const SCHEMA := {
 	"buff": {"stats": "stats", "seconds": "number"},
 }
 const STRIKES := ["bolt", "burst", "ring", "dash", "mark"]
-const STATUSES := ["slow", "stun"]
+const STATUSES := ["slow", "stun", "root"]
 const DASH_SPEED := 500.0
 const DASH_VERTICAL := 0.6
 const DASH_HIT_RANGE := 40.0
@@ -163,10 +164,12 @@ static func _hit(t, power: int, spec: Dictionary, from: Vector2) -> void:
 	t.receive_hit(power, str(spec.get("damage_type", "physical")), from, "")
 	_apply_status(t, spec.get("status", {}))
 
-## slow: any actor that can be slowed. stun: an Enemy that can be eaten (the serpent cannot be stunned).
+## slow: any actor that can be slowed. stun: an Enemy that can be eaten (the serpent cannot be stunned). root: any Enemy, a boss included.
 static func _apply_status(t, status: Dictionary) -> void:
 	if status.has("slow") and t.has_method("slow_for"):
 		t.slow_for(float(status["slow"]))
+	if status.has("root") and t.has_method("root_for"):
+		t.root_for(float(status["root"]))
 	if status.has("stun") and t.get("status") != null and t.get("def") != null and t.def.predatable:
 		t.status.stun(float(status["stun"]))
 
@@ -183,6 +186,7 @@ static func validate(spec: Dictionary) -> PackedStringArray:
 		out.append("unknown verb kind '%s'" % kind)
 		return out
 	var keys: Dictionary = SCHEMA[kind].duplicate()
+	keys["cooldown"] = "number"
 	if kind in STRIKES:
 		keys["damage_type"] = "text"
 		keys["status"] = "status"
@@ -223,5 +227,5 @@ static func _expects(key: String, what: String) -> String:
 		"stats":
 			return "stats must be a dictionary of stat id to number"
 		"status":
-			return "status must be slow and stun seconds"
+			return "status must be slow, stun or root seconds"
 	return "%s must be a number" % key

@@ -95,6 +95,8 @@ var _on_ceiling := false
 var _spit_damage := 0
 var _spit_cd := 0.0
 var _slow := 0.0
+## A verb's root (Bind): no AI, no contact hit, no eat, for this long. Not a stun, so it works on an enemy that cannot be stunned.
+var _root := 0.0
 ## Set only by a thread, never by a zone or a tackle, so the webs on the sprite mean what happened to it.
 var _web_slow := 0.0
 var _web_hold := false
@@ -253,6 +255,14 @@ func slow_for(seconds: float) -> void:
 		return
 	_slow = maxf(_slow, seconds)
 
+func root_for(seconds: float) -> void:
+	if _untouchable():
+		return
+	_root = maxf(_root, seconds)
+
+func is_rooted() -> bool:
+	return _root > 0.0
+
 func can_be_predated() -> bool:
 	return not dormant and def.predatable and status.predatable()
 
@@ -307,9 +317,10 @@ func _physics_process(delta: float) -> void:
 		return
 	_spit_cd = maxf(0.0, _spit_cd - delta)
 	_slow = maxf(0.0, _slow - delta)
+	_root = maxf(0.0, _root - delta)
 	_web_slow = maxf(0.0, _web_slow - delta)
 	var player: Node2D = get_tree().get_first_node_in_group("player")
-	var active := status.state == EnemyStatus.ACTIVE
+	var active := status.state == EnemyStatus.ACTIVE and _root <= 0.0
 	if def.swimmer and not _water_resolved:
 		_home_water = DeepWater.at(get_tree(), global_position)
 		_water_resolved = true

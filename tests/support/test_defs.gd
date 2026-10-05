@@ -2,6 +2,10 @@ class_name TestDefs
 extends RefCounted
 ## Builders for SkillDef/CreatureDef fixtures. Defaults produce a valid def.
 
+## The ids of the shipped form_verb skills: what a form's `verb` must name when real forms are validated.
+static func real_verb_ids() -> Array:
+	return DefLoader.load_dir("res://data/skills").filter(func(d: SkillDef) -> bool: return d.source == "form_verb").map(func(d: SkillDef) -> String: return d.id)
+
 static func skill(id: String, fields: Dictionary = {}) -> SkillDef:
 	var d := SkillDef.new()
 	d.id = id

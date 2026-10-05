@@ -4,3 +4,5 @@ extends Ability
 
 func _perform() -> void:
 	VerbKinds.run(self, spec)
+	if spec.has("cooldown"):
+		_cooldown = float(spec["cooldown"])

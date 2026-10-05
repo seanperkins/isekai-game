@@ -14,6 +14,7 @@ import unicodedata
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build_evolutions as be  # noqa: E402
+import build_form_verbs as bfv  # noqa: E402
 
 OUT = "data/forms"
 STAGE_BASE = {2: {"max_hp": 5, "max_mp": 3}, 3: {"max_hp": 12, "max_mp": 6, "atk": 1}, 4: {"max_hp": 22, "max_mp": 10, "atk": 2, "def": 1}}
@@ -113,6 +114,7 @@ def species_forms():
         f["size"] = STAGE_SIZE[f["stage"]]
         check_row(f)
     check_unique(forms)
+    attach_verbs(forms)
     return forms
 
 
@@ -152,7 +154,32 @@ def slime_forms():
         f["size"] = STAGE_SIZE[f["stage"]]
         check_row(f)
     check_unique(out)
+    attach_verbs(out)
     return out
+
+
+def attach_verbs(forms, rows=None):
+    """A form with a row in tools/form_verbs.json gets `verbId` and the grant of that skill."""
+    by_form = {r["form"]: r for r in (bfv.load_rows() if rows is None else rows)}
+    for f in forms:
+        if f["dataId"] in by_form:
+            f["verbId"] = bfv.skill_id(f["dataId"])
+            f["grants"] = list(f.get("grants", [])) + [f["verbId"]]
+
+
+def check_verb_rows(rows, form_ids):
+    """The table names generated forms once each, a known fidelity, and a spec with a kind."""
+    seen = set()
+    for r in rows:
+        if r["form"] not in form_ids:
+            raise ValueError("form_verbs.json: unknown form '%s'" % r["form"])
+        if r["form"] in seen:
+            raise ValueError("form_verbs.json: two rows for '%s'" % r["form"])
+        seen.add(r["form"])
+        if r["fidelity"] not in bfv.FIDELITY:
+            raise ValueError("form_verbs.json: '%s' has fidelity '%s'" % (r["form"], r["fidelity"]))
+        if not r["name"] or not r["spec"].get("kind") or int(r["mp"]) <= 0:
+            raise ValueError("form_verbs.json: '%s' needs a name, a spec kind and a positive mp" % r["form"])
 
 
 def q(text):
@@ -183,6 +210,8 @@ def tres(f):
         lines.append("traits = %s" % arr(f["traits"]))
     if f.get("grants"):
         lines.append("grants = %s" % arr(f["grants"]))
+    if f.get("verbId"):
+        lines.append("verb = %s" % q(f["verbId"]))
     lines += [
         "tint = Color(%s, %s, %s, 1)" % (num(r), num(g), num(b)), "size = %s" % num(f["size"]),
         "blurb = %s" % q(f["verb"]),
@@ -212,4 +241,5 @@ def build_slime(out_dir=OUT):
 
 
 if __name__ == "__main__":
+    check_verb_rows(bfv.load_rows(), [f["dataId"] for f in species_forms() + slime_forms()])
     print("wrote %d forms and %d new slime forms to %s" % (len(build()), len(build_slime()), OUT))

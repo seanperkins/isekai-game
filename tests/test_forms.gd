@@ -18,7 +18,7 @@ func test_there_are_42_slime_forms_across_stages_two_to_four() -> void:
 	assert_eq(per_stage, {2: 6, 3: 12, 4: 24})
 
 func test_the_data_passes_its_validator() -> void:
-	var errs := FormValidator.validate(forms, skill_ids)
+	var errs := FormValidator.validate(forms, skill_ids, false, TestDefs.real_verb_ids())
 	assert_eq(errs.size(), 0, str(errs))
 
 func test_every_stage_two_form_grows_from_the_base_slime() -> void:

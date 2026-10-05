@@ -107,7 +107,7 @@ func _skill_ids() -> Array:
 	return out
 
 func _errors(forms: Dictionary) -> PackedStringArray:
-	return FormValidator.validate(forms, _skill_ids())
+	return FormValidator.validate(forms, _skill_ids(), false, TestDefs.real_verb_ids())
 
 func test_the_fixture_species_passes_the_validator() -> void:
 	assert_eq(_errors(wolf_forms()).size(), 0, str(_errors(wolf_forms())))

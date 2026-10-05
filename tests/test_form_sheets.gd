@@ -57,7 +57,7 @@ func test_the_form_data_validates_with_its_art_present() -> void:
 	for d in DefLoader.load_dir("res://data/skills"):
 		if d.source != "enemy_only":
 			skill_ids.append(d.id)
-	var errs := FormValidator.validate(forms, skill_ids, true)
+	var errs := FormValidator.validate(forms, skill_ids, true, TestDefs.real_verb_ids())
 	assert_eq(errs.size(), 0, str(errs))
 
 func test_no_hit_shape_of_a_form_balloons_past_its_pixels() -> void:

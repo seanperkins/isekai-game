@@ -17,7 +17,8 @@ stats = {
 "max_mp": 10
 }
 traits = ["spinner"]
-grants = ["sticky_thread"]
+grants = ["sticky_thread", "verb_gleipnir"]
+verb = "verb_gleipnir"
 tint = Color(0.83, 0.75, 1, 1)
 size = 1.4
 blurb = "Bind: roots one big enemy or boss for a few seconds"

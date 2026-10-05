@@ -97,7 +97,7 @@ class FormsTest(unittest.TestCase):
         by = {f["dataId"]: f for f in forms}
         self.assertEqual(len(forms), 18)
         g = by["gleipnir"]
-        self.assertEqual((g["parents"], g["lineage"], g["traits"], g["grants"]), (["snare"], "weaver", ["spinner"], ["sticky_thread"]))
+        self.assertEqual((g["parents"], g["lineage"], g["traits"], g["grants"]), (["snare"], "weaver", ["spinner"], ["sticky_thread", "verb_gleipnir"]))
         self.assertEqual(by["ariadne"]["parents"], ["arachne"])
         self.assertEqual(by["ariadne"]["grants"], ["sticky_thread", "wall_cling"])
         k = by["king_slime"]

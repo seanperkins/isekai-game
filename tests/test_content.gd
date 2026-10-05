@@ -20,7 +20,7 @@ func _creature(id: String) -> CreatureDef:
 	return null
 
 func test_all_content_validates() -> void:
-	assert_eq(skills.size(), 32)
+	assert_eq(skills.filter(func(d: SkillDef) -> bool: return d.source != "form_verb").size(), 32, "the authored skills; the form verbs are generated and counted in test_slime_verbs")
 	assert_eq(creatures.size(), 19)
 	assert_eq(Array(DefValidator.validate(skills, creatures)), [])
 

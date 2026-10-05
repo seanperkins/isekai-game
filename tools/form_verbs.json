@@ -1,0 +1,11 @@
+[
+  {"form": "gleipnir", "name": "Bind", "mp": 8, "value": 2, "fidelity": "full", "note": "",
+   "text": "Roots one big enemy or boss for a few seconds.",
+   "spec": {"kind": "bolt", "range": 160, "half_width": 24, "pierce": false, "status": {"root": 4.0}, "cooldown": 8.0}},
+  {"form": "shoggoth", "name": "Pseudopod", "mp": 3, "value": 5, "fidelity": "full", "note": "",
+   "text": "Extrudes long limbs for reach.",
+   "spec": {"kind": "bolt", "range": 150, "half_width": 12}},
+  {"form": "poltergeist", "name": "Hurl", "mp": 4, "value": 6, "fidelity": "approx", "note": "Always has rubble to throw; the design needs loose objects in the room.",
+   "text": "Throws loose rubble in the room at enemies.",
+   "spec": {"kind": "bolt", "range": 220, "half_width": 14, "pierce": false}}
+]

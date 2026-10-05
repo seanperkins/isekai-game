@@ -9,7 +9,7 @@ func _skill_ids() -> Array:
 	return out
 
 func _errors(forms: Dictionary) -> PackedStringArray:
-	return FormValidator.validate(forms, _skill_ids())
+	return FormValidator.validate(forms, _skill_ids(), false, TestDefs.real_verb_ids())
 
 func _wolf(id: String, fields := {}) -> FormDef:
 	var f := FormDef.new()

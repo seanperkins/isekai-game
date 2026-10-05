@@ -196,7 +196,7 @@ func test_validate_reports_the_exact_messages() -> void:
 	assert_eq(Array(VerbKinds.validate({"kind": "ring", "width": 3})), ["ring: unknown key 'width'"])
 	assert_eq(Array(VerbKinds.validate({"kind": "buff", "stats": {"spd": "fast"}})), ["buff: stats must be a dictionary of stat id to number"])
 	assert_eq(Array(VerbKinds.validate({"kind": "buff", "stats": {"luck": 3}})), ["buff: stats must be a dictionary of stat id to number"])
-	assert_eq(Array(VerbKinds.validate({"kind": "bolt", "status": {"burn": 2}})), ["bolt: status must be slow and stun seconds"])
+	assert_eq(Array(VerbKinds.validate({"kind": "bolt", "status": {"burn": 2}})), ["bolt: status must be slow, stun or root seconds"])
 
 func test_a_buff_survives_a_skill_refresh() -> void:
 	var p := _real_player()
@@ -215,3 +215,24 @@ func test_active_spec_ignores_a_spec_that_is_not_a_dictionary() -> void:
 	for bad in ["bolt", [1], 3]:
 		var d := TestDefs.skill("v", {"effects": [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [4], "spec": bad}]})
 		assert_eq(SkillEffects.active_spec(d), {})
+
+# --- B3: the spec's own cooldown and the root status ---
+
+func test_a_spec_cooldown_replaces_the_default() -> void:
+	var a := _verb({"kind": "bolt", "cooldown": 5.0})
+	assert_true(a.activate())
+	a._process(4.0)
+	assert_false(a.ready(), "still cooling")
+	a._process(1.1)
+	assert_true(a.ready())
+
+func test_the_default_cooldown_stands_without_one() -> void:
+	var a := _verb({"kind": "bolt"})
+	a.activate()
+	a._process(Ability.COOLDOWN_SECONDS + 0.01)
+	assert_true(a.ready())
+
+func test_validate_accepts_cooldown_and_root_and_rejects_text() -> void:
+	assert_eq(Array(VerbKinds.validate({"kind": "bolt", "cooldown": 8.0, "status": {"root": 4.0}})), [])
+	assert_eq(Array(VerbKinds.validate({"kind": "zone", "cooldown": 8})), [])
+	assert_eq(Array(VerbKinds.validate({"kind": "bolt", "cooldown": "long"})), ["bolt: cooldown must be a number"])

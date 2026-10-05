@@ -22,7 +22,7 @@ func test_the_species_have_their_forms() -> void:
 	assert_eq(forms.size(), 141)
 
 func test_the_data_passes_the_validator() -> void:
-	assert_eq(Array(FormValidator.validate(forms, _skill_ids())), [])
+	assert_eq(Array(FormValidator.validate(forms, _skill_ids(), false, TestDefs.real_verb_ids())), [])
 
 func test_every_stage_two_and_three_form_has_at_least_two_children() -> void:
 	for f: FormDef in _others():
