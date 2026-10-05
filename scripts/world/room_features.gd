@@ -4,6 +4,21 @@ extends RefCounted
 ## from its data. Unknown kinds return null.
 
 static func make(f: Dictionary, ctx: Dictionary) -> Node2D:
+	var made := _make(f, ctx)
+	if made is RoomDeed:
+		(made as RoomDeed).ledger = ctx.get("ledger", null)
+	return made
+
+## Whether `ledger` (the run's rules engine, the autoload when null) has `event` for this feature's id already: a barrier broken or a door found
+## this life is not built again.
+static func _said(f: Dictionary, event: String, ctx: Dictionary) -> bool:
+	var l = ctx.get("ledger", null)
+	if l == null:
+		var loop := Engine.get_main_loop()
+		l = (loop as SceneTree).root.get_node_or_null("SkillRules") if loop is SceneTree else null
+	return l != null and l.count(event, {"id": f.get("id", "")}) > 0
+
+static func _make(f: Dictionary, ctx: Dictionary) -> Node2D:
 	match f.get("kind", ""):
 		"glow_pool":
 			var pool := GlowPool.new()
@@ -25,10 +40,14 @@ static func make(f: Dictionary, ctx: Dictionary) -> Node2D:
 			sw.setup(f, ctx)
 			return sw
 		"barrier":
+			if _said(f, Deeds.BARRIER_BROKEN, ctx):
+				return null
 			var barrier := RoomBarrier.new()
 			barrier.setup(f, ctx)
 			return barrier
 		"hidden":
+			if _said(f, Deeds.HIDDEN_FOUND, ctx):
+				return null
 			var hidden := RoomHidden.new()
 			hidden.setup(f, ctx)
 			return hidden

@@ -121,7 +121,8 @@ func _ready() -> void:
 	if not _editor_play:
 		for e in Game.world_errors(rooms, _creatures.keys()):
 			push_error(e)
-	var world_ctx := {"spawn": _spawn, "progress": progress, "compendium": Compendium.model, "announce": Announcer.queue.push_unlock}
+	var world_ctx := {"spawn": _spawn, "progress": progress, "compendium": Compendium.model, "announce": Announcer.queue.push_unlock,
+		"ledger": SkillRules}  # what this life has done: a feature that pays a deed once a life asks it
 	if _menagerie:
 		world_ctx["compendium"] = null  # looking at every creature is not seeing them
 		Compendium.model.saving = false  # and a defeat or an eat there is not the real bestiary's to keep
@@ -228,6 +229,7 @@ func begin_life(start: Dictionary) -> void:
 	player.avenge_target = Compendium.soul.last_death_cause
 	if world.current_id != "":  # the run's first room was entered before the run began: say so now
 		player.emit_deed(Deeds.ROOM_ENTERED, {"room": world.current_id, "area": world.rooms[world.current_id].area})
+		_village.enter(world.current_id, world.rooms[world.current_id].area)
 	if not start["kit"].is_empty():
 		# an editor Play passes no compendium: the kit grant must not raise slots in the (persistent) profile
 		HeadStart.apply(player, SkillRules, null if _editor_play else Compendium.model, start["kit"])
@@ -340,7 +342,7 @@ func _check_room_cleared() -> void:
 	player.emit_deed(Deeds.ROOM_CLEARED, tags)
 
 func _emit_game_event(event_name: String, tags: Dictionary) -> void:
-	if event_name == Deeds.DEFEATED:
+	if event_name == Deeds.DEFEATED or event_name == Events.PREDATED or event_name == Deeds.PREY_COCOONED:  # killed, eaten alive, or taken in a cocoon
 		_village.killed()
 	EventBus.game_event.emit(event_name, tags)
 

@@ -67,7 +67,7 @@ func _font() -> RoomDef:
 	AreaKit.decor(r, "crystal_rose", 250.0, 320.0)
 	AreaKit.decor(r, "flowers", 520.0, 320.0)
 	AreaKit.decor(r, "vine", 300.0, 20.0)
-	AreaKit.feature(r, "hidden", "CA3_hidden", 44.0, 320.0, {"size": Vector2(24.0, 120.0)})  # a door that looks like wall until revealed
+	AreaKit.feature(r, "hidden", "CA3_hidden", 44.0, 320.0, {"w": 24.0, "h": 120.0})  # a door that looks like wall until revealed
 	AreaKit.feature(r, "vigil", "CA3_vigil", 440.0, 320.0)
 	return r
 

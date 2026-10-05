@@ -42,15 +42,15 @@ func test_a_barrier_or_a_hidden_door_fills_the_whole_way_it_stands_in() -> void:
 		var f := _feature(pair[0], pair[1])
 		var e: Dictionary = r.exits[0]
 		assert_eq(e["edge"], "left", pair[0])
-		var size: Vector2 = f["size"]
+		var size := Vector2(float(f["w"]), float(f["h"]))
 		assert_lte((f["pos"] as Vector2).y - size.y, float(e["from"]), "%s covers the door's top" % pair[1])
 		assert_gte((f["pos"] as Vector2).y, float(e["to"]), "%s covers the door's sill" % pair[1])
 		assert_gte((f["pos"] as Vector2).x - size.x / 2.0, RoomDef.WALL, "%s stands inside the room, not in the wall" % pair[1])
 	var forge := world["VO4"] as RoomDef
 	var hole: Dictionary = forge.exits.filter(func(e: Dictionary) -> bool: return e["edge"] == "bottom")[0]
 	var plug := _feature("VO4", "VO4_barrier")
-	assert_lte((plug["pos"] as Vector2).x - (plug["size"] as Vector2).x / 2.0, float(hole["from"]))
-	assert_gte((plug["pos"] as Vector2).x + (plug["size"] as Vector2).x / 2.0, float(hole["to"]))
+	assert_lte((plug["pos"] as Vector2).x - float(plug["w"]) / 2.0, float(hole["from"]))
+	assert_gte((plug["pos"] as Vector2).x + float(plug["w"]) / 2.0, float(hole["to"]))
 	assert_eq((plug["pos"] as Vector2).y, forge.pixel_size().y, "it stands in the floor's gap, its foot at the room's bottom")
 
 func test_each_gap_is_the_real_space_between_two_ledges_of_its_room() -> void:

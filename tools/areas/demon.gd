@@ -113,5 +113,5 @@ func _reliquary() -> RoomDef:
 	AreaKit.decor(r, "deep_bones", 200.0, 320.0)
 	AreaKit.decor(r, "deep_glow_fungus", 520.0, 320.0)
 	AreaKit.decor(r, "deep_wall_crystal", 440.0, 320.0)
-	AreaKit.feature(r, "hidden", "DM7_hidden", 44.0, 320.0, {"size": Vector2(24.0, 120.0)})
+	AreaKit.feature(r, "hidden", "DM7_hidden", 44.0, 320.0, {"w": 24.0, "h": 120.0})
 	return r

@@ -36,10 +36,11 @@ features = [{
 "kind": "glow_pool",
 "pos": Vector2(360, 320)
 }, {
+"h": 120.0,
 "id": "CA3_hidden",
 "kind": "hidden",
 "pos": Vector2(44, 320),
-"size": Vector2(24, 120)
+"w": 24.0
 }, {
 "id": "CA3_vigil",
 "kind": "vigil",

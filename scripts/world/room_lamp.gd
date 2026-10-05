@@ -27,9 +27,7 @@ func prompt() -> String:
 	return "drink"
 
 func interact(player: Node) -> void:
-	var dry := _done
-	report(Deeds.LAMP_DRUNK)
-	_done = true
+	var drunk := report(Deeds.LAMP_DRUNK)  # false when it was drunk before, by this node or earlier in this life
 	if is_instance_valid(_light):
 		_light.queue_free()
-	player.inspect_report.emit(PackedStringArray(["Lamp", "The lamp is dry." if dry else "You drink the oil. It tastes of smoke and old wax."]))
+	player.inspect_report.emit(PackedStringArray(["Lamp", "You drink the oil. It tastes of smoke and old wax." if drunk else "The lamp is dry."]))

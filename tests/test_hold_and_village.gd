@@ -186,6 +186,28 @@ func test_the_scan_finds_an_alert_enemy_in_the_room_while_inside() -> void:
 
 # --- in the game ---
 
+func test_a_life_that_begins_in_the_village_is_watched_from_its_first_room() -> void:
+	var game = load("res://scenes/main.tscn").instantiate()
+	add_child_autofree(game)
+	await wait_physics_frames(3)
+	game.world.current_id = "VI3"
+	game._on_room_entered("VI3")
+	game.begin_life({"kit": {}})
+	game._on_room_entered("SW3")
+	assert_eq(_named(Deeds.VILLAGE_KEPT).size(), 1, "the Yard was where the life began")
+
+func test_eating_or_webbing_a_village_creature_spoils_kept_as_killing_does() -> void:
+	var game = load("res://scenes/main.tscn").instantiate()
+	add_child_autofree(game)
+	await wait_physics_frames(3)
+	for event in [[Events.PREDATED, {"source": "village_goblin", "kind": "creature"}], [Deeds.PREY_COCOONED, {"creature": "cave_rat"}]]:
+		events.clear()
+		game._village.reset()
+		game._on_room_entered("VI3")
+		game._emit_game_event(event[0], event[1])
+		game._on_room_entered("SW3")
+		assert_eq(_named(Deeds.VILLAGE_KEPT).size(), 0, event[0])
+
 func test_the_game_feeds_the_village_watch_rooms_kills_and_a_new_life() -> void:
 	var game = load("res://scenes/main.tscn").instantiate()
 	add_child_autofree(game)

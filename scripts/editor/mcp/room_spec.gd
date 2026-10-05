@@ -10,13 +10,13 @@ extends RefCounted
 ## No coordinate or size in a spec is beyond this (a room is at most 6 x 640 by 6 x 360 px): it keeps NaN-like and runaway numbers out.
 const LIMIT := 1000000.0
 
-## The spec of room `r`: id, area, cell, size, start (null when there is none) and the six lists. With `indexed`, every element also
+## The spec of room `r`: id, area, cell, size, start (null when there is none), the six lists and its tags (read only: a spec's content never sets them). With `indexed`, every element also
 ## carries `index`, its position in the room's array, which an edit tool's `ref` uses.
 static func to_json(r: RoomDef, indexed := false) -> Dictionary:
 	var out := {
 		"id": r.id, "area": r.area, "cell": [r.cell.x, r.cell.y], "size": [r.size.x, r.size.y],
 		"start": [r.start.x, r.start.y] if r.is_start() else null,
-		"solids": [], "water": [], "spawns": [], "features": [], "decor": [], "exits": [],
+		"solids": [], "water": [], "spawns": [], "features": [], "decor": [], "exits": [], "tags": r.tags.duplicate(),
 	}
 	for i in r.solids.size():
 		out["solids"].append(_tag({"rect": plain(r.solids[i]), "hard": r.hard_ledges.has(r.solids[i])}, i, indexed))

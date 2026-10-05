@@ -57,9 +57,10 @@ exits = [{
 "to": 400.0
 }]
 features = [{
+"h": 40.0,
 "id": "VO4_barrier",
 "kind": "barrier",
 "pos": Vector2(520, 360),
-"size": Vector2(160, 40)
+"w": 160.0
 }]
 tags = ["hold"]

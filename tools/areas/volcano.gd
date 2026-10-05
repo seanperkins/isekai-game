@@ -79,7 +79,7 @@ func _forge() -> RoomDef:
 	AreaKit.decor(r, "rubble", 120.0, 320.0)
 	AreaKit.decor(r, "stalactite", 600.0, 20.0)
 	AreaKit.decor(r, "stalactite", 1050.0, 20.0)
-	AreaKit.feature(r, "barrier", "VO4_barrier", 520.0, 360.0, {"size": Vector2(160.0, 40.0)})  # a slab in the floor's gap over the Cooled Vault
+	AreaKit.feature(r, "barrier", "VO4_barrier", 520.0, 360.0, {"w": 160.0, "h": 40.0})  # a slab in the floor's gap over the Cooled Vault
 	AreaKit.tag(r, "hold")
 	return r
 

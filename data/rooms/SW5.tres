@@ -31,8 +31,9 @@ exits = [{
 "to": 320.0
 }]
 features = [{
+"h": 120.0,
 "id": "SW5_barrier",
 "kind": "barrier",
 "pos": Vector2(44, 320),
-"size": Vector2(24, 120)
+"w": 24.0
 }]

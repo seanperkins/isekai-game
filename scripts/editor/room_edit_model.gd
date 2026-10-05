@@ -5,7 +5,7 @@ extends RefCounted
 
 const GRID := 4.0
 const UNDO_CAP := 200
-const FEATURE_KINDS := ["glow_pool", "tablet", "switch", "altar"]
+const FEATURE_KINDS := ["glow_pool", "tablet", "switch", "altar", "barrier", "hidden", "gap", "lamp", "vigil"]
 const MIN_SOLID := 4.0
 ## The smallest water rect either way (RoomLint.WATER_MIN: the largest swimmer's body fits).
 const MIN_WATER := 32.0
@@ -522,6 +522,11 @@ func add_feature(room_id: String, kind: String, pos: Vector2) -> String:
 		"altar":
 			f["area"] = r.area
 			f["perk"] = ""
+		"barrier", "hidden":
+			f["w"] = 24.0
+			f["h"] = 64.0
+		"gap":
+			f["width"] = 50.0
 	var before := _snap([room_id])
 	r.features.append(f)
 	_push(before)
@@ -1245,6 +1250,14 @@ func _feature_fields_error(f: Dictionary) -> String:
 		return "a %s has no perk" % kind
 	if f.has("id") and not valid_id(f["id"]):
 		return "id: an id is letters, digits and underscore"
+	for key: String in ["w", "h", "width"]:
+		if not f.has(key):
+			continue
+		if not (f[key] is float or f[key] is int) or float(f[key]) < 1.0 or float(f[key]) > 2000.0:
+			return "%s: expected a number from 1 to 2000" % key
+		var owners := ["gap"] if key == "width" else ["barrier", "hidden"]
+		if not owners.has(kind):
+			return "a %s has no %s" % [kind, key]
 	match kind:
 		"tablet":
 			if f.has("title") and f["title"] == "":

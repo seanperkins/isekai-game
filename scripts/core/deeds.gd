@@ -44,7 +44,7 @@ const TAGS := {
 	"jumped": [], "wall_touched": [], "damaged": ["damage_type"], "stunned_enemy": ["source"], "submerged": [],
 	"predated": ["source", "kind", "species"], "absorbed": ["essence", "source"], "skill_used": ["id"],
 	DEFEATED: ["source", "species", "behind", "ranged", "marked", "poison", "heavy", "ceiling", "dark", "unseen", "fleeing", "moonlit", "avenged"],
-	GUARD_BROKEN: ["source"], BARRIER_BROKEN: [], HIDDEN_FOUND: [], ROOM_CLEARED: ["room", "alone"], ROOM_ENTERED: ["room", "area"],
+	GUARD_BROKEN: ["source"], BARRIER_BROKEN: ["id"], HIDDEN_FOUND: ["id"], ROOM_CLEARED: ["room", "alone"], ROOM_ENTERED: ["room", "area"],
 	SKILL_HIT: ["id"], SKILL_MISSED: ["id"], SWITCH_HIT: ["far"],
 	PART_HARVESTED: ["part"], GRAFT_ATTACHED: ["part"], GRAFT_SHED: ["part"], BOND_FORMED: ["kind", "creature"],
 	LESSON_LEARNED: ["creature", "species", "element"], TRAP_SPRUNG: [], WEAPON_FORGED: [], ITEM_STOLEN: ["creature", "part"], WARD_STONE_PLACED: [],
