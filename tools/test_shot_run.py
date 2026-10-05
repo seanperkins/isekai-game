@@ -3,6 +3,7 @@
 """
 import os
 import subprocess
+import tempfile
 import unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -50,6 +51,32 @@ class CommandLineTest(unittest.TestCase):
         self.assertEqual(none.returncode, 2)
         self.assertIn("usage", none.stderr)
         self.assertEqual(dry_run("tools/nothing_here.gd").returncode, 2)
+
+
+class CleanupTest(unittest.TestCase):
+    def test_a_shot_dir_with_a_space_deletes_only_its_own_files(self):
+        """The exit trap removes the project copy and the throwaway HOME. Unquoted, a SHOT_DIR with a space split into two paths and
+        `rm -rf` took out whatever shared their names."""
+        with tempfile.TemporaryDirectory() as d:
+            neighbours = [os.path.join(d, "review"), os.path.join(d, "captures.home")]
+            for path in neighbours:
+                os.makedirs(path)
+                with open(os.path.join(path, "keep.txt"), "w", encoding="utf-8") as fh:
+                    fh.write("not the runner's")
+            out = dry_run("tools/evolution_shots.gd", SHOT_DIR=os.path.join(d, "review captures"))
+            self.assertEqual(out.returncode, 0, out.stderr)
+            for path in neighbours:
+                self.assertTrue(os.path.exists(os.path.join(path, "keep.txt")), "%s was deleted" % path)
+            self.assertFalse(os.path.exists(os.path.join(d, "review captures.home")), "its own home is removed")
+            self.assertFalse(os.path.exists(os.path.join(d, "review captures.proj")), "and its own project copy")
+
+    def test_a_home_named_by_the_caller_is_never_removed(self):
+        with tempfile.TemporaryDirectory() as d:
+            home = os.path.join(d, "mine")
+            os.makedirs(home)
+            out = dry_run("tools/evolution_shots.gd", SHOT_HOME=home, SHOT_DIR=os.path.join(d, "run"))
+            self.assertEqual(out.returncode, 0, out.stderr)
+            self.assertTrue(os.path.isdir(home))
 
 
 class NeverDoTest(unittest.TestCase):

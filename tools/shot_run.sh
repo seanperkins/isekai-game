@@ -37,7 +37,14 @@ mkdir -p "$(dirname "$SHOT_DIR")"
 mkdir -p "$HOME_DIR"
 rm -rf "$PROJ" "$LOG"
 pid=""
-trap '[ -n "$pid" ] && kill "$pid" 2>/dev/null; rm -rf "$PROJ" $OWN_HOME' EXIT
+# Quoted, and each path alone: SHOT_DIR may hold a space, and an unquoted path split into two would delete two other directories.
+cleanup() {
+	[ -n "$pid" ] && kill "$pid" 2>/dev/null
+	rm -rf "$PROJ"
+	[ -n "$OWN_HOME" ] && rm -rf "$OWN_HOME"
+	return 0
+}
+trap cleanup EXIT
 mkdir -p "$PROJ"
 for f in * .godot; do
 	case "$f" in project.godot|.tmp|.git|.worktrees|node-compile-cache) continue;; esac

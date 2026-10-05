@@ -25,7 +25,7 @@ static func open(root: Window, size := VIEW, game_size := GAME) -> SubViewport:
 ## A fresh profile plays the opening over every frame, so mark it seen, in memory only. A -s script's _initialize runs before the
 ## autoloads are ready (the Compendium has no `soul` yet), so then wait for its ready: it comes before the game's, which is added later.
 static func _skip_the_opening(root: Window) -> void:
-	var compendium := root.get_node_or_null("Compendium")  # an autoload: a -s script cannot name it
+	var compendium = root.get_node_or_null("Compendium")  # an autoload, so untyped: a -s script cannot name it and Node has no `soul`
 	if compendium == null:
 		return
 	if compendium.get("soul") != null:
