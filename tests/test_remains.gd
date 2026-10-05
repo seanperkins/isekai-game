@@ -3,8 +3,12 @@ extends GutTest
 
 class FakeBody extends Node2D:
 	var got: Array = []
-	func collect_part(id: String) -> void:
+	var refuses: Array = []
+	func collect_part(id: String) -> bool:
+		if refuses.has(id):
+			return false
 		got.append(id)
+		return true
 
 var dir: String
 var parts := {}
@@ -78,6 +82,22 @@ func test_taking_the_remains_returns_them_once_and_clears_them() -> void:
 	assert_eq(w.take_remains()["parts"], ["ribs"])
 	assert_eq(w.remains, {})
 	assert_eq(w.take_remains(), {})
+
+func test_keeping_some_of_the_remains_saves_what_is_left() -> void:
+	var w := WorldProgress.new(_profile())
+	w.leave_remains("C2", Vector2(1, 2), ["ribs", "cocoon:bat"])
+	w.keep_remains(["cocoon:bat"])
+	assert_eq(w.remains["parts"], ["cocoon:bat"])
+	assert_eq(w.remains["deaths_left"], WorldProgress.REMAINS_DEATHS, "the clock is not reset or spent")
+	assert_eq(WorldProgress.new(_profile()).remains["parts"], ["cocoon:bat"])
+
+func test_keeping_nothing_clears_the_remains_and_keeping_with_none_does_nothing() -> void:
+	var w := WorldProgress.new()
+	w.keep_remains(["ribs"])
+	assert_eq(w.remains, {})
+	w.leave_remains("C2", Vector2(1, 2), ["ribs"])
+	w.keep_remains([])
+	assert_eq(w.remains, {})
 
 func test_remains_survive_a_reload_and_so_does_their_clearing() -> void:
 	var p := _profile()
@@ -155,6 +175,42 @@ func test_standing_on_the_remains_gives_every_part_back_once() -> void:
 	r._physics_process(0.016)
 	assert_eq(body.got, ["ribs", "claw", "moonstone"])
 	assert_signal_emit_count(r, "recovered", 1)
+	assert_true(r.is_queued_for_deletion())
+
+func test_what_the_body_refuses_stays_in_the_remains() -> void:
+	var body := _body()
+	body.refuses = ["cocoon:bat"]
+	var r := _remains(["ribs", "cocoon:bat"], Vector2.ZERO)
+	watch_signals(r)
+	r._physics_process(0.016)
+	assert_eq(body.got, ["ribs"])
+	assert_eq(r.parts, ["cocoon:bat"])
+	assert_false(r.is_queued_for_deletion(), "what is left is still there")
+	assert_signal_emit_count(r, "recovered", 1)
+	assert_eq(get_signal_parameters(r, "recovered"), [["cocoon:bat"]])
+
+func test_a_body_that_refuses_everything_takes_nothing_and_says_nothing() -> void:
+	var body := _body()
+	body.refuses = ["ribs", "claw"]
+	var r := _remains(["ribs", "claw"], Vector2.ZERO)
+	watch_signals(r)
+	r._physics_process(0.016)
+	r._physics_process(0.016)
+	assert_eq(body.got, [])
+	assert_eq(r.parts, ["ribs", "claw"])
+	assert_signal_not_emitted(r, "recovered")
+	assert_false(r.is_queued_for_deletion())
+
+func test_what_was_refused_comes_later_when_the_body_has_room() -> void:
+	var body := _body()
+	body.refuses = ["cocoon:bat"]
+	var r := _remains(["ribs", "cocoon:bat"], Vector2.ZERO)
+	r._physics_process(0.016)
+	body.refuses = []
+	watch_signals(r)
+	r._physics_process(0.016)
+	assert_eq(body.got, ["ribs", "cocoon:bat"])
+	assert_eq(get_signal_parameters(r, "recovered"), [[]])
 	assert_true(r.is_queued_for_deletion())
 
 func test_remains_out_of_reach_stay() -> void:
@@ -271,6 +327,22 @@ func test_entering_the_room_of_your_remains_shows_them_and_collecting_returns_th
 	assert_eq(game._progress.remains, {})
 	await wait_physics_frames(2)
 	assert_eq(_remains_nodes(game).size(), 0)
+
+func test_a_spider_with_full_hands_leaves_the_rest_of_its_remains_waiting() -> void:
+	var game = await _game()
+	game.player.set_species("spider")
+	var here: String = game.world.current_id
+	game.player.collect_part("cocoon:toad")
+	game.player.collect_part("cocoon:lizard")
+	game._progress.leave_remains(here, Vector2(60, 60), ["cocoon:bat", "cocoon:moth", "claw"])
+	game._on_room_entered(here)
+	await wait_physics_frames(2)
+	game.player.global_position = _remains_nodes(game)[0].global_position
+	await wait_physics_frames(3)
+	assert_eq(game.player.inventory.carried_parts(), ["claw"])
+	assert_eq(game.player.inventory.cocoons(), ["toad", "lizard"], "full: the two cocoons stay where they are")
+	assert_eq(game._progress.remains["parts"], ["cocoon:bat", "cocoon:moth"], "and are still saved")
+	assert_eq(_remains_nodes(game).size(), 1)
 
 func test_the_parts_do_not_come_back_twice() -> void:
 	var game = await _game()

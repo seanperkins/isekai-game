@@ -1013,7 +1013,7 @@ func eat_cocoon() -> bool:
 	if def == null:
 		return false
 	inventory.take_cocoon()
-	_absorb_eaten(def, "creature", "", null)
+	_absorb_eaten(def, "creature", Inventory.COCOON_PREFIX + def.id, null)  # a repeat of a kind pays a quarter, as any repeat does
 	return true
 
 func _on_companion_died(pal: Companion) -> void:
@@ -1541,13 +1541,14 @@ func can_graft() -> bool:
 func can_collect_parts() -> bool:
 	return not health.is_dead()
 
-## Takes a part: worn when the body can graft it and there is room, else carried. Says what it did.
-func collect_part(id: String) -> void:
+## Takes a part: worn when the body can graft it and there is room, else carried. Says what it did; false when it could not be taken (a dead
+## body, an unknown part, a third cocoon).
+func collect_part(id: String) -> bool:
 	if not can_collect_parts():
-		return
+		return false
 	var r := inventory.add(id, can_graft())
 	if not r["ok"]:
-		return
+		return false
 	if r["worn"]:
 		_refresh_grafts()
 	if not Inventory.is_cocoon(id):  # a cocoon is something carried, not a part harvested
@@ -1555,6 +1556,7 @@ func collect_part(id: String) -> void:
 	_emit.call(Deeds.ITEM_CARRIED, {})
 	if r["worn"]:
 		_emit.call(Deeds.GRAFT_ATTACHED, {"part": id})
+	return true
 
 ## The latest worn graft falls off beside the body, away from the blow.
 func _shed_graft(from: Vector2) -> void:

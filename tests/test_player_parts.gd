@@ -69,6 +69,16 @@ func test_a_fifth_graft_is_carried_and_changes_nothing_worn() -> void:
 	assert_eq(_named(Deeds.GRAFT_ATTACHED).size(), 4)
 	assert_eq(_named(Deeds.PART_HARVESTED).size(), 5)
 
+func test_collect_part_says_whether_it_took_the_part() -> void:
+	_make("spider")
+	assert_true(player.collect_part("claw"))
+	assert_false(player.collect_part("no_such_part"))
+	player.collect_part("cocoon:a")
+	player.collect_part("cocoon:b")
+	assert_false(player.collect_part("cocoon:c"), "a third cocoon does not fit")
+	player.receive_hit(player.health.max_hp * 5, "fire")
+	assert_false(player.collect_part("claw"), "a dead body takes nothing")
+
 func test_an_unknown_part_is_refused() -> void:
 	_make("undead")
 	player.collect_part("no_such_part")

@@ -25,6 +25,22 @@ func test_a_freed_prey_stands_stunned_beside_the_spider() -> void:
 	assert_lt(bat.global_position.distance_to(game.player.global_position), 40.0)
 	assert_eq(SkillRules.condition_value({"kind": "counter", "event": Deeds.PREY_FREED, "tags": {"creature": "bat"}, "n": 1}), 1)
 
+func test_a_freed_prey_pays_a_quarter_the_second_time_it_is_downed() -> void:
+	var game = await _game()
+	game.player.set_species("spider")
+	var paid: Array = []
+	for round in 2:
+		game.player.collect_part("cocoon:gloom_wolf")
+		game.player.do_inspect()
+		var wolf: Enemy = _creatures_of(game, "gloom_wolf").filter(func(n: Enemy) -> bool: return not n.is_queued_for_deletion())[0]
+		var before: int = game.player.progression.xp
+		wolf.receive_hit(999, "physical", game.player.global_position)
+		await wait_physics_frames(2)
+		paid.append(game.player.progression.xp - before)
+		wolf.free()
+	assert_gt(paid[0], 3, "the first pays in full")
+	assert_eq(paid[1], int(floor(float(paid[0]) / Progression.REPEAT_DIVISOR)))
+
 func test_the_freed_prey_can_be_webbed_again() -> void:
 	var game = await _game()
 	game.player.set_species("spider")

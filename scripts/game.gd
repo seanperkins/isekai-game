@@ -281,7 +281,7 @@ func _place_remains() -> void:
 		return
 	var pile := Remains.new()
 	pile.setup(r["parts"], Vector2(r["pos"][0], r["pos"][1]))
-	pile.recovered.connect(_progress.take_remains)
+	pile.recovered.connect(_progress.keep_remains)
 	world.room.add_child(pile)
 
 ## A creature the spider let out of its cocoon stands in the room again, stunned for a moment.
@@ -294,6 +294,7 @@ func _on_prey_released(id: String, pos: Vector2) -> void:
 	world.room.add_child(prey)
 	prey.global_position = pos
 	if prey is Enemy:
+		(prey as Enemy).spawn_key = "freed:" + id  # a creature let out and downed again is a repeat, not a fresh spawn
 		(prey as Enemy).status.stun(FREED_STUN_SECONDS)
 
 ## A graft knocked off the player lies in the room it was lost in.

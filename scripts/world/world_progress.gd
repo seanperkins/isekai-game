@@ -134,6 +134,16 @@ func take_remains() -> Dictionary:
 	_save()
 	return out
 
+## Some of the remains were taken: what is left stays saved (nothing left clears them).
+func keep_remains(parts: Array) -> void:
+	if remains.is_empty():
+		return
+	if parts.is_empty():
+		remains = {}
+	else:
+		remains["parts"] = parts.duplicate()
+	_save()
+
 ## A death passed with the remains still out there: they go after REMAINS_DEATHS of them.
 func note_death_unrecovered() -> void:
 	if remains.is_empty():

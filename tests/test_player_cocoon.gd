@@ -178,6 +178,19 @@ func test_every_third_eat_raises_max_mp_whether_a_cocoon_or_not() -> void:
 	player.eat_cocoon()
 	assert_eq(player.stats.get_stat("max_mp"), max_mp + Player.MAX_MP_PER_THREE_EATS)
 
+func test_a_second_cocoon_of_the_same_kind_pays_a_quarter_of_the_xp() -> void:
+	var d := _def()
+	d.xp = 4
+	_make("spider", [d])
+	player.collect_part("cocoon:t_prey")
+	var xp := player.progression.xp
+	player.eat_cocoon()
+	assert_eq(player.progression.xp, xp + 4, "the first of a kind pays in full")
+	player.collect_part("cocoon:t_prey")
+	xp = player.progression.xp
+	player.eat_cocoon()
+	assert_eq(player.progression.xp, xp + 1, "a repeat pays a quarter, however it was caught")
+
 func test_with_no_cocoon_nothing_is_eaten_and_nothing_is_said() -> void:
 	_make("spider", [_def()])
 	assert_false(player.eat_cocoon())

@@ -3,7 +3,8 @@ extends Node2D
 ## What a life carried when it died, lying where it fell: standing on it gives every part back (through collect_part, so the usual
 ## rules apply) and says `recovered`, so the world forgets it.
 
-signal recovered
+## Said when some of the pile was taken, with what is still left in it (empty when it is all gone).
+signal recovered(left: Array)
 
 var parts: Array = []
 var _taken := false
@@ -32,9 +33,15 @@ func _physics_process(_delta: float) -> void:
 	for body in get_tree().get_nodes_in_group("player"):
 		if body is Node2D and body.has_method("collect_part") and body.global_position.distance_to(global_position) <= PartPickup.COLLECT_RANGE \
 				and (not body.has_method("can_collect_parts") or body.can_collect_parts()):
-			_taken = true
+			var left := []
 			for id in parts:
-				body.collect_part(id)
-			recovered.emit()
-			queue_free()
+				if not body.collect_part(id):
+					left.append(id)  # no room for it: it stays in the pile
+			if left.size() == parts.size():
+				return  # nothing fit: nothing happens, and nothing is said
+			parts = left
+			recovered.emit(left)
+			if left.is_empty():
+				_taken = true
+				queue_free()
 			return
