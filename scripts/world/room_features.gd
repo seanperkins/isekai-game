@@ -1,7 +1,7 @@
 class_name RoomFeatures
 extends RefCounted
-## Builds a room feature (Glow Pool, altar, tablet, shortcut switch) from its data. Unknown kinds
-## return null.
+## Builds a room feature (Glow Pool, altar, tablet, shortcut switch, and the five the deeds read: barrier, hidden door, gap, lamp, vigil)
+## from its data. Unknown kinds return null.
 
 static func make(f: Dictionary, ctx: Dictionary) -> Node2D:
 	match f.get("kind", ""):
@@ -24,4 +24,24 @@ static func make(f: Dictionary, ctx: Dictionary) -> Node2D:
 			var sw := ShortcutSwitch.new()
 			sw.setup(f, ctx)
 			return sw
+		"barrier":
+			var barrier := RoomBarrier.new()
+			barrier.setup(f, ctx)
+			return barrier
+		"hidden":
+			var hidden := RoomHidden.new()
+			hidden.setup(f, ctx)
+			return hidden
+		"gap":
+			var gap := RoomGap.new()
+			gap.setup(f, ctx)
+			return gap
+		"lamp":
+			var lamp := RoomLamp.new()
+			lamp.setup(f, ctx)
+			return lamp
+		"vigil":
+			var vigil := RoomVigil.new()
+			vigil.setup(f, ctx)
+			return vigil
 	return null
