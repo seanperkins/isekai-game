@@ -57,7 +57,7 @@ func test_a_six_tick_press_never_travels_less_than_a_tap() -> void:
 	var tap := await _cast(1)
 	player.global_position = Vector2.ZERO
 	player.velocity = Vector2.ZERO
-	await wait_seconds(0.9)  # the cooldown
+	await wait_physics_frames(60)  # the cooldown, in game time: a wall-clock wait is wrong under --fixed-fps  # the cooldown
 	var six := await _cast(6)
 	assert_gte(six["dx"], tap["dx"] - 1.0)
 
@@ -65,7 +65,7 @@ func test_a_full_horizontal_hold_stretches_the_burst_but_does_not_fly() -> void:
 	var tap := await _cast(1)
 	player.global_position = Vector2.ZERO
 	player.velocity = Vector2.ZERO
-	await wait_seconds(0.9)
+	await wait_physics_frames(60)  # the cooldown, in game time: a wall-clock wait is wrong under --fixed-fps
 	var full := await _cast(60)  # held well past the 0.6 s cap
 	assert_lte(full["dx"], tap["dx"] * 3.5)
 	assert_gt(full["dx"], tap["dx"] * 2.0, "the hold does extend it")
@@ -76,7 +76,7 @@ func test_a_full_upward_hold_rises_at_most_1_6_times_a_taps_apex() -> void:
 	var tap := await _cast(1, true)
 	player.global_position = Vector2.ZERO
 	player.velocity = Vector2.ZERO
-	await wait_seconds(0.9)
+	await wait_physics_frames(60)  # the cooldown, in game time: a wall-clock wait is wrong under --fixed-fps
 	var full := await _cast(60, true)
 	assert_gt(tap["rise"], 60.0)
 	assert_lte(full["rise"], tap["rise"] * 1.6)
@@ -95,12 +95,12 @@ func test_the_direction_is_latched_at_the_press() -> void:
 func test_the_hold_ends_at_0_6_seconds_even_at_maximum_regen() -> void:
 	player.stats.set_modifiers("test_regen", [{"stat": "mp_regen", "op": "add", "value": 300}])
 	Input.action_press("active_1")
-	await wait_seconds(0.9)
+	await wait_physics_frames(60)  # the cooldown, in game time: a wall-clock wait is wrong under --fixed-fps
 	assert_null(player._channel)
 
 func test_a_full_hold_costs_the_start_and_one_beat() -> void:
 	Input.action_press("active_1")
-	await wait_seconds(0.9)
+	await wait_physics_frames(60)  # the cooldown, in game time: a wall-clock wait is wrong under --fixed-fps
 	assert_eq(events.filter(func(e): return e[0] == "mana_spent").size(), 3 + 1)
 
 func test_the_spray_is_a_child_of_the_ability_and_follows_the_channel() -> void:
