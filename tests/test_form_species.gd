@@ -143,11 +143,13 @@ func test_only_stage_two_forms_grow_from_a_wolf_base() -> void:
 
 # --- Task 4: FormOffers per species ---
 
-## A stand-in for SkillRulesEngine: FormOffers only asks level_of.
+## A stand-in for SkillRulesEngine: FormOffers asks level_of and absorbed.
 class FakeRules:
 	var levels := {}
 	func level_of(id: String) -> int:
 		return int(levels.get(id, 0))
+	func absorbed(_element: String) -> int:
+		return 0
 
 func test_a_wolf_at_stage_one_is_offered_every_wolf_line() -> void:
 	assert_eq(FormOffers.offers(_all(), Form.new("wolf"), FakeRules.new()), ["fx_black_dog", "fx_moonbound"])

@@ -9,6 +9,8 @@ display_name = "Weaver"
 lineage = "weaver"
 parents = ["slime"]
 powers = ["sticky_thread"]
+reveal = {"dark": 24}
+offer = {"dark": 26}
 stats = {
 "max_hp": 5,
 "max_mp": 3,

@@ -1,8 +1,8 @@
 class_name FormOffers
 extends RefCounted
 ## Which bodies a species is offered when it can evolve. Pure functions over data.
-##   Stage 1 to 2, the slime: every lineage whose power the player has reached (open_lineages), in LINEAGE_ORDER, plus the
-##     Greater Slime fallback when fewer than two lineages are open. No ranking and no cap.
+##   Stage 1 to 2, the slime: every lineage whose offer threshold its diet has met (offered_lineages), in LINEAGE_ORDER, plus the
+##     Greater Slime fallback when fewer than two are offered. No ranking and no cap.
 ##   Stage 1 to 2, any other species: every one of its stage-2 forms, until it has gates of its own.
 ##   Stage 2 to 3: the form's two children. Stage 3 to 4: the lineage's one Sovereign. Stage 4: none.
 
@@ -28,19 +28,43 @@ static func lineage_powers(forms: Dictionary) -> Dictionary:
 			out[(f as FormDef).lineage] = (f as FormDef).powers
 	return out
 
-## The slime's lineages the player has opened this life, in LINEAGE_ORDER. A lineage is open when any of its powers has been reached:
-## `rules.level_of` keeps answering the level a retired parent reached, so an evolved power still opens its lineage.
+## Each owned power of a lineage counts this much towards every element of its thresholds. Powers help; they never gate alone.
+const POWER_BONUS := 3
+
+## The slime's lineages its diet has revealed this life, in LINEAGE_ORDER: what it has absorbed, with a little help from the
+## lineage's owned powers, meets the lineage form's `reveal`. `rules.level_of` keeps answering the level a retired parent reached,
+## so an evolved power still counts as owned.
+static func revealed_lineages(forms: Dictionary, rules) -> Array:
+	return _lineages_meeting(forms, rules, false)
+
+## The lineages on the stage-2 menu: revealed, and the diet meets the higher `offer` as well.
+static func offered_lineages(forms: Dictionary, rules) -> Array:
+	return _lineages_meeting(forms, rules, true)
+
+## The Tree tab's name for the revealed lineages.
 static func open_lineages(forms: Dictionary, rules) -> Array:
-	var powers := lineage_powers(forms)
+	return revealed_lineages(forms, rules)
+
+static func _lineages_meeting(forms: Dictionary, rules, offer: bool) -> Array:
 	var out: Array = []
 	for l in LINEAGE_ORDER:
-		if not powers.has(l) or not forms.has(l):
-			continue
-		for p in powers[l]:
-			if rules.level_of(p) > 0:
+		for f in FormLoader.stage2_forms(forms):
+			if (f as FormDef).lineage == l and _meets(f, rules, offer):
 				out.append(l)
-				break
 	return out
+
+static func _meets(f: FormDef, rules, offer: bool) -> bool:
+	var need: Dictionary = f.offer if offer else f.reveal
+	if need.is_empty():
+		return false
+	var owned := 0
+	for p in f.powers:
+		if rules.level_of(p) > 0:
+			owned += 1
+	for e in need:
+		if rules.absorbed(e) + POWER_BONUS * owned < int(need[e]):
+			return false
+	return true
 
 ## The form ids on offer for `form` (a Form), given the rules state.
 static func offers(forms: Dictionary, form: Form, rules) -> Array:
@@ -54,7 +78,7 @@ static func offers(forms: Dictionary, form: Form, rules) -> Array:
 static func _first_offers(forms: Dictionary, species: String, rules) -> Array:
 	if species != Form.DEFAULT_SPECIES:
 		return FormLoader.stage2_forms(forms, species).map(func(f: FormDef) -> String: return f.id)
-	var out := open_lineages(forms, rules)
+	var out := offered_lineages(forms, rules)
 	if out.size() < 2 and forms.has(FALLBACK):
 		out.append(FALLBACK)
 	return out

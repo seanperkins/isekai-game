@@ -4,8 +4,8 @@ extends RefCounted
 
 ## The slime's lineages. Another species names its own: any non-empty id, shared by a stage-2 form and all its descendants.
 const LINEAGES := ["weaver", "tide", "toxic", "bulwark", "echo", "greater"]
-## Whether a slime lineage form must carry a reveal and an offer (turned on when the five lineages have theirs).
-const REQUIRE_GATES := false
+## Whether a slime lineage form must carry a reveal and an offer.
+const REQUIRE_GATES := true
 ## The areas a form may be found in: the four built and the eight planned.
 const AREAS := ["cave", "grotto", "flooded", "deep", "forest", "swamp", "village", "sacred", "cemetery", "crypt", "volcano", "demon"]
 

@@ -9,6 +9,8 @@ display_name = "Bulwark"
 lineage = "bulwark"
 parents = ["slime"]
 powers = ["body_armor", "hardened_shell", "tremor"]
+reveal = {"earth": 30}
+offer = {"earth": 56}
 stats = {
 "def": 1,
 "max_hp": 5,

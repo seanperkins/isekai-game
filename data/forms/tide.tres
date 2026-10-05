@@ -9,6 +9,8 @@ display_name = "Tide"
 lineage = "tide"
 parents = ["slime"]
 powers = ["hydraulic_propulsion"]
+reveal = {"water": 16}
+offer = {"water": 26}
 stats = {
 "max_hp": 5,
 "max_mp": 3,

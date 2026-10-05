@@ -9,6 +9,8 @@ display_name = "Echo"
 lineage = "echo"
 parents = ["slime"]
 powers = ["echolocation"]
+reveal = {"air": 10}
+offer = {"air": 34}
 stats = {
 "jump_height": 10,
 "max_hp": 5,

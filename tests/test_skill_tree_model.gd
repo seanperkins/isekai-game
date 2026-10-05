@@ -328,6 +328,10 @@ func test_a_power_with_no_unlock_condition_has_no_how_line() -> void:
 func _forms() -> Dictionary:
 	return FormLoader.load_species()
 
+func _absorb(element: String, n: int) -> void:
+	for i in n:
+		rules.handle_event("absorbed", {"essence": element, "source": "test"})
+
 func _assert_walk_reaches_everything(m: Dictionary) -> void:
 	var seen := _walk(m)
 	for id in m["nodes"]:
@@ -345,7 +349,8 @@ func test_a_new_soul_sees_the_slime_and_the_greater_slime_on_offer() -> void:
 
 func test_an_open_lineage_names_its_stage_two_form_and_stubs_its_children() -> void:
 	assert_true(_forms()["weaver"].powers.has("sticky_thread"))
-	rules.grant("sticky_thread")  # level 1: the Weaver lineage is open this life
+	rules.grant("sticky_thread")  # an owned power counts +3 towards the Weaver's dark 24
+	_absorb("dark", 21)  # 21 and the power's 3 reveal the lineage this life
 	var m := _build(_forms())
 	var nodes: Dictionary = m["nodes"]
 	assert_eq(nodes["weaver"]["state"], SkillTreeModel.NAMED)
@@ -365,6 +370,8 @@ func test_a_power_known_but_not_reached_this_life_shows_its_lineage_as_a_stub() 
 func test_greater_slime_is_a_stub_once_two_lineages_open_unless_it_was_reached() -> void:
 	rules.grant("sticky_thread")
 	rules.grant("hydraulic_propulsion")
+	_absorb("dark", 21)  # Weaver: 21 and Sticky Thread's 3 make 24
+	_absorb("water", 13)  # Tide: 13 and Hydraulic Propulsion's 3 make 16
 	assert_eq(_build(_forms())["nodes"]["greater_slime"]["state"], SkillTreeModel.STUB)
 	assert_eq(_build(_forms(), ["greater_slime"])["nodes"]["greater_slime"]["state"], SkillTreeModel.REACHED)
 

@@ -9,6 +9,8 @@ display_name = "Toxic"
 lineage = "toxic"
 parents = ["slime"]
 powers = ["poison_breath", "spore_cloud"]
+reveal = {"water": 10, "dark": 8}
+offer = {"water": 20, "dark": 14}
 stats = {
 "atk": 1,
 "max_hp": 5,
