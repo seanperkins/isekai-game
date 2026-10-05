@@ -40,9 +40,16 @@ func setup(def: RoomDef, ctx: Dictionary, boss: Enemy, solids: Array, painted: b
 	if boss != null:
 		boss.dormant = true
 		boss.downed.connect(_on_boss_downed)
+		boss.tree_exited.connect(_on_boss_freed)
 
 func locked() -> bool:
 	return model.state == BossArenaModel.State.INTRO or model.state == BossArenaModel.State.FIGHT
+
+## The boss left the tree: eaten alive (Enemy.consume frees it with no downed signal), or its corpse timing out after a kill. Either way
+## the fight is over; the room freeing the arena with it does not matter.
+func _on_boss_freed() -> void:
+	if is_inside_tree() and model.state == BossArenaModel.State.FIGHT:
+		_downed = true
 
 func _on_boss_downed(_def_downed: CreatureDef) -> void:
 	_downed = true  # read by the next physics tick, after the game's own downed handlers have run

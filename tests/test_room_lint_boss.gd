@@ -148,3 +148,17 @@ func test_a_room_with_none_of_it_is_unchanged() -> void:
 	var plain := _room("T1")
 	assert_eq([plain.boss, plain.tremor, plain.glimpse], [{}, 0.0, {}])
 	assert_eq(RoomLint.check_room(plain, {"T1": plain}).filter(func(f): return f["rule"] in ["creature_fit", "boss_room", "tremor_range", "glimpse"]).size(), 0)
+
+# --- final review fixes ---
+
+func test_the_threshold_needs_a_positive_size() -> void:
+	for flat in [Rect2(360, 200, 0, 0), Rect2(360, 200, 40, 0), Rect2(360, 200, 0, 120)]:
+		var arena := _arena({"boss": {"creature": "taratect", "threshold": flat}})
+		assert_true(_boss_findings(arena, _ante()).any(func(f): return "positive size" in f["text"]), str(flat))
+
+func test_the_boss_is_spawned_exactly_once() -> void:
+	var twice := _arena({"spawns": [{"id": "taratect", "pos": Vector2(900, 40)}, {"id": "taratect", "pos": Vector2(1000, 40)}]})
+	assert_true(_boss_findings(twice, _ante()).any(func(f): return "exactly once" in f["text"]))
+	var none := _arena({"spawns": []})
+	assert_true(_boss_findings(none, _ante()).any(func(f): return "exactly once" in f["text"]), "none is also wrong")
+	assert_eq(_boss_findings(_arena(), _ante()).size(), 0, "the valid arena still passes")

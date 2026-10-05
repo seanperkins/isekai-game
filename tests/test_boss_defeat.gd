@@ -176,3 +176,17 @@ func test_the_editor_preview_builds_a_boss_room_with_no_progress_and_no_spawner(
 	var node := RoomBuilder.build_room(def, {"progress": null})
 	add_child_autofree(node)
 	assert_eq(node.get_children().filter(func(n: Node) -> bool: return n is Enemy or n is BossArena).size(), 0)
+
+func test_eating_the_living_boss_also_ends_the_fight() -> void:
+	_world()
+	var arena := await _fight()
+	var boss := _boss()
+	assert_eq(arena.model.state, BossArenaModel.State.FIGHT)
+	boss.status.stun()  # a tackle stuns it: awake, it can be predated
+	assert_true(boss.can_be_predated())
+	assert_gt(boss.health.hp, 0)
+	boss.consume()  # eaten alive: freed with no downed signal
+	await wait_physics_frames(4)
+	assert_eq(arena.model.state, BossArenaModel.State.WON, "the arena does not stay sealed on a boss that is gone")
+	assert_eq(world.room.get_children().filter(func(n: Node) -> bool: return n.is_in_group(BossArena.GATE_GROUP)).size(), 0)
+	assert_true(progress.is_defeated("toad"))

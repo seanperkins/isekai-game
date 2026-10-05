@@ -1096,6 +1096,11 @@ func _shift_content(r: RoomDef, d: Vector2) -> void:
 			e["pos"] = (e["pos"] as Vector2) + d
 	if r.is_start():
 		r.start += d
+	if r.boss.has("threshold"):
+		var th: Rect2 = r.boss["threshold"]
+		r.boss["threshold"] = Rect2(th.position + d, th.size)  # the arena's line moves with the floor it was drawn on
+	if r.glimpse.has("pos"):
+		r.glimpse["pos"] = (r.glimpse["pos"] as Vector2) + d
 	for e in r.exits:
 		var along_x: bool = e["edge"] == "top" or e["edge"] == "bottom"
 		var amount := d.x if along_x else d.y

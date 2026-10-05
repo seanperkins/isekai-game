@@ -606,6 +606,8 @@ static func _boss_room(r: RoomDef, rooms: Dictionary) -> Array:
 		out.append(_f(r, "boss_room", "boss needs a creature id and a threshold Rect2"))
 		return out
 	var size := r.pixel_size()
+	if (threshold as Rect2).size.x <= 0.0 or (threshold as Rect2).size.y <= 0.0:
+		out.append(_f(r, "boss_room", "the threshold %s needs a positive size, or nothing can cross it" % _rect_text(threshold)))
 	if maxi(r.size.x, r.size.y) < BOSS_MIN_SCREENS:
 		out.append(_f(r, "boss_room", "a boss room is at least %d screens in one dimension, this one is %dx%d" % [BOSS_MIN_SCREENS, r.size.x, r.size.y]))
 	if r.exits.size() != 1:
@@ -626,12 +628,13 @@ static func _boss_room(r: RoomDef, rooms: Dictionary) -> Array:
 			out.append(_f(r, "boss_room", "a bottom exit is a hole in the floor: nothing may fall out of an arena"))
 	if not r.water.is_empty():
 		out.append(_f(r, "boss_room", "a boss room has no water"))
-	var boss_at := -1
+	var matches: Array = []
 	for i in r.spawns.size():
 		if r.spawns[i]["id"] == creature:
-			boss_at = i
-	if boss_at < 0:
-		out.append(_f(r, "boss_room", "the boss %s is not in this room's spawns" % creature))
+			matches.append(i)
+	var boss_at: int = matches[0] if matches.size() == 1 else -1
+	if matches.size() != 1:
+		out.append(_f(r, "boss_room", "the boss %s must be in this room's spawns exactly once, it is there %d times" % [creature, matches.size()]))
 	elif _gap(Rect2(r.spawns[boss_at]["pos"], Vector2.ZERO), threshold) < BOSS_SPAWN_GAP:
 		out.append(_f(r, "boss_room", "the boss spawns %d px from the threshold, at least %d" % [int(_gap(Rect2(r.spawns[boss_at]["pos"], Vector2.ZERO), threshold)), int(BOSS_SPAWN_GAP)], "spawn", boss_at))
 	if not Rect2(Vector2.ZERO, size).encloses(threshold):
