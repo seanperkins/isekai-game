@@ -5,9 +5,9 @@ extends RefCounted
 
 ## The scene every data-defined verb uses.
 const SCENE := "res://scenes/abilities/verb.tscn"
-const KINDS := ["bolt", "burst", "ring", "dash", "zone", "mark", "heal", "ward", "buff", "pull", "aura", "chain", "engulf", "dissolve", "glide", "anchor", "decoy", "summon", "vine", "transmute", "copy"]
+const KINDS := ["bolt", "burst", "ring", "dash", "zone", "mark", "heal", "ward", "buff", "pull", "aura", "chain", "engulf", "dissolve", "glide", "anchor", "decoy", "summon", "vine", "transmute", "copy", "reveal", "bridge"]
 ## Each kind's keys and what they hold (validate() checks them). Every kind also takes `cooldown` (seconds, in place of the default);
-## the kinds in STRIKES also take damage_type and status.
+## the kinds in TYPED also take damage_type, and those in STRIKES a status and `drain` (the fraction of the damage the caster heals).
 const SCHEMA := {
 	"bolt": {"range": "number", "half_width": "number", "pierce": "bool"},
 	"burst": {"range": "number", "half_width": "number"},
@@ -30,6 +30,8 @@ const SCHEMA := {
 	"vine": {"height": "number", "seconds": "number"},
 	"transmute": {"from_units": "number", "to_units": "number"},
 	"copy": {"seconds": "number"},
+	"reveal": {"radius": "number"},
+	"bridge": {"length": "number", "seconds": "number"},
 }
 ## The kinds that hurt, which take a `damage_type`; STRIKES are the instant ones, which also take a `status`.
 const TYPED := ["bolt", "burst", "ring", "dash", "mark", "zone", "pull", "aura", "chain", "engulf", "dissolve"]
@@ -79,6 +81,10 @@ const TRANSMUTE_TO := 2
 const COPY_SECONDS := 8.0
 const COPY_STATS := ["atk", "def"]
 const COPY_SOURCE := "verb_copy"
+const REVEAL_RADIUS := 160.0
+const BRIDGE_LENGTH := 160.0
+const BRIDGE_SECONDS := 15.0
+const BRIDGE_REACH := 8.0
 const BUFF_SOURCE := "verb_buff"
 const BUFF_GENERATION := "verb_buff_generation"
 const BOLT_RANGE := 260.0
@@ -133,6 +139,10 @@ static func run(ability: Ability, spec: Dictionary) -> void:
 			_transmute(ability, spec)
 		"copy":
 			_copy(ability, spec)
+		"reveal":
+			_reveal(ability, spec)
+		"bridge":
+			_bridge(ability, spec)
 
 static func _bolt(a: Ability, spec: Dictionary) -> void:
 	var dir := a.aim_dir()
@@ -195,7 +205,7 @@ static func _mark_lands(caster, target, power: int, spec: Dictionary) -> void:
 	if target.has_method("can_be_hit") and not target.can_be_hit():
 		return
 	var from: Vector2 = caster.global_position if is_instance_valid(caster) else Vector2.INF
-	_hit(target, power, spec, from)
+	_hit(target, power, spec, from, false, caster)
 
 static func _heal(a: Ability, spec: Dictionary) -> void:
 	var health = a.actor.get("health")
@@ -278,7 +288,7 @@ static func _chain(a: Ability, spec: Dictionary) -> void:
 	for i in 1 + int(spec.get("hops", CHAIN_HOPS)):
 		hit.append(current)
 		var here: Vector2 = current.global_position
-		_hit(current, power, spec, from)
+		_hit(current, power, spec, from, false, a.actor)
 		Vfx.line(a.actor, from, here, _color(spec), 2.0, 0.3)
 		var next = null
 		var best := jump + 0.001
@@ -380,19 +390,47 @@ static func _vine(a: Ability, spec: Dictionary) -> void:
 	a.actor.get_parent().add_child(vine)
 	vine.launch(floor_point if floor_point != null else from, float(spec.get("height", VINE_HEIGHT)), float(spec.get("seconds", VINE_SECONDS)))
 
+## Whatever is in the group `hidden` within `radius` shows itself (`reveal()`): a hidden exit, a weak floor, a shortcut.
+static func _reveal(a: Ability, spec: Dictionary) -> void:
+	var radius := float(spec.get("radius", REVEAL_RADIUS))
+	for n in a.actor.get_tree().get_nodes_in_group("hidden"):
+		if n.has_method("reveal") and n.global_position.distance_to(a.actor.global_position) <= radius:
+			n.reveal()
+	var spots: Array = []
+	for i in 12:
+		spots.append(a.actor.global_position + Vector2.from_angle(TAU * float(i) / 12.0) * radius * 0.6)
+	Vfx.puffs(a.actor, Art.texture("spit_glob"), spots, Color(1.0, 0.95, 0.6, 0.8), 0.4)
+
+## A one-way plank at the caster's feet, `length` long, starting just ahead of it, the way it faces (Span). A second cast replaces it.
+static func _bridge(a: Ability, spec: Dictionary) -> void:
+	for old in a.actor.get_tree().get_nodes_in_group("verb_bridges"):
+		if old.caster == a.actor:
+			old.free()
+	var length := float(spec.get("length", BRIDGE_LENGTH))
+	var way := 1.0 if float(a.aim_dir().x) >= 0.0 else -1.0
+	var from: Vector2 = a.actor.global_position
+	var bridge := VerbBridge.new()
+	a.actor.get_parent().add_child(bridge)
+	bridge.launch(a.actor, Vector2(from.x + way * (BRIDGE_REACH + length / 2.0), from.y + BodyConfig.BOTTOM), length, float(spec.get("seconds", BRIDGE_SECONDS)))
+
 ## The skill's damage to each target, then the spec's status. `ignore_def` skips an Enemy's DEF.
 static func _strike(a: Ability, targets: Array, spec: Dictionary, ignore_def := false) -> void:
 	var power := Damage.skill_power(a.value(), a.actor_atk())
 	for t in targets:
-		_hit(t, power, spec, a.actor.global_position, ignore_def)
+		_hit(t, power, spec, a.actor.global_position, ignore_def, a.actor)
 
-static func _hit(t, power: int, spec: Dictionary, from: Vector2, ignore_def := false) -> void:
+static func _hit(t, power: int, spec: Dictionary, from: Vector2, ignore_def := false, caster = null) -> void:
 	var type := str(spec.get("damage_type", "physical"))
 	if ignore_def and t is Enemy:
 		t.receive_hit(power, type, from, "", true)
 	else:
 		t.receive_hit(power, type, from, "")
 	_apply_status(t, spec.get("status", {}))
+	var drain := float(spec.get("drain", 0.0))
+	if drain > 0.0 and caster != null and is_instance_valid(caster):
+		var health = caster.get("health")
+		if health != null:
+			health.heal(maxi(1, int(float(power) * drain)))  # the caster takes back some of what it dealt
 
 ## slow: any actor that can be slowed. stun: an Enemy that can be eaten (the serpent cannot be stunned). root: any Enemy, a boss included.
 static func _apply_status(t, status: Dictionary) -> void:
@@ -421,6 +459,7 @@ static func validate(spec: Dictionary) -> PackedStringArray:
 		keys["damage_type"] = "text"
 	if kind in STRIKES:
 		keys["status"] = "status"
+		keys["drain"] = "number"
 	for key in spec:
 		if key == "kind":
 			continue

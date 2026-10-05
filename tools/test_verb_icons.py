@@ -40,3 +40,12 @@ class IconsTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class KindsTest(unittest.TestCase):
+    def test_every_kind_the_framework_has_a_glyph(self):
+        import re
+        text = open(os.path.join(os.path.dirname(HERE), "scripts/abilities/verb_kinds.gd"), encoding="utf-8").read()
+        kinds = re.search(r"const KINDS := \[(.*?)\]", text, re.S).group(1)
+        for kind in re.findall(r'"(\w+)"', kinds):
+            self.assertIn(kind, vi.GLYPHS, kind)

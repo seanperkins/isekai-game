@@ -151,10 +151,23 @@ def g_copy(d, fg):
     d.rectangle([12, 12, 26, 26], fill=fg[:3] + (140,), outline=fg, width=2)
 
 
+def g_reveal(d, fg):
+    d.ellipse([4, 9, 28, 23], outline=fg, width=2)
+    d.ellipse([12, 12, 20, 20], fill=fg)
+    d.ellipse([15, 15, 17, 17], fill=BACK)
+
+
+def g_bridge(d, fg):
+    d.rectangle([3, 16, 29, 19], fill=fg)
+    for x in (5, 12, 19, 26):
+        d.line([(x, 19), (x, 25)], fill=fg, width=2)
+    d.line([(3, 12), (29, 12)], fill=fg, width=1)
+
+
 GLYPHS = {"bolt": g_bolt, "burst": g_burst, "ring": g_ring, "dash": g_dash, "zone": g_zone, "mark": g_mark, "heal": g_heal,
           "ward": g_ward, "buff": g_buff, "pull": g_pull, "aura": g_aura, "chain": g_chain, "engulf": g_engulf,
           "dissolve": g_dissolve, "glide": g_glide, "anchor": g_anchor, "decoy": g_decoy, "summon": g_summon, "vine": g_vine,
-          "transmute": g_transmute, "copy": g_copy}
+          "transmute": g_transmute, "copy": g_copy, "reveal": g_reveal, "bridge": g_bridge}
 
 
 def form_tint(form):

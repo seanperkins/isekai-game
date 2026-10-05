@@ -122,51 +122,19 @@ func test_appraising_a_creature_remembers_it() -> void:
 
 # --- the whole set ---
 
-## What a cast can change, read off the arena: damage and roots, spawned nodes, a mark, stats, essence, a glide, a ward. (Not the
-## player's position or speed: it falls in this arena, so they change whatever is cast.)
-func _snapshot(foes: Array, lizard: Enemy) -> Dictionary:
-	var hits := 0
-	for f in foes:
-		hits += f.hits.size()
-	return {"hits": hits, "hp": lizard.health.hp, "rooted": lizard.is_rooted(), "state": lizard.status.state,
-		"fields": get_tree().get_nodes_in_group("verb_fields").size(), "clouds": get_tree().get_nodes_in_group("player_clouds").size(), "allies": get_tree().get_nodes_in_group("verb_allies").size(),
-		"vines": get_tree().get_nodes_in_group("verb_vines").size(), "husks": get_tree().get_nodes_in_group("verb_husks").size(),
-		"mark": player.has_meta(VerbKinds.ANCHOR_META), "atk": player.stats.get_stat("atk"), "water": rules.held("water"),
-		"glide": player._glide, "ward": player._ward}
+func _slime_rows() -> Array:
+	var rows: Array = JSON.parse_string(FileAccess.get_file_as_string("res://tools/form_verbs.json"))
+	return rows.filter(func(r: Dictionary) -> bool: return load("res://data/forms/%s.tres" % r["form"]).species == "slime")
 
 func test_every_slime_form_four_but_quicksilver_has_a_working_verb() -> void:
-	var rows: Array = JSON.parse_string(FileAccess.get_file_as_string("res://tools/form_verbs.json"))
+	var rows := _slime_rows()
 	assert_eq(rows.size(), 17, "the 17 verbs of the design's slime form-fours")
+	var arena := VerbArena.new(self)
 	for row in rows:
-		_new_player()  # a clean body for each verb: a glide or a buff from the last would otherwise change this snapshot
-		var foes: Array = []
-		for x in [40.0, 80.0, 120.0]:
-			var f := Foe.new()
-			add_child_autofree(f)
-			f.add_to_group("actors")
-			f.global_position = Vector2(x, 0)
-			foes.append(f)
-		var lizard := Enemy.new()
-		lizard.setup(creatures["lizard"], skills_by_id)
-		lizard.position = Vector2(30, 0)
-		add_child_autofree(lizard)
-		lizard.health.max_hp = 100
-		lizard.health.hp = 100
-		player.global_position = Vector2.ZERO
-		player.facing = 1
-		_absorb("water", 5)
-		player.last_inspected = creatures["lizard"]
-		var before := _snapshot(foes, lizard)
-		var verb := _row_verb(row["form"])
-		assert_true(verb.activate(), row["form"])
-		await wait_physics_frames(2)
-		assert_ne(_snapshot(foes, lizard), before, "%s (%s) did something" % [row["name"], row["form"]])
-		for group in ["verb_fields", "verb_allies", "verb_vines", "verb_husks", "player_clouds"]:
-			for n in get_tree().get_nodes_in_group(group):
-				n.free()
-		for n in foes + [lizard]:
-			n.free()
-		player.free()
+		arena.fresh()  # a clean arena for each verb: a glide or a buff from the last would otherwise change this snapshot
+		var did: bool = await arena.changes_something(row["form"])
+		assert_true(did, "%s (%s) did something" % [row["name"], row["form"]])
+		arena.clean()
 
 func test_quicksilver_has_no_verb_and_still_evolves() -> void:
 	var forms := FormLoader.load_all()
