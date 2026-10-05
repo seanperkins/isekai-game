@@ -1,0 +1,505 @@
+{
+  "sprites": [
+    {
+      "id": "slime",
+      "name": "Slime",
+      "group": "species",
+      "clips": [
+        {
+          "id": "idle",
+          "file": "slime-idle.gif",
+          "fps": 1.5
+        },
+        {
+          "id": "run",
+          "file": "slime-run.gif",
+          "fps": 10.0
+        },
+        {
+          "id": "rise",
+          "file": "slime-rise.gif",
+          "fps": 1.0
+        },
+        {
+          "id": "fall",
+          "file": "slime-fall.gif",
+          "fps": 1.0
+        },
+        {
+          "id": "land",
+          "file": "slime-land.gif",
+          "fps": 1.0
+        },
+        {
+          "id": "wall",
+          "file": "slime-wall.gif",
+          "fps": 4.0
+        },
+        {
+          "id": "tackle",
+          "file": "slime-tackle.gif",
+          "fps": 1.0
+        },
+        {
+          "id": "spread",
+          "file": "slime-spread.gif",
+          "fps": 10.0
+        },
+        {
+          "id": "hurt",
+          "file": "slime-hurt.gif",
+          "fps": 1.0
+        },
+        {
+          "id": "rope",
+          "file": "slime-rope.gif",
+          "fps": 1.0
+        },
+        {
+          "id": "cover",
+          "file": "slime-cover.gif",
+          "fps": 8.0
+        }
+      ]
+    },
+    {
+      "id": "goblin",
+      "name": "Goblin acrobat",
+      "group": "species",
+      "clips": [
+        {
+          "id": "idle",
+          "file": "goblin-idle.gif",
+          "fps": 2.0
+        },
+        {
+          "id": "run",
+          "file": "goblin-run.gif",
+          "fps": 10.0
+        },
+        {
+          "id": "rise",
+          "file": "goblin-rise.gif",
+          "fps": 1.0
+        },
+        {
+          "id": "fall",
+          "file": "goblin-fall.gif",
+          "fps": 1.0
+        },
+        {
+          "id": "roll",
+          "file": "goblin-roll.gif",
+          "fps": 14.0
+        },
+        {
+          "id": "slide",
+          "file": "goblin-slide.gif",
+          "fps": 1.0
+        },
+        {
+          "id": "mantle",
+          "file": "goblin-mantle.gif",
+          "fps": 8.0
+        },
+        {
+          "id": "wall",
+          "file": "goblin-wall.gif",
+          "fps": 1.0
+        }
+      ]
+    },
+    {
+      "id": "gloom_wolf",
+      "name": "Gloom Wolf",
+      "group": "species",
+      "clips": [
+        {
+          "id": "idle",
+          "file": "gloom_wolf-idle.gif",
+          "fps": 1.0
+        },
+        {
+          "id": "walk",
+          "file": "gloom_wolf-walk.gif",
+          "fps": 8.0
+        },
+        {
+          "id": "windup",
+          "file": "gloom_wolf-windup.gif",
+          "fps": 1.0
+        },
+        {
+          "id": "charge",
+          "file": "gloom_wolf-charge.gif",
+          "fps": 12.0
+        },
+        {
+          "id": "rest",
+          "file": "gloom_wolf-rest.gif",
+          "fps": 1.0
+        },
+        {
+          "id": "stunned",
+          "file": "gloom_wolf-stunned.gif",
+          "fps": 1.0
+        },
+        {
+          "id": "hurt",
+          "file": "gloom_wolf-hurt.gif",
+          "fps": 1.0
+        },
+        {
+          "id": "downed",
+          "file": "gloom_wolf-downed.gif",
+          "fps": 1.0
+        }
+      ]
+    },
+    {
+      "id": "spider",
+      "name": "Black Spider",
+      "group": "species",
+      "clips": [
+        {
+          "id": "hang",
+          "file": "spider-hang.gif",
+          "fps": 2.0
+        },
+        {
+          "id": "drop",
+          "file": "spider-drop.gif",
+          "fps": 1.0
+        },
+        {
+          "id": "crawl",
+          "file": "spider-crawl.gif",
+          "fps": 8.0
+        },
+        {
+          "id": "stunned",
+          "file": "spider-stunned.gif",
+          "fps": 1.0
+        },
+        {
+          "id": "hurt",
+          "file": "spider-hurt.gif",
+          "fps": 1.0
+        },
+        {
+          "id": "downed",
+          "file": "spider-downed.gif",
+          "fps": 1.0
+        }
+      ]
+    },
+    {
+      "id": "form_weaver",
+      "name": "Weaver (player form)",
+      "group": "form",
+      "clips": [
+        {
+          "id": "idle",
+          "file": "form_weaver-idle.gif",
+          "fps": 1.5
+        },
+        {
+          "id": "run",
+          "file": "form_weaver-run.gif",
+          "fps": 10.0
+        }
+      ]
+    },
+    {
+      "id": "form_snare",
+      "name": "Snare (player form)",
+      "group": "form",
+      "clips": [
+        {
+          "id": "idle",
+          "file": "form_snare-idle.gif",
+          "fps": 1.5
+        },
+        {
+          "id": "run",
+          "file": "form_snare-run.gif",
+          "fps": 10.0
+        }
+      ]
+    },
+    {
+      "id": "form_arachne",
+      "name": "Arachne (player form)",
+      "group": "form",
+      "clips": [
+        {
+          "id": "idle",
+          "file": "form_arachne-idle.gif",
+          "fps": 1.5
+        },
+        {
+          "id": "run",
+          "file": "form_arachne-run.gif",
+          "fps": 10.0
+        }
+      ]
+    },
+    {
+      "id": "form_silkbound",
+      "name": "Silkbound (player form)",
+      "group": "form",
+      "clips": [
+        {
+          "id": "idle",
+          "file": "form_silkbound-idle.gif",
+          "fps": 1.5
+        },
+        {
+          "id": "run",
+          "file": "form_silkbound-run.gif",
+          "fps": 10.0
+        }
+      ]
+    },
+    {
+      "id": "armed_ant",
+      "name": "Armed Ant",
+      "group": "creature",
+      "clips": [
+        {
+          "id": "idle",
+          "file": "armed_ant-idle.gif",
+          "fps": 1.0
+        },
+        {
+          "id": "walk",
+          "file": "armed_ant-walk.gif",
+          "fps": 10.0
+        }
+      ]
+    },
+    {
+      "id": "bat",
+      "name": "Cave Bat",
+      "group": "creature",
+      "clips": [
+        {
+          "id": "hover",
+          "file": "bat-hover.gif",
+          "fps": 6.0
+        },
+        {
+          "id": "fly",
+          "file": "bat-fly.gif",
+          "fps": 10.0
+        }
+      ]
+    },
+    {
+      "id": "bog_lizardman",
+      "name": "Bog Lizardman",
+      "group": "creature",
+      "clips": [
+        {
+          "id": "idle",
+          "file": "bog_lizardman-idle.gif",
+          "fps": 1.0
+        },
+        {
+          "id": "walk",
+          "file": "bog_lizardman-walk.gif",
+          "fps": 8.0
+        }
+      ]
+    },
+    {
+      "id": "cave_crayfish",
+      "name": "Cave Crayfish",
+      "group": "creature",
+      "clips": [
+        {
+          "id": "idle",
+          "file": "cave_crayfish-idle.gif",
+          "fps": 1.0
+        },
+        {
+          "id": "charge",
+          "file": "cave_crayfish-charge.gif",
+          "fps": 12.0
+        }
+      ]
+    },
+    {
+      "id": "drift_jelly",
+      "name": "Drift Jelly",
+      "group": "creature",
+      "clips": [
+        {
+          "id": "drift",
+          "file": "drift_jelly-drift.gif",
+          "fps": 5.0
+        }
+      ]
+    },
+    {
+      "id": "glass_eel",
+      "name": "Glass Eel",
+      "group": "creature",
+      "clips": [
+        {
+          "id": "swim",
+          "file": "glass_eel-swim.gif",
+          "fps": 8.0
+        },
+        {
+          "id": "dart",
+          "file": "glass_eel-dart.gif",
+          "fps": 1.0
+        }
+      ]
+    },
+    {
+      "id": "lizard",
+      "name": "Armored Lizard",
+      "group": "creature",
+      "clips": [
+        {
+          "id": "idle",
+          "file": "lizard-idle.gif",
+          "fps": 2.0
+        },
+        {
+          "id": "charge",
+          "file": "lizard-charge.gif",
+          "fps": 12.0
+        }
+      ]
+    },
+    {
+      "id": "mushroom_crab",
+      "name": "Mushroom Crab",
+      "group": "creature",
+      "clips": [
+        {
+          "id": "idle",
+          "file": "mushroom_crab-idle.gif",
+          "fps": 1.0
+        },
+        {
+          "id": "charge",
+          "file": "mushroom_crab-charge.gif",
+          "fps": 12.0
+        }
+      ]
+    },
+    {
+      "id": "pale_moth",
+      "name": "Pale Moth",
+      "group": "creature",
+      "clips": [
+        {
+          "id": "fly",
+          "file": "pale_moth-fly.gif",
+          "fps": 10.0
+        }
+      ]
+    },
+    {
+      "id": "spore_moth",
+      "name": "Spore Moth",
+      "group": "creature",
+      "clips": [
+        {
+          "id": "fly",
+          "file": "spore_moth-fly.gif",
+          "fps": 10.0
+        }
+      ]
+    },
+    {
+      "id": "stone_drake",
+      "name": "Stone Drake",
+      "group": "creature",
+      "clips": [
+        {
+          "id": "idle",
+          "file": "stone_drake-idle.gif",
+          "fps": 1.0
+        },
+        {
+          "id": "walk",
+          "file": "stone_drake-walk.gif",
+          "fps": 6.0
+        }
+      ]
+    },
+    {
+      "id": "storm_eel",
+      "name": "Storm Eel",
+      "group": "creature",
+      "clips": [
+        {
+          "id": "swim",
+          "file": "storm_eel-swim.gif",
+          "fps": 8.0
+        },
+        {
+          "id": "dart",
+          "file": "storm_eel-dart.gif",
+          "fps": 1.0
+        }
+      ]
+    },
+    {
+      "id": "taratect",
+      "name": "Taratect",
+      "group": "creature",
+      "clips": [
+        {
+          "id": "hang",
+          "file": "taratect-hang.gif",
+          "fps": 2.0
+        },
+        {
+          "id": "crawl",
+          "file": "taratect-crawl.gif",
+          "fps": 8.0
+        }
+      ]
+    },
+    {
+      "id": "toad",
+      "name": "Poison Toad",
+      "group": "creature",
+      "clips": [
+        {
+          "id": "idle",
+          "file": "toad-idle.gif",
+          "fps": 2.0
+        },
+        {
+          "id": "walk",
+          "file": "toad-walk.gif",
+          "fps": 8.0
+        }
+      ]
+    },
+    {
+      "id": "vine_snake",
+      "name": "Vine Snake",
+      "group": "creature",
+      "clips": [
+        {
+          "id": "hide",
+          "file": "vine_snake-hide.gif",
+          "fps": 1.0
+        },
+        {
+          "id": "slither",
+          "file": "vine_snake-slither.gif",
+          "fps": 8.0
+        }
+      ]
+    }
+  ]
+}

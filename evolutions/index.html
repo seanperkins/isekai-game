@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Isekai Evolutions</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="page">
+
+<h1>Isekai Chronicles — every evolution</h1>
+<p class="lede">All five species, every form from the first body to the last, with the creature each one is in the world, the essences it reads and the monsters the world still needs. A proposal for review: only the forms marked <em>built</em> exist in the game today.</p>
+<p class="meta"><span id="built"></span> · design: <code>docs/research/species-form-branches.md</code> via <code>tools/build_evolutions.py</code> · <a href="../">design review</a></p>
+
+<div class="stats" id="stats" aria-label="Totals"></div>
+
+<nav class="tabs" id="tabs" role="tablist" aria-label="Sections"></nav>
+
+<div class="layout">
+  <main id="panel" role="tabpanel" tabindex="-1"></main>
+  <aside id="detail" class="detail" aria-label="Form details" hidden></aside>
+</div>
+
+<details class="how">
+  <summary>How to read this</summary>
+  <ul>
+    <li><strong>Form 1</strong> is a species' first body. It splits into three or four <strong>form 2</strong> lines, each into two <strong>form 3</strong>s and each of those into two <strong>form 4</strong>s. Branches never rejoin.</li>
+    <li><strong>★</strong> marks the four asks: the werewolf, the secret light undead, the heavy-weapon undead and the half-spider. <strong>Built</strong> forms exist in the game. <strong>Secret</strong> forms need a hidden condition. A dashed chip is an essence no creature carries yet (<em>fire</em>, <em>mind</em>, <em>blood</em>): that form shows as a stub until it arrives.</li>
+    <li><strong>World twin</strong>: every form is also a creature the player can meet, with the same kit. Its tier sets the essence it carries and the XP it pays. Click any form for its twin.</li>
+    <li>The numbers are the design's, not tuned: the essence amounts follow the shipped creatures' scale, and the thresholds that open slime lineages are calibrated in the document.</li>
+  </ul>
+</details>
+
+</div>
+<script src="evolutions-data.js"></script>
+<script src="evolutions.js"></script>
+</body>
+</html>

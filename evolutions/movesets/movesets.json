@@ -1,0 +1,243 @@
+{
+  "species": [
+    {
+      "id": "slime",
+      "name": "Slime",
+      "clips": [
+        {
+          "id": "run",
+          "title": "Run",
+          "caption": "Left and right run at 140 px/s: 0.05 s to get up to speed, 0.06 s to stop and a slow 0.08 s turn round.",
+          "file": "slime-run.gif",
+          "fps": 30,
+          "width": 840,
+          "height": 240,
+          "frames": 81
+        },
+        {
+          "id": "jump",
+          "title": "Jump to a ledge",
+          "caption": "Space jumps and the height follows how long it is held: a tap is a small hop (letting go early makes gravity 2.5 times heavier on the way up), a full hold rises about 63 px. That clears the 40 px ledge, then the 60 px one with 3 px to spare.",
+          "file": "slime-jump.gif",
+          "fps": 30,
+          "width": 800,
+          "height": 480,
+          "frames": 97
+        },
+        {
+          "id": "bounce",
+          "title": "Hold-jump bounce",
+          "caption": "Keep Space held through a fall and the slime rebounds on landing as a ball with its eyes rolling, each bounce at 85% of the last launch speed, until the impact drops under 250 px/s. Let go of Space and it settles.",
+          "file": "slime-bounce.gif",
+          "fps": 30,
+          "width": 640,
+          "height": 360,
+          "frames": 110
+        },
+        {
+          "id": "tackle",
+          "title": "Tackle",
+          "caption": "J is a short dash along the facing: 340 px/s for 0.18 s, in the tackle pose. Shown at half speed.",
+          "file": "slime-tackle.gif",
+          "fps": 30,
+          "width": 840,
+          "height": 240,
+          "frames": 83,
+          "slow": 2
+        },
+        {
+          "id": "puddle",
+          "title": "Puddle",
+          "caption": "Run, then hold down: the slime flattens into a 0.5 s puddle slide and keeps crawling at half speed while down is held, flat enough for the 12 px tunnel. It stands up again once down is released and there is room.",
+          "file": "slime-puddle.gif",
+          "fps": 30,
+          "width": 1080,
+          "height": 240,
+          "frames": 141
+        },
+        {
+          "id": "wall",
+          "title": "Wall cling and wall jump",
+          "caption": "Pressing into a wall in the air makes the slime stick for 0.2 s, then slide down at 90 px/s. Space kicks off the wall at 180 px/s with a full jump; kicking from wall to wall climbs the shaft.",
+          "file": "slime-wall.gif",
+          "fps": 30,
+          "width": 360,
+          "height": 560,
+          "frames": 134
+        }
+      ]
+    },
+    {
+      "id": "biped",
+      "name": "Biped (goblin and undead body)",
+      "clips": [
+        {
+          "id": "run",
+          "title": "Run",
+          "caption": "Left and right run at 140 px/s, with a fast start (0.04 s), a fast stop (0.03 s) and a quick turn.",
+          "file": "biped-run.gif",
+          "fps": 30,
+          "width": 840,
+          "height": 240,
+          "frames": 81
+        },
+        {
+          "id": "jump",
+          "title": "Jump",
+          "caption": "Space jumps about 60 px when held; a tap cuts the rise to a small hop. Here a tap, then a held run-up jump that goes up through the thin one-way ledge and lands on it.",
+          "file": "biped-jump.gif",
+          "fps": 30,
+          "width": 800,
+          "height": 480,
+          "frames": 59
+        },
+        {
+          "id": "roll",
+          "title": "Roll",
+          "caption": "J from a standstill, or under 100 px/s, rolls at 220 px/s for 0.35 s with a low flat body. The body is drawn translucent for the first 0.2 s, which are invulnerable.",
+          "file": "biped-roll.gif",
+          "fps": 30,
+          "width": 840,
+          "height": 240,
+          "frames": 51
+        },
+        {
+          "id": "slide",
+          "title": "Slide",
+          "caption": "J while running (100 px/s or more) slides instead: the run speed bleeds off over 0.4 s in the same low body, again invulnerable for the first 0.2 s.",
+          "file": "biped-slide.gif",
+          "fps": 30,
+          "width": 840,
+          "height": 240,
+          "frames": 53
+        },
+        {
+          "id": "mantle",
+          "title": "Mantle",
+          "caption": "Jump at a ledge with a wall ahead so the feet end up within 32 px under its lip (this 60 px one, which a 60 px jump only just reaches) and the hands catch the lip: no button, the biped is pulled up and over in 0.25 s. Shown at half speed.",
+          "file": "biped-mantle.gif",
+          "fps": 30,
+          "width": 800,
+          "height": 480,
+          "frames": 82,
+          "slow": 2
+        },
+        {
+          "id": "walljump",
+          "title": "Wall slide and wall jump",
+          "caption": "Pressing into a wall in the air slides down it at 90 px/s (the biped does not stick, unlike the slime). Space kicks off at 180 px/s with a full jump; kicking from wall to wall climbs the shaft.",
+          "file": "biped-walljump.gif",
+          "fps": 30,
+          "width": 360,
+          "height": 560,
+          "frames": 136
+        },
+        {
+          "id": "dropthrough",
+          "title": "Drop through a thin ledge",
+          "caption": "Down while standing on a one-way ledge drops through it for 0.2 s, and a jump from below passes up through it and lands on top. Every species can; shown with the biped.",
+          "file": "biped-dropthrough.gif",
+          "fps": 30,
+          "width": 800,
+          "height": 480,
+          "frames": 58
+        }
+      ]
+    },
+    {
+      "id": "wolf",
+      "name": "Wolf",
+      "clips": [
+        {
+          "id": "gallop",
+          "title": "Gallop",
+          "caption": "The wolf is slow to start: 0.4 s from rest to its 230 px/s top speed, walking at first and galloping from 150 px/s. Released, it stops in 0.1 s.",
+          "file": "wolf-gallop.gif",
+          "fps": 30,
+          "width": 840,
+          "height": 240,
+          "frames": 83
+        },
+        {
+          "id": "skid",
+          "title": "Skid turn",
+          "caption": "Reversing at a gallop (150 px/s or more) is a skid: it brakes in 0.1 s, leans back and kicks up dust, then sets off the other way. Shown at half speed.",
+          "file": "wolf-skid.gif",
+          "fps": 30,
+          "width": 840,
+          "height": 240,
+          "frames": 108,
+          "slow": 2
+        },
+        {
+          "id": "pounce",
+          "title": "Pounce",
+          "caption": "J leaps along the aim at 300 px/s (plus half the speed it already had) for 0.35 s, then gravity takes over; one pounce per jump and 0.8 s before the next. Up and right here, then up and left. The sandbox only records contact with the red dummy: the flash is added by the capture. Shown at half speed.",
+          "file": "wolf-pounce.gif",
+          "fps": 30,
+          "width": 840,
+          "height": 240,
+          "frames": 96,
+          "slow": 2
+        },
+        {
+          "id": "vault",
+          "title": "Vault a step",
+          "caption": "Running at 150 px/s or more into a hard step up to 24 px high makes the wolf hop it by itself, with no jump press, keeping its speed. The step here is an extra 16 px one in the open: the sandbox's own sits 20 px from the wall, too close to land past.",
+          "file": "wolf-vault.gif",
+          "fps": 30,
+          "width": 840,
+          "height": 240,
+          "frames": 50
+        }
+      ]
+    },
+    {
+      "id": "spider",
+      "name": "Spider",
+      "clips": [
+        {
+          "id": "crawl",
+          "title": "Crawl walls and ceilings",
+          "caption": "The arrows crawl along any hard surface. One held direction takes the spider up the pillar's wall, over its corner onto the slab, round to the underside and down the far side to the floor.",
+          "file": "spider-crawl.gif",
+          "fps": 30,
+          "width": 480,
+          "height": 560,
+          "frames": 150
+        },
+        {
+          "id": "zip",
+          "title": "Web zip",
+          "caption": "J fires a thread along the aim at the first solid within 160 px and pulls the spider to it at 400 px/s, gripping what it reaches. Up to the slab's underside, then down and left to the pillar's wall. Shown at half speed.",
+          "file": "spider-zip.gif",
+          "fps": 30,
+          "width": 480,
+          "height": 560,
+          "frames": 104,
+          "slow": 2
+        },
+        {
+          "id": "drop",
+          "title": "Silk drop",
+          "caption": "Down, hanging from a ceiling or in the air, spins a thread from the solid above and slides down it at 90 px/s. Down reels out, up climbs back at 60 px/s, Space lets go, and the floor grips it again.",
+          "file": "spider-drop.gif",
+          "fps": 30,
+          "width": 480,
+          "height": 560,
+          "frames": 87
+        },
+        {
+          "id": "slick",
+          "title": "Slick block",
+          "caption": "The pale block is slick: the spider cannot hold a thread to it, crawl up it or hang from it. A zip at it from 100 px away, well in range, fizzles with no thread; crawling up to it stops at the face, and a hop at it slides off.",
+          "file": "spider-slick.gif",
+          "fps": 30,
+          "width": 480,
+          "height": 560,
+          "frames": 111
+        }
+      ]
+    }
+  ]
+}
