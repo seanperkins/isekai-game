@@ -50,3 +50,11 @@ trucks = [{
 }]
 fallback = "The truck does not care what you chose."
 goddess_line = "I am so sorry. That truck was never meant to be there. Come, let me make it up to you."
+dodge_success = "You dodge! The truck roars past and misses you completely. Then you hear a second engine."
+second_truck = "A second truck pulls in beside the first. There are two of them now."
+grandma = {
+"id": "grandma",
+"label": "Save Grandma",
+"prompt": "An old lady has stepped into the road, right in front of the trucks!",
+"result": "You shove her out of the way. The trucks, regrettably, do not stop."
+}

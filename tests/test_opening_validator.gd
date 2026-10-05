@@ -66,6 +66,45 @@ func test_more_choices_than_fit_the_screen_are_named() -> void:
 	d.choices.pop_back()
 	assert_eq(_errors(d), "", "exactly the maximum is fine")
 
+func _with_grandma() -> OpeningDef:
+	var d := _good()
+	d.grandma = {"id": "grandma", "label": "Save Grandma", "prompt": "An old lady!", "result": "You push her clear."}
+	return d
+
+func test_a_def_with_a_grandma_validates_clean_and_the_extra_copy_is_optional() -> void:
+	assert_eq(_errors(_with_grandma()), "")
+	var d := _with_grandma()
+	d.dodge_success = "You dodge!"
+	d.second_truck = "Two trucks."
+	assert_eq(_errors(d), "")
+
+func test_each_grandma_mistake_is_named() -> void:
+	for key in ["id", "label", "prompt", "result"]:
+		var d := _with_grandma()
+		d.grandma[key] = "  "
+		assert_string_contains(_errors(d), "opening: grandma needs a non-blank string id, label, prompt and result", key)
+		d = _with_grandma()
+		d.grandma.erase(key)
+		assert_string_contains(_errors(d), "opening: grandma needs a non-blank string id, label, prompt and result", "no " + key)
+		d = _with_grandma()
+		d.grandma[key] = 5
+		assert_string_contains(_errors(d), "opening: grandma needs a non-blank string id, label, prompt and result", "wrong type " + key)
+	var d := _with_grandma()
+	d.grandma["id"] = "dodge"
+	assert_string_contains(_errors(d), "opening: grandma id 'dodge' is also a choice")
+	d = _with_grandma()
+	d.grandma["label"] = "Jump"
+	assert_string_contains(_errors(d), "opening: grandma label 'Jump' is also a choice label")
+
+func test_the_grandmas_row_fits_beside_the_most_choices() -> void:
+	var d := _with_grandma()
+	d.choices = []
+	for i in OpeningDef.MAX_CHOICES:
+		d.choices.append({"id": "c%d" % i, "label": "C%d" % i})
+	d.trucks = [{"prompt": "P", "results": {}}]
+	assert_eq(_errors(d), "", "the maximum choices and her row is the most the window is built for")
+	assert_eq(OpeningDef.MAX_ROWS, OpeningDef.MAX_CHOICES + 1)
+
 func test_wrong_types_are_named_not_crashed() -> void:
 	var d := _good()
 	d.choices = [5]
@@ -99,3 +138,8 @@ func test_the_shipped_opening_pins_its_shape() -> void:
 		for id in truck["results"]:
 			lines[truck["results"][id]] = true
 	assert_eq(lines.size(), 15, "three trucks times five commands, every line different")
+	assert_ne(d.dodge_success.strip_edges(), "", "the first dodge has its own line")
+	assert_ne(d.second_truck.strip_edges(), "", "and the second truck its arrival")
+	assert_eq(d.grandma["id"], "grandma")
+	assert_eq(d.grandma["label"], "Save Grandma")
+	assert_false(lines.has(d.dodge_success), "the dodge line is not one of the failing lines")

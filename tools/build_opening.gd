@@ -2,7 +2,7 @@ extends SceneTree
 ## Writes the opening's data: res://data/opening/opening.tres. Run once (then edit the .tres freely):
 ##   env HOME="$PWD/.tmp/gdhome" godot --headless -s tools/build_opening.gd
 ## It is its own generator so that re-running tools/build_soul.gd never overwrites Sean's edited soul copy.
-## Every line below is PLACEHOLDER copy for Sean to rewrite: three trucks, five commands, and every command fails.
+## Every line below is PLACEHOLDER copy for Sean to rewrite: three rounds, five commands, and every command fails (except the first Dodge, which works once, and the old lady's round, where only saving her can be picked).
 
 const CHOICES := [
 	{"id": "fight", "label": "Fight"},
@@ -34,6 +34,14 @@ const TRUCKS := [
 		"run": "You run, and you almost make it. Trucks do not respect almost.",
 	}},
 ]
+const DODGE_SUCCESS := "You dodge! The truck roars past and misses you completely. Then you hear a second engine."
+const SECOND_TRUCK := "A second truck pulls in beside the first. There are two of them now."
+const GRANDMA := {
+	"id": "grandma",
+	"label": "Save Grandma",
+	"prompt": "An old lady has stepped into the road, right in front of the trucks!",
+	"result": "You shove her out of the way. The trucks, regrettably, do not stop.",
+}
 const FALLBACK_LINE := "The truck does not care what you chose."
 const GODDESS_LINE := "I am so sorry. That truck was never meant to be there. Come, let me make it up to you."
 
@@ -48,6 +56,9 @@ func _opening() -> OpeningDef:
 	d.trucks = TRUCKS.duplicate(true)
 	d.fallback = FALLBACK_LINE
 	d.goddess_line = GODDESS_LINE
+	d.dodge_success = DODGE_SUCCESS
+	d.second_truck = SECOND_TRUCK
+	d.grandma = GRANDMA.duplicate(true)
 	return d
 
 func _save(res: Resource, path: String) -> int:

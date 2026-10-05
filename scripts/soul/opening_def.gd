@@ -5,6 +5,8 @@ extends Resource
 
 ## The most choices the truck menu has room for on the 640x360 screen (OpeningScene lays its rows out for exactly this many).
 const MAX_CHOICES := 5
+## The most rows it ever shows: the choices and, in the last round, the old lady's.
+const MAX_ROWS := MAX_CHOICES + 1
 
 ## [{"id": String, "label": String}], the menu in order.
 @export var choices: Array = []
@@ -14,6 +16,14 @@ const MAX_CHOICES := 5
 @export var fallback: String = ""
 ## Her first words, shown on top of her menu.
 @export var goddess_line: String = ""
+## The line shown when the first Dodge works (it always works once): the truck misses, and then a second one shows up. A blank line
+## falls back to the truck's own line for Dodge.
+@export var dodge_success: String = ""
+## The prompt of the round that opens when that second truck arrives. Blank falls back to the truck's own prompt.
+@export var second_truck: String = ""
+## The old lady in the last round: {"id", "label", "prompt", "result"}. While she is there every other command is grayed out and
+## only `label` can be picked (it shows `result`). Empty means there is no old lady.
+@export var grandma: Dictionary = {}
 
 ## The line for `choice_id` against truck `truck`: the truck's own, else the fallback (also for a truck that does not exist).
 func result_for(truck: int, choice_id: String) -> String:
