@@ -19,6 +19,8 @@ stats = {
 "mp_regen": 40,
 "spd": 12
 }
+grants = ["verb_spider_tarantella"]
+verb = "verb_spider_tarantella"
 tint = Color(0.725, 0.925, 1, 1)
 size = 1.4
 sprite_set = "forms_spider"

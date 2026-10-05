@@ -39,6 +39,26 @@ func test_every_wolf_and_undead_form_has_a_verb() -> void:
 func test_each_wolf_and_undead_verb_does_something_in_a_fresh_arena() -> void:
 	await _check_verbs_do_something(["wolf", "undead"])
 
+# --- spider and goblin ---
+
+func test_every_spider_and_goblin_form_has_a_verb() -> void:
+	_check_species(["spider"], 21)
+	_check_species(["goblin"], 28)
+
+func test_each_spider_and_goblin_verb_does_something_in_a_fresh_arena() -> void:
+	await _check_verbs_do_something(["spider", "goblin"])
+
+func test_every_form_but_the_built_slime_ones_has_a_verb_and_they_have_none() -> void:
+	var with_verb := 0
+	for f in FormLoader.load_all().values():
+		if f.verb != "":
+			with_verb += 1
+		elif f.species != "slime" or f.id == "quicksilver_slime":
+			assert_eq(f.species == "slime", true, "%s has no verb" % f.id)  # only Quicksilver and the 24 built slime forms are without
+		else:
+			assert_true(["weaver", "snare", "silkbound", "arachne", "tide", "brook", "tidal", "tempest", "toxic", "acid", "venom", "blight", "bulwark", "golem", "stone", "crystal", "echo", "phantom", "storm", "sky", "greater_slime", "vast", "prime", "radiant"].has(f.id), f.id)
+	assert_eq(with_verb, 99 + 17, "99 for the other species and the slime's 17")
+
 # --- every row ---
 
 func test_the_data_validates_with_every_verb() -> void:

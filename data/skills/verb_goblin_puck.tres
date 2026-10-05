@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_goblin_puck"
+display_name = "Mislead"
+description = "Illusions and decoys; reverse an enemy's facing."
+announce = "New verb. Acquired [Mislead]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "decoy", "seconds": 1.2, "speed": 200, "ward": 0.6, "cooldown": 8.0}}]
+mp_cost = 5

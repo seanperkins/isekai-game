@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_goblin_changeling"
+display_name = "Swap"
+description = "Trade places with a decoy; look like a creature to scout."
+announce = "New verb. Acquired [Swap]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "decoy", "seconds": 2.0, "speed": 120, "ward": 1.0, "cooldown": 8.0}}]
+mp_cost = 5

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_goblin_hearth_god"
+display_name = "Lar"
+description = "Ward-stones link into one wider aura."
+announce = "New verb. Acquired [Lar]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "zone", "radius": 110, "seconds": 12.0, "slow": true, "heals": 3, "cooldown": 16.0}}]
+mp_cost = 8

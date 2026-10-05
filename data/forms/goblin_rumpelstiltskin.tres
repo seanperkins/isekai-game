@@ -16,6 +16,8 @@ stats = {
 "max_hp": 22,
 "max_mp": 13
 }
+grants = ["verb_goblin_rumpelstiltskin"]
+verb = "verb_goblin_rumpelstiltskin"
 tint = Color(0.975, 0.79, 0.825, 1)
 size = 1.4
 sprite_set = "forms_goblin"

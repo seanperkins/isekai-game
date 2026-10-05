@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_goblin_knocker"
+display_name = "Tap"
+description = "Senses hidden walls, weak floors and traps in a room."
+announce = "New verb. Acquired [Tap]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "reveal", "radius": 180, "cooldown": 8.0}}]
+mp_cost = 3

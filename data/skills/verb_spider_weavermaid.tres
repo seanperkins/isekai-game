@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_spider_weavermaid"
+display_name = "Hands"
+description = "A person's torso on a spider body; uses items, tools and bows."
+announce = "New verb. Acquired [Hands]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "buff", "stats": {"atk": 2}, "seconds": 8.0, "cooldown": 12.0}}]
+mp_cost = 4

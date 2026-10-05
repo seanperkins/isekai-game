@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_spider_chasm_weaver"
+display_name = "Span"
+description = "Spin a permanent web bridge across a gap (a traversal gate)."
+announce = "New verb. Acquired [Span]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "bridge", "length": 160, "seconds": 15.0, "cooldown": 8.0}}]
+mp_cost = 6

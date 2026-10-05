@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_spider_venomspinner"
+display_name = "Venom web"
+description = "Webs apply poison that spreads through trap webs."
+announce = "New verb. Acquired [Venom web]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [1], "spec": {"kind": "zone", "radius": 70, "seconds": 8.0, "slow": true, "damage": true, "damage_type": "poison", "cooldown": 10.0}}]
+mp_cost = 6

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_spider_cave_matriarch"
+display_name = "Heavy bite"
+description = "A huge lone hunter: heavy bite, a web wall."
+announce = "New verb. Acquired [Heavy bite]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [12], "spec": {"kind": "burst", "range": 55, "half_width": 40, "cooldown": 5.0}}]
+mp_cost = 6

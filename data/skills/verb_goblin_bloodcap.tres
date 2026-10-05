@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_goblin_bloodcap"
+display_name = "Cap-throw"
+description = "A boomerang cap that returns, dyed."
+announce = "New verb. Acquired [Cap-throw]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [8], "spec": {"kind": "bolt", "range": 200, "pierce": true, "cooldown": 3.0}}]
+mp_cost = 5

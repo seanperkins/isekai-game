@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_goblin_horn_bearer"
+display_name = "Horn"
+description = "A blast that stuns and rallies allies."
+announce = "New verb. Acquired [Horn]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [4], "spec": {"kind": "burst", "range": 90, "half_width": 60, "status": {"stun": 1.5}, "cooldown": 9.0}}]
+mp_cost = 6

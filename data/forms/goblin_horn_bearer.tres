@@ -18,6 +18,8 @@ stats = {
 "max_mp": 12,
 "spd": 12
 }
+grants = ["verb_goblin_horn_bearer"]
+verb = "verb_goblin_horn_bearer"
 tint = Color(0.95, 1, 0.9, 1)
 size = 1.4
 sprite_set = "forms_goblin"

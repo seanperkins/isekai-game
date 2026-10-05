@@ -16,6 +16,8 @@ stats = {
 "max_hp": 12,
 "max_mp": 6
 }
+grants = ["verb_spider_cave_matriarch"]
+verb = "verb_spider_cave_matriarch"
 tint = Color(0.8, 0.69, 0.725, 1)
 size = 1.25
 sprite_set = "forms_spider"

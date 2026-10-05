@@ -18,6 +18,8 @@ stats = {
 "max_mp": 10,
 "spd": 12
 }
+grants = ["verb_spider_anansi"]
+verb = "verb_spider_anansi"
 tint = Color(0.8, 0.825, 0.975, 1)
 size = 1.4
 sprite_set = "forms_spider"

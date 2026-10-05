@@ -79,10 +79,10 @@ class SpeciesRowsTest(unittest.TestCase):
     def tearDownClass(cls):
         os.chdir(cls.old)
 
-    def test_every_wolf_and_undead_form_has_a_row(self):
+    def test_every_form_of_the_four_species_has_a_row(self):
         for f in self.forms:
-            if f["species"] in ("wolf", "undead"):
-                self.assertIn(f["dataId"], self.rows)
+            self.assertIn(f["dataId"], self.rows)
+        self.assertEqual(len([f for f in self.forms]), 99)
 
     def test_full_means_no_note_and_the_rest_say_what_is_missing(self):
         for r in self.rows.values():

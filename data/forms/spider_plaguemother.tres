@@ -17,6 +17,8 @@ stats = {
 "max_mp": 10,
 "mp_regen": 40
 }
+grants = ["verb_spider_plaguemother"]
+verb = "verb_spider_plaguemother"
 tint = Color(0.675, 0.75, 0.975, 1)
 size = 1.4
 sprite_set = "forms_spider"

@@ -1062,5 +1062,785 @@
       "damage_type": "dark",
       "cooldown": 6.0
     }
+  },
+  {
+    "form": "spider_weavermaid",
+    "name": "Hands",
+    "mp": 4,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "An attack window; the person's torso, its tools, items and bow are not modeled.",
+    "text": "A person's torso on a spider body; uses items, tools and bows.",
+    "spec": {
+      "kind": "buff",
+      "stats": {
+        "atk": 2
+      },
+      "seconds": 8.0,
+      "cooldown": 12.0
+    }
+  },
+  {
+    "form": "spider_jorogumo",
+    "name": "Veil",
+    "mp": 5,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "Untouchable for three seconds, standing in for passing as a goblin; village standing is not modeled.",
+    "text": "Pass as a goblin or villager; revealing it bursts the veil.",
+    "spec": {
+      "kind": "ward",
+      "seconds": 3.0,
+      "cooldown": 14.0
+    }
+  },
+  {
+    "form": "spider_seven_spider_spirits",
+    "name": "Sisters",
+    "mp": 9,
+    "value": 2,
+    "fidelity": "approx",
+    "note": "Seven decoy spiders fight for six seconds; they do not web.",
+    "text": "Split into seven decoys that web.",
+    "spec": {
+      "kind": "summon",
+      "count": 7,
+      "seconds": 6.0,
+      "cooldown": 18.0
+    }
+  },
+  {
+    "form": "spider_tsuchigumo",
+    "name": "True form",
+    "mp": 8,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "A window of size and strength; burrowing a lair and calling lesser spiders are not modeled.",
+    "text": "Drop the veil into a giant; burrow a lair; call lesser spiders.",
+    "spec": {
+      "kind": "buff",
+      "stats": {
+        "max_hp": 10,
+        "atk": 3
+      },
+      "seconds": 10.0,
+      "cooldown": 25.0
+    }
+  },
+  {
+    "form": "spider_loom_weaver",
+    "name": "Tapestry",
+    "mp": 6,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "A patch of web that slows for twelve seconds; it does not catch and hold.",
+    "text": "Weave a patterned web that stays as a trap and a snare.",
+    "spec": {
+      "kind": "zone",
+      "radius": 70,
+      "seconds": 12.0,
+      "slow": true,
+      "cooldown": 10.0
+    }
+  },
+  {
+    "form": "spider_norn",
+    "name": "Fate thread",
+    "mp": 7,
+    "value": 8,
+    "fidelity": "approx",
+    "note": "Marks an enemy and strikes it after two seconds; the next hit it lands on you is not sent back.",
+    "text": "Tie a thread to an enemy; the next hit it lands on you is sent back.",
+    "spec": {
+      "kind": "mark",
+      "range": 220,
+      "delay": 2.0,
+      "cooldown": 12.0
+    }
+  },
+  {
+    "form": "spider_anansi",
+    "name": "Steal",
+    "mp": 6,
+    "value": 0,
+    "fidelity": "needs",
+    "note": "Takes the last appraised creature's attack and defence for ten seconds; stealing a power or essence waits for the creature kits (F1).",
+    "text": "Take a power or essence from a living enemy without killing it.",
+    "spec": {
+      "kind": "copy",
+      "seconds": 10.0,
+      "cooldown": 12.0
+    }
+  },
+  {
+    "form": "spider_broodmother",
+    "name": "Brood",
+    "mp": 7,
+    "value": 2,
+    "fidelity": "approx",
+    "note": "Three spiderlings fight for twelve seconds; they do not hatch from cocoons or carry anything.",
+    "text": "Cocoons hatch spiderlings that carry and harass.",
+    "spec": {
+      "kind": "summon",
+      "count": 3,
+      "seconds": 12.0,
+      "cooldown": 14.0
+    }
+  },
+  {
+    "form": "spider_brood_queen",
+    "name": "Command",
+    "mp": 8,
+    "value": 2,
+    "fidelity": "approx",
+    "note": "Four spiderlings fight for twelve seconds; they do not follow your lead beyond that.",
+    "text": "Spiderlings follow your lead.",
+    "spec": {
+      "kind": "summon",
+      "count": 4,
+      "seconds": 12.0,
+      "cooldown": 14.0
+    }
+  },
+  {
+    "form": "spider_cocoon_mother",
+    "name": "Hatch",
+    "mp": 9,
+    "value": 5,
+    "fidelity": "approx",
+    "note": "Two stronger young fight for fifteen seconds; prey is not cocooned alive.",
+    "text": "Prey cocooned alive hatch into stronger young.",
+    "spec": {
+      "kind": "summon",
+      "count": 2,
+      "seconds": 15.0,
+      "cooldown": 18.0
+    }
+  },
+  {
+    "form": "spider_swarm_sovereign",
+    "name": "Disperse",
+    "mp": 6,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "Leaves a husk and slips away untouchable; it does not squeeze through grates and it can fight.",
+    "text": "The body breaks into a swarm that squeezes through grates and reforms.",
+    "spec": {
+      "kind": "decoy",
+      "seconds": 1.5,
+      "speed": 300,
+      "ward": 0.8,
+      "cooldown": 12.0
+    }
+  },
+  {
+    "form": "spider_cave_matriarch",
+    "name": "Heavy bite",
+    "mp": 6,
+    "value": 12,
+    "fidelity": "approx",
+    "note": "A heavy bite; the web wall is not modeled.",
+    "text": "A huge lone hunter: heavy bite, a web wall.",
+    "spec": {
+      "kind": "burst",
+      "range": 55,
+      "half_width": 40,
+      "cooldown": 5.0
+    }
+  },
+  {
+    "form": "spider_light_eater",
+    "name": "Drink",
+    "mp": 2,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "Heals HP and MP; no lamp or pool is eaten and no room darkens.",
+    "text": "Eat lamps and glow pools to darken a room and heal.",
+    "spec": {
+      "kind": "heal",
+      "hp": 6,
+      "mp": 4,
+      "cooldown": 10.0
+    }
+  },
+  {
+    "form": "spider_chasm_weaver",
+    "name": "Span",
+    "mp": 6,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "A plank of web laid ahead for fifteen seconds; it is not permanent and needs no anchors.",
+    "text": "Spin a permanent web bridge across a gap (a traversal gate).",
+    "spec": {
+      "kind": "bridge",
+      "length": 160,
+      "seconds": 15.0,
+      "cooldown": 8.0
+    }
+  },
+  {
+    "form": "spider_stalker",
+    "name": "Ambush",
+    "mp": 5,
+    "value": 8,
+    "fidelity": "approx",
+    "note": "A lunge; the ceiling drop and the zip are the movement the body already has.",
+    "text": "A ceiling drop and a web zip.",
+    "spec": {
+      "kind": "dash",
+      "speed": 380,
+      "hit_range": 50,
+      "cooldown": 6.0
+    }
+  },
+  {
+    "form": "spider_shadow_stalker",
+    "name": "Silent drop",
+    "mp": 5,
+    "value": 10,
+    "fidelity": "approx",
+    "note": "A lunge; the bonus in dim light is not modeled.",
+    "text": "A bonus strike in dim light.",
+    "spec": {
+      "kind": "dash",
+      "speed": 300,
+      "hit_range": 50,
+      "cooldown": 6.0
+    }
+  },
+  {
+    "form": "spider_nightstalker",
+    "name": "Reset",
+    "mp": 4,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "A speed window; kills do not reset the zip and shadow does not hide you.",
+    "text": "Kills reset the zip; unseen in shadow.",
+    "spec": {
+      "kind": "buff",
+      "stats": {
+        "spd": 40
+      },
+      "seconds": 6.0,
+      "cooldown": 10.0
+    }
+  },
+  {
+    "form": "spider_veil_spinner",
+    "name": "Veil",
+    "mp": 5,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "Untouchable for three seconds; it hides no one else and no doorway is covered.",
+    "text": "Spin a web over a doorway that hides you and allies.",
+    "spec": {
+      "kind": "ward",
+      "seconds": 3.0,
+      "cooldown": 12.0
+    }
+  },
+  {
+    "form": "spider_venomspinner",
+    "name": "Venom web",
+    "mp": 6,
+    "value": 1,
+    "fidelity": "approx",
+    "note": "A web patch that slows and poisons what is in it; the poison does not spread through trap webs.",
+    "text": "Webs apply poison that spreads through trap webs.",
+    "spec": {
+      "kind": "zone",
+      "radius": 70,
+      "seconds": 8.0,
+      "slow": true,
+      "damage": true,
+      "damage_type": "poison",
+      "cooldown": 10.0
+    }
+  },
+  {
+    "form": "spider_plaguemother",
+    "name": "Miasma",
+    "mp": 8,
+    "value": 2,
+    "fidelity": "approx",
+    "note": "A poison cloud for eight seconds; it does not spread when you die.",
+    "text": "A poison cloud that spreads on death.",
+    "spec": {
+      "kind": "zone",
+      "radius": 90,
+      "seconds": 8.0,
+      "slow": false,
+      "damage": true,
+      "cooldown": 12.0
+    }
+  },
+  {
+    "form": "spider_tarantella",
+    "name": "Dance-venom",
+    "mp": 6,
+    "value": 3,
+    "fidelity": "approx",
+    "note": "A poisonous bite that jumps to a second enemy; bitten enemies do not stagger into hazards.",
+    "text": "A bitten enemy staggers erratically into hazards.",
+    "spec": {
+      "kind": "chain",
+      "range": 140,
+      "jump": 80,
+      "hops": 2,
+      "damage_type": "poison",
+      "cooldown": 7.0
+    }
+  },
+  {
+    "form": "goblin_beastcaller",
+    "name": "Offer",
+    "mp": 5,
+    "value": 2,
+    "fidelity": "approx",
+    "note": "A companion fights for twenty seconds; it is not an item offered and tamed for good.",
+    "text": "An item to a weakened creature, which follows you (taming).",
+    "spec": {
+      "kind": "summon",
+      "count": 1,
+      "seconds": 20.0,
+      "cooldown": 25.0
+    }
+  },
+  {
+    "form": "goblin_pied_piper",
+    "name": "Tune",
+    "mp": 7,
+    "value": 2,
+    "fidelity": "approx",
+    "note": "Three followers fight for ten seconds; vermin are not drawn.",
+    "text": "A pipe call commands a small group and draws vermin.",
+    "spec": {
+      "kind": "summon",
+      "count": 3,
+      "seconds": 10.0,
+      "cooldown": 15.0
+    }
+  },
+  {
+    "form": "goblin_rat_king",
+    "name": "Knot",
+    "mp": 8,
+    "value": 1,
+    "fidelity": "approx",
+    "note": "Five rats fight for twelve seconds as separate bodies, not one big companion.",
+    "text": "A mobile swarm of tamed vermin acts as one big companion.",
+    "spec": {
+      "kind": "summon",
+      "count": 5,
+      "seconds": 12.0,
+      "cooldown": 18.0
+    }
+  },
+  {
+    "form": "goblin_orpheus",
+    "name": "Lull",
+    "mp": 7,
+    "value": 1,
+    "fidelity": "approx",
+    "note": "A ring that holds enemies for three seconds with a token hit; they are not calmed or tamed, and bosses can be held too.",
+    "text": "Calm a hostile creature so it stops attacking and can be tamed.",
+    "spec": {
+      "kind": "ring",
+      "radius": 100,
+      "status": {
+        "root": 3.0
+      },
+      "cooldown": 12.0
+    }
+  },
+  {
+    "form": "goblin_beast_rider",
+    "name": "Mount",
+    "mp": 6,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "A speed and attack window; you do not fuse with the companion.",
+    "text": "Fuse with the companion for a ride.",
+    "spec": {
+      "kind": "buff",
+      "stats": {
+        "spd": 40,
+        "atk": 2
+      },
+      "seconds": 12.0,
+      "cooldown": 20.0
+    }
+  },
+  {
+    "form": "goblin_wolf_lord",
+    "name": "Spear charge",
+    "mp": 7,
+    "value": 12,
+    "fidelity": "approx",
+    "note": "A spear lunge; it is not tied to being mounted.",
+    "text": "A spear charge and gallop while mounted.",
+    "spec": {
+      "kind": "dash",
+      "speed": 420,
+      "hit_range": 60,
+      "cooldown": 8.0
+    }
+  },
+  {
+    "form": "goblin_lord_of_beasts",
+    "name": "Two companions",
+    "mp": 9,
+    "value": 4,
+    "fidelity": "approx",
+    "note": "Two companions fight for twenty seconds.",
+    "text": "Two companions at once.",
+    "spec": {
+      "kind": "summon",
+      "count": 2,
+      "seconds": 20.0,
+      "cooldown": 25.0
+    }
+  },
+  {
+    "form": "goblin_tinker",
+    "name": "Throwable",
+    "mp": 3,
+    "value": 5,
+    "fidelity": "approx",
+    "note": "A thrown device; crafting, traps and recipe slots are not modeled.",
+    "text": "Crafted throwables, rigged traps, more recipe slots.",
+    "spec": {
+      "kind": "bolt",
+      "range": 180,
+      "pierce": false,
+      "cooldown": 1.5
+    }
+  },
+  {
+    "form": "goblin_knocker",
+    "name": "Tap",
+    "mp": 3,
+    "value": 0,
+    "fidelity": "needs",
+    "note": "Shows nodes in the group hidden; hidden walls, weak floors and traps arrive with the new areas (F2).",
+    "text": "Senses hidden walls, weak floors and traps in a room.",
+    "spec": {
+      "kind": "reveal",
+      "radius": 180,
+      "cooldown": 8.0
+    }
+  },
+  {
+    "form": "goblin_gremlin",
+    "name": "Sabotage",
+    "mp": 5,
+    "value": 2,
+    "fidelity": "approx",
+    "note": "Holds one enemy for three seconds; turning a trap on its owner is not modeled.",
+    "text": "Disable an enemy device or turn a trap against its owner.",
+    "spec": {
+      "kind": "bolt",
+      "range": 160,
+      "pierce": false,
+      "status": {
+        "root": 3.0
+      },
+      "cooldown": 8.0
+    }
+  },
+  {
+    "form": "goblin_rumpelstiltskin",
+    "name": "Spin",
+    "mp": 5,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "Moves essence between elements at a loss; junk and parts are not modeled.",
+    "text": "Transmute junk into a better part, two for one.",
+    "spec": {
+      "kind": "transmute",
+      "from_units": 2,
+      "to_units": 2,
+      "cooldown": 6.0
+    }
+  },
+  {
+    "form": "goblin_smith",
+    "name": "Forge",
+    "mp": 6,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "An attack and defence window; no weapon is forged and no forge is needed.",
+    "text": "Craft a named weapon from parts at a forge.",
+    "spec": {
+      "kind": "buff",
+      "stats": {
+        "atk": 3,
+        "def": 2
+      },
+      "seconds": 15.0,
+      "cooldown": 25.0
+    }
+  },
+  {
+    "form": "goblin_mastersmith",
+    "name": "Flawless gear",
+    "mp": 7,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "A longer attack and defence window; the second gear slot is not modeled.",
+    "text": "A second gear slot; flawless upgrades.",
+    "spec": {
+      "kind": "buff",
+      "stats": {
+        "atk": 4,
+        "def": 3
+      },
+      "seconds": 20.0,
+      "cooldown": 25.0
+    }
+  },
+  {
+    "form": "goblin_ring_maker",
+    "name": "Cursed gear",
+    "mp": 6,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "A big attack window at the cost of defence; the curse is not lasting.",
+    "text": "Huge stats with a real cost.",
+    "spec": {
+      "kind": "buff",
+      "stats": {
+        "atk": 6,
+        "def": -2
+      },
+      "seconds": 12.0,
+      "cooldown": 20.0
+    }
+  },
+  {
+    "form": "goblin_skulker",
+    "name": "Sneak strike",
+    "mp": 4,
+    "value": 8,
+    "fidelity": "approx",
+    "note": "A short lunge; the smoke bomb is not modeled.",
+    "text": "A sneak strike, a smoke bomb.",
+    "spec": {
+      "kind": "dash",
+      "speed": 300,
+      "hit_range": 50,
+      "cooldown": 5.0
+    }
+  },
+  {
+    "form": "goblin_redcap",
+    "name": "Dye",
+    "mp": 5,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "A speed and attack window; there is no blood-cap timer that kills refresh.",
+    "text": "Each kill refreshes a blood-cap timer for speed and damage.",
+    "spec": {
+      "kind": "buff",
+      "stats": {
+        "atk": 3,
+        "spd": 25
+      },
+      "seconds": 8.0,
+      "cooldown": 12.0
+    }
+  },
+  {
+    "form": "goblin_ironboot",
+    "name": "Stomp",
+    "mp": 6,
+    "value": 9,
+    "fidelity": "approx",
+    "note": "A stomp ring that stuns for a moment.",
+    "text": "A heavy kick with heft.",
+    "spec": {
+      "kind": "ring",
+      "radius": 70,
+      "status": {
+        "stun": 1.0
+      },
+      "cooldown": 7.0
+    }
+  },
+  {
+    "form": "goblin_bloodcap",
+    "name": "Cap-throw",
+    "mp": 5,
+    "value": 8,
+    "fidelity": "approx",
+    "note": "A thrown cap that pierces; it does not return and needs no blood.",
+    "text": "A boomerang cap that returns, dyed.",
+    "spec": {
+      "kind": "bolt",
+      "range": 200,
+      "pierce": true,
+      "cooldown": 3.0
+    }
+  },
+  {
+    "form": "goblin_puck",
+    "name": "Mislead",
+    "mp": 5,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "Leaves a husk and slips away; enemies are not drawn to it and facings are not reversed.",
+    "text": "Illusions and decoys; reverse an enemy's facing.",
+    "spec": {
+      "kind": "decoy",
+      "seconds": 1.2,
+      "speed": 200,
+      "ward": 0.6,
+      "cooldown": 8.0
+    }
+  },
+  {
+    "form": "goblin_changeling",
+    "name": "Swap",
+    "mp": 5,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "Leaves a husk and slips away untouchable; it does not trade places or look like a creature.",
+    "text": "Trade places with a decoy; look like a creature to scout.",
+    "spec": {
+      "kind": "decoy",
+      "seconds": 2.0,
+      "speed": 120,
+      "ward": 1.0,
+      "cooldown": 8.0
+    }
+  },
+  {
+    "form": "goblin_leprechaun",
+    "name": "Pocket",
+    "mp": 5,
+    "value": 3,
+    "fidelity": "approx",
+    "note": "A fast lunge; pickpocketing and the teleport are not modeled.",
+    "text": "Pickpocket items from a living creature without killing it; a short teleport.",
+    "spec": {
+      "kind": "dash",
+      "speed": 450,
+      "hit_range": 40,
+      "cooldown": 8.0
+    }
+  },
+  {
+    "form": "goblin_hob",
+    "name": "Ward",
+    "mp": 4,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "Untouchable for three seconds; no area is protected.",
+    "text": "Offer and Ward: protects an area.",
+    "spec": {
+      "kind": "ward",
+      "seconds": 3.0,
+      "cooldown": 10.0
+    }
+  },
+  {
+    "form": "goblin_tomte",
+    "name": "Hearth",
+    "mp": 6,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "A patch that slows enemies and mends you for ten seconds; it is not a placed stone.",
+    "text": "Plant a ward-stone; creatures near it are slowed and you heal.",
+    "spec": {
+      "kind": "zone",
+      "radius": 70,
+      "seconds": 10.0,
+      "slow": true,
+      "heals": 2,
+      "cooldown": 14.0
+    }
+  },
+  {
+    "form": "goblin_hearth_god",
+    "name": "Lar",
+    "mp": 8,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "A wider patch that slows and mends for twelve seconds; stones do not link.",
+    "text": "Ward-stones link into one wider aura.",
+    "spec": {
+      "kind": "zone",
+      "radius": 110,
+      "seconds": 12.0,
+      "slow": true,
+      "heals": 3,
+      "cooldown": 16.0
+    }
+  },
+  {
+    "form": "goblin_boggart",
+    "name": "Fear aura",
+    "mp": 7,
+    "value": 2,
+    "fidelity": "approx",
+    "note": "A dark aura that follows you and hurts what comes near; allies do not fear you too and no stone is set.",
+    "text": "Curse-stone and a fear aura.",
+    "spec": {
+      "kind": "aura",
+      "radius": 90,
+      "seconds": 8.0,
+      "damage": true,
+      "damage_type": "dark",
+      "cooldown": 14.0
+    }
+  },
+  {
+    "form": "goblin_paladin",
+    "name": "Blessed throw",
+    "mp": 4,
+    "value": 7,
+    "fidelity": "approx",
+    "note": "A holy throw; the shield is not modeled.",
+    "text": "Blessed throwables and a shield.",
+    "spec": {
+      "kind": "bolt",
+      "range": 180,
+      "pierce": false,
+      "damage_type": "holy",
+      "cooldown": 2.0
+    }
+  },
+  {
+    "form": "goblin_horn_bearer",
+    "name": "Horn",
+    "mp": 6,
+    "value": 4,
+    "fidelity": "approx",
+    "note": "A blast that stuns for a moment; allies are not rallied.",
+    "text": "A blast that stuns and rallies allies.",
+    "spec": {
+      "kind": "burst",
+      "range": 90,
+      "half_width": 60,
+      "status": {
+        "stun": 1.5
+      },
+      "cooldown": 9.0
+    }
+  },
+  {
+    "form": "goblin_giant_killer",
+    "name": "Giant-slayer",
+    "mp": 6,
+    "value": 14,
+    "fidelity": "approx",
+    "note": "A heavy single blow; its damage does not scale with the target's size.",
+    "text": "Damage scales with the target's size.",
+    "spec": {
+      "kind": "bolt",
+      "range": 80,
+      "pierce": false,
+      "cooldown": 5.0
+    }
   }
 ]

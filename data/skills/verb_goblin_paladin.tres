@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_goblin_paladin"
+display_name = "Blessed throw"
+description = "Blessed throwables and a shield."
+announce = "New verb. Acquired [Blessed throw]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [7], "spec": {"kind": "bolt", "range": 180, "pierce": false, "damage_type": "holy", "cooldown": 2.0}}]
+mp_cost = 4

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_goblin_leprechaun"
+display_name = "Pocket"
+description = "Pickpocket items from a living creature without killing it; a short teleport."
+announce = "New verb. Acquired [Pocket]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [3], "spec": {"kind": "dash", "speed": 450, "hit_range": 40, "cooldown": 8.0}}]
+mp_cost = 5

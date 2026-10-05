@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_spider_cocoon_mother"
+display_name = "Hatch"
+description = "Prey cocooned alive hatch into stronger young."
+announce = "New verb. Acquired [Hatch]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [5], "spec": {"kind": "summon", "count": 2, "seconds": 15.0, "cooldown": 18.0}}]
+mp_cost = 9

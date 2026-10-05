@@ -16,6 +16,8 @@ stats = {
 "max_mp": 6,
 "mp_regen": 40
 }
+grants = ["verb_spider_venomspinner"]
+verb = "verb_spider_venomspinner"
 tint = Color(0.625, 0.7, 0.925, 1)
 size = 1.25
 sprite_set = "forms_spider"

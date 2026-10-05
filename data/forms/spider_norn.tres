@@ -16,6 +16,8 @@ stats = {
 "max_hp": 22,
 "max_mp": 15
 }
+grants = ["verb_spider_norn"]
+verb = "verb_spider_norn"
 tint = Color(1, 0.875, 0.875, 1)
 size = 1.4
 sprite_set = "forms_spider"

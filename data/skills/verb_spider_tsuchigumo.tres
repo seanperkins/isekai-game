@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_spider_tsuchigumo"
+display_name = "True form"
+description = "Drop the veil into a giant; burrow a lair; call lesser spiders."
+announce = "New verb. Acquired [True form]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "buff", "stats": {"max_hp": 10, "atk": 3}, "seconds": 10.0, "cooldown": 25.0}}]
+mp_cost = 8
