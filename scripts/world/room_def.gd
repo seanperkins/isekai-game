@@ -32,6 +32,13 @@ const NO_START := Vector2(-1, -1)
 ## Deep water (Rect2, local px): swim physics, the swimmers' homes, drawn by RoomBuilder as DeepWater. At least 32x32, inside the
 ## room, never overlapping or touching another. Shallow water is decor.
 @export var water: Array = []
+## A boss room (an arena) when non-empty: {"creature": id of a spawn in this room, "threshold": Rect2 in local px}. Crossing the
+## threshold starts the fight: the exits seal and the boss wakes (docs/superpowers/specs/2026-10-04-boss-arenas-design.md).
+@export var boss := {}
+## How hard the ground shakes while the player is here, 0 for not at all to 1 (the warning that a boss is ahead).
+@export var tremor := 0.0
+## A dark silhouette of a creature behind the room's solids: {"creature": id, "pos": Vector2, "scale": float, optional "frame": String}.
+@export var glimpse := {}
 
 func pixel_size() -> Vector2:
 	return Vector2(size) * SCREEN

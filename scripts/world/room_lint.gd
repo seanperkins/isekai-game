@@ -35,7 +35,19 @@ const FEATURE_BOX := {
 }
 
 const RULES := ["solid_outside", "outside", "in_rock", "exit_blocked", "exit_narrow", "start_floor", "ledge_reach", "over_hole",
-	"altar_clearance", "feature_id", "shortcut_pair", "hint_unknown", "decor_unknown", "water_rect", "swimmer_dry", "water_exit"]
+	"altar_clearance", "feature_id", "shortcut_pair", "hint_unknown", "decor_unknown", "water_rect", "swimmer_dry", "water_exit",
+	"creature_fit", "boss_room", "tremor_range", "glimpse"]
+
+## A standing creature needs this many times its tallest frame of clear height above its footing and this many times its widest
+## frame of footing; a ceiling-anchored one the same height as a drop below its anchor and the same width at the anchor. The
+## sheet's frames are the sizes as drawn in game, which already carry the creature size ladder.
+const FIT_HEIGHT := 1.25
+const FIT_FOOTING := 2.0
+## A boss room's threshold is this far from every exit (the Jet Dash's 700 px/s over the 0.4 s before the doors slam, the 28 px body
+## and a margin), the boss spawns at least BOSS_SPAWN_GAP from it, and the room is BOSS_MIN_SCREENS screens in one dimension.
+const SEAL_CLEARANCE := 320.0
+const BOSS_MIN_SCREENS := 2
+const BOSS_SPAWN_GAP := 200.0
 
 static var _hintable: Array = []
 
@@ -68,6 +80,10 @@ static func check_room(r: RoomDef, rooms: Dictionary) -> Array:
 	out.append_array(_over_hole(r))
 	out.append_array(_altar_clearance(r))
 	out.append_array(_decor_unknown(r))
+	out.append_array(_creature_fit(r))
+	out.append_array(_boss_room(r, rooms))
+	out.append_array(_tremor_range(r))
+	out.append_array(_glimpse(r))
 	out.append_array(_feature_id(r, rooms))
 	out.append_array(_shortcut_pair(r, rooms))
 	out.append_array(_hint_unknown(r))
@@ -462,3 +478,187 @@ static func water_groups(rooms: Dictionary) -> Array:
 		if not safe:
 			out.append({"rooms": groups[root].map(func(k): return nodes[k]["room"]), "text": "a swimmer in this connected water has no shore and no way out"})
 	return out
+
+# --- creature fit and boss rooms (plan: boss arenas) ---
+
+static var _extents: Dictionary = {}
+static var _kinds: Dictionary = {}
+
+## The widest and tallest frame of a creature's sheet (px, as drawn in game), ZERO when it has no sheet.
+static func creature_extent(id: String) -> Vector2:
+	if not _extents.has(id):
+		var e := Vector2.ZERO
+		if SpriteSheet.available(id):
+			var sheet := SpriteSheet.load_set(id)
+			for n in sheet.frame_names():
+				var s: Vector2 = sheet.frame_size(n)
+				e = Vector2(maxf(e.x, s.x), maxf(e.y, s.y))
+		_extents[id] = e
+	return _extents[id]
+
+## "walker" (stands on a footing), "ceiling" (a `ceiling_walk` creature hangs from the ceiling), "flier" (a drifter or a `flight` creature)
+## or "swimmer", from the shipped defs; "" for an id with no def.
+static func creature_kind(id: String) -> String:
+	if _kinds.is_empty():
+		for c in DefLoader.load_dir("res://data/creatures"):
+			var d := c as CreatureDef
+			var skill_ids: Array = d.skills.map(func(s: Dictionary) -> String: return str(s.get("id", "")))
+			if d.swimmer:
+				_kinds[d.id] = "swimmer"
+			elif skill_ids.has("ceiling_walk"):
+				_kinds[d.id] = "ceiling"
+			elif d.drifter or skill_ids.has("flight"):
+				_kinds[d.id] = "flier"
+			else:
+				_kinds[d.id] = "walker"
+	return _kinds.get(id, "")
+
+## A creature that stands has FIT_HEIGHT x its tallest frame of clear height above its footing and FIT_FOOTING x its widest frame of
+## footing; one that hangs has the same height of drop below its anchor and the same width at the anchor. Creatures with no sheet,
+## fliers and swimmers are skipped.
+static func _creature_fit(r: RoomDef) -> Array:
+	var out: Array = []
+	for i in r.spawns.size():
+		var id: String = r.spawns[i]["id"]
+		var pos: Vector2 = r.spawns[i]["pos"]
+		var ext := creature_extent(id)
+		var kind := creature_kind(id)
+		if ext == Vector2.ZERO or (kind != "walker" and kind != "ceiling"):
+			continue
+		var foot_l := pos.x - ext.x / 2.0
+		var foot_r := pos.x + ext.x / 2.0
+		if kind == "walker":
+			var support = _support(r, pos)
+			if support == null:
+				continue
+			var run := _footing(r, support)
+			if run.y - run.x < FIT_FOOTING * ext.x:
+				out.append(_f(r, "creature_fit", "%s at %s stands on %d px of footing, needs %d (%s x its %d px width)" % [id, pos, int(run.y - run.x), int(ceil(FIT_FOOTING * ext.x)), FIT_FOOTING, int(ext.x)], "spawn", i))
+			var top: float = (support as Rect2).position.y
+			var ceiling := 0.0
+			for rect in rock(r):
+				var rr: Rect2 = rect
+				if rr.end.y < top - 0.5 and rr.position.x < foot_r and rr.end.x > foot_l and not RoomBuilder.is_one_way(rr, r.hard_ledges):  # strictly overhead: a block standing on the footing is beside it, not above
+					ceiling = maxf(ceiling, rr.end.y)
+			if top - ceiling < FIT_HEIGHT * ext.y:
+				out.append(_f(r, "creature_fit", "%s at %s has %d px of clear height over its footing, needs %d (%s x its %d px height)" % [id, pos, int(top - ceiling), int(ceil(FIT_HEIGHT * ext.y)), FIT_HEIGHT, int(ext.y)], "spawn", i))
+		else:
+			var floor_y := r.pixel_size().y
+			for rect in rock(r):
+				var rr: Rect2 = rect
+				if rr.position.y >= pos.y - 0.5 and rr.position.x < foot_r and rr.end.x > foot_l:
+					floor_y = minf(floor_y, rr.position.y)
+			if floor_y - pos.y < FIT_HEIGHT * ext.y:
+				out.append(_f(r, "creature_fit", "%s at %s has %d px to drop below its anchor, needs %d (%s x its %d px height)" % [id, pos, int(floor_y - pos.y), int(ceil(FIT_HEIGHT * ext.y)), FIT_HEIGHT, int(ext.y)], "spawn", i))
+			var left := 0.0
+			var right := r.pixel_size().x
+			for rect in rock(r):
+				var rr: Rect2 = rect
+				if rr.position.y <= pos.y and pos.y <= rr.end.y:
+					if rr.end.x <= pos.x:
+						left = maxf(left, rr.end.x)
+					elif rr.position.x >= pos.x:
+						right = minf(right, rr.position.x)
+			if right - left < FIT_FOOTING * ext.x:
+				out.append(_f(r, "creature_fit", "%s at %s has %d px of room at its anchor, needs %d (%s x its %d px width)" % [id, pos, int(right - left), int(ceil(FIT_FOOTING * ext.x)), FIT_FOOTING, int(ext.x)], "spawn", i))
+	return out
+
+## The standable top (a Rect2) nearest below `pos` that `pos.x` is over, or null.
+static func _support(r: RoomDef, pos: Vector2):
+	var best = null
+	for rect in standable(r):
+		var rr: Rect2 = rect
+		if pos.x >= rr.position.x and pos.x <= rr.end.x and rr.position.y >= pos.y - 1.0:
+			if best == null or rr.position.y < (best as Rect2).position.y:
+				best = rr
+	return best
+
+## The contiguous run (x start, x end) of standable tops at the same height as `support`, touching or overlapping it.
+static func _footing(r: RoomDef, support: Rect2) -> Vector2:
+	var lo := support.position.x
+	var hi := support.end.x
+	var grew := true
+	while grew:
+		grew = false
+		for rect in standable(r):
+			var rr: Rect2 = rect
+			if absf(rr.position.y - support.position.y) < 0.5 and rr.position.x <= hi + 0.5 and rr.end.x >= lo - 0.5 and (rr.position.x < lo - 0.01 or rr.end.x > hi + 0.01):
+				lo = minf(lo, rr.position.x)
+				hi = maxf(hi, rr.end.x)
+				grew = true
+	return Vector2(lo, hi)
+
+static func _gap(a: Rect2, b: Rect2) -> float:
+	var dx := maxf(0.0, maxf(a.position.x - b.end.x, b.position.x - a.end.x))
+	var dy := maxf(0.0, maxf(a.position.y - b.end.y, b.position.y - a.end.y))
+	return sqrt(dx * dx + dy * dy)
+
+## The rules of a boss room: two screens in one dimension, one exit (no bottom door: nothing may fall out), no water, an exit that leads
+## to a room with a glow pool and no spawns, the boss spawned in the room at least BOSS_SPAWN_GAP from the threshold, and the threshold
+## inside the room at least SEAL_CLEARANCE from every exit.
+static func _boss_room(r: RoomDef, rooms: Dictionary) -> Array:
+	var out: Array = []
+	if r.boss.is_empty():
+		return out
+	var creature: String = str(r.boss.get("creature", ""))
+	var threshold = r.boss.get("threshold")
+	if creature == "" or not (threshold is Rect2):
+		out.append(_f(r, "boss_room", "boss needs a creature id and a threshold Rect2"))
+		return out
+	var size := r.pixel_size()
+	if (threshold as Rect2).size.x <= 0.0 or (threshold as Rect2).size.y <= 0.0:
+		out.append(_f(r, "boss_room", "the threshold %s needs a positive size, or nothing can cross it" % _rect_text(threshold)))
+	if maxi(r.size.x, r.size.y) < BOSS_MIN_SCREENS:
+		out.append(_f(r, "boss_room", "a boss room is at least %d screens in one dimension, this one is %dx%d" % [BOSS_MIN_SCREENS, r.size.x, r.size.y]))
+	if r.exits.size() != 1:
+		out.append(_f(r, "boss_room", "a boss room has exactly one exit, this one has %d" % r.exits.size()))
+	else:
+		var partner = rooms.get(r.exits[0].get("room", ""))
+		if partner != null:
+			var has_pool := false
+			for f in (partner as RoomDef).features:
+				if f.get("kind", "") == "glow_pool":
+					has_pool = true
+			if not has_pool:
+				out.append(_f(r, "boss_room", "its exit leads to %s, which has no glow pool to rest at" % partner.id))
+			if not (partner as RoomDef).spawns.is_empty():
+				out.append(_f(r, "boss_room", "its exit leads to %s, which has spawns: the antechamber must be quiet" % partner.id))
+	for e in r.exits:
+		if e.get("edge", "") == "bottom":
+			out.append(_f(r, "boss_room", "a bottom exit is a hole in the floor: nothing may fall out of an arena"))
+	if not r.water.is_empty():
+		out.append(_f(r, "boss_room", "a boss room has no water"))
+	var matches: Array = []
+	for i in r.spawns.size():
+		if r.spawns[i]["id"] == creature:
+			matches.append(i)
+	var boss_at: int = matches[0] if matches.size() == 1 else -1
+	if matches.size() != 1:
+		out.append(_f(r, "boss_room", "the boss %s must be in this room's spawns exactly once, it is there %d times" % [creature, matches.size()]))
+	elif _gap(Rect2(r.spawns[boss_at]["pos"], Vector2.ZERO), threshold) < BOSS_SPAWN_GAP:
+		out.append(_f(r, "boss_room", "the boss spawns %d px from the threshold, at least %d" % [int(_gap(Rect2(r.spawns[boss_at]["pos"], Vector2.ZERO), threshold)), int(BOSS_SPAWN_GAP)], "spawn", boss_at))
+	if not Rect2(Vector2.ZERO, size).encloses(threshold):
+		out.append(_f(r, "boss_room", "the threshold %s is not inside the room" % _rect_text(threshold)))
+	for e in r.exits:
+		if _gap(threshold, RoomBuilder.gate_rect(size, e)) < SEAL_CLEARANCE - 0.01:
+			out.append(_f(r, "boss_room", "the threshold is %d px from the %s exit, at least %d so the doors never close on the player" % [int(_gap(threshold, RoomBuilder.gate_rect(size, e))), e.get("edge", ""), int(SEAL_CLEARANCE)]))
+	return out
+
+static func _tremor_range(r: RoomDef) -> Array:
+	if r.tremor < 0.0 or r.tremor > 1.0:
+		return [_f(r, "tremor_range", "tremor %s is outside 0 to 1" % r.tremor)]
+	return []
+
+## A glimpse names a creature with a sheet, sits inside the room and has a scale above 0.
+static func _glimpse(r: RoomDef) -> Array:
+	if r.glimpse.is_empty():
+		return []
+	var creature: String = str(r.glimpse.get("creature", ""))
+	if not SpriteSheet.available(creature):
+		return [_f(r, "glimpse", "the glimpse creature '%s' has no sheet" % creature)]
+	var pos = r.glimpse.get("pos")
+	if not (pos is Vector2) or not Rect2(Vector2.ZERO, r.pixel_size()).has_point(pos):
+		return [_f(r, "glimpse", "the glimpse is not inside the room")]
+	if float(r.glimpse.get("scale", 0.0)) <= 0.0:
+		return [_f(r, "glimpse", "the glimpse scale must be above 0")]
+	return []

@@ -98,3 +98,41 @@ func test_d1_holds_the_altar_and_d5_the_glow_pool_and_the_tablet() -> void:
 	var d5_kinds: Array = (rooms["D5"] as RoomDef).features.map(func(f): return f["kind"])
 	assert_true(d5_kinds.has("glow_pool"))
 	assert_true(d5_kinds.has("tablet"))
+
+# --- the boss arena and its approach (plan: boss arenas, Task 7) ---
+
+func test_the_deep_has_a_boss_arena_d6_two_screens_wide_with_one_exit_to_d7() -> void:
+	var d6: RoomDef = rooms["D6"]
+	assert_eq([d6.cell, d6.size], [Vector2i(19, 5), Vector2i(2, 1)])
+	assert_eq(d6.boss["creature"], "taratect")
+	assert_eq(d6.exits.size(), 1)
+	assert_eq([d6.exits[0]["edge"], d6.exits[0]["room"]], ["left", "D7"])
+	assert_eq(d6.spawns.map(func(s): return s["id"]), ["taratect"])
+	assert_eq(d6.water.size(), 0)
+	assert_eq(RoomLint.check_room(d6, rooms), [], RoomLint.text(RoomLint.check_room(d6, rooms), RoomLint.RULES))
+
+func test_d7_is_the_antechamber_a_glow_pool_a_tablet_no_spawns_and_tremor_0_6() -> void:
+	var d7: RoomDef = rooms["D7"]
+	assert_eq([d7.cell, d7.size, d7.area], [Vector2i(18, 5), Vector2i.ONE, "deep"])
+	var kinds: Array = d7.features.map(func(f): return f["kind"])
+	assert_true(kinds.has("glow_pool"))
+	assert_true(kinds.has("tablet"))
+	assert_false(kinds.has("altar"), "one altar per area: the Deep's is D1's")
+	assert_eq(d7.spawns.size(), 0)
+	assert_eq(d7.tremor, 0.6)
+	assert_eq(d7.glimpse["creature"], "taratect")
+	assert_eq(d7.exits.map(func(e): return e["room"]), ["D2", "D6"])
+
+func test_d2_climbs_to_d7_through_a_wall_cling_chimney_and_trembles_0_3() -> void:
+	var d2: RoomDef = rooms["D2"]
+	var top: Dictionary = d2.exits.filter(func(e): return e["edge"] == "top")[0]
+	assert_eq([top["room"], top["gate"]], ["D7", "wall_cling"])
+	assert_eq(d2.tremor, 0.3)
+
+func test_the_exits_between_d2_d7_and_d6_pair_up() -> void:
+	var up_a: Vector2 = WorldValidator.world_span(rooms["D2"], (rooms["D2"] as RoomDef).exits.filter(func(e): return e["edge"] == "top")[0])
+	var up_b: Vector2 = WorldValidator.world_span(rooms["D7"], (rooms["D7"] as RoomDef).exits.filter(func(e): return e["edge"] == "bottom")[0])
+	assert_eq(up_a, up_b, "the chimney's span meets D7's floor opening")
+	var side_a: Vector2 = WorldValidator.world_span(rooms["D7"], (rooms["D7"] as RoomDef).exits.filter(func(e): return e["edge"] == "right")[0])
+	var side_b: Vector2 = WorldValidator.world_span(rooms["D6"], (rooms["D6"] as RoomDef).exits.filter(func(e): return e["edge"] == "left")[0])
+	assert_eq(side_a, side_b, "D7's door meets the arena's")

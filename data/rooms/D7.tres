@@ -1,0 +1,49 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_t2g7r"]
+
+[resource]
+script = ExtResource("1_t2g7r")
+id = "D7"
+area = "deep"
+cell = Vector2i(18, 5)
+decor = [{
+"id": "deep_bones",
+"pos": Vector2(120, 320)
+}, {
+"anchor": "top",
+"id": "deep_root_hang",
+"pos": Vector2(200, 20)
+}, {
+"id": "deep_stalagmite",
+"pos": Vector2(600, 320)
+}]
+exits = [{
+"edge": "bottom",
+"from": 280.0,
+"gate": "wall_cling",
+"room": "D2",
+"to": 360.0
+}, {
+"edge": "right",
+"from": 240.0,
+"room": "D6",
+"to": 320.0
+}]
+features = [{
+"id": "d7_glow_pool_1",
+"kind": "glow_pool",
+"pos": Vector2(440, 320)
+}, {
+"id": "d7_tablet_1",
+"kind": "tablet",
+"pos": Vector2(540, 320),
+"text": "Something large lives beyond the door. The walls hum when it breathes.",
+"title": "Scratched tablet"
+}]
+tremor = 0.6
+glimpse = {
+"creature": "taratect",
+"pos": Vector2(520, 170),
+"scale": 2.4
+}

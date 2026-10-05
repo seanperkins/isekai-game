@@ -132,3 +132,26 @@ func test_a_grown_room_keeps_the_world_valid() -> void:
 	model.grow_room("L1", "left")
 	model.grow_room("L1", "top")
 	assert_false("\n".join(model.validate()).contains("L1: overlaps"))
+
+func test_growing_shifts_the_boss_threshold_and_the_glimpse_with_the_room() -> void:
+	_with_lone()
+	var lone: RoomDef = model.rooms["L1"]
+	lone.boss = {"creature": "toad", "threshold": Rect2(200, 100, 40, 80)}
+	lone.glimpse = {"creature": "taratect", "pos": Vector2(320, 150), "scale": 2.0}
+	model._baseline["L1"] = RoomEditModel.copy_room(lone)
+	var before := RoomEditModel.copy_room(lone)
+	assert_eq(model.grow_room("L1", "left"), "")
+	assert_eq(model.grow_room("L1", "top"), "")
+	var grown: RoomDef = model.rooms["L1"]
+	assert_eq(_world_pos(grown, (grown.boss["threshold"] as Rect2).position), _world_pos(before, (before.boss["threshold"] as Rect2).position), "the threshold stays where it was in the world")
+	assert_eq(_world_pos(grown, grown.glimpse["pos"]), _world_pos(before, before.glimpse["pos"]), "and so does the glimpse")
+	assert_eq((grown.boss["threshold"] as Rect2).size, Rect2(200, 100, 40, 80).size)
+	assert_true(model.undo())
+	assert_true(model.undo())
+	var undone: RoomDef = model.rooms["L1"]
+	assert_eq(undone.boss["threshold"], Rect2(200, 100, 40, 80))
+	assert_eq(undone.glimpse["pos"], Vector2(320, 150))
+	assert_true(model.redo())
+	assert_true(model.redo())
+	var redone: RoomDef = model.rooms["L1"]
+	assert_eq(_world_pos(redone, (redone.boss["threshold"] as Rect2).position), _world_pos(before, (before.boss["threshold"] as Rect2).position))

@@ -84,6 +84,48 @@
         "sfx/eat_predated_1.ogg"
       ]
     },
+    "ground_rumble_far": {
+      "bus": "SFX_Enemy",
+      "volume_db": -14,
+      "files": [
+        "sfx/slime_land_hard_1.ogg"
+      ]
+    },
+    "ground_rumble_near": {
+      "bus": "SFX_Enemy",
+      "volume_db": -7,
+      "files": [
+        "sfx/slime_land_hard_2.ogg"
+      ]
+    },
+    "boss_rumble": {
+      "bus": "SFX_Enemy",
+      "volume_db": -4,
+      "files": [
+        "sfx/slime_land_hard_1.ogg"
+      ]
+    },
+    "boss_doors": {
+      "bus": "SFX_Enemy",
+      "volume_db": -1,
+      "files": [
+        "sfx/slime_land_hard_2.ogg"
+      ]
+    },
+    "boss_roar": {
+      "bus": "SFX_Enemy",
+      "volume_db": -3,
+      "files": [
+        "sfx/skill_tail_swipe_1.ogg"
+      ]
+    },
+    "boss_victory": {
+      "bus": "SFX_Enemy",
+      "volume_db": -2,
+      "files": [
+        "sfx/skill_unlock_1.ogg"
+      ]
+    },
     "enemy_death_beast": {
       "bus": "SFX_Enemy",
       "volume_db": -4,
@@ -527,8 +569,18 @@
       "toad": "enemy_death_beast",
       "lizard": "enemy_death_beast",
       "serpent": "enemy_death_boss",
+      "taratect": "enemy_death_boss",
       "default": "enemy_death_beast"
     },
+    "boss_tremor": {
+      "by": "near",
+      "true": "ground_rumble_near",
+      "false": "ground_rumble_far"
+    },
+    "boss_intro": "boss_rumble",
+    "boss_slam": "boss_doors",
+    "boss_wake": "boss_roar",
+    "boss_defeated": "boss_victory",
     "tablet_read": "tablet_chime",
     "switch_opened": "switch_open",
     "pool_rested": "pool_rest",

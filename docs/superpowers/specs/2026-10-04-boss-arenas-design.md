@@ -1,0 +1,115 @@
+# Boss arenas: big creatures in big rooms, a boss room that seals, and a world that warns you — Design
+
+Status: built (2026-10-04, plan `docs/superpowers/plans/2026-10-04-boss-arenas.md`; ledger `docs/ledgers/boss-arenas-ledger.md`). It was a draft for Sean's review, and he approved it. Builds on the room system (`docs/rooms.md`), the species work (`2026-10-04-species-movesets-design.md`, its creature size ladder) and the research in `docs/research/level-design-reference.md` (arena and foreshadowing rules).
+
+## Intent
+
+Sean (2026-10-04): "We can have large creatures in larger rooms. Bosses should have their own rooms that lock behind a player so they have to fight. We can make it clear a boss is ahead."
+
+Understanding, written back so it can be corrected:
+
+1. **Room size follows creature size.** A creature that big needs space to move and attack in, so the room linter checks it and a drake can never end up in a corridor.
+2. **A boss lives alone in a room built for it.** Crossing a marked line inside the room starts a short intro, the way back seals, and the boss wakes. The seal opens only when the boss is dead. Dying is a rebirth, so a sealed arena cannot strand anyone.
+3. **The world warns you.** You are never surprised by a boss: a quiet room with a place to rest comes first, the ground shakes and the sound changes as you approach, and the approach carries traces of the creature, with a glimpse of it before you meet it.
+
+Success: in the Deep, the player climbs toward something they can hear and half see, rests in a quiet room, walks into a large room, watches the doors close, and fights the Taratect with nowhere to run; killing it opens the doors, and it stays dead.
+
+Scope: the framework (data, lock, wake, win, persistence, warning cues, lint) and the first boss, the Taratect in the Deep. Not in this spec: boss attack patterns and phases, a boss health bar, music, a reward beyond what a kill already gives, other bosses, a map marker.
+
+## Decisions (Sean, 2026-10-04)
+
+- **First boss: the Taratect only.** The framework is data, so a second boss later is a room and a creature id.
+- **The arena seals a beat after a threshold.** You can turn back until you cross the line; after that you are committed.
+- **Announce it three ways:** an antechamber (a quiet room right before the arena, where you can rest), sound and screen cues, and traces plus a glimpse. (A distinctive door look was offered and not picked.)
+- **Room size is a lint rule**, not a convention.
+
+## Design
+
+### Boss room data
+
+`RoomDef` gains three fields, all empty by default so no existing room changes unless it is edited:
+
+- `boss: Dictionary`: `{"creature": id, "threshold": Rect2}`. `creature` names a spawn in the room's own `spawns` (the boss, whose id appears there once); `threshold` is a rect in local px, the line the player crosses to start the fight. A room with a `boss` is an arena.
+- `tremor: float`: 0 for none, 0 to 1 for how hard the ground shakes while the player is in the room (the warning, below).
+- `glimpse: Dictionary`: `{"creature": id, "pos": Vector2, "scale": float, optional "frame"}`, a dark silhouette of a creature drawn behind the room's solids (the warning, below).
+
+All of a boss room's exits seal. Everything else about the room is ordinary data edited in the room editor.
+
+### The arena's life
+
+One `BossArena` node per arena room, driven by a pure `BossArenaModel` (a `RefCounted`, so it is tested without a scene). States:
+
+| State | Meaning | Leaves it when |
+|---|---|---|
+| `waiting` | the boss is dormant, exits open | the player's body overlaps the threshold |
+| `intro` | `INTRO_SECONDS` (0.8): a rumble cue at once, the doors slam halfway (`SEAL_AT` 0.4), the boss wakes at the end | the timer ends |
+| `fight` | exits sealed, the boss acts | the boss dies |
+| `won` | the seals open, the boss is recorded as defeated | (final) |
+
+Rebirth (the player dies) discards the room: the world builds rooms fresh on every entry (`RoomBuilder.build_room`), so an arena that is not won is `waiting` again with a full-health boss. Nothing in this spec changes that.
+
+**The seal** is the arena's own gate, built the way a shortcut's is but not tied to one: the closed-shortcut path in `RoomBuilder.build_room` makes a gate only for an exit that `is_exit_open` calls closed and groups it by shortcut id (`World._open_gate` frees it on a shortcut event), and an ordinary exit has none. The gate-building code (the solid from `RoomBuilder.gate_rect`, with the painted art on it) is pulled into one `RoomBuilder` helper that both paths call. The arena calls it for every exit of its room when the intro starts, adds the solids to a group of its own (`boss_gate`), plays the slam cue, and frees only that group on `won`. The threshold must sit at least `SEAL_CLEARANCE` (320) px from every exit span: the fastest thing the player does is the Jet Dash at 700 px/s, which covers 280 px in the 0.4 s before the doors slam, plus the 28 px body and a margin, so a closing gate never lands on the player and the player cannot get out first. As belt and braces the world also ignores exit transitions while an arena is in `intro` or `fight`.
+
+**The boss wakes.** `Enemy` gains `dormant: bool`. A dormant enemy is frozen where it spawned (no gravity, no movement, no AI, so a dropper stays on its ceiling), deals no contact damage, and refuses everything that would affect it, at every entry point (it is also not predatable, so it cannot be eaten out from under the arena): damage through `can_be_hit()` and `receive_hit()` (area skills call the latter directly), and the stun, thread and predation paths (`receive_tackle`, `receive_thread`, eating), since a stun would make the boss predatable. Its hang or idle frame shows. The arena sets it on the boss at build time and clears it when the intro ends; the Taratect's spawn in the arena data is on the ceiling, where it hangs. Awake, the boss is `hunting`: always alert, ignoring `CHASE_RANGE` and line of sight, because the arena is its ground (a floor-bound player 260 px below a ceiling spawn would otherwise never be noticed).
+
+**The boss dies.** The arena listens to the boss node's `downed` signal, not the `enemy_died` world event: `Enemy._on_died` emits the event first and `downed` after, and `Game._spawn` connects `downed` to the compendium's `on_creature_defeated` and the player's progression. The arena connects after those and records the defeat on the next frame, so the Bestiary has the defeat before the profile says the boss never spawns again; a stop between the two leaves the boss alive, not unearned.
+
+**Persistence.** `WorldProgress` (it owns the profile sections for shortcuts, tablets and the map, and writes them through `Profile.save`) gains a `bosses` section: the set of defeated boss creature ids. `WorldProgress._save` discards `Profile.save()`'s result today, for shortcuts too; for a boss the flag is kept in memory for the session either way, and a failed write is retried by the next progress save (the same rule as every other section), so a failed write costs at worst a second fight after a restart, never a boss that cannot be fought. A defeated boss is not spawned again and its room builds without an arena: the doors stay open and the room is an ordinary empty one. The reward is what a kill gives today (XP through the player's progression and the Bestiary defeat that the species unlock rule reads); the corpse's rare part in the design doc is not built, and building it is not in this spec.
+
+**Camera.** The camera already follows inside a multi-screen room; it stays as it is. A small `shake(amount, seconds)` is added to the world's camera for the warning cues and the slam.
+
+### Making it clear a boss is ahead
+
+All three are data on rooms, so every boss gets the same grammar:
+
+1. **The antechamber.** An arena has exactly one exit, and it leads to a room with a glow pool and no spawns. The glow pool is the existing feature that restores HP and MP (D5 pairs one with a tablet), so the player can arrive at the fight rested, and the quiet pause before the door is the warning. It is a glow pool and not an altar because the world validator allows one altar per area and the Deep's is D1's (an altar is also the place the player is reborn, and a rest is not). The cost is that dying in the arena sends the player back to D1; whether the Deep gets a second altar by the arena, with the validator's rule relaxed, is Sean's call and is listed in the open items. (Research rule: a safe room immediately before the arena.)
+2. **Sound and screen cues.** A room with `tremor` shakes the screen and drops dust from the ceiling every 5 to 9 seconds (a random gap) and plays a `boss_tremor` cue, scaled by the value: about 0.3 in the rooms leading up, 0.6 in the antechamber. The shake scales continuously; the sound has two cues (a far and a near one, chosen by a `near` tag when the value is at least 0.5) because a cue's volume is fixed in its data. The arena adds `boss_slam` (the doors) and `boss_wake` (the roar), and the death cue routing in `data/audio/cues.json` gets `"taratect": "enemy_death_boss"` (only the serpent has it; anything else falls to `enemy_death_beast`). Files come from the audio pipeline, with the nearest existing sounds as stand-ins until then.
+3. **Traces and a glimpse.** The approach rooms carry decor of the creature: `deep_bones` and the hanging pieces exist and are used first; web strands and claw marks on the walls are new decor art that comes from the terrain art pipeline later, so the first build ships without them. The antechamber has a gap in its wall behind translucent web in which a large dark silhouette of the boss moves slowly: the room's `glimpse`, a sprite of the creature's own sheet frame tinted dark and scaled up, drawn by `RoomBuilder` behind the solids (not through `SetDressing`, which `RoomBuilder.simple_layers` switches off today), so no new art. Lint checks that the creature has a sheet and the position is inside the room.
+
+### The Deep
+
+Placement is for the plan to settle against the real geometry; the recommendation, from D2's layout (its chimney is two 16 px walls at x 900 to 1020, a wall-cling climb up through a top exit at 920 to 1000 into D6):
+
+- `D6` becomes the arena, 2 screens wide (cells (19,5) and (20,5), both free), with the Taratect spawned far from the threshold, a flat floor with no gaps, and one exit only: a new left door.
+- A new `D7` at cell (18,5) is the antechamber: 1 screen, a glow pool, a tablet (`tablet` is an existing feature) that says something lives beyond, the glimpse gap, `tremor` 0.6. Its right door meets D6's left door; its bottom exit is the wall-cling climb.
+- `D2`'s chimney moves to the left half (its two walls and its top exit, at the matching span under D7), and `D2` gets `tremor` 0.3 and the first traces. D6's old bottom exit is removed.
+
+### Room size follows creature size
+
+`RoomLint` gets a `creature_fit` rule, constants beside the others and pinned by tests. For each spawn whose creature has a sheet (the water pools have none and are skipped; swimmers are skipped, they live in water), with `W` and `H` the widest and tallest frame of its sheet (read through `SpriteSheet`):
+
+- a creature that stands: the **clear height** above its footing, up to the nearest solid, is at least `1.25 * H`, and the **footing** (the floor or a solid's top, the contiguous run under the spawn) is at least `2 * W` wide;
+- a creature anchored to a ceiling (a dropper, the Taratect): the **clear drop** below its anchor, down to the nearest solid, is at least `1.25 * H`, and the room is at least `2 * W` wide at the anchor; the footing check does not apply.
+
+Boss rooms add their own rules: at least 2 screens in one dimension; one exit; that exit leads to a room with a glow pool and no spawns; `boss.creature` is in `spawns` and at least 200 px from the threshold; the threshold is inside the room and `SEAL_CLEARANCE` from every exit span; the floor has no hole (so nothing falls out) and no water. A room with `tremor` has it in `[0, 1]`. The rules run in the editor's Validate and in the suite over every room, like the existing ones, and the shipped rooms must pass: the stone drake's frames (108 wide and 99 tall for its windup, read from the sheet, which already carries the size ladder's 1.5 times) are checked against every room it is in, and what fails is fixed in the room's data, not by loosening the rule. D3 already fails: its drake's platform is 160 px wide against the 216 the rule needs, so the platform is widened. The rooms edited are therefore D2, D6, D7 and whichever the rule flags.
+
+The enemies' terrain body is a fixed 16x12 box whatever the sprite is (`Enemy.BODY_SIZE`), so a big creature is physically a small one that draws large. This spec leaves that as it is; per-creature bodies belong to the hitbox and reach-model plan the scale work called for, and the arena rules above are written against the sprite so they stay right when it lands.
+
+## Constraints
+
+- No existing mechanic changes: the new fields default to empty, `dormant` and `hunting` to false, the `bosses` section to empty. The rooms edited are the Deep's D2 (the chimney and a `tremor`), D6 (the arena) and the new D7, and any room `creature_fit` flags (D3 for sure).
+- The seal never closes on the player (clearance rule), never traps a body that cannot fight: death is a rebirth.
+- A defeated boss stays defeated across rebirths and saves; an undefeated one is full health every time you enter.
+- No time estimates in plans; plans stay lean.
+
+## Testing
+
+- The editor's preview builds a boss room with no progress and no spawn callable (`RoomView` passes `{"progress": null}`): no arena and no boss, no error; a `tremor` with no shake callable still plays its sound.
+- `BossArenaModel`: the four states and their transitions, the intro timer, exactly one transition per event, a win before the fight held and resolved when the fight begins (the doors still shut and open, never stay shut on a dead boss).
+- Real collision: crossing the threshold seals every exit after the intro (the player cannot pass a gate; a room's ordinary exits had none before), the boss is dormant until the intro ends (it does not move or fall, deals no contact damage, and an area skill's `receive_hit` does nothing), its death frees only the arena's gates, and the defeat survives a profile save and load.
+- Ordering and failure: the Bestiary has the defeat before the profile does (stop between them and the boss is still alive next run); a failed profile write leaves the boss dead for the session and is retried by the next progress save.
+- Rebirth: a lost fight rebuilds the arena `waiting`, the boss at full health.
+- `RoomLint`: `creature_fit` on a cramped fixture and a roomy one at the boundary, every boss-room rule on a fixture that breaks it, and the shipped Deep rooms (D2, D6, D7, D3 to D5) all clean.
+- `tremor`: the cue and shake fire on the schedule and scale with the value (a seeded generator).
+
+## Known gaps and open
+
+- Built beyond the spec: a `hunting` boss creeps along its ceiling until it is over the player and then drops (a dropper otherwise hangs until someone stands under it, so the arena's boss would never fight), and the world's camera has a `shake`. D7 and the larger D6 are in the shipped room list (24 rooms, 47 screens).
+- No boss health bar, music, phases or attack tuning yet: the Taratect fights with its ordinary behaviour (crawl, drop) until a combat pass gives it a pattern. Its stats (HP 24, ATK 9) are the creature's today.
+- The terrain body of big creatures (see above) and the per-species reach model are the next structural plan; the arena is built to survive both.
+- **A second altar by the arena (Sean's call).** With one altar per area, dying to the boss means the walk back from D1. A second Deep altar in D7 would be a checkpoint, at the cost of relaxing `WorldValidator`'s one-altar-per-area rule and deciding what attuning two altars means.
+- A way out of a fight that cannot be won (a "give up") is not offered: rebirth is the way out, and a fight where the boss cannot be damaged would be a bug, covered by the tests.
+- Which other creatures become bosses, and whether the deep areas each get one, is open.
+- **The truck as a boss (Sean, 2026-10-04: a note for later).** The truck from the opening may become a boss: the opening battle already draws it (`assets/sheets/truck`) and it is the first thing that kills the player. It would be the first boss that is not a creature def (no stats, no Bestiary entry, no species-unlock rule) and the first with no ceiling to hang from, so it would need its own spawn and its own fight shape; the arena's room data, threshold, sealed exits and persistent defeat do not care what the boss is, but `BossArena` today takes an `Enemy` node (it sets `dormant` and `hunting` and listens for `downed`), so a truck would need an Enemy-shaped wrapper or a small boss interface. Nothing is built for it.
+- The map does not mark a boss room.
+- The room editor does not edit `boss`, `tremor` or `glimpse` yet (they are saved and loaded with the room, so editing the `.tres` is how they are set); a round-trip test pins that they survive a save.

@@ -17,6 +17,8 @@ var tablets: Array = []
 var rebirths: Array = []
 ## Body forms reached in any life (the Tree tab keeps them). The base slime is reached by definition and never stored.
 var forms_reached: Array = []
+## Boss creature ids the player has beaten.
+var bosses: Array = []
 ## Where the next run starts ({"altar", "species", "kit"}), set on death and consumed by the game on reload.
 ## In memory only: the scene rebuilds on every death, so it cannot live on the Run node.
 var pending_start := {}
@@ -31,6 +33,7 @@ func _init(p_profile = null) -> void:
 		tablets = profile.list_section("tablets")
 		rebirths = profile.list_section("rebirths")
 		forms_reached = profile.list_section("forms_reached")
+		bosses = profile.list_section("bosses")
 		var choice: Dictionary = profile.dict_section("rebirth_choice")
 		if typeof(choice.get("pool")) == TYPE_STRING:
 			_last_altar = choice["pool"]
@@ -44,6 +47,17 @@ func visit(id: String) -> void:
 
 func is_visited(id: String) -> bool:
 	return visited.has(id)
+
+## A boss (a creature id) the player has beaten: it is not spawned again and its room builds without an arena. Kept in memory for the
+## session whatever the disk said; every `_save` rewrites every section, so a write that failed is retried by the next one.
+func defeat_boss(id: String) -> void:
+	if bosses.has(id):
+		return
+	bosses.append(id)
+	_save()
+
+func is_defeated(id: String) -> bool:
+	return bosses.has(id)
 
 func open_shortcut(id: String) -> void:
 	if shortcuts.has(id):
@@ -114,5 +128,6 @@ func _save() -> void:
 	profile.set_section("tablets", tablets.duplicate())
 	profile.set_section("rebirths", rebirths.duplicate())
 	profile.set_section("forms_reached", forms_reached.duplicate())
+	profile.set_section("bosses", bosses.duplicate())
 	profile.set_section("rebirth_choice", {"pool": _last_altar, "species": _species})
 	profile.save()

@@ -29,6 +29,31 @@ floor, a blocked or too narrow exit, a feature id used twice, a switch with no e
 The editor's `Validate (N)` button lists them with the validator's findings, and the test suite runs the same functions on
 every room.
 
+## Boss rooms
+
+A room with a `boss` is an arena (spec: `docs/superpowers/specs/2026-10-04-boss-arenas-design.md`). Three optional `RoomDef` fields, all edited in the `.tres`
+(the room editor saves them and does not edit them yet):
+
+- `boss`: `{"creature": id, "threshold": Rect2}`. `creature` is a spawn in the room, spawned dormant (frozen, untouchable); the `threshold` is the line the player
+  crosses to start the fight. The room is an arena only in a World with a progress and a spawner: the editor's preview shows the room without the boss.
+- `tremor`: 0 to 1, how hard the ground shakes while the player is in the room. Every 5 to 9 seconds the room shakes the camera, drops dust and rumbles (a far or a
+  near cue: at least 0.5 is near). Only a World supplies the camera shake, so the editor's preview stays quiet.
+- `glimpse`: `{"creature": id, "pos": Vector2, "scale": float, optional "frame"}`, a near-black silhouette of the creature's sheet frame behind the room's solids,
+  drifting slowly.
+
+The arena runs `waiting`, `intro` (the rumble at once, the doors slam at 0.4 s, the boss wakes at 0.8 s: awake it is `hunting`, always alert), `fight` (every exit
+sealed by a gate of the arena's own, and the world ignores exit transitions) and `won` (the doors open and `WorldProgress` records the boss; it is not spawned again,
+and its room is an ordinary empty one). Dying is a rebirth: the next build is `waiting` again with a full-health boss.
+
+The lint rules (`RoomLint`) for a boss room: at least 2 screens in one dimension; exactly one exit and no bottom door (a hole in the floor); no water; the exit leads
+to a room with a glow pool and no spawns (the antechamber: a glow pool because the validator allows one altar per area); the boss is in `spawns` at least 200 px from
+the threshold; the threshold is inside the room and at least 320 px from every exit (the Jet Dash covers 280 px before the doors slam). `creature_fit` applies to every
+room: a creature that stands needs 2 times its widest frame of footing and 1.25 times its tallest frame of clear height; one that hangs from the ceiling needs the same
+drop below its anchor and the same width at it; fliers, swimmers and creatures with no sheet are skipped. The rules read the sheet as shipped, so a creature's size
+ladder entry (`tests/test_creature_scale.gd`) is what they measure.
+
+The Deep's boss is the Taratect: D2's chimney climbs to D7 (the antechamber: glow pool, a tablet, tremor 0.6, the glimpse), whose right door opens into D6, the arena.
+
 ## Decor
 
 Decor is the standing and hanging pieces (crystals, fungus, hanging roots, stalactites) drawn in front of the back wall. The catalog the

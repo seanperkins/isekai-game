@@ -89,3 +89,35 @@ func test_a_malformed_forms_section_is_dropped_with_a_warning() -> void:
 	assert_eq(w.forms_reached, [])
 	assert_eq(w.visited, ["C1"], "the other sections still load")
 	assert_eq(warnings.size(), 1)
+
+# --- defeated bosses (plan: boss arenas, Task 5) ---
+
+## A profile whose first write fails, like a full disk.
+class FlakyProfile extends Profile:
+	var fail_next := true
+	func save() -> bool:
+		if fail_next:
+			fail_next = false
+			return false
+		return super.save()
+
+func test_a_defeated_boss_is_stored_and_survives_a_reload() -> void:
+	var w := WorldProgress.new(_profile())
+	assert_false(w.is_defeated("taratect"))
+	w.defeat_boss("taratect")
+	w.defeat_boss("taratect")
+	assert_true(w.is_defeated("taratect"))
+	assert_eq(w.bosses, ["taratect"])
+	var again := WorldProgress.new(_profile())
+	assert_true(again.is_defeated("taratect"))
+	assert_false(again.is_defeated("serpent"))
+
+func test_a_failed_write_keeps_the_boss_dead_for_the_session_and_the_next_save_retries() -> void:
+	var flaky := FlakyProfile.new(dir.path_join("profile.json"))
+	flaky.reload()
+	var w := WorldProgress.new(flaky)
+	w.defeat_boss("taratect")  # this write fails
+	assert_true(w.is_defeated("taratect"), "dead for the session whatever the disk said")
+	assert_false(WorldProgress.new(_profile()).is_defeated("taratect"), "and not on disk yet")
+	w.visit("C1")  # any later progress save rewrites every section, the boss included
+	assert_true(WorldProgress.new(_profile()).is_defeated("taratect"), "the next save retried it")
