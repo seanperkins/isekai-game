@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SpeciesDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/soul/species_def.gd" id="1_q4dwy"]
+
+[resource]
+script = ExtResource("1_q4dwy")
+id = "undead"
+display_name = "Undead"
+movement_profile = "biped"
+unlock = {
+"creature": "bog_lizardman",
+"kind": "count",
+"n": 3
+}

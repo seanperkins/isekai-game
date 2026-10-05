@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SpeciesDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/soul/species_def.gd" id="1_q4dwy"]
+
+[resource]
+script = ExtResource("1_q4dwy")
+id = "wolf"
+display_name = "Wolf"
+movement_profile = "wolf"
+unlock = {
+"creature": "gloom_wolf",
+"kind": "defeat"
+}

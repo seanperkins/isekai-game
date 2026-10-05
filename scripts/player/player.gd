@@ -194,6 +194,15 @@ func setup(rules: SkillRulesEngine, compendium: CompendiumModel, creature_defs: 
 func uses_species_body() -> bool:
 	return species_body != null
 
+## Becomes `id` (a species with a movement profile) before the run starts: the form tree, the movement and the look follow. An unknown
+## id, or the species it already is, changes nothing; a Player is never turned back into a slime.
+func set_species(id: String) -> void:
+	if id == species or id == Form.DEFAULT_SPECIES or MovementProfile.for_species(id) == null:
+		return
+	species = id
+	form = Form.new(species)
+	_build_species_body()
+
 func _physics_process(delta: float) -> void:
 	if health == null or health.is_dead():
 		return

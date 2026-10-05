@@ -102,6 +102,8 @@ func _ready() -> void:
 	progress.sanitize(altars.map(func(p: Dictionary) -> String: return p["id"]))
 	var start := {"default": false, "room": request["room"], "pos": request["pos"], "kit": request.get("kit", {})} if _editor_play \
 		else Game.resolve_start(altars, progress.take_pending(), progress.is_attuned)
+	var species := Game.species_arg(args)
+	player.set_species(species if species != "" else str(start.get("species", WorldProgress.DEFAULT_SPECIES)))
 	if start["default"]:
 		world.enter_start()
 	else:
@@ -273,6 +275,16 @@ static func resolve_start(altars: Array, pending: Dictionary, attuned: Callable)
 			return {"default": false, "room": p["room"], "pos": p["pos"] + Vector2(0.0, -BodyConfig.BOTTOM),
 				"kit": kit, "altar": id, "species": species}
 	return default
+
+## `-- --species=wolf` (or goblin, undead, spider) starts the run as that species, whatever the goddess's menu gave; "" for no flag, a
+## bare flag or a species nobody knows.
+static func species_arg(args: Array) -> String:
+	for arg in args:
+		var text := str(arg)
+		if text.begins_with("--species="):
+			var id := text.trim_prefix("--species=")
+			return id if Form.SPECIES.has(id) else ""
+	return ""
 
 ## `-- --soul=N` on the command line grants N soul points to spend this session: 0 to 9999, anything else reads 0.
 static func soul_points_arg(args: Array) -> int:
