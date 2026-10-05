@@ -15,13 +15,14 @@ static func first_time(rooms: Dictionary, creatures: Dictionary, ids: Array) -> 
 	return total
 
 ## The shipped rooms out of `rooms`, as copies, with the exits to rooms that are not shipped (the new areas attach to C3 and C4, for one)
-## taken off: the world these rooms were pinned and tested in is the 24 as hand-authored.
+## and the features the area modules attached taken off: the world these rooms were pinned and tested in is the 24 as hand-authored.
 static func only(rooms: Dictionary) -> Dictionary:
 	var out := {}
 	for id in IDS:
 		if rooms.has(id):
 			var r := AreaBuilder.copy_room(rooms[id])
 			r.exits = r.exits.filter(func(e: Dictionary) -> bool: return IDS.has(e["room"]))
+			r.features = r.features.filter(func(f: Dictionary) -> bool: return not f.has("by"))  # what an area module attached (F6's switch)
 			out[id] = r
 	return out
 
