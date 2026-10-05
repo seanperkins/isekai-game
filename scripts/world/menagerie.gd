@@ -48,6 +48,14 @@ static func order(creatures: Array) -> Array:
 static func _hangs(c: CreatureDef) -> bool:
 	return c.skills.any(func(s: Dictionary) -> bool: return s.get("id", "") == "ceiling_walk")
 
+## Where `id` stands in the room, -1 for a creature that is not in it.
+static func x_of(id: String, creatures: Array) -> float:
+	var shown := order(creatures)
+	for i in shown.size():
+		if shown[i].id == id:
+			return spawn_x(i)
+	return -1.0
+
 static func spawn_x(i: int) -> float:
 	return FIRST_X + float(i) * SPACING
 

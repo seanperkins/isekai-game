@@ -8,8 +8,9 @@ extends SceneTree
 
 const VIEW_SIZE := Vector2i(1280, 720)
 const GAME_SIZE := Vector2i(640, 360)  # the game's own resolution, drawn at twice the size
-const STOPS := [60.0, 420.0, 1000.0, 1700.0, 4400.0, 7000.0, 9200.0, 10300.0]
+const DEFAULT_STOPS := [60.0, 420.0, 1000.0, 1700.0, 4400.0, 7000.0, 9200.0, 10300.0]
 const SETTLE := 25
+var stops: Array = DEFAULT_STOPS.duplicate()  # where the player stands for each frame; `--stops=1000,4400` changes them
 var out := ProjectSettings.globalize_path("res://.tmp/menagerie-frames")
 var view: SubViewport
 var game
@@ -20,6 +21,10 @@ func _initialize() -> void:
 	for arg in OS.get_cmdline_user_args():
 		if str(arg).begins_with("--out="):
 			out = str(arg).trim_prefix("--out=")
+		elif str(arg).begins_with("--stops="):
+			stops = []
+			for x in str(arg).trim_prefix("--stops=").split(",", false):
+				stops.append(float(x))
 	DirAccess.make_dir_recursive_absolute(out)
 	print("shots: window mode=%d size=%s" % [DisplayServer.window_get_mode(), DisplayServer.window_get_size()])  # the wrapper checks this
 	view = SubViewport.new()
@@ -37,11 +42,11 @@ func _process(_delta: float) -> bool:
 		if frame > 5:
 			view.get_texture().get_image().save_png("%s/stop_%d.png" % [out, stop])
 			stop += 1
-			if stop >= STOPS.size():
+			if stop >= stops.size():
 				quit()
 				return true
 		_hush()
-		game.player.global_position = Vector2(STOPS[stop], 300.0)
+		game.player.global_position = Vector2(stops[stop], 300.0)
 		game.player.velocity = Vector2.ZERO
 	return false
 

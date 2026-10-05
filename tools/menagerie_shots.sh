@@ -6,13 +6,23 @@
 #    that cannot take focus; the real project.godot is never touched;
 #  - the game is drawn into a 1280x720 SubViewport that tools/menagerie_shots.gd saves, so the frames are full size;
 #  - the app you were in gets the focus back if Godot takes it anyway.
-# Run from anywhere:  tools/menagerie_shots.sh      Frames land in .tmp/menagerie-frames/stop_N.png.
+# Run from anywhere:  tools/menagerie_shots.sh [x ...]      Frames land in .tmp/menagerie-frames/stop_N.png, one per x (the player's
+# position along the room, up to 8); with no x, eight stops spread along the room. The room MCP's menagerie_shot tool runs this.
 # GODOT=/path/to/godot overrides the binary.
 cd "$(dirname "$0")/.." || exit 1
 GODOT="${GODOT:-godot}"
 OUT="$PWD/.tmp/menagerie-frames"
 PROJ="$PWD/.tmp/shotproj"
-STOPS=8  # tools/menagerie_shots.gd takes one frame at each of its STOPS
+STOPS=8  # how many frames to expect: one per x, else the eight default stops
+STOPS_ARG=()
+if [ $# -gt 0 ]; then
+	for x in "$@"; do
+		case "$x" in ''|*[!0-9.]*) echo "usage: $0 [x ...]  (numbers only, got '$x')" >&2; exit 2;; esac
+	done
+	[ $# -gt 8 ] && { echo "usage: $0 [x ...]  (at most 8)" >&2; exit 2; }
+	STOPS=$#
+	STOPS_ARG=("--stops=$(IFS=,; echo "$*")")
+fi
 mkdir -p .tmp/gdhome
 rm -rf "$OUT" "$PROJ"
 trap 'rm -rf "$PROJ"' EXIT
@@ -37,7 +47,7 @@ mine=$(front)
 [ -z "$mine" ] && echo "note: cannot read the frontmost app (Accessibility permission?), so focus will not be handed back" >&2
 
 env HOME="$PWD/.tmp/gdhome" "$GODOT" --path "$PROJ" --position 30000,30000 \
-	-s res://tools/menagerie_shots.gd -- --room=menagerie --out="$OUT" > .tmp/shots.log 2>&1 &
+	-s res://tools/menagerie_shots.gd -- --room=menagerie --out="$OUT" "${STOPS_ARG[@]}" > .tmp/shots.log 2>&1 &
 pid=$!
 while kill -0 "$pid" 2>/dev/null; do
 	if [ -n "$mine" ]; then

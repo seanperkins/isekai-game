@@ -8,10 +8,12 @@ extends RefCounted
 const CATALOG_SECTIONS := ["creatures", "features", "decor", "prefabs", "perks", "gates", "areas", "limits"]
 
 var _session: RoomSession
+var _shots: ShotRunner
 var _table := {}  # name -> {description, schema, handler}
 
-func _init(p_session: RoomSession = null) -> void:
+func _init(p_session: RoomSession = null, p_shots: ShotRunner = null) -> void:
 	_session = p_session
+	_shots = p_shots if p_shots != null else ShotRunner.new()
 	_register_read()
 	_register_add()
 	_register_change()
@@ -19,6 +21,7 @@ func _init(p_session: RoomSession = null) -> void:
 	_register_stamp()
 	_register_persist()
 	_register_preview()
+	_register_shot()
 
 func tool_list() -> Array:
 	var out: Array = []
@@ -405,6 +408,33 @@ func _preview(args: Dictionary) -> Dictionary:
 		var head := "%s (%s): %dx%d screens, %dx%d px, image scale %s\n" % [
 			r.id, r.area, r.size.x, r.size.y, r.pixel_size().x, r.pixel_size().y, RoomPreview.clamp_scale(r, scale)]
 		content.append({"type": "text", "text": head + RoomPreview.legend(r) + "\n" + RoomPreview.text_map(r)})
+	return result(content)
+
+# --- the game's own picture ---
+
+func _register_shot() -> void:
+	_add("menagerie_shot", "A real picture from the game: its Menagerie room, where every creature in the game (shipped, support monster and the 140 form "
+		+ "twins) stands asleep with its name on the floor, drawn with the game's own art. Name creatures to see them, or give x positions "
+		+ "(the room runs from about 260 to 10600, one creature every 56 px). Slow: it starts a second Godot with a tiny off-screen window, "
+		+ "so it takes a few seconds a picture and needs a display; nothing takes over the screen. Unlike preview, this is the real game.",
+		obj({"creatures": {"type": "array", "items": {"type": "string"}, "maxItems": ShotRunner.MAX_STOPS,
+				"description": "Creature ids (twin_wolf_fenrir, bat, chapel_priest ...), each shown from just left of where it stands, with its neighbours."},
+			"x": {"type": "array", "items": {"type": "number", "minimum": 0, "maximum": ShotRunner.MAX_X}, "maxItems": ShotRunner.MAX_STOPS,
+				"description": "Positions along the room to look from. Creatures and x together make at most four pictures."},
+			"scale": {"type": "number", "minimum": 0.25, "maximum": 1.0, "description": "Picture size, 0.5 (640x360, the game's own pixels) by default; 1 is 1280x720."}}),
+		_menagerie_shot)
+
+func _menagerie_shot(args: Dictionary) -> Dictionary:
+	var plan := _shots.stops_for(args.get("creatures", []), args.get("x", []), DefLoader.load_dir("res://data/creatures"))
+	if plan["error"] != "":
+		return fail(plan["error"])
+	var shot := _shots.shoot(plan["stops"], float(args.get("scale", ShotRunner.DEFAULT_SCALE)))
+	if shot["error"] != "":
+		return fail(shot["error"])
+	var content: Array = []
+	for i in shot["images"].size():
+		content.append(_png(shot["images"][i]))
+		content.append({"type": "text", "text": plan["labels"][i]})
 	return result(content)
 
 # --- the bulk tool ---
