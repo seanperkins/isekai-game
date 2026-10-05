@@ -1,5 +1,8 @@
 extends SceneTree
 ## Frames of the Menagerie at a few stops along its length. Needs a real renderer. Run from the project root:
+##   tools/menagerie_shots.sh
+## The script opens the window far off-screen and gives the focus back to the app you were in (Godot cannot render headless). To run
+## this by hand instead:
 ##   env HOME="$PWD/.tmp/gdhome" godot --path . -s res://tools/menagerie_shots.gd -- --room=menagerie
 ## Shots go to .tmp/menagerie-frames/stop_N.png. Every creature is held asleep and the player cannot be hurt, so a frame shows the
 ## creatures at rest and not a fight. The game is untyped: a -s script cannot see autoloads.
