@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_undead_deadeye"
+display_name = "Sure shot"
+description = "Six sure shots, then a cursed seventh."
+announce = "New verb. Acquired [Sure shot]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [10], "spec": {"kind": "bolt", "range": 260, "pierce": false, "cooldown": 3.0}}]
+mp_cost = 5

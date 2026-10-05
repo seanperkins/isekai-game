@@ -65,3 +65,31 @@ class RowsTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SpeciesRowsTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.old = os.getcwd()
+        os.chdir(os.path.dirname(HERE))
+        cls.rows = {r["form"]: r for r in bfv.load_rows()}
+        cls.forms = bsf.species_forms()
+
+    @classmethod
+    def tearDownClass(cls):
+        os.chdir(cls.old)
+
+    def test_every_wolf_and_undead_form_has_a_row(self):
+        for f in self.forms:
+            if f["species"] in ("wolf", "undead"):
+                self.assertIn(f["dataId"], self.rows)
+
+    def test_full_means_no_note_and_the_rest_say_what_is_missing(self):
+        for r in self.rows.values():
+            self.assertEqual(r["note"] == "", r["fidelity"] == "full", r["form"])
+
+    def test_a_form_is_named_once_and_its_skill_id_follows_it(self):
+        self.assertEqual(len(self.rows), len(bfv.load_rows()))
+        for f in self.forms:
+            if f["dataId"] in self.rows:
+                self.assertEqual(f["verbId"], bfv.skill_id(f["dataId"]))

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_wolf_gabriel_hound"
+display_name = "Hunt's passage"
+description = "The pack carries you over one gap (a short glide)."
+announce = "New verb. Acquired [Hunt's passage]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "glide", "seconds": 2.5, "fall": 25, "cooldown": 6.0}}]
+mp_cost = 4

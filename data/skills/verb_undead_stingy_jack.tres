@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_undead_stingy_jack"
+display_name = "Trick"
+description = "An enemy that touches your lure is held fast."
+announce = "New verb. Acquired [Trick]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [3], "spec": {"kind": "bolt", "range": 160, "pierce": false, "status": {"root": 3.0}, "cooldown": 10.0}}]
+mp_cost = 6

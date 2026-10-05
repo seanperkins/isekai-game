@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_wolf_hellhound"
+display_name = "Burning pounce"
+description = "A burning pounce and a flame trail."
+announce = "New verb. Acquired [Burning pounce]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [10], "spec": {"kind": "dash", "speed": 400, "hit_range": 56, "damage_type": "fire", "cooldown": 6.0}}]
+mp_cost = 7

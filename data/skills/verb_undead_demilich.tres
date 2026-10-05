@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_undead_demilich"
+display_name = "Float"
+description = "A floating skull, very frail, very strong."
+announce = "New verb. Acquired [Float]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "glide", "seconds": 4.0, "fall": 15, "cooldown": 6.0}}]
+mp_cost = 3

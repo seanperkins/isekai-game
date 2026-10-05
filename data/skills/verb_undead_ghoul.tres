@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_undead_ghoul"
+display_name = "Rend"
+description = "Claws, a paralysing touch, a stench cloud."
+announce = "New verb. Acquired [Rend]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [5], "spec": {"kind": "burst", "range": 40, "half_width": 30, "status": {"stun": 1.0}, "cooldown": 4.0}}]
+mp_cost = 4

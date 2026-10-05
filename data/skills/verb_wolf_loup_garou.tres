@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_wolf_loup_garou"
+display_name = "Frenzy"
+description = "Each kill stokes a bloodlust meter: faster, bleeding bites."
+announce = "New verb. Acquired [Frenzy]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "buff", "stats": {"atk": 3, "spd": 30}, "seconds": 10.0, "cooldown": 20.0}}]
+mp_cost = 6

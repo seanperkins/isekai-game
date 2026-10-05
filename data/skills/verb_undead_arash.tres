@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_undead_arash"
+display_name = "Life-arrow"
+description = "Spend most of your HP on one arrow that crosses the room and pierces."
+announce = "New verb. Acquired [Life-arrow]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [20], "spec": {"kind": "bolt", "range": 400, "pierce": true, "cooldown": 20.0}}]
+mp_cost = 6

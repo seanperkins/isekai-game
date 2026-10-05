@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_undead_bone_colossus"
+display_name = "Juggernaut"
+description = "Double size, stomp and heft cleave; walks through hazards."
+announce = "New verb. Acquired [Juggernaut]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [10], "spec": {"kind": "ring", "radius": 90, "status": {"stun": 1.0}, "cooldown": 8.0}}]
+mp_cost = 8

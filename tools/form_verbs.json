@@ -261,5 +261,806 @@
       "seconds": 8.0,
       "cooldown": 10.0
     }
+  },
+  {
+    "form": "wolf_moonbound",
+    "name": "Rise",
+    "mp": 4,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "A stat window for standing on two legs; it does not change the body, and the claws and items it stands for wait for E.",
+    "text": "Stand on two legs for claws and items, drop to four to gallop.",
+    "spec": {
+      "kind": "buff",
+      "stats": {
+        "atk": 2,
+        "def": 1
+      },
+      "seconds": 8.0,
+      "cooldown": 14.0
+    }
+  },
+  {
+    "form": "wolf_loup_garou",
+    "name": "Frenzy",
+    "mp": 6,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "A speed and attack window; there is no bloodlust meter that builds from kills, and nothing you cannot stop.",
+    "text": "Each kill stokes a bloodlust meter: faster, bleeding bites.",
+    "spec": {
+      "kind": "buff",
+      "stats": {
+        "atk": 3,
+        "spd": 30
+      },
+      "seconds": 10.0,
+      "cooldown": 20.0
+    }
+  },
+  {
+    "form": "wolf_beast_of_gevaudan",
+    "name": "Stalk-kill",
+    "mp": 8,
+    "value": 14,
+    "fidelity": "approx",
+    "note": "A heavy lunge; it is not a stealth opener and does not shrug off ranged hits.",
+    "text": "A stealth opener that deals huge damage to the first target.",
+    "spec": {
+      "kind": "dash",
+      "speed": 420,
+      "hit_range": 60,
+      "hit_half_width": 24,
+      "cooldown": 12.0
+    }
+  },
+  {
+    "form": "wolf_lycaon",
+    "name": "First Wolf's roar",
+    "mp": 8,
+    "value": 3,
+    "fidelity": "approx",
+    "note": "Three spectral wolves fight for eight seconds; wild wolves in the room do not join.",
+    "text": "Wild wolves in the room join you briefly.",
+    "spec": {
+      "kind": "summon",
+      "count": 3,
+      "seconds": 8.0,
+      "cooldown": 20.0
+    }
+  },
+  {
+    "form": "wolf_ulfhedinn",
+    "name": "Skin",
+    "mp": 6,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "A berserk window of attack and defence; there is no crash after it and no choice of when the change comes.",
+    "text": "You choose the change: a berserk window with no flinch and iron-proof.",
+    "spec": {
+      "kind": "buff",
+      "stats": {
+        "atk": 3,
+        "def": 3
+      },
+      "seconds": 6.0,
+      "cooldown": 16.0
+    }
+  },
+  {
+    "form": "wolf_wolfskin_champion",
+    "name": "Shield-bite",
+    "mp": 5,
+    "value": 8,
+    "fidelity": "approx",
+    "note": "A bite that ignores armour; it does not refill the berserk window on kills.",
+    "text": "Breaks guards; the berserk window refills on kills.",
+    "spec": {
+      "kind": "dissolve",
+      "range": 40,
+      "half_width": 24,
+      "cooldown": 3.0
+    }
+  },
+  {
+    "form": "wolf_skoll",
+    "name": "Chaser",
+    "mp": 4,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "A speed window; marking a fleeing enemy and the free pounce are not modeled.",
+    "text": "Gallop never slows; mark a fleeing enemy and the pounce is free when you catch it.",
+    "spec": {
+      "kind": "buff",
+      "stats": {
+        "spd": 60
+      },
+      "seconds": 6.0,
+      "cooldown": 10.0
+    }
+  },
+  {
+    "form": "wolf_black_dog",
+    "name": "Slink",
+    "mp": 3,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "Untouchable for three seconds, standing in for unseen; enemies do not lose track of you.",
+    "text": "A silent gait in dark rooms; unseen until the pounce.",
+    "spec": {
+      "kind": "ward",
+      "seconds": 3.0,
+      "cooldown": 10.0
+    }
+  },
+  {
+    "form": "wolf_barghest",
+    "name": "Fear howl",
+    "mp": 5,
+    "value": 1,
+    "fidelity": "approx",
+    "note": "A ring that slows what it reaches; enemies do not turn and flee.",
+    "text": "Enemies falter and flee.",
+    "spec": {
+      "kind": "ring",
+      "radius": 100,
+      "status": {
+        "slow": 3.0
+      },
+      "cooldown": 10.0
+    }
+  },
+  {
+    "form": "wolf_hellhound",
+    "name": "Burning pounce",
+    "mp": 7,
+    "value": 10,
+    "fidelity": "approx",
+    "note": "A fire lunge; it leaves no flame trail and it does not hurt a packmate.",
+    "text": "A burning pounce and a flame trail.",
+    "spec": {
+      "kind": "dash",
+      "speed": 400,
+      "hit_range": 56,
+      "damage_type": "fire",
+      "cooldown": 6.0
+    }
+  },
+  {
+    "form": "wolf_black_shuck",
+    "name": "Omen",
+    "mp": 7,
+    "value": 16,
+    "fidelity": "approx",
+    "note": "Marks the nearest enemy; it takes the blow after ten seconds whether or not it cleanses.",
+    "text": "Mark one enemy; it dies in ten seconds unless it cleanses.",
+    "spec": {
+      "kind": "mark",
+      "range": 240,
+      "delay": 10.0,
+      "damage_type": "dark",
+      "cooldown": 14.0
+    }
+  },
+  {
+    "form": "wolf_cwn_annwn",
+    "name": "Spectral pack",
+    "mp": 7,
+    "value": 3,
+    "fidelity": "approx",
+    "note": "Two echoes fight for eight seconds; they do not pounce when you do.",
+    "text": "Two echoes of you pounce with you.",
+    "spec": {
+      "kind": "summon",
+      "count": 2,
+      "seconds": 8.0,
+      "cooldown": 15.0
+    }
+  },
+  {
+    "form": "wolf_gabriel_hound",
+    "name": "Hunt's passage",
+    "mp": 4,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "A long glide that needs no kill first; no pack carries you.",
+    "text": "The pack carries you over one gap (a short glide).",
+    "spec": {
+      "kind": "glide",
+      "seconds": 2.5,
+      "fall": 25,
+      "cooldown": 6.0
+    }
+  },
+  {
+    "form": "wolf_cu_sith",
+    "name": "Three barks",
+    "mp": 6,
+    "value": 9,
+    "fidelity": "approx",
+    "note": "One unavoidable bolt; there are no two warning barks first.",
+    "text": "Two warnings, then a lunge you cannot dodge from range.",
+    "spec": {
+      "kind": "bolt",
+      "range": 240,
+      "pierce": false,
+      "cooldown": 5.0
+    }
+  },
+  {
+    "form": "wolf_warg",
+    "name": "Bond",
+    "mp": 6,
+    "value": 3,
+    "fidelity": "approx",
+    "note": "A packmate for twenty seconds; it is not a lasting bond and the pounce is not heavier.",
+    "text": "A heavier pounce, knockback, one bonded packmate.",
+    "spec": {
+      "kind": "summon",
+      "count": 1,
+      "seconds": 20.0,
+      "cooldown": 25.0
+    }
+  },
+  {
+    "form": "wolf_dire_wolf",
+    "name": "Tank",
+    "mp": 5,
+    "value": 6,
+    "fidelity": "approx",
+    "note": "A shove that stuns for a moment; heavy targets are not knocked down and the body is not knockback-proof.",
+    "text": "The pounce knocks down heavy targets; knockback-proof.",
+    "spec": {
+      "kind": "burst",
+      "range": 50,
+      "half_width": 40,
+      "status": {
+        "stun": 1.5
+      },
+      "cooldown": 6.0
+    }
+  },
+  {
+    "form": "wolf_fenrir",
+    "name": "Unbound",
+    "mp": 8,
+    "value": 12,
+    "fidelity": "approx",
+    "note": "Breaks armour and anything in the group dissolvable; the world's barriers and grates arrive with the new areas (F2).",
+    "text": "Breaks barriers and grates (a gate-breaking verb).",
+    "spec": {
+      "kind": "dissolve",
+      "range": 80,
+      "half_width": 50,
+      "cooldown": 6.0
+    }
+  },
+  {
+    "form": "wolf_amarok",
+    "name": "Lone hunter",
+    "mp": 5,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "An attack window; it does not look for isolated prey and does not switch the bond off.",
+    "text": "Strongest with no packmate, hunts isolated prey.",
+    "spec": {
+      "kind": "buff",
+      "stats": {
+        "atk": 4
+      },
+      "seconds": 10.0,
+      "cooldown": 15.0
+    }
+  },
+  {
+    "form": "wolf_church_grim",
+    "name": "Guardian",
+    "mp": 6,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "A patch that mends you while you stand in it; it wards no packmate and holds no holy ground.",
+    "text": "Wards a packmate, holds holy ground, unharmed in holy zones.",
+    "spec": {
+      "kind": "zone",
+      "radius": 70,
+      "seconds": 6.0,
+      "heals": 2,
+      "slow": false,
+      "cooldown": 12.0
+    }
+  },
+  {
+    "form": "wolf_wepwawet",
+    "name": "Opener",
+    "mp": 3,
+    "value": 0,
+    "fidelity": "needs",
+    "note": "Shows nodes in the group hidden; the world's hidden exits and shortcuts arrive with the new areas (F2).",
+    "text": "Reveals hidden exits and shortcuts in a room.",
+    "spec": {
+      "kind": "reveal",
+      "radius": 200,
+      "cooldown": 8.0
+    }
+  },
+  {
+    "form": "wolf_lupa",
+    "name": "Suckle",
+    "mp": 6,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "A healing patch; no pup grows into a second packmate.",
+    "text": "Heals packmates and grows a pup into a second packmate.",
+    "spec": {
+      "kind": "zone",
+      "radius": 50,
+      "seconds": 5.0,
+      "heals": 3,
+      "slow": false,
+      "cooldown": 12.0
+    }
+  },
+  {
+    "form": "undead_zombie",
+    "name": "Devour",
+    "mp": 3,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "Heals you; it needs no corpse to eat, and the slow heavy swing is not modeled.",
+    "text": "Devour corpses to heal; slow, heavy swings.",
+    "spec": {
+      "kind": "heal",
+      "hp": 8,
+      "cooldown": 10.0
+    }
+  },
+  {
+    "form": "undead_ghoul",
+    "name": "Rend",
+    "mp": 4,
+    "value": 5,
+    "fidelity": "approx",
+    "note": "A claw that stuns for a moment; the paralysing touch and the stench cloud are one strike here.",
+    "text": "Claws, a paralysing touch, a stench cloud.",
+    "spec": {
+      "kind": "burst",
+      "range": 40,
+      "half_width": 30,
+      "status": {
+        "stun": 1.0
+      },
+      "cooldown": 4.0
+    }
+  },
+  {
+    "form": "undead_vampire",
+    "name": "Drain",
+    "mp": 5,
+    "value": 6,
+    "fidelity": "approx",
+    "note": "A bite that heals you by part of what it deals; blood essence and items are not modeled.",
+    "text": "Uses items; devours blood.",
+    "spec": {
+      "kind": "burst",
+      "range": 40,
+      "half_width": 30,
+      "drain": 0.6,
+      "damage_type": "dark",
+      "cooldown": 4.0
+    }
+  },
+  {
+    "form": "undead_jiangshi",
+    "name": "Hop",
+    "mp": 5,
+    "value": 6,
+    "fidelity": "approx",
+    "note": "A bounding lunge that drains on touch; it can turn mid-way and talisman rooms do not stop it.",
+    "text": "Bounding straight-line leaps that drain on touch.",
+    "spec": {
+      "kind": "dash",
+      "speed": 380,
+      "hit_range": 50,
+      "drain": 0.5,
+      "cooldown": 5.0
+    }
+  },
+  {
+    "form": "undead_draugr",
+    "name": "Heft",
+    "mp": 6,
+    "value": 12,
+    "fidelity": "approx",
+    "note": "A huge swing; it does not swell as it kills.",
+    "text": "Huge barrow-blade swings; it swells as it kills.",
+    "spec": {
+      "kind": "burst",
+      "range": 60,
+      "half_width": 40,
+      "cooldown": 5.0
+    }
+  },
+  {
+    "form": "undead_barrow_king",
+    "name": "Barrow slam",
+    "mp": 7,
+    "value": 8,
+    "fidelity": "approx",
+    "note": "A ground-pound ring that stuns; the armour from carried items is not modeled.",
+    "text": "A ground-pound shockwave; armour while carrying items.",
+    "spec": {
+      "kind": "ring",
+      "radius": 80,
+      "status": {
+        "stun": 1.0
+      },
+      "cooldown": 8.0
+    }
+  },
+  {
+    "form": "undead_abomination",
+    "name": "Cleaver",
+    "mp": 7,
+    "value": 14,
+    "fidelity": "approx",
+    "note": "A cleaving swing; the extra graft slots are not modeled.",
+    "text": "Heft cleaver; extra graft slots (a stitched body).",
+    "spec": {
+      "kind": "burst",
+      "range": 55,
+      "half_width": 40,
+      "cooldown": 6.0
+    }
+  },
+  {
+    "form": "undead_bone_warrior",
+    "name": "Overhead cleave",
+    "mp": 5,
+    "value": 10,
+    "fidelity": "approx",
+    "note": "A slow heavy swing; the shield is not modeled.",
+    "text": "A slow overhead cleave and a shield.",
+    "spec": {
+      "kind": "burst",
+      "range": 55,
+      "half_width": 40,
+      "cooldown": 4.0
+    }
+  },
+  {
+    "form": "undead_revenant_knight",
+    "name": "Vengeance",
+    "mp": 6,
+    "value": 12,
+    "fidelity": "approx",
+    "note": "A heavy swing; it does not hit harder against what killed your last life.",
+    "text": "Hits harder against the creature that killed your last life; heavy swings.",
+    "spec": {
+      "kind": "burst",
+      "range": 55,
+      "half_width": 40,
+      "cooldown": 5.0
+    }
+  },
+  {
+    "form": "undead_dullahan",
+    "name": "Herald",
+    "mp": 5,
+    "value": 8,
+    "fidelity": "approx",
+    "note": "A long reach standing in for the whip; the thrown head is the same strike.",
+    "text": "A long whip, a thrown head.",
+    "spec": {
+      "kind": "bolt",
+      "range": 200,
+      "half_width": 12,
+      "cooldown": 3.0
+    }
+  },
+  {
+    "form": "undead_bone_colossus",
+    "name": "Juggernaut",
+    "mp": 8,
+    "value": 10,
+    "fidelity": "approx",
+    "note": "A stomp ring that stuns; walking through hazards and the double size are not modeled.",
+    "text": "Double size, stomp and heft cleave; walks through hazards.",
+    "spec": {
+      "kind": "ring",
+      "radius": 90,
+      "status": {
+        "stun": 1.0
+      },
+      "cooldown": 8.0
+    }
+  },
+  {
+    "form": "undead_spartoi_hoplite",
+    "name": "Sow",
+    "mp": 7,
+    "value": 3,
+    "fidelity": "approx",
+    "note": "Two bone soldiers fight for ten seconds; block and spear thrust are not modeled and you are not rooted.",
+    "text": "Shield wall: block and spear thrust; sow two bone soldiers.",
+    "spec": {
+      "kind": "summon",
+      "count": 2,
+      "seconds": 10.0,
+      "cooldown": 14.0
+    }
+  },
+  {
+    "form": "undead_sower_of_teeth",
+    "name": "Squad",
+    "mp": 9,
+    "value": 3,
+    "fidelity": "approx",
+    "note": "Four bone soldiers fight for ten seconds.",
+    "text": "A squad of four sown soldiers.",
+    "spec": {
+      "kind": "summon",
+      "count": 4,
+      "seconds": 10.0,
+      "cooldown": 16.0
+    }
+  },
+  {
+    "form": "undead_master_of_the_dance",
+    "name": "Rise",
+    "mp": 8,
+    "value": 2,
+    "fidelity": "approx",
+    "note": "Three dancers fight for ten seconds; they do not rise from downed enemies.",
+    "text": "Downed enemies stand up as dancers for ten seconds.",
+    "spec": {
+      "kind": "summon",
+      "count": 3,
+      "seconds": 10.0,
+      "cooldown": 18.0
+    }
+  },
+  {
+    "form": "undead_skeletal_archer",
+    "name": "Bone throw",
+    "mp": 3,
+    "value": 6,
+    "fidelity": "approx",
+    "note": "The bone does not return to your hand.",
+    "text": "Returning bone throws, bow arm.",
+    "spec": {
+      "kind": "bolt",
+      "range": 220,
+      "pierce": false,
+      "cooldown": 1.5
+    }
+  },
+  {
+    "form": "undead_deadeye",
+    "name": "Sure shot",
+    "mp": 5,
+    "value": 10,
+    "fidelity": "approx",
+    "note": "A sure shot; the six-then-a-cursed-seventh count is not modeled.",
+    "text": "Six sure shots, then a cursed seventh.",
+    "spec": {
+      "kind": "bolt",
+      "range": 260,
+      "pierce": false,
+      "cooldown": 3.0
+    }
+  },
+  {
+    "form": "undead_arash",
+    "name": "Life-arrow",
+    "mp": 6,
+    "value": 20,
+    "fidelity": "approx",
+    "note": "A piercing arrow across the room; it costs no HP.",
+    "text": "Spend most of your HP on one arrow that crosses the room and pierces.",
+    "spec": {
+      "kind": "bolt",
+      "range": 400,
+      "pierce": true,
+      "cooldown": 20.0
+    }
+  },
+  {
+    "form": "undead_wild_huntsman",
+    "name": "Mark",
+    "mp": 6,
+    "value": 12,
+    "fidelity": "approx",
+    "note": "Marks the nearest enemy; the blow follows after three seconds, not as homing arrows.",
+    "text": "Arrows home on one marked prey.",
+    "spec": {
+      "kind": "mark",
+      "range": 260,
+      "delay": 3.0,
+      "cooldown": 8.0
+    }
+  },
+  {
+    "form": "undead_corpse_candle",
+    "name": "Lure-light",
+    "mp": 5,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "A lingering light that slows what enters; enemies do not follow it into hazards.",
+    "text": "Enemies follow a drifting light into hazards.",
+    "spec": {
+      "kind": "zone",
+      "radius": 80,
+      "seconds": 8.0,
+      "slow": true,
+      "cooldown": 12.0
+    }
+  },
+  {
+    "form": "undead_stingy_jack",
+    "name": "Trick",
+    "mp": 6,
+    "value": 3,
+    "fidelity": "approx",
+    "note": "Holds one enemy for three seconds; no lure must be placed first.",
+    "text": "An enemy that touches your lure is held fast.",
+    "spec": {
+      "kind": "bolt",
+      "range": 160,
+      "pierce": false,
+      "status": {
+        "root": 3.0
+      },
+      "cooldown": 10.0
+    }
+  },
+  {
+    "form": "undead_banshee",
+    "name": "Wail",
+    "mp": 6,
+    "value": 4,
+    "fidelity": "full",
+    "note": "",
+    "text": "A cone that stuns and frightens.",
+    "spec": {
+      "kind": "burst",
+      "range": 90,
+      "half_width": 60,
+      "status": {
+        "stun": 1.2
+      },
+      "cooldown": 8.0
+    }
+  },
+  {
+    "form": "undead_adept",
+    "name": "Minions",
+    "mp": 6,
+    "value": 3,
+    "fidelity": "approx",
+    "note": "Two bone minions fight for ten seconds; the focus is not modeled.",
+    "text": "A few bone minions; a focus.",
+    "spec": {
+      "kind": "summon",
+      "count": 2,
+      "seconds": 10.0,
+      "cooldown": 14.0
+    }
+  },
+  {
+    "form": "undead_lich",
+    "name": "Bone beams",
+    "mp": 7,
+    "value": 8,
+    "fidelity": "approx",
+    "note": "A beam that jumps between enemies; there is no blink and no phylactery.",
+    "text": "Bouncing bone beams, a blink; a phylactery anchors remains.",
+    "spec": {
+      "kind": "chain",
+      "range": 200,
+      "jump": 100,
+      "hops": 3,
+      "damage_type": "dark",
+      "cooldown": 6.0
+    }
+  },
+  {
+    "form": "undead_deathless",
+    "name": "Hidden soul",
+    "mp": 6,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "Lays a mark and returns you to it; it does not raise you when you die in range.",
+    "text": "Place an anchor; if you die in range you rise there once per life.",
+    "spec": {
+      "kind": "anchor",
+      "seconds": 60.0,
+      "cooldown": 4.0
+    }
+  },
+  {
+    "form": "undead_demilich",
+    "name": "Float",
+    "mp": 3,
+    "value": 0,
+    "fidelity": "approx",
+    "note": "A slow fall; the body does not really float.",
+    "text": "A floating skull, very frail, very strong.",
+    "spec": {
+      "kind": "glide",
+      "seconds": 4.0,
+      "fall": 15,
+      "cooldown": 6.0
+    }
+  },
+  {
+    "form": "undead_hierophant",
+    "name": "Consecrate",
+    "mp": 8,
+    "value": 3,
+    "fidelity": "approx",
+    "note": "A ring of light that heals you and burns enemies; it does not heal your summons.",
+    "text": "A ring of light that heals you and your summons and burns the living.",
+    "spec": {
+      "kind": "zone",
+      "radius": 90,
+      "seconds": 6.0,
+      "heals": 3,
+      "damage": true,
+      "damage_type": "holy",
+      "slow": false,
+      "cooldown": 12.0
+    }
+  },
+  {
+    "form": "undead_mummy_priest",
+    "name": "Wrap",
+    "mp": 6,
+    "value": 3,
+    "fidelity": "full",
+    "note": "",
+    "text": "Bandages bind enemies; a sand gust.",
+    "spec": {
+      "kind": "bolt",
+      "range": 160,
+      "pierce": false,
+      "status": {
+        "root": 3.0
+      },
+      "cooldown": 9.0
+    }
+  },
+  {
+    "form": "undead_pharaoh",
+    "name": "Decree",
+    "mp": 9,
+    "value": 2,
+    "fidelity": "approx",
+    "note": "A curse that follows you and hurts what comes near; no tomb guards rise.",
+    "text": "A curse ring marks everything in the room; tomb guards rise.",
+    "spec": {
+      "kind": "aura",
+      "radius": 120,
+      "seconds": 8.0,
+      "damage": true,
+      "damage_type": "dark",
+      "cooldown": 16.0
+    }
+  },
+  {
+    "form": "undead_heart_weigher",
+    "name": "Weigh",
+    "mp": 6,
+    "value": 12,
+    "fidelity": "approx",
+    "note": "A drain that works on every foe, not only the weaker; the weighing is not modeled.",
+    "text": "If a creature's essence is lower than yours, drain it at once.",
+    "spec": {
+      "kind": "burst",
+      "range": 50,
+      "half_width": 30,
+      "drain": 1.0,
+      "damage_type": "dark",
+      "cooldown": 6.0
+    }
   }
 ]

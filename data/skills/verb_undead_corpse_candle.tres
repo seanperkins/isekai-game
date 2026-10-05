@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_undead_corpse_candle"
+display_name = "Lure-light"
+description = "Enemies follow a drifting light into hazards."
+announce = "New verb. Acquired [Lure-light]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "zone", "radius": 80, "seconds": 8.0, "slow": true, "cooldown": 12.0}}]
+mp_cost = 5

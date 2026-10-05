@@ -16,6 +16,8 @@ stats = {
 "max_hp": 5,
 "max_mp": 3
 }
+grants = ["verb_undead_zombie"]
+verb = "verb_undead_zombie"
 tint = Color(0.8, 0.69, 0.725, 1)
 size = 1.12
 sprite_set = "forms_undead"

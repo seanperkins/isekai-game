@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_undead_draugr"
+display_name = "Heft"
+description = "Huge barrow-blade swings; it swells as it kills."
+announce = "New verb. Acquired [Heft]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [12], "spec": {"kind": "burst", "range": 60, "half_width": 40, "cooldown": 5.0}}]
+mp_cost = 6

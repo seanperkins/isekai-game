@@ -17,6 +17,8 @@ stats = {
 "max_mp": 3,
 "spd": 8
 }
+grants = ["verb_undead_skeletal_archer"]
+verb = "verb_undead_skeletal_archer"
 tint = Color(0.75, 0.775, 0.925, 1)
 size = 1.12
 sprite_set = "forms_undead"

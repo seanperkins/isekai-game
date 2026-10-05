@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_undead_hierophant"
+display_name = "Consecrate"
+description = "A ring of light that heals you and your summons and burns the living."
+announce = "New verb. Acquired [Consecrate]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [3], "spec": {"kind": "zone", "radius": 90, "seconds": 6.0, "heals": 3, "damage": true, "damage_type": "holy", "slow": false, "cooldown": 12.0}}]
+mp_cost = 8

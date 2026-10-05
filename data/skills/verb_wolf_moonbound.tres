@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_wolf_moonbound"
+display_name = "Rise"
+description = "Stand on two legs for claws and items, drop to four to gallop."
+announce = "New verb. Acquired [Rise]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "buff", "stats": {"atk": 2, "def": 1}, "seconds": 8.0, "cooldown": 14.0}}]
+mp_cost = 4

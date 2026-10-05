@@ -18,6 +18,8 @@ stats = {
 "max_mp": 10,
 "spd": 12
 }
+grants = ["verb_undead_jiangshi"]
+verb = "verb_undead_jiangshi"
 tint = Color(0.8, 0.825, 0.975, 1)
 size = 1.4
 sprite_set = "forms_undead"

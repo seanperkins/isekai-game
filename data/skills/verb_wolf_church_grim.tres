@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_wolf_church_grim"
+display_name = "Guardian"
+description = "Wards a packmate, holds holy ground, unharmed in holy zones."
+announce = "New verb. Acquired [Guardian]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "zone", "radius": 70, "seconds": 6.0, "heals": 2, "slow": false, "cooldown": 12.0}}]
+mp_cost = 6

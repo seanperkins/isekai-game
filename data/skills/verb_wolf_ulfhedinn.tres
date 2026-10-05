@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_wolf_ulfhedinn"
+display_name = "Skin"
+description = "You choose the change: a berserk window with no flinch and iron-proof."
+announce = "New verb. Acquired [Skin]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "buff", "stats": {"atk": 3, "def": 3}, "seconds": 6.0, "cooldown": 16.0}}]
+mp_cost = 6
