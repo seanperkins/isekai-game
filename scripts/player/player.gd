@@ -37,6 +37,8 @@ const TELEPORT_DISTANCE := 4.0
 const SPIDER_CORNER_EASE := 0.04
 const SPIDER_PIVOT_SECONDS := 0.10
 const THREAD_FADE := 0.15
+## The old slime frames stand in for a species with no art, in a colour of its own.
+const PLACEHOLDER_TINT := {"wolf": Color(0.75, 0.75, 0.85), "goblin": Color(0.65, 0.9, 0.55), "undead": Color(0.85, 0.85, 0.75), "spider": Color(0.6, 0.45, 0.6)}
 const KNOCKBACK := Vector2(160.0, -140.0)
 ## A shock hit locks input this long (the same lock a hit's knockback uses, so it only adds the difference).
 const SHOCK_STUN := 0.3
@@ -93,6 +95,8 @@ var _glide_fall := GLIDE_FALL
 ## The species' movement (a wolf, goblin, undead or spider body), or null for the slime, which moves by the code below. Built in
 ## setup() from `species`; it moves this body, so `velocity` is its velocity too.
 var species_body: SpeciesBody
+## How a species' sheet is found (SpeciesLook.sheet_for when unset); a test sets it to simulate missing art.
+var species_sheet_loader := Callable()
 ## The horizontal speed an ability's push or a hit's knockback holds for `_dash` seconds on a species body.
 var _dash_vx := 0.0
 var _pounce_applied := false
@@ -296,16 +300,39 @@ func _species_physics(delta: float) -> void:
 	i.signature_pressed = not eating and Input.is_action_just_pressed("tackle")
 	var st := species_body.state
 	st.velocity = velocity  # whatever wrote the body's velocity since last tick (a room slide, an ability) is the truth
+	if rope != null and i.jump_pressed:  # as do_jump does: on the ground drop the rope and jump, in the air let go and swing on
+		if is_on_floor():
+			drop_rope()
+		else:
+			release_rope()
+			st.velocity = velocity
+			i.jump_pressed = false
+	if _water.in_water and i.jump_pressed:  # in water a press is a bob or a surface launch, never a dry jump
+		i.jump_pressed = false
+		var launched = _water.jump(velocity, is_on_floor(), skillset.has("swim"), sqrt(stats.get_stat("jump_height") / 100.0), global_position)
+		if launched != null:
+			velocity = launched
+			st.velocity = launched
+			sensors.jumped("ground")
 	if _species_pos != Vector2.INF and global_position.distance_to(_species_pos) > TELEPORT_DISTANCE:
 		st.surface_n = Vector2.ZERO  # it was carried somewhere: a crawler is not on the surface it was on, nor hanging from a thread
 		st.drop_up = 0.0
 		st.zip_dir = Vector2.ZERO
 	species_body.fill_input(i, func() -> bool: return _tackle_target() != null)
 	species_body.think(i, delta, sqrt(stats.get_stat("jump_height") / 100.0), stats.get_stat("spd") / 100.0)
+	if st.launched != "" and st.launched != "vault":  # a vault is the body hopping a step by itself, not a jump press
+		sensors.jumped("wall" if st.launched == "wall" else "ground")
 	facing = st.facing
 	if _dash > 0.0:
 		st.velocity.x = _dash_vx  # a push or a knockback holds the horizontal for its time
+	if rope != null:
+		velocity = st.velocity
+		_swing(i.dir, delta)
+		st.velocity = velocity
 	species_body.move(_species_adjust.bind(wet, delta))
+	if rope != null:
+		_stay_on_rope()
+		st.velocity = velocity
 	_species_pos = global_position
 	_species_combat()
 	_actions(delta)
@@ -387,9 +414,16 @@ func _build_species_body() -> void:
 	species_body = SpeciesBody.new(self, _shape, _rect)
 	species_body.set_profile(MovementProfile.for_species(species))
 	var look := species_body.profile.id
-	var sheet := SpeciesLook.sheet_for(look) if use_sheet else null
+	var sheet: SpriteSheet = null
+	if use_sheet:
+		sheet = species_sheet_loader.call(look) if species_sheet_loader.is_valid() else SpeciesLook.sheet_for(look)
 	if sheet == null:
-		return  # no sheet: the old frames stand in, as for a slime with no sheet
+		# No art for this species: not the slime's sheet under another body. The old frames stand in, tinted (see _update_visual_species).
+		_sheet = null
+		_base_sheet = null
+		_form_sheet = null
+		_animator = null
+		return
 	_sheet = sheet
 	_base_sheet = sheet
 	_form_sheet = null
@@ -408,8 +442,11 @@ func _update_visual_species(delta: float) -> void:
 		_land_timer = LAND_SQUASH_SECONDS
 	_was_on_floor = on_floor
 	_land_timer = maxf(0.0, _land_timer - delta)
+	if rope != null:
+		_update_rope_line()
 	if _sheet == null:
 		_draw_fallback_sprite()
+		_sprite.modulate = PLACEHOLDER_TINT.get(species, Color.WHITE)
 		return
 	var st := species_body.state
 	var look := species_body.profile.id
@@ -477,6 +514,8 @@ func _draw_spider(delta: float) -> void:
 
 ## The silk from behind the spider to its anchor while it zips or hangs, fading for a moment after.
 func _update_thread(delta: float) -> void:
+	if rope != null:
+		return  # a rope's own line is drawn
 	var st := species_body.state
 	if st.zip_event == "start":
 		_thread_anchor = global_position + st.zip_target
@@ -1085,6 +1124,9 @@ func apply_impulse(v: Vector2) -> void:
 	velocity = Vector2(v.x, v.y if not is_zero_approx(v.y) else velocity.y)
 	_dash = 0.25
 	_dash_vx = velocity.x
+	if species_body != null and species_body.is_crawling():  # a crawler's surface would hold it still: it leaves it
+		species_body.state.surface_n = Vector2.ZERO
+		species_body.state.surface_lock = SURFACE_LET_GO
 
 func _complete_predation(t) -> void:
 	_end_cover()

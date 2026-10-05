@@ -3,6 +3,7 @@ extends GutTest
 
 var rules: SkillRulesEngine
 var player: Player
+var emitted: Array = []
 var creatures := {}
 var skills_by_id := {}
 
@@ -24,7 +25,10 @@ func _spawn(species: String) -> void:
 	rules.setup(DefLoader.load_dir("res://data/skills"))
 	player = Player.new()
 	player.species = species
-	player.setup(rules, CompendiumModel.new([], []), [], func(n: String, t: Dictionary) -> void: rules.handle_event(n, t))
+	emitted = []
+	player.setup(rules, CompendiumModel.new([], []), [], func(n: String, t: Dictionary) -> void:
+		emitted.append(n)
+		rules.handle_event(n, t))
 	add_child_autofree(player)
 	rules.start_run()
 	var body := StaticBody2D.new()
@@ -370,3 +374,66 @@ func test_a_crawling_spiders_hurt_shape_is_its_body_box() -> void:
 	await wait_physics_frames(80)
 	assert_true(player.species_body.is_crawling())
 	assert_eq(player.hurt_polygon().size(), 4, "a rectangle")
+
+# --- the review's findings ---
+
+func test_a_wolf_swings_on_a_rope_stays_within_it_and_a_jump_lets_go() -> void:
+	await _spawn("wolf")
+	player.global_position = Vector2(0.0, -100.0)
+	await wait_physics_frames(2)
+	player.attach_rope(Vector2(0.0, -200.0), 100.0, 60.0, 1.2)
+	await wait_physics_frames(40)
+	assert_not_null(player.rope)
+	assert_lte(player.global_position.distance_to(Vector2(0.0, -200.0)), 104.0, "held by the rope")
+	var length := player.rope.length
+	Input.action_press("aim_up")  # reel in
+	await wait_physics_frames(20)
+	Input.action_release("aim_up")
+	assert_lt(player.rope.length, length - 3.0, "up reels the rope in, as it does for the slime")
+	Input.action_press("jump")
+	await wait_physics_frames(2)
+	Input.action_release("jump")
+	assert_null(player.rope, "a jump lets go")
+
+func test_a_wolf_in_water_bobs_instead_of_jumping() -> void:
+	await _spawn("wolf")
+	var water := DeepWater.make(Rect2(-300.0, -100.0, 600.0, 200.0))
+	add_child_autofree(water)
+	await wait_physics_frames(4)
+	Input.action_press("jump")
+	await wait_physics_frames(2)
+	Input.action_release("jump")
+	assert_lt(player.velocity.y, 0.0, "it rose")
+	assert_gt(player.velocity.y, -250.0, "a bob, not a dry jump")
+
+func test_a_species_jump_is_a_jumped_event() -> void:
+	await _spawn("wolf")
+	Input.action_press("jump")
+	await wait_physics_frames(2)
+	Input.action_release("jump")
+	assert_gt(emitted.count("jumped"), 0, "Leap counts jumps")
+
+func test_an_ability_impulse_moves_a_spider_standing_on_the_floor() -> void:
+	await _spawn("spider")
+	await wait_physics_frames(3)
+	assert_true(player.species_body.is_crawling())
+	var x0 := player.global_position.x
+	player.apply_impulse(Vector2(300.0, 0.0))
+	await wait_physics_frames(6)
+	assert_gt(player.global_position.x, x0 + 20.0, "it dashed")
+
+func test_a_spider_whose_sheet_is_missing_still_draws_something_while_slime_art_exists() -> void:
+	rules = autofree(SkillRulesEngine.new())
+	rules.setup(DefLoader.load_dir("res://data/skills"))
+	player = Player.new()
+	player.species = "spider"
+	player.species_sheet_loader = func(_id: String) -> SpriteSheet: return null
+	player.setup(rules, CompendiumModel.new([], []), [], func(n: String, t: Dictionary) -> void: rules.handle_event(n, t))
+	add_child_autofree(player)
+	rules.start_run()
+	_block(Rect2(-2000.0, BodyConfig.BOTTOM, 4000.0, 20.0))
+	await wait_physics_frames(6)
+	Input.action_press("move_right")
+	await wait_physics_frames(20)
+	assert_null(player.body_sheet(), "not the slime's sheet under a spider")
+	assert_true(player.get_node("Sprite").visible)
