@@ -38,6 +38,8 @@ var _opening_def: OpeningDef
 var ambient: CanvasModulate
 var _skills_by_id := {}
 var _creatures := {}
+## What this life has done in the village (VillageWatch): said on leaving it.
+var _village := VillageWatch.new()
 ## How long a creature let out of a cocoon stands stunned, before it comes to.
 const FREED_STUN_SECONDS := 2.0
 var _parts := {}
@@ -57,6 +59,7 @@ func _on_room_entered(id: String) -> void:
 	var biome := TerrainArt.art_key(area)  # a new area borrows its biome's light and music bed
 	player.in_dark = DeedTags.is_dark_area(area)
 	player.in_moonlight = (world.rooms[id] as RoomDef).tags.has("moonlit")
+	_village.enter(id, area)
 	player.emit_deed(Deeds.ROOM_ENTERED, {"room": id, "area": area})
 	_place_remains()
 	var target: Color = TerrainArt.ambient(biome, AMBIENT)
@@ -76,6 +79,7 @@ func _ready() -> void:
 	_parts = PartLoader.load_all()
 	player = Player.new()
 	player.setup(SkillRules, Compendium.model, SkillRules.creature_defs, _emit_game_event)
+	_village.emit_deed = func(event: String, tags: Dictionary) -> void: player.emit_deed(event, tags)
 	player.part_dropped.connect(_on_part_dropped)
 	player.prey_released.connect(_on_prey_released)
 	player.died.connect(_on_player_died)
@@ -220,6 +224,7 @@ func _open_altar_menu(altar: Altar) -> void:
 ## start_run() clears everything a kit would set, and the perks last so the stats they raise are filled.
 func begin_life(start: Dictionary) -> void:
 	SkillRules.start_run()
+	_village.reset()
 	player.avenge_target = Compendium.soul.last_death_cause
 	if world.current_id != "":  # the run's first room was entered before the run began: say so now
 		player.emit_deed(Deeds.ROOM_ENTERED, {"room": world.current_id, "area": world.rooms[world.current_id].area})
@@ -335,7 +340,13 @@ func _check_room_cleared() -> void:
 	player.emit_deed(Deeds.ROOM_CLEARED, tags)
 
 func _emit_game_event(event_name: String, tags: Dictionary) -> void:
+	if event_name == Deeds.DEFEATED:
+		_village.killed()
 	EventBus.game_event.emit(event_name, tags)
+
+func _physics_process(_delta: float) -> void:
+	if world != null and is_instance_valid(world.room):
+		_village.scan(world.room)
 
 func _restart() -> void:
 	if _editor_play and not _menagerie:  # the menagerie has no editor: a death starts it again

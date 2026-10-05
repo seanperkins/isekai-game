@@ -195,6 +195,10 @@ static func build_room(def: RoomDef, ctx: Dictionary) -> Node2D:
 		var feature := RoomFeatures.make(f, ctx)
 		if feature != null:
 			node.add_child(feature)
+	if def.tags.has("hold"):
+		var hold := RoomHold.new()
+		hold.setup({"id": def.id, "pos": Vector2.ZERO}, ctx)
+		node.add_child(hold)
 	if def.tremor > 0.0 and ctx.has("shake"):  # only in a World, which supplies the shake: the editor's preview stays quiet
 		var tremor := RoomTremor.new()
 		var rng: RandomNumberGenerator = ctx.get("rng", null)

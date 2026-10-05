@@ -12,12 +12,14 @@ func setup(f: Dictionary, _ctx: Dictionary) -> void:
 	id = f.get("id", "")
 	position = f["pos"]
 
-## Says `event` on the event bus with this feature's id, unless it has been said this life (by this node or an earlier one).
-func report(event: String) -> void:
+## Says `event` on the event bus, with `tags` ({"id": this feature's id} when none are given), unless it has been said this life with them (by this
+## node or an earlier one).
+func report(event: String, tags := {}) -> void:
 	if _done:
 		return
 	_done = true
+	var said: Dictionary = tags if not tags.is_empty() else {"id": id}
 	var l = ledger if ledger != null else get_node_or_null("/root/SkillRules")
-	if l != null and l.count(event, {"id": id}) > 0:
+	if l != null and l.count(event, said) > 0:
 		return
-	EventBus.game_event.emit(event, {"id": id})
+	EventBus.game_event.emit(event, said)
