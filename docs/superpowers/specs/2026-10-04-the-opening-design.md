@@ -1,5 +1,7 @@
 # The Opening (soul layer, plan 4) — design
 
+> **Superseded in part (2026-10-04).** The opening was rebuilt the same day as a JRPG battle (a sunny street, generated art, three rounds, a message window and command and status windows), and has since gained turns, a second truck, an angry truck with a life bar, an old lady in the last round, battle music and sound effects. The flow below (the black screen, the code-drawn truck, "three beats", the silent approach) describes the first version. The current description is the opening paragraph in `docs/isekai-chronicles-design-doc.md`, with the build records in `docs/ledgers/opening-battle-final-review.md`, `docs/ledgers/opening-turns-ledger.md` and `docs/ledgers/opening-sound-ledger.md`. What still holds from this spec: when the opening plays (`Game._ready`, `wants_opening`, the saved `opening_seen` flag), the failure policy, and the hand-off to her menu through `finished`.
+
 Date: 2026-10-04. Builds on `docs/superpowers/specs/2026-10-04-soul-layer-design.md` (plans 1 to 3 are on main: the goddess, her menu, altars). The soul spec left this one as an outline ("its beats get their own brainstorm"); this is that brainstorm. The design doc's "Opening sequence" section is the product intent.
 
 ## What it is
@@ -20,7 +22,7 @@ Decided in the brainstorm (2026-10-04, Sean):
 3. After the third result it hides its layer (the tree stays paused, so the goddess's menu at layer 40 is not left behind its layer 45) and emits `finished`. `Game` answers with `run.open_first_meeting(def.goddess_line)`, which opens `GoddessMenu` with her first words even though there is nothing to choose, counts no death, and (when the player confirms) marks the opening seen and begins the life through the existing `_begin` and restart path: `pending_start` is `{altar: "C1", species: "slime", kit: {}}`. If `open_first_meeting` returns false, `Game` unpauses the tree and the player simply plays on, the opening still unseen: it must never leave the game paused with nothing to press.
 4. The scene reloads, `resolve_start` consumes the pending start, and the game plays as it does after any rebirth. The tree is unpaused by `Game._prepare_restart`, as for every restart.
 
-The truck's hit emits `world_event("opening_hit", {})`, routed in `data/audio/cues.json` to a new cue `opening_impact` (a gameplay script may not name a cue id, so it differs from the event's name) that reuses the `enemy_impact` files on the `UI` bus, not positional: `Audio` keeps only `UI` voices alive while the tree is paused, and `enemy_impact` (bus `SFX_Enemy`, positional) would be silent under the opening. The approach is silent for now. No `player_died` event is emitted, so the death cue, `many_deaths` and the heartbeat are untouched.
+The truck's hit emits `world_event("opening_hit", {})`, routed in `data/audio/cues.json` to a cue on the `UI` bus, not positional: `Audio` keeps only `UI` voices alive while the tree is paused, and `enemy_impact` (bus `SFX_Enemy`, positional) would be silent under the opening. (First built as `opening_impact`, which reused the `enemy_impact` files; it is now `op_crash`, one of the nineteen effects, and the opening also has battle music: see `docs/ledgers/opening-sound-ledger.md`.) No `player_died` event is emitted, so the death cue, `many_deaths` and the heartbeat are untouched.
 
 ## Units
 

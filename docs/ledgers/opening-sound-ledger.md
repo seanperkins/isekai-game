@@ -36,3 +36,10 @@ Nobody on this side can hear audio. The score is checked by rule (every lead not
 - Sean's ear on the theme and effects (tempo, instruments, levels).
 - Her menu has no sound of its own and is still dark navy after the white fade.
 - The truck's engine is not looped under its turn; each effect is a one-shot.
+
+## Final review (debate:run, changeset against main, seats executor, auditor, cartographer, pentester)
+
+- Seats not configured on this machine and so not run: executor-b, simplifier, antigravity, deepseek. The cartographer ran on the executor's model (its own configured model is not one the acpx codex agent advertises).
+- Executor: APPROVED (a bare verdict). Pentester: APPROVED, no exploitable path.
+- Final: fixed a regression this change introduced (auditor, P2): `Audio.reset()` now ends any theme, which refreshed the beds from the last crossfade's end position, so a reset between a biome change and the crossfade's first step (a rebirth in another biome) silenced the outgoing bed and gave the incoming one full volume. A new biome change now resets the crossfade position to 0 — `test_a_reset_between_a_biome_change_and_its_first_fade_step_leaves_the_crossfade_alone` and `test_the_audio_autoload_survives_a_reset_during_a_biome_change` RED→GREEN.
+- Final: fixed stale docs (cartographer): the opening design spec said "The approach is silent for now" and the opening plan named the superseded `opening_impact` cue. The spec now carries a "superseded in part" banner pointing to the current docs (which also resolves the earlier minor deferred in `opening-turns-ledger.md`), and both name `op_crash`.
