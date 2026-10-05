@@ -89,19 +89,32 @@ func _count_restarts() -> Array:
 		game._prepare_restart())
 	return restarts
 
-## Three trucks: Dodge, then Jump, then Pray, dismissing each result.
+## Enter until the command window is up (an Enter during an animation finishes it).
+func _to_command() -> void:
+	for i in 6:
+		if game.opening.beat() == "command":
+			return
+		_push(KEY_ENTER)
+
+## One round: take the command `row` steps down the list, finish its animation, read the result, and let the truck hit.
+func _round(def: OpeningDef, truck: int, row: int, id: String) -> void:
+	_to_command()
+	assert_eq(game.opening.beat(), "command")
+	_push(KEY_DOWN, row)
+	_push(KEY_ENTER)
+	assert_eq(game.opening.text_lines(), [def.result_for(truck, id)])
+	_push(KEY_ENTER)  # finish the action's animation
+	assert_eq(game.opening.beat(), "result")
+	_push(KEY_ENTER)  # the truck charges
+	_push(KEY_ENTER)  # and the hit plays out
+
+## Three trucks: Fight, then Dodge, then Pray; after the third hit he is knocked out and the white is full, so her menu opens.
 func _play_the_trucks(def: OpeningDef) -> void:
-	_push(KEY_ENTER)
-	assert_eq(game.opening.text_lines(), [def.result_for(0, "dodge")])
-	_push(KEY_ENTER)
-	_push(KEY_DOWN)
-	_push(KEY_ENTER)
-	assert_eq(game.opening.text_lines(), [def.result_for(1, "jump")])
-	_push(KEY_ENTER)
-	_push(KEY_DOWN, 2)
-	_push(KEY_ENTER)
-	assert_eq(game.opening.text_lines(), [def.result_for(2, "pray")])
-	_push(KEY_ENTER)
+	_round(def, 0, 0, "fight")
+	_round(def, 1, 1, "dodge")
+	_round(def, 2, 3, "pray")
+	assert_eq(game.opening.beat(), "ko")
+	_push(KEY_ENTER)  # skip the rest of the fade to white
 
 func test_a_new_profile_plays_the_trucks_then_meets_her_and_begins_the_first_life() -> void:
 	_unseen_in_memory_but_seen_on_disk()
@@ -121,8 +134,8 @@ func test_a_new_profile_plays_the_trucks_then_meets_her_and_begins_the_first_lif
 	assert_true(game.opening.is_playing())
 	assert_eq(game.opening.text_lines(), [def.trucks[0]["prompt"]])
 	_play_the_trucks(def)
-	assert_false(game.opening.visible, "the opening hides its layer for her menu")
 	assert_false(game.opening.is_playing())
+	assert_true(game.opening.is_fading(), "the white fades away over her menu")
 	assert_true(game.goddess_menu.is_open())
 	assert_eq(game.goddess_menu.line_text(), def.goddess_line, "her first words")
 	assert_true(get_tree().paused, "her menu works over the paused tree")

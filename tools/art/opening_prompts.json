@@ -1,0 +1,11 @@
+{
+  "_doc": "The opening's backdrop: one opaque 16:9 Codex image per piece, resized to 640x360 by tools/art/opening_build.py. refs are extra style anchors after art_source/sprites_tiles_d.png.",
+  "style": "Modern pixel art with a dynamic-lighting look for a 2D side-scrolling game: chunky visible pixels, rich shading with soft highlights, bright saturated lively colours, hand-made feel like the attached reference sheet but lighter and more colourful. Crisp pixel edges, no anti-aliased blur, no text, no watermark, no border or frame.",
+  "opaque": "The image fills the whole frame edge to edge.",
+  "pieces": {
+    "backdrop": {
+      "refs": [],
+      "prompt": "A wide 16:9 landscape (1792x1008) painted-pixel backdrop for a turn-based battle scene: a quiet, sunny late-afternoon residential street in Japan seen from the side, hopeful and inviting. A flat asphalt road across the lower third with a worn white crosswalk, a pavement and low kerb behind it, a vending machine, utility poles with sagging cables, a low stone wall with blossoming cherry trees, tile-roofed houses and a soft hazy blue sky with warm golden light and fluffy clouds. Bright, saturated, friendly colours: peach, mint, sky blue, soft gold. Keep the road area empty and uncluttered where characters will stand. No characters, no vehicles, no text and no signs with letters."
+    }
+  }
+}

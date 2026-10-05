@@ -92,10 +92,10 @@ func test_the_shipped_opening_pins_its_shape() -> void:
 	assert_not_null(d, "data/opening/opening.tres loads as an OpeningDef")
 	assert_eq(_errors(d), "")
 	assert_eq(d.trucks.size(), 3)
-	assert_eq(d.choices.map(func(c: Dictionary) -> String: return c["id"]), ["dodge", "jump", "pray", "run"])
+	assert_eq(d.choices.map(func(c: Dictionary) -> String: return c["id"]), ["fight", "dodge", "jump", "pray", "run"])
 	assert_ne(d.goddess_line.strip_edges(), "")
 	var lines := {}
 	for truck in d.trucks:
 		for id in truck["results"]:
 			lines[truck["results"][id]] = true
-	assert_eq(lines.size(), 12, "three trucks times four choices, every line different")
+	assert_eq(lines.size(), 15, "three trucks times five commands, every line different")

@@ -1,0 +1,37 @@
+{
+  "canonical": "assets/sprites/lizard_1.png",
+  "style": "Modern pixel art with soft lighting (Style D): a cheerful boxy Japanese delivery truck with a light-blue cab, a white cargo box with a single orange stripe and no writing, big round friendly headlights that look a little like eyes, chrome bumper, dark round wheels, a clean dark outline, chunky readable pixels, gentle highlights and shading, bright saturated hopeful colours. Match the palette, outline weight and rendering of the reference image (an armored lizard) but draw this truck. Side view, the truck facing right. Draw only the truck: no road, no ground, no shadow, no effects, no text.",
+  "frames": [
+    {
+      "name": "idle_1",
+      "width": 247,
+      "refs": [],
+      "prompt": "The truck parked with its engine idling, sitting level on its suspension, headlights glowing warmly."
+    },
+    {
+      "name": "idle_2",
+      "width": 250,
+      "refs": [
+        "idle_1"
+      ],
+      "prompt": "The same truck with its body bobbing very slightly up on the suspension from the engine's rumble, a tiny puff of exhaust at the back. Almost identical to the reference."
+    },
+    {
+      "name": "charge_1",
+      "width": 251,
+      "refs": [
+        "idle_1"
+      ],
+      "prompt": "The same truck revving to charge: the front dipping and the cab leaning forward, wheels turning, headlights flaring bright, determined."
+    },
+    {
+      "name": "charge_2",
+      "width": 251,
+      "refs": [
+        "idle_1",
+        "charge_1"
+      ],
+      "prompt": "The same truck at full speed: leaning hard forward with the front wheels barely touching the ground, headlights blazing, the rear raised slightly."
+    }
+  ]
+}

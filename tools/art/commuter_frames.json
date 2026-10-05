@@ -1,0 +1,140 @@
+{
+  "canonical": "art_source/frames/goblin/idle_1.png",
+  "style": "Modern pixel art with soft lighting (Style D): a young Japanese office worker in his late twenties, a rumpled light-grey suit jacket over a white shirt, a loosened sky-blue tie, dark slacks and brown shoes, short messy black hair, tired but kind eyes and a hopeful little smile, a brown leather satchel slung over one shoulder, a folded black umbrella held in the right hand, a clean dark outline, chunky readable pixels, gentle highlights and shading, bright saturated hopeful colours. Match the palette, outline weight and rendering of the reference image (a bipedal goblin) but draw this man. Side view, the character facing right. Draw only the character: no ground, no wall, no shadow, no effects, no text.",
+  "frames": [
+    {
+      "name": "idle_1",
+      "width": 29,
+      "refs": [],
+      "prompt": "The man standing relaxed with weight on both feet, the folded umbrella held loosely at his side like a cane, the satchel hanging at his hip, looking ahead with a faint hopeful smile."
+    },
+    {
+      "name": "idle_2",
+      "width": 29,
+      "refs": [
+        "idle_1"
+      ],
+      "prompt": "The same man breathing out: shoulders and chest very slightly lower, the tie ruffling a touch. Almost identical to the reference pose."
+    },
+    {
+      "name": "fight_1",
+      "width": 51,
+      "refs": [
+        "idle_1"
+      ],
+      "prompt": "The same man winding up to attack: the folded umbrella raised back over his right shoulder like a sword, knees bent, leaning forward, jaw set bravely."
+    },
+    {
+      "name": "fight_2",
+      "width": 80,
+      "refs": [
+        "idle_1",
+        "fight_1"
+      ],
+      "prompt": "The same man lunging forward mid-swing: the folded umbrella slashing down and forward at arm's length, body stretched into the attack, mouth open in a brave battle cry."
+    },
+    {
+      "name": "fight_3",
+      "width": 80,
+      "refs": [
+        "idle_1",
+        "fight_2"
+      ],
+      "prompt": "The same man just after the swing: the umbrella pointing forward and low, body still leaning into the lunge, panting, eyes wide."
+    },
+    {
+      "name": "dodge_1",
+      "width": 67,
+      "refs": [
+        "idle_1"
+      ],
+      "prompt": "The same man leaning sharply back and away: torso twisted, arms flung out for balance, one leg crossed behind the other, the satchel swinging, eyes wide."
+    },
+    {
+      "name": "dodge_2",
+      "width": 63,
+      "refs": [
+        "idle_1",
+        "dodge_1"
+      ],
+      "prompt": "The same man mid-sidestep stumbling backwards on his heels, off-balance but upright, one arm windmilling, the umbrella held out, mouth open in surprise."
+    },
+    {
+      "name": "jump_1",
+      "width": 59,
+      "refs": [
+        "idle_1"
+      ],
+      "prompt": "The same man in a deep crouch ready to jump, knees bent, both arms swung back, the satchel hanging forward, eyes fixed ahead."
+    },
+    {
+      "name": "jump_2",
+      "width": 60,
+      "refs": [
+        "idle_1",
+        "jump_1"
+      ],
+      "prompt": "The same man leaping straight up: body stretched, knees tucked up, arms thrown above his head, the satchel flying out, the umbrella still gripped."
+    },
+    {
+      "name": "pray_1",
+      "width": 56,
+      "refs": [
+        "idle_1"
+      ],
+      "prompt": "The same man kneeling on both knees with his hands pressed together in front of his face, eyes squeezed shut, head tilted up, the umbrella laid on the ground beside him."
+    },
+    {
+      "name": "pray_2",
+      "width": 55,
+      "refs": [
+        "idle_1",
+        "pray_1"
+      ],
+      "prompt": "The same man kneeling with his head bowed and hands clasped tight, one eye peeking open nervously, the umbrella laid beside him."
+    },
+    {
+      "name": "run_1",
+      "width": 72,
+      "refs": [
+        "idle_1"
+      ],
+      "prompt": "The same man mid-run, contact pose: front foot planted forward, back leg trailing, torso leaning forward, the near arm swung back, the satchel bouncing, the umbrella clutched."
+    },
+    {
+      "name": "run_2",
+      "width": 46,
+      "refs": [
+        "idle_1",
+        "run_1"
+      ],
+      "prompt": "The same man mid-run, passing pose: legs crossing under the body, body low, arms mid-swing, the satchel flapping."
+    },
+    {
+      "name": "run_3",
+      "width": 63,
+      "refs": [
+        "idle_1",
+        "run_1"
+      ],
+      "prompt": "The same man mid-run, the opposite contact pose: the other foot planted forward, the near arm swung forward, hair blown back."
+    },
+    {
+      "name": "hurt",
+      "width": 70,
+      "refs": [
+        "idle_1"
+      ],
+      "prompt": "The same man struck and thrown backward through the air: body arched, arms flung out, eyes squeezed shut, mouth open in a cartoon yelp, the umbrella and the satchel flying off. Cartoon, not gory."
+    },
+    {
+      "name": "ko",
+      "width": 81,
+      "refs": [
+        "idle_1",
+        "hurt"
+      ],
+      "prompt": "The same man lying flat on his back, knocked out, swirly dizzy spirals for eyes, arms and legs sprawled, the satchel open beside him and the umbrella nearby. Cartoon, gentle, not gory. Roughly three times as wide as tall."
+    }
+  ]
+}
