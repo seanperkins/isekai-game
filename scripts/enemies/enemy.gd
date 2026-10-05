@@ -83,6 +83,14 @@ const LUNGE_SPEED := 300.0
 const LUNGE_REACH := 80.0
 const RETREAT_SPEED := 100.0
 
+## A verb is cast at a player this close, after a telegraphed windup, then the enemy holds still for a moment. Its damage is held to
+## VERB_POWER_CAP times its ATK. A dash keeps its speed for IMPULSE_SECONDS.
+const VERB_RANGE := 150.0
+const VERB_WINDUP := 0.35
+const VERB_RECOVER := 0.3
+const VERB_POWER_CAP := 2
+const IMPULSE_SECONDS := 0.25
+
 var def: CreatureDef
 var stats: Stats
 var health: Health
@@ -94,6 +102,15 @@ var _home_x := 0.0
 var _on_ceiling := false
 var _spit_damage := 0
 var _spit_cd := 0.0
+## The verb a twin casts (null for a creature with none, or one an enemy cannot cast) and how often it has.
+var verb_casts := 0
+var _verb: Ability
+var _verb_kind := ""
+var _verb_state := ""  # "", windup or recover
+var _verb_t := 0.0
+var _impulse_x := 0.0
+var _impulse_t := 0.0
+var _ward_t := 0.0
 var _slow := 0.0
 ## A verb's root (Bind): no AI, no contact hit, no eat, for this long. Not a stun, so it works on an enemy that cannot be stunned.
 var _root := 0.0
@@ -161,12 +178,31 @@ func setup(p_def: CreatureDef, skill_defs_by_id: Dictionary) -> void:
 			_spit_damage = int(SkillEffects.value_at(sd.effects[0], lv))
 	health = Health.new(stats.get_stat("max_hp"))  # no emit_event: actor boundary
 	health.died.connect(_on_died)
+	_verb = _build_verb(skill_defs_by_id.get(def.verb))
 	_on_ceiling = capabilities.has("ceiling_walk")
 	kind = _resolve_kind()
 	_state = "idle" if kind == Kind.SWOOPER else ""
 	add_to_group("actors")
 	add_to_group("predatable")
 	add_to_group("inspectable")
+
+## The verb as an ability this enemy casts, or null when the creature has none or its kind is not one an enemy casts.
+func _build_verb(sd: SkillDef) -> Ability:
+	if sd == null:
+		return null
+	var spec := SkillEffects.active_spec(sd)
+	if not VerbKinds.ENEMY_KINDS.has(spec.get("kind", "")):
+		return null
+	var values: Array = []
+	for e in sd.effects:
+		if e.get("kind", "") == "active":
+			values = e.get("values", [])
+	var ability: Ability = load(SkillEffects.active_scene(sd)).instantiate()
+	ability.spec = spec
+	ability.setup(self, values, 1)
+	ability.power_cap = VERB_POWER_CAP * int(stats.get_stat("atk"))
+	_verb_kind = spec["kind"]
+	return ability
 
 ## Reseeds the enemy's own RNG (the bat's hover jitter): _ready seeds it from the instance id.
 func seed_rng(n: int) -> void:
@@ -198,12 +234,14 @@ func _ready() -> void:
 	_rng.seed = get_instance_id()  # each bat keeps its own rhythm
 	if get_child_count() == 0:
 		_build_body()
+	if _verb != null:
+		add_child(_verb)  # after the body: a node here would make _build_body think the scene gave it one
 
 static func cause_for(damage_type: String) -> String:
 	return "poison" if damage_type == "poison" else "other"
 
 func _untouchable() -> bool:
-	return dormant or status.state == EnemyStatus.DOWNED or status.state == EnemyStatus.GONE or status.state == EnemyStatus.DYING
+	return dormant or _ward_t > 0.0 or status.state == EnemyStatus.DOWNED or status.state == EnemyStatus.GONE or status.state == EnemyStatus.DYING
 
 ## `cause` names the blow for the death effect; it is stored before the hit because _on_died() takes
 ## no arguments.
@@ -318,6 +356,8 @@ func _physics_process(delta: float) -> void:
 	_spit_cd = maxf(0.0, _spit_cd - delta)
 	_slow = maxf(0.0, _slow - delta)
 	_root = maxf(0.0, _root - delta)
+	_ward_t = maxf(0.0, _ward_t - delta)
+	_impulse_t = maxf(0.0, _impulse_t - delta)
 	_web_slow = maxf(0.0, _web_slow - delta)
 	var player: Node2D = get_tree().get_first_node_in_group("player")
 	var active := status.state == EnemyStatus.ACTIVE and _root <= 0.0
@@ -333,6 +373,8 @@ func _physics_process(delta: float) -> void:
 	elif status.state != EnemyStatus.DYING:  # a death effect owns the body while it plays
 		velocity.x = 0.0
 		_clear_inactive()
+	if active and _impulse_t > 0.0:
+		velocity.x = _impulse_x  # a dash carries over the walk
 	var stunned := status.state == EnemyStatus.STUNNED
 	var no_gravity := false
 	match kind:
@@ -361,6 +403,7 @@ func _physics_process(delta: float) -> void:
 ## A stun, a down or a missing player drops whatever was pending, except a bat's swoop (it resumes with its remaining
 ## time and its RNG stream). Never touches the timer or the aim.
 func _clear_inactive() -> void:
+	_verb_state = ""  # a stun or a death drops a verb that was winding up
 	if kind != Kind.SWOOPER:
 		_state = ""
 
@@ -517,6 +560,8 @@ func _draw_sheet_frame(delta: float) -> void:
 	_shapes.refresh(_sheet, frame, facing < 0)
 
 func telegraphing() -> bool:
+	if _verb_state == "windup":
+		return true
 	match kind:
 		Kind.CHARGER, Kind.SNAKE:
 			return _state == "windup"
@@ -540,6 +585,8 @@ func _speed() -> float:
 
 func _act(player: Node2D, delta: float) -> void:
 	var to_player: Vector2 = player.global_position - global_position
+	if _verb_act(to_player, delta):
+		return
 	match kind:
 		Kind.SNAKE:
 			_snake_act(player, to_player, delta)
@@ -565,6 +612,49 @@ func _act(player: Node2D, delta: float) -> void:
 				_walk(to_player)
 		_:
 			_walk(to_player)
+
+## The verb: alert and in range with the ability ready, wind up (telegraphed), cast at the player, hold still a moment. True while it owns the
+## body. A heal waits until the enemy is under half its health.
+func _verb_act(to_player: Vector2, delta: float) -> bool:
+	if _verb == null:
+		return false
+	if _verb_state == "windup":
+		velocity.x = 0.0
+		_verb_t -= delta
+		if _verb_t <= 0.0:
+			_verb.aim = to_player.normalized()
+			if _verb.activate():
+				verb_casts += 1
+			_verb_state = "recover"
+			_verb_t = VERB_RECOVER
+		return true
+	if _verb_state == "recover":
+		if _impulse_t <= 0.0:
+			velocity.x = 0.0
+		_verb_t -= delta
+		if _verb_t <= 0.0:
+			_verb_state = ""
+		return true
+	if _state != "" or not is_alert() or not _verb.ready() or to_player.length() > VERB_RANGE:
+		return false
+	if _verb_kind == "heal" and health.hp * 2 >= health.max_hp:
+		return false
+	facing = 1 if to_player.x > 0.0 else -1
+	_verb_state = "windup"
+	_verb_t = VERB_WINDUP
+	velocity.x = 0.0
+	return true
+
+## A dash verb's push (the Ability contract): the horizontal speed holds for IMPULSE_SECONDS over the walk.
+func apply_impulse(v: Vector2) -> void:
+	_impulse_x = v.x
+	_impulse_t = IMPULSE_SECONDS
+	if v.y < 0.0 and is_on_floor():
+		velocity.y = v.y
+
+## A ward verb: the enemy refuses every blow for `seconds`.
+func ward(seconds: float) -> void:
+	_ward_t = seconds
 
 ## Chase while alert (holding at a ledge or wall rather than walking off it), else patrol home.
 func _walk(to_player: Vector2) -> void:

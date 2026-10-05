@@ -19,7 +19,7 @@ func before_all() -> void:
 		skills_by_id[d.id] = d
 
 func test_every_shipped_creature_has_its_kind() -> void:
-	assert_eq(creatures.keys().size(), KINDS.size(), "the map covers every shipped def")
+	assert_eq(Sources.SHIPPED.size(), KINDS.size(), "the map covers every shipped def")
 	for id in KINDS:
 		var e := Enemy.new()
 		e.use_sheet = false
@@ -57,3 +57,14 @@ func test_no_def_combines_behaviours_one_kind_cannot_express() -> void:
 			assert_false(f["spit"], "%s: a stomper that also spits would need two live states" % id)
 		if c.charges:
 			assert_false(f["spit"] or f["flight"] or f["drifter"] or f["ceiling"], "%s: a charges creature is only a charger" % id)
+
+func test_the_twins_and_support_monsters_take_their_kind_from_their_flags() -> void:
+	var want := {"twin_wolf_fenrir": Enemy.Kind.CHARGER, "twin_undead_zombie": Enemy.Kind.WALKER, "twin_goblin_hob": Enemy.Kind.WALKER,
+		"twin_spider_stalker": Enemy.Kind.WALKER, "shield_guard": Enemy.Kind.CHARGER, "ghost": Enemy.Kind.DRIFTER,
+		"bone_hound": Enemy.Kind.CHARGER, "cave_rat": Enemy.Kind.WALKER}
+	for id in want:
+		var e := Enemy.new()
+		e.use_sheet = false
+		e.setup(creatures[id], skills_by_id)
+		assert_eq(e.kind, want[id], id)
+		e.free()

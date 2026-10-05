@@ -34,6 +34,8 @@ const SCHEMA := {
 	"bridge": {"length": "number", "seconds": "number"},
 }
 ## The kinds that hurt, which take a `damage_type`; STRIKES are the instant ones, which also take a `status`.
+## The kinds an enemy casts (at the player, or on itself). The rest need a player's hands: a summon, a bridge, a vine, a reveal, a copy.
+const ENEMY_KINDS := ["bolt", "burst", "ring", "dash", "zone", "mark", "pull", "aura", "chain", "heal", "ward", "buff"]
 const TYPED := ["bolt", "burst", "ring", "dash", "mark", "zone", "pull", "aura", "chain", "engulf", "dissolve"]
 const STRIKES := ["bolt", "burst", "ring", "dash", "mark", "chain", "dissolve"]
 const STATUSES := ["slow", "stun", "root"]
@@ -184,7 +186,7 @@ static func _dash(a: Ability, spec: Dictionary) -> void:
 static func _zone(a: Ability, spec: Dictionary) -> void:
 	var cloud := SporeCloudArea.new()
 	a.actor.get_parent().add_child(cloud)
-	var power := Damage.skill_power(a.value(), a.actor_atk()) if bool(spec.get("damage", false)) else 0
+	var power := a.power() if bool(spec.get("damage", false)) else 0
 	cloud.launch(a.actor.global_position, float(spec.get("radius", ZONE_RADIUS)), float(spec.get("seconds", ZONE_SECONDS)), a.actor,
 		{"damage": power, "slow": bool(spec.get("slow", true)), "heals": int(spec.get("heals", 0)), "color": _color(spec, 0.3),
 		"damage_type": str(spec.get("damage_type", "poison"))})
@@ -195,7 +197,7 @@ static func _mark(a: Ability, spec: Dictionary) -> void:
 	if foes.is_empty():
 		return
 	var target = foes[0]
-	var power := Damage.skill_power(a.value(), a.actor_atk())
+	var power := a.power()
 	var marker := Vfx.puffs(a.actor, Art.texture("spit_glob"), [target.global_position], _color(spec), float(spec.get("delay", MARK_DELAY)))
 	marker.add_to_group("verb_marks")
 	a.actor.get_tree().create_timer(float(spec.get("delay", MARK_DELAY))).timeout.connect(_mark_lands.bind(a.actor, target, power, spec))
@@ -271,7 +273,7 @@ static func _aura(a: Ability, spec: Dictionary) -> void:
 static func _field(a: Ability, spec: Dictionary, at: Vector2, opts: Dictionary, radius: float, seconds: float) -> void:
 	var field := VerbField.new()
 	a.actor.get_parent().add_child(field)
-	opts["damage"] = Damage.skill_power(a.value(), a.actor_atk()) if bool(spec.get("damage", false)) else 0
+	opts["damage"] = a.power() if bool(spec.get("damage", false)) else 0
 	opts["damage_type"] = str(spec.get("damage_type", "physical"))
 	opts["color"] = _color(spec, 0.25)
 	field.launch(a.actor, at, float(spec.get("radius", radius)), float(spec.get("seconds", seconds)), opts)
@@ -281,7 +283,7 @@ static func _chain(a: Ability, spec: Dictionary) -> void:
 	var first := a.targets_in_front(float(spec.get("range", CHAIN_RANGE)), float(spec.get("half_width", CHAIN_HALF_WIDTH)))
 	if first.is_empty():
 		return
-	var power := Damage.skill_power(a.value(), a.actor_atk())
+	var power := a.power()
 	var jump := float(spec.get("jump", CHAIN_JUMP))
 	var hit: Array = []
 	var current = first[0]
@@ -310,7 +312,7 @@ static func _engulf(a: Ability, spec: Dictionary) -> void:
 		if not (t is Enemy) or not t.def.predatable:
 			continue
 		t.status.stun(seconds)
-		var digest := Damage.skill_power(a.value(), a.actor_atk()) if a.value() > 0 else 0
+		var digest := a.power() if a.value() > 0 else 0
 		var field := VerbField.new()
 		a.actor.get_parent().add_child(field)
 		field.launch(a.actor, t.global_position, ENGULF_RADIUS, seconds,
@@ -376,7 +378,7 @@ static func _summon(a: Ability, spec: Dictionary) -> void:
 		if old.caster == a.actor:
 			old.free()
 	var count := maxi(1, int(spec.get("count", SUMMON_COUNT)))
-	var power := Damage.skill_power(a.value(), a.actor_atk())
+	var power := a.power()
 	for i in count:
 		var ally := VerbAlly.new()
 		a.actor.get_parent().add_child(ally)
@@ -416,7 +418,7 @@ static func _bridge(a: Ability, spec: Dictionary) -> void:
 
 ## The skill's damage to each target, then the spec's status. `ignore_def` skips an Enemy's DEF.
 static func _strike(a: Ability, targets: Array, spec: Dictionary, ignore_def := false) -> void:
-	var power := Damage.skill_power(a.value(), a.actor_atk())
+	var power := a.power()
 	for t in targets:
 		_hit(t, power, spec, a.actor.global_position, ignore_def, a.actor)
 

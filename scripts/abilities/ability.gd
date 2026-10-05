@@ -57,6 +57,14 @@ func value() -> int:
 		return 0
 	return int(values[clampi(level, 1, values.size()) - 1])
 
+## The most a cast may deal, 0 for no limit. An enemy's verb is held to a multiple of its ATK, so a boss's table value cannot one-shot.
+var power_cap := 0
+
+## The damage of a cast: the skill's table value amplified by the caster's ATK, held to `power_cap` when one is set.
+func power() -> int:
+	var p := Damage.skill_power(value(), actor_atk())
+	return mini(p, power_cap) if power_cap > 0 else p
+
 ## The caster's ATK, 1 for an actor without stats (test stubs). Read with get() so a stub needs no property.
 func actor_atk() -> int:
 	var s = actor.get("stats")
