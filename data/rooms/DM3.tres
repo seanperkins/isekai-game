@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
+
+[resource]
+script = ExtResource("1_roomdef")
+id = "DM3"
+area = "demon"
+cell = Vector2i(30, 6)
+size = Vector2i(2, 1)
+solids = [Rect2(400, 274, 90, 12), Rect2(470, 222, 90, 12), Rect2(400, 170, 90, 12), Rect2(470, 118, 90, 12), Rect2(400, 66, 90, 12), Rect2(470, 14, 90, 12)]
+decor = [{
+"id": "deep_bones",
+"pos": Vector2(150, 320)
+}, {
+"id": "deep_rubble",
+"pos": Vector2(650, 320)
+}, {
+"id": "deep_stalagmite",
+"pos": Vector2(1220, 320)
+}, {
+"anchor": "top",
+"id": "deep_root_hang",
+"pos": Vector2(800, 20)
+}]
+spawns = [{
+"id": "imp",
+"pos": Vector2(760, 314)
+}, {
+"id": "imp",
+"pos": Vector2(960, 314)
+}, {
+"id": "blinker",
+"pos": Vector2(1160, 314)
+}]
+exits = [{
+"edge": "top",
+"from": 400.0,
+"room": "DM2",
+"to": 560.0
+}]

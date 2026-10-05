@@ -1,0 +1,48 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
+
+[resource]
+script = ExtResource("1_roomdef")
+id = "DM5"
+area = "demon"
+cell = Vector2i(33, 5)
+size = Vector2i(2, 1)
+solids = [Rect2(300, 268, 120, 12), Rect2(900, 268, 120, 12)]
+decor = [{
+"id": "deep_wall_crystal",
+"light": Color(0.95, 0.85, 1, 1),
+"pos": Vector2(200, 320)
+}, {
+"id": "deep_stalagmite",
+"pos": Vector2(1000, 320)
+}, {
+"anchor": "top",
+"id": "deep_root_hang",
+"pos": Vector2(500, 20)
+}, {
+"anchor": "top",
+"id": "deep_lichen_hang",
+"pos": Vector2(1000, 20)
+}]
+spawns = [{
+"id": "ward_bearer",
+"pos": Vector2(560, 314)
+}, {
+"id": "imp",
+"pos": Vector2(760, 314)
+}, {
+"id": "blinker",
+"pos": Vector2(1120, 314)
+}]
+exits = [{
+"edge": "left",
+"from": 200.0,
+"room": "DM2",
+"to": 320.0
+}, {
+"edge": "right",
+"from": 200.0,
+"room": "DM7",
+"to": 320.0
+}]

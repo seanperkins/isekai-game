@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
+
+[resource]
+script = ExtResource("1_roomdef")
+id = "DM1"
+area = "demon"
+cell = Vector2i(29, 5)
+decor = [{
+"id": "deep_bones",
+"pos": Vector2(150, 320)
+}, {
+"id": "deep_glow_fungus",
+"light": Color(0.5, 1, 0.6, 1),
+"pos": Vector2(480, 320)
+}, {
+"anchor": "top",
+"id": "deep_root_hang",
+"pos": Vector2(300, 20)
+}]
+exits = [{
+"edge": "left",
+"from": 200.0,
+"room": "CR4",
+"to": 320.0
+}, {
+"edge": "right",
+"from": 200.0,
+"room": "DM2",
+"to": 320.0
+}]
+features = [{
+"id": "DM1_tablet",
+"kind": "tablet",
+"pos": Vector2(320, 320),
+"text": "Three seals keep the hall. Break the middle one, and the throne will open.",
+"title": "Scorched tablet"
+}]

@@ -7,12 +7,20 @@ const VOLCANO := {"VO1": [Vector2i(22, 8), Vector2i(1, 1)], "VO2": [Vector2i(23,
 	"VO7": [Vector2i(24, 9), Vector2i(1, 1)]}
 const VOLCANO_SUPPORT := ["ember_beetle", "lava_salamander", "ash_moth"]
 
+## The demon area: the Threshold, the Gate Hall and its three spokes (West, Middle, East), the Throne and the Reliquary.
+const DEMON := {"DM1": [Vector2i(29, 5), Vector2i(1, 1)], "DM2": [Vector2i(30, 5), Vector2i(3, 1)], "DM3": [Vector2i(30, 6), Vector2i(2, 1)],
+	"DM4": [Vector2i(31, 4), Vector2i(2, 1)], "DM5": [Vector2i(33, 5), Vector2i(2, 1)], "DM6": [Vector2i(33, 3), Vector2i(1, 2)],
+	"DM7": [Vector2i(35, 5), Vector2i(1, 1)]}
+const DEMON_SUPPORT := ["imp", "demon_hound", "caller", "blinker", "ward_bearer", "rider"]
+
 var hot: Dictionary  # the volcano built, the demon area not yet
+var hell: Dictionary  # the whole world
 var before: Dictionary  # the world before the volcano
 
 func before_all() -> void:
 	hot = AreaWorlds.upto("VO")
 	before = AreaWorlds.upto("CR")
+	hell = AreaWorlds.upto("DM")
 
 ## True when a ledge stands in the opening of room `r`'s top exit `h` with its top at 14 (the end of a climb).
 func _climb_ends_in(r: RoomDef, h: Dictionary) -> bool:
@@ -106,6 +114,87 @@ func test_the_chimney_is_a_stair_down_from_its_door_to_the_floor() -> void:
 func test_the_cooled_vault_is_a_plain_side_room_until_heat_is_a_rule() -> void:
 	for e in (hot["VO6"] as RoomDef).exits:
 		assert_false(e.has("gate") or e.has("shortcut"))
+
+# --- the demon area ---
+
+func test_the_demon_area_is_seven_rooms_at_their_cells_sizes_and_area() -> void:
+	for id in DEMON:
+		assert_true(hell.has(id), id)
+		var r: RoomDef = hell[id]
+		assert_eq(r.area, "demon", id)
+		assert_eq(r.cell, DEMON[id][0], id)
+		assert_eq(r.size, DEMON[id][1], id)
+
+func test_the_whole_world_has_no_problems() -> void:
+	assert_eq(Array(AreaBuilder.problems(hell)), [])
+
+func test_the_demon_area_is_reachable_but_not_without_the_deeps_gates_and_opens_nothing_else() -> void:
+	var reached := WorldValidator.reachable(hell)
+	var ungated := WorldValidator.reachable(hell, true)
+	for id in DEMON:
+		assert_true(reached.has(id), "%s: no way in from the start room" % id)
+		assert_false(ungated.has(id), "%s is behind the Deep's gates" % id)
+	var rest := ungated.filter(func(id: String) -> bool: return not DEMON.has(id))
+	rest.sort()
+	var was := WorldValidator.reachable(hot, true)
+	was.sort()
+	assert_eq(rest, was)
+
+func test_the_vault_gains_one_exit_to_the_threshold_and_nothing_else() -> void:
+	var was := hot["CR4"] as RoomDef
+	var now := hell["CR4"] as RoomDef
+	assert_eq(now.exits.size(), was.exits.size() + 1)
+	var e: Dictionary = now.exits.filter(func(x: Dictionary) -> bool: return x["room"] == "DM1")[0]
+	assert_eq(e["edge"], "right")
+	assert_false(e.has("gate") or e.has("shortcut"))
+	for p in now.get_property_list():
+		if (int(p["usage"]) & PROPERTY_USAGE_STORAGE) != 0 and p["name"] != "script" and p["name"] != "exits":
+			assert_eq(now.get(p["name"]), was.get(p["name"]), "CR4.%s is as built" % p["name"])
+
+func test_the_threshold_and_the_gate_hall_are_quiet_and_the_hall_has_the_pool_and_no_altar() -> void:
+	for id in ["DM1", "DM2"]:
+		assert_eq((hell[id] as RoomDef).spawns, [], id)
+	var kinds := (hell["DM2"] as RoomDef).features.map(func(f: Dictionary) -> String: return f["kind"])
+	assert_eq(kinds.filter(func(k: String) -> bool: return k == "glow_pool").size(), 1)
+	assert_false(kinds.has("altar"))
+	assert_eq((hell["DM1"] as RoomDef).features.filter(func(f: Dictionary) -> bool: return f["kind"] == "tablet").size(), 1)
+
+func test_the_demon_area_holds_the_demons_and_only_them_one_rider_and_at_most_one_blinker_a_room() -> void:
+	var seen := {}
+	var riders := 0
+	for id in DEMON:
+		var blinkers := 0
+		for s in (hell[id] as RoomDef).spawns:
+			assert_true(DEMON_SUPPORT.has(s["id"]), "%s: %s" % [id, s["id"]])
+			seen[s["id"]] = true
+			riders += 1 if s["id"] == "rider" else 0
+			blinkers += 1 if s["id"] == "blinker" else 0
+		assert_lte(blinkers, 1, "%s: at most one blinker" % id)
+	for c in DEMON_SUPPORT:
+		assert_true(seen.has(c), "%s lives in the demon area" % c)
+	assert_eq(riders, 1, "one rider in the area")
+
+func test_the_throne_holds_the_caller_and_what_it_calls() -> void:
+	var ids := (hell["DM6"] as RoomDef).spawns.map(func(s: Dictionary) -> String: return s["id"])
+	assert_true(ids.has("caller"))
+	for i in ids:
+		assert_true(i == "caller" or i == "imp", i)
+
+func test_every_way_up_in_the_demon_area_ends_in_its_opening() -> void:
+	for id in ["DM2", "DM3"]:
+		var r := hell[id] as RoomDef
+		for h: Dictionary in r.exits.filter(func(e: Dictionary) -> bool: return e["edge"] == "top"):
+			assert_true(_climb_ends_in(r, h), "%s: a ledge stands in the opening %s..%s" % [id, h["from"], h["to"]])
+	var middle := hell["DM4"] as RoomDef
+	var hole: Dictionary = middle.exits.filter(func(e: Dictionary) -> bool: return e["edge"] == "bottom")[0]
+	var landings := middle.solids.filter(func(l: Rect2) -> bool: return l.position.y == AreaKit.floor_y(middle) - 52.0)
+	assert_true(landings.any(func(l: Rect2) -> bool: return l.end.x < float(hole["from"])), "a landing left of the Middle's hole")
+	assert_true(landings.any(func(l: Rect2) -> bool: return l.position.x > float(hole["to"])), "and right of it")
+
+func test_the_throne_door_is_at_the_floor_so_the_middle_spoke_is_walked_not_climbed() -> void:
+	var throne := hell["DM6"] as RoomDef
+	var door: Dictionary = throne.exits.filter(func(e: Dictionary) -> bool: return e["room"] == "DM4")[0]
+	assert_eq(float(door["to"]), AreaKit.floor_y(throne), "the sill of the door is the floor of the throne")
 
 func test_the_checked_in_rooms_are_what_the_builder_writes() -> void:
 	assert_eq(AreaBuilder.stale(AreaBuilder.build()), [])
