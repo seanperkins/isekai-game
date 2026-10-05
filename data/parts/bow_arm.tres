@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/items/part_def.gd" id="1_part"]
+
+[resource]
+script = ExtResource("1_part")
+id = "bow_arm"
+display_name = "Bow arm"
+kind = "graft"
+slot = "bow_arm"
+worn_max = 1
+stats = {"spd": 10}
+text = "An archer's arm: quicker on the feet, and steers a skeleton toward the Skeletal Archer."
+color = Color(0.55, 0.45, 0.3, 1)

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/items/part_def.gd" id="1_part"]
+
+[resource]
+script = ExtResource("1_part")
+id = "wrappings"
+display_name = "Wrappings"
+kind = "graft"
+slot = "wrappings"
+worn_max = 2
+stats = {"def": 1}
+text = "Old bandages, two at most: they turn a blow, and steer the Adept toward the Mummy-Priest."
+color = Color(0.88, 0.82, 0.62, 1)

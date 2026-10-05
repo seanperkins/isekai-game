@@ -1,0 +1,12 @@
+[
+ {"id": "ribs", "name": "Ribs", "kind": "graft", "slot": "ribs", "worn_max": 1, "stats": {"def": 1}, "color": [0.92, 0.88, 0.8], "text": "A ribcage to wear: it turns a blow, and steers a skeleton toward the Zombie."},
+ {"id": "flesh", "name": "Flesh", "kind": "graft", "slot": "flesh", "worn_max": 1, "stats": {"max_hp": 4}, "color": [0.78, 0.4, 0.4], "text": "Stitched flesh: more body to lose, and a nudge toward the Zombie."},
+ {"id": "claw", "name": "Claw", "kind": "graft", "slot": "claw", "worn_max": 2, "stats": {"atk": 1}, "color": [0.7, 0.62, 0.45], "text": "A hooked claw, two at most: it sharpens a touch, and steers a Zombie toward the Ghoul."},
+ {"id": "weapon_arm", "name": "Weapon arm", "kind": "graft", "slot": "weapon_arm", "worn_max": 1, "stats": {"atk": 2}, "color": [0.55, 0.58, 0.65], "text": "An arm that still holds its blade: it hits harder, and steers a skeleton toward the Bone Warrior."},
+ {"id": "bow_arm", "name": "Bow arm", "kind": "graft", "slot": "bow_arm", "worn_max": 1, "stats": {"spd": 10}, "color": [0.55, 0.45, 0.3], "text": "An archer's arm: quicker on the feet, and steers a skeleton toward the Skeletal Archer."},
+ {"id": "skull", "name": "Skull", "kind": "graft", "slot": "skull", "worn_max": 1, "stats": {"max_mp": 3}, "color": [0.95, 0.95, 0.9], "text": "A skull to think with: more MP, and steers a skeleton toward the Adept."},
+ {"id": "focus", "name": "Focus", "kind": "graft", "slot": "focus", "worn_max": 1, "stats": {"max_mp": 4}, "color": [0.6, 0.5, 0.95], "text": "A caster's focus: more MP, and steers the Adept toward the Lich."},
+ {"id": "wrappings", "name": "Wrappings", "kind": "graft", "slot": "wrappings", "worn_max": 2, "stats": {"def": 1}, "color": [0.88, 0.82, 0.62], "text": "Old bandages, two at most: they turn a blow, and steer the Adept toward the Mummy-Priest."},
+ {"id": "phylactery_shard", "name": "Phylactery shard", "kind": "held", "slot": "", "worn_max": 1, "stats": {}, "color": [0.4, 0.95, 0.6], "text": "A shard of a lich's soul cage. Carried, not worn: it asks a lich for the Deathless."},
+ {"id": "moonstone", "name": "Moonstone", "kind": "key", "slot": "", "worn_max": 1, "stats": {}, "color": [0.75, 0.85, 1.0], "text": "A stone that holds moonlight. Carried, not worn: it opens the Moonbound without a moon."}
+]

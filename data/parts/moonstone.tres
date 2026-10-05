@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/items/part_def.gd" id="1_part"]
+
+[resource]
+script = ExtResource("1_part")
+id = "moonstone"
+display_name = "Moonstone"
+kind = "key"
+worn_max = 1
+text = "A stone that holds moonlight. Carried, not worn: it opens the Moonbound without a moon."
+color = Color(0.75, 0.85, 1, 1)

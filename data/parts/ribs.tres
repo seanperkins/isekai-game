@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/items/part_def.gd" id="1_part"]
+
+[resource]
+script = ExtResource("1_part")
+id = "ribs"
+display_name = "Ribs"
+kind = "graft"
+slot = "ribs"
+worn_max = 1
+stats = {"def": 1}
+text = "A ribcage to wear: it turns a blow, and steers a skeleton toward the Zombie."
+color = Color(0.92, 0.88, 0.8, 1)

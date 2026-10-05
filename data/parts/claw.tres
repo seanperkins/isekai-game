@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/items/part_def.gd" id="1_part"]
+
+[resource]
+script = ExtResource("1_part")
+id = "claw"
+display_name = "Claw"
+kind = "graft"
+slot = "claw"
+worn_max = 2
+stats = {"atk": 1}
+text = "A hooked claw, two at most: it sharpens a touch, and steers a Zombie toward the Ghoul."
+color = Color(0.7, 0.62, 0.45, 1)

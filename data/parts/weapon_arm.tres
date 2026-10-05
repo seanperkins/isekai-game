@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="PartDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/items/part_def.gd" id="1_part"]
+
+[resource]
+script = ExtResource("1_part")
+id = "weapon_arm"
+display_name = "Weapon arm"
+kind = "graft"
+slot = "weapon_arm"
+worn_max = 1
+stats = {"atk": 2}
+text = "An arm that still holds its blade: it hits harder, and steers a skeleton toward the Bone Warrior."
+color = Color(0.55, 0.58, 0.65, 1)
