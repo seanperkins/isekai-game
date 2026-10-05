@@ -108,6 +108,32 @@ func test_a_recall_mark_expires() -> void:
 	a.activate()
 	assert_eq(caster.global_position, Vector2(99, 0), "an old mark is not returned to")
 
+class FakeWorld extends Node2D:
+	var room: Node2D
+
+func test_a_recall_mark_does_not_follow_the_caster_into_another_room() -> void:
+	var world := FakeWorld.new()
+	add_child_autofree(world)
+	var room_a := Node2D.new()
+	var room_b := Node2D.new()
+	world.add_child(room_a)
+	world.add_child(room_b)
+	world.room = room_a
+	var walker := Actor.new()
+	world.add_child(walker)
+	walker.global_position = Vector2(10, 0)
+	var a := _verb({"kind": "anchor", "seconds": 30.0}, 4, walker)
+	a.activate()  # the mark is laid in room A
+	world.room = room_b
+	walker.global_position = Vector2(500, 0)
+	a._process(1.0)
+	a.activate()
+	assert_eq(walker.global_position, Vector2(500, 0), "room A is gone: there is nothing to return to")
+	walker.global_position = Vector2(600, 0)
+	a._process(1.0)
+	a.activate()
+	assert_eq(walker.global_position, Vector2(500, 0), "but the cast laid a new mark in room B, which it returns to")
+
 # --- shed ---
 
 func test_a_shed_leaves_a_husk_and_slips_away() -> void:
@@ -144,6 +170,12 @@ func test_a_second_court_replaces_the_first() -> void:
 	a.activate()
 	await wait_physics_frames(2)
 	assert_eq(get_tree().get_nodes_in_group("verb_allies").size(), 3)
+
+func test_allies_reach_a_foe_at_another_height() -> void:
+	var foe := _foe(40, 80)
+	_verb({"kind": "summon", "count": 2, "seconds": 3.0}).activate()
+	await wait_seconds(2.0)
+	assert_gt(foe.hits.size(), 0, "they come to it, up or down")
 
 func test_allies_never_hit_their_own_team() -> void:
 	var friend := _foe(60, 0, "player")

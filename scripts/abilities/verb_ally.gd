@@ -1,7 +1,7 @@
 class_name VerbAlly
 extends Node2D
-## A small slime a verb calls (Court). It walks to the nearest foe of the caster's other team and strikes it, or stays by its caster
-## when there is none, and goes when its time is up or its caster is gone. Group `verb_allies`, deliberately not `actors`: foes do
+## A small slime a verb calls (Court). It goes to the nearest foe of the caster's other team (floating, so a foe above or below is
+## reached too) and strikes it, or stays by its caster when there is none, and goes when its time is up or its caster is gone. Group `verb_allies`, deliberately not `actors`: foes do
 ## not see it, so it cannot be hurt and no ability can hit it.
 
 const SPEED := 70.0
@@ -46,7 +46,7 @@ func _physics_process(delta: float) -> void:
 			foe.receive_hit(_power, "physical", global_position, "")
 			_strike_in = STRIKE_SECONDS
 	else:
-		global_position.x = move_toward(global_position.x, foe.global_position.x, SPEED * delta)
+		global_position = global_position.move_toward(foe.global_position, SPEED * delta)
 
 func _nearest_foe() -> Node2D:
 	var best: Node2D = null

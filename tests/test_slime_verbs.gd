@@ -69,6 +69,15 @@ func test_a_rooted_enemy_does_not_act_and_is_not_edible() -> void:
 	await wait_physics_frames(3)
 	assert_eq(caster.hits, [], "and does not strike")
 
+func test_a_stunned_enemy_that_is_rooted_cannot_be_eaten_until_the_root_ends() -> void:
+	var lizard := _enemy("lizard", Vector2(0, 0))
+	lizard.status.stun(5.0)
+	assert_true(lizard.can_be_predated(), "stunned: edible")
+	lizard.root_for(0.3)
+	assert_false(lizard.can_be_predated(), "bound: not")
+	await wait_seconds(0.6)
+	assert_true(lizard.can_be_predated(), "free of the root: edible again")
+
 func test_a_root_ends() -> void:
 	var lizard := _enemy("lizard", Vector2(0, 0))
 	caster.global_position = Vector2(100, 0)

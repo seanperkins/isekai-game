@@ -329,14 +329,20 @@ static func _glide(a: Ability, spec: Dictionary) -> void:
 static func _anchor(a: Ability, spec: Dictionary) -> void:
 	var now := float(Engine.get_physics_frames()) / float(Engine.physics_ticks_per_second)  # game time, not the wall clock
 	var mark = a.actor.get_meta(ANCHOR_META) if a.actor.has_meta(ANCHOR_META) else null
-	if mark != null and now <= float(mark["until"]):
+	if mark != null and now <= float(mark["until"]) and int(mark["room"]) == _room_id(a.actor):
 		a.actor.global_position = mark["at"]
 		if "velocity" in a.actor:
 			a.actor.velocity = Vector2.ZERO
 		a.actor.remove_meta(ANCHOR_META)
 		return
-	a.actor.set_meta(ANCHOR_META, {"at": a.actor.global_position, "until": now + float(spec.get("seconds", ANCHOR_SECONDS))})
+	a.actor.set_meta(ANCHOR_META, {"at": a.actor.global_position, "until": now + float(spec.get("seconds", ANCHOR_SECONDS)), "room": _room_id(a.actor)})
 	Vfx.puffs(a.actor, Art.texture("spit_glob"), [a.actor.global_position], Color(1, 1, 1, 0.7), 2.0)
+
+## The room the caster is in (the World's `room`), 0 when its parent has none: a mark laid in one room is not returned to from another.
+static func _room_id(actor: Node2D) -> int:
+	var world = actor.get_parent()
+	var room = world.get("room") if world != null else null
+	return room.get_instance_id() if room != null else 0
 
 ## Leaves a husk of the caster's own look where it stood, is untouchable for a moment and throws itself away from where it faces (Shed).
 static func _decoy(a: Ability, spec: Dictionary) -> void:

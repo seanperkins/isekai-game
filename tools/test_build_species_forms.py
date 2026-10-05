@@ -99,7 +99,7 @@ class FormsTest(unittest.TestCase):
         g = by["gleipnir"]
         self.assertEqual((g["parents"], g["lineage"], g["traits"], g["grants"]), (["snare"], "weaver", ["spinner"], ["sticky_thread", "verb_gleipnir"]))
         self.assertEqual(by["ariadne"]["parents"], ["arachne"])
-        self.assertEqual(by["ariadne"]["grants"], ["sticky_thread", "wall_cling"])
+        self.assertEqual(by["ariadne"]["grants"], ["sticky_thread", "wall_cling", "verb_ariadne"])
         k = by["king_slime"]
         self.assertEqual((k["parents"], k["lineage"], k["traits"]), (["radiant"], "greater", ["adaptable"]))
         self.assertEqual(by["talos"]["parents"], ["golem"])
@@ -116,7 +116,7 @@ class FormsTest(unittest.TestCase):
     def test_a_slime_tres_writes_its_traits_and_grants_and_the_others_do_not(self):
         text = bsf.tres(next(f for f in bsf.slime_forms() if f["dataId"] == "ariadne"))
         self.assertIn('traits = ["spinner"]', text)
-        self.assertIn('grants = ["sticky_thread", "wall_cling"]', text)
+        self.assertIn('grants = ["sticky_thread", "wall_cling", "verb_ariadne"]', text)
         self.assertNotIn("traits =", bsf.tres(self.by_id["wolf_moonbound"]))
 
     def test_the_tres_text_lists_the_new_fields(self):

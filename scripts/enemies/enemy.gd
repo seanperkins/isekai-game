@@ -264,7 +264,7 @@ func is_rooted() -> bool:
 	return _root > 0.0
 
 func can_be_predated() -> bool:
-	return not dormant and def.predatable and status.predatable()
+	return not dormant and _root <= 0.0 and def.predatable and status.predatable()
 
 func set_held(v: bool) -> void:
 	status.held = v
