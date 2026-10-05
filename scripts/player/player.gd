@@ -99,6 +99,9 @@ var species_body: SpeciesBody
 var species_sheet_loader := Callable()
 ## The horizontal speed an ability's push or a hit's knockback holds for `_dash` seconds on a species body.
 var _dash_vx := 0.0
+const SLOW_SOURCE := "enemy_slow"
+const SLOW_SPD := -50
+var _slow := 0.0
 ## True while become_form runs: the forced line is neither announced nor recorded as reached.
 var _debug_silent := false
 var _pounce_applied := false
@@ -1168,12 +1171,22 @@ func _in_roll_iframes() -> bool:
 	return species_body != null and species_body.state.invulnerable
 
 ## Untouchable for `seconds` (a longer ward already running is kept).
+## A slow from an enemy's verb (a bolt's slow status, a web zone): the speed stat drops by SLOW_SPD until the longest slow so far has
+## run out. Slows do not stack.
+func slow_for(seconds: float) -> void:
+	_slow = maxf(_slow, seconds)
+	stats.set_timed_modifiers(SLOW_SOURCE, [{"stat": "spd", "op": "add", "value": SLOW_SPD}])
+
 func ward(seconds: float) -> void:
 	_ward = maxf(_ward, seconds)
 
 func tick(delta: float) -> void:
 	_invuln = maxf(0.0, _invuln - delta)
 	_ward = maxf(0.0, _ward - delta)
+	if _slow > 0.0:
+		_slow = maxf(0.0, _slow - delta)
+		if _slow <= 0.0:
+			stats.set_timed_modifiers(SLOW_SOURCE, [])
 	_glide = maxf(0.0, _glide - delta)
 	if health.is_dead():
 		return

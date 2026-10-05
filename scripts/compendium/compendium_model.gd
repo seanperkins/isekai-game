@@ -11,6 +11,8 @@ const BAND_STIRS := "stirs"
 const BAND_CLOSE := "close"
 
 var store  # CompendiumStore or Profile: load_states / load_creatures / save_states
+## False for a run that must not reach the real profile (the Menagerie): records still change in memory, nothing is saved.
+var saving := true
 var _defs := {}       # id -> SkillDef (enemy_only excluded)
 var _creatures := {}  # id -> CreatureDef
 var _states := {}     # id -> State
@@ -49,7 +51,7 @@ func raise(id: String, new_state: int) -> bool:
 	return true
 
 func _save() -> void:
-	if store != null:
+	if store != null and saving:
 		store.save_states(_states, STATE_NAMES, _records)
 
 # --- Bestiary ---------------------------------------------------------------

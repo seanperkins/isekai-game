@@ -42,6 +42,10 @@ var _editor_play := false
 ## Started with `-- --room=menagerie`: an editor-Play-like run in the room of every creature, with no editor to go back to.
 var _menagerie := false
 
+func _exit_tree() -> void:
+	if _menagerie:
+		Compendium.model.saving = true
+
 ## Each biome sets its own ambient light and sound: the bright Cave, a darker deep, and so on.
 func _on_room_entered(id: String) -> void:
 	var area: String = world.rooms[id].area
@@ -101,7 +105,8 @@ func _ready() -> void:
 			push_error(e)
 	var world_ctx := {"spawn": _spawn, "progress": progress, "compendium": Compendium.model, "announce": Announcer.queue.push_unlock}
 	if _menagerie:
-		world_ctx["compendium"] = null  # looking at every creature is not seeing them: the bestiary is the real profile's
+		world_ctx["compendium"] = null  # looking at every creature is not seeing them
+		Compendium.model.saving = false  # and a defeat or an eat there is not the real bestiary's to keep
 	if not _editor_play:
 		world_ctx["altar_menu"] = _open_altar_menu  # the menu is built once the goddess exists, after the world
 	world.setup(rooms, player, world_ctx)

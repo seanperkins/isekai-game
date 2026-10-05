@@ -164,3 +164,45 @@ func test_a_dying_enemy_never_casts() -> void:
 	player.global_position = Vector2(100, 0)
 	await wait_physics_frames(60)
 	assert_eq(e.verb_casts, 0)
+
+## A real Player in place of the stub: a slow from an enemy's verb has to reach it.
+func _real_player(at: Vector2) -> Player:
+	player.remove_from_group("player")  # the enemy aims at the first player in the group
+	player.remove_from_group("actors")
+	var skills := DefLoader.load_dir("res://data/skills")
+	var rules := SkillRulesEngine.new()
+	rules.setup(skills)
+	var p := Player.new()
+	p.setup(rules, CompendiumModel.new(skills, []), [], func(_n: String, _t: Dictionary) -> void: pass)
+	add_child_autofree(p)
+	rules.start_run()
+	p.global_position = at
+	p._invuln = 1000.0
+	return p
+
+func test_a_slow_only_zone_slows_a_real_player_standing_in_it() -> void:
+	var spec := _spec("twin_spider_loom_weaver")
+	assert_true(bool(spec.get("slow", true)) and not bool(spec.get("damage", false)), "this twin's verb is a slow and nothing else")
+	var e := _enemy("twin_spider_loom_weaver")
+	var p := _real_player(Vector2(60, 0))
+	await wait_physics_frames(90)
+	assert_gte(e.verb_casts, 1)
+	assert_lt(p.stats.get_stat("spd"), 100, "the web slowed it")
+
+func test_a_slow_wears_off_and_slows_do_not_stack() -> void:
+	var p := _real_player(Vector2(0, -200))
+	p.slow_for(0.3)
+	assert_eq(p.stats.get_stat("spd"), 100 + Player.SLOW_SPD)
+	p.slow_for(0.3)
+	assert_eq(p.stats.get_stat("spd"), 100 + Player.SLOW_SPD, "slows do not stack")
+	await wait_physics_frames(30)  # half a second
+	assert_eq(p.stats.get_stat("spd"), 100, "it wears off")
+
+func test_a_shorter_slow_does_not_cut_a_longer_one_short() -> void:
+	var p := _real_player(Vector2(0, -200))
+	p.slow_for(0.8)
+	p.slow_for(0.1)
+	await wait_physics_frames(30)  # half a second: past the short one, inside the long one
+	assert_eq(p.stats.get_stat("spd"), 100 + Player.SLOW_SPD, "the longer slow still holds")
+	await wait_physics_frames(40)
+	assert_eq(p.stats.get_stat("spd"), 100)

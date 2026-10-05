@@ -117,7 +117,24 @@ func test_a_game_started_with_the_flag_is_in_the_menagerie() -> void:
 	assert_not_null(game.get_node_or_null("MenagerieKeeper"))
 	assert_eq(Compendium.progress.forms_reached.size(), 0, "nothing reaches the real profile")
 	assert_null(game.world.ctx.get("compendium"), "looking is not seeing: no sighting reaches the bestiary")
+	assert_false(Compendium.model.saving, "a defeat or an eat in the menagerie is not saved to the real profile")
+	remove_child(game)
+	game.queue_free()
+	assert_true(Compendium.model.saving, "saving is back when the menagerie is left")
 	assert_eq(game.get_children().filter(func(n: Node) -> bool: return n is EditorReturn).size(), 0, "there is no editor to go back to")
+
+func test_a_hanging_creature_wakes_for_a_player_standing_under_it() -> void:
+	var room: RoomDef = Menagerie.request(creatures)["rooms"][Menagerie.ROOM_ID]
+	var by_id := {}
+	for c in creatures:
+		by_id[c.id] = c
+	var hangers := 0
+	for s in room.spawns:
+		if Menagerie._hangs(by_id[s["id"]]):
+			hangers += 1
+			var under := Vector2(s["pos"].x, 308.0)  # the player's height on the floor
+			assert_lte(under.distance_to(s["pos"]), MenagerieKeeper.WAKE_RANGE, "%s hangs where a player under it wakes it" % s["id"])
+	assert_gt(hangers, 0)
 
 func test_a_misspelt_room_flag_starts_the_normal_game() -> void:
 	Game.launch_override = {"headless": true, "args": ["--room=menagre", "--skip-opening"]}
@@ -126,3 +143,4 @@ func test_a_misspelt_room_flag_starts_the_normal_game() -> void:
 	await wait_physics_frames(5)
 	assert_ne(game.world.current_id, Menagerie.ROOM_ID)
 	assert_null(game.get_node_or_null("MenagerieKeeper"))
+	assert_true(Compendium.model.saving, "an ordinary game saves")
