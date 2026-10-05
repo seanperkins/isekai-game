@@ -23,7 +23,7 @@ func test_surface_lift_is_derived_from_the_jump_and_the_body() -> void:
 func test_the_rules_are_registered() -> void:
 	for rule in ["water_rect", "swimmer_dry", "water_exit"]:
 		assert_true(RoomLint.RULES.has(rule), rule)
-	assert_eq(RoomLint.RULES.size(), 16)
+	assert_eq(RoomLint.RULES.size(), 20)
 
 # --- water_rect ---
 

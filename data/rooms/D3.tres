@@ -8,7 +8,7 @@ id = "D3"
 area = "deep"
 cell = Vector2i(20, 6)
 size = Vector2i(1, 2)
-solids = [Rect2(20, 320, 100, 12), Rect2(160, 368, 100, 12), Rect2(20, 416, 100, 12), Rect2(160, 464, 100, 12), Rect2(20, 512, 100, 12), Rect2(160, 560, 100, 12), Rect2(20, 608, 100, 12), Rect2(160, 656, 100, 12), Rect2(360, 632, 160, 48)]
+solids = [Rect2(20, 320, 100, 12), Rect2(160, 368, 100, 12), Rect2(20, 416, 100, 12), Rect2(160, 464, 100, 12), Rect2(20, 512, 100, 12), Rect2(160, 560, 100, 12), Rect2(20, 608, 100, 12), Rect2(160, 656, 100, 12), Rect2(340, 632, 216, 48)]
 decor = [{
 "id": "deep_stalagmite",
 "pos": Vector2(420, 632)
@@ -29,13 +29,13 @@ spawns = [{
 "pos": Vector2(440, 620)
 }, {
 "id": "armed_ant",
-"pos": Vector2(292, 668)
+"pos": Vector2(270, 668)
 }, {
 "id": "armed_ant",
-"pos": Vector2(320, 668)
+"pos": Vector2(296, 668)
 }, {
 "id": "armed_ant",
-"pos": Vector2(344, 668)
+"pos": Vector2(322, 668)
 }]
 exits = [{
 "edge": "left",

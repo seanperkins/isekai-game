@@ -156,7 +156,7 @@ func test_decor_unknown_flags_an_id_outside_the_catalog_with_a_decor_pick() -> v
 	assert_false(_rules(ok).has("decor_unknown"))
 
 func test_the_rule_list_has_sixteen_rules() -> void:
-	assert_eq(RoomLint.RULES.size(), 16)
+	assert_eq(RoomLint.RULES.size(), 20)
 
 func _altar(id: String, area: String, pos: Vector2) -> Dictionary:
 	return {"kind": "altar", "id": id, "area": area, "pos": pos, "perk": ""}
