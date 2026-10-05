@@ -94,7 +94,7 @@ spawns = [{
 }, {
 "by": "PL",
 "id": "cave_rat",
-"pos": Vector2(41, 314)
+"pos": Vector2(61, 314)
 }]
 exits = [{
 "edge": "top",

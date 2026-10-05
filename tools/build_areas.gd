@@ -9,8 +9,10 @@ func _initialize() -> void:
 func _run() -> void:
 	var builder = load("res://tools/areas/area_builder.gd")
 	var check := "--check" in OS.get_cmdline_user_args()
-	var world: Dictionary = builder.build()
+	var said: Array = []  # what the modules could not do (a creature with no room)
+	var world: Dictionary = builder.build_with(builder.modules(), builder.ROOMS_DIR, said)
 	var problems: PackedStringArray = builder.problems(world)
+	problems.append_array(PackedStringArray(said))
 	if not problems.is_empty():
 		print("build_areas: the world has %d problems, nothing written:" % problems.size())
 		for p in problems:

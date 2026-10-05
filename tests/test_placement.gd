@@ -160,3 +160,51 @@ func test_a_flier_hovers_clear_of_the_rock() -> void:
 	var s: Dictionary = _placed(world, "PA")[0]
 	assert_eq(RoomLint.spawn_findings(world["PA"]), [])
 	assert_lt((s["pos"] as Vector2).y, AreaKit.floor_y(world["PA"]) - 60.0, "in the air")
+
+func test_no_creature_stands_with_its_drawn_body_in_a_side_wall() -> void:
+	var world := _world([_room("PA", "forest", Vector2i(60, 60))])
+	var plan := {}
+	for id in ["twin_wolf_fenrir", "tusker_boar", "village_goblin", "cave_rat"]:
+		plan[id] = {"areas": ["forest"], "class": "common"}
+	_run(world, _plan(plan))
+	assert_eq(_placed(world, "PA").size(), 4)
+	var width := (world["PA"] as RoomDef).pixel_size().x
+	for pair in _all_placed(world):
+		var s: Dictionary = pair[1]
+		var half := AreaPlacement.size_of(defs[s["id"]]).x / 2.0
+		assert_gte((s["pos"] as Vector2).x - half, RoomDef.WALL, "%s is in the west wall" % s["id"])
+		assert_lte((s["pos"] as Vector2).x + half, width - RoomDef.WALL, "%s is in the east wall" % s["id"])
+
+func test_a_flier_wider_than_the_air_beside_the_wall_still_hovers_inside_the_room() -> void:
+	var wide := CreatureDef.new()
+	wide.id = "wide_flier"
+	wide.display_name = "Wide"
+	wide.drifter = true
+	wide.sprite_set = "forms_wolf"
+	wide.sprite_frame = "fenrir"
+	wide.sprite_size = 3.0
+	var world := _world([_room("PA", "forest", Vector2i(60, 60))])
+	_run(world, _plan({"wide_flier": {"areas": ["forest"], "class": "common"}}), {"wide_flier": wide})
+	var found := _placed(world, "PA")
+	if not found.is_empty():
+		var half := AreaPlacement.size_of(wide).x / 2.0
+		assert_gte((found[0]["pos"] as Vector2).x - half, RoomDef.WALL)
+		assert_lte((found[0]["pos"] as Vector2).x + half, 640.0 - RoomDef.WALL)
+
+func test_a_creature_nothing_can_hold_is_a_problem_the_build_reports_and_the_world_still_builds() -> void:
+	var giant := CreatureDef.new()
+	giant.id = "giant"
+	giant.display_name = "Giant"
+	giant.sprite_set = "forms_wolf"
+	giant.sprite_frame = "fenrir"
+	giant.sprite_size = 30.0
+	var world := _world([_room("PA", "forest", Vector2i(60, 60))])
+	var pl := _run(world, _plan({"giant": {"areas": ["forest"], "class": "common"}}), {"giant": giant})
+	assert_push_error("giant")
+	assert_eq(Array(pl.problems()), ["placement: giant has no room in [\"forest\"]"])
+	var report: Array = []
+	var built := AreaBuilder.build_with([AreaPlacement.new(_plan({"giant": {"areas": ["forest"], "class": "common"}}), defs.merged({"giant": giant}))], AreaBuilder.ROOMS_DIR, report)
+	assert_push_error("giant")
+	assert_eq(report.size(), 1)
+	assert_string_contains(report[0], "giant")
+	assert_true(built.has("C1"), "the rest of the world is built")

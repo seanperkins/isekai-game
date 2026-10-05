@@ -25,3 +25,7 @@ func attach_feature(r: RoomDef, kind: String, id: String, x: float, surface_y: f
 	var f := extra.duplicate()
 	f["by"] = prefix()
 	AreaKit.feature(r, kind, id, x, surface_y, f)
+
+## What this module could not do (a creature no room can hold): the builder reports it and refuses to write the world. Empty when all is well.
+func problems() -> PackedStringArray:
+	return PackedStringArray()

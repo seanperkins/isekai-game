@@ -28,15 +28,15 @@ decor = [{
 spawns = [{
 "by": "PL",
 "id": "twin_spider_venomspinner",
-"pos": Vector2(37.625, 674)
+"pos": Vector2(57.625, 674)
 }, {
 "by": "PL",
 "id": "twin_blight",
-"pos": Vector2(399.5, 674)
+"pos": Vector2(395.5, 674)
 }, {
 "by": "PL",
 "id": "bog_wisp",
-"pos": Vector2(222, 674)
+"pos": Vector2(218, 674)
 }]
 exits = [{
 "edge": "top",

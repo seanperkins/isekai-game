@@ -21,19 +21,19 @@ decor = [{
 spawns = [{
 "by": "PL",
 "id": "twin_undead_wild_huntsman",
-"pos": Vector2(28.8, 1034)
+"pos": Vector2(48.8, 1034)
 }, {
 "by": "PL",
 "id": "twin_goblin_beast_rider",
-"pos": Vector2(198.75, 1034)
+"pos": Vector2(194.75, 1034)
 }, {
 "by": "PL",
 "id": "twin_spider_loom_weaver",
-"pos": Vector2(107.75, 1034)
+"pos": Vector2(127.75, 1034)
 }, {
 "by": "PL",
 "id": "twin_wolf_warg",
-"pos": Vector2(589.6, 1034)
+"pos": Vector2(565.6, 1034)
 }, {
 "by": "PL",
 "id": "village_goblin",

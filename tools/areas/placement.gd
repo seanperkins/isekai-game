@@ -27,8 +27,9 @@ const LEVEL := 60.0
 const HOVER_Y := 150.0
 const FALLBACK_SIZE := Vector2(32.0, 32.0)
 
-## The ids no room could hold.
+## The ids no room could hold, and the problem each one is (AreaModule.problems).
 var unplaced: Array = []
+var _problems := PackedStringArray()
 var _plan: Dictionary
 var _defs: Dictionary
 
@@ -46,6 +47,9 @@ func area() -> String:
 func prefix() -> String:
 	return MARK
 
+func problems() -> PackedStringArray:
+	return _problems
+
 ## The drawn size of a creature: its sheet's frame, or the creature it wears, times its `sprite_size`.
 static func size_of(def: CreatureDef) -> Vector2:
 	var s := Vector2.ZERO
@@ -59,6 +63,7 @@ static func size_of(def: CreatureDef) -> Vector2:
 
 func build(world: Dictionary) -> void:
 	unplaced = []
+	_problems = PackedStringArray()
 	var quiet: Array = _plan.get("quiet", [])
 	var lairs: Array = _plan.get("lairs", [])
 	var by_area := {}
@@ -74,8 +79,7 @@ func build(world: Dictionary) -> void:
 		var cls: String = row["class"]
 		var def: CreatureDef = _defs.get(cid)
 		if def == null:
-			unplaced.append(cid)
-			push_error("placement: %s is in the plan but is not a creature" % cid)
+			_give_up(cid, "placement: %s is in the plan but is not a creature" % cid)
 			continue
 		var size := size_of(def)
 		var spot = null
@@ -86,11 +90,15 @@ func build(world: Dictionary) -> void:
 				home = room_id
 				break
 		if spot == null:
-			unplaced.append(cid)
-			push_error("placement: %s has no room in %s" % [cid, row["areas"]])
+			_give_up(cid, "placement: %s has no room in %s" % [cid, row["areas"]])
 			continue
 		(world[home] as RoomDef).spawns.append({"id": cid, "pos": spot, "by": MARK})
 		loads[home] = float(loads[home]) + float(WEIGHT[cls])
+
+func _give_up(cid: String, why: String) -> void:
+	unplaced.append(cid)
+	_problems.append(why)
+	push_error(why)
 
 ## The plan's creatures, rares first, the ones with the fewest areas first, the biggest first (they need the most room), then by id.
 func _order() -> Array:
@@ -140,12 +148,14 @@ func _find_spot(r: RoomDef, cid: String, size: Vector2):
 			return a.position.y > b.position.y
 		return a.position.x < b.position.x)
 	for surface: Rect2 in surfaces:
-		if surface.size.x < size.x + 2.0 * EDGE:
+		var lo := maxf(surface.position.x, RoomDef.WALL)  # the generated floor runs under the side walls: stand between their faces
+		var hi := minf(surface.end.x, r.pixel_size().x - RoomDef.WALL)
+		if hi - lo < size.x + 2.0 * EDGE:
 			continue
 		var best = null
 		var best_gap := -1.0
-		var x := surface.position.x + size.x / 2.0 + EDGE
-		while x <= surface.end.x - size.x / 2.0 - EDGE:
+		var x := lo + size.x / 2.0 + EDGE
+		while x <= hi - size.x / 2.0 - EDGE:
 			var pos := Vector2(x, AreaKit.stand(surface.position.y))
 			if _headroom(r, pos.x, surface.position.y, size) and _doors_clear(r, pos.x, surface.position.y, size.x) and _fits(r, cid, pos):
 				var gap := _gap_to_others(r, pos, size)
@@ -161,8 +171,9 @@ func _find_spot(r: RoomDef, cid: String, size: Vector2):
 func _hover_spot(r: RoomDef, cid: String, size: Vector2):
 	var best = null
 	var best_gap := -1.0
-	var x := RoomDef.WALL + RoomLint.CLEAR
-	while x <= r.pixel_size().x - RoomDef.WALL - RoomLint.CLEAR:
+	var edge := maxf(RoomLint.CLEAR, size.x / 2.0 + EDGE)
+	var x := RoomDef.WALL + edge
+	while x <= r.pixel_size().x - RoomDef.WALL - edge:
 		var pos := Vector2(x, HOVER_Y)
 		if _fits(r, cid, pos):
 			var gap := _gap_to_others(r, pos, size)

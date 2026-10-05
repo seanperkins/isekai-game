@@ -39,26 +39,26 @@ spawns = [{
 }, {
 "by": "PL",
 "id": "twin_wolf_fenrir",
-"pos": Vector2(65.2, 674)
-}, {
-"by": "PL",
-"id": "twin_spider_chasm_weaver",
-"pos": Vector2(204.2, 650)
+"pos": Vector2(85.2, 674)
 }, {
 "by": "PL",
 "id": "twin_spider_swarm_sovereign",
-"pos": Vector2(503.5, 626)
+"pos": Vector2(203.5, 650)
 }, {
 "by": "PL",
-"id": "twin_stone",
-"pos": Vector2(62.8, 602)
+"id": "twin_prime",
+"pos": Vector2(502.8, 626)
+}, {
+"by": "PL",
+"id": "twin_spider_seven_spider_spirits",
+"pos": Vector2(61.4, 602)
 }, {
 "by": "PL",
 "id": "twin_spider_tsuchigumo",
 "pos": Vector2(201.4, 554)
 }, {
 "by": "PL",
-"id": "twin_undead_barrow_king",
+"id": "twin_undead_bone_colossus",
 "pos": Vector2(373.7, 626)
 }, {
 "by": "PL",

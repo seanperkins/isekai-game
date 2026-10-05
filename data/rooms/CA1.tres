@@ -51,7 +51,7 @@ spawns = [{
 }, {
 "by": "PL",
 "id": "chapel_priest",
-"pos": Vector2(37, 314)
+"pos": Vector2(57, 314)
 }, {
 "by": "PL",
 "id": "shield_guard",
@@ -59,11 +59,11 @@ spawns = [{
 }, {
 "by": "PL",
 "id": "gargoyle",
-"pos": Vector2(198.5, 314)
+"pos": Vector2(194.5, 314)
 }, {
 "by": "PL",
 "id": "candle_wisp",
-"pos": Vector2(124, 314)
+"pos": Vector2(120, 314)
 }, {
 "by": "PL",
 "id": "twin_goblin_hob",

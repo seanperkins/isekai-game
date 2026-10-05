@@ -78,6 +78,16 @@ func test_no_two_creatures_overlap_on_a_level_and_a_door_is_clear() -> void:
 						var from_wall := (s["pos"] as Vector2).x - RoomDef.WALL if e["edge"] == "left" else r.pixel_size().x - RoomDef.WALL - (s["pos"] as Vector2).x
 						assert_gte(from_wall - mine / 2.0, RoomLint.CLEAR - 0.5, "%s blocks the %s door of %s" % [s["id"], e["edge"], id])
 
+func test_no_walking_creature_has_its_drawn_body_in_a_side_wall() -> void:
+	for pair in _placed():
+		if RoomLint.creature_kind(pair[1]["id"]) == "flier":
+			continue
+		var half := AreaPlacement.size_of(defs[pair[1]["id"]]).x / 2.0
+		var width := (world[pair[0]] as RoomDef).pixel_size().x
+		var x: float = (pair[1]["pos"] as Vector2).x
+		assert_gte(x - half, RoomDef.WALL - 0.01, "%s in %s: west wall" % [pair[1]["id"], pair[0]])
+		assert_lte(x + half, width - RoomDef.WALL + 0.01, "%s in %s: east wall" % [pair[1]["id"], pair[0]])
+
 func test_no_room_is_over_the_bounds_per_screen() -> void:
 	for id in world:
 		var r := world[id] as RoomDef

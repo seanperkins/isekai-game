@@ -72,7 +72,7 @@ dressing = [{
 spawns = [{
 "by": "PL",
 "id": "twin_cube",
-"pos": Vector2(55.399998, 314)
+"pos": Vector2(75.399994, 314)
 }, {
 "by": "PL",
 "id": "twin_quicksilver_slime",

@@ -23,27 +23,27 @@ decor = [{
 spawns = [{
 "by": "PL",
 "id": "twin_wolf_cwn_annwn",
-"pos": Vector2(54.5, 674)
+"pos": Vector2(74.5, 674)
 }, {
 "by": "PL",
 "id": "twin_undead_ghoul",
-"pos": Vector2(529.125, 674)
+"pos": Vector2(525.125, 674)
 }, {
 "by": "PL",
 "id": "carrion_crow",
-"pos": Vector2(299.5, 674)
+"pos": Vector2(319.5, 674)
 }, {
 "by": "PL",
 "id": "twin_wolf_black_dog",
-"pos": Vector2(189.6, 674)
+"pos": Vector2(209.6, 674)
 }, {
 "by": "PL",
 "id": "twin_undead_skeletal_archer",
-"pos": Vector2(430.64, 674)
+"pos": Vector2(426.64, 674)
 }, {
 "by": "PL",
 "id": "skeleton",
-"pos": Vector2(380.5, 674)
+"pos": Vector2(472.5, 674)
 }]
 exits = [{
 "edge": "right",

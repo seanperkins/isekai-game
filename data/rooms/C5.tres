@@ -116,11 +116,11 @@ spawns = [{
 }, {
 "by": "PL",
 "id": "twin_sky",
-"pos": Vector2(39.5, 1034)
+"pos": Vector2(59.5, 1034)
 }, {
 "by": "PL",
 "id": "twin_golem",
-"pos": Vector2(159.5, 1034)
+"pos": Vector2(179.5, 1034)
 }, {
 "by": "PL",
 "id": "twin_bulwark",

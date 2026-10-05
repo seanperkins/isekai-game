@@ -34,15 +34,15 @@ spawns = [{
 }, {
 "by": "PL",
 "id": "twin_wolf_amarok",
-"pos": Vector2(569.2, 314)
+"pos": Vector2(541.2, 314)
 }, {
 "by": "PL",
-"id": "twin_wolf_gabriel_hound",
-"pos": Vector2(448.5, 314)
+"id": "twin_spider_chasm_weaver",
+"pos": Vector2(424.2, 314)
 }, {
 "by": "PL",
-"id": "twin_undead_abomination",
-"pos": Vector2(225.7, 314)
+"id": "twin_undead_barrow_king",
+"pos": Vector2(221.7, 314)
 }]
 exits = [{
 "edge": "left",

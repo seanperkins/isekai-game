@@ -47,32 +47,32 @@ spawns = [{
 "pos": Vector2(1000, 308)
 }, {
 "by": "PL",
-"id": "twin_ariadne",
-"pos": Vector2(151.4, 314)
+"id": "twin_wolf_gabriel_hound",
+"pos": Vector2(156.5, 314)
 }, {
 "by": "PL",
-"id": "twin_mimic",
-"pos": Vector2(1135.4, 314)
+"id": "twin_gleipnir",
+"pos": Vector2(1131.4, 314)
 }, {
 "by": "PL",
-"id": "twin_prime",
-"pos": Vector2(498.8, 314)
+"id": "twin_stone",
+"pos": Vector2(518.8, 314)
 }, {
 "by": "PL",
-"id": "twin_spider_seven_spider_spirits",
-"pos": Vector2(929.4, 314)
+"id": "twin_goblin_giant_killer",
+"pos": Vector2(775.8, 314)
 }, {
 "by": "PL",
 "id": "twin_goblin_lord_of_beasts",
-"pos": Vector2(779.1, 314)
+"pos": Vector2(919.1, 314)
 }, {
 "by": "PL",
 "id": "twin_undead_heart_weigher",
-"pos": Vector2(652.8, 314)
+"pos": Vector2(648.8, 314)
 }, {
 "by": "PL",
 "id": "twin_undead_demilich",
-"pos": Vector2(242, 314)
+"pos": Vector2(358, 314)
 }]
 exits = [{
 "edge": "left",

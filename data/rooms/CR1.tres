@@ -29,15 +29,15 @@ spawns = [{
 }, {
 "by": "PL",
 "id": "twin_undead_lich",
-"pos": Vector2(25.125, 674)
+"pos": Vector2(45.125, 674)
 }, {
 "by": "PL",
 "id": "twin_goblin_redcap",
-"pos": Vector2(481.125, 674)
+"pos": Vector2(477.125, 674)
 }, {
 "by": "PL",
 "id": "twin_undead_spartoi_hoplite",
-"pos": Vector2(241.125, 674)
+"pos": Vector2(261.125, 674)
 }]
 exits = [{
 "edge": "left",

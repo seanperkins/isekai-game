@@ -34,19 +34,19 @@ spawns = [{
 }, {
 "by": "PL",
 "id": "twin_wolf_ulfhedinn",
-"pos": Vector2(115.25, 314)
+"pos": Vector2(135.25, 314)
 }, {
 "by": "PL",
 "id": "twin_wolf_moonbound",
-"pos": Vector2(349.2, 314)
+"pos": Vector2(1809.2, 314)
 }, {
 "by": "PL",
 "id": "twin_goblin_leprechaun",
-"pos": Vector2(1804.8, 314)
+"pos": Vector2(360.8, 314)
 }, {
 "by": "PL",
 "id": "firefly_swarm",
-"pos": Vector2(510, 314)
+"pos": Vector2(1010, 314)
 }]
 exits = [{
 "edge": "left",

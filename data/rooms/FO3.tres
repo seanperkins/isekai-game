@@ -20,7 +20,7 @@ decor = [{
 spawns = [{
 "by": "PL",
 "id": "twin_goblin_wolf_lord",
-"pos": Vector2(107.8, 314)
+"pos": Vector2(127.8, 314)
 }]
 exits = [{
 "edge": "left",

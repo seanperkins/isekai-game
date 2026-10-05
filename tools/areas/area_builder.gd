@@ -18,7 +18,8 @@ static func modules() -> Array:
 static func build() -> Dictionary:
 	return build_with(modules())
 
-static func build_with(mods: Array, dir := ROOMS_DIR) -> Dictionary:
+## `report`, when given, receives what the modules say they could not do (AreaModule.problems).
+static func build_with(mods: Array, dir := ROOMS_DIR, report: Array = []) -> Dictionary:
 	var prefixes: Array = []
 	for m in mods:
 		if m.prefix() != "":
@@ -34,6 +35,7 @@ static func build_with(mods: Array, dir := ROOMS_DIR) -> Dictionary:
 		r.spawns = r.spawns.filter(func(sp: Dictionary) -> bool: return not prefixes.has(str(sp.get("by", ""))))
 	for m in mods:
 		m.build(world)
+		report.append_array(m.problems())
 	return world
 
 ## An id a module makes: its prefix and then digits only.
