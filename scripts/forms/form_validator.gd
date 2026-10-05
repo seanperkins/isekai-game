@@ -4,6 +4,8 @@ extends RefCounted
 
 ## The slime's lineages. Another species names its own: any non-empty id, shared by a stage-2 form and all its descendants.
 const LINEAGES := ["weaver", "tide", "toxic", "bulwark", "echo", "greater"]
+## The areas a form may be found in: the four built and the eight planned.
+const AREAS := ["cave", "grotto", "flooded", "deep", "forest", "swamp", "village", "sacred", "cemetery", "crypt", "volcano", "demon"]
 
 ## `check_art` also requires every form's sprite set to have its sheet (the art tests turn it on).
 static func validate(forms: Dictionary, skill_ids: Array, check_art := false) -> PackedStringArray:
@@ -56,6 +58,12 @@ static func validate(forms: Dictionary, skill_ids: Array, check_art := false) ->
 		for p in f.powers:
 			if not skill_ids.has(p):
 				errs.append("%s: lists unknown power '%s'" % [id, p])
+		for e in f.reads:
+			if not Essences.ALL.has(e):
+				errs.append("%s: reads unknown essence '%s'" % [id, e])
+		for a in f.host:
+			if not AREAS.has(a):
+				errs.append("%s: host names unknown area '%s'" % [id, a])
 		if f.size < 1.0 or f.size > 1.5:
 			errs.append("%s: size %.2f outside 1.0..1.5" % [id, f.size])
 		for c in [f.tint.r, f.tint.g, f.tint.b]:

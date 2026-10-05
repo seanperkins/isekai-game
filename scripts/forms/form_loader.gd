@@ -18,6 +18,10 @@ static func children_of(forms: Dictionary, id: String) -> Array:
 			out.append(forms[k])
 	return out
 
+## The forms of one species from the data folder.
+static func load_species(species := Form.DEFAULT_SPECIES, dir := "res://data/forms") -> Dictionary:
+	return of_species(load_all(dir), species)
+
 ## The forms of one species, keys unchanged.
 static func of_species(forms: Dictionary, species: String) -> Dictionary:
 	var out := {}

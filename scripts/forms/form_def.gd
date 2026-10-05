@@ -29,3 +29,14 @@ extends Resource
 ## A sheet set in res://assets/sheets/ (e.g. "form_weaver"), or "" for the tinted base sheet.
 @export var sprite_set := ""
 @export var blurb := ""
+## The essences this body reads (Essences.ALL): the elements that open it and that its kit leans on.
+@export var reads: Array = []
+## The areas (FormValidator.AREAS) it is found in, as a form of its own and as the creature it is in the world.
+@export var host: Array = []
+## The legend or tradition it is drawn from.
+@export var source := ""
+## What its verb does, and what it gives up: words for the Tree tab until the verb system gives them behaviour.
+@export var verb_text := ""
+@export var gives_up := ""
+## How it opens: the diet, power, lesson, graft or condition the design asks for.
+@export var opened_by := ""
