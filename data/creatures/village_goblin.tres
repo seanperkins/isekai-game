@@ -18,6 +18,7 @@ essences = {
 }
 xp = 3
 origin = "support"
+species = "goblin"
 role = "common"
 sprite_set = "goblin"
 sprite_frame = "idle_1"

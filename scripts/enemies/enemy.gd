@@ -105,6 +105,12 @@ var _on_ceiling := false
 var _spit_damage := 0
 var _spit_cd := 0.0
 ## The verb a twin casts (null for a creature with none, or one an enemy cannot cast) and how often it has.
+## What the last blow was, for the deeds a kill earns (DeedTags): {"from_behind", "distance", "damage_type", "cause", "marked", "alert",
+## "fleeing"}; empty until something hits it.
+var last_blow := {}
+## Set when the player appraises it: an appraised enemy counts as marked.
+var appraised := false
+var _blow_from_behind := false
 var verb_casts := 0
 var _verb: Ability
 var _verb_kind := ""
@@ -253,11 +259,24 @@ func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, cau
 	if _untouchable():
 		return
 	EventBus.world_event.emit("enemy_hit", {"pos": global_position})
+	_record_blow(damage_type, from, cause)
 	_cause = cause if cause != "" else cause_for(damage_type)
 	_killed_from = from
 	health.take_hit(Damage.hit(raw, damage_type, 0 if ignore_def else stats.get_stat("def"), 0, 0), damage_type)
 	if status.state != EnemyStatus.DYING:
 		_hurt_t = HURT_SECONDS
+
+func _record_blow(damage_type: String, from: Vector2, cause: String) -> void:
+	last_blow = {"from_behind": _blow_from_behind, "distance": global_position.distance_to(from) if from != Vector2.INF else 0.0,
+		"damage_type": damage_type, "cause": cause, "marked": has_meta("verb_marked") or appraised, "alert": is_alert(), "fleeing": _is_fleeing()}
+	_blow_from_behind = false
+
+## Moving away from the player faster than DeedTags.FLEE_SPEED.
+func _is_fleeing() -> bool:
+	var player := get_tree().get_first_node_in_group("player") as Node2D if is_inside_tree() else null
+	if player == null or absf(velocity.x) <= DeedTags.FLEE_SPEED:
+		return false
+	return signf(velocity.x) == signf(global_position.x - player.global_position.x)
 
 ## An armored front has a weak point behind it: a tackle from behind, or on an armored enemy that is already stunned, ignores
 ## DEF and does double. (A base slime has ATK 1, so against DEF 2 a plain hit floors at 1: a Mushroom Crab would take ten.)
@@ -269,6 +288,7 @@ func receive_tackle(atk: int, from_behind: bool, from: Vector2 = Vector2.INF) ->
 	if _untouchable():
 		return false
 	var weak := def.armored_charger and (from_behind or status.state == EnemyStatus.STUNNED)
+	_blow_from_behind = from_behind
 	receive_hit(atk * WEAK_POINT_MULT if weak else atk, "physical", from, "tackle", weak)
 	if status.state == EnemyStatus.DYING or status.state == EnemyStatus.DOWNED:
 		return true

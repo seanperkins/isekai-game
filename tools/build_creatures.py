@@ -40,6 +40,8 @@ SUPPORT_WEARS = {
     "imp": "bat", "demon_hound": "gloom_wolf", "caller": "bog_lizardman", "blinker": "pale_moth", "ward_bearer": "stone_drake",
     "rider": "bog_lizardman"}
 # The kit a support monster's description names, where the existing enemy kinds can do it.
+# The three support monsters that are a species' base creature: eating one counts as eating that species.
+SUPPORT_SPECIES = {"wild_slime": "slime", "skeleton": "undead", "village_goblin": "goblin"}
 SUPPORT_FLAGS = {"shield_guard": {"armored_charger": True}, "ghost": {"drifter": True}, "bone_hound": {"pack": True, "charges": True},
                  "demon_hound": {"charges": True}}
 FLAG_ORDER = ["armored_charger", "drifter", "pack", "charges"]
@@ -85,7 +87,7 @@ def support_rows(data):
             continue
         role = c["role"] if c["role"] in ROLE_STATS else "common"
         dominant = max(c["essence"], key=lambda e: c["essence"][e])
-        row = {"id": c["id"], "name": c["name"], "origin": "support", "species": "", "stage": 0, "role": c["role"], "form": "", "verb": "",
+        row = {"id": c["id"], "name": c["name"], "origin": "support", "species": SUPPORT_SPECIES.get(c["id"], ""), "stage": 0, "role": c["role"], "form": "", "verb": "",
                "stats": dict(ROLE_STATS[role]), "essences": dict(c["essence"]), "xp": c["xp"], "flags": dict(SUPPORT_FLAGS.get(c["id"], {})),
                "areas": c["areas"], "sprite_set": "", "sprite_frame": "", "wears": "", "sprite_size": 1.0, "sprite_tint": [1.0, 1.0, 1.0]}
         if c["id"] in SUPPORT_SET:

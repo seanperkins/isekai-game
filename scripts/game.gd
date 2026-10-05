@@ -50,6 +50,7 @@ func _exit_tree() -> void:
 func _on_room_entered(id: String) -> void:
 	var area: String = world.rooms[id].area
 	var biome := TerrainArt.art_key(area)  # a new area borrows its biome's light and music bed
+	player.in_dark = DeedTags.is_dark_area(area)
 	var target: Color = TerrainArt.ambient(biome, AMBIENT)
 	var tw := create_tween()
 	tw.tween_property(ambient, "color", target, 0.6)
@@ -222,6 +223,7 @@ func _spawn(id: String, pos: Vector2) -> Node2D:
 		node = Enemy.new()
 		node.setup(def, _skills_by_id)
 		node.downed.connect(func(d: CreatureDef) -> void: player.on_enemy_downed(d, node.spawn_key))
+		node.downed.connect(func(_d: CreatureDef) -> void: player.note_defeat(node))
 		node.downed.connect(func(d: CreatureDef) -> void: Compendium.model.on_creature_defeated(d.id))
 	node.position = pos
 	return node

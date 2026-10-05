@@ -17,6 +17,7 @@ essences = {
 }
 xp = 3
 origin = "support"
+species = "undead"
 role = "common"
 sprite_set = "forms_undead"
 sprite_frame = "skeleton"

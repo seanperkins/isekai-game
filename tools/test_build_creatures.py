@@ -105,6 +105,10 @@ class RowsTest(unittest.TestCase):
         self.assertTrue(by_id["ghost"]["flags"].get("drifter"))
         self.assertEqual((by_id["wild_slime"]["sprite_set"], by_id["wild_slime"]["sprite_frame"]), ("slime", "idle_1"))
 
+    def test_the_three_species_bases_say_their_species_and_no_other_support_monster_does(self):
+        species = {r["id"]: r["species"] for r in self.support if r["species"]}
+        self.assertEqual(species, {"wild_slime": "slime", "skeleton": "undead", "village_goblin": "goblin"})
+
     def test_a_support_monster_with_no_art_of_its_own_wears_a_shipped_creature_tinted(self):
         rat = next(r for r in self.support if r["id"] == "cave_rat")
         self.assertIn(rat["wears"], SHIPPED)

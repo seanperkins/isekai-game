@@ -99,9 +99,14 @@ var species_body: SpeciesBody
 var species_sheet_loader := Callable()
 ## The horizontal speed an ability's push or a hit's knockback holds for `_dash` seconds on a species body.
 var _dash_vx := 0.0
+## How long after leaving a ceiling a kill still counts as made from it (a drop onto prey).
+const CEILING_GRACE := 1.2
 const SLOW_SOURCE := "enemy_slow"
 const SLOW_SPD := -50
 var _slow := 0.0
+## In a dark area (set by the game on entering a room): a kill here is a kill in the dark.
+var in_dark := false
+var _ceiling_t := 0.0
 ## True while become_form runs: the forced line is neither announced nor recorded as reached.
 var _debug_silent := false
 var _pounce_applied := false
@@ -340,6 +345,7 @@ func _species_physics(delta: float) -> void:
 		_stay_on_rope()
 		st.velocity = velocity
 	_species_pos = global_position
+	track_ceiling(delta)
 	_species_combat()
 	_actions(delta)
 	audio_events.update(is_on_floor(), species_body.fall_speed, velocity.x, false, st.clinging)
@@ -745,6 +751,8 @@ func do_inspect() -> void:
 		return
 	var c: CreatureDef = target.def
 	last_inspected = c
+	if "appraised" in target:
+		target.appraised = true
 	sensors.inspected(c.id, c.appraisal_target)
 	inspect_report.emit(StatusText.creature_lines(_compendium.creature_report(c.id, _rules.level_of("appraisal"))))
 
@@ -872,6 +880,19 @@ func award_xp(amount: int) -> void:
 func on_enemy_downed(def: CreatureDef, spawn_key := "") -> void:
 	if not health.is_dead():
 		progression.award(spawn_key, "down", def.xp)
+
+## An enemy was downed: say how, as a `defeated` deed (DeedTags). Nothing when the player is dead.
+func note_defeat(enemy) -> void:
+	if health.is_dead():
+		return
+	_emit.call(Deeds.DEFEATED, DeedTags.for_defeat(enemy.def, enemy.last_blow, {"ceiling": _ceiling_t > 0.0, "dark": in_dark}))
+
+## Keeps the ceiling window open while a crawler hangs from one, and lets it close after.
+func track_ceiling(delta: float) -> void:
+	if species_body != null and species_body.state.surface_n == Vector2.DOWN:
+		_ceiling_t = CEILING_GRACE
+	else:
+		_ceiling_t = maxf(0.0, _ceiling_t - delta)
 
 ## Pays the price in held essence and unlocks a ready evolution. False when it is not ready or the price is not held.
 func try_evolve(id: String) -> bool:
@@ -1225,7 +1246,10 @@ func _complete_predation(t) -> void:
 	predation.cancel()
 	var c: CreatureDef = t.consume()
 	var kind := "terrain" if c.id == Sources.WATER_POOL else "creature"
-	_emit.call(Events.PREDATED, {"source": c.id, "kind": kind})
+	var eaten := {"source": c.id, "kind": kind}
+	if c.species != "":
+		eaten["species"] = c.species
+	_emit.call(Events.PREDATED, eaten)
 	for ess in Essences.ALL:  # canonical order, independent of how the .tres stored the keys
 		for i in int(c.essences.get(ess, 0)):
 			_emit.call(Events.ABSORBED, {"essence": ess, "source": c.id})

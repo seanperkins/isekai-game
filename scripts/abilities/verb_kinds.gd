@@ -197,6 +197,7 @@ static func _mark(a: Ability, spec: Dictionary) -> void:
 	if foes.is_empty():
 		return
 	var target = foes[0]
+	target.set_meta("verb_marked", true)  # until the mark lands: a kill in that time is a marked kill
 	var power := a.power()
 	var marker := Vfx.puffs(a.actor, Art.texture("spit_glob"), [target.global_position], _color(spec), float(spec.get("delay", MARK_DELAY)))
 	marker.add_to_group("verb_marks")
@@ -205,10 +206,11 @@ static func _mark(a: Ability, spec: Dictionary) -> void:
 static func _mark_lands(caster, target, power: int, spec: Dictionary) -> void:
 	if not is_instance_valid(target) or not target.is_inside_tree():
 		return
-	if target.has_method("can_be_hit") and not target.can_be_hit():
-		return
-	var from: Vector2 = caster.global_position if is_instance_valid(caster) else Vector2.INF
-	_hit(target, power, spec, from, false, caster)
+	if not (target.has_method("can_be_hit") and not target.can_be_hit()):
+		var from: Vector2 = caster.global_position if is_instance_valid(caster) else Vector2.INF
+		_hit(target, power, spec, from, false, caster)
+	if is_instance_valid(target):
+		target.remove_meta("verb_marked")  # the mark is spent, landed or not
 
 static func _heal(a: Ability, spec: Dictionary) -> void:
 	var health = a.actor.get("health")
