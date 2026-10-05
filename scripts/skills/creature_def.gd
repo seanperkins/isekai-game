@@ -37,3 +37,18 @@ extends Resource
 @export var charges: bool = false
 ## A charger whose "charge" is a ground slam you dodge by being airborne (the drake). Set with `armored_charger`.
 @export var stomper: bool = false
+## "" for a shipped creature, "twin" for the world twin of a form, "support" for a monster the forms need.
+@export var origin: String = ""
+## The form a twin is the world twin of (data/forms id).
+@export var form: String = ""
+## The species of the form it twins ("" for a creature that is not one), and its place in the world ("common", "elite", "rare", ...).
+@export var species: String = ""
+@export var role: String = ""
+## The skill id of the verb it casts at the player ("verb_wolf_fenrir"); "" for none. Enemy only casts the kinds in VerbKinds.ENEMY_KINDS.
+@export var verb: String = ""
+## Its art: a still in a sheet (the form art track's sets), or the frames of a shipped creature it `wears`. Both empty: a plain placeholder.
+@export var sprite_set: String = ""
+@export var sprite_frame: String = ""
+@export var wears: String = ""
+@export var sprite_size: float = 1.0
+@export var sprite_tint: Color = Color.WHITE

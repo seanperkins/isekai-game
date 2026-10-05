@@ -156,6 +156,25 @@ static func _check_prices(by_id: Dictionary, errors: PackedStringArray) -> void:
 			elif int(d.evolution_price[e]) <= 0:
 				errors.append("%s: evolution_price of '%s' must be positive" % [w, e])
 
+## A creature's verb, origin and art: the verb is a data verb, a twin names its form, a still is a real frame, and `wears` is a shipped creature.
+static func _check_creature_look(w: String, c: CreatureDef, by_id: Dictionary, errors: PackedStringArray) -> void:
+	if not ["", "twin", "support"].has(c.origin):
+		errors.append("%s: origin '%s' is not twin or support" % [w, c.origin])
+	if c.origin == "twin" and c.form == "":
+		errors.append("%s: a twin needs a form" % w)
+	if c.verb != "":
+		if not by_id.has(c.verb):
+			errors.append("%s: verb '%s' is not a skill" % [w, c.verb])
+		elif SkillEffects.active_spec(by_id[c.verb]).is_empty():
+			errors.append("%s: verb '%s' has no verb spec" % [w, c.verb])
+	if c.sprite_set != "":
+		if not SpriteSheet.available(c.sprite_set):
+			errors.append("%s: sprite_set '%s' is not a sheet" % [w, c.sprite_set])
+		elif not SpriteSheet.load_set(c.sprite_set).has_frame(c.sprite_frame):
+			errors.append("%s: sprite_set '%s' has no frame '%s'" % [w, c.sprite_set, c.sprite_frame])
+	if c.wears != "" and not Sources.SHIPPED.has(c.wears):
+		errors.append("%s: wears '%s', which is not a shipped creature" % [w, c.wears])
+
 static func _check_event_ref(w: String, field: String, event: String, tags: Dictionary, errors: PackedStringArray) -> void:
 	if not Events.ALL.has(event):
 		errors.append("%s: %s uses unknown event '%s'" % [w, field, event])
@@ -235,6 +254,7 @@ static func _check_creatures(creatures: Array, by_id: Dictionary, errors: Packed
 			errors.append("%s: projectile '%s' is not '' or spear" % [w, c.projectile])
 		if not c.appraisal_target and c.predatable:
 			errors.append("%s: appraisal_target may be false only on non-predatable sources" % w)
+		_check_creature_look(w, c, by_id, errors)
 	for sid in Sources.ALL:
 		if not seen.has(sid):
 			errors.append("missing CreatureDef for source '%s'" % sid)
