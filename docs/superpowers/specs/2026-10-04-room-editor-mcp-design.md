@@ -112,7 +112,7 @@ One JSON shape in both directions (`get_room` out, `apply_room_spec` in):
 {
   "id": "F1", "area": "forest", "cell": [4, 0], "size": [2, 1], "start": null,
   "solids":   [{"rect": [x, y, w, h], "hard": false}],
-  "water":    [[x, y, w, h]],
+  "water":    [{"rect": [x, y, w, h]}],
   "spawns":   [{"creature": "goblin", "pos": [x, y]}],
   "features": [{"kind": "altar", "id": "f1_altar_1", "pos": [x, y], "perk": "", "title": "", "text": "", "hint": "", "shortcut": ""}],
   "decor":    [{"piece": "rubble", "pos": [x, y]}],
