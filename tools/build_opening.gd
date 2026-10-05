@@ -2,9 +2,10 @@ extends SceneTree
 ## Writes the opening's data: res://data/opening/opening.tres. Run once (then edit the .tres freely):
 ##   env HOME="$PWD/.tmp/gdhome" godot --headless -s tools/build_opening.gd
 ## It is its own generator so that re-running tools/build_soul.gd never overwrites Sean's edited soul copy.
-## Every line below is PLACEHOLDER copy for Sean to rewrite: three trucks, four choices, and every choice fails.
+## Every line below is PLACEHOLDER copy for Sean to rewrite: three trucks, five commands, and every command fails.
 
 const CHOICES := [
+	{"id": "fight", "label": "Fight"},
 	{"id": "dodge", "label": "Dodge"},
 	{"id": "jump", "label": "Jump"},
 	{"id": "pray", "label": "Pray"},
@@ -12,18 +13,21 @@ const CHOICES := [
 ]
 const TRUCKS := [
 	{"prompt": "A truck is coming.", "results": {
+		"fight": "You swing your umbrella with all your heart. The truck is, tragically, a truck.",
 		"dodge": "You step aside. The truck steps with you.",
 		"jump": "You jump. The truck is taller than you thought.",
 		"pray": "You pray. The truck is not a religious truck.",
 		"run": "You run. The truck is faster than your plans.",
 	}},
 	{"prompt": "Another truck is coming.", "results": {
+		"fight": "You swing again, this time with feeling. The truck honks politely.",
 		"dodge": "You dodge with real conviction. The truck finds you anyway.",
 		"jump": "You jump higher. The truck was always going to be there when you landed.",
 		"pray": "You pray harder. The truck arrives on time.",
 		"run": "You run the other way. The road, it turns out, loops.",
 	}},
 	{"prompt": "Somehow, a third truck.", "results": {
+		"fight": "One last swing. The umbrella folds. So, shortly, do you.",
 		"dodge": "You dodge perfectly. It does not matter.",
 		"jump": "You jump out of habit. The truck hits you out of habit too.",
 		"pray": "You pray one last time. The truck is the answer.",
