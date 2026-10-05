@@ -30,4 +30,4 @@ source = "(guide)"
 verb_text = "a poison cloud that spreads on death"
 gives_up = "slow"
 opened_by = "Venomspinner, plus a poison kill streak"
-gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "water"}, "n": 22, "text": "water essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 22, "text": "dark essence"}, {"kind": "reset_counter", "event": "defeated", "tags": {"poison": true}, "reset_on": "damaged", "n": 3, "text": "poison kills in a row"}]
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "water"}, "n": 22, "text": "water essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 22, "text": "dark essence"}, {"kind": "streak", "event": "defeated", "tags": {"poison": true}, "reset_on": "damaged", "n": 3, "text": "poison kills in a row"}]

@@ -45,14 +45,32 @@ func test_an_empty_gate_is_met() -> void:
 	assert_true(FormGate.met(_def([]), engine))
 	assert_eq(FormGate.progress(_def([]), engine), [])
 
+func _streak(tags := {}, n := 3) -> Dictionary:
+	return {"kind": "streak", "event": "defeated", "tags": tags, "reset_on": "damaged", "n": n, "text": "kills in a row"}
+
 func test_a_streak_restarts_when_the_reset_event_comes() -> void:
-	var streak := {"kind": "reset_counter", "event": "defeated", "tags": {}, "reset_on": "damaged", "n": 3, "text": "kills without a hit"}
-	var d := _def([streak])
+	var d := _def([_streak()])
 	_feed("defeated", 2)
 	engine.handle_event("damaged", {"damage_type": "physical"})
 	_feed("defeated", 2)
 	assert_false(FormGate.met(d, engine), "the hit between the kills restarted it")
 	_feed("defeated", 1)
+	assert_true(FormGate.met(d, engine), "three since the hit")
+
+func test_a_streak_that_was_reached_stays_reached_after_a_later_hit() -> void:
+	var d := _def([_streak()])
+	_feed("defeated", 3)
+	assert_true(FormGate.met(d, engine))
+	engine.handle_event("damaged", {"damage_type": "physical"})
+	assert_true(FormGate.met(d, engine), "a form that was open does not close again")
+
+func test_a_streak_of_a_kind_of_kill_is_broken_by_a_kill_of_another_kind() -> void:
+	var d := _def([_streak({"unseen": true})])
+	_feed("defeated", 2, {"unseen": true})
+	_feed("defeated", 1)
+	_feed("defeated", 2, {"unseen": true})
+	assert_false(FormGate.met(d, engine), "an alerted kill in between: two and two, never three in a row")
+	_feed("defeated", 1, {"unseen": true})
 	assert_true(FormGate.met(d, engine))
 
 func test_a_skill_level_atom_needs_the_skill_owned() -> void:
@@ -110,7 +128,9 @@ func test_validate_rejects_each_kind_of_bad_atom() -> void:
 		"an any with no members": {"kind": "any", "text": "x", "of": []},
 		"a held atom of an unknown element": {"kind": "held", "element": "plasma", "n": 1, "text": "x"},
 		"a skill_level with no skill": {"kind": "skill_level", "n": 1, "text": "x"},
-		"a reset on nothing": {"kind": "reset_counter", "event": "defeated", "tags": {}, "reset_on": "nothing_happened", "n": 1, "text": "x"},
+		"a streak reset on nothing": {"kind": "streak", "event": "defeated", "tags": {}, "reset_on": "nothing_happened", "n": 1, "text": "x"},
+		"a streak of an unknown event": {"kind": "streak", "event": "nothing_happened", "tags": {}, "n": 1, "text": "x"},
+		"a reset_counter (a gate wants the best run, not the current one)": {"kind": "reset_counter", "event": "defeated", "tags": {}, "reset_on": "damaged", "n": 1, "text": "x"},
 	}
 	for what in bad:
 		assert_gt(FormGate.validate(_def([bad[what]])).size(), 0, what)

@@ -44,7 +44,8 @@ class RowsTest(unittest.TestCase):
 
     def test_a_bad_atom_is_refused(self):
         for atom in ({"kind": "feeling", "text": "x", "n": 1}, {"kind": "counter", "event": "defeated", "n": 0, "text": "x"},
-                     {"kind": "counter", "event": "defeated", "n": 1}, {"kind": "reset_counter", "event": "defeated", "n": 1, "text": "x"},
+                     {"kind": "counter", "event": "defeated", "n": 1}, {"kind": "reset_counter", "event": "defeated", "reset_on": "damaged", "n": 1, "text": "x"},
+                     {"kind": "streak", "n": 1, "text": "x"},
                      {"kind": "any", "text": "x", "of": []}):
             with self.assertRaises(ValueError, msg=str(atom)):
                 bfg.check_atom(atom, "t")
@@ -72,10 +73,15 @@ class RowsTest(unittest.TestCase):
             for a in f["gate"]:
                 self.assertTrue(a["text"], f["dataId"])
 
-    def test_a_streak_names_what_resets_it(self):
+    def test_a_no_damage_streak_names_what_resets_it(self):
         form = next(f for f in self.forms if f["dataId"] == "wolf_beast_of_gevaudan")
-        streak = [a for a in form["gate"] if a["kind"] == "reset_counter"][0]
+        streak = [a for a in form["gate"] if a["kind"] == "streak"][0]
         self.assertEqual((streak["event"], streak["reset_on"]), ("defeated", "damaged"))
+
+    def test_the_streak_gates_are_the_five_the_design_text_names(self):
+        streaks = sorted(f["dataId"] for f in self.forms if any(a["kind"] == "streak" for a in f["gate"]))
+        self.assertEqual(streaks, ["goblin_redcap", "spider_nightstalker", "spider_plaguemother", "undead_deadeye", "wolf_beast_of_gevaudan"])
+        self.assertFalse(any(a["kind"] == "reset_counter" for f in self.forms for a in f["gate"]), "a gate wants the best run, not the current one")
 
 
 class WriteTest(unittest.TestCase):

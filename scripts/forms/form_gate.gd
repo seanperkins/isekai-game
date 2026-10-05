@@ -1,10 +1,11 @@
 class_name FormGate
 extends RefCounted
 ## A form's gate read against the run's ledger. A gate is a list of atoms, all of which must hold. An atom is a condition like a
-## skill's `unlock` (`counter`, `reset_counter`, `skill_level`) plus `held` (essence still held) and `any` (one of several), with a
-## `text` the cards show: {"kind": "counter", "event": "defeated", "tags": {"behind": true}, "n": 5, "text": "kills from behind"}.
+## skill's `unlock` (`counter`, `skill_level`) plus `held` (essence still held), `streak` (the best unbroken run of matching events this
+## life: a gate that opened stays open, which a current run would not) and `any` (one of several), with a `text` the cards show:
+## {"kind": "counter", "event": "defeated", "tags": {"behind": true}, "n": 5, "text": "kills from behind"}.
 
-const KINDS := ["counter", "reset_counter", "skill_level", "held", "any"]
+const KINDS := ["counter", "streak", "skill_level", "held", "any"]
 
 static func met(def: FormDef, rules) -> bool:
 	for atom in def.gate:
@@ -69,7 +70,7 @@ static func _check(atom, where: String, needs_text: bool, errs: PackedStringArra
 	if int(atom.get("n", 0)) < 1:
 		errs.append("%s: n must be at least 1" % where)
 	match kind:
-		"counter", "reset_counter":
+		"counter", "streak":
 			var event: String = atom.get("event", "")
 			if not Deeds.TAGS.has(event):
 				errs.append("%s: unknown event '%s'" % [where, event])
@@ -81,8 +82,8 @@ static func _check(atom, where: String, needs_text: bool, errs: PackedStringArra
 					for key in tags:
 						if not (Deeds.TAGS[event] as Array).has(key):
 							errs.append("%s: event '%s' has no tag '%s'" % [where, event, key])
-			if kind == "reset_counter" and not Deeds.known(atom.get("reset_on", "")):
-				errs.append("%s: resets on unknown event '%s'" % [where, atom.get("reset_on", "")])
+			if kind == "streak" and atom.get("reset_on", "") != "" and not Deeds.known(atom["reset_on"]):
+				errs.append("%s: resets on unknown event '%s'" % [where, atom["reset_on"]])
 		"skill_level":
 			if str(atom.get("id", "")) == "":
 				errs.append("%s: a skill_level needs a skill id" % where)

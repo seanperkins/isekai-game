@@ -26,4 +26,4 @@ func test_eating_a_twin_pays_its_essence_and_says_what_was_eaten() -> void:
 		assert_eq(e[1], {"essence": "earth", "source": "twin_wolf_fenrir"})
 	var eaten := events.filter(func(e: Array) -> bool: return e[0] == Events.PREDATED)
 	assert_eq(eaten.size(), 1)
-	assert_eq(eaten[0][1], {"source": "twin_wolf_fenrir", "kind": "creature"})
+	assert_eq(eaten[0][1], {"source": "twin_wolf_fenrir", "kind": "creature", "species": "wolf"})

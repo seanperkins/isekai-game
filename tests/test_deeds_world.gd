@@ -210,6 +210,19 @@ func test_a_room_stays_cleared_when_something_falls_after_it() -> void:
 	await wait_physics_frames(2)
 	assert_eq(_count(Deeds.ROOM_CLEARED, {"room": game.world.current_id}), 1)
 
+func test_eating_the_last_enemy_alive_clears_the_room() -> void:
+	var game = await _game()
+	var enemies: Array = game.world.room.get_children().filter(func(n: Node) -> bool: return n is Enemy)
+	for i in enemies.size() - 1:
+		enemies[i].receive_hit(999, "physical", game.player.global_position)
+	await wait_physics_frames(2)
+	assert_eq(_count(Deeds.ROOM_CLEARED), 0)
+	var last: Enemy = enemies[enemies.size() - 1]
+	last.status.stun(10.0)
+	last.consume()  # eaten while it still lives: it never goes down
+	await wait_physics_frames(2)
+	assert_eq(_count(Deeds.ROOM_CLEARED, {"room": game.world.current_id}), 1)
+
 func test_a_room_is_cleared_once_however_many_fall_at_once() -> void:
 	var game = await _game()
 	for n in game.world.room.get_children():

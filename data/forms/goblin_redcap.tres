@@ -28,4 +28,4 @@ source = "the Border legend: a goblin who dyes his cap in his victims' blood and
 verb_text = "Dye: each kill refreshes a blood-cap timer for speed and damage; if it dries you lose it"
 gives_up = "idle play wastes it; holy words repel"
 opened_by = "Skulker, plus a stealth kill chain, plus blood (later)"
-gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 17, "text": "dark essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "blood"}, "n": 17, "text": "blood essence"}, {"kind": "reset_counter", "event": "defeated", "tags": {"unseen": true}, "reset_on": "damaged", "n": 3, "text": "a stealth kill chain"}]
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 17, "text": "dark essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "blood"}, "n": 17, "text": "blood essence"}, {"kind": "streak", "event": "defeated", "tags": {"unseen": true}, "reset_on": "damaged", "n": 3, "text": "a stealth kill chain"}]

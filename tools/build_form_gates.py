@@ -4,7 +4,7 @@
   data/forms/*.tres       each form's `gate` = its essence atoms (from its `reads` and stage) plus its row's atoms
 
 tools/build_species_forms.py calls gate_for() when it writes a form. An atom is `{"kind", "event", "tags", "n", "text"}` (kinds counter,
-reset_counter, skill_level, held and any, see scripts/forms/form_gate.gd); the events and tags are the game's (scripts/core/deeds.gd),
+streak, skill_level, held and any, see scripts/forms/form_gate.gd); the events and tags are the game's (scripts/core/deeds.gd),
 which GUT checks against every written gate. A deed with no emitter yet is in Deeds.RESERVED.
 """
 import json
@@ -15,7 +15,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROWS = os.path.join(HERE, "form_gates.json")
 # The essence a form asks for in all, by stage, split evenly over its `reads` (the slime offers at 24 to 26).
 TOTAL = {2: 26, 3: 34, 4: 44}
-KINDS = ["counter", "reset_counter", "skill_level", "held", "any"]
+KINDS = ["counter", "streak", "skill_level", "held", "any"]
 
 
 def load_rows(path=ROWS):
@@ -44,10 +44,8 @@ def check_atom(atom, where):
         return
     if int(atom.get("n", 0)) < 1:
         raise ValueError("%s: n must be at least 1" % where)
-    if kind in ("counter", "reset_counter") and not atom.get("event"):
+    if kind in ("counter", "streak") and not atom.get("event"):
         raise ValueError("%s: no event" % where)
-    if kind == "reset_counter" and not atom.get("reset_on"):
-        raise ValueError("%s: no reset_on" % where)
 
 
 def check_rows(rows, form_ids):

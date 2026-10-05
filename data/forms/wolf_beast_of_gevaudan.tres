@@ -29,4 +29,4 @@ source = "the man-eater that terrorised the Gévaudan, 1764 to 1767; musket shot
 verb_text = "Stalk-kill: a stealth opener that deals huge damage to the first target, shrugs off ranged hits"
 gives_up = "helpless against crowds"
 opened_by = "Loup-Garou, plus a no-damage kill streak, plus blood (later)"
-gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 22, "text": "dark essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "blood"}, "n": 22, "text": "blood essence"}, {"kind": "reset_counter", "event": "defeated", "tags": {}, "reset_on": "damaged", "n": 5, "text": "kills without taking a hit"}]
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 22, "text": "dark essence"}, {"kind": "counter", "event": "absorbed", "tags": {"essence": "blood"}, "n": 22, "text": "blood essence"}, {"kind": "streak", "event": "defeated", "tags": {}, "reset_on": "damaged", "n": 5, "text": "kills without taking a hit"}]

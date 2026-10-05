@@ -29,4 +29,4 @@ source = "(guide)"
 verb_text = "kills reset the zip; unseen in shadow"
 gives_up = "needs shadow"
 opened_by = "Shadow-stalker, plus an unseen kill streak"
-gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 44, "text": "dark essence"}, {"kind": "reset_counter", "event": "defeated", "tags": {"unseen": true}, "reset_on": "damaged", "n": 4, "text": "unseen kills in a row"}]
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 44, "text": "dark essence"}, {"kind": "streak", "event": "defeated", "tags": {"unseen": true}, "reset_on": "damaged", "n": 4, "text": "unseen kills in a row"}]

@@ -28,4 +28,4 @@ source = "Der Freischütz: magic bullets; six hit true, the seventh is the Devil
 verb_text = "six sure shots, then a cursed seventh"
 gives_up = "the seventh costs HP"
 opened_by = "Archer, plus a perfect-hit streak"
-gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 34, "text": "dark essence"}, {"kind": "reset_counter", "event": "skill_hit", "tags": {}, "reset_on": "skill_missed", "n": 5, "text": "hits without a miss"}]
+gate = [{"kind": "counter", "event": "absorbed", "tags": {"essence": "dark"}, "n": 34, "text": "dark essence"}, {"kind": "streak", "event": "skill_hit", "tags": {}, "reset_on": "skill_missed", "n": 5, "text": "hits without a miss"}]

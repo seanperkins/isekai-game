@@ -119,7 +119,7 @@
   "form": "wolf_beast_of_gevaudan",
   "atoms": [
    {
-    "kind": "reset_counter",
+    "kind": "streak",
     "event": "defeated",
     "tags": {},
     "reset_on": "damaged",
@@ -331,7 +331,7 @@
   "form": "undead_deadeye",
   "atoms": [
    {
-    "kind": "reset_counter",
+    "kind": "streak",
     "event": "skill_hit",
     "tags": {},
     "reset_on": "skill_missed",
@@ -800,7 +800,7 @@
   "form": "spider_nightstalker",
   "atoms": [
    {
-    "kind": "reset_counter",
+    "kind": "streak",
     "event": "defeated",
     "tags": {
      "unseen": true
@@ -819,7 +819,7 @@
   "form": "spider_plaguemother",
   "atoms": [
    {
-    "kind": "reset_counter",
+    "kind": "streak",
     "event": "defeated",
     "tags": {
      "poison": true
@@ -1045,7 +1045,7 @@
   "form": "goblin_redcap",
   "atoms": [
    {
-    "kind": "reset_counter",
+    "kind": "streak",
     "event": "defeated",
     "tags": {
      "unseen": true

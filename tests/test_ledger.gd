@@ -45,3 +45,24 @@ func test_recorded_tags_are_copied() -> void:
 	ledger.record("damaged", tags)
 	tags["damage_type"] = "physical"
 	assert_eq(ledger.counter("damaged", {"damage_type": "poison"}), 1)
+
+func test_best_streak_is_the_longest_run_of_matching_events_with_no_break_between() -> void:
+	for flag in [true, true, false, true, true, true, false, true]:
+		ledger.record("defeated", {"unseen": true} if flag else {})
+	assert_eq(ledger.best_streak("defeated", {"unseen": true}), 3, "a plain defeat in between ends a run")
+
+func test_best_streak_stops_at_the_reset_event_and_keeps_the_best_run_ever() -> void:
+	for i in 3:
+		ledger.record("defeated", {})
+	ledger.record("damaged", {})
+	for i in 2:
+		ledger.record("defeated", {})
+	assert_eq(ledger.best_streak("defeated", {}, "damaged"), 3, "the run of three came before the hit and still counts")
+	assert_eq(ledger.best_streak("defeated", {}), 5, "with no reset event a hit does not break it")
+
+func test_best_streak_skips_other_events_and_an_empty_log_is_zero() -> void:
+	assert_eq(ledger.best_streak("defeated", {}), 0)
+	ledger.record("defeated", {})
+	ledger.record("jumped", {})
+	ledger.record("defeated", {})
+	assert_eq(ledger.best_streak("defeated", {}), 2)

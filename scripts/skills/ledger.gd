@@ -27,6 +27,23 @@ func reset_counter(event_name: String, query: Dictionary, reset_on: String) -> i
 			n += 1
 	return n
 
+## The longest run this life of matching `event_name` entries with no break between: a break is an entry of the same event that does
+## not match `query` (a kill of another kind), or a `reset_on` event (any tags; "" for none). Other events are skipped. The best run ever,
+## not the current one, so a streak that was reached stays reached after a later hit.
+func best_streak(event_name: String, query: Dictionary, reset_on := "") -> int:
+	var current := 0
+	var best := 0
+	for entry in _log:
+		if reset_on != "" and entry[0] == reset_on:
+			current = 0
+		elif entry[0] == event_name:
+			if _matches(entry[1], query):
+				current += 1
+				best = maxi(best, current)
+			else:
+				current = 0
+	return best
+
 func clear() -> void:
 	_log.clear()
 

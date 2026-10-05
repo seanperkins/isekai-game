@@ -229,14 +229,17 @@ func _spawn(id: String, pos: Vector2) -> Node2D:
 		node.downed.connect(func(d: CreatureDef) -> void: player.on_enemy_downed(d, node.spawn_key))
 		node.downed.connect(func(_d: CreatureDef) -> void: player.note_defeat(node))
 		node.downed.connect(func(_d: CreatureDef) -> void: _check_room_cleared())
+		node.tree_exiting.connect(_check_room_cleared)  # an enemy eaten alive leaves without ever going down
 		node.downed.connect(func(d: CreatureDef) -> void: Compendium.model.on_creature_defeated(d.id))
 	node.position = pos
 	return node
 
 ## The room is cleared when its last enemy goes down: a deed, once per room, and alone when no ally is out.
 func _check_room_cleared() -> void:
+	if world == null or not is_instance_valid(world.room):
+		return
 	var room := world.room
-	if room == null or room.has_meta("cleared"):
+	if room.has_meta("cleared"):
 		return
 	var any := false
 	for n in room.get_children():

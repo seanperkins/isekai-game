@@ -340,8 +340,8 @@ func _conditions_met(d: SkillDef) -> bool:
 func _current(c: Dictionary) -> int:
 	return condition_value(c)
 
-## How far a condition has got: its counter, its streak, the level of the skill it names, or the essence of an element still held
-## (the kinds a skill's unlock and a form's gate share).
+## How far a condition has got: its counter, the run since its reset event, the level of the skill it names, the essence of an element
+## still held, or (`streak`, for a form's gate) the best unbroken run of matching events this life.
 func condition_value(c: Dictionary) -> int:
 	match c.get("kind", ""):
 		"counter":
@@ -352,4 +352,6 @@ func condition_value(c: Dictionary) -> int:
 			return level_of(c["id"])
 		"held":
 			return held(c["element"])
+		"streak":
+			return _ledger.best_streak(c["event"], c.get("tags", {}), c.get("reset_on", ""))
 	return 0
