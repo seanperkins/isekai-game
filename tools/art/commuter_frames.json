@@ -135,6 +135,24 @@
         "hurt"
       ],
       "prompt": "The same man lying flat on his back, knocked out, swirly dizzy spirals for eyes, arms and legs sprawled, the satchel open beside him and the umbrella nearby. Cartoon, gentle, not gory. Roughly three times as wide as tall."
+    },
+    {
+      "name": "save_1",
+      "width": 80,
+      "refs": [
+        "idle_1",
+        "run_2"
+      ],
+      "prompt": "The same man lunging forward to the right with both arms stretched out in front of him, shoving someone out of the way: leaning hard, one leg back, a determined worried face, the umbrella and satchel swinging."
+    },
+    {
+      "name": "save_2",
+      "width": 82,
+      "refs": [
+        "idle_1",
+        "save_1"
+      ],
+      "prompt": "The same man in the follow-through of the shove: both arms still outstretched, body low and stretched forward, one foot off the ground, eyes squeezed shut with effort."
     }
   ]
 }

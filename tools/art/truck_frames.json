@@ -32,6 +32,42 @@
         "charge_1"
       ],
       "prompt": "The same truck at full speed: leaning hard forward with the front wheels barely touching the ground, headlights blazing, the rear raised slightly."
+    },
+    {
+      "name": "idle_angry_1",
+      "width": 247,
+      "refs": [
+        "idle_1"
+      ],
+      "prompt": "The same truck parked with its engine idling, but now furious: thick dark angry eyebrows slanting down toward the middle above each big round headlight so the headlights glare like angry eyes, and a scowling grille. Everything else identical to the reference truck."
+    },
+    {
+      "name": "idle_angry_2",
+      "width": 250,
+      "refs": [
+        "idle_1",
+        "idle_angry_1"
+      ],
+      "prompt": "The same furious truck with the thick dark angry eyebrows, its body bobbing very slightly up on the suspension from the engine's rumble, a tiny puff of exhaust at the back. Almost identical to the angry reference."
+    },
+    {
+      "name": "charge_angry_1",
+      "width": 251,
+      "refs": [
+        "charge_1",
+        "idle_angry_1"
+      ],
+      "prompt": "The same furious truck with the thick dark angry eyebrows revving to charge: the front dipping and the cab leaning forward, wheels turning, headlights glaring fiercely."
+    },
+    {
+      "name": "charge_angry_2",
+      "width": 251,
+      "refs": [
+        "charge_2",
+        "idle_angry_1",
+        "charge_angry_1"
+      ],
+      "prompt": "The same furious truck with the thick dark angry eyebrows at full speed: leaning hard forward with the front wheels barely touching the ground, the rear raised slightly, headlights blazing with rage."
     }
   ]
 }

@@ -1,0 +1,28 @@
+{
+  "canonical": "art_source/frames/commuter/idle_1.png",
+  "style": "Modern pixel art with soft lighting (Style D): a small elderly Japanese grandmother, a head shorter than a grown man and slightly hunched, white hair in a neat bun, little round glasses, a soft lavender cardigan over a plum dress, sensible shoes, a beige cloth shopping bag in one hand and a wooden cane in the other, a kind wrinkled face, a clean dark outline, chunky readable pixels, gentle highlights and shading, bright saturated hopeful colours. Match the palette, outline weight and rendering of the reference image (a young office worker) but draw this grandmother. Side view, the character facing right. Draw only the character: no ground, no wall, no shadow, no effects, no text.",
+  "frames": [
+    {
+      "name": "idle_1",
+      "width": 26,
+      "refs": [],
+      "prompt": "The grandmother standing frozen in the road, wide startled eyes and a small round open mouth, the cane planted and the shopping bag held tight."
+    },
+    {
+      "name": "idle_2",
+      "width": 26,
+      "refs": [
+        "idle_1"
+      ],
+      "prompt": "The same grandmother trembling with fright: the cane and the shopping bag shaking slightly, shoulders hunched a little higher. Almost identical to the reference."
+    },
+    {
+      "name": "safe",
+      "width": 26,
+      "refs": [
+        "idle_1"
+      ],
+      "prompt": "The same grandmother safe and relieved: one hand pressed to her chest, a grateful little smile, bowing slightly with the cane in the other hand."
+    }
+  ]
+}

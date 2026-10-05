@@ -24,7 +24,7 @@ PLAYER_SPECIES = {  # sheet id -> (display name, note)
     "goblin": ("Goblin acrobat", "The biped species the player can become. No attack shape yet."),
 }
 ALSO_PLAYABLE = {"gloom_wolf": "the wolf species", "spider": "the spider species"}
-NOT_CREATURES = {"commuter", "truck"}  # the opening's battle sprites (data/opening_clips.json): sheets, but nothing for a bestiary
+NOT_CREATURES = {"commuter", "truck", "grandma"}  # the opening's battle sprites (data/opening_clips.json): sheets, but nothing for a bestiary
 DEFAULT_FRAMES = ("idle_1", "hang_1", "fly_1", "hover_1", "swim_1", "drift_1", "slither_1", "idle")
 
 
