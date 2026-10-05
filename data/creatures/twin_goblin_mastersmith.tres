@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="CreatureDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/creature_def.gd" id="1_hf3fk"]
+
+[resource]
+script = ExtResource("1_hf3fk")
+id = "twin_goblin_mastersmith"
+display_name = "Mastersmith"
+stats = {
+"atk": 8,
+"def": 3,
+"max_hp": 26,
+"spd": 100
+}
+essences = {
+"earth": 6,
+"fire": 6
+}
+xp = 20
+pack = true
+origin = "twin"
+form = "goblin_mastersmith"
+species = "goblin"
+role = "rare or boss"
+verb = "verb_goblin_mastersmith"
+sprite_set = "forms_goblin"
+sprite_frame = "mastersmith"
+sprite_size = 1.4

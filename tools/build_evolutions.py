@@ -249,7 +249,7 @@ def in_game_data(f):
 BASE_SPRITE = {"J1": "slime", "W1": "gloom_wolf", "S1": "spider", "G1": "goblin"}
 
 
-def build():
+def collect():
     text = read(DOC)
     tables = parse_tables(text)
 
@@ -412,13 +412,19 @@ def build():
     for key, rel in (("movesets", "movesets/movesets.json"), ("art", "art/art.json")):
         path = os.path.join(OUT, rel)
         data[key] = json.loads(read(path)) if os.path.exists(path) else None
+    return data
+
+
+def build():
+    """collect(), then write the page's data and the sprites it shows."""
+    data = collect()
     os.makedirs(OUT, exist_ok=True)
-    used = {n["sprite"]["sheet"] for n in list(forms) + list(bases.values()) if n["sprite"]}
-    used |= {c["sprite"]["image"].split("/")[-1][:-4] for c in creatures if c.get("sprite")}
+    used = {n["sprite"]["sheet"] for n in list(data["forms"]) + list(data["bases"]) if n["sprite"]}
+    used |= {c["sprite"]["image"].split("/")[-1][:-4] for c in data["creatures"] if c.get("sprite")}
     copy_sprites(used)
     with open(os.path.join(OUT, "evolutions-data.js"), "w") as fh:
         fh.write("window.EVOLUTIONS = " + json.dumps(data, separators=(",", ":"), ensure_ascii=False) + ";\n")
-    print("wrote %d forms, %d new twins, %d support monsters" % (len(forms), new_twins, len(support)))
+    print("wrote %d forms, %d new twins, %d support monsters" % (len(data["forms"]), data["summary"]["newTwins"], data["summary"]["support"]))
     return data
 
 

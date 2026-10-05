@@ -21,7 +21,7 @@ func _creature(id: String) -> CreatureDef:
 
 func test_all_content_validates() -> void:
 	assert_eq(skills.filter(func(d: SkillDef) -> bool: return d.source != "form_verb").size(), 32, "the authored skills; the form verbs are generated and counted in test_slime_verbs")
-	assert_eq(creatures.size(), 19)
+	assert_eq(creatures.size(), 187, "19 shipped, 140 twins and 28 support monsters")
 	assert_eq(Array(DefValidator.validate(skills, creatures)), [])
 
 func test_spec_numbers_are_verbatim() -> void:

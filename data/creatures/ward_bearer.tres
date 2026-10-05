@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="CreatureDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/creature_def.gd" id="1_hf3fk"]
+
+[resource]
+script = ExtResource("1_hf3fk")
+id = "ward_bearer"
+display_name = "Ward-Bearer"
+stats = {
+"atk": 5,
+"def": 2,
+"max_hp": 14,
+"spd": 90
+}
+essences = {
+"dark": 3,
+"earth": 3,
+"fire": 2
+}
+xp = 10
+origin = "support"
+role = "elite"
+wears = "stone_drake"
+sprite_tint = Color(0.75, 0.6, 0.4, 1)

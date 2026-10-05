@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="CreatureDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/creature_def.gd" id="1_hf3fk"]
+
+[resource]
+script = ExtResource("1_hf3fk")
+id = "twin_goblin_tomte"
+display_name = "Tomte"
+stats = {
+"atk": 5,
+"def": 2,
+"max_hp": 14,
+"spd": 90
+}
+essences = {
+"earth": 4,
+"light": 4
+}
+xp = 10
+pack = true
+origin = "twin"
+form = "goblin_tomte"
+species = "goblin"
+role = "neutral guardian"
+verb = "verb_goblin_tomte"
+sprite_set = "forms_goblin"
+sprite_frame = "tomte"
+sprite_size = 1.25

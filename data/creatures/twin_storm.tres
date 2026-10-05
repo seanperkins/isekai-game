@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="CreatureDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/creature_def.gd" id="1_hf3fk"]
+
+[resource]
+script = ExtResource("1_hf3fk")
+id = "twin_storm"
+display_name = "Storm Sovereign"
+stats = {
+"atk": 8,
+"def": 3,
+"max_hp": 26,
+"spd": 80
+}
+essences = {
+"air": 12
+}
+xp = 20
+origin = "twin"
+form = "storm"
+species = "slime"
+role = "rare or boss"
+sprite_set = "slime"
+sprite_frame = "idle_1"
+sprite_size = 1.4
+sprite_tint = Color(1, 0.75, 1, 1)

@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="CreatureDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/creature_def.gd" id="1_hf3fk"]
+
+[resource]
+script = ExtResource("1_hf3fk")
+id = "twin_tide"
+display_name = "Tide"
+stats = {
+"atk": 3,
+"def": 1,
+"max_hp": 6,
+"spd": 70
+}
+essences = {
+"water": 3
+}
+xp = 4
+origin = "twin"
+form = "tide"
+species = "slime"
+role = "common enemy"
+sprite_set = "slime"
+sprite_frame = "idle_1"
+sprite_size = 1.12
+sprite_tint = Color(0.55, 0.8, 1, 1)

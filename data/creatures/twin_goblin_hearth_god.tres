@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="CreatureDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/creature_def.gd" id="1_hf3fk"]
+
+[resource]
+script = ExtResource("1_hf3fk")
+id = "twin_goblin_hearth_god"
+display_name = "Hearth-God"
+stats = {
+"atk": 8,
+"def": 3,
+"max_hp": 26,
+"spd": 100
+}
+essences = {
+"light": 12
+}
+xp = 20
+pack = true
+origin = "twin"
+form = "goblin_hearth_god"
+species = "goblin"
+role = "rare or boss"
+verb = "verb_goblin_hearth_god"
+sprite_set = "forms_goblin"
+sprite_frame = "hearth_god"
+sprite_size = 1.4

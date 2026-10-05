@@ -24,5 +24,5 @@ const TARATECT := "taratect"
 
 const SHIPPED := [BAT, TOAD, LIZARD, SPIDER, WATER_POOL, SERPENT, SPORE_MOTH, MUSHROOM_CRAB, VINE_SNAKE, PALE_MOTH, GLASS_EEL, CAVE_CRAYFISH, DRIFT_JELLY, BOG_LIZARDMAN, STORM_EEL, GLOOM_WOLF, ARMED_ANT, STONE_DRAKE, TARATECT]
 
-## Every source id. The twins and support monsters join in a later change.
-const ALL := SHIPPED
+## Every source id: the shipped creatures, then the twins and support monsters (data/creatures, tools/build_creatures.py).
+const ALL := SHIPPED + MenagerieIds.ALL

@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="CreatureDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/creature_def.gd" id="1_hf3fk"]
+
+[resource]
+script = ExtResource("1_hf3fk")
+id = "twin_wolf_lycaon"
+display_name = "Lycaon"
+stats = {
+"atk": 8,
+"def": 3,
+"max_hp": 26,
+"spd": 120
+}
+essences = {
+"dark": 12
+}
+xp = 20
+pack = true
+charges = true
+origin = "twin"
+form = "wolf_lycaon"
+species = "wolf"
+role = "rare or boss"
+verb = "verb_wolf_lycaon"
+sprite_set = "forms_wolf"
+sprite_frame = "lycaon"
+sprite_size = 1.4

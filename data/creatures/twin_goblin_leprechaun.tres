@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="CreatureDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/creature_def.gd" id="1_hf3fk"]
+
+[resource]
+script = ExtResource("1_hf3fk")
+id = "twin_goblin_leprechaun"
+display_name = "Leprechaun"
+stats = {
+"atk": 8,
+"def": 3,
+"max_hp": 26,
+"spd": 100
+}
+essences = {
+"air": 6,
+"dark": 6
+}
+xp = 20
+pack = true
+origin = "twin"
+form = "goblin_leprechaun"
+species = "goblin"
+role = "thief"
+verb = "verb_goblin_leprechaun"
+sprite_set = "forms_goblin"
+sprite_frame = "leprechaun"
+sprite_size = 1.4

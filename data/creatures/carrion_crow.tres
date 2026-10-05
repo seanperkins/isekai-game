@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CreatureDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/creature_def.gd" id="1_hf3fk"]
+
+[resource]
+script = ExtResource("1_hf3fk")
+id = "carrion_crow"
+display_name = "Carrion Crow"
+stats = {
+"atk": 3,
+"def": 0,
+"max_hp": 4,
+"spd": 90
+}
+essences = {
+"air": 1,
+"blood": 2
+}
+xp = 3
+origin = "support"
+role = "common"
+wears = "bat"
+sprite_tint = Color(0.9, 0.3, 0.35, 1)

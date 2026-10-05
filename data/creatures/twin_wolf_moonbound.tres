@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="CreatureDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/creature_def.gd" id="1_hf3fk"]
+
+[resource]
+script = ExtResource("1_hf3fk")
+id = "twin_wolf_moonbound"
+display_name = "Moonbound"
+stats = {
+"atk": 3,
+"def": 1,
+"max_hp": 6,
+"spd": 110
+}
+essences = {
+"dark": 3
+}
+xp = 4
+pack = true
+charges = true
+origin = "twin"
+form = "wolf_moonbound"
+species = "wolf"
+role = "common enemy"
+verb = "verb_wolf_moonbound"
+sprite_set = "forms_wolf"
+sprite_frame = "moonbound"
+sprite_size = 1.12

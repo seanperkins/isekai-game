@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="CreatureDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/creature_def.gd" id="1_hf3fk"]
+
+[resource]
+script = ExtResource("1_hf3fk")
+id = "twin_wolf_amarok"
+display_name = "Amarok"
+stats = {
+"atk": 8,
+"def": 3,
+"max_hp": 26,
+"spd": 120
+}
+essences = {
+"earth": 6,
+"water": 6
+}
+xp = 20
+pack = true
+charges = true
+origin = "twin"
+form = "wolf_amarok"
+species = "wolf"
+role = "rare or boss"
+verb = "verb_wolf_amarok"
+sprite_set = "forms_wolf"
+sprite_frame = "amarok"
+sprite_size = 1.4

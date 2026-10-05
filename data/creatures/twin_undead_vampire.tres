@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="CreatureDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/creature_def.gd" id="1_hf3fk"]
+
+[resource]
+script = ExtResource("1_hf3fk")
+id = "twin_undead_vampire"
+display_name = "Vampire"
+stats = {
+"atk": 8,
+"def": 3,
+"max_hp": 26,
+"spd": 80
+}
+essences = {
+"blood": 6,
+"dark": 6
+}
+xp = 20
+origin = "twin"
+form = "undead_vampire"
+species = "undead"
+role = "elite"
+verb = "verb_undead_vampire"
+sprite_set = "forms_undead"
+sprite_frame = "vampire"
+sprite_size = 1.4

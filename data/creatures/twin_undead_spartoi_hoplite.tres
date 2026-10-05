@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="CreatureDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/creature_def.gd" id="1_hf3fk"]
+
+[resource]
+script = ExtResource("1_hf3fk")
+id = "twin_undead_spartoi_hoplite"
+display_name = "Spartoi Hoplite"
+stats = {
+"atk": 5,
+"def": 2,
+"max_hp": 14,
+"spd": 70
+}
+essences = {
+"dark": 4,
+"earth": 4
+}
+xp = 10
+origin = "twin"
+form = "undead_spartoi_hoplite"
+species = "undead"
+role = "elite"
+verb = "verb_undead_spartoi_hoplite"
+sprite_set = "forms_undead"
+sprite_frame = "spartoi_hoplite"
+sprite_size = 1.25

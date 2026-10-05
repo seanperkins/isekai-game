@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="CreatureDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/creature_def.gd" id="1_hf3fk"]
+
+[resource]
+script = ExtResource("1_hf3fk")
+id = "twin_goblin_beastcaller"
+display_name = "Beastcaller"
+stats = {
+"atk": 3,
+"def": 1,
+"max_hp": 6,
+"spd": 90
+}
+essences = {
+"air": 1,
+"earth": 2
+}
+xp = 4
+pack = true
+origin = "twin"
+form = "goblin_beastcaller"
+species = "goblin"
+role = "common enemy"
+verb = "verb_goblin_beastcaller"
+sprite_set = "forms_goblin"
+sprite_frame = "beastcaller"
+sprite_size = 1.12

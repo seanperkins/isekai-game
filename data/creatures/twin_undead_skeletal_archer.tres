@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="CreatureDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/creature_def.gd" id="1_hf3fk"]
+
+[resource]
+script = ExtResource("1_hf3fk")
+id = "twin_undead_skeletal_archer"
+display_name = "Skeletal Archer"
+stats = {
+"atk": 3,
+"def": 1,
+"max_hp": 6,
+"spd": 70
+}
+essences = {
+"air": 2,
+"dark": 1
+}
+xp = 4
+origin = "twin"
+form = "undead_skeletal_archer"
+species = "undead"
+role = "common enemy"
+verb = "verb_undead_skeletal_archer"
+sprite_set = "forms_undead"
+sprite_frame = "skeletal_archer"
+sprite_size = 1.12

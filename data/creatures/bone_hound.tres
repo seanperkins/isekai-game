@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="CreatureDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/creature_def.gd" id="1_hf3fk"]
+
+[resource]
+script = ExtResource("1_hf3fk")
+id = "bone_hound"
+display_name = "Bone Hound"
+stats = {
+"atk": 3,
+"def": 0,
+"max_hp": 4,
+"spd": 90
+}
+essences = {
+"blood": 1,
+"dark": 2
+}
+xp = 4
+pack = true
+charges = true
+origin = "support"
+role = "common"
+wears = "gloom_wolf"
+sprite_tint = Color(0.55, 0.45, 0.65, 1)

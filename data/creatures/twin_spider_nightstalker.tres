@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="CreatureDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/creature_def.gd" id="1_hf3fk"]
+
+[resource]
+script = ExtResource("1_hf3fk")
+id = "twin_spider_nightstalker"
+display_name = "Nightstalker"
+stats = {
+"atk": 8,
+"def": 3,
+"max_hp": 26,
+"spd": 110
+}
+essences = {
+"dark": 12
+}
+xp = 20
+origin = "twin"
+form = "spider_nightstalker"
+species = "spider"
+role = "rare or boss"
+verb = "verb_spider_nightstalker"
+sprite_set = "forms_spider"
+sprite_frame = "nightstalker"
+sprite_size = 1.4

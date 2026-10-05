@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="CreatureDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/creature_def.gd" id="1_hf3fk"]
+
+[resource]
+script = ExtResource("1_hf3fk")
+id = "twin_greater_slime"
+display_name = "Greater Slime"
+stats = {
+"atk": 3,
+"def": 1,
+"max_hp": 6,
+"spd": 70
+}
+essences = {
+"air": 1,
+"earth": 1,
+"water": 1
+}
+xp = 4
+origin = "twin"
+form = "greater_slime"
+species = "slime"
+role = "common enemy"
+sprite_set = "slime"
+sprite_frame = "idle_1"
+sprite_size = 1.12
+sprite_tint = Color(1, 0.92, 0.7, 1)

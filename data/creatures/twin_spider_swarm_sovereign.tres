@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="CreatureDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/creature_def.gd" id="1_hf3fk"]
+
+[resource]
+script = ExtResource("1_hf3fk")
+id = "twin_spider_swarm_sovereign"
+display_name = "Swarm Sovereign"
+stats = {
+"atk": 8,
+"def": 3,
+"max_hp": 26,
+"spd": 110
+}
+essences = {
+"air": 6,
+"dark": 6
+}
+xp = 20
+origin = "twin"
+form = "spider_swarm_sovereign"
+species = "spider"
+role = "rare or boss"
+verb = "verb_spider_swarm_sovereign"
+sprite_set = "forms_spider"
+sprite_frame = "swarm_sovereign"
+sprite_size = 1.4

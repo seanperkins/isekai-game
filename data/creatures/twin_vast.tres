@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="CreatureDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/creature_def.gd" id="1_hf3fk"]
+
+[resource]
+script = ExtResource("1_hf3fk")
+id = "twin_vast"
+display_name = "Vast Slime"
+stats = {
+"atk": 5,
+"def": 2,
+"max_hp": 14,
+"spd": 70
+}
+essences = {
+"earth": 4,
+"water": 4
+}
+xp = 10
+origin = "twin"
+form = "vast"
+species = "slime"
+role = "elite"
+sprite_set = "slime"
+sprite_frame = "idle_1"
+sprite_size = 1.25
+sprite_tint = Color(1, 0.92, 0.7, 1)

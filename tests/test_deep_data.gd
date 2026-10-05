@@ -42,7 +42,7 @@ func test_the_stats_are_scaled_at_level_10() -> void:
 		assert_eq([c.stats["max_hp"], c.stats["atk"], c.stats["def"]], want[id], id)
 
 func test_only_the_deeps_creatures_carry_the_new_flags() -> void:
-	for id in creatures:
+	for id in Sources.SHIPPED:  # the twins and support monsters have their own flags
 		var c: CreatureDef = creatures[id]
 		if not ["gloom_wolf", "armed_ant", "stone_drake", "taratect"].has(id):
 			assert_false(c.pack or c.charges or c.stomper, id)

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="CreatureDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/creature_def.gd" id="1_hf3fk"]
+
+[resource]
+script = ExtResource("1_hf3fk")
+id = "twin_king_slime"
+display_name = "King Slime"
+stats = {
+"atk": 8,
+"def": 3,
+"max_hp": 26,
+"spd": 80
+}
+essences = {
+"earth": 6,
+"light": 6
+}
+xp = 20
+origin = "twin"
+form = "king_slime"
+species = "slime"
+role = "rare or boss"
+verb = "verb_king_slime"
+sprite_set = "forms_slime"
+sprite_frame = "king_slime"
+sprite_size = 1.4
