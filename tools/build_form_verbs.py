@@ -3,11 +3,13 @@
 tools/build_species_forms.py gives each form its `verb` and the grant. The table is the one place a verb's cost, damage value and
 spec live; `fidelity` says how much of the design doc's verb text the spec does (full, approx, needs) and `note` says what is missing.
 
-Run from the repo root:  python3 tools/build_form_verbs.py
+It also draws each verb's placeholder icon (tools/art/verb_icons.py, which needs Pillow). Run from the repo root:
+  uv run --with Pillow python tools/build_form_verbs.py
 """
 import glob
 import json
 import os
+import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 TABLE = os.path.join(HERE, "form_verbs.json")
@@ -60,4 +62,6 @@ def build(out_dir=OUT, rows=None):
 
 
 if __name__ == "__main__":
-    print("wrote %d form verbs to %s" % (len(build()), OUT))
+    sys.path.insert(0, os.path.join(HERE, "art"))
+    import verb_icons  # noqa: E402
+    print("wrote %d form verbs to %s and %d icons" % (len(build()), OUT, len(verb_icons.build())))

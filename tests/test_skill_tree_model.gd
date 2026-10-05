@@ -28,7 +28,7 @@ func _discover_all() -> void:
 func _player_skill_ids() -> Array:
 	var out: Array = []
 	for d in skills:
-		if d.source != "enemy_only":
+		if d.source != "enemy_only" and d.source != "form_verb":  # a form's verb is not a node of the skill tree
 			out.append(d.id)
 	out.sort()
 	return out

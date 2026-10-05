@@ -115,8 +115,9 @@ func test_every_active_skill_has_its_own_cue() -> void:
 	var c := CueCatalog.load_file("res://data/audio/cues.json")
 	var by_id: Dictionary = c.events["skill_used"]
 	for d in SkillRules.skill_defs:
-		if SkillEffects.active_scene(d) != "":
+		if SkillEffects.active_scene(d) != "" and d.source != "form_verb":  # a form's verb plays the default skill cue
 			assert_true(by_id.has(d.id), "skill_used.%s" % d.id)
+	assert_true(by_id.has("default"))
 
 func test_no_audio_file_is_orphaned() -> void:
 	var c := CueCatalog.load_file("res://data/audio/cues.json")
