@@ -7,11 +7,23 @@ unless --force. Codex needs network and its own state directory, so run this uns
 """
 import json
 import os
+import re
 import subprocess
 import sys
 
 CODEX = "/Users/sean/.local/bin/codex"  # the native binary; the cmux shim on PATH breaks
 STYLE_REF = "art_source/sprites_tiles_d.png"
+NAME = re.compile(r"^[a-z0-9_]+$")
+
+
+def valid_name(name):
+    """A piece name becomes part of file paths, so it is a plain identifier (no slashes or dots)."""
+    return bool(NAME.match(name))
+
+
+def valid_ref(ref):
+    """A reference image is a path inside the project: relative, no parent steps."""
+    return bool(ref) and not os.path.isabs(ref) and ".." not in ref.split("/")
 
 
 def build_prompt(cfg, spec, out):
@@ -26,6 +38,9 @@ def generate(cfg, name, force):
     os.makedirs(os.path.dirname(out), exist_ok=True)
     os.makedirs(".tmp/opening-gen", exist_ok=True)
     spec = cfg["pieces"][name]
+    bad = [r for r in spec.get("refs", []) if not valid_ref(r)]
+    if bad:
+        return "FAILED: reference outside the project: %s" % bad
     cmd = [CODEX, "-a", "never", "exec", "--sandbox", "workspace-write", "-C", os.getcwd(), "--json"]
     for ref in [STYLE_REF] + spec.get("refs", []):
         cmd += ["--image", ref]
@@ -39,7 +54,11 @@ def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     force = "--force" in sys.argv
     cfg = json.load(open("tools/art/opening_prompts.json"))
-    for name in args or list(cfg["pieces"]):
+    names = args or list(cfg["pieces"])
+    for name in names:
+        if not valid_name(name) or name not in cfg["pieces"]:
+            raise SystemExit("unknown piece: %r" % name)
+    for name in names:
         print("%s: %s" % (name, generate(cfg, name, force)), flush=True)
 
 

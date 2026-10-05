@@ -308,6 +308,7 @@ func _impact(last: bool) -> void:
 
 func _after_hit(_last: bool) -> void:
 	_kill(_fx)
+	_flash.modulate.a = 0.0  # a skipped hit reaches here with the impact's flash still up and its fade killed
 	hp_display = float(_hp)
 	_model.act()
 	if _model.done():

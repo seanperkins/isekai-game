@@ -176,6 +176,17 @@ func test_the_truck_hits_hp_drops_and_the_third_knocks_you_out() -> void:
 	_press(KEY_ENTER)
 	assert_eq(done[0], 1, "and never again")
 
+func test_skipping_a_hit_leaves_no_white_over_the_next_round() -> void:
+	scene.play(_def())
+	var flash := scene.get_node("Flash") as ColorRect
+	_choose(0)
+	_press(KEY_ENTER)  # the truck starts to charge
+	_press(KEY_ENTER)  # and the player skips the whole hit, impact included, before it plays
+	assert_eq(scene.beat(), "intro", "the next truck is rolling in")
+	assert_eq(flash.modulate.a, 0.0, "the impact's white flash must not be left over the next round")
+	_to_command()
+	assert_eq(flash.modulate.a, 0.0)
+
 func test_a_new_play_after_the_fade_shows_the_battle_again() -> void:
 	scene.play(_def())
 	for i in 3:
