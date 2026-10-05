@@ -48,6 +48,7 @@ fi
 rm -rf "${WT:?}/$DEST"
 mkdir -p "$WT/$DEST"
 cp -R "$SRC/." "$WT/$DEST/"
+find "$WT/$DEST" -name '*.import' -delete  # Godot writes these next to the page's PNGs (git ignores them): they are not part of the page
 : > "$WT/.nojekyll"
 git -C "$WT" add -A
 
