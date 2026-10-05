@@ -1107,6 +1107,136 @@ func _shift_content(r: RoomDef, d: Vector2) -> void:
 		e["from"] = float(e["from"]) + amount
 		e["to"] = float(e["to"]) + amount
 
+# --- replacing a room's content ---
+
+## Replaces the room's solids, hard ledges, water, spawns, features and decor with `content` (RoomSpec.content_of's shape; a missing
+## key means none) in ONE undo step, or changes nothing. Returns [] on success, else every refusal as {kind, index, error} (index into
+## the content's list), so a whole spec can be fixed in one pass. Exits, dressing, start, cell, size and area are left alone.
+## Each element goes through the rule behind its single add (a solid as _put_solid, water as _water_error, a spawn in open space, a
+## feature or decor piece on a surface) but its numbers are kept exactly, never snapped or clipped: most of the shipped rooms are off
+## the 4 px grid, which the editor's mouse snaps to and the data does not need. A feature, decor piece or spawn that is exactly one
+## the room already holds is not re-checked, so a room's own spec applies back unchanged even where shipped decor stands in an exit's
+## gap (three pieces do); only what is new or changed meets the rules.
+func apply_content(room_id: String, content: Dictionary) -> Array:
+	if not rooms.has(room_id):
+		return [{"kind": "room", "index": -1, "error": "no room '%s'" % room_id}]
+	var scratch := RoomEditModel.new(rooms, creature_ids)
+	var errors := scratch._replay(room_id, content)
+	if not errors.is_empty():
+		return errors
+	var before := _snap([room_id])
+	var from: RoomDef = scratch.rooms[room_id]
+	var r: RoomDef = rooms[room_id]
+	r.solids = from.solids
+	r.hard_ledges = from.hard_ledges
+	r.water = from.water
+	r.spawns = from.spawns
+	r.features = from.features
+	r.decor = from.decor
+	_push(before)
+	selection = {}
+	return errors
+
+## Empties the room's six content lists and adds `content` back element by element, collecting what each check refuses. Solids go
+## first, then water, spawns, features and decor, because the later checks look at the solids already placed.
+func _replay(room_id: String, content: Dictionary) -> Array:
+	var r: RoomDef = rooms[room_id]
+	var held := RoomEditModel.copy_room(r)  # what the room holds now: an element identical to one of these is not re-checked
+	r.solids = []
+	r.hard_ledges = []
+	r.water = []
+	r.spawns = []
+	r.features = []
+	r.decor = []
+	var errors: Array = []
+	var refuse := func(kind: String, i: int, why: String) -> void:
+		errors.append({"kind": kind, "index": i, "error": why})
+	var solids: Array = content.get("solids", [])
+	for i in solids.size():
+		var rect: Rect2 = solids[i]["rect"]
+		var hard: bool = solids[i].get("hard", false)
+		if hard and not (rect.size.y <= 24.0 and rect.size.x > 24.0):
+			refuse.call("solid", i, "only a thin solid can be rock from below")
+			continue
+		r.solids.append(Rect2())  # the slot _put_solid writes
+		var err := _put_solid(room_id, r.solids.size() - 1, rect, hard)
+		if err != "":
+			r.solids.pop_back()
+			refuse.call("solid", i, err)
+	var water: Array = content.get("water", [])
+	for i in water.size():
+		var err := _water_error(r, water[i])
+		if err != "":
+			refuse.call("water", i, err)
+		else:
+			r.water.append(water[i])
+	var spawns: Array = content.get("spawns", [])
+	for i in spawns.size():
+		var sp: Dictionary = spawns[i]
+		var pos: Vector2 = sp["pos"]
+		if held.spawns.has(sp):
+			r.spawns.append(sp.duplicate(true))
+		elif not creature_ids.is_empty() and not creature_ids.has(sp["id"]):
+			refuse.call("spawn", i, "unknown creature '%s'" % sp["id"])
+		elif not bounds(r).has_point(pos):
+			refuse.call("spawn", i, "outside the room")
+		elif _in_rock(room_id, pos):
+			refuse.call("spawn", i, "inside rock: click open space")
+		else:
+			r.spawns.append(sp.duplicate(true))
+	var features: Array = content.get("features", [])
+	for i in features.size():
+		var f: Dictionary = features[i].duplicate(true)
+		var err := "" if held.features.has(features[i]) else _feature_error(room_id, f)
+		if err != "":
+			refuse.call("feature", i, err)
+			continue
+		if not f.has("id"):
+			f["id"] = _feature_id(room_id, f["kind"])
+		match f["kind"]:
+			"tablet":
+				f["title"] = f.get("title", "Tablet")
+			"switch":
+				f["shortcut"] = f.get("shortcut", f["id"])
+			"altar":
+				f["area"] = f.get("area", r.area)
+				f["perk"] = f.get("perk", "")
+		r.features.append(f)
+	var decor: Array = content.get("decor", [])
+	for i in decor.size():
+		var d: Dictionary = decor[i].duplicate(true)
+		var err := "" if held.decor.has(decor[i]) else _decor_error(room_id, d)
+		if err != "":
+			refuse.call("decor", i, err)
+			continue
+		var entry := DecorLib.entry(d["id"], d["pos"])
+		entry.merge(d, true)  # the spec's own keys win; the catalog fills anchor and light only where it left them out
+		r.decor.append(entry)
+	return errors
+
+## Why feature `f` (kind, pos) cannot stand where it says ("" when it can): an unknown kind, or no surface at exactly that height.
+func _feature_error(room_id: String, f: Dictionary) -> String:
+	if not FEATURE_KINDS.has(f.get("kind", "")):
+		return "unknown feature '%s'" % f.get("kind", "")
+	var base = _feature_base(room_id, f["pos"], f["kind"])
+	if base is String:
+		return base
+	if absf(base.y - (f["pos"] as Vector2).y) > 0.5:
+		return "nothing to stand on at y %s: the surface below is at y %s" % [f["pos"].y, base.y]
+	return ""
+
+## Why decor `d` (id, pos, optional anchor) cannot stand or hang where it says ("" when it can).
+func _decor_error(room_id: String, d: Dictionary) -> String:
+	if not DecorLib.CATALOG.has(d["id"]):
+		return "unknown decor '%s'" % d["id"]
+	var hangs := str(d.get("anchor", DecorLib.CATALOG[d["id"]].get("anchor", "bottom"))) == "top"
+	var base = _decor_base(room_id, d["pos"], hangs)
+	if base is String:
+		return base
+	if absf(base.y - (d["pos"] as Vector2).y) > 0.5:
+		return "nothing to %s at y %s: the surface is at y %s" % ["hang from" if hangs else "stand on", d["pos"].y, base.y]
+	return ""
+
 # --- save ---
 
 ## Writes each dirty room to `<dir>/<id>.tres` with ResourceSaver (the call the generator used). Rooms save independently: a

@@ -15,6 +15,7 @@ func _init(p_session: RoomSession = null) -> void:
 	_register_read()
 	_register_add()
 	_register_change()
+	_register_bulk()
 	_register_persist()
 	_register_preview()
 
@@ -65,6 +66,8 @@ static func _check_object(path: String, schema: Dictionary, v: Dictionary) -> St
 	for key: String in schema.get("required", []):
 		if not v.has(key):
 			return "%s: required" % _join(path, key)
+	if not schema.has("properties"):
+		return ""  # a free-form object (a spec): its keys are the handler's business
 	for key: String in v:
 		if not props.has(key):
 			return "%s: unknown argument" % _join(path, key)
@@ -402,3 +405,29 @@ func _preview(args: Dictionary) -> Dictionary:
 			r.id, r.area, r.size.x, r.size.y, r.pixel_size().x, r.pixel_size().y, RoomPreview.clamp_scale(r, scale)]
 		content.append({"type": "text", "text": head + RoomPreview.legend(r) + "\n" + RoomPreview.text_map(r)})
 	return result(content)
+
+# --- the bulk tool ---
+
+func _register_bulk() -> void:
+	_add("apply_room_spec", "Replace one room's solids (with hard flags), water, spawns, features and decor from a spec, in one undo step. All or nothing: "
+		+ "if any element is refused, nothing changes and every refusal is listed as {kind, index, error} (index into your spec). Exits, "
+		+ "dressing, start, cell, size and area are not touched (use add_exit and new_room). Numbers are kept exactly, not snapped. "
+		+ "The spec is the one get_room returns.",
+		obj({"room": {"type": "string"}, "spec": {"type": "object", "description": "{solids: [{rect: [x, y, w, h], hard?}], water: [{rect}], "
+			+ "spawns: [{creature, pos}], features: [{kind, pos, id?, ...}], decor: [{piece, pos, ...}]}. A list left out becomes empty."}},
+			["room", "spec"]), _apply_room_spec)
+
+func _apply_room_spec(args: Dictionary) -> Dictionary:
+	if _room(args["room"]) == null:
+		return _no_room(args["room"])
+	var parsed := RoomSpec.content_from_json(args["spec"])
+	# A malformed element is dropped from the parsed content, so the model's own indexes would no longer match the agent's spec:
+	# shape errors are reported alone, and the model's checks run once the spec is well formed.
+	var errors: Array = parsed["errors"]
+	if errors.is_empty():
+		errors = _session.model.apply_content(args["room"], parsed["content"])
+	if not errors.is_empty():
+		return result([{"type": "text", "text": JSON.stringify({"ok": false, "errors": errors})}], true)
+	var content: Dictionary = parsed["content"]
+	return ok({"ok": true, "counts": {"solids": content["solids"].size(), "water": content["water"].size(),
+		"spawns": content["spawns"].size(), "features": content["features"].size(), "decor": content["decor"].size()}})
