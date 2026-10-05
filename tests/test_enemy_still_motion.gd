@@ -54,10 +54,10 @@ func test_a_still_that_walks_hops_and_leans_towards_where_it_faces() -> void:
 	var lean := 0.0
 	for i in 40:
 		_draw_at(e, i * 0.05)
-		rose = maxf(rose, Enemy.BODY_BOTTOM - _feet(e))
+		rose = maxf(rose, Enemy.BODY_BOTTOM - _lowest(e))
 		lean = maxf(lean, _sprite(e).rotation)
 	assert_gt(rose, 1.0, "it leaves the floor at the top of a hop")
-	assert_lte(rose, 4.01)
+	assert_lte(rose, Enemy.STILL_HOP + 0.01, "no higher than a hop: the lean's corner is lifted back, not added")
 	assert_gt(lean, 0.02, "leaning right")
 	e.facing = -1
 	_draw_at(e, 0.2)
@@ -106,3 +106,37 @@ func test_a_creature_that_is_not_a_still_is_untouched() -> void:
 	_draw_at(e, 0.3)
 	assert_eq(_sprite(e).scale, Vector2.ONE)
 	assert_eq(_sprite(e).rotation, 0.0)
+
+## The lowest point of the drawn still, whatever it is doing.
+func _lowest(e: Enemy) -> float:
+	var sp := _sprite(e)
+	var half := Vector2((sp.texture as AtlasTexture).region.size.x * sp.scale.x, (sp.texture as AtlasTexture).region.size.y * sp.scale.y) / 2.0
+	var turn := Transform2D(sp.rotation, sp.position)
+	return maxf((turn * Vector2(-half.x, half.y)).y, (turn * Vector2(half.x, half.y)).y)
+
+func test_a_leaning_still_never_dips_a_corner_below_the_floor_and_touches_it_between_hops() -> void:
+	var e := _twin()
+	e.velocity = Vector2(60, 0)
+	var touched := false
+	for i in 120:
+		_draw_at(e, i * 0.01)
+		assert_lte(_lowest(e), Enemy.BODY_BOTTOM + 0.01, "t=%s" % (i * 0.01))
+		if absf(_lowest(e) - Enemy.BODY_BOTTOM) < 0.2:
+			touched = true
+	assert_true(touched, "a foot comes down between hops")
+
+func test_a_still_that_dies_is_upright_for_the_death_effect() -> void:
+	var e := _twin()
+	e.velocity = Vector2(60, 0)
+	for i in 4:
+		_draw_at(e, 0.1 + i * 0.05)
+	e.status.state = EnemyStatus.DYING
+	_draw_at(e, 0.3)
+	assert_eq(_sprite(e).rotation, 0.0)
+
+func test_the_hurt_box_does_not_move_with_the_breathing() -> void:
+	var e := _twin()
+	_draw_at(e, 0.0)
+	var first := e.hurt_polygon()
+	_draw_at(e, 0.45)
+	assert_eq(e.hurt_polygon(), first, "a still's hurt box is the body's, not its drawing's")

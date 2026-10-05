@@ -14,5 +14,7 @@ func show_over(sprite: Sprite2D, held: bool) -> void:
 	texture = VfxArt.web_cover(Vector2i(sprite.texture.get_size()), held)
 	position = sprite.position
 	offset = sprite.offset
+	scale = sprite.scale  # a still is drawn at its creature's size, and breathes and leans
+	rotation = sprite.rotation
 	flip_h = sprite.flip_h
 	visible = true

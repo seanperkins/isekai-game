@@ -22,7 +22,8 @@ var _look_tint := Color.WHITE
 var _look_scale := 1.0
 var _cut: Node2D
 var _bottom := 0.0
-var _tex_height := 0.0
+var _tex_height := 0.0  # the prey's drawn height
+var _prey_scale := Vector2.ONE
 var _time := 0.0
 
 static func cover_frame(progress: float, t: float) -> String:
@@ -42,7 +43,8 @@ func begin(target: Node2D, sheet: SpriteSheet, left: bool = false) -> void:
 	if _prey_sprite != null:
 		_prey_was_visible = _prey_sprite.visible
 	if _prey_sprite != null and _prey_sprite.texture != null:
-		_tex_height = float(_prey_sprite.texture.get_height())
+		_prey_scale = _prey_sprite.scale  # a still is drawn at its creature's size
+		_tex_height = float(_prey_sprite.texture.get_height()) * _prey_scale.y
 		_bottom = _prey_sprite.position.y + _tex_height / 2.0
 		prey_copy.texture = _prey_sprite.texture
 		prey_copy.flip_h = _prey_sprite.flip_h
@@ -74,7 +76,7 @@ func tick(delta: float, progress: float) -> void:
 	if is_instance_valid(_target):
 		global_position = _target.global_position + Vector2(0.0, _bottom)
 	var s := lerpf(1.0, PREY_MIN_SCALE, clampf(progress, 0.0, 1.0))
-	prey_copy.scale = Vector2(s, s)
+	prey_copy.scale = _prey_scale * s
 	prey_copy.position.y = -_tex_height * s / 2.0
 	if prey_halves != null:
 		prey_halves.scale = Vector2(s, s)

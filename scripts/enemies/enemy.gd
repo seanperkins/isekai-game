@@ -584,6 +584,8 @@ func _update_visual(delta: float = 0.0) -> void:
 		return
 	if status.state != EnemyStatus.DYING:  # the death effect owns the sprite
 		_draw_creature(delta)
+	else:
+		_sprite.rotation = 0.0  # upright for it: a still dies from the pose it stood in
 	_update_web()  # after the draw, so it fits this frame
 
 func _draw_creature(delta: float) -> void:
@@ -614,7 +616,7 @@ const STILL_LEAN := 0.06
 func _draw_still() -> void:
 	var frame := _still_frame()
 	var size := def.sprite_size
-	var height := _still.frame_size(frame).y * size
+	var frame_size := _still.frame_size(frame)
 	_sprite.texture = _still.frame_texture(frame)
 	_sprite.flip_h = facing < 0
 	_sprite.flip_v = status.state == EnemyStatus.DOWNED
@@ -630,7 +632,11 @@ func _draw_still() -> void:
 			lean = (1.0 if facing >= 0 else -1.0) * STILL_LEAN * step * step
 	_sprite.scale = Vector2(size, scale_y)
 	_sprite.rotation = lean
-	_sprite.position.y = BODY_BOTTOM - height * scale_y / size / 2.0 - hop
+	# The still turns about its feet: the sprite is centred, so its centre sits where the feet, the lean and the hop put it, and the corner the
+	# lean lowers is lifted back to the floor.
+	var height := frame_size.y * scale_y
+	var feet_y := BODY_BOTTOM - hop - frame_size.x * size * absf(sin(lean)) / 2.0
+	_sprite.position = Vector2(sin(lean) * height / 2.0, feet_y - cos(lean) * height / 2.0)
 
 ## Strands while a thread slows it, the cocoon while a thread holds it, nothing once either ends or it is down.
 func _update_web() -> void:

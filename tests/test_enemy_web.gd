@@ -50,6 +50,19 @@ func test_the_web_sits_on_the_sprite() -> void:
 	_step(e)
 	assert_eq(_cover(e).position, e._sprite.position)
 
+func test_the_web_over_a_twin_follows_its_still_scale_and_lean() -> void:
+	var e := _enemy("twin_wolf_fenrir")
+	e.receive_thread(1)  # slows it: it still walks, breathes and leans
+	_step(e)
+	e.velocity = Vector2(60, 0)
+	e._anim_t = 0.07
+	e._update_visual(0.0)
+	assert_ne(e._sprite.rotation, 0.0, "it leans")
+	assert_true(_cover(e).visible)
+	assert_eq(_cover(e).scale, e._sprite.scale)
+	assert_eq(_cover(e).rotation, e._sprite.rotation)
+	assert_eq(_cover(e).position, e._sprite.position)
+
 func test_a_thread_that_only_slows_an_enemy_that_cannot_be_stunned_draws_strands() -> void:
 	var e := _enemy("serpent")
 	e.receive_thread(2)

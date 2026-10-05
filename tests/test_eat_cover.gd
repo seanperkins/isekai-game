@@ -215,3 +215,20 @@ func test_finishing_restores_whatever_visibility_the_prey_sprite_had() -> void:
 	cover.finish()
 	assert_false(prey.get_node("Sprite").visible, "it was hidden before, so it stays hidden")
 	await wait_process_frames(2)
+
+func test_the_copy_of_a_sized_still_is_drawn_at_its_size_and_shrinks_from_it() -> void:
+	var fenrir: CreatureDef = DefLoader.load_dir("res://data/creatures").filter(func(c: CreatureDef) -> bool: return c.id == "twin_wolf_fenrir")[0]
+	var e := Enemy.new()
+	e.setup(fenrir, {})
+	e.set_physics_process(false)
+	add_child_autofree(e)
+	e._update_visual(0.0)
+	var s: Sprite2D = e.get_node("Sprite")
+	var cover := _cover(e)
+	cover.tick(0.016, 0.0)
+	assert_almost_eq(cover.prey_copy.scale.x, s.scale.x, 0.0001, "the size it is drawn at, not 1")
+	assert_almost_eq(cover.prey_copy.scale.y, s.scale.y, 0.0001)
+	var feet := s.position.y + s.texture.get_size().y * s.scale.y / 2.0
+	assert_almost_eq(cover.global_position.y, e.global_position.y + feet, 0.01, "the cover stands on the creature's feet")
+	cover.tick(0.016, 1.0)
+	assert_almost_eq(cover.prey_copy.scale.x, s.scale.x * EatCover.PREY_MIN_SCALE, 0.0001)
