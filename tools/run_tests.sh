@@ -9,6 +9,9 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
+# A fresh profile for every run: the game saves what the player did (deaths, the bestiary, the map, remains) under HOME, and a profile that
+# remembers earlier runs changes what some tests see (the skill screen's tree tab failed on one that had 85 deaths in it).
+rm -rf .tmp/gdhome
 mkdir -p .tmp/test-logs .tmp/gdhome
 log=.tmp/test-logs/gut.log
 xml=.tmp/test-logs/results.xml
