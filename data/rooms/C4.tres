@@ -1,9 +1,9 @@
 [gd_resource type="Resource" script_class="RoomDef" format=3]
 
-[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_y5g08"]
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
 
 [resource]
-script = ExtResource("1_y5g08")
+script = ExtResource("1_roomdef")
 id = "C4"
 area = "cave"
 cell = Vector2i(4, 2)
@@ -88,6 +88,12 @@ exits = [{
 "from": 200.0,
 "room": "C5",
 "to": 320.0
+}, {
+"edge": "top",
+"from": 440.0,
+"gate": "wall_cling",
+"room": "FO4",
+"to": 560.0
 }]
 features = [{
 "id": "c4_pool",

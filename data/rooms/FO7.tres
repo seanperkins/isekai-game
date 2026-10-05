@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
+
+[resource]
+script = ExtResource("1_roomdef")
+id = "FO7"
+area = "forest"
+cell = Vector2i(10, -3)
+solids = [Rect2(200, 268, 120, 12)]
+decor = [{
+"id": "grotto_root_hang",
+"pos": Vector2(320, 20)
+}]
+spawns = [{
+"id": "moon_hare",
+"pos": Vector2(420, 314)
+}]
+exits = [{
+"edge": "left",
+"from": 200.0,
+"room": "FO6",
+"to": 320.0
+}]

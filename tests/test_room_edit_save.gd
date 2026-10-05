@@ -64,7 +64,7 @@ func test_a_new_room_saves_and_so_does_its_neighbours_partner_exit() -> void:
 	result["saved"].sort()
 	assert_eq(result["saved"], ["C6", "Fresh"])
 	var reloaded := {}
-	for id in ShippedRooms.IDS:
+	for id in World.load_rooms("res://data/rooms"):  # every room the world has: C3 and C4 lead to the forest
 		reloaded[id] = _load(id) if id == "C6" else ResourceLoader.load("res://data/rooms/%s.tres" % id, "", ResourceLoader.CACHE_MODE_IGNORE)
 	reloaded["Fresh"] = _load("Fresh")
 	var ids: Array = DefLoader.load_dir("res://data/creatures").map(func(c): return c.id)
@@ -97,7 +97,7 @@ func _reload_all(dir: String, ids: Array) -> Dictionary:
 	return out
 
 func test_undoing_a_saved_new_room_removes_its_file_on_the_next_save_and_redo_brings_it_back() -> void:
-	var ids: Array = ShippedRooms.IDS.duplicate()
+	var ids: Array = World.load_rooms("res://data/rooms").keys()  # every room the world has, the forest included
 	assert_eq(model.new_room_beside("C6", "left", "Fresh", "cave", Vector2i(1, 1)), "")
 	model.save_dirty(TMP)
 	assert_true(FileAccess.file_exists("%s/Fresh.tres" % TMP))

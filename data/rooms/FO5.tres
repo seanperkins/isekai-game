@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
+
+[resource]
+script = ExtResource("1_roomdef")
+id = "FO5"
+area = "forest"
+cell = Vector2i(6, -3)
+size = Vector2i(1, 3)
+solids = [Rect2(100, 988, 100, 12), Rect2(420, 988, 100, 12), Rect2(240, 936, 100, 12), Rect2(100, 884, 100, 12), Rect2(240, 832, 100, 12), Rect2(100, 780, 100, 12), Rect2(240, 728, 100, 12), Rect2(100, 676, 100, 12), Rect2(240, 624, 100, 12), Rect2(100, 572, 100, 12), Rect2(240, 520, 100, 12), Rect2(100, 468, 100, 12), Rect2(240, 416, 100, 12), Rect2(390, 364, 220, 12)]
+decor = [{
+"id": "grotto_root_hang",
+"pos": Vector2(300, 20)
+}, {
+"id": "grotto_flowers",
+"pos": Vector2(470, 988)
+}]
+exits = [{
+"edge": "bottom",
+"from": 240.0,
+"room": "FO3",
+"to": 400.0
+}, {
+"edge": "right",
+"from": 200.0,
+"room": "FO6",
+"to": 320.0
+}]

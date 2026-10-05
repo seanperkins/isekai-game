@@ -1,0 +1,42 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
+
+[resource]
+script = ExtResource("1_roomdef")
+id = "FO8"
+area = "forest"
+cell = Vector2i(7, 0)
+size = Vector2i(3, 1)
+solids = [Rect2(380, 296, 90, 12), Rect2(900, 296, 90, 12), Rect2(1400, 296, 90, 12)]
+decor = [{
+"id": "grotto_root_hang",
+"pos": Vector2(500, 20)
+}, {
+"id": "grotto_root_hang",
+"pos": Vector2(1300, 20)
+}, {
+"id": "grotto_flowers",
+"pos": Vector2(820, 320)
+}]
+spawns = [{
+"id": "tusker_boar",
+"pos": Vector2(700, 314)
+}, {
+"id": "tusker_boar",
+"pos": Vector2(1200, 314)
+}, {
+"id": "village_goblin",
+"pos": Vector2(1600, 314)
+}]
+exits = [{
+"edge": "left",
+"from": 200.0,
+"room": "FO3",
+"to": 320.0
+}, {
+"edge": "right",
+"from": 200.0,
+"room": "FO9",
+"to": 320.0
+}]

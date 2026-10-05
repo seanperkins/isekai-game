@@ -22,7 +22,7 @@ static func build_with(mods: Array, dir := ROOMS_DIR) -> Dictionary:
 	var world := {}
 	for id in World.load_rooms(dir):
 		if not _generated(id, prefixes):
-			world[id] = _copy(World.load_rooms(dir)[id])
+			world[id] = copy_room(World.load_rooms(dir)[id])
 	for id in world:
 		var r: RoomDef = world[id]
 		r.exits = r.exits.filter(func(e: Dictionary) -> bool: return not _generated(str(e.get("room", "")), prefixes))
@@ -38,7 +38,7 @@ static func _generated(id: String, prefixes: Array) -> bool:
 	return false
 
 ## A copy of a loaded room that can be changed without changing the cached resource other code holds.
-static func _copy(r: RoomDef) -> RoomDef:
+static func copy_room(r: RoomDef) -> RoomDef:
 	var c := RoomDef.new()
 	for p in r.get_property_list():
 		if (int(p["usage"]) & PROPERTY_USAGE_STORAGE) == 0 or p["name"] == "script":

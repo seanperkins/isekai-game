@@ -14,11 +14,15 @@ static func first_time(rooms: Dictionary, creatures: Dictionary, ids: Array) -> 
 			total += c.xp * (1 if c.id == "water_pool" else 2)
 	return total
 
+## The shipped rooms out of `rooms`, as copies, with the exits to rooms that are not shipped (the new areas attach to C3 and C4, for one)
+## taken off: the world these rooms were pinned and tested in is the 24 as hand-authored.
 static func only(rooms: Dictionary) -> Dictionary:
 	var out := {}
 	for id in IDS:
 		if rooms.has(id):
-			out[id] = rooms[id]
+			var r := AreaBuilder.copy_room(rooms[id])
+			r.exits = r.exits.filter(func(e: Dictionary) -> bool: return IDS.has(e["room"]))
+			out[id] = r
 	return out
 
 static func load_all() -> Dictionary:

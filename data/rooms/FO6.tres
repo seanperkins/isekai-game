@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
+
+[resource]
+script = ExtResource("1_roomdef")
+id = "FO6"
+area = "forest"
+cell = Vector2i(7, -3)
+size = Vector2i(3, 1)
+solids = [Rect2(300, 268, 120, 12), Rect2(470, 216, 120, 12), Rect2(640, 268, 120, 12), Rect2(810, 216, 120, 12), Rect2(980, 268, 120, 12), Rect2(1150, 216, 120, 12), Rect2(1320, 268, 120, 12), Rect2(1490, 216, 120, 12)]
+decor = [{
+"id": "grotto_root_hang",
+"pos": Vector2(600, 20)
+}, {
+"id": "grotto_root_hang",
+"pos": Vector2(1500, 20)
+}]
+spawns = [{
+"id": "firefly_swarm",
+"pos": Vector2(640, 184)
+}, {
+"id": "firefly_swarm",
+"pos": Vector2(1360, 184)
+}, {
+"id": "village_goblin",
+"pos": Vector2(1100, 314)
+}]
+exits = [{
+"edge": "left",
+"from": 200.0,
+"room": "FO5",
+"to": 320.0
+}, {
+"edge": "right",
+"from": 200.0,
+"room": "FO7",
+"to": 320.0
+}]

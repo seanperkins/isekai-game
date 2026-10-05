@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
+
+[resource]
+script = ExtResource("1_roomdef")
+id = "FO1"
+area = "forest"
+cell = Vector2i(3, 0)
+solids = [Rect2(230, 268, 110, 12)]
+decor = [{
+"id": "grotto_flowers",
+"pos": Vector2(280, 268)
+}, {
+"id": "grotto_glow_fungus",
+"pos": Vector2(120, 320)
+}, {
+"id": "grotto_flowers",
+"pos": Vector2(470, 320)
+}, {
+"id": "grotto_root_hang",
+"pos": Vector2(360, 20)
+}]
+exits = [{
+"edge": "left",
+"from": 200.0,
+"room": "C3",
+"to": 320.0
+}, {
+"edge": "right",
+"from": 200.0,
+"room": "FO2",
+"to": 320.0
+}]
