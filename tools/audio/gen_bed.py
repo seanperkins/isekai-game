@@ -3,6 +3,8 @@
 A bed spec (art_source/audio/beds/<biome>.json) holds the provider prompt and, per kind, which
 provider makes the raw audio:
   "synth": a built-in pad (music) or noise wash (ambience). Placeholder that works offline.
+  "score": a chiptune score (art_source/audio/scores/<name>.json, see score.py) rendered in-repo. It is a
+           bar-exact loop already, so it skips the trim and the crossfade a recorded bed gets.
   "local": decode a file Sean or a provider dropped at art_source/audio/raw/ (gitignored).
 Every bed is trimmed, made loop-safe with a crossfade, set to its LUFS target and encoded.
 Run from the project root:
@@ -22,6 +24,7 @@ import zlib
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import audiolib  # noqa: E402
 import dsp  # noqa: E402
+import score  # noqa: E402
 
 BEDS = "art_source/audio/beds"
 OUT = "assets/audio"
@@ -90,6 +93,9 @@ def raw_samples(spec, biome, kind, raw_dir=RAW_DIR, fetch=_fetch):
     provider = spec.get("provider")
     if provider == "elevenlabs":
         return _elevenlabs(spec, biome, kind, raw_dir, fetch)
+    if provider == "score":
+        with open(spec["file"]) as f:
+            return score.render(json.load(f))
     if provider == "synth":
         rng = random.Random(zlib.crc32(("%s/%s" % (biome, kind)).encode()))
         if kind == "music":
@@ -109,10 +115,13 @@ def _measure(stereo):
         return audiolib.measure_lufs(path)
 
 
-def process(raw, kind):
-    left, right = dsp.trim_silence(audiolib.to_stereo(raw))
-    left = dsp.make_loop(left, XFADE)
-    right = dsp.make_loop(right, XFADE)
+def process(raw, kind, seamless=False):
+    if seamless:
+        left, right = audiolib.to_stereo(raw)  # already a bar-exact loop: trimming or blending would move it off the beat
+    else:
+        left, right = dsp.trim_silence(audiolib.to_stereo(raw))
+        left = dsp.make_loop(left, XFADE)
+        right = dsp.make_loop(right, XFADE)
     # A raw pad can peak far above full scale, and the WAV used for measuring would clip it, so
     # bring it to a working level first: measure the signal that will really be encoded.
     top = audiolib.lin_to_db(max(audiolib.peak(left), audiolib.peak(right)))
@@ -130,7 +139,8 @@ def process(raw, kind):
 
 
 def build(biome, kind, spec, out_root=OUT):
-    audiolib.write_ogg(process(raw_samples(spec, biome, kind), kind), os.path.join(out_root, kind, biome + ".ogg"))
+    seamless = spec.get("provider") == "score"
+    audiolib.write_ogg(process(raw_samples(spec, biome, kind), kind, seamless), os.path.join(out_root, kind, biome + ".ogg"))
 
 
 def main(argv):

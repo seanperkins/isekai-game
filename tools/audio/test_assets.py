@@ -24,9 +24,9 @@ class BuiltAssetsTest(unittest.TestCase):
         cls.pcm = {p: a.decode_pcm(p) for kind in ("sfx", "music", "ambience") for p in oggs(kind)}
 
     def test_every_file_is_stereo_vorbis(self):
-        expected = 2 * len(("cave", "grotto", "flooded", "deep")) + sum(
+        expected = 2 * len(("cave", "grotto", "flooded", "deep")) + len(self.catalog.get("themes", {})) + sum(
             int(r.get("variants", 1)) for r in synth_sfx.load_recipes().values())
-        self.assertEqual(len(self.pcm), expected)  # every SFX variant plus the eight beds
+        self.assertEqual(len(self.pcm), expected)  # every SFX variant, the eight beds and each theme's music
         for path in self.pcm:
             info = a.validate_ogg(path)
             self.assertEqual(info["channels"], 2, path)

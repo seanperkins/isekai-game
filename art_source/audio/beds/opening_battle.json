@@ -1,0 +1,8 @@
+{
+  "prompt": "A fast, driving 16-bit JRPG battle theme in a bright minor key at about 160 BPM: pounding drums, galloping synth bass, urgent staccato strings, and a soaring chiptune and brass lead melody with a heroic, slightly over-the-top mock-serious feel. Exciting and playful rather than dark, with a cheeky edge. Instrumental, no vocals, a steady groove that loops cleanly.",
+  "music": {
+    "provider": "score",
+    "file": "art_source/audio/scores/opening_battle.json"
+  },
+  "_note": "Composed in-repo (tools/audio/score.py): the ElevenLabs music API needs a paid plan and this key is on the free tier. With a paid plan, swap the provider for {\"provider\": \"elevenlabs\", \"seconds\": 45} and the prompt above (or the comic one in docs/ledgers/opening-sound-ledger.md)."
+}
