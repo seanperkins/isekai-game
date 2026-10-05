@@ -29,6 +29,14 @@ const INSPECT_RANGE := 96.0
 const INTERACT_RANGE := 24.0
 const INVULN_SECONDS := 1.0
 const GLIDE_FALL := 40.0
+## Seconds a crawler that was hit cannot grip a surface again.
+const SURFACE_LET_GO := 0.3
+## A species body that is this far (px) from where its last tick left it has been moved by something else.
+const TELEPORT_DISTANCE := 4.0
+## The spider's sprite: how fast it settles onto a new surface (s), how long a reversal pivots (s) and how long the thread fades (s).
+const SPIDER_CORNER_EASE := 0.04
+const SPIDER_PIVOT_SECONDS := 0.10
+const THREAD_FADE := 0.15
 const KNOCKBACK := Vector2(160.0, -140.0)
 ## A shock hit locks input this long (the same lock a hit's knockback uses, so it only adds the difference).
 const SHOCK_STUN := 0.3
@@ -89,6 +97,19 @@ var species_body: SpeciesBody
 var _dash_vx := 0.0
 var _pounce_applied := false
 var _last_verb := ""
+## Where a species body ended its last tick: a different position at the next one means something moved it (Recall, a placement).
+var _species_pos := Vector2.INF
+## The spider's drawing: its sprite turns to the surface it is on, the legs follow the distance crawled, a reversal pivots, a
+## corner is eased through, and a thread is drawn while it zips or hangs.
+var _spider_angle := 0.0
+var _spider_stride := 0.0
+var _spider_sense := 1.0
+var _spider_pivot := 0.0
+var _spider_off := Vector2.ZERO
+var _spider_prev := Vector2.ZERO
+var _thread_anchor := Vector2.ZERO
+var _thread_dir := Vector2.RIGHT
+var _thread_alpha := 0.0
 var _dash := 0.0
 ## The water model: whether the body centre is in a DeepWater, the submerged clock, the edges (see PlayerWater).
 var _water := PlayerWater.new()
@@ -266,12 +287,17 @@ func _species_physics(delta: float) -> void:
 	i.signature_pressed = not eating and Input.is_action_just_pressed("tackle")
 	var st := species_body.state
 	st.velocity = velocity  # whatever wrote the body's velocity since last tick (a room slide, an ability) is the truth
+	if _species_pos != Vector2.INF and global_position.distance_to(_species_pos) > TELEPORT_DISTANCE:
+		st.surface_n = Vector2.ZERO  # it was carried somewhere: a crawler is not on the surface it was on, nor hanging from a thread
+		st.drop_up = 0.0
+		st.zip_dir = Vector2.ZERO
 	species_body.fill_input(i, func() -> bool: return _tackle_target() != null)
 	species_body.think(i, delta, sqrt(stats.get_stat("jump_height") / 100.0), stats.get_stat("spd") / 100.0)
 	facing = st.facing
 	if _dash > 0.0:
 		st.velocity.x = _dash_vx  # a push or a knockback holds the horizontal for its time
 	species_body.move(_species_adjust.bind(wet, delta))
+	_species_pos = global_position
 	_species_combat()
 	_actions(delta)
 	audio_events.update(is_on_floor(), species_body.fall_speed, velocity.x, false, st.clinging)
@@ -378,6 +404,9 @@ func _update_visual_species(delta: float) -> void:
 		return
 	var st := species_body.state
 	var look := species_body.profile.id
+	if look == "spider":
+		_draw_spider(delta)
+		return
 	var clip := SpeciesLook.clip_for(look, on_floor, velocity.y, velocity.x, _land_timer, st.verb, VerbRunner.is_flat(st, species_body.profile), st.clinging)
 	if clip == "" or not _sheet.has_frame(_animator_first_frame(clip)):
 		clip = "idle"
@@ -395,6 +424,64 @@ func _update_visual_species(delta: float) -> void:
 	_sprite.modulate = tint
 	_sprite.flip_h = (st.wall_side < 0) if clip == "wall" else facing < 0
 	_shapes.refresh(_sheet, frame, _sprite.flip_h)
+
+## The spider, after how spiders move: the legs follow the distance travelled (so they freeze the instant it stops), the body is
+## rigid, the sprite turns to the surface and eases through a corner (the body changes surface in one tick; the sprite starts where
+## it was and catches up), the head points the way it goes and a reversal pivots. The thread shows while it zips or hangs.
+func _draw_spider(delta: float) -> void:
+	var st := species_body.state
+	var attached := st.surface_n != Vector2.ZERO
+	var corner := st.surface_event == "concave" or st.surface_event == "convex"
+	if corner:
+		_spider_off += _spider_prev - global_position
+	_spider_off = _spider_off.lerp(Vector2.ZERO, 1.0 - exp(-delta / SPIDER_CORNER_EASE))
+	var zipping := st.zip_dir != Vector2.ZERO
+	var dropping := st.drop_up > 0.0
+	var target := SpeciesLook.surface_angle(st.surface_n) if attached else 0.0
+	if dropping:
+		target = PI / 2.0 if _spider_sense > 0.0 else -PI / 2.0  # head first down the thread
+	if zipping:
+		if absf(st.zip_dir.x) > 0.01:
+			_spider_sense = signf(st.zip_dir.x)
+		target = st.zip_dir.angle() if _spider_sense > 0.0 else wrapf(st.zip_dir.angle() + PI, -PI, PI)
+	_spider_angle = lerp_angle(_spider_angle, target, 1.0 - exp(-delta / SPIDER_CORNER_EASE))
+	if (attached and not corner) or dropping:
+		_spider_stride = SpeciesLook.stride_advance(_spider_stride, st.surface_shift.length())
+	var clip := "crawl_%d" % (SpeciesLook.stride_frame(_spider_stride) + 1) if (attached or dropping) and not zipping else "drop"
+	var vx := st.drop_vx if dropping else velocity.x
+	var sense := st.surface_sigma if attached else (signf(vx) if absf(vx) > 20.0 else _spider_sense)
+	if sense != _spider_sense:
+		_spider_sense = sense
+		_spider_pivot = SPIDER_PIVOT_SECONDS
+	_spider_pivot = maxf(0.0, _spider_pivot - delta)
+	var squeeze := 1.0 - 0.55 * sin(PI * (1.0 - _spider_pivot / SPIDER_PIVOT_SECONDS)) if _spider_pivot > 0.0 else 1.0
+	var size := _sheet.frame_size(clip)
+	var scale := body_scale()
+	_sprite.texture = _sheet.frame_texture(clip)
+	_sprite.rotation = _spider_angle
+	_sprite.flip_h = _spider_sense < 0.0  # the sprite's right is the clockwise tangent: against it, mirror
+	_sprite.scale = Vector2(squeeze, 1.0) * scale
+	_sprite.position = _spider_off + Vector2.UP.rotated(_spider_angle) * (size.y * scale / 2.0 - SurfaceStep.HN)
+	_sprite.modulate = body_tint()
+	_spider_prev = global_position
+	_update_thread(delta)
+
+## The silk from behind the spider to its anchor while it zips or hangs, fading for a moment after.
+func _update_thread(delta: float) -> void:
+	var st := species_body.state
+	if st.zip_event == "start":
+		_thread_anchor = global_position + st.zip_target
+		_thread_dir = st.zip_dir
+	if st.drop_event == "start":
+		_thread_anchor = global_position + st.drop_target
+		_thread_dir = Vector2.DOWN
+	if st.zip_dir != Vector2.ZERO or st.drop_up > 0.0:
+		_thread_alpha = 1.0
+	else:
+		_thread_alpha = maxf(0.0, _thread_alpha - delta / THREAD_FADE)
+	rope_line.visible = _thread_alpha > 0.0
+	rope_line.modulate.a = _thread_alpha
+	rope_line.points = PackedVector2Array([global_position - _thread_dir * 8.0, _thread_anchor])
 
 ## The first frame of a clip (a clip the sheet's clip file lacks has none, and the body shows its idle).
 func _animator_first_frame(clip: String) -> String:
@@ -458,6 +545,8 @@ func body_rect() -> Rect2:
 ## Where the slime can be hit: the current frame's traced shape (global points), or the body box
 ## when the sheet is missing.
 func hurt_polygon() -> PackedVector2Array:
+	if species_body != null and species_body.is_crawling():
+		return ShapeHit.rect_points(body_rect())  # the sprite is turned to the surface, the traced shape is not
 	if _shapes != null and _shapes.hurt_poly.polygon.size() >= 3:
 		return ShapeHit.moved(_shapes.hurt_poly.polygon, _shapes.global_position, body_scale())
 	return ShapeHit.rect_points(body_rect())
@@ -892,7 +981,7 @@ func can_cast() -> bool:
 
 ## `from` is the attacker's position for contact hits; the slime is knocked away from it.
 func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, cause: String = "") -> void:
-	if _invuln > 0.0 or _ward > 0.0 or health.is_dead():
+	if _invuln > 0.0 or _ward > 0.0 or _in_roll_iframes() or health.is_dead():
 		return
 	last_hit_cause = cause if cause != "" else damage_type  # before take_hit: a lethal hit fires `died`
 	end_channel()  # a hit ends any channel, including a poison hit that carries no `from`
@@ -904,6 +993,9 @@ func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, cau
 		velocity = Vector2(away * KNOCKBACK.x, KNOCKBACK.y) * skillset.knockback_factor()
 		_dash = 0.2
 		_dash_vx = velocity.x
+		if species_body != null:  # a crawler let go of its surface; it may not grip again straight away
+			species_body.state.surface_n = Vector2.ZERO
+			species_body.state.surface_lock = SURFACE_LET_GO
 	if damage_type == "shock" and not health.is_dead():
 		_dash = maxf(_dash, SHOCK_STUN)  # after the knockback block, which assigns 0.2
 
@@ -919,7 +1011,7 @@ func _step_water(delta: float) -> Dictionary:
 	return out
 
 func receive_poison(application: int, tick_amount: int, seconds: float) -> void:
-	if _invuln > 0.0 or _ward > 0.0 or health.is_dead():
+	if _invuln > 0.0 or _ward > 0.0 or _in_roll_iframes() or health.is_dead():
 		return
 	receive_hit(application, "poison")
 	_poison_left = seconds
@@ -943,6 +1035,10 @@ func transmute_essence(from_units: int, to_units: int) -> bool:
 func glide(seconds: float, fall := GLIDE_FALL) -> void:
 	_glide = maxf(_glide, seconds)
 	_glide_fall = fall
+
+## A species body inside a burst's window of invulnerability: the biped's roll and slide.
+func _in_roll_iframes() -> bool:
+	return species_body != null and species_body.state.invulnerable
 
 ## Untouchable for `seconds` (a longer ward already running is kept).
 func ward(seconds: float) -> void:
