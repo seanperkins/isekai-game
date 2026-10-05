@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
+
+[resource]
+script = ExtResource("1_roomdef")
+id = "CR4"
+area = "crypt"
+cell = Vector2i(28, 5)
+solids = [Rect2(200, 268, 120, 12)]
+decor = [{
+"id": "deep_bones",
+"pos": Vector2(120, 320)
+}, {
+"id": "deep_glow_fungus",
+"light": Color(0.5, 1, 0.6, 1),
+"pos": Vector2(540, 320)
+}, {
+"id": "deep_wall_crystal",
+"light": Color(0.95, 0.85, 1, 1),
+"pos": Vector2(320, 320)
+}]
+spawns = [{
+"id": "junk",
+"pos": Vector2(420, 314)
+}]
+exits = [{
+"edge": "left",
+"from": 200.0,
+"room": "CR3",
+"to": 320.0
+}]

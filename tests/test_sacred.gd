@@ -11,14 +11,21 @@ const CATHEDRAL := {"CA1": [Vector2i(19, 3), Vector2i(3, 1)], "CA2": [Vector2i(2
 	"CA4": [Vector2i(22, 0), Vector2i(1, 3)], "CA5": [Vector2i(20, 0), Vector2i(2, 1)]}
 const SACRED_SUPPORT := ["candle_wisp", "chapel_priest", "stained_glass_moth", "shield_guard", "gargoyle", "ghost"]
 
+## The crypt: the Stair, the Ossuary, the Niche Gallery, the Vault and the Coffin Slide down to D5.
+const CRYPT := {"CR1": [Vector2i(22, 4), Vector2i(1, 2)], "CR2": [Vector2i(23, 5), Vector2i(2, 1)], "CR3": [Vector2i(25, 5), Vector2i(3, 1)],
+	"CR4": [Vector2i(28, 5), Vector2i(1, 1)], "CR5": [Vector2i(23, 6), Vector2i(2, 1)]}
+const CRYPT_SUPPORT := ["skeleton", "junk", "vampire_bat", "bone_hound"]
+
 var graveyard: Dictionary  # the cemetery built, the rest of the cluster not yet
 var nave: Dictionary  # the cathedral built, the crypt not yet
+var crypt: Dictionary  # the whole cluster
 var before: Dictionary  # the world before the cluster: the forest, the swamp and the village
 
 func before_all() -> void:
 	graveyard = AreaWorlds.upto("CM")
 	before = AreaWorlds.upto("VI")
 	nave = AreaWorlds.upto("CA")
+	crypt = AreaWorlds.upto("CR")
 
 func test_the_cemetery_is_three_rooms_at_their_cells_and_sizes() -> void:
 	for id in CEMETERY:
@@ -147,6 +154,66 @@ func test_the_font_chapel_has_a_pool_and_no_altar() -> void:
 	var feats := (nave["CA3"] as RoomDef).features
 	assert_eq(feats.filter(func(f: Dictionary) -> bool: return f["kind"] == "glow_pool").size(), 1)
 	assert_eq(feats.filter(func(f: Dictionary) -> bool: return f["kind"] == "altar").size(), 0)
+
+# --- the crypt ---
+
+func test_the_crypt_is_five_rooms_at_their_cells_sizes_and_area() -> void:
+	for id in CRYPT:
+		assert_true(crypt.has(id), id)
+		var r: RoomDef = crypt[id]
+		assert_eq(r.area, "crypt", id)
+		assert_eq(r.cell, CRYPT[id][0], id)
+		assert_eq(r.size, CRYPT[id][1], id)
+
+func test_the_whole_world_with_the_cluster_has_no_problems() -> void:
+	assert_eq(Array(AreaBuilder.problems(crypt)), [])
+
+func test_every_crypt_room_is_reachable_and_only_through_the_wall_cling() -> void:
+	var reached := WorldValidator.reachable(crypt)
+	var ungated := WorldValidator.reachable(crypt, true)
+	for id in CRYPT:
+		assert_true(reached.has(id), "%s: no way in from the start room" % id)
+		assert_false(ungated.has(id), "%s is behind the wall cling" % id)
+	var rest := ungated.filter(func(id: String) -> bool: return not CRYPT.has(id) and not CATHEDRAL.has(id) and not CEMETERY.has(id))
+	rest.sort()
+	var was := WorldValidator.reachable(before, true)
+	was.sort()
+	assert_eq(rest, was, "the whole cluster opens no way into anything else without the wall cling")
+
+func test_the_crypt_holds_the_crypts_creatures_and_only_them() -> void:
+	var seen := {}
+	for id in CRYPT:
+		for s in (crypt[id] as RoomDef).spawns:
+			assert_true(CRYPT_SUPPORT.has(s["id"]), "%s: %s" % [id, s["id"]])
+			seen[s["id"]] = true
+	for c in CRYPT_SUPPORT:
+		assert_true(seen.has(c), "%s lives in the crypt" % c)
+
+func test_d5_gains_a_top_exit_and_nothing_else_and_has_no_way_back_up() -> void:
+	var was := nave["D5"] as RoomDef
+	var now := crypt["D5"] as RoomDef
+	assert_eq(now.exits.size(), was.exits.size() + 1)
+	var e: Dictionary = now.exits.filter(func(x: Dictionary) -> bool: return x["room"] == "CR5")[0]
+	assert_eq(e["edge"], "top")
+	assert_false(e.has("gate") or e.has("shortcut"))
+	for p in now.get_property_list():
+		if (int(p["usage"]) & PROPERTY_USAGE_STORAGE) != 0 and p["name"] != "script" and p["name"] != "exits":
+			assert_eq(now.get(p["name"]), was.get(p["name"]), "D5.%s is as shipped" % p["name"])
+	assert_eq(now.solids, [], "no ledge in D5: the slide is a drop, and a hole in the ceiling is out of the base jump's reach")
+
+func test_nothing_stands_over_the_ossuarys_hole_or_the_slides() -> void:
+	for pair in [["CR2", "CR5"], ["CR5", "D5"]]:
+		var upper := crypt[pair[0]] as RoomDef
+		var hole: Dictionary = upper.exits.filter(func(e: Dictionary) -> bool: return e["edge"] == "bottom")[0]
+		for s in upper.spawns:
+			assert_false(s["pos"].x > float(hole["from"]) - 20.0 and s["pos"].x < float(hole["to"]) + 20.0, "%s: %s is over the hole" % [pair[0], s["id"]])
+	assert_eq((crypt["CR5"] as RoomDef).spawns, [], "the slide is a chute")
+
+func test_the_lych_gate_gains_one_exit_to_the_stair() -> void:
+	var was := nave["CM3"] as RoomDef
+	var now := crypt["CM3"] as RoomDef
+	assert_eq(now.exits.size(), was.exits.size() + 1)
+	assert_eq(now.exits.filter(func(x: Dictionary) -> bool: return x["room"] == "CR1")[0]["edge"], "right")
 
 func test_the_checked_in_rooms_are_what_the_builder_writes() -> void:
 	assert_eq(AreaBuilder.stale(AreaBuilder.build()), [])

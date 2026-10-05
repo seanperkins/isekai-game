@@ -1,0 +1,57 @@
+[gd_resource type="Resource" script_class="RoomDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/room_def.gd" id="1_roomdef"]
+
+[resource]
+script = ExtResource("1_roomdef")
+id = "CR3"
+area = "crypt"
+cell = Vector2i(25, 5)
+size = Vector2i(3, 1)
+solids = [Rect2(250, 268, 150, 12), Rect2(450, 216, 150, 12), Rect2(650, 268, 150, 12), Rect2(1250, 216, 150, 12), Rect2(1450, 268, 150, 12), Rect2(1650, 216, 150, 12)]
+decor = [{
+"id": "deep_bones",
+"pos": Vector2(880, 320)
+}, {
+"id": "deep_stalagmite",
+"pos": Vector2(1500, 320)
+}, {
+"id": "deep_wall_crystal",
+"light": Color(0.95, 0.85, 1, 1),
+"pos": Vector2(1800, 320)
+}, {
+"anchor": "top",
+"id": "deep_lichen_hang",
+"pos": Vector2(700, 20)
+}, {
+"anchor": "top",
+"id": "deep_root_hang",
+"pos": Vector2(1500, 20)
+}]
+spawns = [{
+"id": "bone_hound",
+"pos": Vector2(950, 314)
+}, {
+"id": "bone_hound",
+"pos": Vector2(1100, 314)
+}, {
+"id": "skeleton",
+"pos": Vector2(130, 314)
+}, {
+"id": "skeleton",
+"pos": Vector2(1200, 314)
+}, {
+"id": "vampire_bat",
+"pos": Vector2(1000, 124)
+}]
+exits = [{
+"edge": "left",
+"from": 200.0,
+"room": "CR2",
+"to": 320.0
+}, {
+"edge": "right",
+"from": 200.0,
+"room": "CR4",
+"to": 320.0
+}]
