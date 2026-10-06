@@ -14,6 +14,8 @@ import bmesh
 import bpy
 from mathutils import Euler, Matrix, Vector
 
+import stage
+
 NEAR = -1.0  # the side of the creature the camera sees (the camera is at -Y)
 LIGHT = (-0.45, 0.70, 0.55)  # where toon.py puts the light; a glowing part's normal points at it, so it is always in the lit band
 
@@ -303,17 +305,18 @@ def normal_material():
 
 def setup_camera(scene, canvas, ppu, margin, supersample, center_x=0.0):
     """A side-on orthographic camera: `canvas` game pixels square at `ppu` pixels per unit, the ground `margin` pixels above the bottom."""
+    cp = stage.camera_params(canvas, ppu, margin, supersample, center_x)
     data = bpy.data.cameras.new("cam")
     data.type = "ORTHO"
-    data.ortho_scale = canvas / ppu
+    data.ortho_scale = cp["ortho_scale"]
     cam = bpy.data.objects.new("cam", data)
-    cam.location = (center_x, -20.0, canvas / (2.0 * ppu) - margin / ppu)
-    cam.rotation_euler = (math.radians(90), 0.0, 0.0)
+    cam.location = cp["location"]
+    cam.rotation_euler = tuple(math.radians(d) for d in cp["rotation_deg"])
     scene.collection.objects.link(cam)
     scene.camera = cam
     r = scene.render
     r.engine = "CYCLES"
-    r.resolution_x = r.resolution_y = canvas * supersample
+    r.resolution_x = r.resolution_y = cp["resolution"]
     r.resolution_percentage = 100
     r.film_transparent = True
     r.image_settings.file_format = "PNG"
