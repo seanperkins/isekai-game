@@ -13,6 +13,14 @@ skeleton must have the goblin's bone names (`hips, spine, head, arm_n/f, fore_n/
 bones are followed through by `secondary.py` when listed in the motion's `SECONDARY` table) with its own proportions (`goblin_skeleton.py` is the template).
 Anything a family cannot do with that (hopping, floating, a different number of legs) is its own motion module, written like `quad_motion.py`.
 
+**Verb gestures.** A form's attack clip is the gesture of the verb it casts: `tools/verb_anims.json` says which of thirteen gestures (`verb_anims.ARCHETYPES`: cast, slam, roar, lunge,
+guard, claw, point, throw, summon, drink, craft, sneak, pulse) each kind of verb plays, a verb row may name its own (`anim`), and `attack_kinds.resolve(form, form_id, weapon_kind,
+family=...)` picks the attack (what the form names itself, then the row's gesture, then a weapon blow for a bolt or burst, then the kind's). A family gives every gesture a preset in
+its own attack table (`biped_motion.ATTACKS`, `quad_motion.ATTACKS`, `spider_motion.ATTACKS`/`GESTURES`, `slime_motion.STYLES`, `undead_motion.KINDS`) and says which in
+`verb_anims.PRESETS[<family>]`; a gesture it lacks is named in `stage_review.KNOWN_ARCHETYPES`, never played as something else. Its creature module has `gesture_clip(rig, variant,
+archetype)` (a KeyError for a gesture it cannot play) and its `_form` calls `attack_kinds.resolve` with its family. Judge the new presets on the 3D stage first
+(`python3 tools/art/stage_review.py <creature> --gesture all`), and keep two gestures from being the same pose under two names (`test_attack_kinds.py` measures it).
+
 | File | Pure Python? | What it is |
 |---|---|---|
 | `<fam>_skeleton.py` | yes | The skeleton as a table `core(**proportions)` of `(name, head, tail, parent)` in standard coordinates, and `skeleton(...)` returning a flat `skeleton2d.Skeleton2D`. The kit and the motion code both read it. |

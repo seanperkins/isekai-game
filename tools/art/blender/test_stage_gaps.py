@@ -53,6 +53,27 @@ class RealCreatureTests(unittest.TestCase):
             self.assertTrue(line, "%s: %s" % (species, (out.stdout + out.stderr)[-800:]))
             self.assertEqual(sorted(json.loads(line[-1][9:])["missing"]), sr.KNOWN_ARCHETYPES[species], "%s: the gestures with no preset changed" % species)
 
+    def gesture_run(self, species, variant, gesture):
+        import tempfile
+        script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "stage_review.py")
+        with tempfile.TemporaryDirectory() as out:
+            cmd = [BLENDER, "-b", "--factory-startup", "-P", script, "--", "--creature", species, "--gesture", gesture, "--out", out, "--every", "6"]
+            done = subprocess.run(cmd + (["--variant", variant] if variant else []), capture_output=True, text=True)
+            self.assertEqual(done.returncode, 0, (done.stdout + done.stderr)[-1500:])
+            with open(os.path.join(out, "gesture_manifest.json")) as fh:
+                return json.load(fh), sorted(d for d in os.listdir(out) if d.startswith("gesture_") and os.path.isdir(os.path.join(out, d)))
+
+    def test_a_form_that_can_play_no_gesture_still_reports_its_gaps(self):
+        manifest, folders = self.gesture_run("goblin", "beast_rider", "all")   # a rider's attack is its mount's
+        self.assertEqual(manifest["rendered"], [])
+        self.assertEqual(sorted(manifest["missing"]), sorted(sr.verb_anims.ARCHETYPES))
+        self.assertEqual(folders, [])
+
+    def test_a_single_gesture_reports_only_itself(self):
+        manifest, folders = self.gesture_run("goblin", None, "slam")
+        self.assertEqual(manifest, {"rendered": ["slam"], "missing": []})
+        self.assertEqual(folders, ["gesture_slam"])
+
     def test_a_species_cannot_be_posed_only_in_the_states_listed_as_missing(self):
         for species, scripts in self.reports.items():
             for script, report in scripts.items():

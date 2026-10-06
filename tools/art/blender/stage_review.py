@@ -599,6 +599,7 @@ def render(args):
         ob.data.materials.clear()
         ob.data.materials.append(mat)
     tinted = False
+    os.makedirs(args.out, exist_ok=True)  # a creature that can play no gesture renders nothing, and still reports
     runs, lacking = [], []  # (recording, the clips it is played with, its folder)
     if args.gesture:
         for name in (verb_anims.ARCHETYPES if args.gesture == "all" else [args.gesture]):
@@ -636,9 +637,9 @@ def render(args):
         with open(os.path.join(out, "review.json"), "w") as fh:
             json.dump(meta, fh)
         print("%s %s: %d frames in %s" % (args.creature, recording["script"], len(frames), out))
-    if args.gesture:
-        with open(os.path.join(args.out, "gesture_gaps.json"), "w") as fh:
-            json.dump({"missing": lacking}, fh)
+    if args.gesture:  # what this run made and what it could not: the folders a run before left are not part of it
+        with open(os.path.join(args.out, "gesture_manifest.json"), "w") as fh:
+            json.dump({"rendered": [folder[len("gesture_"):] for _, _, folder in runs if folder], "missing": lacking}, fh)
 
 
 def main():

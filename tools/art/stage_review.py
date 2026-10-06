@@ -116,12 +116,14 @@ def gesture_review(creature, variant, name, every, out=None):
     done = subprocess.run(cmd, capture_output=True, text=True)
     if done.returncode != 0:
         sys.exit("render failed:\n" + (done.stdout + done.stderr)[-3000:])
-    with open(os.path.join(base, "gesture_gaps.json")) as fh:
-        missing = json.load(fh)["missing"]
+    with open(os.path.join(base, "gesture_manifest.json")) as fh:
+        manifest = json.load(fh)
+    missing = manifest["missing"]
     lines = []
-    for folder in sorted(d for d in os.listdir(base) if d.startswith("gesture_") and os.path.isdir(os.path.join(base, d))):
-        meta = assemble(os.path.join(base, folder))
-        lines.append("%-8s %-8s %s" % (creature, folder[len("gesture_"):], os.path.join(base, folder, "review.gif")))
+    for name in manifest["rendered"]:   # this run's gestures only, not the folders an earlier run left beside them
+        folder = "gesture_" + name
+        assemble(os.path.join(base, folder))
+        lines.append("%-8s %-8s %s" % (creature, name, os.path.join(base, folder, "review.gif")))
     known = KNOWN_ARCHETYPES.get(creature, [])
     new = [m for m in missing if m not in known]
     lines.append("%-8s no preset for: %s%s" % (creature, ", ".join(missing) or "none", "   NEW: " + ", ".join(new) if new else ""))
