@@ -44,11 +44,15 @@ class SkeletonTest(unittest.TestCase):
         self.assertLess(s.rest["head"][0][1] - withers, 0.13, "a wolf's head hangs about level with its back; it is not raised on a long neck")
         self.assertLess(s.rest["head"][1][1], s.rest["head"][0][1], "and the muzzle points a little down")
 
-    def test_an_ear_is_a_broad_plate_facing_forward_wide_across_the_head_and_thin_front_to_back(self):
-        for t, half_x, half_y in qs.EAR_SECTIONS:
+    def test_an_ear_is_a_broad_plate_wide_and_thin_through_whose_face_looks_forward_and_outward(self):
+        for t, half_width, half_thickness in qs.EAR_SECTIONS:
             if t < 0.9:
-                self.assertGreaterEqual(half_y, 1.5 * half_x, "at %.2f of its length the ear is wider across the head than it is thick" % t)
-        self.assertGreater(qs.EAR_SECTIONS[0][2], 0.04, "and a wolf's ear is broad at the base")
+                self.assertGreaterEqual(half_width, 1.5 * half_thickness, "at %.2f of its length the ear is wider than it is thick" % t)
+        self.assertGreater(qs.EAR_SECTIONS[0][1], 0.04, "and a wolf's ear is broad at the base")
+        fx, fy, fz = qs.EAR_FACE
+        self.assertGreater(fx, 0.5, "its face looks forward")
+        self.assertLess(fy, -0.4, "and outward (the near ear's outside is -y), so the side view shows it as a triangle too")
+        self.assertAlmostEqual(fx * fx + fy * fy + fz * fz, 1.0, places=2)
 
     def test_a_longer_legged_hound_stands_taller_and_a_stocky_wolf_lower(self):
         tall, plain, stocky = (qs.skeleton(leg=k).rest["hips"][0][1] for k in (1.3, 1.0, 0.85))

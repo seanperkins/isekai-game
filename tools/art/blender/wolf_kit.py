@@ -163,12 +163,13 @@ class Wolf:
         self.loft("jaw", [((jaw[0][0] + 0.02, 0, jaw[0][2] - 0.01), (0.036 * hs, 0.054 * hs)), ((jaw[0][0] + 0.12 * hs, 0, jaw[0][2] - 0.05 * hs * 0.4), (0.028 * hs, 0.042 * hs)),
                            ((jaw[1][0] - 0.02, 0, jaw[1][2] + 0.01), (0.022 * hs, 0.030 * hs))], "jaw", belly, sides=6)
         for s, y in (("n", -1), ("f", 1)):
-            # an ear is a short rounded triangle: wide at the base, set at the back corner of the skull, leaning out a little
+            # an ear is a broad plate that faces forward and outward, so it shows a triangle from the side and from the front; it sits at the back corner of the skull and leans out
             base, tip = hp(0.14, 0.090, y * 0.062 * hs), hp(0.05, 0.250, y * 0.112 * hs)
-            rings = []
-            for t, ax, ay in skeleton.EAR_SECTIONS:
-                rings.append((tuple(base[i] + (tip[i] - base[i]) * t for i in range(3)), (ax * f.get("ears", 1.0) * hs, ay * hs)))
-            self.loft("ear_" + s, rings, "ear_" + s, f.get("ear", self.dark), axis="z", sides=6, far=s == "f")
+            pts = [tuple(base[i] + (tip[i] - base[i]) * t for i in range(3)) for t, _, _ in skeleton.EAR_SECTIONS]
+            secs = [(w * f.get("ears", 1.0) * hs, th * hs) for _, w, th in skeleton.EAR_SECTIONS]
+            face = (skeleton.EAR_FACE[0], skeleton.EAR_FACE[1] * -y, skeleton.EAR_FACE[2])      # the near ear's face looks to -y, the far one's to +y
+            ear = k.sweep(self.pre + "ear_" + s, [self.P(*p) for p in pts], [(self.R(w), self.R(th)) for w, th in secs], 8, 1, up=face)
+            self.rig.part(ear, self.pre + "ear_" + s, f.get("ear", self.dark), s == "f")
             self.e("eye_" + s, hp(0.50, 0.026, y * 0.066 * hs), (0.020, 0.015, 0.017), "head", f.get("eye", EYE), far=s == "f", glow=True, seg=8, rings=6)
         self.blade("fang_u", hp(0.82, -0.050), hp(0.82, -0.098), 0.020, 0.016, "head", FANG)
         self.blade("fang_l", hp(0.82, -0.080), hp(0.84, -0.040), 0.020, 0.016, "jaw", FANG)

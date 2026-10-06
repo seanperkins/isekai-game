@@ -13,9 +13,10 @@ BASE_SCALE = 1.0
 
 
 TAIL_DROOPING = ((-0.18, -0.08), (-0.16, -0.13), (-0.12, -0.14))
-# an ear's cross-sections along its length: (fraction of the way from the base to the tip, half its thickness front to back, half its width across the head).
-# A wolf's ear is a broad plate that faces forward: wide across the head, thin front to back.
-EAR_SECTIONS = ((0.0, 0.028, 0.052), (0.30, 0.024, 0.044), (0.65, 0.017, 0.030), (0.90, 0.008, 0.014), (1.0, 0.003, 0.004))
+# an ear's cross-sections along its length: (fraction of the way from the base to the tip, half its width, half its thickness). A wolf's ear is a broad plate: wide, and thin through.
+# It faces forward and outward (EAR_FACE, the way its flat face points, for the near ear; the far one is its mirror), so it shows a triangle from the side and from the front.
+EAR_SECTIONS = ((0.0, 0.056, 0.026), (0.30, 0.046, 0.022), (0.65, 0.031, 0.016), (0.90, 0.015, 0.009), (1.0, 0.004, 0.004))
+EAR_FACE = (0.77, -0.64, 0.0)
 TAIL_RAISED = ((-0.20, 0.04), (-0.18, 0.08), (-0.12, 0.12))      # carried high, over the haunches
 TAIL_CURLED = ((-0.12, 0.14), (-0.02, 0.20), (0.10, 0.10))       # curled forward over the back
 

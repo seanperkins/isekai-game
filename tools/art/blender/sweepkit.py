@@ -67,11 +67,11 @@ def tangent_at(points, i):
     return _norm(_sub(points[hi], points[lo]))
 
 
-def rings(points, sections, sides=10):
+def rings(points, sections, sides=10, up=(0.0, 1.0, 0.0)):
     """One ring of `sides` vertices for each sample: an ellipse of the sample's (half width, half depth) in the plane across the path. The width runs along the plane's own
-    direction in the path's plane (front to back for a leg), the depth along y. A bend widens the ring by the cosine of its angle, so the leg does not pinch at a joint."""
+    direction in the path's plane (front to back for a leg), the depth along `up` (y by default; turn it and a flat shape such as an ear turns its face with it). A bend widens the
+    ring by the cosine of its angle, so the leg does not pinch at a joint."""
     out = []
-    up = (0.0, 1.0, 0.0)
     for i, c in enumerate(points):
         t = tangent_at(points, i)
         u = _norm(_cross(up, t))

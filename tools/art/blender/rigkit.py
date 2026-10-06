@@ -96,12 +96,12 @@ def loft(name, rings, axis="z", sides=8, smooth=False, caps=True):
     return _object(name, bm, smooth)
 
 
-def sweep(name, path, sections, sides=12, per=3, smooth=False):
+def sweep(name, path, sections, sides=12, per=3, smooth=False, up=(0.0, 1.0, 0.0)):
     """A smooth tube along `path` (points through the joints of a limb) with a (half width, half depth) section at each point, as sweepkit.rings lays them out: one mesh with
     no seam where a leg bends. Both ends are closed flat, so end it with a small section or bury the end inside another shape."""
     import sweepkit
     pts, secs, _ = sweepkit.resample(path, sections, per)
-    rings = sweepkit.rings(pts, secs, sides)
+    rings = sweepkit.rings(pts, secs, sides, up)
     bm = bmesh.new()
     rows = [[bm.verts.new(p) for p in ring] for ring in rings]
     for r0, r1 in zip(rows, rows[1:]):

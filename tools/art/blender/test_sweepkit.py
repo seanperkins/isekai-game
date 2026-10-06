@@ -68,6 +68,28 @@ class RingTest(unittest.TestCase):
         self.assertGreaterEqual(widest, 2 * 0.05 - 1e-9)
 
 
+class FrameTest(unittest.TestCase):
+    def ring_for(self, yaw):
+        a = math.radians(yaw)
+        straight = [(0.0, 0.0, 0.0), (0.0, 0.0, 0.2)]
+        return sk.rings(straight, [(0.05, 0.01), (0.05, 0.01)], sides=12, up=(math.sin(a), math.cos(a), 0.0))[0]
+
+    def test_with_no_turn_the_width_runs_along_x_and_the_thickness_along_y(self):
+        ring = self.ring_for(0.0)
+        self.assertAlmostEqual(max(abs(v[0]) for v in ring), 0.05, places=6)
+        self.assertAlmostEqual(max(abs(v[1]) for v in ring), 0.01, places=6)
+
+    def test_turned_a_quarter_the_width_runs_along_y(self):
+        ring = self.ring_for(90.0)
+        self.assertAlmostEqual(max(abs(v[0]) for v in ring), 0.01, places=6)
+        self.assertAlmostEqual(max(abs(v[1]) for v in ring), 0.05, places=6)
+
+    def test_turned_part_way_the_plate_shows_a_good_width_from_the_side_and_from_the_front(self):
+        ring = self.ring_for(40.0)
+        self.assertGreater(max(abs(v[0]) for v in ring), 0.035, "seen from the side")
+        self.assertGreater(max(abs(v[1]) for v in ring), 0.028, "seen from the front")
+
+
 class WeightTest(unittest.TestCase):
     def test_a_vertex_on_a_bone_is_that_bones_alone_and_one_at_a_joint_is_shared_evenly(self):
         bounds = [0.0, 0.2, 0.4]       # the arclengths where bone 0, bone 1 and the end begin
