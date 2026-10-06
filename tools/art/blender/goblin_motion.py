@@ -210,30 +210,52 @@ REST = "rest"   # in a key: the form's own resting value of that channel (its id
 
 # Each attack is the frames it is drawn in, [(start second, how long)], and eased keys over time for every channel. Directions are world degrees
 # (0 down, 90 forward, 180 up); lean and head are tipped-forward degrees; pelvis and feet are fractions of L from where they rest; `item` is how
-# far forward the weapon (which points up in the hand) is tipped. The anticipation is held, the swing is fast, the impact is held, the recovery slow.
+# far forward the weapon is tipped, clockwise as the camera sees it (so a weapon that points up swings forward as the number rises, and one that
+# points down, a dagger, swings back). The anticipation is held, the swing is fast, the impact is held, the recovery slow. Every kind has the same
+# frames, so the clips are the same length; what differs is the path the body and the weapon take.
+ATTACK_FRAMES = [(0.00, 0.06), (0.06, 0.06), (0.12, 0.12), (0.24, 0.03), (0.27, 0.03), (0.30, 0.09), (0.39, 0.06), (0.45, 0.06), (0.51, 0.09), (0.60, 0.12)]
+ATTACK_WINDUP = 3
+T_WIND, T_HOLD, T_MID, T_HIT, T_FOLLOW, T_END = 0.12, 0.24, 0.27, 0.30, 0.46, 0.72
+
+
+def _swing(channel, windup, mid, hit, follow, rest=True):
+    """Keys for one channel: the form's rest, the windup (held), the middle of the swing, the impact, the follow-through, back to rest."""
+    end = REST if rest else 0.0
+    start = REST if rest else 0.0
+    return [(0.0, start, "out"), (T_WIND, windup, "smooth"), (T_HOLD, windup, "in"), (T_MID, mid, "linear"), (T_HIT, hit, "out"), (T_FOLLOW, follow, "smooth"), (T_END, end, "smooth")]
+
+
+def _attack(lean, head, px, pz, arm_n, fore_n, item, arm_f, fore_f, step=0.2, lift=0.10, heel=-24.0):
+    """One attack from its four-key paths (windup, mid-swing, impact, follow-through) per channel."""
+    return dict(frames=ATTACK_FRAMES, windup=ATTACK_WINDUP, keys={
+        "lean": _swing("lean", *lean), "head": _swing("head", *head),
+        "pelvis_x": _swing("pelvis_x", *px, rest=False), "pelvis_z": _swing("pelvis_z", *pz, rest=False),
+        "arm_n": _swing("arm_n", *arm_n), "fore_n": _swing("fore_n", *fore_n), "item_n": _swing("item_n", *item),
+        "arm_f": _swing("arm_f", *arm_f), "fore_f": _swing("fore_f", *fore_f),
+        "step_n": [(0.0, 0.0, "smooth"), (T_HOLD, 0.0, "in"), (T_HIT, step, "out"), (0.55, step, "smooth"), (T_END, 0.0, "smooth")],
+        "lift_n": [(0.0, 0.0, "smooth"), (T_HOLD, 0.0, "smooth"), (T_MID, lift, "smooth"), (T_HIT, 0.0, "smooth")],
+        "heel_f": [(0.0, 0.0, "smooth"), (T_HIT, 0.0, "out"), (0.36, heel, "smooth"), (0.60, 0.85 * heel, "smooth"), (T_END, 0.0, "smooth")],
+    })
+
+
+# (windup, mid-swing, impact, follow-through) for each channel
 ATTACKS = {
-    "chop": dict(
-        frames=[(0.00, 0.06), (0.06, 0.06), (0.12, 0.12), (0.24, 0.03), (0.27, 0.03), (0.30, 0.09), (0.39, 0.07), (0.46, 0.07), (0.53, 0.09), (0.62, 0.11)],
-        windup=3,
-        keys={
-            "lean": [(0.0, REST, "out"), (0.12, 12.0, "smooth"), (0.24, 12.0, "in"), (0.30, 44.0, "out"), (0.46, 48.0, "smooth"), (0.72, REST, "smooth")],
-            "head": [(0.0, REST, "out"), (0.12, 4.0, "smooth"), (0.24, 4.0, "in"), (0.30, 26.0, "out"), (0.46, 28.0, "smooth"), (0.72, REST, "smooth")],
-            "pelvis_x": [(0.0, 0.0, "out"), (0.12, -0.07, "smooth"), (0.24, -0.07, "in"), (0.30, 0.16, "out"), (0.46, 0.17, "smooth"), (0.72, 0.0, "smooth")],
-            "pelvis_z": [(0.0, 0.0, "out"), (0.12, -0.07, "smooth"), (0.24, -0.07, "in"), (0.30, -0.08, "out"), (0.50, -0.05, "smooth"), (0.72, 0.0, "smooth")],
-            "arm_n": [(0.0, REST, "out"), (0.12, 205.0, "smooth"), (0.24, 205.0, "in"), (0.27, 120.0, "linear"), (0.30, 48.0, "out"), (0.46, 28.0, "smooth"), (0.72, REST, "smooth")],
-            "fore_n": [(0.0, REST, "out"), (0.12, 235.0, "smooth"), (0.24, 235.0, "in"), (0.27, 140.0, "linear"), (0.30, 58.0, "out"), (0.46, 34.0, "smooth"), (0.72, REST, "smooth")],
-            "item_n": [(0.0, REST, "out"), (0.12, -62.0, "smooth"), (0.24, -62.0, "in"), (0.27, 10.0, "linear"), (0.30, 58.0, "out"), (0.46, 40.0, "smooth"), (0.72, REST, "smooth")],
-            "arm_f": [(0.0, REST, "out"), (0.12, 60.0, "smooth"), (0.24, 60.0, "in"), (0.30, -20.0, "out"), (0.46, -10.0, "smooth"), (0.72, REST, "smooth")],
-            "fore_f": [(0.0, REST, "out"), (0.12, 100.0, "smooth"), (0.24, 100.0, "in"), (0.30, 20.0, "out"), (0.72, REST, "smooth")],
-            "step_n": [(0.0, 0.0, "smooth"), (0.24, 0.0, "in"), (0.30, 0.20, "out"), (0.55, 0.20, "smooth"), (0.72, 0.0, "smooth")],
-            "lift_n": [(0.0, 0.0, "smooth"), (0.24, 0.0, "smooth"), (0.27, 0.10, "smooth"), (0.30, 0.0, "smooth")],
-            "heel_f": [(0.0, 0.0, "smooth"), (0.30, 0.0, "out"), (0.36, -24.0, "smooth"), (0.60, -20.0, "smooth"), (0.72, 0.0, "smooth")],
-        }),
+    # an overhead blow with an axe, a club, a hammer: the weapon goes up and back, then over and down in front
+    "chop": _attack(lean=(12, 28, 44, 48), head=(4, 14, 26, 28), px=(-0.07, 0.04, 0.16, 0.17), pz=(-0.07, -0.07, -0.08, -0.05),
+                    arm_n=(205, 120, 48, 28), fore_n=(235, 140, 58, 34), item=(-62, 10, 58, 40), arm_f=(60, 20, -20, -10), fore_f=(100, 60, 20, 20)),
+    # a dagger held point down: raised over the head, then driven down and forward
+    "stab": _attack(lean=(10, 30, 46, 50), head=(2, 14, 28, 30), px=(-0.08, 0.05, 0.18, 0.19), pz=(-0.08, -0.08, -0.10, -0.06),
+                    arm_n=(175, 110, 62, 44), fore_n=(205, 125, 72, 50), item=(140, 60, -50, -62), arm_f=(40, 10, -30, -20), fore_f=(80, 50, 10, 10), step=0.22),
+    # a long weapon held upright: drawn back, then driven straight out in front with the whole body behind it
+    "thrust": _attack(lean=(20, 34, 42, 40), head=(10, 18, 24, 22), px=(-0.10, 0.06, 0.20, 0.19), pz=(-0.09, -0.09, -0.10, -0.07),
+                      arm_n=(20, 60, 84, 78), fore_n=(70, 80, 88, 84), item=(-12, 40, 78, 74), arm_f=(30, 60, 82, 78), fore_f=(60, 80, 86, 82), step=0.26, lift=0.12),
+    # a spell: the free hand and the focus raised, then thrown forward with the chest behind it, the feet staying put
+    "cast": _attack(lean=(14, 30, 38, 36), head=(6, 16, 22, 22), px=(-0.05, 0.02, 0.07, 0.07), pz=(-0.05, -0.06, -0.06, -0.04),
+                    arm_n=(150, 100, 74, 64), fore_n=(175, 112, 70, 60), item=(10, 36, 54, 50), arm_f=(120, 60, 20, 10), fore_f=(150, 80, 20, 20), step=0.06, lift=0.0, heel=-10.0),
+    # empty hands: a backhand swipe from behind the hip, up and across
+    "swipe": _attack(lean=(16, 30, 42, 44), head=(6, 14, 24, 26), px=(-0.06, 0.04, 0.14, 0.15), pz=(-0.06, -0.07, -0.08, -0.05),
+                     arm_n=(-30, 40, 100, 120), fore_n=(0, 60, 96, 110), item=(0, 20, 50, 60), arm_f=(40, 20, -10, -10), fore_f=(70, 40, 20, 20)),
 }
-ATTACKS["stab"] = dict(ATTACKS["chop"])
-ATTACKS["thrust"] = dict(ATTACKS["chop"])
-ATTACKS["cast"] = dict(ATTACKS["chop"])
-ATTACKS["swipe"] = dict(ATTACKS["chop"])
 
 
 def _rest_channels(body):
