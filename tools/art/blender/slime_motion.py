@@ -623,7 +623,7 @@ def specials(body, clip, i, t, n, soft, root):
                 ground = -(pivot[2] + root[2]) + f.get("pebble_r", 0.03)
                 dz = fall * ground
                 side = 1.0 if pivot[0] >= 0.0 else -1.0     # they scatter out past the spreading puddle, where they can be seen
-                dx = side * (0.45 * W + 0.05 * W * k) * fall - pivot[0] * fall
+                dx = side * (0.85 * W + 0.06 * W * k) * fall - pivot[0] * fall
             off[g] = dict(d=(dx, dz))
         elif g.startswith("puff"):
             k = int(g[4:] or 0)
