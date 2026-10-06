@@ -7,6 +7,7 @@ written once and fits a stout goblin, a tall one or a small one riding a wolf.
 """
 import math
 
+import goblin_skeleton as skeleton
 import rigkit as k
 
 SKIN = (122, 140, 70)
@@ -59,17 +60,10 @@ class Goblin:
         f = self.form
         sk = self.skin
         ears = f.get("ears", 1.0)
-        self.bone("hips", (0, 0, 0.80), (0, 0, 0.95))
-        self.bone("spine", (0, 0, 0.95), (0.05, 0, 1.30), "hips")
-        self.bone("head", (0.07, 0, 1.32), (0.13, 0, 1.62), "spine")
-        for s, y in (("n", NEAR), ("f", FAR)):
-            self.bone("arm_" + s, (0.06, y, 1.28), (0.10, y, 1.04), "spine")
-            self.bone("fore_" + s, (0.10, y, 1.04), (0.22, y, 0.84), "arm_" + s)
-            self.bone("item_" + s, (0.23, y, 0.82), (0.23, y, 0.92), "fore_" + s)
-        for s, y in (("n", -0.11), ("f", 0.11)):
-            self.bone("thigh_" + s, (0.0, y, 0.80), (0.03, y, 0.48), "hips")
-            self.bone("shin_" + s, (0.03, y, 0.48), (0.0, y, 0.11), "thigh_" + s)
-            self.bone("foot_" + s, (0.0, y, 0.11), (0.22, y, 0.05), "shin_" + s)
+        for name, head, tail, parent in skeleton.core():
+            self.bone(name, head, tail, parent)
+        for name, head, tail, parent in skeleton.ears(ears):
+            self.bone(name, head, tail, parent)
         hd = f.get("head", 1.0)
         self.e("pelvis", (0, 0, 0.88), (0.17, 0.15, 0.13), "hips", sk)
         self.e("torso", (0.04, 0, 1.13), (0.20, 0.17, 0.24), "spine", sk)
@@ -77,15 +71,14 @@ class Goblin:
         self.l("nose", (0.30 * hd, 0, 1.56), (0.46 * hd, 0, 1.50), 0.055, 0.0, "head", sk, sides=6)
         for s, y in (("n", -1), ("f", 1)):
             tip = (-0.20 * ears, y * 0.46 * ears, 1.62 + 0.22 * ears)
-            self.bone("ear_" + s, (0.10, y * 0.16, 1.62), tip, "head")
             self.l("ear_" + s, (0.10, y * 0.16, 1.62), tip, 0.07, 0.0, "ear_" + s, sk, far=s == "f", sides=5)
             self.e("eye_" + s, (0.31 * hd, y * 0.10, 1.62), (0.05, 0.05, 0.05), "head", AMBER, far=s == "f", glow=True, seg=8, rings=6)
         self.e("tooth", (0.30 * hd, -0.05, 1.42), (0.025, 0.02, 0.05), "head", (240, 236, 210), seg=6, rings=4)
         for s, y in (("n", NEAR), ("f", FAR)):
             far = s == "f"
-            self.l("arm_" + s, (0.06, y, 1.28), (0.10, y, 1.04), 0.065, 0.052, "arm_" + s, sk, far, sides=6)
-            self.l("fore_" + s, (0.10, y, 1.04), (0.22, y, 0.84), 0.052, 0.045, "fore_" + s, sk, far, sides=6)
-            self.e("hand_" + s, (0.23, y, 0.82), (0.065, 0.06, 0.065), "fore_" + s, sk, far)
+            self.l("arm_" + s, (0.06, y, 1.28), (0.10, y, 1.02), 0.065, 0.052, "arm_" + s, sk, far, sides=6)
+            self.l("fore_" + s, (0.10, y, 1.02), (0.24, y, 0.78), 0.052, 0.045, "fore_" + s, sk, far, sides=6)
+            self.e("hand_" + s, (0.25, y, 0.76), (0.065, 0.06, 0.065), "fore_" + s, sk, far)
         for s, y in (("n", -0.11), ("f", 0.11)):
             far = s == "f"
             self.l("thigh_" + s, (0.0, y, 0.80), (0.03, y, 0.48), 0.085, 0.066, "thigh_" + s, sk, far)

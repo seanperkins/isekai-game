@@ -76,6 +76,7 @@ class Rig:
         self.rest = {}   # bone -> (head, tail, parent)
         self.order = []  # parents before children
         self.parts = []  # (object, rgb 0..255, far)
+        self.owner = {}  # part -> the bone it is bound to
         self.glowing = set()  # parts lit whatever their shape: eyes, marks
 
     def bone(self, name, head, tail, parent=None):
@@ -102,6 +103,7 @@ class Rig:
         mod.object = self.obj
         ob.parent = self.obj
         self.parts.append((ob, rgb, far))
+        self.owner[ob] = bone
         if glow:
             self.glowing.add(ob)
         return ob
@@ -146,6 +148,20 @@ class Rig:
                 xs.append(w.x)
                 zs.append(w.z)
         return min(xs), max(xs), min(zs), max(zs)
+
+    def bounds_of(self, bone):
+        """(min x, max x, min z, max z) of the parts bound to `bone` in the current pose, or None."""
+        deps = bpy.context.evaluated_depsgraph_get()
+        xs, zs = [], []
+        for ob, _, _ in self.parts:
+            if self.owner[ob] != bone:
+                continue
+            ev = ob.evaluated_get(deps)
+            for c in ev.bound_box:
+                w = ev.matrix_world @ Vector(c)
+                xs.append(w.x)
+                zs.append(w.z)
+        return (min(xs), max(xs), min(zs), max(zs)) if xs else None
 
     def stand(self, rot=None, root=(0.0, 0.0, 0.0)):
         """Pose, then drop or lift the whole creature until its lowest point rests on the ground (z = 0), a stand-in for foot IK.

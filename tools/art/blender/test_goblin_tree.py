@@ -11,6 +11,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 sys.path.insert(0, HERE)
 import goblin_forms as forms  # noqa: E402
+import goblin_motion as motion  # noqa: E402
 import goblin_tree as tree  # noqa: E402
 
 
@@ -48,7 +49,7 @@ class FormsTableTest(unittest.TestCase):
 
     def test_every_form_names_gear_poses_and_frames_that_exist(self):
         gear = function_names(module_tree("goblin_gear.py"))
-        arms, stances = dict_keys(module_tree("creatures", "goblin.py"), "ARMS"), dict_keys(module_tree("creatures", "goblin.py"), "STANCES")
+        arms, stances = set(motion.ARMS), set(motion.STANCES)
         for name, f in forms.FORMS.items():
             for g, _ in f["gear"]:
                 self.assertIn(g, gear, "%s wears %s" % (name, g))

@@ -56,7 +56,8 @@ class ShadeTest(unittest.TestCase):
         self.assertEqual(out[:3], (255, 255, 255))
 
     def test_rigkit_and_toon_agree_on_where_the_light_is(self):
-        source = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "rigkit.py")).read()
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "rigkit.py")) as fh:
+            source = fh.read()
         line = [l for l in source.split("\n") if l.startswith("LIGHT = ")][0]
         self.assertEqual(eval(line.split("=", 1)[1].split("#")[0]), toon.LIGHT)
 

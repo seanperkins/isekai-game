@@ -110,6 +110,28 @@ class PipelineTest(unittest.TestCase):
                 rect = before[form]["rect"]
                 self.assertTrue(0.6 < (w * h) / (rect[2] * rect[3]) < 1.7, "%s covers %.0f px against %d before" % (form, w * h, rect[2] * rect[3]))
 
+    def test_the_flat_skeleton_the_motion_is_tested_on_matches_the_real_armature_in_every_clip(self):
+        sys.path.insert(0, HERE)
+        import goblin_forms as forms
+        import goblin_skeleton as gs
+        for variant in ("redcap", "tomte"):
+            with self.subTest(variant=variant), tempfile.TemporaryDirectory() as tmp:
+                path = os.path.join(tmp, "pose.json")
+                done = blender("-P", os.path.join(HERE, "probe_pose.py"), "--", path, variant)
+                self.assertTrue(os.path.exists(path), done.stdout[-1500:] + done.stderr[-1500:])
+                with open(path) as fh:
+                    probes = json.load(fh)
+                form = forms.FORMS[variant]
+                skel = gs.skeleton(1.12 * form.get("bx", 1.0), 0.9 * form.get("tall", 1.0), extra=gs.ears(form.get("ears", 1.0)))
+                self.assertEqual({p["clip"] for p in probes}, {"idle", "walk", "run", "attack", "hurt", "die"})
+                for probe in probes:
+                    posed = skel.pose({k: tuple(v) for k, v in probe["rot"].items()}, tuple(probe["root"]))
+                    for bone, (head, tail, _) in posed.items():
+                        want_head, want_tail = probe["bones"][bone]
+                        for got, want in ((head, want_head), (tail, want_tail)):
+                            self.assertAlmostEqual(got[0], want[0], delta=1e-4, msg="%s %d %s" % (probe["clip"], probe["frame"], bone))
+                            self.assertAlmostEqual(got[1], want[1], delta=1e-4, msg="%s %d %s" % (probe["clip"], probe["frame"], bone))
+
     def test_a_variant_changes_colours_and_parts_but_not_the_animation(self):
         with tempfile.TemporaryDirectory() as plain, tempfile.TemporaryDirectory() as red:
             self.render("goblin", plain)

@@ -3,7 +3,7 @@ were rigid on a spring (anim.follow), so it trails the body. Pure Python; the cr
 
 A table entry: `parents`, the chain of bones above whose angles it rides (or `after`, another entry whose followed angle it rides, for the
 second link of a cloak or a tail); `bob`, how much the body's bounce shakes it (degrees per unit of height); `wind`, how far it is blown back
-in a full walk (degrees); `k` and `c`, the spring's stiffness and damping.
+in a full walk (degrees); `freq` and `zeta`, the spring's natural frequency (Hz) and damping ratio. Time is in seconds: `durations` is how long each frame lasts.
 """
 import anim
 
@@ -13,9 +13,10 @@ def abs_deg(rot, chain):
     return -sum(rot.get(b, (0.0, 0.0, 0.0))[1] for b in chain)
 
 
-def series(present, table, frames, wind, pre="", extra_chain=()):
+def series(present, table, frames, wind, durations, pre="", extra_chain=(), periodic=True):
     """Per frame, each hung thing's angle against the bone it hangs from. `present` is the set of bone names the rig has (the table's names with
-    `pre` in front); `frames` is [(rot, root)] over a loop; `wind` scales every entry's wind (1 in a walk); `extra_chain` is bones of a mount."""
+    `pre` in front); `frames` is [(rot, root)]; `wind` scales every entry's wind (1 in a walk); `durations` is each frame's length in seconds; `periodic` says
+    whether it is a loop (a seamless seam) or a one-shot (starts at rest); `extra_chain` is bones of a mount."""
     n = len(frames)
     mean_z = sum(root[2] for _, root in frames) / n
     followed, out = {}, {}
@@ -29,7 +30,7 @@ def series(present, table, frames, wind, pre="", extra_chain=()):
             chain = [b for b in chain if b in present or b in extra_chain or b in ("hips", "spine", pre + "hips", pre + "spine")]
             parent = [abs_deg(rot, chain) for rot, _ in frames]
         driver = [pa + cfg["bob"] * (root[2] - mean_z) + wind * cfg["wind"] for pa, (_, root) in zip(parent, frames)]
-        chased = anim.follow(driver, stiffness=cfg["k"], damping=cfg["c"])
+        chased = anim.follow(driver, durations, freq=cfg["freq"], zeta=cfg["zeta"], periodic=periodic)
         followed[name] = chased
         out[pre + name] = [c - pa for c, pa in zip(chased, parent)]
     return out

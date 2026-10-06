@@ -43,46 +43,55 @@ class IkTest(unittest.TestCase):
             self.assertTrue(all(math.isfinite(v) for v in (a1, a2)))
 
 
-class GaitTest(unittest.TestCase):
+class FootTest(unittest.TestCase):
     STRIDE, DUTY, LIFT = 0.4, 0.6, 0.12
+    HEEL, TOE, ANKLE = 0.08, 0.22, 0.11
 
     def foot(self, u):
-        return anim.stride_foot(u, self.STRIDE, self.DUTY, self.LIFT)
+        return anim.foot_pose(u, self.STRIDE, self.DUTY, self.LIFT, self.HEEL, self.TOE, self.ANKLE)
 
-    def test_a_planted_foot_stays_on_the_ground_and_moves_back_at_one_speed(self):
-        xs = []
-        for k in range(0, 60):
-            u = k / 100.0
-            x, z, _, grounded = self.foot(u)
-            self.assertTrue(grounded)
-            self.assertEqual(z, 0.0)
-            xs.append(x)
-        steps = [a - b for a, b in zip(xs, xs[1:])]
-        self.assertTrue(all(abs(s - steps[0]) < 1e-9 for s in steps), "constant speed: it does not slide")
-        self.assertAlmostEqual(self.foot(0.0)[0] - self.foot(self.DUTY)[0], self.STRIDE, places=6)
+    def sole_low(self, u):
+        x, z, pitch, _ = self.foot(u)
+        return min(p[1] for p in anim.sole_points(x, z, pitch, self.HEEL, self.TOE, self.ANKLE))
 
-    def test_a_swinging_foot_lifts_and_comes_forward_and_lands_where_the_next_stance_begins(self):
-        self.assertAlmostEqual(self.foot(self.DUTY)[0], -self.STRIDE / 2, places=6)
-        self.assertAlmostEqual(self.foot(0.999999)[0], self.STRIDE / 2, places=3)
-        last = -1e9
-        peak = 0.0
-        for k in range(61, 100):
-            x, z, _, grounded = self.foot(k / 100.0)
-            self.assertFalse(grounded)
-            self.assertGreaterEqual(x, last, "it only moves forward")
-            last = x
-            peak = max(peak, z)
-        self.assertAlmostEqual(peak, self.LIFT, delta=0.01)
-        self.assertEqual(self.foot(0.9999999)[1] < 0.001, True)
-
-    def test_the_foot_is_continuous_across_the_whole_cycle(self):
+    def test_the_ankle_path_has_no_jumps_across_the_whole_cycle_including_the_toe_off_and_the_wrap(self):
         prev = self.foot(0.0)
-        for k in range(1, 400):
-            cur = self.foot(k / 400.0)
-            self.assertLess(abs(cur[0] - prev[0]), 0.05)
-            self.assertLess(abs(cur[1] - prev[1]), 0.05)
+        worst = 0.0
+        for k in range(1, 2001):
+            cur = self.foot(k / 2000.0)
+            worst = max(worst, abs(cur[0] - prev[0]), abs(cur[1] - prev[1]), abs(cur[2] - prev[2]) * 0.01)
             prev = cur
-        self.assertAlmostEqual(self.foot(0.0)[0], self.foot(1.0)[0], places=6)
+        self.assertLess(worst, 0.01, "no step of more than a centimetre in 1/2000 of a cycle")
+        wrap = self.foot(0.0), self.foot(0.999999)
+        for a, b in zip(wrap[0][:3], wrap[1][:3]):
+            self.assertAlmostEqual(a, b, delta=0.01)
+
+    def test_a_planted_foot_rests_exactly_on_the_ground_and_its_contact_point_moves_back_at_one_speed(self):
+        xs = []
+        for k in range(0, 600):
+            u = k / 1000.0
+            self.assertAlmostEqual(self.sole_low(u), 0.0, places=9)
+            x, z, pitch, grounded = self.foot(u)
+            self.assertTrue(grounded)
+            xs.append(anim.sole_contact(x, z, pitch, self.HEEL, self.TOE, self.ANKLE)[0])
+        steps = [a - b for a, b in zip(xs, xs[1:])]
+        for step in steps:
+            self.assertAlmostEqual(step, steps[0], places=6)
+        self.assertAlmostEqual(xs[0] - xs[-1], self.STRIDE * (0.599 / self.DUTY), delta=0.002)
+
+    def test_the_sole_never_goes_below_the_ground_in_swing_and_the_foot_comes_up_to_the_lift(self):
+        peak = 0.0
+        for k in range(601, 1000):
+            u = k / 1000.0
+            self.assertGreaterEqual(self.sole_low(u), -1e-9)
+            self.assertFalse(self.foot(u)[3])
+            peak = max(peak, self.sole_low(u))
+        self.assertGreater(peak, self.LIFT * 0.6)
+
+    def test_the_heel_strikes_toe_up_rolls_flat_and_the_heel_lifts_before_the_toe_leaves(self):
+        self.assertGreater(self.foot(0.0)[2], 5.0)
+        self.assertAlmostEqual(self.foot(0.3)[2], 0.0, delta=2.0)
+        self.assertLess(self.foot(self.DUTY - 0.001)[2], -25.0)
 
     def test_the_other_leg_is_half_a_cycle_behind_so_a_foot_is_always_down_and_both_are_down_a_fifth_of_the_time(self):
         both = 0
@@ -93,18 +102,60 @@ class GaitTest(unittest.TestCase):
             both += a and b
         self.assertAlmostEqual(both / 1000.0, 2 * (self.DUTY - 0.5), delta=0.01)
 
-    def test_the_heel_strikes_toe_up_rolls_flat_and_the_heel_lifts_before_the_toe_leaves(self):
-        self.assertGreater(self.foot(0.0)[2], 5.0)
-        self.assertAlmostEqual(self.foot(0.3)[2], 0.0, delta=2.0)
-        self.assertLess(self.foot(self.DUTY - 0.01)[2], -15.0)
+    def test_the_heel_is_behind_the_ankle_and_the_toe_ahead_and_both_are_below_it(self):
+        heel, toe = anim.sole_points(0.5, 0.3, 0.0, self.HEEL, self.TOE, self.ANKLE)
+        self.assertAlmostEqual(heel[0], 0.5 - self.HEEL, places=9)
+        self.assertAlmostEqual(toe[0], 0.5 + self.TOE, places=9)
+        self.assertAlmostEqual(heel[1], 0.3 - self.ANKLE, places=9)
 
-    def test_a_tilted_foot_rests_on_its_heel_or_its_toe(self):
-        self.assertEqual(anim.contact_lift(0.0, 0.1, 0.2), 0.0)
-        self.assertAlmostEqual(anim.contact_lift(30.0, 0.1, 0.2), 0.1 * 0.5, places=6)
-        self.assertAlmostEqual(anim.contact_lift(-30.0, 0.1, 0.2), 0.2 * 0.5, places=6)
+    def test_the_heel_is_what_stands_at_heel_strike_and_the_toe_at_toe_off(self):
+        x, z, p, _ = self.foot(0.0)
+        heel = anim.sole_points(x, z, p, self.HEEL, self.TOE, self.ANKLE)[0]
+        self.assertAlmostEqual(heel[0], self.STRIDE / 2.0, delta=0.005)
+        u = self.DUTY - 1e-6
+        x, z, p, _ = self.foot(u)
+        toe = anim.sole_points(x, z, p, self.HEEL, self.TOE, self.ANKLE)[1]
+        self.assertAlmostEqual(toe[0], self.STRIDE / 2.0 - self.STRIDE * (u / self.DUTY), delta=0.005)
+
+    def test_a_foot_swung_with_no_lift_still_does_not_go_through_the_floor(self):
+        for k in range(601, 1000):
+            x, z, p, _ = anim.foot_pose(k / 1000.0, self.STRIDE, self.DUTY, 0.0, self.HEEL, self.TOE, self.ANKLE)
+            self.assertGreaterEqual(min(pt[1] for pt in anim.sole_points(x, z, p, self.HEEL, self.TOE, self.ANKLE)), -1e-9)
+
+    def test_a_short_stubby_foot_swung_low_is_lifted_clear_of_the_floor(self):
+        heel, toe, ankle = 0.05, 0.1, 0.2  # a foot on which the swing's roll would otherwise dip the sole through the floor
+        for k in range(601, 1000):
+            x, z, p, _ = anim.foot_pose(k / 1000.0, 0.1, self.DUTY, 0.0, heel, toe, ankle)
+            self.assertGreaterEqual(min(pt[1] for pt in anim.sole_points(x, z, p, heel, toe, ankle)), -1e-9)
+
+    def test_a_tilted_foot_rests_on_its_heel_or_its_toe_and_the_lowest_point_is_what_decides(self):
+        flat = anim.sole_points(0.0, 0.11, 0.0, self.HEEL, self.TOE, self.ANKLE)
+        self.assertAlmostEqual(min(p[1] for p in flat), 0.0, places=9)
+        toe_up = anim.sole_points(0.0, 0.2, 30.0, self.HEEL, self.TOE, self.ANKLE)
+        self.assertLess(toe_up[0][1], toe_up[1][1], "toe up: the heel is the low point")
+        heel_up = anim.sole_points(0.0, 0.2, -30.0, self.HEEL, self.TOE, self.ANKLE)
+        self.assertLess(heel_up[1][1], heel_up[0][1], "heel up: the toe is the low point")
 
 
 class PelvisTest(unittest.TestCase):
+    def test_a_planted_foot_puts_its_contact_point_where_it_is_told_and_its_sole_on_the_floor(self):
+        heel, toe, ankle = 0.08, 0.22, 0.11
+        for pitch in (-34.0, -10.0, 0.0, 7.0, 14.0):
+            x, z = anim.plant(0.3, pitch, heel, toe, ankle)
+            cx, low = anim.sole_contact(x, z, pitch, heel, toe, ankle)
+            self.assertAlmostEqual(cx, 0.3, places=9)
+            self.assertAlmostEqual(low, 0.0, places=9)
+
+    def test_a_heel_lifting_turns_about_the_toe_which_stays_put(self):
+        heel, toe, ankle = 0.08, 0.22, 0.11
+        flat_x, _ = anim.plant(0.3, 0.0, heel, toe, ankle)
+        flat_toe = flat_x + toe
+        for pitch in (-5.0, -20.0, -34.0):
+            x, z = anim.plant_toe(flat_toe, pitch, heel, toe, ankle)
+            _, tip = anim.sole_points(x, z, pitch, heel, toe, ankle)
+            self.assertAlmostEqual(tip[0], flat_toe, places=9)
+            self.assertAlmostEqual(tip[1], 0.0, places=9)
+
     def test_the_pelvis_is_highest_as_each_leg_passes_and_lowest_just_after_each_heel_strike(self):
         duty, amp = 0.6, 0.03
         samples = [(k / 200.0, anim.pelvis_height(k / 200.0, 1.0, amp, duty)) for k in range(200)]
@@ -120,31 +171,55 @@ class PelvisTest(unittest.TestCase):
 
 
 class FollowTest(unittest.TestCase):
-    def sine(self, n=12, amp=10.0):
-        return [amp * math.sin(2 * math.pi * i / n) for i in range(n)]
+    N, DT = 12, 1.0 / 24.0
+
+    def sine(self, amp=10.0):
+        return [amp * math.sin(2 * math.pi * i / self.N) for i in range(self.N)]
 
     def test_a_constant_driver_settles_to_it(self):
-        out = anim.follow([7.0] * 8)
-        for v in out:
+        for v in anim.follow([7.0] * 8, self.DT, freq=3.0, zeta=0.4):
             self.assertAlmostEqual(v, 7.0, places=3)
 
-    def test_the_follower_lags_the_driver_and_the_loop_is_seamless(self):
+    def test_the_follower_lags_the_driver_and_does_not_fly_off(self):
         driver = self.sine()
-        out = anim.follow(driver)
-        peak_driver = driver.index(max(driver))
-        peak_out = out.index(max(out))
-        self.assertGreater((peak_out - peak_driver) % len(driver), 0, "it arrives late")
-        self.assertLess(max(out), max(driver) * 1.6, "and does not fly off")
-        again = anim.follow(driver, cycles=12)
-        for a, b in zip(out, again):
-            self.assertAlmostEqual(a, b, places=2)
+        out = anim.follow(driver, self.DT, freq=3.0, zeta=0.4)
+        self.assertGreater((out.index(max(out)) - driver.index(max(driver))) % self.N, 0, "it arrives late")
+        self.assertLess(max(out), max(driver) * 1.6)
+
+    def test_a_loop_is_seamless_the_spring_ends_where_it_began_in_position_and_speed(self):
+        series, start, end = anim.follow(self.sine(), self.DT, freq=3.0, zeta=0.2, state=True)
+        self.assertAlmostEqual(start[0], end[0], places=3)
+        self.assertAlmostEqual(start[1], end[1], places=2)
+        again = anim.follow(self.sine(), self.DT, freq=3.0, zeta=0.2)
+        for a, b in zip(series, again):
+            self.assertAlmostEqual(a, b, places=6)
+
+    def test_a_lightly_damped_spring_still_converges_whatever_the_number_of_cycles_it_takes(self):
+        series, start, end = anim.follow(self.sine(), self.DT, freq=6.0, zeta=0.03, state=True)
+        self.assertAlmostEqual(start[0], end[0], places=2)
 
     def test_a_stiffer_follower_stays_closer_to_the_driver(self):
         driver = self.sine()
-        soft = anim.follow(driver, stiffness=0.05)
-        stiff = anim.follow(driver, stiffness=0.5)
         err = lambda out: sum(abs(a - b) for a, b in zip(out, driver))
-        self.assertLess(err(stiff), err(soft))
+        self.assertLess(err(anim.follow(driver, self.DT, freq=8.0, zeta=0.5)), err(anim.follow(driver, self.DT, freq=1.5, zeta=0.5)))
+
+    def test_slower_frames_give_the_spring_more_time_so_it_trails_by_fewer_frames(self):
+        driver = self.sine()
+        lag = lambda dt: (lambda out: (out.index(max(out)) - driver.index(max(driver))) % self.N)(anim.follow(driver, dt, freq=2.0, zeta=0.4))
+        self.assertGreaterEqual(lag(1.0 / 60.0), lag(0.25))
+
+    def test_a_one_shot_starts_at_rest_on_the_first_frame_and_only_catches_up_from_there(self):
+        step = [0.0] * 3 + [10.0] * 9
+        out = anim.follow(step, self.DT, freq=3.0, zeta=0.5, periodic=False)
+        self.assertEqual(out[0], 0.0)
+        self.assertLess(out[3], 10.0, "the frame the driver jumps it has not yet arrived")
+        self.assertGreater(out[-1], 5.0)
+
+    def test_frames_of_different_lengths_are_integrated_over_their_own_time(self):
+        driver = [0.0, 10.0, 10.0, 10.0]
+        short = anim.follow(driver, [0.02, 0.02, 0.02, 0.02], freq=3.0, zeta=0.5, periodic=False)
+        long = anim.follow(driver, [0.02, 0.5, 0.02, 0.02], freq=3.0, zeta=0.5, periodic=False)
+        self.assertGreater(long[2], short[2], "a held frame gives it time to arrive")
 
 
 class KeysTest(unittest.TestCase):
@@ -153,6 +228,11 @@ class KeysTest(unittest.TestCase):
     def test_it_hits_every_key_exactly(self):
         for t, v, _ in self.KEYS:
             self.assertAlmostEqual(anim.sample(self.KEYS, t), v, places=9)
+
+    def test_a_loop_whose_first_key_is_late_still_wraps_smoothly_from_the_previous_cycle(self):
+        keys = [(2, 0.0, "linear"), (6, 8.0, "linear")]
+        self.assertAlmostEqual(anim.sample_loop(keys, 0, 8), 4.0, places=6, msg="halfway down from 8 (at 6) to 0 (at 2 + 8)")
+        self.assertAlmostEqual(anim.sample_loop(keys, 7.999999, 8), anim.sample_loop(keys, 0, 8), places=3)
 
     def test_it_holds_before_the_first_and_after_the_last(self):
         self.assertEqual(anim.sample(self.KEYS, -4), 0.0)

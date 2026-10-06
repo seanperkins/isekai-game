@@ -50,6 +50,7 @@ def main():
     materials = sorted({rigkit.shown_colour(rgb, far) for _, rgb, far in rig.parts})
     meta = {"creature": a.creature, "variant": a.variant or "", "canvas": cfg["canvas"], "ppu": cfg["ppu"], "margin": cfg["margin"], "ss": a.ss,
             "still": cfg.get("still", "idle_0"), "fps": cfg.get("fps", {}), "holds": cfg.get("holds", {}), "materials": materials, "anims": {}}
+    meta.update(cfg.get("extra", {}))  # what a creature says about its clips: each frame's duration, which loop, where the windup ends
     for anim in wanted:
         count, fn, grounded = cfg["anims"][anim]
         for i in range(count):
