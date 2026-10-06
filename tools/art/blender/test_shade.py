@@ -209,5 +209,16 @@ class PaletteTest(unittest.TestCase):
         self.assertTrue(any(max(c) < min(max(g) for g in shade.ramp(GREEN)) for c in colours), "the outline darks are in it")
 
 
+class StaleFramesTest(unittest.TestCase):
+    def test_a_rerender_with_fewer_frames_leaves_none_of_the_old_ones(self):
+        import tempfile
+        import spike
+        with tempfile.TemporaryDirectory() as tmp:
+            for name in ("run_0.png", "run_0_n.png", "run_8.png", "run_8_n.png", "idle_0.png", "gone_3.png", "gone_3_n.png", "notes.txt"):
+                open(os.path.join(tmp, name), "w").close()
+            spike.clear_stale(tmp, ["run_0", "idle_0"])
+            self.assertEqual(sorted(os.listdir(tmp)), ["idle_0.png", "notes.txt", "run_0.png", "run_0_n.png"])
+
+
 if __name__ == "__main__":
     unittest.main()

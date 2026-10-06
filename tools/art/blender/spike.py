@@ -12,6 +12,7 @@ Needs Blender (BLENDER=/path overrides /Applications/Blender.app) and Pillow.
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 
@@ -64,6 +65,14 @@ def _flat_outline_normals(lit, normals):
     return out
 
 
+def clear_stale(folder, keys):
+    """Delete the frames (`<anim>_<n>.png` and its `_n.png`) in `folder` that are not one of `keys`: a re-render with fewer frames must not leave the old ones for the readers that count frames by file."""
+    for name in os.listdir(folder):
+        m = re.fullmatch(r"(.+_\d+)(_n)?\.png", name)
+        if m and m.group(1) not in keys:
+            os.remove(os.path.join(folder, name))
+
+
 def process(raw, out, outline=True, bake=BAKE):
     """Shrink, light, outline and palette-snap every frame in `raw` (what render() wrote); returns {anim: [frame names]}. Writes each frame
     and its normal map to out/frames."""
@@ -71,6 +80,7 @@ def process(raw, out, outline=True, bake=BAKE):
     canvas = meta["canvas"]
     materials = [tuple(m) for m in meta["materials"]]
     os.makedirs(os.path.join(out, "frames"), exist_ok=True)
+    clear_stale(os.path.join(out, "frames"), {"%s_%d" % (anim, i) for anim, count in meta["anims"].items() for i in range(count)})
     colours = shade.palette_colours(materials, bake)
     pal = toon.palette_of(colours)  # every colour a creature can show: its materials' ramps and their outline darks (refuses more than a palette can hold)
     result = {}
