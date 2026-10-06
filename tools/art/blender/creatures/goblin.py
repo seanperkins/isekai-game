@@ -125,7 +125,7 @@ def rider_clips(rig, form, variant):
     """({name: Clip}, ppu) for a goblin on a wolf: the wolf moves as a wolf does (the quadruped motion on the mount's own flat skeleton, its bones
     prefixed) and the rider sits on it."""
     mount = form["mount"]
-    mform = dict(wolf.mount_form(mount["fur"], mount["belly"], mount.get("barding")), attack=attack_kinds.resolve({}, "goblin_" + (variant or ""), "bite", quad=True))
+    mform = dict(wolf.mount_form(mount["fur"], mount["belly"], mount.get("barding")), attack=attack_kinds.resolve({}, "goblin_" + (variant or ""), "bite", family="quad"))
     body = wolf.body_of(rig, mform, "w_")
     rig.pose(*_rider_frame(form, wolf.motion_.idle_clip(body).frames[0][0], wolf.motion_.idle_clip(body).frames[0][1], 0.0))
     x0, x1, z0, z1 = rig.extent()
@@ -213,7 +213,7 @@ def setup(rig, variant):
 
 # ---- gestures ---------------------------------------------------------------------------------------------------------------------
 # the preset of biped_motion.ATTACKS that plays each gesture (verb_anims.ARCHETYPES); a gesture not listed is one the two-legged bodies cannot play yet
-GESTURES = {name: name for name in verb_anims.ARCHETYPES}   # all of them: biped_motion.ATTACKS has a preset for each
+GESTURES = verb_anims.PRESETS["biped"]   # all of them: biped_motion.ATTACKS has a preset for each
 
 
 def gesture_clip(rig, variant, archetype):

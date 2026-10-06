@@ -14,6 +14,7 @@ HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if HERE not in sys.path:
     sys.path.insert(0, HERE)
 
+import attack_kinds  # noqa: E402
 import player_poses  # noqa: E402
 import rigkit as k  # noqa: E402
 import sizing  # noqa: E402
@@ -35,7 +36,11 @@ def _name(variant):
 
 
 def _form(variant):
-    return forms.FORMS[_name(variant)]
+    """The form's table entry with the attack it uses: the one it names itself, else what it holds and the verb it casts decide it (attack_kinds.resolve); a floating body has attacks of its own."""
+    form = forms.FORMS[_name(variant)]
+    if form.get("attack") or form["body"] in ("candle", "ghost", "skull"):
+        return form
+    return dict(form, attack=attack_kinds.resolve(form, "undead_" + _name(variant), motion_.attack_kind(form), family="undead"))
 
 
 def build(variant=None):
@@ -123,7 +128,7 @@ def setup(rig, variant):
 
 # ---- gestures ---------------------------------------------------------------------------------------------------------------------
 # the preset of undead_motion.KINDS that plays each gesture (verb_anims.ARCHETYPES); a gesture not listed is one the undead cannot play yet
-GESTURES = {name: name for name in verb_anims.ARCHETYPES}   # undead_motion.KINDS has a preset for each (the biped's, through attack_kinds.register_undead)
+GESTURES = verb_anims.PRESETS["undead"]   # undead_motion.KINDS has a preset for each (the biped's, through attack_kinds.register_undead)
 
 
 def gesture_clip(rig, variant, archetype):

@@ -10,6 +10,7 @@ HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if HERE not in sys.path:
     sys.path.insert(0, HERE)
 
+import attack_kinds  # noqa: E402
 import rigkit as k  # noqa: E402
 from mathutils import Vector  # noqa: E402
 import sizing  # noqa: E402
@@ -33,7 +34,11 @@ def _name(variant):
 
 
 def _form(variant):
-    return forms.FORMS[_name(variant)]
+    """The form's table entry with the attack it uses: the one it names itself, else the gesture of the verb it casts (attack_kinds.resolve), else a bite."""
+    form = forms.FORMS[_name(variant)]
+    if form.get("attack"):
+        return form
+    return dict(form, attack=attack_kinds.resolve(form, "spider_" + _name(variant), "bite", family=verb_anims.family_of("spider", form)))
 
 
 def build(variant=None):
@@ -109,10 +114,8 @@ def setup(rig, variant):
 # ---- gestures ---------------------------------------------------------------------------------------------------------------------
 # the preset of spider_motion.ATTACKS that plays each gesture on a plain spider (verb_anims.ARCHETYPES): its blows for the cast (a spit), the lunge (a pounce) and the claw (a slash), its own
 # for the rest; a drider plays the arms of spider_motion.GESTURES (its own cast, throw and smash, the biped's for the rest) instead
-GESTURES = {name: name for name in verb_anims.ARCHETYPES}
-GESTURES.update({"cast": "spit", "lunge": "pounce", "claw": "slash"})
-DRIDER_GESTURES = {name: name for name in verb_anims.ARCHETYPES if name != "slam"}
-DRIDER_GESTURES["slam"] = "smash"
+GESTURES = verb_anims.PRESETS["spider"]
+DRIDER_GESTURES = verb_anims.PRESETS["drider"]
 
 
 def gesture_clip(rig, variant, archetype):

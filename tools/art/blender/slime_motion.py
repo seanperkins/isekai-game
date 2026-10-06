@@ -527,7 +527,7 @@ LASH = _swing(-55.0, 40.0, 75.0, 30.0, -10.0)     # degrees a striking chain swi
 
 
 # the channels of each attack style a form can name; one not here is the lunge
-STYLES = {"slam": SLAM, "lash": REACH, "throw": REACH, "pulse": REACH, "lunge": LUNGE}
+STYLES = {"slam": SLAM, "lash": REACH, "throw": REACH, "pulse": REACH, "lunge": LUNGE, "bite": LUNGE}
 
 import slime_gestures  # noqa: E402  (the verb gestures beyond these styles: roar, guard, point, toss, summon, drink, craft, sneak, throb)
 slime_gestures.register(STYLES, _swing)

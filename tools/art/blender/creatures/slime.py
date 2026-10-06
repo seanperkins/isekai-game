@@ -12,6 +12,7 @@ HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if HERE not in sys.path:
     sys.path.insert(0, HERE)
 
+import attack_kinds  # noqa: E402
 import rigkit as k  # noqa: E402
 import sizing  # noqa: E402
 import slime_forms as forms  # noqa: E402
@@ -26,7 +27,10 @@ PAD = 4
 
 
 def _form(variant):
-    return forms.FORMS[variant or "slime"]
+    """The form's table entry with the attack style it uses: the one it names itself, else the gesture of the verb it casts (attack_kinds.resolve), else the soft body's own (slime_motion.attack_style)."""
+    form = forms.FORMS[variant or "slime"]
+    style = attack_kinds.resolve(form, variant or "slime", None, family="slime")
+    return dict(form, attack=style) if style else form
 
 
 def build(variant=None):
@@ -84,8 +88,7 @@ def setup(rig, variant):
 
 # ---- gestures ---------------------------------------------------------------------------------------------------------------------
 # the attack style of slime_motion that plays each gesture (verb_anims.ARCHETYPES); a gesture not listed is one the slimes cannot play yet
-GESTURES = {name: name for name in verb_anims.ARCHETYPES}
-GESTURES.update({"cast": "lash", "claw": "bite", "throw": "toss", "pulse": "throb"})   # the styles forms name (lash, bite, throw, pulse) are not changed: the gestures have their own
+GESTURES = verb_anims.PRESETS["slime"]
 
 
 def gesture_clip(rig, variant, archetype):

@@ -69,27 +69,27 @@ def register_undead(kinds, goblin_lean, goblin_head):
         kinds.setdefault(name, undead_kind(spec, goblin_lean, goblin_head))
 
 
-# What a verb of each kind an enemy can cast looks like (tools/form_verbs.json; scripts/abilities/verb_kinds.gd ENEMY_KINDS). A blow with a weapon stays a weapon
-# blow when the verb is a bolt or a burst; anything else takes the attack that reads like the verb.
-BY_VERB = {"burst": "slam", "ring": "slam", "dash": "lunge", "zone": "guard", "aura": "roar", "buff": "roar", "ward": "guard", "mark": "cast", "pull": "cast",
-           "chain": "cast", "heal": "cast", "bolt": "cast", "rage": "roar", "blink": "cast", "devour": "slam", "summon": "cast"}
-BY_VERB_QUAD = {"burst": "slam", "ring": "roar", "dash": "lunge", "zone": "guard", "aura": "roar", "buff": "roar", "ward": "guard", "mark": "roar", "pull": "bite",
-                "chain": "bite", "heal": "guard", "bolt": "roar", "rage": "roar", "blink": "lunge", "devour": "bite", "summon": "roar"}
 WEAPON = ("chop", "stab", "thrust")
 
 
-def choose(weapon_kind, verb_kind, quad=False):
-    """The attack for a creature whose weapon blow would be `weapon_kind` and whose verb is of `verb_kind` (None for no verb, or one an enemy does not cast)."""
-    if verb_kind is None:
+def choose(weapon_kind, verb_kind, family="biped", anim=None):
+    """The attack for a creature whose weapon blow would be `weapon_kind` and whose verb is of `verb_kind` (None for no verb): the gesture of the verb's kind (verb_anims.py) in the preset its rig
+    `family` plays it with, or `anim`, the gesture its row says, which beats a weapon too. A blow with a weapon stays a weapon blow when the verb is a bolt or a burst and the row says no gesture."""
+    import verb_anims
+    if verb_kind is None and anim is None:
         return weapon_kind
-    if not quad and verb_kind in ("burst", "bolt") and weapon_kind in WEAPON:
+    if anim is None and verb_kind in ("burst", "bolt") and weapon_kind in WEAPON:
         return weapon_kind
-    return (BY_VERB_QUAD if quad else BY_VERB).get(verb_kind, weapon_kind)
+    return verb_anims.PRESETS[family][anim or verb_anims.archetype_of(verb_kind)]
 
 
-def resolve(form, form_id, weapon_kind, quad=False):
-    """The attack a form uses: the one it names itself, else what its weapon and its verb make of it (`form_id` is `<species>_<form>`, as tools/form_verbs.json has it)."""
+def resolve(form, form_id, weapon_kind, family="biped"):
+    """The attack a form uses: the one it names itself, else what its weapon and its verb make of it (`form_id` is `<species>_<form>`, as tools/form_verbs.json has it): the verb's gesture in the
+    preset its rig family plays it with."""
     import verbs
     if form.get("attack"):
         return form["attack"]
-    return choose(weapon_kind, verbs.kind_of(form_id), quad)
+    for row in verbs.rows():
+        if row["form"] == form_id:
+            return choose(weapon_kind, row["spec"].get("kind"), family, row.get("anim"))
+    return weapon_kind

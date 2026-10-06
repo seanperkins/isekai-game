@@ -44,18 +44,53 @@ class ChooseTest(unittest.TestCase):
         self.assertEqual(ak.choose("swipe", "buff"), "roar")
         self.assertEqual(ak.choose("chop", None), "chop")
 
-    def test_a_four_legged_creature_has_its_own_table(self):
-        self.assertEqual(ak.choose("bite", "dash", quad=True), "lunge")
-        self.assertEqual(ak.choose("bite", "burst", quad=True), "slam")
-        self.assertEqual(ak.choose("bite", "ring", quad=True), "roar")
-        self.assertEqual(ak.choose("bite", None, quad=True), "bite")
+    def test_every_verb_kind_has_its_gesture_not_only_the_ones_an_enemy_casts(self):
+        self.assertEqual(ak.choose("chop", "mark"), "point")
+        self.assertEqual(ak.choose("chop", "heal"), "pulse")
+        self.assertEqual(ak.choose("chop", "forge"), "craft", "a smith's forge is a crouch, whatever it holds")
+        self.assertEqual(ak.choose("chop", "stone"), "craft")
+        self.assertEqual(ak.choose("chop", "drink"), "drink")
 
-    def test_every_attack_a_choice_can_return_exists_for_both_kinds_of_body(self):
-        import quad_motion as qm
-        for kind in set(ak.BY_VERB.values()):
-            self.assertIn(kind, gm.ATTACKS)
-        for kind in set(ak.BY_VERB_QUAD.values()):
-            self.assertIn(kind, qm.ATTACKS)
+    def test_a_four_legged_creature_has_its_own_table(self):
+        self.assertEqual(ak.choose("bite", "dash", family="quad"), "lunge")
+        self.assertEqual(ak.choose("bite", "burst", family="quad"), "slam")
+        self.assertEqual(ak.choose("bite", "dissolve", family="quad"), "bite", "its claw is its bite")
+        self.assertEqual(ak.choose("bite", None, family="quad"), "bite")
+
+    def test_what_a_form_names_itself_is_what_it_does(self):
+        self.assertEqual(ak.resolve({"attack": "swipe"}, "goblin_redcap", "chop"), "swipe")
+
+    def test_a_row_that_says_its_own_gesture_has_it_even_over_a_weapon_blow(self):
+        self.assertEqual(ak.resolve({}, "goblin_paladin", "chop"), "throw", "the blessed throw")
+        self.assertEqual(ak.resolve({}, "wolf_barghest", "bite", family="quad"), "roar", "the fear howl")
+        self.assertEqual(ak.resolve({}, "undead_banshee", "slash", family="undead"), "roar", "the wail")
+
+    def test_a_form_with_a_weapon_and_a_bolt_or_burst_swings_the_weapon_and_one_with_no_verb_does_its_default(self):
+        self.assertEqual(ak.resolve({}, "goblin_giant_killer", "chop"), "chop", "a blow that scales with size")
+        self.assertEqual(ak.resolve({}, "goblin_nobody", "chop"), "chop")
+
+    def test_every_verb_row_has_a_preset_in_its_family(self):
+        import biped_motion
+        import quad_motion
+        import slime_forms
+        import spider_forms
+        import spider_motion
+        import undead_forms
+        import undead_motion
+        import goblin_forms
+        import wolf_forms
+        tables = {"biped": biped_motion.ATTACKS, "undead": undead_motion.KINDS, "quad": quad_motion.ATTACKS, "slime": slm.STYLES, "spider": spider_motion.ATTACKS, "drider": spider_motion.GESTURES}
+        species = (("goblin", goblin_forms.FORMS, "goblin_"), ("undead", undead_forms.FORMS, "undead_"), ("wolf", wolf_forms.FORMS, "wolf_"), ("spider", spider_forms.FORMS, "spider_"), ("slime", slime_forms.FORMS, ""))
+        seen = 0
+        for sp, forms, prefix in species:
+            for name, form in forms.items():
+                if verbs.anim_of(prefix + name) is None:
+                    continue
+                family = verb_anims.family_of(sp, form)
+                preset = ak.resolve({}, prefix + name, "chop" if family in ("biped", "undead") else "bite", family=family)
+                self.assertIn(preset, list(tables[family]), "%s%s (%s)" % (prefix, name, family))
+                seen += 1
+        self.assertGreater(seen, 100)
 
 
 class BipedKindsTest(unittest.TestCase):

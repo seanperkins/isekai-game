@@ -37,3 +37,30 @@ def table(path=None):
 def archetype_of(kind, kinds=None):
     """The gesture a verb of this kind plays; a KeyError for a kind the table does not know (that is a missing row, not a default)."""
     return (kinds if kinds is not None else table())[kind]
+
+
+def _own(**different):
+    """A family's presets: each gesture is played by the preset of its own name, except those it plays with another."""
+    return dict({name: name for name in ARCHETYPES}, **different)
+
+
+# the preset each rig family plays a gesture with (what its motion tables call it): biped_motion.ATTACKS for the goblins and the werewolves, undead_motion.KINDS, quad_motion.ATTACKS for the
+# wolves (whose claw is their bite), spider_motion.ATTACKS for a plain spider (its blows for the cast, the lunge and the claw) and spider_motion.GESTURES for a drider (whose slam is its smash),
+# slime_motion.STYLES (the styles forms name, lash, bite, throw and pulse, are kept as they were: the gestures are toss and throb)
+PRESETS = {
+    "biped": _own(),
+    "undead": _own(),
+    "quad": _own(claw="bite"),
+    "spider": _own(cast="spit", lunge="pounce", claw="slash"),
+    "drider": _own(slam="smash"),
+    "slime": _own(cast="lash", claw="bite", throw="toss", pulse="throb"),
+}
+
+
+def family_of(species, form):
+    """The rig family a form of `species` is moved by (a key of PRESETS): the wolf species has quadrupeds and, with a biped body, werewolves; a spider with a `drider` is a person on a spider."""
+    if species == "wolf":
+        return "biped" if form.get("body") == "biped" else "quad"
+    if species == "spider":
+        return "drider" if form.get("drider") else "spider"
+    return {"goblin": "biped", "undead": "undead", "slime": "slime"}[species]

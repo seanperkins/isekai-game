@@ -27,7 +27,7 @@ RUN_SPEED = 1.9   # a run covers the ground this many times as fast as the walk 
 
 def _form(variant):
     form = forms.FORMS[variant]
-    return dict(form, attack=attack_kinds.resolve(form, "wolf_" + variant, motion_.attack_kind(form)))
+    return dict(form, attack=attack_kinds.resolve(form, "wolf_" + variant, motion_.attack_kind(form), family="biped"))
 
 
 def build(variant):

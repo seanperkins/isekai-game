@@ -32,7 +32,7 @@ BONES = {name for name, _, _, _ in skeleton.core()}
 def _form(variant):
     """The form's table entry with the attack it uses, chosen by the verb it casts (attack_kinds.resolve)."""
     form = forms.FORMS[variant or "gloom_wolf"]
-    return dict(form, attack=attack_kinds.resolve(form, "wolf_" + variant if variant else "wolf", "bite", quad=True))
+    return dict(form, attack=attack_kinds.resolve(form, "wolf_" + variant if variant else "wolf", "bite", family="quad"))
 
 
 def mount_form(fur, belly, barding=None):
@@ -158,8 +158,7 @@ def setup(rig, variant):
 
 # ---- gestures ---------------------------------------------------------------------------------------------------------------------
 # the preset of quad_motion.ATTACKS that plays each gesture (verb_anims.ARCHETYPES); a gesture not listed is one the wolves cannot play yet
-GESTURES = {name: name for name in verb_anims.ARCHETYPES if name != "claw"}   # quad_motion.ATTACKS has a preset for each but the claw, which is the bite
-GESTURES["claw"] = "bite"
+GESTURES = verb_anims.PRESETS["quad"]   # quad_motion.ATTACKS has a preset for each, the claw being the bite
 
 
 def gesture_clip(rig, variant, archetype):
