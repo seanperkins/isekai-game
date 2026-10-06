@@ -3,7 +3,8 @@ them. A form names its proportions, colours and gear (wolf_gear.py). The upright
 
   leg, neck, tail, head   proportions: leg length (a hound is above 1), neck, tail and head
   bulk                    how thick every part is
-  fur, belly, dark, tail_colour, ear, eye, star_colour   colours
+  ears, tail_r            how big the ears are, how thick the tail is (1.0 is the plain wolf's)
+  fur, belly, dark, socks, tail_colour, tail_tip, ear, eye, star_colour   colours (`socks`: the paler lower legs and cheeks, a mix of fur and belly by default)
   tail_shape              the tail's carriage (quad_skeleton.TAIL_*)
   star                    False for a form with no mark on its forehead
   gear                    [(name, {options})...] in wolf_gear.GEAR

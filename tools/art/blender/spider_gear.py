@@ -31,7 +31,7 @@ def hourglass(g, color=None, dim=False, cracks=False, slim=False, woven=False, r
     color = color or g.mark
     if runes:
         color = GOLD
-    glow = True
+    glow = not dim      # a dim one is lit like the body it is on
     if cracks:
         for i, (u, v, du, dv) in enumerate(((-0.3, 0.2, 0.35, -0.25), (0.1, -0.1, 0.3, 0.2), (0.35, 0.35, 0.25, -0.15), (-0.05, 0.55, 0.25, 0.05))):
             g.mark_line("crack%d" % i, (u, v), (u + du, v + dv), 0.035, color, glow=True)
@@ -48,14 +48,17 @@ def hourglass(g, color=None, dim=False, cracks=False, slim=False, woven=False, r
     g.painted("glass_low", ((-0.02, -0.06), (0.02, -0.06), (0.30 * k, -0.50), (-0.30 * k, -0.50)), color, glow=glow)
 
 
+# (u along the carapace, v up it, y across it, size) of one side's four eyes: two big ones forward, a smaller pair behind and further out
+EYE_POINTS = ((1.04, 1.16, 0.20, 1.0), (0.96, 1.18, 0.52, 0.7), (0.76, 1.38, 0.24, 0.75), (0.70, 1.30, 0.52, 0.6))
+
+
 def eyes(g, color=None, small=False, big=False, **_):
     """A cluster of eyes on the front of the carapace: two large forward ones, and a row of smaller ones behind and to the sides, on both sides."""
     color = color or g.eye
     r = 0.032 if not big else 0.044
     if small:
         r = 0.021
-    pts = ((1.00, 1.22, 0.18, 1.0), (0.92, 1.24, 0.45, 0.7), (0.74, 1.42, 0.22, 0.75), (0.68, 1.34, 0.46, 0.6))
-    for i, (u, v, y, k) in enumerate(pts):
+    for i, (u, v, y, k) in enumerate(EYE_POINTS):
         for sg, sign in (("n", -1.0), ("f", 1.0)):
             g.e("eye%d%s" % (i, sg), g.thorax_point(u, v, sign * y), (r * k, r * k, r * k), "body", color, far=sg == "f", glow=True, seg=6, rings=4)
 

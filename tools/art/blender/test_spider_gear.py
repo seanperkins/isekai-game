@@ -4,7 +4,9 @@ import sys
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import spider_forms as sf  # noqa: E402
 import spider_gear as sg  # noqa: E402
+import spider_skeleton as ss  # noqa: E402
 
 
 class FakeKit:
@@ -36,6 +38,12 @@ class HourglassTest(unittest.TestCase):
         sg.hourglass(g)
         self.assertTrue(all(glow for *_, glow in g.shapes))
 
+    def test_a_dim_one_does_not_glow_so_it_stays_in_the_shadow_of_the_body(self):
+        g = FakeKit()
+        sg.hourglass(g, dim=True)
+        self.assertTrue(g.shapes)
+        self.assertFalse(any(glow for *_, glow in g.shapes))
+
     def test_a_slim_one_is_narrower(self):
         plain, slim = FakeKit(), FakeKit()
         sg.hourglass(plain)
@@ -49,6 +57,40 @@ class HourglassTest(unittest.TestCase):
             sg.hourglass(g, **kw)
             self.assertTrue(g.shapes)
             self.assertTrue(all(len(outline) == 2 for _, outline, _, _ in g.shapes), kw)
+
+
+class EyeKit:
+    """Stands in for the kit: places the eyes where the kit's thorax_point would, and records them."""
+    eye = (255, 70, 70)
+
+    def __init__(self, form):
+        self.sh = ss.shape(**ss.proportions_of(form))
+        self.eyes = []
+
+    def thorax_point(self, u, v, y=0.0):
+        sh = self.sh
+        return (sh["xc"] + u * sh["T"], y * sh["th_w"] * 1.6, sh["hc"] + v * sh["th_h"])
+
+    def e(self, name, c, r, bone, rgb, far=False, glow=False, **_):
+        self.eyes.append((name, c, r, far, glow))
+
+
+class EyeTest(unittest.TestCase):
+    def test_every_near_eye_stands_out_of_the_mound_it_sits_on_so_the_side_view_shows_it(self):
+        for name, form in sf.FORMS.items():
+            if form.get("drider"):
+                continue
+            for opts in ({}, {"small": True}, {"big": True}):
+                g = EyeKit(form)
+                sg.eyes(g, **opts)
+                (cx, cy, cz), (rx, ry, rz) = ss.turret(g.sh)
+                self.assertEqual(len(g.eyes), 8, "four on each side")
+                for ename, (x, y, z), (r, _, _), far, glow in g.eyes:
+                    self.assertTrue(glow, ename)
+                    if far:
+                        continue
+                    outermost = ((x - cx) / rx) ** 2 + ((abs(y) + r - 0.0) / ry) ** 2 + ((z - cz) / rz) ** 2
+                    self.assertGreaterEqual(outermost, 1.0, "%s %s %s: the eye's outer edge is outside the mound" % (name, opts, ename))
 
 
 if __name__ == "__main__":

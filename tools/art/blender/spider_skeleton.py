@@ -67,6 +67,12 @@ def shape(span=1.0, ride=1.0, thorax=1.0, abdomen=1.0, abd_len=1.0, abd_lift=20.
 LEG_SCALE = 1.14   # a spider's legs are long: the span a form names is of a body this much leggier
 
 
+def turret(sh):
+    """The low mound at the front of the carapace the eyes ride on: (centre, half sizes) of an ellipsoid, in standard coordinates."""
+    xc, T, hc, H, W = sh["xc"], sh["T"], sh["hc"], sh["th_h"], sh["th_w"]
+    return (xc + T * 0.84, 0.0, hc + 0.03 + H * 0.95), (T * 0.40, W * 0.46, H * 0.60)
+
+
 def leg_points(i, s, span, tars, sh):
     """(hip, knee, ankle, tip) of leg pair `i` on side sign `s`, as (x, y, z)."""
     span = span * LEG_SCALE

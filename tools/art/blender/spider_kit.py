@@ -234,7 +234,8 @@ class Spider:
                                ((xc + T * 0.05, 0, hc + 0.03), (H * 1.15, W * 1.0)), ((xc + T * 0.6, 0, hc + 0.04), (H * 1.1, W * 0.85)),
                                ((xc + T * 1.0, 0, hc + 0.03), (H * 0.75, W * 0.6)), ((xc + T * 1.15, 0, hc + 0.02), (H * 0.4, W * 0.4))], "body", ch, "x", 8)
         # the eyes ride a low mound at the front of the carapace
-        self.e("turret", (xc + T * 0.82, 0.0, hc + 0.03 + H * 0.95), (T * 0.46, W * 0.62, H * 0.62), "body", ch, seg=8, rings=6)
+        centre, radii = skeleton.turret(sh)
+        self.e("turret", centre, radii, "body", ch, seg=8, rings=6)
         self.e("sternum", (xc, 0.0, hc - H * 0.45), (T * 0.75, W * 0.7, H * 0.5), "body", dark, seg=8, rings=5)
         self.e("pedicel", sh["pedicel"][:1] + (0.0,) + sh["pedicel"][1:], (0.05 * self.th, 0.05 * self.th, 0.045 * self.th), "body", dark, seg=6, rings=4)
         # the abdomen: an egg carried up behind, its facets catching the light
