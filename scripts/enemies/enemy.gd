@@ -161,7 +161,7 @@ const LIVE_LAYER := 1
 const GLYPH_REACH := 90.0
 const POSSESS_RANGE := 360.0
 const POSSESS_REACH := 22.0
-const POSSESS_FLOOR := 40.0  # a body on another floor is not one it can walk to
+const POSSESS_FLOOR := 16.0  # a body higher or lower than this is out of reach however close it comes along the floor: it is not one it can walk to
 const POSSESS_HP := 0.5
 const POSSESSED_TINT := Color(0.85, 0.55, 0.65)
 const TURN_RANGE := 420.0
@@ -1036,9 +1036,8 @@ func _glyph_lit() -> bool:
 			return true
 	return false
 
-## A rider: it goes to the nearest downed creature and possesses it: the body stands up, hurt, with the rider inside, and the rider is gone. True while it is
-## on its way.
-func _possess_act(_delta: float) -> bool:
+## The downed creature a rider goes to: the nearest one on its own floor (a body it cannot walk up to is not one it can reach); null when there is none.
+func _possess_target() -> Enemy:
 	var body: Enemy = null
 	var best := POSSESS_RANGE
 	for n in get_tree().get_nodes_in_group("actors"):
@@ -1047,6 +1046,12 @@ func _possess_act(_delta: float) -> bool:
 			if d < best:
 				body = n
 				best = d
+	return body
+
+## A rider: it goes to the nearest downed creature and possesses it: the body stands up, hurt, with the rider inside, and the rider is gone. True while it is
+## on its way.
+func _possess_act(_delta: float) -> bool:
+	var body := _possess_target()
 	if body == null:
 		return false
 	var gap := body.global_position.x - global_position.x

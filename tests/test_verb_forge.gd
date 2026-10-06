@@ -80,13 +80,15 @@ func test_a_forge_can_raise_another_stat() -> void:
 
 func test_a_worn_graft_is_never_spent() -> void:
 	_make("undead")
+	player.collect_part("ribs")  # the slot takes one: the next two are carried
+	player.collect_part("ribs")
 	player.collect_part("ribs")
 	player.collect_part("moonstone")
 	player.collect_part("phylactery_shard")
 	assert_eq(player.inventory.worn(), ["ribs"])
 	assert_true(player.forge("atk", 2, 2))
 	assert_eq(player.inventory.worn(), ["ribs"])
-	assert_eq(player.parts_carried(), 0)
+	assert_eq(player.parts_carried(), 2, "the moonstone and the shard are not craft material")
 
 func test_the_forged_weapon_is_gone_with_the_life() -> void:
 	_make()

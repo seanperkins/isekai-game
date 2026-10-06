@@ -5,6 +5,7 @@ extends RefCounted
 
 const GRID := 4.0
 const UNDO_CAP := 200
+const WEAK_FLOOR_WIDTH := 60.0  # as wide as a new one is made
 const FEATURE_KINDS := ["glow_pool", "tablet", "switch", "altar", "barrier", "hidden", "gap", "lamp", "vigil", "talisman", "forge", "weak_floor", "snare", "glyph"]
 const MIN_SOLID := 4.0
 ## The smallest water rect either way (RoomLint.WATER_MIN: the largest swimmer's body fits).
@@ -486,7 +487,7 @@ func _feature_base(room_id: String, p: Vector2, kind: String) -> Variant:
 	if not bounds(r).has_point(q):
 		return "outside the room"
 	if kind == "weak_floor":  # it spans a hole in the floor: where it is put is the surface it makes, and there is nothing under it to stand on
-		return "stuck in rock or a wall" if RoomLint.embedded(r, q, kind) else q
+		return "stuck in rock or a wall" if RoomLint.embedded(r, q, kind, WEAK_FLOOR_WIDTH) else q
 	var y = surface_below(room_id, q - Vector2(0.0, 1.0))
 	if y == null:
 		return "nothing to stand on there: click open space above a floor or a ledge"
@@ -530,7 +531,7 @@ func add_feature(room_id: String, kind: String, pos: Vector2) -> String:
 		"gap":
 			f["width"] = 50.0
 		"weak_floor":
-			f["width"] = 60.0
+			f["width"] = WEAK_FLOOR_WIDTH
 	var before := _snap([room_id])
 	r.features.append(f)
 	_push(before)

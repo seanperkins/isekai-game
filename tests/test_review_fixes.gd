@@ -143,6 +143,7 @@ func test_a_body_that_really_died_and_is_possessed_collides_again_and_only_when_
 func test_a_rider_does_not_possess_a_corpse_on_another_floor() -> void:
 	var corpse := _enemy("skeleton", Vector2(0, -100))
 	corpse.status.down()
+	corpse.set_physics_process(false)  # it lies where it was put
 	var rider := _enemy("rider", Vector2(0, 0))
 	player.global_position = Vector2(-300, 0)
 	await wait_seconds(0.5)
@@ -256,13 +257,19 @@ func test_a_lamp_drunk_earlier_this_life_is_dry_in_a_room_built_again() -> void:
 	var a := _verb({"kind": "drink", "range": 60.0, "hp": 6, "mp": 4})
 	assert_false(a.ready())
 
-func test_a_rider_ignores_a_corpse_on_another_floor_and_goes_on_with_its_own_ai() -> void:
-	var corpse := _enemy("skeleton", Vector2(0, -100))
+## A rider, and a downed body `above` px over it; neither moves.
+func _rider_and_a_corpse(above: float) -> Array:
+	var rider := _enemy("rider", Vector2(-200, 0))
+	var corpse := _enemy("skeleton", Vector2(-200, -above))
 	corpse.status.down()
-	var rider := _enemy("rider", Vector2(0, 0))
-	player.global_position = Vector2(150, 0)
-	await wait_seconds(0.8)
-	assert_gt(rider.global_position.x, 10.0, "it came for the player rather than stalling under the corpse")
+	for e in [rider, corpse]:
+		e.set_physics_process(false)
+	return [rider, corpse]
+
+func test_a_rider_ignores_a_corpse_on_another_floor_and_goes_on_with_its_own_ai() -> void:
+	var pair := _rider_and_a_corpse(100.0)
+	assert_null(pair[0]._possess_target())
+	assert_false(pair[0]._possess_act(0.0), "no body to walk to: its own ai goes on")
 
 func test_a_returning_throw_comes_from_the_far_end_to_a_ward_bearer() -> void:
 	for f in arena.foes:
@@ -280,7 +287,22 @@ func test_a_returning_throw_comes_from_the_far_end_to_a_ward_bearer() -> void:
 func test_a_weak_floor_cannot_be_placed_inside_rock() -> void:
 	var r := AreaKit.room("TW2", "forest", Vector2i(40, 40))
 	var model := RoomEditModel.new({"TW2": r}, [])
-	assert_ne(model.add_feature("TW2", "weak_floor", Vector2(8, 500)), "", "outside or in the wall it is refused")
+	assert_eq(model.add_feature("TW2", "weak_floor", Vector2(8, 320)), "stuck in rock or a wall", "in the wall it is refused")
+
+func test_a_weak_floor_is_refused_when_its_full_width_reaches_into_the_wall() -> void:
+	var r := AreaKit.room("TW3", "forest", Vector2i(40, 40))
+	var model := RoomEditModel.new({"TW3": r}, [])
+	assert_eq(model.add_feature("TW3", "weak_floor", Vector2(44, 320)), "stuck in rock or a wall", "its 60 px span reaches x = 14, into the 20 px wall")
+	assert_eq(model.add_feature("TW3", "weak_floor", Vector2(120, 320)), "", "clear of the wall it is placed")
+
+func test_a_rider_ignores_a_corpse_it_cannot_reach_along_the_floor() -> void:
+	var pair := _rider_and_a_corpse(30.0)  # inside the old 40 px band, beyond its 22 px reach straight up
+	assert_null(pair[0]._possess_target())
+	assert_false(pair[0]._possess_act(0.0))
+
+func test_a_rider_still_takes_a_corpse_a_few_pixels_off_the_floor() -> void:
+	var pair := _rider_and_a_corpse(10.0)
+	assert_eq(pair[0]._possess_target(), pair[1])
 
 func test_a_spear_charge_counts_a_companion_as_a_mount_only_when_it_is_beside_the_rider() -> void:
 	for f in arena.foes:

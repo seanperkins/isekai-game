@@ -142,10 +142,13 @@ static func rock(r: RoomDef) -> Array:
 
 ## A feature's `pos` is its base. It is stuck when its drawn box reaches into a side wall column (a wall or a side doorway), or
 ## the point one pixel above the base is inside rock: Rect2.has_point includes the top edge, so testing the base itself would
-## flag every feature standing on a ledge and refuse every horizontal drag.
-static func embedded(r: RoomDef, base: Vector2, kind := "") -> bool:
+## flag every feature standing on a ledge and refuse every horizontal drag. `span` is the width of a feature that is as wide as it was
+## made (a weak floor) and replaces its box's width, centred.
+static func embedded(r: RoomDef, base: Vector2, kind := "", span := 0.0) -> bool:
 	var width := r.pixel_size().x
 	var box: Rect2 = FEATURE_BOX.get(kind, Rect2(0, 0, 0, 0))
+	if span > 0.0:
+		box = Rect2(-span / 2.0, box.position.y, span, box.size.y)
 	if base.x + box.position.x < RoomDef.WALL or base.x + box.end.x > width - RoomDef.WALL:
 		return true
 	var above := base - Vector2(0.0, 1.0)
@@ -197,7 +200,8 @@ static func _in_rock(r: RoomDef) -> Array:
 				break
 	for i in r.features.size():
 		var f: Dictionary = r.features[i]
-		if embedded(r, f["pos"], f.get("kind", "")):
+		var kind: String = f.get("kind", "")
+		if embedded(r, f["pos"], kind, float(f.get("width", 0.0)) if kind == "weak_floor" else 0.0):
 			out.append(_f(r, "in_rock", "feature %s at %s is stuck in rock or a wall" % [f.get("id", "?"), f["pos"]], "feature", i))
 	return out
 
