@@ -89,28 +89,16 @@ class Spider:
         return self.rig.part(ob, self.pre + bone, rgb, far, glow)
 
     # ---- the idle pose, for gear that is held where the idle puts a hand or a claw ----
-    def idle_posed(self):
-        if not hasattr(self, "_idle"):
-            import spider_motion
-            skel = skeleton.skeleton(**self.proportions)
-            body = spider_motion.SpiderBody(skel, {k: 0.006 for k in skeleton.LEGS}, dict(self.form, _hull=skeleton.hull_for(self.form)))
-            self._idle = skel, skel.pose(*spider_motion.idle_pose(body, 0.0))
-        return self._idle
-
     def where(self, bone, u=1.0):
         """Where the idle pose puts the point `u` of the way along a bone, (x, z)."""
-        _, posed = self.idle_posed()
-        h, t, _ = posed[bone]
-        return (h[0] + (t[0] - h[0]) * u, h[1] + (t[1] - h[1]) * u)
+        import spider_motion
+        return spider_motion.where(self.form, bone, u)
 
     def rest_point(self, bone, world, y=0.0):
         """The point (x, y, z) to build a part at, bound to `bone`, so that the idle pose carries it to `world` (x, z)."""
-        import skeleton2d as sk2
-        skel, posed = self.idle_posed()
-        head = skel.rest[bone][0]
-        total = skel.rest_direction(bone) - posed[bone][2]
-        dx, dz = sk2.turn((world[0] - posed[bone][0][0], world[1] - posed[bone][0][1]), -total)
-        return (head[0] + dx, y, head[1] + dz)
+        import spider_motion
+        x, z = spider_motion.rest_point(self.form, bone, world)
+        return (x, y, z)
 
     # ---- points on the body ----
     def thorax_point(self, u, v, y=0.0):

@@ -157,9 +157,10 @@ def cocoons(g, color=(214, 196, 150), core=(120, 100, 84), **_):
 
 def held_cocoon(g, color=(214, 196, 150), core=(120, 100, 84), **_):
     """One more cocoon clutched in the front claws: built where the idle holds the near claw and bound to its tarsus, so it goes where the claw goes."""
-    x, z = g.where("tar_n0", 0.7)
-    c = g.rest_point("tar_n0", (x - 0.03, z - 0.06), -0.14)
-    g.e("held", c, (0.10, 0.07, 0.075), "tar_n0", color, seg=8, rings=6)
+    import spider_motion
+    x, z = spider_motion.held_cocoon_at(g.form)
+    c = (x, -0.14, z)
+    g.e("held", c, spider_motion.HELD_COCOON, "tar_n0", color, seg=8, rings=6)
     g.e("held_c", (c[0] + 0.01, c[1] - 0.06, c[2]), (0.045, 0.02, 0.03), "tar_n0", core, seg=6, rings=4)
 
 

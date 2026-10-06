@@ -204,6 +204,10 @@ def hull_for(form):
         # a tarantula's tufts stand out a quarter past the abdomen's outline (spider_gear.hair)
         c = shape(**proportions_of(form))["a_centre"]
         pts += [(b, (c[0] + 1.25 / 1.03 * (p[0] - c[0]), c[1] + 1.25 / 1.03 * (p[1] - c[1]))) for b, p in list(pts) if b == "abdomen"]
+    if any(name == "held_cocoon" for name, _ in form.get("gear", [])):
+        import spider_motion
+        x, z = spider_motion.held_cocoon_at(form)
+        pts.append(("tar_n0", (x, z - spider_motion.HELD_COCOON[2])))     # the bottom of the cocoon the claws clutch
     if "cloth2" in bones:
         pts.append(("cloth2", (bones["cloth2"][1][0], bones["cloth2"][1][2])))   # the hem
     if any(name == "scythes" for name, _ in form.get("gear", [])):

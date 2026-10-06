@@ -559,7 +559,7 @@ def _pose_offsets(body, c, ch, t=0.0, gesture=None, time=0.0, front_placed=False
 def _keep_gear_up(body, rot, root, tips, clearance=0.01):
     """A claw that carries gear reaching past it (a scythe's blade) is lifted until the gear clears the floor."""
     for key in ("n0", "f0"):
-        for _ in range(3):
+        for _ in range(4):
             low = [p[1] for b, p in hull_points(body, rot, root) if b == "tar_" + key]
             if not low or min(low) >= clearance:
                 break
@@ -667,6 +667,45 @@ def die_pose(body, time):
             aim(sk, rot, bone, _lerp_angle(d[bone], target, slump))
     _jitter_one_shot(body, rot, min(time, 0.6), 0.6, 2.4)
     return rot, (c["root"][0] - 0.05 * body.U * anim.clamp(time / 0.3), 0.0, 0.0)
+
+
+# ---- gear held where the idle puts a claw or a hand ---------------------------------------------------------------------------------
+_LAYOUTS = {}
+
+
+def idle_layout(form):
+    """(flat skeleton, the idle's first pose) of a form, standing on nominal claws: where gear that a claw or a hand holds is built from."""
+    key = repr(sorted((k, repr(v)) for k, v in form.items() if not k.startswith("_")))
+    if key not in _LAYOUTS:
+        skel = ss.skeleton_for(form)
+        body = SpiderBody(skel, {k: 0.006 for k in ss.LEGS}, dict(form, _hull=[]))
+        _LAYOUTS[key] = skel, skel.pose(*idle_pose(body, 0.0))
+    return _LAYOUTS[key]
+
+
+def where(form, bone, u=1.0):
+    """Where the idle pose puts the point `u` of the way along a bone, (x, z)."""
+    h, t, _ = idle_layout(form)[1][bone]
+    return (h[0] + (t[0] - h[0]) * u, h[1] + (t[1] - h[1]) * u)
+
+
+def rest_point(form, bone, world):
+    """The rest (x, z) to build a part at, bound to `bone`, so that the idle pose carries it to `world` (x, z)."""
+    import skeleton2d as sk2
+    skel, posed = idle_layout(form)
+    head = skel.rest[bone][0]
+    total = skel.rest_direction(bone) - posed[bone][2]
+    dx, dz = sk2.turn((world[0] - posed[bone][0][0], world[1] - posed[bone][0][1]), -total)
+    return (head[0] + dx, head[1] + dz)
+
+
+HELD_COCOON = (0.10, 0.07, 0.075)   # its half sizes
+
+
+def held_cocoon_at(form):
+    """The rest (x, z) of the cocoon the cocoon-mother clutches, bound to her near front tarsus."""
+    x, z = where(form, "tar_n0", 0.7)
+    return rest_point(form, "tar_n0", (x - 0.03, z - 0.06))
 
 
 # ---- clips ------------------------------------------------------------------------------------------------------------------------
