@@ -8,8 +8,9 @@ func before_all() -> void:
 	for c in DefLoader.load_dir("res://data/creatures"):
 		creatures[c.id] = c
 
-func _enemy(id: String) -> Enemy:
+func _enemy(id: String, animated := true) -> Enemy:
 	var e := Enemy.new()
+	e.use_sheet = animated  # false draws a twin's still, which is what leans
 	e.setup(creatures[id], {})
 	add_child_autofree(e)
 	e.set_physics_process(false)  # stepped by hand so nothing moves it
@@ -51,7 +52,7 @@ func test_the_web_sits_on_the_sprite() -> void:
 	assert_eq(_cover(e).position, e._sprite.position)
 
 func test_the_web_over_a_twin_follows_its_still_scale_and_lean() -> void:
-	var e := _enemy("twin_wolf_fenrir")
+	var e := _enemy("twin_wolf_fenrir", false)
 	e.receive_thread(1)  # slows it: it still walks, breathes and leans
 	_step(e)
 	e.velocity = Vector2(60, 0)

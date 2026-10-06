@@ -26,6 +26,7 @@ ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 sys.path.insert(0, HERE)
 import clips  # noqa: E402
 
+BASES = {"goblin": "goblin", "wolf": "gloom_wolf", "spider": "spider", "undead": "skeleton"}   # a family's base creature is not a twin: it has its own sheet
 ANIM_ORDER = ("idle", "walk", "run", "attack", "hurt", "die")
 ENEMY_GD = os.path.join(ROOT, "scripts", "enemies", "enemy.gd")
 
@@ -129,7 +130,7 @@ def main(argv=None):
     ap.add_argument("--from", dest="source")
     a = ap.parse_args(argv)
     source = a.source or os.path.join(ROOT, ".tmp", "%s-tree" % a.creature)
-    forms = a.forms or sorted(d for d in os.listdir(source) if os.path.isdir(os.path.join(source, d, "raw")) and d != "goblin")
+    forms = a.forms or sorted(d for d in os.listdir(source) if os.path.isdir(os.path.join(source, d, "raw")) and d != BASES.get(a.creature))
     table = {}
     for form in forms:
         fid, c = install(a.creature, form, os.path.join(source, form))

@@ -13,6 +13,7 @@ func before_all() -> void:
 
 func _twin(key := "T:1") -> Enemy:
 	var e := Enemy.new()
+	e.use_sheet = false  # this is the still's own motion, whether or not its form has been given an animation since
 	e.setup(creatures["twin_wolf_fenrir"], skills_by_id)
 	e.spawn_key = key
 	e.set_physics_process(false)  # the test drives the clock

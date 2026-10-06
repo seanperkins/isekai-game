@@ -52,6 +52,9 @@ STANCES = {
 # forward; `recoil`: how much a blow throws the body (1 is the goblin's); `gaits`: overrides of GAITS for this family (a man is upright and long of stride).
 POSTURES = {
     "goblin": dict(crouch=0.82, stance_half=0.31, lean=28.0, head_lean=12.0, recoil=1.0, gaits={}),
+    # a wolf-man: tall, hunched far forward over long digitigrade legs, a long stride
+    "werewolf": dict(crouch=0.84, stance_half=0.30, lean=38.0, head_lean=16.0, recoil=0.9,
+                     gaits={"walk": dict(lean=40.0, head=16.0, stride_legs=1.0, max_stride=1.1), "run": dict(lean=52.0, head=22.0, stride_legs=1.3, max_stride=1.35)}),
 }
 
 GAITS = {
@@ -72,6 +75,9 @@ SECONDARY = {
     "cloak1": dict(parents=["hips", "spine"], bob=120.0, wind=-9.0, freq=2.4, zeta=0.5),
     "cloak2": dict(after="cloak1", bob=220.0, wind=-12.0, freq=2.1, zeta=0.45),
     "pack": dict(parents=["hips", "spine"], bob=520.0, wind=0.0, freq=3.0, zeta=0.5),
+    "tail1": dict(parents=["hips"], bob=500.0, wind=-6.0, freq=3.0, zeta=0.5),
+    "tail2": dict(after="tail1", bob=500.0, wind=-9.0, freq=2.0, zeta=0.4),
+    "tail3": dict(after="tail2", bob=500.0, wind=-12.0, freq=1.4, zeta=0.35),
 }
 
 # what a form holds decides how it attacks (the gear on its near hand, see goblin_gear.py)
@@ -148,6 +154,12 @@ def _hold_items(body, rot, gain=0.25):
             continue
         tilt = body.form.get("item_angle", {}).get(s, 0.0) + gain * (direction_of(body, rot, "fore_" + s) - sk.rest_direction("fore_" + s))
         aim(sk, rot, bone, sk.rest_direction(bone) - tilt)
+
+
+def _jaw(body, rot, degrees):
+    """Open the jaw of a creature that has one (a wolf's, a skull's) `degrees`: it is a child of the head, so this is its own turn."""
+    if "jaw" in body.skel.rest:
+        rot["jaw"] = (0.0, degrees, 0.0)
 
 
 def _plant(body, rot, side, hip, contact_x, pitch=0.0, lift=0.0):
@@ -242,9 +254,10 @@ def _swing(channel, windup, mid, hit, follow, rest=True):
     return [(0.0, start, "out"), (T_WIND, windup, "smooth"), (T_HOLD, windup, "in"), (T_MID, mid, "linear"), (T_HIT, hit, "out"), (T_FOLLOW, follow, "smooth"), (T_END, end, "smooth")]
 
 
-def _attack(lean, head, px, pz, arm_n, fore_n, item, arm_f, fore_f, step=0.2, lift=0.10, heel=-24.0):
-    """One attack from its four-key paths (windup, mid-swing, impact, follow-through) per channel."""
+def _attack(lean, head, px, pz, arm_n, fore_n, item, arm_f, fore_f, step=0.2, lift=0.10, heel=-24.0, jaw=(12, 26, 4, 0)):
+    """One attack from its four-key paths (windup, mid-swing, impact, follow-through) per channel; `jaw` is how far a creature with a jaw opens it."""
     return dict(frames=ATTACK_FRAMES, windup=ATTACK_WINDUP, keys={
+        "jaw": _swing("jaw", *jaw, rest=False),
         "d_lean": _swing("d_lean", *[v - GOBLIN_LEAN for v in lean], rest=False), "d_head": _swing("d_head", *[v - GOBLIN_HEAD for v in head], rest=False),
         "pelvis_x": _swing("pelvis_x", *px, rest=False), "pelvis_z": _swing("pelvis_z", *pz, rest=False),
         "arm_n": _swing("arm_n", *arm_n), "fore_n": _swing("fore_n", *fore_n), "item_n": _swing("item_n", *item),
@@ -310,6 +323,7 @@ def attack_pose(body, time):
     else:
         _plant_heel(body, rot, "f", hip, fx, ch["heel_f"])
     _posture(body, rot, rest["lean"] + ch["d_lean"], rest["head"] + ch["d_head"])
+    _jaw(body, rot, ch["jaw"])
     sk = body.skel
     aim(sk, rot, "arm_n", ch["arm_n"])
     aim(sk, rot, "fore_n", ch["fore_n"])
@@ -335,6 +349,7 @@ HURT = dict(
         "d_arm_f": [(0.0, 0.0, "out"), (0.04, -34.0, "out"), (0.10, -56.0, "smooth"), (0.16, -16.0, "smooth"), (0.21, 0.0, "smooth")],
         "d_fore_f": [(0.0, 0.0, "out"), (0.04, -20.0, "out"), (0.10, -40.0, "smooth"), (0.16, -10.0, "smooth"), (0.21, 0.0, "smooth")],
         "d_item_n": [(0.0, 0.0, "out"), (0.04, -20.0, "out"), (0.10, -34.0, "smooth"), (0.16, -8.0, "smooth"), (0.21, 0.0, "smooth")],
+        "jaw": [(0.0, 0.0, "out"), (0.04, 18.0, "out"), (0.10, 26.0, "smooth"), (0.16, 8.0, "smooth"), (0.21, 0.0, "smooth")],
     })
 
 
@@ -353,6 +368,7 @@ def hurt_pose(body, time):
     rot = {}
     _stand_feet(body, rot, hip)
     _posture(body, rot, rest["lean"] + r * ch["d_lean"], rest["head"] + r * ch["d_head"])
+    _jaw(body, rot, ch["jaw"])
     sk = body.skel
     for bone in ("arm_n", "fore_n", "arm_f", "fore_f"):
         aim(sk, rot, bone, rest[bone] + ch["d_" + bone])
@@ -383,6 +399,7 @@ DIE = dict(
         "arm_f": [(0.0, REST, "out"), (0.06, 150.0, "out"), (0.14, 100.0, "smooth"), (0.22, 70.0, "smooth"), (0.32, 40.0, "smooth"), (0.44, 80.0, "out"), (0.9, 88.0, "smooth")],
         "fore_f": [(0.0, REST, "out"), (0.06, 170.0, "out"), (0.14, 120.0, "smooth"), (0.22, 80.0, "smooth"), (0.32, 20.0, "smooth"), (0.44, 80.0, "out"), (0.9, 86.0, "smooth")],
         "item_n": [(0.0, REST, "out"), (0.06, -30.0, "out"), (0.22, 20.0, "smooth"), (0.44, 90.0, "out"), (0.9, 90.0, "smooth")],
+        "jaw": [(0.0, 0.0, "out"), (0.06, 24.0, "out"), (0.22, 26.0, "smooth"), (0.44, 14.0, "out"), (0.9, 12.0, "smooth")],
     })
 
 
@@ -402,6 +419,7 @@ def die_pose(body, time):
     _posture(body, rot, ch["lean"], ch["head"])
     for bone in ("thigh_n", "shin_n", "foot_n", "thigh_f", "shin_f", "foot_f", "arm_n", "fore_n", "arm_f", "fore_f"):
         aim(sk, rot, bone, ch[bone])
+    _jaw(body, rot, ch["jaw"])
     aim(sk, rot, "item_f", 180.0 - 0.0)
     aim(sk, rot, "item_n", 180.0 - ch["item_n"])
     return rot, (root0[0] + ch["x"] * body.L, 0.0, 0.0)  # the render sets the whole body on the ground, so there is no height to give

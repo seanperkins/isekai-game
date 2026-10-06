@@ -10,17 +10,18 @@ func before_all() -> void:
 	for d in DefLoader.load_dir("res://data/skills"):
 		skills_by_id[d.id] = d
 
-func _enemy_of(def: CreatureDef) -> Enemy:
+func _enemy_of(def: CreatureDef, animated := true) -> Enemy:
 	var e := Enemy.new()
+	e.use_sheet = animated  # false draws a twin's still even when its form has been animated since
 	e.setup(def, skills_by_id)
 	add_child_autofree(e)
 	return e
 
-func _enemy(id: String) -> Enemy:
-	return _enemy_of(creatures[id])
+func _enemy(id: String, animated := true) -> Enemy:
+	return _enemy_of(creatures[id], animated)
 
 func test_a_twin_shows_its_forms_still_at_its_size() -> void:
-	var e := _enemy("twin_wolf_fenrir")
+	var e := _enemy("twin_wolf_fenrir", false)
 	await wait_physics_frames(2)
 	var sprite: Sprite2D = e.get_node("Sprite")
 	var want := SpriteSheet.load_set("forms_wolf").frame_texture("fenrir") as AtlasTexture
@@ -31,7 +32,7 @@ func test_a_twin_shows_its_forms_still_at_its_size() -> void:
 	assert_almost_eq(sprite.position.y, Enemy.BODY_BOTTOM - want.region.size.y * sprite.scale.y / 2.0, 0.01, "its feet are on the ground")
 
 func test_a_still_turns_with_the_creature() -> void:
-	var e := _enemy("twin_wolf_fenrir")
+	var e := _enemy("twin_wolf_fenrir", false)
 	e.facing = 1
 	await wait_physics_frames(2)
 	assert_false((e.get_node("Sprite") as Sprite2D).flip_h)

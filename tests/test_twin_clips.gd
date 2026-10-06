@@ -175,7 +175,9 @@ func test_it_is_drawn_at_its_size_on_the_floor() -> void:
 	assert_eq(sprite.position.y, Enemy.BODY_BOTTOM - 6.0, "a 6 px tall frame at 2x stands on the floor")
 
 func test_a_twin_with_no_animated_form_is_still_a_still() -> void:
-	var e := _enemy(creatures["twin_wolf_fenrir"])
+	var def: CreatureDef = creatures["twin_wolf_fenrir"].duplicate()
+	def.form = "a_form_nobody_has_animated"
+	var e := _enemy(def)
 	_step(e)
 	assert_false((e.get_node("Sprite") as Sprite2D).texture is CanvasTexture)
 	assert_eq(e._anim_state, "")
