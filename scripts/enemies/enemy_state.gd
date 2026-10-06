@@ -69,3 +69,30 @@ static func pick(creature: String, status: int, charge: String, swoop: String, s
 					return "stomp"
 			return "walk" if moving else "idle"
 	return "idle"
+
+## What an animated twin (a form with its own clips) plays when it has no clip for a state: a stun or a downing shows the hit, anything else
+## the idle loop.
+const FORM_FALLBACK := {"stunned": "hurt", "downed": "hurt", "hurt": "idle", "windup": "idle", "recover": "idle", "walk": "idle"}
+const LOCOMOTION := ["idle", "walk"]
+
+## The clip an animated twin plays: its status first, then a hit, then the state of its verb, then whether it is walking. `clips` is its
+## {state: clip} table; a state it has no clip for takes the fallback.
+static func pick_form(clips: Dictionary, status: int, verb_state: String, moving: bool, hurt: bool) -> String:
+	var want := "idle"
+	if status == EnemyStatus.DOWNED:
+		want = "downed"
+	elif status == EnemyStatus.STUNNED:
+		want = "stunned"
+	elif status == EnemyStatus.DYING or hurt:
+		want = "hurt"
+	elif verb_state == "windup" or verb_state == "recover":
+		want = verb_state
+	elif moving:
+		want = "walk"
+	while not clips.has(want) and FORM_FALLBACK.has(want):
+		want = FORM_FALLBACK[want]
+	return want
+
+## Standing or walking: the states a one-shot that is still playing keeps the creature out of.
+static func is_locomotion(state: String) -> bool:
+	return state in LOCOMOTION

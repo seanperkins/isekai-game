@@ -1,0 +1,49 @@
+{
+ "fixture_form": {
+  "idle": {
+   "frames": [
+    "idle_0",
+    "idle_1"
+   ],
+   "fps": 2.0,
+   "loop": true
+  },
+  "walk": {
+   "frames": [
+    "walk_0",
+    "walk_1"
+   ],
+   "fps": 8.0,
+   "loop": true
+  },
+  "windup": {
+   "frames": [
+    "windup_0"
+   ],
+   "fps": 3.0,
+   "loop": false
+  },
+  "recover": {
+   "frames": [
+    "recover_0",
+    "recover_1"
+   ],
+   "fps": 4.0,
+   "loop": false
+  },
+  "hurt": {
+   "frames": [
+    "hurt"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "downed": {
+   "frames": [
+    "downed"
+   ],
+   "fps": 1.0,
+   "loop": false
+  }
+ }
+}

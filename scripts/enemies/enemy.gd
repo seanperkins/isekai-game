@@ -68,6 +68,10 @@ const STUNNED_TINT := Color(0.6, 0.6, 0.85)
 ## How long a non-lethal hit flinches (the hurt frame).
 const HURT_SECONDS := 0.25
 const CLIPS := "res://data/enemy_clips.json"
+## The clips of the twins' animated forms: {form id: {state: {frames, fps, loop}}} (tools/art/blender/goblin_tree.py writes it). A test points
+## it at a fixture.
+static var form_clips_path := "res://data/form_clips.json"
+static var _form_clip_cache := {}  # path -> parsed file
 ## The Bog Lizardman's spear: how far, how level and how often it throws (the toad's are SPIT_*; Spear.SPEED is its speed).
 const SPEAR_RANGE := 140.0
 const SPEAR_LEVEL := 40.0
@@ -151,6 +155,7 @@ var dormant := false:
 var hunting := false
 var _sheet: SpriteSheet
 var _still: SpriteSheet  # the sheet of a creature that is one still (a twin), null for the rest
+var _form_sheet: SpriteSheet  # the animated sheet of a twin's form (assets/sheets/anim_<form>), null when it has none
 var _animator: SlimeAnimator
 var _shapes: SlimeShapes
 var _hurt_t := 0.0
@@ -589,7 +594,9 @@ func _update_visual(delta: float = 0.0) -> void:
 	_update_web()  # after the draw, so it fits this frame
 
 func _draw_creature(delta: float) -> void:
-	if _still != null:
+	if _form_sheet != null:
+		_draw_form_frame(delta)
+	elif _still != null:
 		_draw_still()
 	elif _sheet != null:
 		_draw_sheet_frame(delta)
@@ -637,6 +644,33 @@ func _draw_still() -> void:
 	var height := frame_size.y * scale_y
 	var feet_y := BODY_BOTTOM - hop - frame_size.x * size * absf(sin(lean)) / 2.0
 	_sprite.position = Vector2(sin(lean) * height / 2.0, feet_y - cos(lean) * height / 2.0)
+
+## A twin whose form has its own animated sheet: the frame of the clip its state picks (EnemyState.pick_form), at the creature's size, lit by the
+## room's lights when the sheet has normals (a creature facing left gets mirrored normals), and turned with it. A clip that is a one-shot (a
+## windup, a recover, a hurt) plays out before the creature goes back to walking or standing; a hit, a stun or a new verb state interrupts it.
+## Its hurt box stays the body's, as a still's does.
+func _draw_form_frame(delta: float) -> void:
+	if not dormant:
+		_animator.advance(delta)  # first, so a one-shot that has just finished no longer holds the creature
+	var state := EnemyState.pick_form(_animator.clips, EnemyStatus.ACTIVE if dormant else status.state, "" if dormant else _verb_state,
+		absf(velocity.x) > 1.0 and not dormant, _hurt_t > 0.0 and not dormant)
+	if _animator.locked() and EnemyState.is_locomotion(state) and not dormant:
+		state = _animator.state()
+	_anim_state = state
+	_animator.play(state)
+	var frame := _animator.frame()
+	var size := def.sprite_size
+	var lit := _form_sheet.lit_texture(frame, facing < 0)
+	if lit != null:
+		_sprite.texture = lit
+		_sprite.flip_h = false  # mirrored in the texture, so the normals are mirrored with it
+	else:
+		_sprite.texture = _form_sheet.frame_texture(frame)
+		_sprite.flip_h = facing < 0
+	_sprite.flip_v = false
+	_sprite.rotation = 0.0
+	_sprite.scale = Vector2(size, size)
+	_sprite.position = Vector2(0.0, BODY_BOTTOM - _form_sheet.frame_size(frame).y * size / 2.0)
 
 ## Strands while a thread slows it, the cocoon while a thread holds it, nothing once either ends or it is down.
 func _update_web() -> void:
@@ -988,7 +1022,26 @@ func _build_body() -> void:
 		_web = WebCover.new()
 		add_child(_web)  # after the sprite, so it draws over it
 		_load_sheet()
+		_load_form()
 		_update_visual()
+
+## A twin's animated form, when its sheet (assets/sheets/anim_<form>) and its clips exist; otherwise the still stays.
+func _load_form() -> void:
+	if not use_sheet or def.form == "":
+		return
+	var set_name := "anim_" + def.form
+	if not SpriteSheet.available(set_name) or not FileAccess.file_exists(form_clips_path):
+		return
+	if not _form_clip_cache.has(form_clips_path):
+		_form_clip_cache[form_clips_path] = SlimeAnimator.load_clips(form_clips_path)
+	var all: Dictionary = _form_clip_cache[form_clips_path]
+	if not all.has(def.form):
+		return
+	_form_sheet = SpriteSheet.load_set(set_name)
+	if _form_sheet == null:
+		return
+	_animator = SlimeAnimator.new(all[def.form])
+	_animator.play("idle")
 
 ## The creature's own frames, when its sheet and clips exist; otherwise the old single sprites stay.
 func _load_sheet() -> void:

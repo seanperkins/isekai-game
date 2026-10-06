@@ -4,23 +4,30 @@ extends RefCounted
 ## shapes traced from each frame. Shapes are frame-local pixels, origin at the bottom centre.
 
 const DIR := "res://assets/sheets/"
+## Where sheets are read from; a test points it at tests/support/sheets.
+static var dir := DIR
 
 var texture: Texture2D
+## The normal map laid out exactly as `texture` (tools/art/assemble_frames.py writes <set>_n.png beside the colour sheet), or null.
+var normal_texture: Texture2D
 var _frames := {}   # name -> {"rect": Rect2, "hurt": PackedVector2Array, "attack": PackedVector2Array}
 var _atlas := {}    # name -> AtlasTexture
+var _lit := {}      # "name:mirrored" -> CanvasTexture
 
 static func available(set_name: String) -> bool:
-	return ResourceLoader.exists(DIR + set_name + ".png") and FileAccess.file_exists(DIR + set_name + ".json")
+	return ResourceLoader.exists(dir + set_name + ".png") and FileAccess.file_exists(dir + set_name + ".json")
 
 static func load_set(set_name: String) -> SpriteSheet:
 	if not available(set_name):
 		return null
 	var json := JSON.new()
-	if json.parse(FileAccess.get_file_as_string(DIR + set_name + ".json")) != OK:
+	if json.parse(FileAccess.get_file_as_string(dir + set_name + ".json")) != OK:
 		push_error("SpriteSheet: cannot read %s.json" % set_name)
 		return null
 	var sheet := SpriteSheet.new()
-	sheet.texture = load(DIR + str(json.data["image"]))
+	sheet.texture = load(dir + str(json.data["image"]))
+	if json.data.has("normal"):
+		sheet.normal_texture = load(dir + str(json.data["normal"]))
 	var frames: Dictionary = json.data["frames"]
 	for name in frames:
 		var f: Dictionary = frames[name]
@@ -59,3 +66,32 @@ func hurt(name: String) -> PackedVector2Array:
 
 func attack(name: String) -> PackedVector2Array:
 	return _frames[name]["attack"]
+
+func has_normals() -> bool:
+	return normal_texture != null
+
+## The frame as the room's lights see it: its picture and its normal map, each cut from its sheet, as a CanvasTexture; null for a sheet with no
+## normals. `mirrored` is for a creature facing left: the picture is flipped and so is the normal map, whose red channel (right) is inverted so a
+## surface that faced right now faces left. Nearest filtering, as pixel art needs. Cut once.
+func lit_texture(name: String, mirrored := false) -> Texture2D:
+	if normal_texture == null:
+		return null
+	var key := "%s:%d" % [name, 1 if mirrored else 0]
+	if not _lit.has(key):
+		var rect := Rect2i(_frames[name]["rect"])
+		var color := texture.get_image().get_region(rect)
+		var normal := normal_texture.get_image().get_region(rect)
+		if mirrored:
+			color.flip_x()
+			normal.flip_x()
+			for y in normal.get_height():
+				for x in normal.get_width():
+					var c := normal.get_pixel(x, y)
+					if c.a > 0.0:
+						normal.set_pixel(x, y, Color8(255 - c.r8, c.g8, c.b8, c.a8))  # whole numbers: no float rounding off a byte
+		var canvas := CanvasTexture.new()
+		canvas.diffuse_texture = ImageTexture.create_from_image(color)
+		canvas.normal_texture = ImageTexture.create_from_image(normal)
+		canvas.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		_lit[key] = canvas
+	return _lit[key]

@@ -197,6 +197,28 @@ class DeriveTests(unittest.TestCase):
         self.assertTrue(a.is_native({}, {"name": "x", "native": True}))
         self.assertFalse(a.is_native({}, {"name": "x"}))
 
+    def test_a_native_box_is_where_the_native_frame_was_cut_from_in_the_source(self):
+        src = frame(100, 50, (20, 10, 80, 40))
+        box = a.native_box(src)
+        self.assertEqual(box, (20, 10, 80, 40))
+        self.assertEqual(src.crop(box).size, a.native_frame(src).size)
+
+    def test_a_faint_edge_is_left_out_of_the_native_box_as_it_is_left_out_of_the_frame(self):
+        im = Image.new("RGBA", (10, 10), (0, 0, 0, 0))
+        im.putpixel((4, 4), (10, 20, 30, 200))
+        im.putpixel((5, 5), (10, 20, 30, 90))
+        self.assertEqual(a.native_box(im), (4, 4, 5, 5))
+
+    def test_normals_are_packed_where_their_frames_are(self):
+        rects = {"a": (0, 0, 3, 2), "b": (4, 1, 2, 2)}
+        n_a = Image.new("RGBA", (3, 2), (128, 128, 255, 255))
+        n_b = Image.new("RGBA", (2, 2), (200, 100, 150, 255))
+        sheet = a.pack_like((8, 4), rects, {"a": n_a, "b": n_b})
+        self.assertEqual(sheet.size, (8, 4))
+        self.assertEqual(sheet.getpixel((1, 1)), (128, 128, 255, 255))
+        self.assertEqual(sheet.getpixel((5, 2)), (200, 100, 150, 255))
+        self.assertEqual(sheet.getpixel((3, 0))[3], 0, "nothing where there is no frame")
+
 
 if __name__ == "__main__":
     unittest.main()

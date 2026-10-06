@@ -57,10 +57,30 @@ def cropped(im):
     return im.crop(box)
 
 
+def native_box(im):
+    """Where a native frame is cut from in its source: the drawn pixels (alpha at least half), as (left, top, right, bottom)."""
+    keyed_im = keyed(im.convert("RGBA"))
+    box = keyed_im.split()[3].getbbox()
+    if box is None:
+        raise ValueError("frame is empty after keying")
+    solid = crisp_alpha(keyed_im.crop(box)).split()[3].getbbox()
+    if solid is None:
+        raise ValueError("frame has no solid pixels")
+    return (box[0] + solid[0], box[1] + solid[1], box[0] + solid[2], box[1] + solid[3])
+
+
 def native_frame(im):
-    """A frame drawn at its final pixel size (an Aseprite or Procreate export at 1:1): key, crop to the drawn pixels and crisp the
+    """A frame drawn at its final pixel size (an Aseprite or Procreate export at 1:1, or a render): key, crop to the drawn pixels and crisp the
     alpha, with no resize, so the artist's pixels are never blended. The width in the frame's spec is ignored."""
-    return trim(crisp_alpha(cropped(im)))
+    return crisp_alpha(keyed(im.convert("RGBA")).crop(native_box(im)))
+
+
+def pack_like(size, rects, images):
+    """A sheet of `size` with each image pasted at the rect its frame has in the diffuse sheet (the normal sheet is laid out as the colour one)."""
+    sheet = Image.new("RGBA", size, (0, 0, 0, 0))
+    for name, im in images.items():
+        sheet.paste(im, rects[name][:2])
+    return sheet
 
 
 def is_native(data, frame):
@@ -237,7 +257,7 @@ def main():
         raise SystemExit("usage: assemble_frames.py <set>")
     rig_set = sys.argv[1]
     data = json.load(open("tools/art/%s_frames.json" % rig_set))
-    fitted, shapes = {}, {}
+    fitted, shapes, normals = {}, {}, {}
     scale = None
     # a derived set (e.g. the Pale Moth) reads another set's source frames and lightens/tints the keyed crop
     src_set = data.get("derive_from", rig_set)
@@ -250,7 +270,13 @@ def main():
         if not os.path.exists(src):
             raise SystemExit("missing %s (generate it first)" % src)
         if is_native(data, f):
-            fitted[f["name"]] = native_frame(Image.open(src))
+            source = Image.open(src)
+            fitted[f["name"]] = native_frame(source)
+            normal_src = os.path.join(SRC, src_set, f["name"] + "_n.png")
+            if os.path.exists(normal_src):  # the normal map beside it, cut the same way, drawn only where the frame is
+                cut = Image.open(normal_src).convert("RGBA").crop(native_box(source))
+                cut.putalpha(fitted[f["name"]].split()[3])
+                normals[f["name"]] = cut
         else:
             fitted[f["name"]] = fit_scaled(Image.open(src), scale, look) if scale else fit_frame(Image.open(src), f["width"])
         shapes[f["name"]] = trace(fitted[f["name"]], f.get("attack_from"), f.get("outline_eps", 0.35))
@@ -258,8 +284,14 @@ def main():
     os.makedirs(OUT, exist_ok=True)
     sheet.save(os.path.join(OUT, rig_set + ".png"))
     frames = {n: {"rect": list(rects[n]), "hurt": shapes[n][0], "attack": shapes[n][1]} for n in fitted}
+    meta = {"set": rig_set, "image": rig_set + ".png", "frames": frames}
+    if normals:  # a sheet with normal maps: every frame has one, laid out exactly as the colour sheet
+        if set(normals) != set(fitted):
+            raise SystemExit("normal maps for %d of %d frames: give every frame one or none" % (len(normals), len(fitted)))
+        pack_like(sheet.size, rects, normals).save(os.path.join(OUT, rig_set + "_n.png"))
+        meta["normal"] = rig_set + "_n.png"
     with open(os.path.join(OUT, rig_set + ".json"), "w") as out:
-        json.dump({"set": rig_set, "image": rig_set + ".png", "frames": frames}, out)
+        json.dump(meta, out)
     for n, im in fitted.items():
         print("frame", n, im.size)
     print("wrote", os.path.join(OUT, rig_set + ".png"), sheet.size)

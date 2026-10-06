@@ -1,0 +1,1 @@
+{"set": "fixture_lit", "image": "fixture_lit.png", "normal": "fixture_lit_n.png", "frames": {"a": {"rect": [0, 0, 4, 3], "hurt": [[-2.0, -3.0], [2.0, -3.0], [2.0, 0.0], [-2.0, 0.0]], "attack": []}, "b": {"rect": [5, 0, 2, 2], "hurt": [[-1.0, -2.0], [1.0, -2.0], [1.0, 0.0], [-1.0, 0.0]], "attack": []}}}

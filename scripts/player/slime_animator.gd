@@ -53,3 +53,10 @@ func frame() -> String:
 	if bool(clip["loop"]):
 		return frames[posmod(index, frames.size())]
 	return frames[mini(index, frames.size() - 1)]
+
+## True while a one-shot clip is still playing: it has not shown all its frames yet. A loop is never locked.
+func locked() -> bool:
+	if not clips.has(_state) or not _exit.is_empty():
+		return false
+	var clip: Dictionary = clips[_state]
+	return not bool(clip["loop"]) and int(_time * float(clip["fps"])) < (clip["frames"] as Array).size()

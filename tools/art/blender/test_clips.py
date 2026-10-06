@@ -1,0 +1,50 @@
+"""Turning timed frames into the engine's clips (clips.py): pure Python. The engine's SlimeAnimator plays {"frames": [...], "fps": f, "loop": b}
+at one fps, so a held frame is a repeated name and the base fps is the length of the shortest frame."""
+import os
+import sys
+import unittest
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import clips  # noqa: E402
+
+
+class ClipTest(unittest.TestCase):
+    def test_a_walk_of_equal_frames_plays_each_once_at_one_over_the_frame_length(self):
+        c = clips.clip(["w0", "w1", "w2", "w3"], [0.05] * 4, loop=True)
+        self.assertEqual(c["frames"], ["w0", "w1", "w2", "w3"])
+        self.assertAlmostEqual(c["fps"], 20.0, places=6)
+        self.assertTrue(c["loop"])
+
+    def test_a_held_frame_is_a_repeated_name(self):
+        c = clips.clip(["a0", "a1", "a2", "a3"], [0.07, 0.14, 0.21, 0.07], loop=False)
+        self.assertEqual(c["frames"], ["a0", "a1", "a1", "a2", "a2", "a2", "a3"])
+        self.assertAlmostEqual(c["fps"], 1 / 0.07, places=6)
+        self.assertFalse(c["loop"])
+
+    def test_the_total_time_is_preserved(self):
+        durations = [0.07, 0.14, 0.21, 0.07]
+        c = clips.clip(["a0", "a1", "a2", "a3"], durations, loop=False)
+        self.assertAlmostEqual(len(c["frames"]) / c["fps"], sum(durations), places=6)
+
+    def test_timing_that_cannot_be_played_at_one_rate_is_refused(self):
+        with self.assertRaises(ValueError):
+            clips.clip(["a", "b", "c"], [0.05, 0.073, 0.05], loop=False)
+
+    def test_a_single_still_frame_is_a_clip_of_one(self):
+        c = clips.clip(["hurt"], [0.2], loop=False)
+        self.assertEqual(c["frames"], ["hurt"])
+
+    def test_names_and_durations_must_agree(self):
+        with self.assertRaises(ValueError):
+            clips.clip(["a", "b"], [0.05], loop=True)
+
+
+class TableTest(unittest.TestCase):
+    def test_a_table_orders_the_clips_and_keys_them_by_creature(self):
+        table = clips.table("twin_goblin_hob", {"walk": clips.clip(["w0", "w1"], [0.05, 0.05], True), "idle": clips.clip(["i0"], [0.2], True)})
+        self.assertEqual(list(table), ["twin_goblin_hob"])
+        self.assertEqual(sorted(table["twin_goblin_hob"]), ["idle", "walk"])
+
+
+if __name__ == "__main__":
+    unittest.main()
