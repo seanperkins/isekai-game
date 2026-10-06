@@ -16,6 +16,7 @@ stats = {
 "max_hp": 12,
 "max_mp": 6
 }
+traits = ["knockback_proof"]
 grants = ["verb_wolf_dire_wolf"]
 verb = "verb_wolf_dire_wolf"
 tint = Color(0.9, 0.78, 0.6, 1)

@@ -10,5 +10,5 @@ static func make(p_rules: SkillRulesEngine, p_stats: Stats, pct: int) -> FixedRe
 	s.percent = pct
 	return s
 
-func incoming(_damage_type: String, _hp: int, _max_hp: int) -> Dictionary:
+func incoming(_damage_type: String, _hp: int, _max_hp: int, _distance := 0.0, _carried := 0) -> Dictionary:
 	return {"percent_off": percent, "flat_off": 0}

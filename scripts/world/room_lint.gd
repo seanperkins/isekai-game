@@ -37,6 +37,7 @@ const FEATURE_BOX := {
 	"gap": Rect2(-20, -12, 40, 12),
 	"lamp": Rect2(-6, -16, 12, 16),
 	"vigil": Rect2(-8, -16, 16, 16),
+	"talisman": Rect2(-4, -16, 8, 16),
 }
 
 const RULES := ["solid_outside", "outside", "in_rock", "exit_blocked", "exit_narrow", "start_floor", "ledge_reach", "over_hole",

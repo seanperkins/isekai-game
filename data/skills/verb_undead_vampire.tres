@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_undead_vampire"
 display_name = "Drain"
-description = "Uses items; devours blood."
+description = "A bite that heals you by half of what it deals. Fast, and frail to holy light."
 announce = "New verb. Acquired [Drain]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [6], "spec": {"kind": "burst", "range": 40, "half_width": 30, "drain": 0.6, "damage_type": "dark", "cooldown": 4.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [6], "spec": {"kind": "burst", "range": 50, "half_width": 30, "drain": 0.5, "damage_type": "dark", "cooldown": 5.0}}]
 mp_cost = 5

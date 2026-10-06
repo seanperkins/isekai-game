@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_goblin_mastersmith"
 display_name = "Flawless gear"
-description = "A second gear slot; flawless upgrades."
+description = "Forge flawless gear from three carried parts: a lasting +3 ATK in one slot and +2 DEF in a second."
 announce = "New verb. Acquired [Flawless gear]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "buff", "stats": {"atk": 4, "def": 3}, "seconds": 20.0, "cooldown": 25.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "forge", "stat": "atk", "amount": 3, "also": {"def": 2}, "parts": 3, "deed": "weapon_forged", "cooldown": 25.0}}]
 mp_cost = 7

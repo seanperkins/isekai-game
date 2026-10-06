@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_undead_bone_colossus"
 display_name = "Juggernaut"
-description = "Double size, stomp and heft cleave; walks through hazards."
+description = "A stomp that stuns everything around you. Poison clouds and thrown spears do nothing to you."
 announce = "New verb. Acquired [Juggernaut]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [10], "spec": {"kind": "ring", "radius": 90, "status": {"stun": 1.0}, "cooldown": 8.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [10], "spec": {"kind": "ring", "radius": 90, "status": {"stun": 1.0}, "heft": 1.5, "cooldown": 8.0}}]
 mp_cost = 8

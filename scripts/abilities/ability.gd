@@ -19,6 +19,8 @@ var _cooldown := 0.0
 ## is the second half of it), -1 to keep the spec's.
 var power_mult := 1.0
 var cooldown_after := -1.0
+## A heavy verb that did not swing (a meal instead of a blow) does not hold its caster still.
+var no_swing := false
 
 func setup(p_actor: Node2D, p_values: Array, p_level: int) -> void:
 	actor = p_actor

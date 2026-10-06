@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_goblin_redcap"
 display_name = "Dye"
-description = "Each kill refreshes a blood-cap timer for speed and damage."
+description = "Dye the cap: speed and damage while it is wet. Each kill refreshes it; if it dries you lose it for a long while."
 announce = "New verb. Acquired [Dye]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "buff", "stats": {"atk": 3, "spd": 25}, "seconds": 8.0, "cooldown": 12.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "rage", "seconds": 8.0, "stats": {"atk": 3, "spd": 25}, "kill_refill": 4.0, "max_seconds": 14.0, "dry_lock": 30.0, "cooldown": 12.0}}]
 mp_cost = 5

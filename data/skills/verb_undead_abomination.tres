@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_undead_abomination"
 display_name = "Cleaver"
-description = "Heft cleaver; extra graft slots (a stitched body)."
+description = "A heavy cleaver swing. Your stitched body wears two more grafts, and the stench slows what comes close."
 announce = "New verb. Acquired [Cleaver]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [14], "spec": {"kind": "burst", "range": 55, "half_width": 40, "cooldown": 6.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [14], "spec": {"kind": "burst", "range": 55, "half_width": 40, "heft": 1.8, "cooldown": 6.0}}]
 mp_cost = 7

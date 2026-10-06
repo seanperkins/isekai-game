@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_wolf_moonbound"
 display_name = "Rise"
-description = "Stand on two legs for claws and items, drop to four to gallop."
+description = "Stand on two legs for claws (+2 ATK, +1 DEF); cast again to drop to four and gallop. Rising costs a beat, and you cannot pounce while up."
 announce = "New verb. Acquired [Rise]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "buff", "stats": {"atk": 2, "def": 1}, "seconds": 8.0, "cooldown": 14.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "rage", "toggle": true, "beat": 0.4, "lock_blow": true, "stats": {"atk": 2, "def": 1}, "cooldown": 1.0}}]
 mp_cost = 4

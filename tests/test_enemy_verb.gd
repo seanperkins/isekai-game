@@ -87,7 +87,13 @@ func test_a_stunned_or_dormant_enemy_never_casts() -> void:
 	assert_eq(dormant.verb_casts, 0)
 
 func test_a_heal_verb_casts_only_when_hurt() -> void:
-	var e := _enemy("twin_undead_zombie")
+	skills_by_id["verb_test_heal"] = TestDefs.skill("verb_test_heal", {"source": "form_verb", "mp_cost": 2, "max_level": 1,
+		"effects": [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "heal", "hp": 8, "cooldown": 30.0}}]})
+	var c: CreatureDef = creatures["twin_undead_zombie"].duplicate()
+	c.verb = "verb_test_heal"
+	var e := Enemy.new()
+	e.setup(c, skills_by_id)
+	add_child_autofree(e)
 	player.global_position = Vector2(100, 0)
 	await wait_physics_frames(45)
 	assert_eq(e.verb_casts, 0, "at full health it does not heal")
@@ -213,3 +219,35 @@ func test_a_shorter_slow_does_not_cut_a_longer_one_short() -> void:
 	assert_eq(p.stats.get_stat("spd"), 100 + Player.SLOW_SPD, "the longer slow still holds")
 	await wait_physics_frames(40)
 	assert_eq(p.stats.get_stat("spd"), 100)
+
+func test_a_window_verb_is_a_buff_to_an_enemy_and_ends_with_its_crash() -> void:
+	skills_by_id["verb_test_rage"] = TestDefs.skill("verb_test_rage", {"source": "form_verb", "mp_cost": 2, "max_level": 1,
+		"effects": [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "rage", "seconds": 0.5, "stats": {"atk": 5}, "crash": {"stats": {"atk": -2}, "seconds": 1.5}, "cooldown": 30.0}}]})
+	var c: CreatureDef = creatures["twin_wolf_black_dog"].duplicate()
+	c.verb = "verb_test_rage"
+	var e := Enemy.new()
+	e.setup(c, skills_by_id)
+	add_child_autofree(e)
+	var atk := e.stats.get_stat("atk")
+	player.global_position = Vector2(100, 0)
+	await wait_physics_frames(45)
+	assert_eq(e.verb_casts, 1)
+	assert_eq(e.stats.get_stat("atk"), atk + 5, "the window")
+	await wait_seconds(0.4)
+	assert_eq(e.stats.get_stat("atk"), atk - 2, "the crash")
+	await wait_seconds(1.5)
+	assert_eq(e.stats.get_stat("atk"), atk, "recovered")
+
+func test_a_blink_verb_carries_the_enemy_toward_the_player() -> void:
+	skills_by_id["verb_test_blink"] = TestDefs.skill("verb_test_blink", {"source": "form_verb", "mp_cost": 2, "max_level": 1,
+		"effects": [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "blink", "distance": 60.0, "cooldown": 30.0}}]})
+	var c: CreatureDef = creatures["twin_wolf_black_dog"].duplicate()
+	c.verb = "verb_test_blink"
+	var e := Enemy.new()
+	e.setup(c, skills_by_id)
+	add_child_autofree(e)
+	player.global_position = Vector2(140, 0)
+	var x0 := e.global_position.x
+	await wait_physics_frames(45)
+	assert_eq(e.verb_casts, 1)
+	assert_gt(e.global_position.x, x0 + 40.0, "it jumped ahead")

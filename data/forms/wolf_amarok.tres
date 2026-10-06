@@ -17,6 +17,7 @@ stats = {
 "max_mp": 10,
 "mp_regen": 40
 }
+traits = ["no_bond"]
 grants = ["verb_wolf_amarok"]
 verb = "verb_wolf_amarok"
 tint = Color(0.775, 0.84, 0.85, 1)

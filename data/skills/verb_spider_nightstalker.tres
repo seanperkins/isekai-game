@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_spider_nightstalker"
 display_name = "Reset"
-description = "Kills reset the zip; unseen in shadow."
+description = "Hunt the dark: faster, and unseen while you stand in shadow. Each kill resets the zip. A lit room gives you away."
 announce = "New verb. Acquired [Reset]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "buff", "stats": {"spd": 40}, "seconds": 6.0, "cooldown": 10.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "rage", "seconds": 8.0, "stats": {"spd": 40}, "kill_resets": ["zip"], "unseen_in_dark": true, "cooldown": 10.0}}]
 mp_cost = 4

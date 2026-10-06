@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_goblin_giant_killer"
 display_name = "Giant-slayer"
-description = "Damage scales with the target's size."
+description = "A blow whose damage scales with the target's size: strong against giants, weak against small foes."
 announce = "New verb. Acquired [Giant-slayer]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [14], "spec": {"kind": "bolt", "range": 80, "pierce": false, "cooldown": 5.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [14], "spec": {"kind": "bolt", "range": 80, "pierce": false, "size_scale": 12.0, "cooldown": 5.0}}]
 mp_cost = 6

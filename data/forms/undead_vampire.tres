@@ -14,8 +14,10 @@ stats = {
 "atk": 4,
 "def": 1,
 "max_hp": 22,
-"max_mp": 10
+"max_mp": 10,
+"spd": 15
 }
+traits = ["light_frail"]
 grants = ["verb_undead_vampire"]
 verb = "verb_undead_vampire"
 tint = Color(0.85, 0.575, 0.725, 1)

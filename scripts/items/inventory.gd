@@ -4,6 +4,12 @@ extends RefCounted
 ## are worn); everything else is carried. Pure data: the player turns stat_mods() into modifiers.
 
 const GRAFT_CAP := 4
+
+## Slots a body has beyond the usual (a stitched body wears more); the Player sets it from its traits.
+var extra_slots := 0
+
+func graft_cap() -> int:
+	return GRAFT_CAP + extra_slots
 ## A cocoon is carried like a part, as the id "cocoon:<creature>"; a spider carries at most this many.
 const COCOON_PREFIX := "cocoon:"
 const COCOON_COUNT_MAX := 2
@@ -101,7 +107,7 @@ func give_all(ids: Array, can_graft: bool) -> void:
 		add(id, can_graft)
 
 func _can_wear(def: PartDef, can_graft: bool) -> bool:
-	if not can_graft or def.kind != "graft" or _worn.size() >= GRAFT_CAP:
+	if not can_graft or def.kind != "graft" or _worn.size() >= graft_cap():
 		return false
 	var in_slot := _worn.filter(func(id: String) -> bool: return _parts[id].slot == def.slot).size()
 	return in_slot < def.worn_max

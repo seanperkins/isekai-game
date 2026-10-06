@@ -1,0 +1,52 @@
+{
+  "wolf_beast_of_gevaudan": {
+    "traits": [
+      "ranged_proof"
+    ]
+  },
+  "wolf_amarok": {
+    "traits": [
+      "no_bond"
+    ]
+  },
+  "wolf_dire_wolf": {
+    "traits": [
+      "knockback_proof"
+    ]
+  },
+  "undead_abomination": {
+    "traits": [
+      "extra_grafts",
+      "stench"
+    ]
+  },
+  "undead_bone_colossus": {
+    "traits": [
+      "hazard_proof"
+    ]
+  },
+  "undead_barrow_king": {
+    "traits": [
+      "hoard_armour"
+    ]
+  },
+  "undead_ghoul": {
+    "traits": [
+      "light_frail"
+    ]
+  },
+  "undead_vampire": {
+    "traits": [
+      "light_frail"
+    ],
+    "stats": {
+      "spd": 15
+    }
+  },
+  "undead_demilich": {
+    "stats": {
+      "max_hp": -17,
+      "atk": 3
+    }
+  }
+}

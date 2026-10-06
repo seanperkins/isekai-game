@@ -5,14 +5,18 @@ extends RefCounted
 
 ## The scene every data-defined verb uses.
 const SCENE := "res://scenes/abilities/verb.tscn"
-const KINDS := ["bolt", "burst", "ring", "dash", "zone", "mark", "heal", "ward", "buff", "pull", "aura", "chain", "engulf", "dissolve", "glide", "anchor", "decoy", "summon", "vine", "transmute", "copy", "reveal", "bridge", "trap", "forge", "veil", "stalk", "swap", "blink", "light", "omen", "fate", "sabotage", "chase", "disperse"]
+const KINDS := ["bolt", "burst", "ring", "dash", "zone", "mark", "heal", "ward", "buff", "pull", "aura", "chain", "engulf", "dissolve", "glide", "anchor", "decoy", "summon", "vine", "transmute", "copy", "reveal", "bridge", "trap", "forge", "rage", "weigh", "devour", "veil", "stalk", "swap", "blink", "light", "omen", "fate", "sabotage", "chase", "disperse"]
 ## Each kind's keys and what they hold (validate() checks them). Every kind also takes `cooldown` (seconds, in place of the default);
 ## the kinds in TYPED also take damage_type, and those in STRIKES a status and `drain` (the fraction of the damage the caster heals).
+## The keys of a window (Rage), as a verb's own spec (kind rage) or inside any verb's `rage`.
+const RAGE_KEYS := {"seconds": "number", "stats": "dict", "kill_refill": "number", "max_seconds": "number", "meter": "dict", "crash": "dict", "dry_lock": "number",
+	"forbids": "list", "resist": "dict", "no_flinch": "bool", "bleed": "number", "kill_resets": "list", "unseen_in_dark": "bool", "alone": "dict", "lasting": "dict",
+	"swell": "dict", "toggle": "bool", "beat": "number", "lock_blow": "bool"}
 const SCHEMA := {
 	"bolt": {"range": "number", "half_width": "number", "pierce": "bool"},
 	"burst": {"range": "number", "half_width": "number"},
 	"ring": {"radius": "number"},
-	"dash": {"speed": "number", "vertical": "number", "hit_range": "number", "hit_half_width": "number", "opener": "number", "smoke": "number"},
+	"dash": {"speed": "number", "vertical": "number", "hit_range": "number", "hit_half_width": "number", "opener": "number", "smoke": "number", "drop": "number", "dim": "number", "lit_mult": "number", "hops": "number", "hop_gap": "number", "hop_lift": "number"},
 	"zone": {"radius": "number", "seconds": "number", "slow": "bool", "heals": "number", "damage": "bool"},
 	"mark": {"range": "number", "delay": "number"},
 	"heal": {"hp": "number", "mp": "number"},
@@ -33,22 +37,25 @@ const SCHEMA := {
 	"reveal": {"radius": "number"},
 	"bridge": {"length": "number", "seconds": "number"},
 	"trap": {"seconds": "number", "stun": "number", "lure": "number", "root": "number", "damage": "bool"},
-	"forge": {"stat": "stat", "amount": "number", "parts": "number"},
+	"forge": {"stat": "stat", "amount": "number", "parts": "number", "also": "dict"},
 	"veil": {"seconds": "number", "lit_seconds": "number", "radius": "number", "disguise": "text", "no_web": "bool"},
+	"rage": RAGE_KEYS,
 }
 ## The kinds that hurt, which take a `damage_type`; STRIKES are the instant ones, which also take a `status`.
 ## The kinds an enemy casts (at the player, or on itself). The rest need a player's hands: a summon, a bridge, a vine, a reveal, a copy.
-const ENEMY_KINDS := ["bolt", "burst", "ring", "dash", "zone", "mark", "pull", "aura", "chain", "heal", "ward", "buff"]
+const ENEMY_KINDS := ["bolt", "burst", "ring", "dash", "zone", "mark", "pull", "aura", "chain", "heal", "ward", "buff", "rage", "blink", "devour"]
 const TYPED := ["bolt", "burst", "ring", "dash", "mark", "zone", "pull", "aura", "chain", "engulf", "dissolve"]
 const STRIKES := ["bolt", "burst", "ring", "dash", "mark", "chain", "dissolve"]
 ## Keys any kind may carry: its cooldown and deed, how long it holds the caster still or locks its blow, the radius it wakes enemies in, whether it is a web
 ## (a veil that stops webbing refuses it) and whether it can be cast once between rests.
-const COMMON := {"cooldown": "number", "deed": "deed", "lock": "number", "still": "number", "alerts": "number", "web": "bool", "once_per_rest": "bool"}
+const COMMON := {"cooldown": "number", "deed": "deed", "lock": "number", "still": "number", "alerts": "number", "web": "bool", "once_per_rest": "bool", "rage": "rage", "heft": "number"}
 const STATUSES := ["slow", "stun", "root", "flee", "calm", "confuse"]
 const DASH_SPEED := 500.0
 const DASH_VERTICAL := 0.6
 const DASH_HIT_RANGE := 40.0
 const DASH_HIT_HALF_WIDTH := 24.0
+const HOP_GAP := 0.35
+const HOP_LIFT := 220.0
 const ZONE_RADIUS := 60.0
 const ZONE_SECONDS := 3.0
 const MARK_RANGE := 200.0
@@ -98,6 +105,7 @@ const TRAP_SECONDS := 30.0
 const TRAP_STUN := 2.0
 ## How many of one caster's traps stand at once: a cast beyond it takes the place of the oldest.
 const TRAP_MAX := 3
+const HEFT_STILL := 0.35
 const VEIL_SECONDS := 4.0
 const VEIL_RADIUS := 60.0
 const FORGE_STAT := "atk"
@@ -114,6 +122,18 @@ const TYPE_COLOR := {"physical": Color(0.92, 0.92, 0.96), "poison": Color(0.55, 
 	"water": Color(0.45, 0.75, 1.0), "holy": Color(1.0, 0.92, 0.5), "dark": Color(0.65, 0.45, 0.9)}
 
 static func run(ability: Ability, spec: Dictionary) -> void:
+	var heft := float(spec.get("heft", 1.0))
+	ability.power_mult *= heft  # a heavy swing
+	ability.no_swing = false
+	_run_kind(ability, spec)
+	ability.power_mult /= heft
+	if heft != 1.0 and not ability.no_swing and not spec.has("still") and ability.actor.has_method("hold_still"):
+		ability.actor.hold_still(HEFT_STILL)  # and a slow one
+	_price(ability, spec)
+	if spec.has("deed"):
+		_deed(ability, str(spec["deed"]))
+
+static func _run_kind(ability: Ability, spec: Dictionary) -> void:
 	match spec.get("kind", ""):
 		"bolt":
 			_bolt(ability, spec)
@@ -167,12 +187,14 @@ static func run(ability: Ability, spec: Dictionary) -> void:
 			_forge(ability, spec)
 		"veil":
 			_veil(ability, spec)
+		"rage":
+			pass  # all of it is the window `_price` opens
 		_:
-			if VerbMind.KINDS.has(str(spec.get("kind", ""))):
-				VerbMind.run(str(spec["kind"]), ability, spec)
-	_price(ability, spec)
-	if spec.has("deed"):
-		_deed(ability, str(spec["deed"]))
+			var kind := str(spec.get("kind", ""))
+			if VerbMind.KINDS.has(kind):
+				VerbMind.run(kind, ability, spec)
+			elif VerbBody.KINDS.has(kind):
+				VerbBody.run(kind, ability, spec)
 
 ## What a cast costs the caster besides MP, from the keys any kind may carry: it holds still, its own blow is locked, enemies around it wake, and a verb
 ## cast once between rests is spent.
@@ -185,8 +207,17 @@ static func _price(a: Ability, spec: Dictionary) -> void:
 		for e in a.actor.get_tree().get_nodes_in_group("actors"):
 			if e is Enemy and e.global_position.distance_to(a.actor.global_position) <= float(spec["alerts"]):
 				e.wake()
+	if spec.has("cloud"):
+		var cloud: Dictionary = {"radius": 50.0, "seconds": 4.0, "slow": true, "damage": true, "damage_type": "poison"}
+		cloud.merge(spec["cloud"], true)
+		_zone(a, cloud)  # a stench cloud where it stands
 	if bool(spec.get("once_per_rest", false)):
 		a.actor.set_meta(_spent_key(a), true)
+	if a.actor.has_method("rage_start"):
+		if spec.get("kind", "") == "rage":
+			a.actor.rage_start(spec, a.skill_id)
+		elif spec.has("rage"):
+			a.actor.rage_start(spec["rage"], a.skill_id)
 
 ## A true/false property of an actor that may not have it (a stub, an enemy).
 static func _flag(actor, name: String) -> bool:
@@ -228,18 +259,53 @@ static func _ring(a: Ability, spec: Dictionary) -> void:
 	Vfx.puffs(a.actor, Art.texture("spit_glob"), spots, _color(spec), 0.3)
 
 static func _dash(a: Ability, spec: Dictionary) -> void:
+	var actor = a.actor
+	var hops := maxi(1, int(spec.get("hops", 1)))
+	if hops > 1 and actor.has_method("in_talisman") and actor.in_talisman():
+		return  # a talisman stops a hopping corpse
 	var dir := a.aim_dir()
+	var aim_before := a.aim
+	var mult := 1.0
+	if spec.has("drop") and actor.has_method("hangs") and actor.hangs():
+		dir = Vector2.DOWN  # from the ceiling it falls on what is below
+		a.aim = dir
+		mult *= float(spec["drop"])
+	if spec.has("dim") and _flag(actor, "in_dark"):
+		mult *= float(spec["dim"])
+	if spec.has("lit_mult") and not _flag(actor, "in_dark"):
+		mult *= float(spec["lit_mult"])
+	if spec.has("opener") and _flag(actor, "cast_unseen"):
+		mult *= float(spec["opener"])  # a strike out of hiding hits harder
+	a.power_mult *= mult
+	_hop(a, spec, dir, hops > 1)
+	a.power_mult /= mult
+	a.aim = aim_before
+	var gap := float(spec.get("hop_gap", HOP_GAP))
+	for i in range(1, hops):
+		actor.get_tree().create_timer(gap * float(i)).timeout.connect(_hop_again.bind(a, spec, dir, mult))
+	if spec.has("smoke") and actor.has_method("veil_for"):
+		actor.veil_for(float(spec["smoke"]))  # a smoke bomb left behind hides the way out
+
+## One leap and its blow. A bounding verb holds the caster's direction between its hops.
+static func _hop(a: Ability, spec: Dictionary, dir: Vector2, bounding: bool) -> void:
 	var speed := float(spec.get("speed", DASH_SPEED))
-	a.actor.apply_impulse(Vector2(dir.x * speed, dir.y * speed * float(spec.get("vertical", DASH_VERTICAL))))
+	var hold := float(spec.get("hop_gap", HOP_GAP)) + 0.05 if bounding else 0.0
+	var lift := -float(spec.get("hop_lift", HOP_LIFT)) if bounding else dir.y * speed * float(spec.get("vertical", DASH_VERTICAL))
+	if hold > 0.0:
+		a.actor.apply_impulse(Vector2(dir.x * speed, lift), hold)
+	else:
+		a.actor.apply_impulse(Vector2(dir.x * speed, lift))
 	var reach := float(spec.get("hit_range", DASH_HIT_RANGE))
-	if spec.has("opener") and _flag(a.actor, "cast_unseen"):
-		a.power_mult = float(spec["opener"])  # a strike out of hiding hits harder
 	_strike(a, a.targets_in_front(reach, float(spec.get("hit_half_width", DASH_HIT_HALF_WIDTH))), spec)
-	a.power_mult = 1.0
-	var from := a.actor.global_position
+	var from: Vector2 = a.actor.global_position
 	Vfx.line(a.actor, from, from + dir * reach, _color(spec), 4.0, 0.2)
-	if spec.has("smoke") and a.actor.has_method("veil_for"):
-		a.actor.veil_for(float(spec["smoke"]))  # a smoke bomb left behind hides the way out
+
+static func _hop_again(a, spec: Dictionary, dir: Vector2, mult: float) -> void:  # untyped: the ability may be freed by now
+	if not is_instance_valid(a) or not is_instance_valid(a.actor) or not a.actor.is_inside_tree():
+		return
+	a.power_mult *= mult
+	_hop(a, spec, dir, true)
+	a.power_mult /= mult
 
 ## A lingering cloud at the caster's feet. It slows by default; `damage` makes it hurt (the skill's power) and `heals` mends the caster.
 static func _zone(a: Ability, spec: Dictionary) -> void:
@@ -522,7 +588,9 @@ static func can_run(a: Ability, spec: Dictionary) -> bool:
 
 ## Spends carried parts on a lasting bonus to a stat for the life (Forge).
 static func _forge(a: Ability, spec: Dictionary) -> void:
-	a.actor.forge(str(spec.get("stat", FORGE_STAT)), int(spec.get("amount", FORGE_AMOUNT)), int(spec.get("parts", FORGE_PARTS)))
+	if a.actor.forge(str(spec.get("stat", FORGE_STAT)), int(spec.get("amount", FORGE_AMOUNT)), int(spec.get("parts", FORGE_PARTS))):
+		for stat in spec.get("also", {}):  # a second slot forged with it
+			a.actor.lasting_bonus(str(stat), int(spec["also"][stat]))
 	Vfx.puffs(a.actor, Art.texture("spit_glob"), [a.actor.global_position + Vector2(0, -8)], Color(1.0, 0.7, 0.3, 0.9), 0.4)
 
 ## The skill's damage to each target, then the spec's status. `ignore_def` skips an Enemy's DEF.
@@ -544,11 +612,21 @@ static func _deed(a: Ability, event_name: String, tags := {}) -> void:
 
 static func _hit(t, power: int, spec: Dictionary, from: Vector2, ignore_def := false, caster = null) -> void:
 	var type := str(spec.get("damage_type", "physical"))
+	if caster != null and is_instance_valid(caster) and t is Enemy and caster.get("rage") != null:
+		power = maxi(1, roundi(float(power) * caster.rage.power_mult_vs(t)))  # a lone hunter's prey with no company
+	if spec.has("size_scale") and t is Enemy:
+		power = maxi(1, roundi(float(power) * clampf(float(t.def.stats.get("max_hp", 1)) / float(spec["size_scale"]), 0.4, 3.0)))  # the bigger the foe, the harder it falls
+	if spec.has("vs_killer") and caster != null and is_instance_valid(caster) and t is Enemy and str(caster.get("avenge_target")) == str(t.def.id):
+		power = maxi(1, roundi(float(power) * float(spec["vs_killer"])))  # what killed the last life
 	var before := _hp(t)
 	if ignore_def and t is Enemy:
 		t.receive_hit(power, type, from, "", true)
 	else:
 		t.receive_hit(power, type, from, "")
+	if caster != null and is_instance_valid(caster) and caster.get("rage") != null:
+		caster.rage.on_hit(t)
+	if spec.has("knockdown") and t is Enemy and int(t.def.stats.get("max_hp", 0)) >= DeedTags.HEAVY_HP:
+		t.knock_down(float(spec["knockdown"]))  # a heavy one goes down too
 	var delay := float(spec.get("status_delay", 0.0))
 	if delay > 0.0 and is_instance_valid(t) and t.is_inside_tree():
 		t.get_tree().create_timer(delay).timeout.connect(_apply_status.bind(t, spec.get("status", {})))  # slow to take hold
@@ -598,11 +676,15 @@ static func validate(spec: Dictionary) -> PackedStringArray:
 		return out
 	var keys: Dictionary = _schema(kind).duplicate()
 	keys.merge(COMMON)  # any verb may say a deed (Deeds) when the player casts it
-	if kind in TYPED or kind in VerbMind.TYPED:
+	if kind in TYPED or kind in VerbMind.TYPED or kind in VerbBody.TYPED:
 		keys["damage_type"] = "text"
 	if kind in STRIKES:
 		keys["status"] = "status"
 		keys["status_delay"] = "number"
+		keys["knockdown"] = "number"
+		keys["vs_killer"] = "number"
+		keys["size_scale"] = "number"
+		keys["cloud"] = "dict"
 		keys["drain"] = "number"
 	for key in spec:
 		if key == "kind":
@@ -621,7 +703,9 @@ static func validate(spec: Dictionary) -> PackedStringArray:
 
 ## The keys of a kind: the ones here, or a pack's.
 static func _schema(kind: String) -> Dictionary:
-	return SCHEMA[kind] if SCHEMA.has(kind) else VerbMind.SCHEMA.get(kind, {})
+	if SCHEMA.has(kind):
+		return SCHEMA[kind]
+	return VerbMind.SCHEMA.get(kind, VerbBody.SCHEMA.get(kind, {}))
 
 static func _is_number(v) -> bool:
 	return typeof(v) == TYPE_INT or typeof(v) == TYPE_FLOAT
@@ -632,6 +716,10 @@ static func _fits(v, what: String) -> bool:
 			return _is_number(v)
 		"bool":
 			return typeof(v) == TYPE_BOOL
+		"dict":
+			return typeof(v) == TYPE_DICTIONARY
+		"list":
+			return typeof(v) == TYPE_ARRAY
 		"text", "deed":
 			return typeof(v) == TYPE_STRING and v != ""
 		"stat":
@@ -640,10 +728,22 @@ static func _fits(v, what: String) -> bool:
 			return typeof(v) == TYPE_DICTIONARY and not v.is_empty() and v.keys().all(func(k): return Stats.DEFAULTS.has(k) and _is_number(v[k]))
 		"status":
 			return typeof(v) == TYPE_DICTIONARY and v.keys().all(func(k): return k in STATUSES and _is_number(v[k]))
+		"rage":
+			return typeof(v) == TYPE_DICTIONARY and _rage_fits(v)
 	return false
+
+## Whether a `rage` dictionary has only window keys of the right shape.
+static func _rage_fits(v: Dictionary) -> bool:
+	return v.keys().all(func(k): return RAGE_KEYS.has(k) and _fits(v[k], RAGE_KEYS[k]))
 
 static func _expects(key: String, what: String) -> String:
 	match what:
+		"rage":
+			return "rage must be a dictionary of window keys"
+		"dict":
+			return "%s must be a dictionary" % key
+		"list":
+			return "%s must be a list" % key
 		"bool":
 			return "%s must be true or false" % key
 		"deed":

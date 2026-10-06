@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_undead_zombie"
 display_name = "Devour"
-description = "Devour corpses to heal; slow, heavy swings."
+description = "Devour the nearest corpse to heal; with none, a slow, heavy swing."
 announce = "New verb. Acquired [Devour]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "heal", "hp": 8, "cooldown": 10.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [3], "spec": {"kind": "devour", "range": 55, "hp": 8, "heft": 1.8, "cooldown": 8.0}}]
 mp_cost = 3

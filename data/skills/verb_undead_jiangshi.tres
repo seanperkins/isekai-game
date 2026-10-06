@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_undead_jiangshi"
 display_name = "Hop"
-description = "Bounding straight-line leaps that drain on touch."
+description = "Hop: three bounding leaps in a straight line that you cannot turn, draining on touch. A talisman stops it."
 announce = "New verb. Acquired [Hop]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [6], "spec": {"kind": "dash", "speed": 380, "hit_range": 50, "drain": 0.5, "cooldown": 5.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [6], "spec": {"kind": "dash", "speed": 260, "hit_range": 40, "drain": 0.5, "hops": 3, "hop_gap": 0.35, "hop_lift": 220, "cooldown": 6.0}}]
 mp_cost = 5

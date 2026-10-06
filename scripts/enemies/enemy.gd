@@ -150,6 +150,10 @@ var _lure_t := 0.0
 var _lure_reckless := false
 var _reverse_t := 0.0
 var _disarm_t := 0.0
+var _bleed_t := 0.0
+var _rage_generation := 0
+const RAGE_SECONDS := 8.0
+var _bleed_acc := 0.0
 var _slow := 0.0
 ## A verb's root (Bind): no AI, no contact hit, no eat, for this long. Not a stun, so it works on an enemy that cannot be stunned.
 var _root := 0.0
@@ -407,6 +411,22 @@ func wake() -> void:
 	_calm_t = 0.0
 	_alert = ALERT_MEMORY
 
+## Knocked down: stunned for `seconds` whatever it is (the serpent that cannot be stunned too), unless it hunts (a boss is not felled).
+func knock_down(seconds: float) -> bool:
+	if hunting or dormant:
+		return false
+	status.stun(seconds)
+	return true
+
+## Bleeding: one point of damage a second, through its DEF, for `seconds` (a bleeding bite).
+func bleed_for(seconds: float) -> void:
+	if dormant:
+		return
+	_bleed_t = maxf(_bleed_t, seconds)
+
+func is_bleeding() -> bool:
+	return _bleed_t > 0.0
+
 ## Its verb and its throwing are jammed (Sabotage).
 func disarm_for(seconds: float) -> bool:
 	if dormant:
@@ -524,6 +544,12 @@ func _physics_process(delta: float) -> void:
 	_lure_t = maxf(0.0, _lure_t - delta)
 	_reverse_t = maxf(0.0, _reverse_t - delta)
 	_disarm_t = maxf(0.0, _disarm_t - delta)
+	if _bleed_t > 0.0 and status.state != EnemyStatus.DYING:
+		_bleed_t = maxf(0.0, _bleed_t - delta)
+		_bleed_acc += delta
+		if _bleed_acc >= 1.0:
+			_bleed_acc -= 1.0
+			receive_hit(1, "physical", Vector2.INF, "bleed", true)
 	var player: Node2D = get_tree().get_first_node_in_group("player")
 	var active := status.state == EnemyStatus.ACTIVE and _root <= 0.0
 	if def.swimmer and not _water_resolved:
@@ -985,11 +1011,37 @@ func _verb_act(to_player: Vector2, delta: float) -> bool:
 	return true
 
 ## A dash verb's push (the Ability contract): the horizontal speed holds for IMPULSE_SECONDS over the walk.
-func apply_impulse(v: Vector2) -> void:
+func apply_impulse(v: Vector2, hold := IMPULSE_SECONDS) -> void:
 	_impulse_x = v.x
-	_impulse_t = IMPULSE_SECONDS
+	_impulse_t = hold
 	if v.y < 0.0 and is_on_floor():
 		velocity.y = v.y
+
+## A window (Rage) as an enemy has it: the stats it adds for its seconds and the crash after. The rest of a window's keys are a player's.
+func rage_start(spec: Dictionary, _skill_id: String) -> void:
+	var seconds := float(spec.get("seconds", RAGE_SECONDS))
+	stats.set_timed_modifiers("verb_rage_crash", [])
+	stats.set_timed_modifiers("verb_rage", _stat_mods(spec.get("stats", {})))
+	_rage_generation += 1
+	get_tree().create_timer(seconds).timeout.connect(_rage_ends.bind(spec, _rage_generation))
+
+func _rage_ends(spec: Dictionary, generation: int) -> void:  # untyped self: the enemy may be gone
+	if not is_instance_valid(self) or generation != _rage_generation:
+		return
+	stats.set_timed_modifiers("verb_rage", [])
+	if spec.has("crash"):
+		stats.set_timed_modifiers("verb_rage_crash", _stat_mods(spec["crash"].get("stats", {})))
+		get_tree().create_timer(float(spec["crash"].get("seconds", 3.0))).timeout.connect(_rage_crash_ends.bind(_rage_generation))
+
+func _rage_crash_ends(generation: int) -> void:
+	if is_instance_valid(self) and generation == _rage_generation:
+		stats.set_timed_modifiers("verb_rage_crash", [])
+
+func _stat_mods(table: Dictionary) -> Array:
+	var out: Array = []
+	for stat in table:
+		out.append({"stat": stat, "op": "add", "value": int(table[stat])})
+	return out
 
 ## A ward verb: the enemy refuses every blow for `seconds`.
 func ward(seconds: float) -> void:

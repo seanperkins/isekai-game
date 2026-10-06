@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_wolf_amarok"
 display_name = "Lone hunter"
-description = "Strongest with no packmate, hunts isolated prey."
+description = "Lone hunter: strongest with no packmate, and prey with no company takes double. The bond is disabled."
 announce = "New verb. Acquired [Lone hunter]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "buff", "stats": {"atk": 4}, "seconds": 10.0, "cooldown": 15.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "rage", "seconds": 10.0, "alone": {"stats": {"atk": 4}, "isolated": 2.0}, "cooldown": 15.0}}]
 mp_cost = 5

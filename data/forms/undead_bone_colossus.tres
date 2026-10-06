@@ -16,6 +16,7 @@ stats = {
 "max_hp": 22,
 "max_mp": 10
 }
+traits = ["hazard_proof"]
 grants = ["verb_undead_bone_colossus"]
 verb = "verb_undead_bone_colossus"
 tint = Color(0.95, 0.83, 0.65, 1)

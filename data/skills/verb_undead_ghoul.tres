@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_undead_ghoul"
 display_name = "Rend"
-description = "Claws, a paralysing touch, a stench cloud."
+description = "A claw with a paralysing touch (even a heavy creature goes down) that leaves a stench cloud where you stand."
 announce = "New verb. Acquired [Rend]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [5], "spec": {"kind": "burst", "range": 40, "half_width": 30, "status": {"stun": 1.0}, "cooldown": 4.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [5], "spec": {"kind": "burst", "range": 55, "half_width": 40, "status": {"stun": 2.5}, "knockdown": 2.5, "cloud": {"radius": 50, "seconds": 4.0}, "cooldown": 7.0}}]
 mp_cost = 4

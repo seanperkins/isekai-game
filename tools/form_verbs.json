@@ -269,17 +269,19 @@
     "name": "Rise",
     "mp": 4,
     "value": 0,
-    "fidelity": "approx",
-    "note": "A stat window for standing on two legs; it does not change the body, and the claws and items it stands for wait for E.",
-    "text": "Stand on two legs for claws and items, drop to four to gallop.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Stand on two legs for claws (+2 ATK, +1 DEF); cast again to drop to four and gallop. Rising costs a beat, and you cannot pounce while up.",
     "spec": {
-      "kind": "buff",
+      "kind": "rage",
+      "toggle": true,
+      "beat": 0.4,
+      "lock_blow": true,
       "stats": {
         "atk": 2,
         "def": 1
       },
-      "seconds": 8.0,
-      "cooldown": 14.0
+      "cooldown": 1.0
     }
   },
   {
@@ -287,17 +289,27 @@
     "name": "Frenzy",
     "mp": 6,
     "value": 0,
-    "fidelity": "approx",
-    "note": "A speed and attack window; there is no bloodlust meter that builds from kills, and nothing you cannot stop.",
-    "text": "Each kill stokes a bloodlust meter: faster, bleeding bites.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Frenzy: each kill stokes a bloodlust meter (faster, harder, bleeding bites). At full you cannot stop. No guard and no items while frenzied.",
     "spec": {
-      "kind": "buff",
-      "stats": {
-        "atk": 3,
-        "spd": 30
+      "kind": "rage",
+      "meter": {
+        "start": 30,
+        "per_kill": 25,
+        "decay": 8,
+        "hold": 4
       },
-      "seconds": 10.0,
-      "cooldown": 20.0
+      "stats": {
+        "atk": 4,
+        "spd": 40
+      },
+      "bleed": 3.0,
+      "forbids": [
+        "ward",
+        "items"
+      ],
+      "cooldown": 12.0
     }
   },
   {
@@ -339,16 +351,27 @@
     "name": "Skin",
     "mp": 6,
     "value": 0,
-    "fidelity": "approx",
-    "note": "A berserk window of attack and defence; there is no crash after it and no choice of when the change comes.",
-    "text": "You choose the change: a berserk window with no flinch and iron-proof.",
+    "fidelity": "full",
+    "note": "",
+    "text": "You choose the change: a berserk window with no flinch and iron-proof. A crash follows it.",
     "spec": {
-      "kind": "buff",
+      "kind": "rage",
+      "seconds": 6.0,
       "stats": {
         "atk": 3,
         "def": 3
       },
-      "seconds": 6.0,
+      "no_flinch": true,
+      "resist": {
+        "physical": 60
+      },
+      "crash": {
+        "stats": {
+          "atk": -2,
+          "spd": -20
+        },
+        "seconds": 3.0
+      },
       "cooldown": 16.0
     }
   },
@@ -357,13 +380,29 @@
     "name": "Shield-bite",
     "mp": 5,
     "value": 8,
-    "fidelity": "approx",
-    "note": "A bite that ignores armour; it does not refill the berserk window on kills.",
-    "text": "Breaks guards; the berserk window refills on kills.",
+    "fidelity": "full",
+    "note": "",
+    "text": "A bite that breaks guards and opens the berserk window; each kill refills it. It still crashes when it ends.",
     "spec": {
       "kind": "dissolve",
       "range": 40,
       "half_width": 24,
+      "rage": {
+        "seconds": 6.0,
+        "stats": {
+          "atk": 3,
+          "def": 2
+        },
+        "kill_refill": 3.0,
+        "max_seconds": 12.0,
+        "no_flinch": true,
+        "crash": {
+          "stats": {
+            "atk": -2
+          },
+          "seconds": 3.0
+        }
+      },
       "cooldown": 3.0
     }
   },
@@ -513,9 +552,9 @@
     "name": "Tank",
     "mp": 5,
     "value": 6,
-    "fidelity": "approx",
-    "note": "A shove that stuns for a moment; heavy targets are not knocked down and the body is not knockback-proof.",
-    "text": "The pounce knocks down heavy targets; knockback-proof.",
+    "fidelity": "full",
+    "note": "",
+    "text": "A shove that stuns and knocks down heavy targets. You cannot be shoved.",
     "spec": {
       "kind": "burst",
       "range": 50,
@@ -523,6 +562,7 @@
       "status": {
         "stun": 1.5
       },
+      "knockdown": 2.5,
       "cooldown": 6.0
     }
   },
@@ -546,15 +586,18 @@
     "name": "Lone hunter",
     "mp": 5,
     "value": 0,
-    "fidelity": "approx",
-    "note": "An attack window; it does not look for isolated prey and does not switch the bond off.",
-    "text": "Strongest with no packmate, hunts isolated prey.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Lone hunter: strongest with no packmate, and prey with no company takes double. The bond is disabled.",
     "spec": {
-      "kind": "buff",
-      "stats": {
-        "atk": 4
-      },
+      "kind": "rage",
       "seconds": 10.0,
+      "alone": {
+        "stats": {
+          "atk": 4
+        },
+        "isolated": 2.0
+      },
       "cooldown": 15.0
     }
   },
@@ -610,14 +653,16 @@
     "form": "undead_zombie",
     "name": "Devour",
     "mp": 3,
-    "value": 0,
-    "fidelity": "approx",
-    "note": "Heals you; it needs no corpse to eat, and the slow heavy swing is not modeled.",
-    "text": "Devour corpses to heal; slow, heavy swings.",
+    "value": 3,
+    "fidelity": "full",
+    "note": "",
+    "text": "Devour the nearest corpse to heal; with none, a slow, heavy swing.",
     "spec": {
-      "kind": "heal",
+      "kind": "devour",
+      "range": 55,
       "hp": 8,
-      "cooldown": 10.0
+      "heft": 1.8,
+      "cooldown": 8.0
     }
   },
   {
@@ -625,17 +670,22 @@
     "name": "Rend",
     "mp": 4,
     "value": 5,
-    "fidelity": "approx",
-    "note": "A claw that stuns for a moment; the paralysing touch and the stench cloud are one strike here.",
-    "text": "Claws, a paralysing touch, a stench cloud.",
+    "fidelity": "full",
+    "note": "",
+    "text": "A claw with a paralysing touch (even a heavy creature goes down) that leaves a stench cloud where you stand.",
     "spec": {
       "kind": "burst",
-      "range": 40,
-      "half_width": 30,
+      "range": 55,
+      "half_width": 40,
       "status": {
-        "stun": 1.0
+        "stun": 2.5
       },
-      "cooldown": 4.0
+      "knockdown": 2.5,
+      "cloud": {
+        "radius": 50,
+        "seconds": 4.0
+      },
+      "cooldown": 7.0
     }
   },
   {
@@ -643,16 +693,16 @@
     "name": "Drain",
     "mp": 5,
     "value": 6,
-    "fidelity": "approx",
-    "note": "A bite that heals you by part of what it deals; blood essence and items are not modeled.",
-    "text": "Uses items; devours blood.",
+    "fidelity": "full",
+    "note": "",
+    "text": "A bite that heals you by half of what it deals. Fast, and frail to holy light.",
     "spec": {
       "kind": "burst",
-      "range": 40,
+      "range": 50,
       "half_width": 30,
-      "drain": 0.6,
+      "drain": 0.5,
       "damage_type": "dark",
-      "cooldown": 4.0
+      "cooldown": 5.0
     }
   },
   {
@@ -660,15 +710,18 @@
     "name": "Hop",
     "mp": 5,
     "value": 6,
-    "fidelity": "approx",
-    "note": "A bounding lunge that drains on touch; it can turn mid-way and talisman rooms do not stop it.",
-    "text": "Bounding straight-line leaps that drain on touch.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Hop: three bounding leaps in a straight line that you cannot turn, draining on touch. A talisman stops it.",
     "spec": {
       "kind": "dash",
-      "speed": 380,
-      "hit_range": 50,
+      "speed": 260,
+      "hit_range": 40,
       "drain": 0.5,
-      "cooldown": 5.0
+      "hops": 3,
+      "hop_gap": 0.35,
+      "hop_lift": 220,
+      "cooldown": 6.0
     }
   },
   {
@@ -676,13 +729,22 @@
     "name": "Heft",
     "mp": 6,
     "value": 12,
-    "fidelity": "approx",
-    "note": "A huge swing; it does not swell as it kills.",
-    "text": "Huge barrow-blade swings; it swells as it kills.",
+    "fidelity": "full",
+    "note": "",
+    "text": "A huge swing, slow to land. For twenty seconds each kill swells you: +1 ATK for the life, up to five.",
     "spec": {
       "kind": "burst",
       "range": 60,
       "half_width": 40,
+      "heft": 2.0,
+      "rage": {
+        "seconds": 20.0,
+        "swell": {
+          "stat": "atk",
+          "per_kill": 1,
+          "max": 5
+        }
+      },
       "cooldown": 5.0
     }
   },
@@ -691,15 +753,16 @@
     "name": "Barrow slam",
     "mp": 7,
     "value": 8,
-    "fidelity": "approx",
-    "note": "A ground-pound ring that stuns; the armour from carried items is not modeled.",
-    "text": "A ground-pound shockwave; armour while carrying items.",
+    "fidelity": "full",
+    "note": "",
+    "text": "A ground-pound shockwave that stuns. You take a point less from every hit for each part you carry, up to four.",
     "spec": {
       "kind": "ring",
       "radius": 80,
       "status": {
         "stun": 1.0
       },
+      "heft": 1.5,
       "cooldown": 8.0
     }
   },
@@ -708,13 +771,14 @@
     "name": "Cleaver",
     "mp": 7,
     "value": 14,
-    "fidelity": "approx",
-    "note": "A cleaving swing; the extra graft slots are not modeled.",
-    "text": "Heft cleaver; extra graft slots (a stitched body).",
+    "fidelity": "full",
+    "note": "",
+    "text": "A heavy cleaver swing. Your stitched body wears two more grafts, and the stench slows what comes close.",
     "spec": {
       "kind": "burst",
       "range": 55,
       "half_width": 40,
+      "heft": 1.8,
       "cooldown": 6.0
     }
   },
@@ -723,13 +787,20 @@
     "name": "Overhead cleave",
     "mp": 5,
     "value": 10,
-    "fidelity": "approx",
-    "note": "A slow heavy swing; the shield is not modeled.",
-    "text": "A slow overhead cleave and a shield.",
+    "fidelity": "full",
+    "note": "",
+    "text": "A slow overhead cleave, then you hold your shield up: half damage for a moment.",
     "spec": {
       "kind": "burst",
       "range": 55,
       "half_width": 40,
+      "heft": 2.0,
+      "rage": {
+        "seconds": 2.5,
+        "resist": {
+          "*": 50
+        }
+      },
       "cooldown": 4.0
     }
   },
@@ -738,13 +809,15 @@
     "name": "Vengeance",
     "mp": 6,
     "value": 12,
-    "fidelity": "approx",
-    "note": "A heavy swing; it does not hit harder against what killed your last life.",
-    "text": "Hits harder against the creature that killed your last life; heavy swings.",
+    "fidelity": "full",
+    "note": "",
+    "text": "A heavy swing that hits two and a half times harder against the creature that killed your last life.",
     "spec": {
       "kind": "burst",
       "range": 55,
       "half_width": 40,
+      "heft": 1.8,
+      "vs_killer": 2.5,
       "cooldown": 5.0
     }
   },
@@ -768,15 +841,16 @@
     "name": "Juggernaut",
     "mp": 8,
     "value": 10,
-    "fidelity": "approx",
-    "note": "A stomp ring that stuns; walking through hazards and the double size are not modeled.",
-    "text": "Double size, stomp and heft cleave; walks through hazards.",
+    "fidelity": "full",
+    "note": "",
+    "text": "A stomp that stuns everything around you. Poison clouds and thrown spears do nothing to you.",
     "spec": {
       "kind": "ring",
       "radius": 90,
       "status": {
         "stun": 1.0
       },
+      "heft": 1.5,
       "cooldown": 8.0
     }
   },
@@ -990,14 +1064,14 @@
     "name": "Float",
     "mp": 3,
     "value": 0,
-    "fidelity": "approx",
-    "note": "A slow fall; the body does not really float.",
-    "text": "A floating skull, very frail, very strong.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Float: the skull hangs in the air, falling not at all, for six seconds. Very strong, and the frailest form.",
     "spec": {
       "kind": "glide",
-      "seconds": 4.0,
-      "fall": 15,
-      "cooldown": 6.0
+      "seconds": 6.0,
+      "fall": 0,
+      "cooldown": 8.0
     }
   },
   {
@@ -1059,14 +1133,13 @@
     "name": "Weigh",
     "mp": 6,
     "value": 12,
-    "fidelity": "approx",
-    "note": "A drain that works on every foe, not only the weaker; the weighing is not modeled.",
-    "text": "If a creature's essence is lower than yours, drain it at once.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Weigh: if the creature's essence is lower than what you hold, drain it at once. Against a stronger one the scales tip and nothing happens.",
     "spec": {
-      "kind": "burst",
+      "kind": "weigh",
       "range": 50,
       "half_width": 30,
-      "drain": 1.0,
       "damage_type": "dark",
       "cooldown": 6.0
     }
@@ -1291,13 +1364,15 @@
     "name": "Ambush",
     "mp": 5,
     "value": 8,
-    "fidelity": "approx",
-    "note": "A lunge; the ceiling drop and the zip are the movement the body already has.",
-    "text": "A ceiling drop and a web zip.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Ambush: from the ceiling, drop on what is below for two and a half times the damage. In a lit room the blow is weak.",
     "spec": {
       "kind": "dash",
       "speed": 380,
       "hit_range": 50,
+      "drop": 2.5,
+      "lit_mult": 0.7,
       "cooldown": 6.0
     }
   },
@@ -1306,13 +1381,16 @@
     "name": "Silent drop",
     "mp": 5,
     "value": 10,
-    "fidelity": "approx",
-    "note": "A lunge; the bonus in dim light is not modeled.",
-    "text": "A bonus strike in dim light.",
+    "fidelity": "full",
+    "note": "",
+    "text": "A silent drop with a bonus strike in dim light: double in the dark, weak in a lit room.",
     "spec": {
       "kind": "dash",
       "speed": 300,
       "hit_range": 50,
+      "drop": 1.5,
+      "dim": 2.0,
+      "lit_mult": 0.6,
       "cooldown": 6.0
     }
   },
@@ -1321,15 +1399,19 @@
     "name": "Reset",
     "mp": 4,
     "value": 0,
-    "fidelity": "approx",
-    "note": "A speed window; kills do not reset the zip and shadow does not hide you.",
-    "text": "Kills reset the zip; unseen in shadow.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Hunt the dark: faster, and unseen while you stand in shadow. Each kill resets the zip. A lit room gives you away.",
     "spec": {
-      "kind": "buff",
+      "kind": "rage",
+      "seconds": 8.0,
       "stats": {
         "spd": 40
       },
-      "seconds": 6.0,
+      "kill_resets": [
+        "zip"
+      ],
+      "unseen_in_dark": true,
       "cooldown": 10.0
     }
   },
@@ -1598,16 +1680,18 @@
     "name": "Flawless gear",
     "mp": 7,
     "value": 0,
-    "fidelity": "approx",
-    "note": "A longer attack and defence window; the second gear slot is not modeled.",
-    "text": "A second gear slot; flawless upgrades.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Forge flawless gear from three carried parts: a lasting +3 ATK in one slot and +2 DEF in a second.",
     "spec": {
-      "kind": "buff",
-      "stats": {
-        "atk": 4,
-        "def": 3
+      "kind": "forge",
+      "stat": "atk",
+      "amount": 3,
+      "also": {
+        "def": 2
       },
-      "seconds": 20.0,
+      "parts": 3,
+      "deed": "weapon_forged",
       "cooldown": 25.0
     }
   },
@@ -1616,16 +1700,19 @@
     "name": "Cursed gear",
     "mp": 6,
     "value": 0,
-    "fidelity": "approx",
-    "note": "A big attack window at the cost of defence; the curse is not lasting.",
-    "text": "Huge stats with a real cost.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Cursed gear: huge attack for a while, and a curse that stays for the life (-2 max HP each time).",
     "spec": {
-      "kind": "buff",
+      "kind": "rage",
+      "seconds": 12.0,
       "stats": {
         "atk": 6,
         "def": -2
       },
-      "seconds": 12.0,
+      "lasting": {
+        "max_hp": -2
+      },
       "cooldown": 20.0
     }
   },
@@ -1651,16 +1738,19 @@
     "name": "Dye",
     "mp": 5,
     "value": 0,
-    "fidelity": "approx",
-    "note": "A speed and attack window; there is no blood-cap timer that kills refresh.",
-    "text": "Each kill refreshes a blood-cap timer for speed and damage.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Dye the cap: speed and damage while it is wet. Each kill refreshes it; if it dries you lose it for a long while.",
     "spec": {
-      "kind": "buff",
+      "kind": "rage",
+      "seconds": 8.0,
       "stats": {
         "atk": 3,
         "spd": 25
       },
-      "seconds": 8.0,
+      "kill_refill": 4.0,
+      "max_seconds": 14.0,
+      "dry_lock": 30.0,
       "cooldown": 12.0
     }
   },
@@ -1669,15 +1759,16 @@
     "name": "Stomp",
     "mp": 6,
     "value": 9,
-    "fidelity": "approx",
-    "note": "A stomp ring that stuns for a moment.",
-    "text": "A heavy kick with heft.",
+    "fidelity": "full",
+    "note": "",
+    "text": "A heavy kick with heft: a slow stomp that stuns everything around you.",
     "spec": {
       "kind": "ring",
       "radius": 70,
       "status": {
         "stun": 1.0
       },
+      "heft": 1.5,
       "cooldown": 7.0
     }
   },
@@ -1851,13 +1942,14 @@
     "name": "Giant-slayer",
     "mp": 6,
     "value": 14,
-    "fidelity": "approx",
-    "note": "A heavy single blow; its damage does not scale with the target's size.",
-    "text": "Damage scales with the target's size.",
+    "fidelity": "full",
+    "note": "",
+    "text": "A blow whose damage scales with the target's size: strong against giants, weak against small foes.",
     "spec": {
       "kind": "bolt",
       "range": 80,
       "pierce": false,
+      "size_scale": 12.0,
       "cooldown": 5.0
     }
   }

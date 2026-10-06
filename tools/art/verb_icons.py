@@ -177,6 +177,23 @@ def g_forge(d, fg):
     d.line([(3, 14), (6, 14)], fill=fg, width=2)
 
 
+def g_weigh(d, fg):
+    d.line([(16, 5), (16, 26)], fill=fg, width=2)
+    d.line([(6, 9), (26, 9)], fill=fg, width=2)
+    d.arc([3, 9, 13, 19], 0, 180, fill=fg, width=2)
+    d.arc([19, 9, 29, 19], 0, 180, fill=fg, width=2)
+    d.rectangle([11, 26, 21, 28], fill=fg)
+
+
+def g_devour(d, fg):
+    d.pieslice([5, 5, 27, 27], 30, 330, fill=fg)
+    d.polygon([(16, 16), (27, 10), (27, 22)], fill=BACK)
+
+
+def g_rage(d, fg):
+    d.polygon([(16, 3), (22, 13), (30, 11), (23, 20), (26, 29), (16, 24), (6, 29), (9, 20), (2, 11), (10, 13)], fill=fg)
+
+
 def g_veil(d, fg):
     d.polygon([(16, 5), (26, 27), (6, 27)], outline=fg, width=3)
     d.line([(10, 20), (22, 20)], fill=fg, width=2)
@@ -236,7 +253,7 @@ GLYPHS = {"bolt": g_bolt, "burst": g_burst, "ring": g_ring, "dash": g_dash, "zon
           "ward": g_ward, "buff": g_buff, "pull": g_pull, "aura": g_aura, "chain": g_chain, "engulf": g_engulf,
           "dissolve": g_dissolve, "glide": g_glide, "anchor": g_anchor, "decoy": g_decoy, "summon": g_summon, "vine": g_vine,
           "transmute": g_transmute, "copy": g_copy, "reveal": g_reveal, "bridge": g_bridge, "trap": g_trap, "forge": g_forge,
-          "veil": g_veil, "stalk": g_stalk, "swap": g_swap, "blink": g_blink, "light": g_light, "omen": g_omen, "fate": g_fate,
+          "rage": g_rage, "weigh": g_weigh, "devour": g_devour, "veil": g_veil, "stalk": g_stalk, "swap": g_swap, "blink": g_blink, "light": g_light, "omen": g_omen, "fate": g_fate,
           "sabotage": g_sabotage, "chase": g_chase, "disperse": g_disperse}
 
 

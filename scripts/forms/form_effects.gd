@@ -13,6 +13,13 @@ const TRAITS := {
 	"sonar": "Echolocation reads one level stronger.",
 	"adaptable": "Eat and recover faster.",
 	"ranged_proof": "Take 60% less damage from hits that come from afar.",
+	"knockback_proof": "Blows do not shove you.",
+	"hazard_proof": "Poison clouds and thrown spears do nothing to you.",
+	"hoard_armour": "Take 1 less damage from every hit for each part you carry, up to 4.",
+	"extra_grafts": "Wear two more grafts.",
+	"stench": "Enemies close to you are slowed.",
+	"no_bond": "You cannot bond or tame.",
+	"light_frail": "Take half again as much from holy light.",
 }
 const THREAD_SKILLS := ["sticky_thread", "swing_thread", "binding_web"]
 const WATER_SKILLS := ["hydraulic_propulsion", "water_blade", "jet_dash"]
@@ -20,6 +27,11 @@ const ADAPTABLE_HEAL := 2  # extra HP from every creature eaten
 const VENOM_PERCENT := 30
 const SHELL_FLAT := 1
 const RANGED_PERCENT := 60
+const HOARD_MAX := 4
+const LIGHT_FRAIL := 1.5
+const STENCH_RANGE := 48.0
+const STENCH_SLOW := 0.6
+const EXTRA_GRAFTS := 2
 ## A hit from farther than this counts as a ranged one.
 const RANGED_FROM := 64.0
 

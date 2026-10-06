@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_wolf_loup_garou"
 display_name = "Frenzy"
-description = "Each kill stokes a bloodlust meter: faster, bleeding bites."
+description = "Frenzy: each kill stokes a bloodlust meter (faster, harder, bleeding bites). At full you cannot stop. No guard and no items while frenzied."
 announce = "New verb. Acquired [Frenzy]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "buff", "stats": {"atk": 3, "spd": 30}, "seconds": 10.0, "cooldown": 20.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "rage", "meter": {"start": 30, "per_kill": 25, "decay": 8, "hold": 4}, "stats": {"atk": 4, "spd": 40}, "bleed": 3.0, "forbids": ["ward", "items"], "cooldown": 12.0}}]
 mp_cost = 6

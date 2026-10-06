@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_undead_heart_weigher"
 display_name = "Weigh"
-description = "If a creature's essence is lower than yours, drain it at once."
+description = "Weigh: if the creature's essence is lower than what you hold, drain it at once. Against a stronger one the scales tip and nothing happens."
 announce = "New verb. Acquired [Weigh]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [12], "spec": {"kind": "burst", "range": 50, "half_width": 30, "drain": 1.0, "damage_type": "dark", "cooldown": 6.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [12], "spec": {"kind": "weigh", "range": 50, "half_width": 30, "damage_type": "dark", "cooldown": 6.0}}]
 mp_cost = 6

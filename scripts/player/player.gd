@@ -218,6 +218,9 @@ var _still_t := 0.0
 var _blow_lock_t := 0.0
 var _swarm_t := 0.0
 var _jam_t := 0.0
+var _stench_t := 0.0
+## The window a verb has open (Rage): a bonus with a price.
+var rage := Rage.new()
 var _slow_immune_t := 0.0
 var _fated: Enemy = null
 var _fated_t := 0.0
@@ -282,6 +285,8 @@ func _physics_process(delta: float) -> void:
 	var dir := Input.get_axis("move_left", "move_right")
 	if predation.active() or _still_t > 0.0:
 		dir = 0.0
+	elif rage.drives() and is_zero_approx(dir):
+		dir = float(facing)  # at full a frenzy cannot stop
 	set_spread(wants_spread(is_on_floor(), aim_vector(), raw_aim().y, spreading))
 	_tackle_time = maxf(0.0, _tackle_time - delta)
 	if dir != 0.0:
@@ -355,6 +360,8 @@ func _species_physics(delta: float) -> void:
 	var i := MoveInput.new()
 	var held := eating or _still_t > 0.0
 	i.dir = 0.0 if held else Input.get_axis("move_left", "move_right")
+	if rage.drives() and not held and is_zero_approx(i.dir):
+		i.dir = float(facing)  # at full a frenzy cannot stop
 	i.jump_pressed = not held and Input.is_action_just_pressed("jump")
 	i.jump_held = Input.is_action_pressed("jump")
 	i.down = Input.get_action_strength("aim_down")
@@ -431,6 +438,7 @@ func _species_combat() -> void:
 			var from_behind: bool = target.facing == facing
 			if target.receive_tackle(stats.get_stat("atk"), from_behind, global_position):
 				_emit.call(Events.STUNNED_ENEMY, {"source": target.def.id})
+			rage.on_hit(target)
 			if target is Enemy and is_chasing(target):
 				species_body.state.cooldowns.clear()  # the chase is paid for: the next pounce is free
 				_chased = null
@@ -883,6 +891,8 @@ func use_active(i: int) -> void:
 		return
 	if not ability.ready():
 		return  # on cooldown: costs nothing
+	if rage.forbids(str(ability.spec.get("kind", ""))):
+		return  # a frenzy has no guard
 	if _veil_no_web and is_unseen() and (FormEffects.THREAD_SKILLS.has(id) or bool(ability.spec.get("web", false))):
 		return  # a veil that passes as someone else does not web
 	var cost := FormEffects.mp_cost(skillset.capabilities, id, _rules.get_def(id).mp_cost)
@@ -1014,7 +1024,7 @@ func parts_carried() -> int:
 ## Spends `parts` carried parts (never a worn graft) on `amount` more of `stat` for the rest of the life; forges stack. False, and nothing
 ## spent, when too few are carried.
 func forge(stat: String, amount: int, parts: int) -> bool:
-	if parts_carried() < parts:
+	if rage.forbids("items") or parts_carried() < parts:
 		return false
 	for i in parts:
 		inventory.take_carried()
@@ -1028,13 +1038,15 @@ func forge(stat: String, amount: int, parts: int) -> bool:
 
 ## How many companions the body keeps: the Lord of Beasts two, everyone else one.
 func companion_cap() -> int:
+	if skillset.has("trait_no_bond"):
+		return 0
 	return 2 if form.form_id == "goblin_lord_of_beasts" else 1
 
 ## The species action on the inspect button. A wolf bonds with a stunned creature that joins a pack; a goblin tames a stunned creature
 ## that can be tamed by offering it one carried part (and learns it). The creature leaves the room and follows as a Companion. True when
 ## a bond was made; a refused bond (no one in reach, the cap, nothing to offer, the wrong species) costs nothing.
 func try_bond() -> bool:
-	if health.is_dead() or companions.size() >= companion_cap() or get_parent() == null:
+	if rage.forbids("items") or health.is_dead() or companions.size() >= companion_cap() or get_parent() == null:
 		return false
 	var kind := "pack" if species == "wolf" else ("tame" if species == "goblin" else "")
 	if kind == "":
@@ -1067,7 +1079,7 @@ func try_pickpocket() -> bool:
 
 ## The same, for any body that has the knack (a verb's blink), within `reach`.
 func pickpocket(reach: float) -> bool:
-	if health.is_dead():
+	if rage.forbids("items") or health.is_dead():
 		return false
 	var target = _nearest_in_group("predatable", reach, func(n) -> bool: return n.has_method("can_be_robbed") and n.can_be_robbed())
 	if target == null:
@@ -1083,7 +1095,7 @@ func pickpocket(reach: float) -> bool:
 ## The spider webs the nearest stunned creature into a cocoon it carries (a carried item like any other, at most Inventory.COCOON_COUNT_MAX):
 ## the creature leaves the room alive, never downed. True when one was webbed; a refusal (the cap, no one in reach, the wrong species) costs nothing.
 func try_cocoon() -> bool:
-	if species != "spider" or health.is_dead() or inventory.cocoons().size() >= Inventory.COCOON_COUNT_MAX:
+	if species != "spider" or rage.forbids("items") or health.is_dead() or inventory.cocoons().size() >= Inventory.COCOON_COUNT_MAX:
 		return false
 	var target = _nearest_in_group("predatable", PREDATE_RANGE, func(n) -> bool: return n.has_method("can_be_cocooned") and n.can_be_cocooned())
 	if target == null:
@@ -1154,6 +1166,7 @@ func learn_from(enemy) -> void:
 func note_defeat(enemy) -> void:
 	if health.is_dead():
 		return
+	rage.on_kill(enemy)
 	_emit.call(Deeds.DEFEATED, DeedTags.for_defeat(enemy.def, enemy.last_blow, {"ceiling": _ceiling_t > 0.0, "dark": in_dark,
 		"moonlit": in_moonlight, "avenged": enemy.def.id == avenge_target}))
 
@@ -1433,6 +1446,10 @@ func can_cast() -> bool:
 
 ## `from` is the attacker's position for contact hits; the slime is knocked away from it.
 func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, cause: String = "") -> void:
+	if cause == "spear" and skillset.has("trait_hazard_proof"):
+		return  # it walks through hazards
+	if damage_type == "holy" and skillset.has("trait_light_frail"):
+		raw = ceili(float(raw) * FormEffects.LIGHT_FRAIL)  # frail to light
 	if _invuln > 0.0 or _ward > 0.0 or _in_roll_iframes() or health.is_dead():
 		return
 	if _fate_sends_back(raw, damage_type, from, cause):
@@ -1440,13 +1457,13 @@ func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, cau
 	last_hit_cause = cause if cause != "" else damage_type  # before take_hit: a lethal hit fires `died`
 	break_veil()
 	end_channel()  # a hit ends any channel, including a poison hit that carries no `from`
-	var m := skillset.incoming(damage_type, health.hp, health.max_hp, global_position.distance_to(from) if from != Vector2.INF else 0.0)
-	var dealt := Damage.hit(raw, damage_type, stats.get_stat("def"), m["percent_off"], m["flat_off"])
+	var m := skillset.incoming(damage_type, health.hp, health.max_hp, global_position.distance_to(from) if from != Vector2.INF else 0.0, parts_carried())
+	var dealt := Damage.hit(raw, damage_type, stats.get_stat("def"), mini(100, int(m["percent_off"]) + rage.percent_off(damage_type)), m["flat_off"])
 	health.take_hit(dealt, damage_type)
 	_invuln = INVULN_SECONDS
 	if not health.is_dead() and float(dealt) >= health.max_hp * SHED_FRACTION:
 		_shed_graft(from)
-	if from != Vector2.INF and not health.is_dead():
+	if from != Vector2.INF and not health.is_dead() and not rage.no_flinch() and not skillset.has("trait_knockback_proof"):
 		var away := 1.0 if global_position.x >= from.x else -1.0
 		velocity = Vector2(away * KNOCKBACK.x, KNOCKBACK.y) * skillset.knockback_factor()
 		_dash = 0.2
@@ -1481,6 +1498,8 @@ func _step_water(delta: float) -> Dictionary:
 	return out
 
 func receive_poison(application: int, tick_amount: int, seconds: float) -> void:
+	if skillset.has("trait_hazard_proof"):
+		return  # it walks through hazards
 	if _invuln > 0.0 or _ward > 0.0 or _in_roll_iframes() or health.is_dead():
 		return
 	receive_hit(application, "poison")
@@ -1531,7 +1550,7 @@ func veil_for(seconds: float, disguise := "", no_web := false) -> void:
 
 ## True while a veil is on the player or the player stands in a web it has spun.
 func is_unseen() -> bool:
-	if _veil_t > 0.0:
+	if _veil_t > 0.0 or rage.unseen():
 		return true
 	for v in get_tree().get_nodes_in_group("verb_veils"):
 		if v.caster == self and v.covers(self):
@@ -1540,6 +1559,8 @@ func is_unseen() -> bool:
 
 ## Whether `enemy` is fooled: a disguise fools only its own kind, a plain veil or a web everyone.
 func unseen_by(enemy: Node) -> bool:
+	if rage.unseen():
+		return true
 	if _veil_t > 0.0 and (_veil_disguise == "" or ("def" in enemy and str(enemy.def.id).contains(_veil_disguise))):
 		return true
 	for v in get_tree().get_nodes_in_group("verb_veils"):
@@ -1555,12 +1576,64 @@ func break_veil() -> void:
 		if v.caster == self:
 			v.tear()
 
+## Opens a window (Rage) for the verb `skill_id`.
+func rage_start(spec: Dictionary, skill_id: String) -> void:
+	if bool(spec.get("toggle", false)) and rage.active() and rage.skill_id == skill_id:
+		rage.stop()  # a stance cast again is dropped
+		return
+	rage.start(self, spec, skill_id)
+	if spec.has("beat"):
+		hold_still(float(spec["beat"]))  # taking a stance costs a beat
+
+## A bonus to `stat` that stays for the life (a curse or a swelling): it joins what a forge gives and goes with the life.
+func lasting_bonus(stat: String, amount: int) -> void:
+	forged[stat] = int(forged.get(stat, 0)) + amount
+	var mods := []
+	for s in forged:
+		mods.append({"stat": s, "op": "add", "value": forged[s]})
+	stats.set_timed_modifiers(FORGE_SOURCE, mods)
+	refresh_stats()
+
+## Locks a verb for `seconds` (a window that dried).
+func lock_verb(skill_id: String, seconds: float) -> void:
+	var ability = _abilities.get(skill_id)
+	if ability != null:
+		ability._cooldown = maxf(ability._cooldown, seconds)
+
+## Clears a cooldown a kill resets: the spider's zip, the pounce.
+func reset_cooldown(id: String) -> void:
+	if species_body == null:
+		return
+	match id:
+		"zip":
+			species_body.state.zip_cooldown = 0.0
+		"pounce":
+			species_body.state.cooldowns.clear()
+
 ## Its own verbs are jammed for `seconds` (a sabotage that went off in its hands).
 func jam(seconds: float) -> void:
 	_jam_t = maxf(_jam_t, seconds)
 
 func is_jammed() -> bool:
 	return _jam_t > 0.0
+
+## True while the body hangs from a ceiling (a drop from it falls on what is below).
+func hangs() -> bool:
+	return _ceiling_t > 0.0
+
+## True within the reach of a talisman: a hopping corpse cannot hop there.
+func in_talisman() -> bool:
+	for t in get_tree().get_nodes_in_group("talismans"):
+		if t.covers(self):
+			return true
+	return false
+
+## What the body holds of every essence together: the weight a Weigh sets against a creature's.
+func essence_weight() -> int:
+	var n := 0
+	for e in Essences.ALL:
+		n += _rules.held(e)
+	return n
 
 ## Ties a thread to `enemy`: the next blow it lands on the player is sent back to it (Fate thread). One thread at a time.
 func fate_tie(enemy: Enemy, seconds: float) -> void:
@@ -1591,7 +1664,7 @@ func lock_blow(seconds: float) -> void:
 	_blow_lock_t = maxf(_blow_lock_t, seconds)
 
 func is_blow_locked() -> bool:
-	return _blow_lock_t > 0.0 or _swarm_t > 0.0
+	return _blow_lock_t > 0.0 or _swarm_t > 0.0 or rage.locks_blow()
 
 ## A swarm: it can neither cast nor strike until it reforms.
 func swarm_for(seconds: float) -> void:
@@ -1615,6 +1688,14 @@ func tick(delta: float) -> void:
 	_still_t = maxf(0.0, _still_t - delta)
 	_blow_lock_t = maxf(0.0, _blow_lock_t - delta)
 	_jam_t = maxf(0.0, _jam_t - delta)
+	rage.update(delta)
+	if skillset.has("trait_stench"):
+		_stench_t -= delta
+		if _stench_t <= 0.0:
+			_stench_t = 0.3
+			for n in get_tree().get_nodes_in_group("actors"):
+				if n is Enemy and n.global_position.distance_to(global_position) <= FormEffects.STENCH_RANGE:
+					n.slow_for(FormEffects.STENCH_SLOW)
 	_slow_immune_t = maxf(0.0, _slow_immune_t - delta)
 	_fated_t = maxf(0.0, _fated_t - delta)
 	_chased_t = maxf(0.0, _chased_t - delta)
@@ -1654,9 +1735,9 @@ func tick(delta: float) -> void:
 
 ## Sets horizontal speed, and vertical speed too when the impulse has a vertical part, so an
 ## upward cast works mid-fall instead of cancelling against the fall speed.
-func apply_impulse(v: Vector2) -> void:
+func apply_impulse(v: Vector2, hold := 0.25) -> void:
 	velocity = Vector2(v.x, v.y if not is_zero_approx(v.y) else velocity.y)
-	_dash = 0.25
+	_dash = hold
 	_dash_vx = velocity.x
 	if species_body != null and species_body.is_crawling():  # a crawler's surface would hold it still: it leaves it
 		species_body.state.surface_n = Vector2.ZERO
@@ -1847,6 +1928,7 @@ func _part_names(ids: Array) -> String:
 ## Re-reads max HP and MP from the stats (after a kit or a form changed them).
 func refresh_stats() -> void:
 	_sync_max_hp()
+	inventory.extra_slots = FormEffects.EXTRA_GRAFTS if skillset.has("trait_extra_grafts") else 0
 
 func _sync_max_hp() -> void:
 	health.set_max_hp(stats.get_stat("max_hp"))
@@ -1868,6 +1950,7 @@ func rest_refresh() -> void:
 
 func _on_run_started() -> void:
 	rest_refresh()
+	rage.reset()
 	progression = Progression.new()  # levels are per run
 	progression.leveled_up.connect(_on_leveled_up)
 	form.reset()

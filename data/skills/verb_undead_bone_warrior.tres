@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_undead_bone_warrior"
 display_name = "Overhead cleave"
-description = "A slow overhead cleave and a shield."
+description = "A slow overhead cleave, then you hold your shield up: half damage for a moment."
 announce = "New verb. Acquired [Overhead cleave]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [10], "spec": {"kind": "burst", "range": 55, "half_width": 40, "cooldown": 4.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [10], "spec": {"kind": "burst", "range": 55, "half_width": 40, "heft": 2.0, "rage": {"seconds": 2.5, "resist": {"*": 50}}, "cooldown": 4.0}}]
 mp_cost = 5

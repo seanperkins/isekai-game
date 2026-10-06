@@ -228,7 +228,7 @@ func test_sonar_does_nothing_for_a_body_without_it() -> void:
 func test_every_trait_in_the_table_is_consumed_somewhere() -> void:
 	# a trait the UI promises must change something: each has a test above or in test_forms
 	for t in FormEffects.TRAITS:
-		assert_true(["spinner", "water_thrift", "venom_blood", "hard_shell", "sonar", "adaptable", "ranged_proof"].has(t), "%s has a behaviour" % t)
+		assert_true(["spinner", "water_thrift", "venom_blood", "hard_shell", "sonar", "adaptable", "ranged_proof", "knockback_proof", "hazard_proof", "hoard_armour", "extra_grafts", "stench", "no_bond", "light_frail"].has(t), "%s has a behaviour" % t)
 
 # --- a player without its base sheet never crashes on evolving ---
 

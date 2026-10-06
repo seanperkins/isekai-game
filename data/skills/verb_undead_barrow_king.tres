@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_undead_barrow_king"
 display_name = "Barrow slam"
-description = "A ground-pound shockwave; armour while carrying items."
+description = "A ground-pound shockwave that stuns. You take a point less from every hit for each part you carry, up to four."
 announce = "New verb. Acquired [Barrow slam]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [8], "spec": {"kind": "ring", "radius": 80, "status": {"stun": 1.0}, "cooldown": 8.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [8], "spec": {"kind": "ring", "radius": 80, "status": {"stun": 1.0}, "heft": 1.5, "cooldown": 8.0}}]
 mp_cost = 7

@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_spider_shadow_stalker"
 display_name = "Silent drop"
-description = "A bonus strike in dim light."
+description = "A silent drop with a bonus strike in dim light: double in the dark, weak in a lit room."
 announce = "New verb. Acquired [Silent drop]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [10], "spec": {"kind": "dash", "speed": 300, "hit_range": 50, "cooldown": 6.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [10], "spec": {"kind": "dash", "speed": 300, "hit_range": 50, "drop": 1.5, "dim": 2.0, "lit_mult": 0.6, "cooldown": 6.0}}]
 mp_cost = 5

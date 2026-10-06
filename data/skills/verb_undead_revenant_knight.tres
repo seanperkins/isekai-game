@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_undead_revenant_knight"
 display_name = "Vengeance"
-description = "Hits harder against the creature that killed your last life; heavy swings."
+description = "A heavy swing that hits two and a half times harder against the creature that killed your last life."
 announce = "New verb. Acquired [Vengeance]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [12], "spec": {"kind": "burst", "range": 55, "half_width": 40, "cooldown": 5.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [12], "spec": {"kind": "burst", "range": 55, "half_width": 40, "heft": 1.8, "vs_killer": 2.5, "cooldown": 5.0}}]
 mp_cost = 6

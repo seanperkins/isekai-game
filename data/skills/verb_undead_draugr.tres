@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_undead_draugr"
 display_name = "Heft"
-description = "Huge barrow-blade swings; it swells as it kills."
+description = "A huge swing, slow to land. For twenty seconds each kill swells you: +1 ATK for the life, up to five."
 announce = "New verb. Acquired [Heft]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [12], "spec": {"kind": "burst", "range": 60, "half_width": 40, "cooldown": 5.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [12], "spec": {"kind": "burst", "range": 60, "half_width": 40, "heft": 2.0, "rage": {"seconds": 20.0, "swell": {"stat": "atk", "per_kill": 1, "max": 5}}, "cooldown": 5.0}}]
 mp_cost = 6

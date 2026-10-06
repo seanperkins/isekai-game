@@ -48,7 +48,7 @@ func test_get_room() -> void:
 
 func test_catalog() -> void:
 	var all: Dictionary = _data(_call("catalog"))
-	assert_eq(all["features"], ["glow_pool", "tablet", "switch", "altar", "barrier", "hidden", "gap", "lamp", "vigil"])
+	assert_eq(all["features"], ["glow_pool", "tablet", "switch", "altar", "barrier", "hidden", "gap", "lamp", "vigil", "talisman"])
 	assert_eq(all["gates"], ["wall_cling", "swim"])
 	assert_eq(int(all["limits"]["grid"]), 4)
 	assert_eq(int(all["limits"]["max_screens"]), 6)

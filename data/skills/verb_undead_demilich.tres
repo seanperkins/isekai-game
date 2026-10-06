@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_undead_demilich"
 display_name = "Float"
-description = "A floating skull, very frail, very strong."
+description = "Float: the skull hangs in the air, falling not at all, for six seconds. Very strong, and the frailest form."
 announce = "New verb. Acquired [Float]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "glide", "seconds": 4.0, "fall": 15, "cooldown": 6.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "glide", "seconds": 6.0, "fall": 0, "cooldown": 8.0}}]
 mp_cost = 3
