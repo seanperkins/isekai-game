@@ -22,6 +22,7 @@ import undead_forms as forms  # noqa: E402
 import undead_gear as gear  # noqa: E402
 import undead_kit as kit  # noqa: E402
 import undead_motion as motion_  # noqa: E402
+import verb_anims  # noqa: E402
 
 NAME = "undead"
 BASE = "skeleton"
@@ -122,7 +123,7 @@ def setup(rig, variant):
 
 # ---- gestures ---------------------------------------------------------------------------------------------------------------------
 # the preset of undead_motion.KINDS that plays each gesture (verb_anims.ARCHETYPES); a gesture not listed is one the undead cannot play yet
-GESTURES = {"cast": "cast", "slam": "slam", "throw": "throw", "claw": "slash"}
+GESTURES = {name: name for name in verb_anims.ARCHETYPES}   # undead_motion.KINDS has a preset for each (the biped's, through attack_kinds.register_undead)
 
 
 def gesture_clip(rig, variant, archetype):

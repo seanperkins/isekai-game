@@ -322,8 +322,8 @@ def positive_int(text):
 
 # the gestures (verb_anims.ARCHETYPES) each creature's base body has no preset for yet, by creature module (the next tasks author them): checked against the real creatures by test_stage_gaps.py
 KNOWN_ARCHETYPES = {
-    "goblin": ["craft", "drink", "point", "pulse", "sneak", "summon", "throw"],
-    "undead": ["craft", "drink", "guard", "lunge", "point", "pulse", "roar", "sneak", "summon"],
+    "goblin": [],
+    "undead": [],
     "wolf": ["cast", "craft", "drink", "point", "pulse", "sneak", "summon", "throw"],
     "spider": ["craft", "drink", "guard", "point", "pulse", "roar", "sneak", "summon"],
     "slime": ["craft", "drink", "guard", "point", "roar", "sneak", "summon"],

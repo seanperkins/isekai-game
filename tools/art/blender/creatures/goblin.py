@@ -26,6 +26,7 @@ import rigkit as k  # noqa: E402
 import secondary  # noqa: E402
 import sizing  # noqa: E402
 import skeleton2d  # noqa: E402
+import verb_anims  # noqa: E402
 from creatures import wolf  # noqa: E402
 from goblin_kit import down, up  # noqa: E402
 
@@ -212,7 +213,7 @@ def setup(rig, variant):
 
 # ---- gestures ---------------------------------------------------------------------------------------------------------------------
 # the preset of biped_motion.ATTACKS that plays each gesture (verb_anims.ARCHETYPES); a gesture not listed is one the two-legged bodies cannot play yet
-GESTURES = {"cast": "cast", "slam": "slam", "roar": "roar", "lunge": "lunge", "guard": "guard", "claw": "claw"}
+GESTURES = {name: name for name in verb_anims.ARCHETYPES}   # all of them: biped_motion.ATTACKS has a preset for each
 
 
 def gesture_clip(rig, variant, archetype):

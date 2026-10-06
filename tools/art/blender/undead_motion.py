@@ -662,3 +662,7 @@ def clips(body, speed, ppu):
     run = plan_gait(body, "run", speed * RUN_SPEED, ppu)
     return {"idle": idle_clip(body), "walk": gait_clip(body, "walk", *walk), "run": gait_clip(body, "run", *run),
             "attack": attack_clip(body), "hurt": hurt_clip(body), "die": die_clip(body)}
+
+
+import attack_kinds  # noqa: E402  (the verb-shaped attacks the undead take from the biped's: roar, lunge, guard, point, summon ...)
+attack_kinds.register_undead(KINDS, bm.GOBLIN_LEAN, bm.GOBLIN_HEAD)

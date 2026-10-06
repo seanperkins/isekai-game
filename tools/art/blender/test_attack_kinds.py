@@ -7,6 +7,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import attack_kinds as ak  # noqa: E402
 import biped_motion as gm  # noqa: E402
 import test_biped_motion as T  # noqa: E402
+import test_undead_motion as TU  # noqa: E402
+import undead_motion as um  # noqa: E402
+import verb_anims  # noqa: E402
 import verbs  # noqa: E402
 
 
@@ -78,6 +81,60 @@ class BipedKindsTest(unittest.TestCase):
         self.assertGreater(up["item_n"][0][1], up["head"][1][1] - 0.2, "the hands are over the head")
         self.assertLess(down["item_n"][0][1], up["item_n"][0][1] - 0.5, "and come down")
         self.assertLess(down["item_f"][0][1], up["item_f"][0][1] - 0.5)
+
+
+class GestureTest(unittest.TestCase):
+    """The gestures of tools/verb_anims.json on the two-legged bodies: each is there, keeps the engine's timing, comes back to rest, and is a motion of its own."""
+
+    def bodies(self, kind):
+        return (("goblin", T.body_of("redcap", attack=kind), gm), ("undead", TU.body_of("skeleton", attack=kind), um))
+
+    def test_the_two_legged_bodies_have_a_preset_for_every_gesture(self):
+        self.assertEqual([a for a in verb_anims.ARCHETYPES if a not in gm.ATTACKS], [])
+        self.assertEqual([a for a in verb_anims.ARCHETYPES if a not in um.KINDS], [])
+
+    def test_every_gesture_has_the_engines_timing_ends_at_rest_and_never_sinks_a_foot(self):
+        for kind in verb_anims.ARCHETYPES:
+            for family, body, mod in self.bodies(kind):
+                label = "%s %s" % (family, kind)
+                frames, windup = mod.attack_frames(body)
+                self.assertAlmostEqual(sum(d for _, d in frames[:windup]), gm.ENGINE_WINDUP, places=9, msg=label)
+                self.assertAlmostEqual(sum(d for _, d in frames[windup:]), gm.ENGINE_RECOVER, places=9, msg=label)
+                idle, _ = gm.idle_pose(body, 0.0)
+                last = mod.attack_pose(body, frames[-1][0])[0]
+                for bone in ("spine", "head", "arm_n", "fore_n", "thigh_n"):
+                    self.assertAlmostEqual(last[bone][1], idle[bone][1], delta=0.6, msg="%s %s" % (label, bone))
+                for t, _ in frames:
+                    rot, root = mod.attack_pose(body, t)[:2]
+                    for side in "nf":
+                        heel, toe = T.sole(body, side, rot, root)
+                        self.assertGreaterEqual(min(heel[1], toe[1]), -1e-6, "%s %s foot" % (label, side))
+
+    def test_no_two_gestures_are_the_same_motion_under_two_names(self):
+        def key_poses(kind):
+            body = T.body_of("redcap", attack=kind)
+            out = []
+            for t in (gm.T_HOLD, gm.T_HIT):
+                posed = body.skel.pose(*gm.attack_pose(body, t))
+                out.append([posed[b][2] for b in ("spine", "head", "arm_n", "fore_n", "arm_f", "fore_f")])
+            return out
+        poses = {kind: key_poses(kind) for kind in verb_anims.ARCHETYPES}
+        names = list(poses)
+        for i, a in enumerate(names):
+            for b in names[i + 1:]:
+                apart = max(sum(abs(x - y) for x, y in zip(pa, pb)) for pa, pb in zip(poses[a], poses[b]))
+                self.assertGreater(apart, 80.0, "%s and %s read as the same gesture (%d degrees apart in the apex or the impact)" % (a, b, apart))
+
+    def test_the_undead_take_the_bipeds_presets_for_the_gestures_they_had_no_kind_of(self):
+        spec = ak.SPECS["pulse"]
+        kind = um.KINDS["pulse"]
+        self.assertEqual(kind["arm_n"], spec["arm_n"])
+        self.assertEqual(kind["d_lean"], tuple(v - gm.GOBLIN_LEAN for v in spec["lean"]))
+        self.assertEqual(um.KINDS["slam"]["arm_n"], (184, 130, 30, 30), "a kind the undead had keeps its own")
+
+    def test_a_gesture_is_not_a_weapon_blow_so_a_form_that_casts_one_keeps_both_hands_free(self):
+        for kind in ("summon", "pulse", "craft", "drink"):
+            self.assertNotIn(kind, ak.WEAPON)
 
 
 if __name__ == "__main__":
