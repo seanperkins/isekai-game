@@ -40,7 +40,7 @@ def _chest(k, name, color, grow=1.08, low=None, high=None, belly=1.0):
     k.loft(name, rings, "spine", color, sides=8)
 
 
-def _skirt(k, name, color, length, top=None, flare=1.0, front=0.0, hem=None):
+def _skirt(k, name, color, length, top=None, flare=1.0, front=0.0, hem=None, wtop=None, wlength=None):
     """A skirt (a robe, a coat's tails, a kilt) as a sheet round the legs: bound to the hips at the top and, further down, more and more to both thighs
     at once, so the hem sways with the stride without tearing."""
     m = k.m
@@ -58,7 +58,8 @@ def _skirt(k, name, color, length, top=None, flare=1.0, front=0.0, hem=None):
         cols.append(((0.02 + rx0 * c, ry0 * s, top), (0.02 + front + rx1 * c, ry1 * s, end + hem[i % n] * length)))
 
     def weights(z):
-        t = max(0.0, min(1.0, (top - 0.06 - z) / max(1e-6, 0.7 * length)))
+        wt, wl = (top if wtop is None else wtop), (length if wlength is None else wlength)
+        t = max(0.0, min(1.0, (wt - 0.06 - z) / max(1e-6, 0.7 * wl)))
         t = t * t * (3.0 - 2.0 * t)
         return {"hips": 1.0 - 0.8 * t, "thigh_n": 0.4 * t, "thigh_f": 0.4 * t}
     k.sheet(name, cols, weights, color)
@@ -149,9 +150,9 @@ def greaves(k, color, **_):
         k.e("kneecop_" + s, kn, (0.05 * k.bulk,) * 3, "thigh_" + s, color, far, seg=7, rings=5)
 
 
-def cloak(k, color, length=0.9, lining=None, ragged=False, **_):
+def cloak(k, color, length=0.9, lining=None, ragged=False, spread=0.14, **_):
     hem = [0.10, -0.06, 0.14, -0.02, 0.12, -0.06, 0.10, 0.0, 0.12] if ragged else None
-    _cloak_sheet(k, "cloak", color, length, hem=hem)
+    _cloak_sheet(k, "cloak", color, length, spread=spread, hem=hem)
     if lining:
         _cloak_sheet(k, "cloak_lining", lining, length * 0.94, spread=0.10, wrap=60.0, inset=0.015, hem=hem)
 
@@ -161,7 +162,7 @@ def cape(k, color, length=0.5, **_):
 
 
 def fur_cloak(k, color, length=1.0, fur=None, **_):
-    _cloak_sheet(k, "fur_cloak", color, length, spread=0.20, hem=[0.06, -0.04, 0.10, 0.02, 0.08, -0.04, 0.06, 0.02, 0.06])
+    _cloak_sheet(k, "fur_cloak", color, length, spread=0.06, hem=[0.06, -0.04, 0.10, 0.02, 0.08, -0.04, 0.06, 0.02, 0.06])
     m = k.m
     k.e("fur_collar", (0.0, 0, m["neck"] - 0.02), (_girth(k) * 1.15, _girth(k) * 1.35, 0.08), "spine", fur or shade(color, 1.2), seg=10, rings=6)
 
@@ -228,7 +229,7 @@ def qing_robe(k, color, trim=(150, 222, 232), **_):
     m = k.m
     _chest(k, "qing_chest", color, grow=1.16, low=m["waist"] - 0.04)
     _skirt(k, "qing_skirt", color, 0.62, flare=1.0, hem=[0.0] * 14)
-    _skirt(k, "qing_hem", trim, 0.05, top=m["waist"] - 0.62, flare=1.12, hem=[0.0] * 14)
+    _skirt(k, "qing_hem", trim, 0.06, top=m["waist"] - 0.60, flare=1.12, hem=[0.0] * 14, wtop=m["waist"] - 0.02, wlength=0.62)
     _sleeves(k, color, grow=1.4, cuff=trim)
     k.box("qing_square", (0.13, -0.11, m["waist"] + 0.18), (0.035, 0.012, 0.05), "spine", shade(color, 1.35))
 
@@ -502,7 +503,7 @@ def mane(k, color, **_):
 def nimbus(k, color, **_):
     m = k.m
     hb, s = m["head_base"], m["skull"]
-    k.e("nimbus", (-0.02, 0.10, hb + 0.62 * s), (0.20, 0.012, 0.20), "head", color, far=True, glow=True, seg=16, rings=4)
+    k.e("nimbus", (0.02, 0.14, hb + 0.66 * s), (0.30, 0.012, 0.30), "head", color, far=True, glow=True, seg=16, rings=4)
 
 
 # ---- the body ----------------------------------------------------------------------------------------------------------------
@@ -827,9 +828,10 @@ def cleaver(k, side="n", color=(150, 150, 156), big=1.0, **_):
 def bone_cleaver(k, side="n", color=RUST, **_):
     x, y, z = _grip(k, side)
     b = "item_" + side
-    k.l("femur_haft", (x, y, z - 0.10), (x, y, z + 0.55), 0.03, 0.03, b, BONE, _far(side), sides=5)
+    k.l("femur_haft", (x, y, z - 0.10), (x, y, z + 0.45), 0.034, 0.03, b, BONE, _far(side), sides=5)
     k.e("femur_knob", (x, y, z - 0.12), (0.045, 0.04, 0.04), b, BONE, _far(side), seg=6, rings=4)
-    k.box("bc_blade", (x + 0.10, y - 0.005, z + 0.48), (0.11, 0.015, 0.16), b, color, _far(side))
+    k.box("bc_blade", (x + 0.12, y - 0.005, z + 0.36), (0.13, 0.02, 0.20), b, color, _far(side))
+    k.blade("bc_edge", (x + 0.25, y - 0.02, z + 0.16), (x + 0.25, y - 0.02, z + 0.56), 0.03, 0.01, b, (196, 150, 110), _far(side))
 
 
 def greatsword(k, side="n", color=(130, 128, 136), length=1.1, **_):
@@ -845,8 +847,8 @@ def greatsword(k, side="n", color=(130, 128, 136), length=1.1, **_):
 def spear(k, side="f", length=1.25, **_):
     x, y, z = _grip(k, side)
     b = "item_" + side
-    k.l("spear_shaft", (x, y, z - 0.45), (x, y, z + length - 0.45), 0.016, 0.016, b, WOOD, _far(side), sides=5)
-    k.blade("spear_head", (x, y, z + length - 0.47), (x, y, z + length - 0.20), 0.07, 0.02, b, (190, 140, 70), _far(side))
+    k.l("spear_shaft", (x, y, z - 0.45), (x, y, z + length - 0.45), 0.027, 0.027, b, WOOD, _far(side), sides=5)
+    k.blade("spear_head", (x, y, z + length - 0.47), (x, y, z + length - 0.18), 0.09, 0.03, b, (190, 140, 70), _far(side))
 
 
 def shield(k, side="n", color=(186, 128, 62), size=1.0, forward=False, **_):
@@ -869,7 +871,7 @@ def bow(k, side="f", color=WHITE, half=0.42, **_):
     depth = 0.10
     pts = [(x - depth, z - half), (x - 0.02, z - 0.6 * half), (x + 0.02, z - 0.2 * half), (x + 0.02, z + 0.2 * half), (x - 0.02, z + 0.6 * half), (x - depth, z + half)]
     for i, ((x0, z0), (x1, z1)) in enumerate(zip(pts, pts[1:])):
-        r0 = 0.024 if 1 <= i <= 3 else 0.016
+        r0 = 0.034 if 1 <= i <= 3 else 0.026
         k.l("stave%d" % i, (x0, y, z0), (x1, y, z1), r0, r0 * 0.9, b, color, far, sides=5)
     k.blade("tip_u", (x - depth, y, z + half), (x - depth - 0.04, y, z + half + 0.05), 0.03, 0.015, b, color, far)
     k.blade("tip_l", (x - depth, y, z - half), (x - depth - 0.04, y, z - half - 0.05), 0.03, 0.015, b, color, far)
@@ -894,7 +896,7 @@ def staff(k, side="n", color=WOOD, top="crystal", glow=VIOLET, length=1.1, **_):
     b = "item_" + side
     far = _far(side)
     bottom, tip = z - 0.45, z - 0.45 + length
-    k.l("staff", (x, y, bottom), (x + 0.02, y, tip), 0.017, 0.015, b, color, far, sides=5)
+    k.l("staff", (x, y, bottom), (x + 0.02, y, tip), 0.026, 0.024, b, color, far, sides=5)
     if top == "crystal":
         k.l("staff_fork", (x + 0.02, y, tip - 0.04), (x - 0.04, y, tip + 0.06), 0.014, 0.0, b, color, far, sides=4)
         k.e("crystal", (x + 0.03, y, tip + 0.05), (0.035, 0.03, 0.05), b, glow, far, glow=True, seg=5, rings=4)
@@ -932,8 +934,8 @@ def whip(k, length=1.0, **_):
     for i in range(1, 6):
         bone = "whip%d" % i
         h, t, _ = k.raw[bone]
-        k.l(bone, h, t, 0.014 if i < 5 else 0.01, 0.012 if i < 5 else 0.004, bone, (196, 186, 160), sides=4)
-        k.e(bone + "_vert", tuple((h[j] + t[j]) / 2 for j in range(3)), (0.026, 0.022, 0.026), bone, (214, 204, 176), seg=5, rings=3)
+        k.l(bone, h, t, 0.016 if i < 5 else 0.012, 0.014 if i < 5 else 0.006, bone, (150, 136, 112), sides=4)
+        k.e(bone + "_vert", tuple((h[j] + t[j]) / 2 for j in range(3)), (0.026, 0.022, 0.026), bone, (186, 170, 136), seg=5, rings=3)
     x, y, z = _grip(k, "n")
     k.l("whip_handle", (x, y, z - 0.10), (x, y, z + 0.06), 0.018, 0.018, "item_n", (70, 56, 46), sides=4)
 
@@ -941,8 +943,8 @@ def whip(k, length=1.0, **_):
 def head_held(k, hair=(70, 60, 50), **_):
     """The dullahan's own head, under its far arm: pale, grinning, wild-haired."""
     h, t, _ = k.raw["held_head"]
-    c = (h[0] + 0.04, h[1], h[2] + 0.06)
-    k.e("held_head", c, (0.09, 0.08, 0.10), "held_head", (226, 222, 208), True, seg=9, rings=6)
+    c = (h[0] + 0.16, h[1] - 0.08, h[2] + 0.02)
+    k.e("held_head", c, (0.10, 0.09, 0.11), "held_head", (226, 222, 208), True, seg=9, rings=6)
     k.e("held_hair", (c[0] - 0.03, c[1], c[2] + 0.05), (0.09, 0.085, 0.08), "held_head", hair, True, seg=8, rings=5)
     k.blade("held_hair_tuft", (c[0] - 0.06, c[1], c[2] + 0.06), (c[0] - 0.18, c[1], c[2] + 0.12), 0.06, 0.02, "held_head", hair, True)
     k.e("held_eye", (c[0] + 0.08, c[1] - 0.04, c[2] + 0.01), (0.016, 0.012, 0.014), "held_head", (236, 220, 140), True, glow=True, seg=5, rings=3)

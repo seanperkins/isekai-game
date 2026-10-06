@@ -126,7 +126,8 @@ class Undead:
             self.e("rib%d" % i, (0.035 - 0.01 * f, 0, z), (w, w * 1.12, 0.022), "spine", sk, seg=10, rings=4)
         self.l("sternum", (0.11 * b, -0.01, top - 0.02), (0.10 * b, -0.01, bottom + 0.06), 0.016, 0.012, "spine", sk, sides=4)
         self.l("collar", (0.06, -m["sh"] * 0.9, neck - 0.05), (0.08, m["sh"] * 0.9, neck - 0.05), 0.018 * b, 0.018 * b, "spine", sk, sides=5)
-        self.l("neck", (0.04, 0, neck - 0.02), (0.06, 0, m["head_base"] + 0.04), 0.03 * b, 0.028 * b, "spine", sk, sides=5)
+        if not self.form.get("headless"):
+            self.l("neck", (0.04, 0, neck - 0.02), (0.06, 0, m["head_base"] + 0.04), 0.03 * b, 0.028 * b, "spine", sk, sides=5)
 
     # -- a corpse's trunk: pelvis, a chest that is a wedge of flesh, a neck; `bulk` fattens it
     def flesh_torso(self):
@@ -227,10 +228,10 @@ class Undead:
         self.l("wick", (0.0, 0, 0.14), (0.0, 0, 0.20), 0.012, 0.01, "hips", (40, 34, 40), sides=4)
         self.loft("flame", [((0.0, 0, 0.13), (0.07, 0.07)), ((0.0, 0, 0.20), (0.135, 0.12)), ((0.0, 0, 0.30), (0.135, 0.12)), ((-0.01, 0, 0.40), (0.10, 0.09)),
                             ((-0.02, 0, 0.47), (0.05, 0.05))], "spine", flame, sides=8)
-        self.e("core", (0.03, -0.05, 0.26), (0.08, 0.07, 0.10), "spine", core, seg=8, rings=6)
+        self.e("core", (0.0, -0.05, 0.25), (0.08, 0.07, 0.10), "spine", core, seg=8, rings=6)
         for s, y in (("n", -0.035), ("f", 0.035)):
-            self.e("eye_" + s, (0.10, y - 0.06, 0.30), (0.025, 0.02, 0.032), "head", SOCKET, far=s == "f", seg=6, rings=4)
-        self.box("mouth", (0.10, -0.09, 0.22), (0.035, 0.01, 0.008), "head", SOCKET)
+            self.e("eye_" + s, (0.11, y - 0.05, 0.31), (0.03, 0.03, 0.036), "head", SOCKET, far=s == "f", seg=6, rings=4)
+        self.box("mouth", (0.125, -0.06, 0.22), (0.02, 0.03, 0.01), "head", SOCKET)
         self.blade("tip1", (0.0, 0, 0.40), (-0.06, 0, 0.60), 0.13, 0.08, "tip1", flame, glow=True)
         self.blade("tip2", (-0.05, 0, 0.56), (-0.12, 0, 0.70), 0.07, 0.05, "tip2", flame, glow=True)
 

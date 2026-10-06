@@ -346,7 +346,7 @@ class SecondaryTest(unittest.TestCase):
     def test_a_skeletons_jaw_rattles_and_its_rag_swings_as_it_walks(self):
         body = body_of("skeleton")
         clip = um.gait_clip(body, "walk", 0.8, 0.5 * body.L)
-        for bone, least in (("jaw", 2.0), ("rag", 3.0)):
+        for bone, least in (("jaw", 8.0), ("rag", 3.0)):
             angles = [rot[bone][1] for rot, _ in clip.frames]
             self.assertGreater(max(angles) - min(angles), least, bone)
 

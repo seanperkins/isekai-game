@@ -44,28 +44,28 @@ POSTURES = {
     "bones": _posture(0.91, 0.20, 9.0, 6.0, 1.0),
     "alert": _posture(0.90, 0.21, 6.0, 2.0, 1.0, walk=dict(lean=10.0), run=dict(lean=22.0)),
     "stride": _posture(0.92, 0.22, 4.0, 0.0, 0.9, walk=dict(lean=8.0, swing=16.0), run=dict(lean=18.0)),
-    "braced": _posture(0.86, 0.24, 10.0, 4.0, 0.9, walk=dict(crouch=0.82, swing=12.0), run=dict(crouch=0.76)),
+    "braced": _posture(0.88, 0.24, 10.0, 4.0, 0.9, walk=dict(crouch=0.85, swing=12.0), run=dict(crouch=0.76)),
     "knight": _posture(0.90, 0.22, 5.0, 2.0, 0.8, walk=dict(lean=8.0, swing=10.0, bob=0.035, lift=0.10), run=dict(lean=18.0, swing=22.0)),
-    "hoplite": _posture(0.85, 0.27, 14.0, 4.0, 0.9, walk=dict(crouch=0.80, lean=16.0, swing=6.0), run=dict(lean=24.0, swing=12.0)),
+    "hoplite": _posture(0.86, 0.26, 14.0, 4.0, 0.9, walk=dict(crouch=0.84, lean=16.0, swing=6.0), run=dict(lean=24.0, swing=12.0)),
     "regal": _posture(0.94, 0.16, 3.0, 0.0, 0.85, walk=dict(lean=6.0, swing=10.0, bob=0.02, lift=0.10, stride_legs=0.7), run=dict(lean=16.0, swing=22.0)),
     "still": _posture(0.95, 0.12, 1.0, -2.0, 0.7, walk=dict(lean=4.0, swing=6.0, bob=0.015, lift=0.09, stride_legs=0.65), run=dict(lean=14.0, swing=16.0)),
     "mummy": _posture(0.92, 0.16, 6.0, 2.0, 0.9, walk=dict(lean=8.0, swing=6.0, lift=0.09, stride_legs=0.65), run=dict(lean=18.0, swing=14.0)),
     "dancer": _posture(0.93, 0.14, 0.0, -6.0, 0.9, walk=dict(lean=4.0, swing=18.0, bob=0.04, lift=0.18), run=dict(lean=14.0)),
     "wanderer": _posture(0.88, 0.18, 16.0, 10.0, 1.05, walk=dict(lean=18.0, head=10.0, swing=10.0), run=dict(lean=28.0)),
     # a zombie lurches: hunched, short dragging steps with a heavy rise and fall, the body pitching over each step; a blow throws it about
-    "shamble": _posture(0.86, 0.22, 22.0, 12.0, 1.35, walk=dict(duty=0.66, crouch=0.80, bob=0.055, lift=0.06, lean=24.0, lean_amp=5.0, head=12.0, swing=6.0, stride_legs=0.55,
+    "shamble": _posture(0.86, 0.22, 22.0, 12.0, 1.35, walk=dict(duty=0.66, crouch=0.84, bob=0.055, lift=0.06, lean=24.0, lean_amp=5.0, head=12.0, swing=6.0, stride_legs=0.55,
                                                             max_stride=0.7, cycle=(0.7, 1.3)),
                         run=dict(duty=0.48, crouch=0.76, bob=-0.06, lift=0.14, lean=32.0, lean_amp=5.0, swing=14.0, max_stride=0.9, cycle=(0.4, 0.8))),
     # a ghoul is hunched and quick: chest well forward, head thrust ahead, a low fast scuttle
     "ghoul": _posture(0.80, 0.22, 34.0, 18.0, 1.1, walk=dict(crouch=0.76, lean=38.0, head=18.0, lift=0.16, swing=16.0, stride_legs=0.85, max_stride=1.0, cycle=(0.3, 0.7)),
                       run=dict(crouch=0.70, lean=52.0, head=26.0, lift=0.30, swing=30.0, stride_legs=1.1, max_stride=1.12, cycle=(0.2, 0.5))),
     # big and heavy: wide feet, a slow rolling walk with a deep rise and fall, a blow rocks it hard
-    "heavy": _posture(0.86, 0.26, 16.0, 8.0, 1.25, walk=dict(duty=0.65, crouch=0.80, bob=0.05, lift=0.08, lean=20.0, lean_amp=3.5, head=8.0, swing=8.0, stride_legs=0.6,
+    "heavy": _posture(0.88, 0.24, 16.0, 8.0, 1.25, walk=dict(duty=0.65, crouch=0.85, bob=0.05, lift=0.08, lean=20.0, lean_amp=3.5, head=8.0, swing=8.0, stride_legs=0.6,
                                                           max_stride=0.75, cycle=(0.8, 1.4)),
                       run=dict(duty=0.48, crouch=0.76, lean=28.0, lean_amp=4.0, swing=14.0, max_stride=0.9, cycle=(0.45, 0.8))),
     # a giant: barely bends, swings its legs like pendulums, sinks into each step; a blow hardly moves it
-    "giant": _posture(0.87, 0.28, 16.0, 4.0, 0.6, walk=dict(duty=0.66, crouch=0.81, bob=0.06, lift=0.07, lean=18.0, lean_amp=2.5, head=4.0, swing=6.0, stride_legs=0.55,
-                                                         max_stride=0.7, cycle=(0.9, 1.6)),
+    "giant": _posture(0.91, 0.24, 14.0, 4.0, 0.6, walk=dict(duty=0.66, crouch=0.87, bob=0.05, lift=0.07, lean=16.0, lean_amp=2.5, head=4.0, swing=6.0, stride_legs=0.5,
+                                                         max_stride=0.6, cycle=(0.9, 1.6)),
                       run=dict(duty=0.5, crouch=0.77, bob=-0.05, lift=0.12, lean=24.0, swing=10.0, max_stride=0.85, cycle=(0.5, 0.9))),
     # a jiangshi stands stiff with its feet together; it gets about by hopping (HOPS)
     "hop": _posture(0.95, 0.03, 2.0, 0.0, 0.7),
@@ -74,8 +74,8 @@ POSTURES = {
 # the hop: a stance and a flight per cycle, both feet together. `duty` the part of the cycle the feet are down, `dip` how far the knees give on landing
 # (of L), `height` how high the body rises (of L), `tuck` how far the feet are drawn up in the air, `lean` the body's tip forward
 HOPS = {
-    "walk": dict(duty=0.50, crouch=0.90, dip=0.06, height=0.16, tuck=0.06, lean=4.0, stride_legs=0.4, max_stride=0.5, cycle=(0.45, 0.8), lift=0.0, frames=10),
-    "run": dict(duty=0.40, crouch=0.88, dip=0.08, height=0.26, tuck=0.10, lean=10.0, stride_legs=0.5, max_stride=0.6, cycle=(0.35, 0.7), lift=0.0, frames=10),
+    "walk": dict(duty=0.50, crouch=0.94, dip=0.03, height=0.22, tuck=0.03, lean=4.0, stride_legs=0.4, max_stride=0.5, cycle=(0.45, 0.8), lift=0.0, frames=10),
+    "run": dict(duty=0.40, crouch=0.93, dip=0.04, height=0.32, tuck=0.05, lean=10.0, stride_legs=0.5, max_stride=0.6, cycle=(0.35, 0.7), lift=0.0, frames=10),
 }
 
 # the hung things the undead have beyond the goblin's (biped_motion.SECONDARY); a skeleton's jaw is a quick, loose spring, so it chatters
@@ -102,8 +102,8 @@ SECONDARY = dict(bm.SECONDARY, **{
     # a floater's flame, hair and shroud
     "tip1": dict(parents=["hips", "spine"], bob=260.0, wind=-12.0, freq=3.0, zeta=0.35),
     "tip2": dict(after="tip1", bob=300.0, wind=-16.0, freq=2.4, zeta=0.3),
-    "hair1": dict(parents=["hips", "spine", "head"], bob=160.0, wind=-7.0, freq=2.2, zeta=0.4),
-    "hair2": dict(after="hair1", bob=180.0, wind=-9.0, freq=1.8, zeta=0.35),
+    "hair1": dict(parents=["hips", "spine", "head"], bob=160.0, wind=-7.0, freq=2.4, zeta=0.65),
+    "hair2": dict(after="hair1", bob=180.0, wind=-9.0, freq=2.0, zeta=0.6),
     "strip0a": dict(parents=["hips"], bob=140.0, wind=-5.0, freq=2.2, zeta=0.35),
     "strip0b": dict(after="strip0a", bob=160.0, wind=-7.0, freq=1.8, zeta=0.3),
     "strip1a": dict(parents=["hips"], bob=140.0, wind=-6.0, freq=2.0, zeta=0.35),

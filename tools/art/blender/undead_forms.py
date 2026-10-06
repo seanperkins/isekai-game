@@ -12,7 +12,7 @@ tools/art/forms_undead_frames.json describes it (simplified to what reads at 17 
   still      the frame that becomes the form's still in the game; `width` its drawn width in game pixels (forms_undead_frames.json)
 """
 
-BONE, OLD_BONE, YELLOW_BONE = (214, 204, 176), (196, 182, 150), (208, 190, 136)
+BONE, OLD_BONE, YELLOW_BONE = (208, 192, 156), (192, 174, 138), (208, 190, 136)
 RUST, IRON, DKIRON, STEEL, BRONZE, GOLD = (150, 86, 54), (104, 108, 118), (66, 66, 78), (150, 156, 168), (186, 128, 62), (222, 176, 66)
 CLOTH, DKCLOTH, TAN, LINEN = (116, 84, 60), (84, 62, 48), (170, 136, 92), (200, 186, 150)
 VIOLET, DKVIOLET, LAVENDER = (98, 70, 128), (66, 48, 92), (186, 160, 220)
@@ -55,7 +55,7 @@ FORMS = {
                          G("arm_ring", color=GOLD), G("greatsword", side="n", color=RUST, length=1.05)]),
     "barrow_king": dict(stage=4, parent="draugr", width=31, body="biped", posture="giant", style="flesh", skin=(110, 112, 104), eyes=(236, 220, 150), attack="slam",
                         weight="heavy", arms="fists", shape=dict(tall=1.18, bx=1.55, shoulder=1.35, arm=1.1), bulk=1.7,
-                        gear=[G("plate", color=(110, 104, 92), trim=(128, 98, 58)), G("moss", color=MOSS), G("fur_cloak", color=(96, 80, 60), length=1.0, fur=FUR),
+                        gear=[G("plate", color=(110, 104, 92), trim=(128, 98, 58)), G("moss", color=MOSS), G("fur_cloak", color=(96, 80, 60), length=0.8, fur=FUR),
                               G("crown", color=GOLD, style="barrow"), G("beard", color=(156, 152, 146), length=0.34), G("coins", color=GOLD), G("fists", color=(110, 112, 104))]),
     "abomination": dict(stage=4, parent="draugr", width=31, body="biped", posture="heavy", style="flesh", skin=PATCH, eyes=(226, 210, 90), attack="cleave",
                         weight="heavy", arms="cleaver_up", item_angle={"n": 10.0}, shape=dict(tall=1.15, bx=1.45, shoulder=1.3, head=0.92), bulk=1.6,
@@ -74,7 +74,7 @@ FORMS = {
                                   G("surcoat", color=DKVIOLET), G("chains", color=RUST), G("greaves", color=(64, 64, 74)), G("greatsword", side="n", color=(130, 128, 136), length=1.15)]),
     "dullahan": dict(stage=4, parent="revenant_knight", width=31, body="biped", posture="knight", style="bone", skin=OLD_BONE, eyes=(236, 220, 140), attack="whip",
                      arms="head_whip", shape=dict(tall=1.18, bx=1.15, shoulder=1.1), bulk=1.2, headless=True,
-                     gear=[G("plate", color=(46, 44, 54), trim=(72, 68, 80)), G("cloak", color=DKVIOLET, length=1.25), G("greaves", color=(46, 44, 54)),
+                     gear=[G("plate", color=(46, 44, 54), trim=(72, 68, 80)), G("cloak", color=DKVIOLET, length=1.05, spread=0.04), G("greaves", color=(46, 44, 54)),
                            G("head_held", hair=(70, 60, 50)), G("whip", length=1.0)]),
     "bone_colossus": dict(stage=4, parent="revenant_knight", width=31, body="biped", posture="giant", style="bone", skin=(204, 188, 150), eyes=(200, 190, 150), attack="cleave",
                           weight="heavy", arms="guard", item_angle={"n": 6.0}, shape=dict(tall=1.2, bx=1.55, shoulder=1.45, head=0.62, arm=1.1), bulk=2.1,
@@ -97,7 +97,7 @@ FORMS = {
     "skeletal_archer": dict(stage=2, parent="skeleton", width=19, body="biped", posture="alert", style="bone", skin=BONE, eyes=CYAN, attack="shoot",
                             arms="bow", shape=dict(tall=0.98, bx=0.92), bulk=0.95,
                             gear=[G("hood", color=(118, 104, 92)), G("scarf", color=CYAN), G("quiver", color=(110, 82, 56), fletch=WHITE),
-                                  G("throwing_bones"), G("bow", side="f", color=WHITE, half=0.42)]),
+                                  G("throwing_bones"), G("bow", side="f", color=(184, 166, 128), half=0.42)]),
     "deadeye": dict(stage=3, parent="skeletal_archer", width=21, body="biped", posture="alert", style="bone", skin=BONE, eyes=VIOLET, attack="shoot",
                     arms="bow", shape=dict(tall=1.02, bx=0.95), bulk=1.0, one_eye=True,
                     gear=[G("hunting_coat", color=GREEN_BLACK), G("cap", style="plumed", color=(40, 50, 44), feather=(150, 60, 60)),
@@ -138,19 +138,19 @@ FORMS = {
                        arms="bless", shape=dict(tall=1.14, bx=0.98), bulk=1.0,
                        gear=[G("nimbus", color=GOLD), G("robe", color=(226, 218, 196), length=0.84, trim=GOLD), G("stole", color=GOLD, bands=ROSE),
                              G("cap", style="ceremonial", color=(230, 222, 200), band=GOLD), G("staff", side="n", color=GOLD, top="sun", glow=GOLD, length=1.3)]),
-    "mummy_priest": dict(stage=3, parent="adept", width=21, body="biped", posture="mummy", style="mummy", skin=LINEN, eyes=VIOLET, attack="cast",
+    "mummy_priest": dict(stage=3, parent="adept", width=21, body="biped", posture="mummy", style="mummy", skin=(206, 184, 136), eyes=VIOLET, attack="cast",
                          arms="raise_n", shape=dict(tall=0.98, bx=1.0), bulk=1.05,
-                         gear=[G("wrap_stripes", color=(166, 146, 110)), G("collar_gold", color=GOLD), G("headcloth", color=DKVIOLET, stripes=(132, 112, 160)),
+                         gear=[G("wrap_stripes", color=(140, 118, 84)), G("collar_gold", color=GOLD), G("headcloth", color=DKVIOLET, stripes=(132, 112, 160)),
                                G("bandages", color=(196, 180, 140)), G("sand", color=(196, 170, 120))]),
     "pharaoh": dict(stage=4, parent="mummy_priest", width=24, body="biped", posture="regal", style="mummy", skin=LINEN, eyes=VIOLET, attack="cast",
                     arms="crossed", shape=dict(tall=1.2, bx=1.0), bulk=1.05,
                     gear=[G("wrap_stripes", color=(166, 146, 110)), G("nemes", color=GOLD, stripes=(52, 76, 150)), G("false_beard", color=(52, 76, 150)),
                           G("collar_gold", color=GOLD), G("cloak", color=DKVIOLET, length=1.1), G("crook_flail", color=GOLD, band=(52, 76, 150)),
                           G("bandages", color=(196, 180, 140))]),
-    "heart_weigher": dict(stage=4, parent="mummy_priest", width=24, body="biped", posture="still", style="mummy", skin=(98, 84, 74), eyes=(236, 210, 120), attack="bite",
+    "heart_weigher": dict(stage=4, parent="mummy_priest", width=24, body="biped", posture="still", style="mummy", skin=(150, 128, 104), eyes=(236, 210, 120), attack="bite",
                           arms="scale", shape=dict(tall=1.24, bx=0.95), bulk=1.0,
-                          gear=[G("croc_head", color=(96, 110, 82), teeth=WHITE), G("mane", color=(70, 58, 50)), G("kilt", color=DKVIOLET, stripes=GOLD),
-                                G("wrap_stripes", color=(74, 64, 58)), G("balance", side="n", color=(196, 150, 70), heart=CRIMSON, feather=WHITE)]),
+                          gear=[G("croc_head", color=(118, 140, 92), teeth=WHITE), G("mane", color=(92, 74, 60)), G("kilt", color=DKVIOLET, stripes=GOLD),
+                                G("wrap_stripes", color=(108, 90, 74)), G("balance", side="n", color=(196, 150, 70), heart=CRIMSON, feather=WHITE)]),
 }
 
 ORDER = list(FORMS)
