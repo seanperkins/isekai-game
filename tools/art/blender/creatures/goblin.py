@@ -20,6 +20,7 @@ import goblin_forms as forms  # noqa: E402
 import goblin_gear as gear  # noqa: E402
 import goblin_kit as kit  # noqa: E402
 import biped_motion as motion_  # noqa: E402
+import player_poses  # noqa: E402
 import goblin_skeleton as skeleton  # noqa: E402
 import rigkit as k  # noqa: E402
 import secondary  # noqa: E402
@@ -161,6 +162,8 @@ def clips_of(rig, variant):
         "hurt": motion_.hurt_clip(body),
         "die": motion_.die_clip(body),
     }
+    if not variant or variant == "goblin":   # the base goblin is also the player's biped body: it leaps, falls, rolls, slides, mantles and clings as well
+        clips.update({name: player_poses.clip(body, name) for name in player_poses.FRAMES})
     return clips, ppu
 
 
