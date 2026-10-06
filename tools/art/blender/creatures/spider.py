@@ -1,114 +1,104 @@
-"""The spider: eight legs of three segments each, about 1.4 units across, rendered at 26 px per unit (about 37 game pixels, as today's).
-
-The crawl is an alternating tetrapod gait: the near leg of pair 0, the far leg of pair 1, the near leg of pair 2 and the far leg of pair 3
-step together, then the other four. Each leg swings about its hip and lifts by flexing its tibia while it moves forward.
+"""The spider family in Blender: the plain spider and its twenty-one forms on one skeleton (spider_skeleton.py), built by spider_kit.py, dressed from a
+table (spider_forms.py) with gear (spider_gear.py) and moved by spider_motion.py (pure Python, tested without Blender). Every form gets idle, walk (the
+alternating tetrapod), run, attack (a bite, a pounce, a scythe slash, a spit, or a drider's gesture), hurt and die.
 """
 import math
+import os
+import sys
 
-import rigkit as k
+HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if HERE not in sys.path:
+    sys.path.insert(0, HERE)
+
+import rigkit as k  # noqa: E402
+from mathutils import Vector  # noqa: E402
+import sizing  # noqa: E402
+import skeleton2d  # noqa: E402
+import spider_forms as forms  # noqa: E402
+import spider_gear as gear  # noqa: E402
+import spider_kit as kit  # noqa: E402
+import spider_motion as motion_  # noqa: E402
+import spider_skeleton as skeleton  # noqa: E402
 
 NAME = "spider"
-CANVAS = 64
-PPU = 26.0
+BASE = "spider"
 MARGIN = 3
-
-BODY, ABDOMEN, LEG = (52, 48, 62), (40, 36, 50), (96, 82, 112)
-MARK, EYE, FANG = (210, 52, 62), (255, 232, 140), (236, 230, 210)
-
-HIP_Z = 0.45
-HIPS_X = [0.30, 0.15, 0.00, -0.15]
-# per pair, how far knee, ankle and foot lie ahead of the previous joint (negative: behind)
-REACH = [(0.18, 0.25, 0.05), (0.08, 0.18, 0.05), (-0.08, -0.18, -0.05), (-0.18, -0.25, -0.05)]
-SIDES = (("n", -1.0), ("f", 1.0))
+PAD = 4
+RUN_SPEED = 1.9   # a run covers the ground this many times as fast as the walk (enemy.gd: RUN_SPEED)
 
 
-def _joints(i, y):
-    x0, (kx, ax, fx) = HIPS_X[i], REACH[i]
-    hip = (x0, y * 0.10, HIP_Z)
-    knee = (x0 + kx, y * 0.32, HIP_Z + 0.30)
-    ankle = (x0 + kx + ax, y * 0.52, HIP_Z - 0.15)
-    foot = (x0 + kx + ax + fx, y * 0.57, 0.02)
-    return hip, knee, ankle, foot
+def _name(variant):
+    return variant or BASE
+
+
+def _form(variant):
+    return forms.FORMS[_name(variant)]
 
 
 def build(variant=None):
-    rig = k.Rig("spider")
-    rig.bone("body", (0.0, 0, HIP_Z), (0.25, 0, HIP_Z))
-    rig.bone("abdomen", (-0.10, 0, HIP_Z + 0.05), (-0.50, 0, HIP_Z + 0.05), "body")
-    for s, y in SIDES:
-        for i in range(4):
-            hip, knee, ankle, foot = _joints(i, y)
-            rig.bone("fem_%s%d" % (s, i), hip, knee, "body")
-            rig.bone("tib_%s%d" % (s, i), knee, ankle, "fem_%s%d" % (s, i))
-            rig.bone("tar_%s%d" % (s, i), ankle, foot, "tib_%s%d" % (s, i))
+    form = _form(variant)
+    rig = k.Rig("spider_" + _name(variant))
+    s = kit.Spider(rig, form)
+    s.build()
+    for name, kw in form.get("gear", []):
+        gear.GEAR[name](s, **kw)
     rig.build()
-
-    rig.part(k.ellipsoid("thorax", (0.15, 0, HIP_Z), (0.22, 0.17, 0.15)), "body", BODY)
-    rig.part(k.ellipsoid("abdomen", (-0.30, 0, HIP_Z + 0.06), (0.32, 0.23, 0.26)), "abdomen", ABDOMEN)
-    rig.part(k.ellipsoid("mark", (-0.28, -0.20, HIP_Z + 0.04), (0.10, 0.05, 0.16), 8, 6), "abdomen", MARK, glow=True)
-    rig.part(k.ellipsoid("mark2", (-0.46, -0.14, HIP_Z + 0.10), (0.05, 0.04, 0.10), 6, 5), "abdomen", MARK)
-    for n, (ex, ey, ez) in enumerate(((0.34, -0.06, 0.55), (0.37, -0.03, 0.50), (0.33, -0.09, 0.49), (0.30, -0.08, 0.58))):
-        rig.part(k.ellipsoid("eye%d" % n, (ex, ey, ez), (0.035, 0.035, 0.035), 6, 4), "body", EYE, glow=True)
-    for s, y in SIDES:
-        rig.part(k.limb("fang_" + s, (0.36, y * 0.05, 0.42), (0.40, y * 0.05, 0.28), 0.03, 0.0, 5), "body", FANG, far=s == "f")
-    for s, y in SIDES:
-        for i in range(4):
-            hip, knee, ankle, foot = _joints(i, y)
-            far = s == "f"
-            rig.part(k.limb("fem_%s%d" % (s, i), hip, knee, 0.065, 0.05, 5), "fem_%s%d" % (s, i), LEG, far)
-            rig.part(k.limb("tib_%s%d" % (s, i), knee, ankle, 0.05, 0.04, 5), "tib_%s%d" % (s, i), LEG, far)
-            rig.part(k.limb("tar_%s%d" % (s, i), ankle, foot, 0.04, 0.02, 5), "tar_%s%d" % (s, i), LEG, far)
     return rig
 
 
-def _legs(rot, swing, lift):
-    """Fill `rot` with each leg's swing and lift: swing(side, pair) and lift(side, pair) are degrees, forward and up positive."""
-    for s, _ in SIDES:
-        for i in range(4):
-            lean = 1.0 if REACH[i][1] > 0 else -1.0  # a leg that leans forward lifts by turning the other way from one that leans back
-            rot["fem_%s%d" % (s, i)] = (0.0, -swing(s, i), 0.0)
-            rot["tib_%s%d" % (s, i)] = (0.0, -lean * lift(s, i), 0.0)
-            rot["tar_%s%d" % (s, i)] = (0.0, -lean * 0.6 * lift(s, i), 0.0)
+def flat_skeleton(rig):
+    return skeleton2d.Skeleton2D.from_rig(rig)
 
 
-def _group(s, i):
-    """0 for the legs that step first, pi for the others."""
-    return 0.0 if (s == "n") == (i % 2 == 0) else math.pi
+def measure_pads(rig):
+    """{leg: how far below the claw's bone end its mesh reaches}, read off each tarsus's own mesh in the rest pose (not the gear bound to it)."""
+    rig.pose({}, (0.0, 0.0, 0.0))
+    meshes = {ob.name: ob for ob, _, _ in rig.parts}
+    out = {}
+    for key in skeleton.LEGS:
+        ob = meshes["tar_" + key]
+        z0 = min((ob.matrix_world @ Vector(c)).z for c in ob.bound_box)
+        out[key] = rig.rest["tar_" + key][1].z - z0
+    return out
 
 
-def crawl(i, n):
-    p = i / n * 2 * math.pi
-    rot = {}
-    _legs(rot,
-          lambda s, j: 14 * math.sin(p + _group(s, j)),
-          lambda s, j: 30 * max(0.0, math.cos(p + _group(s, j))))
-    rot["abdomen"] = (0.0, -2.5 * math.sin(2 * p), 0.0)
-    return rot, (0.0, 0.0, 0.0)
+def body_of(rig, form):
+    return motion_.SpiderBody(flat_skeleton(rig), measure_pads(rig), dict(form, _hull=skeleton.hull_for(form)), present=set(rig.rest))
 
 
-def idle(i, n):
-    p = i / n * 2 * math.pi
-    rot = {}
-    _legs(rot, lambda s, j: 2.0 * math.sin(p + j * 0.5), lambda s, j: 4.0 + 2.0 * math.sin(p + j))
-    rot["abdomen"] = (0.0, -3.0 * math.sin(p), 0.0)
-    return rot, (0.0, 0.0, 0.0)
+def motion(variant):
+    return sizing.speed_of("spider", None if _name(variant) == BASE else variant)
 
 
-LUNGE = {  # per frame: settle, rear up, hold, strike, land, recover
-    "body": [0, 16, 22, -8, -4, 0],
-    "front": [0, 40, 55, -10, 10, 0],   # the front pair reaches up and forward
-    "abdomen": [0, 6, 8, -6, -2, 0],
-}
+def today(variant):
+    base = (os.path.join(HERE, "..", "..", "..", "assets", "sheets", "spider.json"), "crawl_1") if _name(variant) == BASE else None
+    return sizing.today("spider", variant, _form(variant)["width"], base)
 
 
-def lunge(i, n):
-    rot = {"body": (0.0, -LUNGE["body"][i], 0.0), "abdomen": (0.0, -LUNGE["abdomen"][i], 0.0)}
-    for s, _ in SIDES:
-        for j in range(4):
-            reach = LUNGE["front"][i] if j == 0 else (LUNGE["front"][i] * 0.4 if j == 1 else 0.0)
-            rot["fem_%s%d" % (s, j)] = (0.0, -reach, 0.0)
-            rot["tib_%s%d" % (s, j)] = (0.0, -0.4 * reach if j < 2 else 0.0, 0.0)
-    return rot, (0.0, 0.0, 0.0)
+def clips_of(rig, variant):
+    """({name: Clip}, pixels per unit) for this form: the unit is sized so the still covers the area of the still it replaces."""
+    form = _form(variant)
+    body = body_of(rig, form)
+    idle = motion_.idle_clip(body)
+    rig.pose(*idle.frames[0])
+    x0, x1, z0, z1 = rig.extent()
+    w, h = today(variant)
+    ppu = math.sqrt(w * h / ((x1 - x0) * (z1 - z0))) if h else w / (x1 - x0)
+    return motion_.clips_for(body, motion(variant), ppu, RUN_SPEED), ppu
 
 
-ANIMS = {"idle": (6, idle, True), "crawl": (8, crawl, True), "lunge": (6, lunge, True)}
+def setup(rig, variant):
+    """Size the camera for this form and time its gaits to its speed (so planted claws do not skate); the canvas holds every frame."""
+    clips, ppu = clips_of(rig, variant)
+    anims = {name: (len(c.frames), (lambda i, n, c=c: c.frames[i]), c.grounded) for name, c in clips.items()}
+    lo_x, hi_x, hi_z = 1e9, -1e9, 0.0
+    for c in clips.values():
+        for rot, root in c.frames:
+            (rig.stand if c.grounded else rig.pose)(rot, root)
+            a, b, _, top = rig.extent()
+            lo_x, hi_x, hi_z = min(lo_x, a), max(hi_x, b), max(hi_z, top)
+    need = max(2.0 * max(abs(lo_x), abs(hi_x)) * ppu + 2 * PAD, hi_z * ppu + MARGIN + PAD)
+    canvas = int(math.ceil(need / 8.0) * 8)
+    info = {"durations": {n: c.durations for n, c in clips.items()}, "loops": {n: c.loop for n, c in clips.items()},
+            "fps": {n: len(c.frames) / sum(c.durations) for n, c in clips.items()}, "windup": motion_.WINDUP}
+    return {"canvas": canvas, "ppu": ppu, "margin": MARGIN, "center_x": 0.0, "anims": anims, "still": "idle_0", "extra": info}
