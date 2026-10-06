@@ -8,7 +8,8 @@ of the outline at or right of that fraction of the width), and packs everything 
 assets/sheets/<set>.png + assets/sheets/<set>.json.
 
 Shapes are frame-local pixels with the origin at the bottom centre (x right, y down: the floor
-line is y = 0). Run from the project root (the whole command, no cd or pipes):
+line is y = 0). A set (or a frame) with `"native": true` in its spec is taken as drawn, with no resize: for pixel art
+drawn at its final size (tools/art/handdraw.py). Run from the project root (the whole command, no cd or pipes):
   uv run --python 3.12 --with Pillow python tools/art/assemble_frames.py slime
 """
 import json
@@ -54,6 +55,17 @@ def cropped(im):
     if box is None:
         raise ValueError("frame is empty after keying")
     return im.crop(box)
+
+
+def native_frame(im):
+    """A frame drawn at its final pixel size (an Aseprite or Procreate export at 1:1): key, crop to the drawn pixels and crisp the
+    alpha, with no resize, so the artist's pixels are never blended. The width in the frame's spec is ignored."""
+    return trim(crisp_alpha(cropped(im)))
+
+
+def is_native(data, frame):
+    """Whether a frame is taken as drawn: the set says `"native": true` or the frame does."""
+    return bool(data.get("native") or frame.get("native"))
 
 
 def anchor_scale(im, width):
@@ -237,7 +249,10 @@ def main():
         src = os.path.join(SRC, src_set, f["name"] + ".png")
         if not os.path.exists(src):
             raise SystemExit("missing %s (generate it first)" % src)
-        fitted[f["name"]] = fit_scaled(Image.open(src), scale, look) if scale else fit_frame(Image.open(src), f["width"])
+        if is_native(data, f):
+            fitted[f["name"]] = native_frame(Image.open(src))
+        else:
+            fitted[f["name"]] = fit_scaled(Image.open(src), scale, look) if scale else fit_frame(Image.open(src), f["width"])
         shapes[f["name"]] = trace(fitted[f["name"]], f.get("attack_from"), f.get("outline_eps", 0.35))
     sheet, rects = pack(fitted)
     os.makedirs(OUT, exist_ok=True)

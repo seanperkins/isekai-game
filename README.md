@@ -82,7 +82,7 @@ Rooms are edited in the room editor and saved to `data/rooms/*.tres`; there is n
 
 ### Art and audio
 
-Sprites and backdrops are generated with an image pipeline (`tools/art/`, frame specs in `*_frames.json`) and assembled into sheets; sound effects and music beds are synthesized (`tools/audio/`). Both have Python tests alongside them. The built outputs in `assets/` are committed, so you do not need to run the pipelines to play.
+Sprites and backdrops are generated with an image pipeline (`tools/art/`, frame specs in `*_frames.json`) and assembled into sheets; sound effects and music beds are synthesized (`tools/audio/`). Both have Python tests alongside them. To redraw an existing sprite by hand (Procreate, Aseprite) see [`docs/hand-drawing.md`](docs/hand-drawing.md). The built outputs in `assets/` are committed, so you do not need to run the pipelines to play.
 
 ### Docs
 

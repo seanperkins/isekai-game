@@ -21,3 +21,6 @@ art_source/frames/**/.last.txt
 
 # Godot writes .import files next to any PNG it scans, including the review page's sprite copies
 docs/**/*.import
+
+# Frames that tools/art/handdraw.py import replaced, kept so a hand-drawn frame can be undone
+art_source/.replaced/

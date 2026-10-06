@@ -178,6 +178,25 @@ class DeriveTests(unittest.TestCase):
         im = frame(20, 20, (5, 5, 15, 15))
         self.assertEqual(list(a.fit_scaled(im, 1.0).getdata()), list(a.fit_scaled(im, 1.0, None).getdata()))
 
+    def test_a_native_frame_keeps_its_own_pixels_and_ends_where_the_drawing_does(self):
+        out = a.native_frame(frame(100, 50, (20, 10, 80, 40)))  # a 60x30 subject on magenta
+        self.assertEqual(out.size, (60, 30), "no resize: the artist drew the final pixels")
+        self.assertEqual({out.getpixel((x, y))[3] for x in range(out.width) for y in range(out.height)}, {255})
+
+    def test_a_native_frame_keeps_alpha_crisp_and_rejects_an_empty_frame(self):
+        im = Image.new("RGBA", (10, 10), (0, 0, 0, 0))
+        im.putpixel((4, 4), (10, 20, 30, 200))
+        im.putpixel((5, 5), (10, 20, 30, 90))
+        out = a.native_frame(im)
+        self.assertEqual(out.size, (1, 1), "the faint pixel is dropped, the solid one kept")
+        with self.assertRaises(ValueError):
+            a.native_frame(Image.new("RGBA", (5, 5), MAGENTA))
+
+    def test_a_set_or_a_frame_can_ask_for_native(self):
+        self.assertTrue(a.is_native({"native": True}, {"name": "x"}))
+        self.assertTrue(a.is_native({}, {"name": "x", "native": True}))
+        self.assertFalse(a.is_native({}, {"name": "x"}))
+
 
 if __name__ == "__main__":
     unittest.main()
