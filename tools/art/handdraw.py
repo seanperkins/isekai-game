@@ -146,7 +146,8 @@ def check_frame(im, target_width, native=False):
         lost = sum(1 for before, after in zip(was, _values(alpha)) if before >= 128 and after < 128)
         if lost:
             found.append(Finding("warn", "key_colour", "%d opaque pixel(s) are close to magenta, the pipeline's background key, and will be erased (use pale lavender or soft rose for pinks)" % lost))
-    if clear < CLEAR:
+    corners_clear = any(original.getpixel(c)[3] < 128 for c in ((0, 0), (w - 1, 0), (0, h - 1), (w - 1, h - 1)))
+    if clear < CLEAR and not (native and corners_clear):  # a native frame is cropped to its drawing, so little of it is clear: it has a background only when its corners are filled too
         found.append(Finding("error", "solid_background", "the background is not transparent (hide the template layer and the background colour before exporting)"))
     if not native and (box[0] < EDGE or box[1] < EDGE or box[2] > w - EDGE or box[3] > h - EDGE):
         found.append(Finding("error", "touches_edge", "the drawing runs into the canvas edge, so it is probably cut off"))

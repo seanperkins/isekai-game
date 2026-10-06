@@ -80,7 +80,7 @@ spawns = [{
 }, {
 "by": "PL",
 "id": "twin_poltergeist",
-"pos": Vector2(147.4, 314)
+"pos": Vector2(150.2, 314)
 }]
 exits = [{
 "edge": "left",

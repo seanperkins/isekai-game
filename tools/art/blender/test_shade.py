@@ -200,13 +200,35 @@ class PaletteTest(unittest.TestCase):
         self.assertLessEqual(len(colours), 256)
         for m in materials:
             for c in shade.ramp(m):
-                self.assertIn(c, colours)
+                self.assertIn(shade.unkey(c), colours)   # a ramp colour on the background key is in it moved off the key
 
     def test_the_palette_of_a_creature_is_its_ramps_and_the_outline_darks(self):
         colours = shade.palette_colours([GREEN, RED])
         for c in shade.ramp(GREEN) + shade.ramp(RED):
             self.assertIn(c, colours)
         self.assertTrue(any(max(c) < min(max(g) for g in shade.ramp(GREEN)) for c in colours), "the outline darks are in it")
+
+
+class UnkeyTest(unittest.TestCase):
+    @staticmethod
+    def keyed(c):   # tools/art/slice_sheets.keyed: what the assembler erases as the background
+        r, g, b = c[:3]
+        return r > 150 and b > 150 and g < 120 and min(r, b) - g > 60
+
+    def test_a_colour_the_background_key_would_erase_is_pulled_clear_of_it_and_stays_close(self):
+        c = shade.unkey((190, 113, 224))
+        self.assertFalse(self.keyed(c))
+        self.assertLessEqual(max(abs(a - b) for a, b in zip(c, (190, 113, 224))), 20)
+
+    def test_a_colour_the_key_leaves_alone_is_not_touched(self):
+        for c in ((40, 80, 200), (255, 140, 255), (200, 60, 60), (190, 130, 224)):
+            self.assertEqual(shade.unkey(c), c)
+
+    def test_every_colour_of_the_range_comes_out_clear(self):
+        for r in range(0, 256, 15):
+            for g in range(0, 256, 15):
+                for b in range(0, 256, 15):
+                    self.assertFalse(self.keyed(shade.unkey((r, g, b))), (r, g, b))
 
 
 class StaleFramesTest(unittest.TestCase):

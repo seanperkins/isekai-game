@@ -25,16 +25,16 @@ decor = [{
 }]
 spawns = [{
 "by": "PL",
-"id": "twin_undead_banshee",
-"pos": Vector2(46, 314)
+"id": "twin_undead_lich",
+"pos": Vector2(44.5, 314)
 }, {
 "by": "PL",
 "id": "twin_undead_dullahan",
-"pos": Vector2(389.7, 314)
+"pos": Vector2(391.1, 314)
 }, {
 "by": "PL",
-"id": "twin_undead_mummy_priest",
-"pos": Vector2(213.125, 314)
+"id": "twin_undead_spartoi_hoplite",
+"pos": Vector2(213.75, 314)
 }, {
 "by": "PL",
 "id": "twin_undead_adept",

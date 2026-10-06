@@ -62,6 +62,15 @@ class CheckTest(unittest.TestCase):
         self.assertIn("solid_background", codes(found))
         self.assertTrue(all(f.level == "error" for f in found if f.code == "solid_background"))
 
+    def test_a_tightly_cropped_native_drawing_is_not_a_solid_background_when_its_corners_are_clear(self):
+        im = blob(20, 20, (0, 0, 20, 20))
+        for corner in ((0, 0), (19, 0), (0, 19), (19, 19)):
+            im.putpixel(corner, (0, 0, 0, 0))
+        self.assertNotIn("solid_background", codes(h.check_frame(im, 20, native=True)))
+
+    def test_a_native_drawing_on_an_opaque_background_is_still_a_solid_background(self):
+        self.assertIn("solid_background", codes(h.check_frame(blob(20, 20, (4, 4, 16, 16), bg=(240, 240, 240, 255)), 20, native=True)))
+
     def test_pixels_the_magenta_key_would_erase_are_flagged_in_a_transparent_drawing(self):
         im = blob(400, 300, (50, 40, 350, 260))
         for x in range(100, 110):

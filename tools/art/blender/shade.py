@@ -148,6 +148,15 @@ def shade(albedo, normal, bake=1.0, rim=True, creases=True, previous=None, recor
     return out
 
 
+def unkey(colour):
+    """The colour, moved off the pipeline's magenta background key if it was on it (tools/art/slice_sheets.keyed erases a pixel with red and blue
+    both over 150, green under 120 and the red or blue more than 60 over the green: a purple-pink there would become a hole). Only green moves, as little as it takes."""
+    r, g, b = colour[:3]
+    if r > 150 and b > 150 and g < 120 and min(r, b) - g > 60:
+        return (r, min(r, b) - 60, b) + tuple(colour[3:])
+    return colour
+
+
 def palette_colours(materials, bake=1.0, dark=DARK, lit_dark=0.62, limit=256):
     """Every colour a creature can show: its materials' ramps, and for the outline a dark of each material's shadow, base and lit steps (the outline
     is darker where it touches shadow and lighter where it touches light, and is snapped to the nearest of these). A creature with many materials
@@ -156,6 +165,7 @@ def palette_colours(materials, bake=1.0, dark=DARK, lit_dark=0.62, limit=256):
     seen = []
 
     def add(colour):
+        colour = unkey(colour)
         if colour not in seen:
             seen.append(colour)
     for r in ramps:

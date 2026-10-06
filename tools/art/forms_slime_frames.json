@@ -3,109 +3,109 @@
  "style": "Modern pixel art with soft lighting (Style D). The first reference image is the plain blue jelly slime; keep its clean dark-blue outline, chunky readable pixels, soft inner glow and two small glossy dark eyes at the upper front right. Any further reference shows this same evolved creature or the pose to use. Side view, facing right. Draw only the creature: no ground, no shadow, no text.",
  "frames": [
   {
-   "name": "gleipnir",
+   "name": "gleipnir", "native": true,
    "width": 62,
    "refs": [],
    "prompt": "A stage-four evolved slime called Gleipnir, drawn as one creature in side view facing right: the same translucent jelly body, now a deep dark indigo blue, bound in a single slender shimmering ribbon of silver silk with a pale blue-white sheen that wraps around the body in several tight loops and is tied in a neat bow-knot at the top of its back, the two loose ribbon ends fluttering behind it, a few tiny pale glints along the ribbon, a soft dark-blue inner glow. Two small glossy dark eyes at the upper front right. Pose and shape: the creature resting, a rounded dome slightly wider than tall. Use only blue, indigo, silver and white tones: no pink, magenta or pink-violet colours or highlights anywhere on the creature."
   },
   {
-   "name": "ariadne",
+   "name": "ariadne", "native": true,
    "width": 62,
    "refs": [],
    "prompt": "A stage-four evolved slime called Ariadne, drawn as one creature in side view facing right: the same translucent jelly body, now a pale cyan with a faint pink blush, a single long glowing thread of pink-white light spiralling inside the body like a tiny labyrinth, one end of the thread unspooling out of a small round spool-shaped bulge at the back and trailing only a short way behind it in one small loose loop, much shorter than the body is long, soft pale-cyan inner glow. Two small glossy dark eyes at the upper front right. Pose and shape: the creature resting, a rounded dome slightly wider than tall."
   },
   {
-   "name": "beanstalk",
+   "name": "beanstalk", "native": true,
    "width": 62,
    "refs": [],
    "prompt": "A stage-four evolved slime called Beanstalk, drawn as one creature in side view facing right: the same translucent jelly body, now a pale green-cyan, with a green leafy beanstalk vine sprouting from the top of its back, curling up with a few broad leaves and small tendrils, two plump tan bean seeds visible inside the jelly, a few tan earthy lumps along its base, soft green-cyan inner glow. Two small glossy dark eyes at the upper front right. Pose and shape: the creature resting, a rounded dome slightly wider than tall, the vine kept compact so the whole creature fits in the picture."
   },
   {
-   "name": "selkie",
+   "name": "selkie", "native": true,
    "width": 62,
    "refs": [],
    "prompt": "A stage-four evolved slime called Selkie, drawn as one creature in side view facing right: the same translucent jelly body, now a clear sea-blue, with a smooth dappled grey-tan seal pelt half-shed and draped over its rear back like a loose cloak, a sleek whiskered seal-like rounded snout bump at the front, a few water droplets on the jelly, soft blue inner glow. Two small glossy dark eyes at the upper front right. Pose and shape: the creature resting, a rounded dome slightly wider than tall."
   },
   {
-   "name": "kraken",
+   "name": "kraken", "native": true,
    "width": 62,
    "refs": [],
    "prompt": "A stage-four evolved slime called Kraken, drawn as one creature in side view facing right: the same translucent jelly body, now a deep ocean blue shading to dark violet, a swirling whirlpool spiral visible inside the body, four thick curling tentacles of jelly with small round suction cups growing from its back and sides and rising in S-curves, soft deep-blue inner glow. Two small glossy dark eyes at the upper front right. Pose and shape: the creature resting, a rounded dome slightly wider than tall, the tentacles kept close to the body so the whole creature fits in the picture."
   },
   {
-   "name": "tiamat",
+   "name": "tiamat", "native": true,
    "width": 62,
    "refs": [],
    "prompt": "A stage-four evolved slime called Tiamat, drawn as one creature in side view facing right: the same translucent jelly body, now a dark primordial-sea teal-blue with dark violet depths, a rolling crest of foaming wave along its back, a pair of short curved dark-coral horns on top, small sea-serpent shapes coiling inside the body, a few pearly glints, soft dark-blue inner glow. Two small glossy dark eyes at the upper front right. Pose and shape: the creature resting, a rounded dome slightly wider than tall."
   },
   {
-   "name": "alkahest",
+   "name": "alkahest", "native": true,
    "width": 62,
    "refs": [],
    "prompt": "A stage-four evolved slime called Alkahest, drawn as one creature in side view facing right: the same translucent jelly body, now an almost glass-clear pale blue with a tan-amber tint, fizzing bubbles rising inside it, pitted tan flecks of half-dissolved matter, thick drips of corrosive liquid hanging from its underside and trailing behind, soft pale-blue inner glow. Two small glossy dark eyes at the upper front right. Pose and shape: the creature resting, a rounded dome slightly wider than tall."
   },
   {
-   "name": "pestilence",
+   "name": "pestilence", "native": true,
    "width": 62,
    "refs": [],
    "prompt": "A stage-four evolved slime called Pestilence, drawn as one creature in side view facing right: the same translucent jelly body, now a sickly murky dark violet-grey, a few swollen bubbles and boils on its surface, thin curling wisps of dark green-violet miasma smoke rising from its back and drifting behind it, a faint toxic glow inside, tattered ragged edges at the rear. Two small glossy dark eyes at the upper front right. Pose and shape: the creature resting, a rounded dome slightly wider than tall."
   },
   {
-   "name": "slime_mold",
+   "name": "slime_mold", "native": true,
    "width": 62,
    "refs": [],
    "prompt": "A stage-four evolved slime called Slime Mold, drawn as one creature in side view facing right: the same translucent jelly body, now a warm yellow-tan, a branching network of bright golden-yellow veins running through the whole body like a maze solved, small glowing pink nodes at the vein junctions, thin vein-tendrils creeping out along the bottom edge toward the front, soft yellow inner glow. Two small glossy dark eyes at the upper front right. Pose and shape: the creature resting, a flat rounded dome wider than tall."
   },
   {
-   "name": "talos",
+   "name": "talos", "native": true,
    "width": 62,
    "refs": [],
    "prompt": "A stage-four evolved slime called Talos, drawn as one creature in side view facing right: the same translucent jelly body, now a bronze-copper amber, armoured with riveted bronze plates over its back and sides, a molten ember red-orange glow burning in its core, one single visible bronze nail head set into its lower front side with a thin glowing red vein of ichor running to it. Two small glossy dark eyes at the upper front right. Pose and shape: the creature resting, a rounded dome slightly wider than tall, sturdy and heavy."
   },
   {
-   "name": "philosophers_stone",
+   "name": "philosophers_stone", "native": true,
    "width": 62,
    "refs": [],
    "prompt": "A stage-four evolved slime called Philosopher's Stone, drawn as one creature in side view facing right: the same translucent jelly body, now a warm gold-tan amber, a faceted red-gold stone glowing brightly at its heart inside the jelly with a pulsing ring of warm gold light around it, tiny gold flecks and sparkles drifting through the body, soft golden inner glow. Two small glossy dark eyes at the upper front right. Pose and shape: the creature resting, a rounded dome slightly wider than tall."
   },
   {
-   "name": "cube",
+   "name": "cube", "native": true,
    "width": 62,
    "refs": [],
    "prompt": "A stage-four evolved slime called Cube, drawn as one creature in side view facing right: the same translucent jelly, now set into a rigid boxy cube with flat top and flat sides, slightly rounded corners and crisp bright edges, a pale tan-green tint, a few small things suspended inside it (a tiny coin, a small bone), a soft pale inner glow. Two small glossy dark eyes at the upper front right of the cube. Pose and shape: the creature resting as a squat cube about as tall as it is wide."
   },
   {
-   "name": "mimic",
+   "name": "mimic", "native": true,
    "width": 62,
    "refs": [],
    "prompt": "A stage-four evolved slime called Mimic, drawn as one creature in side view facing right: the same translucent jelly body, now pale cyan with a pink blush, pulled into the rough shape of a small treasure chest with a rounded lid, pale brass-bound corner edges, a ragged mouth line of small white teeth along the front and a pink tongue just visible, soft pale-cyan inner glow. Two small glossy dark eyes at the upper front right. Pose and shape: the creature resting, a squat chest-shaped dome slightly wider than tall."
   },
   {
-   "name": "poltergeist",
+   "name": "poltergeist", "native": true,
    "width": 62,
    "refs": [],
    "prompt": "A stage-four evolved slime called Poltergeist, drawn as one creature in side view facing right: the same jelly body, now a ghostly half-transparent pale cyan, its rear dissolving into a short wispy tattered tail that trails only a little behind, three small tan pebbles and a small chipped brick shard hovering very close to its body (almost touching it, each tiny compared with the body), a cold pale glow. Two small glossy dark eyes at the upper front right. Pose and shape: the creature hovering, a rounded dome slightly wider than tall, tail trailing to the left."
   },
   {
-   "name": "cloud_rider",
+   "name": "cloud_rider", "native": true,
    "width": 62,
    "refs": [],
    "prompt": "A stage-four evolved slime called Cloud-Rider, drawn as one creature in side view facing right: the same translucent pale-cyan jelly body, sitting on top of a small fluffy white-and-pale-cyan cloud that forms its base, the cloud's tail curling into a swirl at the rear, a few wisps of air around the jelly, soft pale-cyan inner glow. Two small glossy dark eyes at the upper front right. Pose and shape: the creature resting, a rounded dome slightly wider than tall on its cloud."
   },
   {
-   "name": "shoggoth",
+   "name": "shoggoth", "native": true,
    "width": 62,
    "refs": [],
    "prompt": "A stage-four evolved slime called Shoggoth, drawn as one creature in side view facing right: a dark shapeless mass of black-violet jelly with an oily iridescent sheen, many small glossy eyes of different sizes scattered across its whole body, and several short thick pseudopod arms extruding from it in different directions, ragged ever-shifting edges, a faint dark-violet inner glow. It has many eyes instead of two, with a couple of larger ones at the upper front right. Pose and shape: the creature resting, an irregular lumpy mound wider than tall, the pseudopods kept short so the whole creature fits in the picture."
   },
   {
-   "name": "king_slime",
+   "name": "king_slime", "native": true,
    "width": 62,
    "refs": [],
    "prompt": "A stage-four evolved slime called King Slime, drawn as one creature in side view facing right: the same plump translucent jelly body, now a rich royal blue with a warm golden glow, a small gold crown with a red ruby sitting on top of its head, a few tiny gold sparkles, a proud calm look, soft warm-gold inner glow. Two small glossy dark eyes at the upper front right. Pose and shape: the creature resting, a plump rounded dome slightly wider than tall."
   },
   {
-   "name": "quicksilver_slime",
+   "name": "quicksilver_slime", "native": true,
    "width": 62,
    "refs": [],
    "prompt": "A stage-four evolved slime called Quicksilver Slime, drawn as one creature in side view facing right: a liquid-metal body of bright mirror-silver mercury with a faint cool blue-white sheen, bold white highlights and reflections, rippling smooth edges, a couple of small silver droplets beside it, soft silver-white inner glow. Two small glossy dark eyes at the upper front right. Pose and shape: the creature resting, a smooth rounded dome slightly wider than tall."

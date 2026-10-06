@@ -29,8 +29,8 @@ spawns = [{
 "pos": Vector2(1100, 314)
 }, {
 "by": "PL",
-"id": "twin_wolf_loup_garou",
-"pos": Vector2(135.25, 314)
+"id": "twin_wolf_ulfhedinn",
+"pos": Vector2(137.75, 314)
 }, {
 "by": "PL",
 "id": "tusker_boar",
@@ -38,11 +38,11 @@ spawns = [{
 }, {
 "by": "PL",
 "id": "twin_spider_broodmother",
-"pos": Vector2(628.72, 314)
+"pos": Vector2(632.08, 314)
 }, {
 "by": "PL",
 "id": "twin_spider_weavermaid",
-"pos": Vector2(1419.04, 314)
+"pos": Vector2(1421.84, 314)
 }]
 exits = [{
 "edge": "left",

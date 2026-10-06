@@ -3,142 +3,600 @@
   "beast_rider": {
    "date": "2026-10-06",
    "route": "native",
-   "source": "blender"
+   "source": "hand"
   },
   "beastcaller": {
    "date": "2026-10-06",
    "route": "native",
-   "source": "blender"
+   "source": "hand"
   },
   "bloodcap": {
    "date": "2026-10-06",
    "route": "native",
-   "source": "blender"
+   "source": "hand"
   },
   "boggart": {
    "date": "2026-10-06",
    "route": "native",
-   "source": "blender"
+   "source": "hand"
   },
   "changeling": {
    "date": "2026-10-06",
    "route": "native",
-   "source": "blender"
+   "source": "hand"
   },
   "giant_killer": {
    "date": "2026-10-06",
    "route": "native",
-   "source": "blender"
+   "source": "hand"
   },
   "gremlin": {
    "date": "2026-10-06",
    "route": "native",
-   "source": "blender"
+   "source": "hand"
   },
   "hearth_god": {
    "date": "2026-10-06",
    "route": "native",
-   "source": "blender"
+   "source": "hand"
   },
   "hob": {
    "date": "2026-10-06",
    "route": "native",
-   "source": "blender"
+   "source": "hand"
   },
   "horn_bearer": {
    "date": "2026-10-06",
    "route": "native",
-   "source": "blender"
+   "source": "hand"
   },
   "ironboot": {
    "date": "2026-10-06",
    "route": "native",
-   "source": "blender"
+   "source": "hand"
   },
   "knocker": {
    "date": "2026-10-06",
    "route": "native",
-   "source": "blender"
+   "source": "hand"
   },
   "leprechaun": {
    "date": "2026-10-06",
    "route": "native",
-   "source": "blender"
+   "source": "hand"
   },
   "lord_of_beasts": {
    "date": "2026-10-06",
    "route": "native",
-   "source": "blender"
+   "source": "hand"
   },
   "mastersmith": {
    "date": "2026-10-06",
    "route": "native",
-   "source": "blender"
+   "source": "hand"
   },
   "orpheus": {
    "date": "2026-10-06",
    "route": "native",
-   "source": "blender"
+   "source": "hand"
   },
   "paladin": {
    "date": "2026-10-06",
    "route": "native",
-   "source": "blender"
+   "source": "hand"
   },
   "pied_piper": {
    "date": "2026-10-06",
    "route": "native",
-   "source": "blender"
+   "source": "hand"
   },
   "puck": {
    "date": "2026-10-06",
    "route": "native",
-   "source": "blender"
+   "source": "hand"
   },
   "rat_king": {
    "date": "2026-10-06",
    "route": "native",
-   "source": "blender"
+   "source": "hand"
   },
   "redcap": {
    "date": "2026-10-06",
    "route": "native",
-   "source": "blender"
+   "source": "hand"
   },
   "ring_maker": {
    "date": "2026-10-06",
    "route": "native",
-   "source": "blender"
+   "source": "hand"
   },
   "rumpelstiltskin": {
    "date": "2026-10-06",
    "route": "native",
-   "source": "blender"
+   "source": "hand"
   },
   "skulker": {
    "date": "2026-10-06",
    "route": "native",
-   "source": "blender"
+   "source": "hand"
   },
   "smith": {
    "date": "2026-10-06",
    "route": "native",
-   "source": "blender"
+   "source": "hand"
   },
   "tinker": {
    "date": "2026-10-06",
    "route": "native",
-   "source": "blender"
+   "source": "hand"
   },
   "tomte": {
    "date": "2026-10-06",
    "route": "native",
-   "source": "blender"
+   "source": "hand"
   },
   "wolf_lord": {
    "date": "2026-10-06",
    "route": "native",
-   "source": "blender"
+   "source": "hand"
+  }
+ },
+ "forms_slime": {
+  "alkahest": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "ariadne": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "beanstalk": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "cloud_rider": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "cube": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "gleipnir": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "king_slime": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "kraken": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "mimic": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "pestilence": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "philosophers_stone": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "poltergeist": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "quicksilver_slime": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "selkie": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "shoggoth": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "slime_mold": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "talos": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "tiamat": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  }
+ },
+ "forms_spider": {
+  "anansi": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "brood_queen": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "broodmother": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "cave_matriarch": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "chasm_weaver": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "cocoon_mother": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "jorogumo": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "light_eater": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "loom_weaver": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "nightstalker": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "norn": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "plaguemother": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "seven_spider_spirits": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "shadow_stalker": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "stalker": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "swarm_sovereign": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "tarantella": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "tsuchigumo": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "veil_spinner": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "venomspinner": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "weavermaid": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  }
+ },
+ "forms_undead": {
+  "abomination": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "adept": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "arash": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "banshee": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "barrow_king": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "bone_colossus": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "bone_warrior": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "corpse_candle": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "deadeye": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "deathless": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "demilich": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "draugr": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "dullahan": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "ghoul": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "heart_weigher": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "hierophant": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "jiangshi": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "lich": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "master_of_the_dance": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "mummy_priest": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "pharaoh": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "revenant_knight": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "skeletal_archer": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "skeleton": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "sower_of_teeth": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "spartoi_hoplite": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "stingy_jack": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "vampire": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "wild_huntsman": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "zombie": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  }
+ },
+ "forms_wolf": {
+  "amarok": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "barghest": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "beast_of_gevaudan": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "black_dog": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "black_shuck": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "church_grim": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "cu_sith": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "cwn_annwn": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "dire_wolf": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "fenrir": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "gabriel_hound": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "hellhound": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "loup_garou": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "lupa": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "lycaon": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "moonbound": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "skoll": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "ulfhedinn": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "warg": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "wepwawet": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
+  },
+  "wolfskin_champion": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "hand"
   }
  }
 }

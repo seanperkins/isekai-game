@@ -27,8 +27,8 @@ spawns = [{
 "pos": Vector2(160, 560)
 }, {
 "by": "PL",
-"id": "twin_alkahest",
-"pos": Vector2(147.4, 674)
+"id": "twin_kraken",
+"pos": Vector2(153, 674)
 }, {
 "by": "PL",
 "id": "twin_tempest",

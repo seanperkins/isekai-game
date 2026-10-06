@@ -39,11 +39,11 @@ spawns = [{
 }, {
 "by": "PL",
 "id": "twin_wolf_black_shuck",
-"pos": Vector2(829.2, 314)
+"pos": Vector2(817.1, 314)
 }, {
 "by": "PL",
-"id": "twin_undead_deadeye",
-"pos": Vector2(117.125, 314)
+"id": "twin_goblin_redcap",
+"pos": Vector2(115.875, 314)
 }, {
 "by": "PL",
 "id": "vampire_bat",

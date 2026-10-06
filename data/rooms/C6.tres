@@ -71,16 +71,16 @@ dressing = [{
 }]
 spawns = [{
 "by": "PL",
-"id": "twin_cube",
-"pos": Vector2(75.399994, 314)
+"id": "twin_quicksilver_slime",
+"pos": Vector2(78.2, 314)
 }, {
 "by": "PL",
-"id": "twin_quicksilver_slime",
-"pos": Vector2(507.4, 314)
+"id": "twin_cube",
+"pos": Vector2(388.8, 314)
 }, {
 "by": "PL",
 "id": "twin_wolf_wolfskin_champion",
-"pos": Vector2(311.2, 314)
+"pos": Vector2(494, 260)
 }]
 exits = [{
 "edge": "right",

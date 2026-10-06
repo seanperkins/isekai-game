@@ -26,12 +26,12 @@ spawns = [{
 "pos": Vector2(320, 270)
 }, {
 "by": "PL",
-"id": "twin_tiamat",
-"pos": Vector2(195.4, 314)
+"id": "twin_selkie",
+"pos": Vector2(77.5, 314)
 }, {
 "by": "PL",
-"id": "twin_selkie",
-"pos": Vector2(74.7, 314)
+"id": "twin_tiamat",
+"pos": Vector2(217.3, 314)
 }, {
 "by": "PL",
 "id": "twin_tidal",

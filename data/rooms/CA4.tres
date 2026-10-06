@@ -23,8 +23,8 @@ spawns = [{
 "pos": Vector2(320, 554)
 }, {
 "by": "PL",
-"id": "twin_spider_veil_spinner",
-"pos": Vector2(64.2, 1034)
+"id": "twin_spider_light_eater",
+"pos": Vector2(69.8, 1034)
 }, {
 "by": "PL",
 "id": "twin_radiant",

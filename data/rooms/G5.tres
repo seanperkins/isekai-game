@@ -64,7 +64,7 @@ spawns = [{
 }, {
 "by": "PL",
 "id": "twin_king_slime",
-"pos": Vector2(387.4, 314)
+"pos": Vector2(390.2, 314)
 }]
 exits = [{
 "edge": "right",

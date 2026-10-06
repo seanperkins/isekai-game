@@ -38,7 +38,7 @@ spawns = [{
 }, {
 "by": "PL",
 "id": "twin_spider_brood_queen",
-"pos": Vector2(129.625, 314)
+"pos": Vector2(135.25, 314)
 }, {
 "by": "PL",
 "id": "village_goblin",

@@ -3,25 +3,25 @@
  "style": "Modern pixel art with soft lighting (Style D). The first reference image is the plain black spider: a glossy black body with red markings and a bright red eye, a clean dark outline, chunky readable pixels, gentle highlights and shading; keep that outline, pixel size, lighting and the black-and-red look so the new creature is clearly that same animal evolved. Any further reference image shows the same line's earlier form: keep this creature recognisably the same individual, grown and changed as described. Elemental accents are small colour touches on the black body (water is a clear blue, earth a sandy tan, air a pale cyan, light a warm gold, dark a dark indigo-violet, fire an ember red-orange, mind a pale peach-pink, blood a crimson); the violet is always dark and muted, never bright purple, lilac, orchid or magenta, and the pink is always pale peach-pink, never hot pink, so that nothing on the creature resembles the flat magenta background. Side view, the creature facing right, standing in a natural pose, fully inside the image with space around it. Exactly one creature: draw only the creature (its own silk is fine): no ground, no background scenery, no shadow, no text, no border, no effects.",
  "frames": [
   {
-   "name": "weavermaid",
+   "name": "weavermaid", "native": true,
    "width": 34,
    "refs": [],
    "prompt": "A Weavermaid, a drider-like half person: the lower body is the same black spider with red markings on its round glossy abdomen and eight jointed legs, and where the spider's head would be, a woman's torso rises upright, with shoulders, two arms and a head in profile facing right: pale grey-lavender skin, long dark hair, a calm watchful face, a small bow slung over her back, and in her slender hands a fine strand of pale cyan silk drawn out between her fingers. Black chitin and the red markings stay, with pale cyan (air) in the silk and dark indigo-violet (dark) in her hair and the shadows."
   },
   {
-   "name": "broodmother",
+   "name": "broodmother", "native": true,
    "width": 37,
    "refs": [],
    "prompt": "A Broodmother, after the wolf spider that carries her young: the same black spider with red markings, larger and heavier, her round abdomen thickly covered by dozens of tiny black spiderlings clinging on her back as one lumpy mass, a pale tan silk egg-sac tucked under her rear, and a protective low stance. Accents: sandy tan (earth) silk of the egg-sac and dusty feet, dark indigo-violet (dark) in the shadows."
   },
   {
-   "name": "stalker",
+   "name": "stalker", "native": true,
    "width": 37,
    "refs": [],
    "prompt": "A Stalker, after the trapdoor and huntsman spiders, the ambush hunter: the same black spider with red markings made lean, flat and fast, with a smaller abdomen, a low wide stance on long legs, front legs raised ready to pounce, a hunched armoured head with small pale cyan eye glints, and a coil of thin pale cyan silk line at its spinnerets. Accents: dark indigo-violet (dark) sheen on the body, pale cyan (air) eye glints and silk."
   },
   {
-   "name": "jorogumo",
+   "name": "jorogumo", "native": true,
    "width": 38,
    "refs": [
     "weavermaid"
@@ -29,7 +29,7 @@
    "prompt": "A Jorōgumo, the Japanese spider that takes a woman's shape and lures men: the next form after the Weavermaid, now elegant and unsettling. A tall woman's torso in a dark indigo-violet kimono with a wide red obi and long loose black hair rises upright from the large black spider body with red markings; she smiles faintly in profile, a folding fan in one hand, short wisps of pale cyan silk hanging from her long sleeves. Her true form leaks through the disguise: a second row of small red spider eyes on her forehead and long sharp black leg tips under the hem. Accents: pale cyan (air) silk, dark indigo-violet (dark) robe."
   },
   {
-   "name": "loom_weaver",
+   "name": "loom_weaver", "native": true,
    "width": 38,
    "refs": [
     "weavermaid"
@@ -37,7 +37,7 @@
    "prompt": "A Loom-Weaver, after Ovid's Arachne who challenged Athena at the loom: the next form after the Weavermaid. A proud woman's torso in a plain working dress with rolled sleeves and a hair band rises upright from the black spider body with red markings, in profile facing right, holding a wooden weaving shuttle in one hand; from her arms and from two of the spider legs hangs a half-finished band of woven pale cyan silk worked with dark indigo diamond patterns, and the red markings on the abdomen echo the same woven pattern. Accents: pale cyan (air) tapestry silk, dark indigo-violet (dark) pattern."
   },
   {
-   "name": "brood_queen",
+   "name": "brood_queen", "native": true,
    "width": 41,
    "refs": [
     "broodmother"
@@ -45,7 +45,7 @@
    "prompt": "A Brood Queen: the next form after the Broodmother, a commanding matriarch. The black spider with red markings grown larger with sandy tan armoured plates on her abdomen, a crest of black chitin spines like a crown over her head with a small soft peach-pink gem glint between the eyes, her front legs raised in a commanding gesture, and a few tiny spiderlings riding on her back. Accents: sandy tan (earth) plates, dark indigo-violet (dark) shadows, peach pink (mind) glint."
   },
   {
-   "name": "cave_matriarch",
+   "name": "cave_matriarch", "native": true,
    "width": 41,
    "refs": [
     "broodmother"
@@ -53,7 +53,7 @@
    "prompt": "A Cave Matriarch, a huge lone cave hunter in the tradition of Shelob and Ungoliant: the next form after the Broodmother, a massively bulky black spider, her hide knobbly and scarred, thick spiked legs, a cluster of large pale eyes and big fangs, her red markings reduced to dull glowing cracks across the abdomen, sandy tan stone dust caked on her legs. Heavy, menacing, low. Accents: sandy tan (earth) dust and spikes, dark indigo-violet (dark) shadows."
   },
   {
-   "name": "shadow_stalker",
+   "name": "shadow_stalker", "native": true,
    "width": 41,
    "refs": [
     "stalker"
@@ -61,7 +61,7 @@
    "prompt": "A Shadow-Stalker: the next form after the Stalker, sleeker and darker, a spider that melts into shadow. A near-black body with dark indigo-violet gradients, its edges softly dissolving into smoky darkness, the red markings dimmed to faint glowing lines, long silent legs mid-stride, and pale cyan eyes glowing in the dark. Accents: dark indigo-violet (dark) shadow-smoke edges, pale cyan (air) eyes."
   },
   {
-   "name": "venomspinner",
+   "name": "venomspinner", "native": true,
    "width": 41,
    "refs": [
     "stalker"
@@ -69,7 +69,7 @@
    "prompt": "A Venomspinner: the next form after the Stalker, a glossy black spider with red markings and a clear blue venom sheen along its legs, large fangs dripping beads of water-blue venom, and thick silk at its spinnerets beaded with glistening clear blue venom droplets. Accents: clear water blue (water) venom and droplets, dark indigo-violet (dark) shadows."
   },
   {
-   "name": "seven_spider_spirits",
+   "name": "seven_spider_spirits", "native": true,
    "width": 42,
    "refs": [
     "jorogumo"
@@ -77,7 +77,7 @@
    "prompt": "The Seven Spider Spirits of Pansi Cave from Journey to the West, drawn as one ghostly creature: the next form after the Jorōgumo, a spirit-woman rising upright from the black spider body with red markings, in profile facing right. She wears a ragged pale grey-white shroud-robe with a dark indigo hem (not a kimono), wild loose hair, and a ghost-pale face with seven large glowing pale cyan eyes set in a bold arc across her forehead and temples. Seven pale silk ropes, each tied with a glowing cyan knot, hang from her waist side by side like a curtain, as the seven sisters spun silk from their navels. Two arms only, hands curled to cast silk. Accents: pale cyan (air) eyes and silk knots, dark indigo-violet (dark) hem and shadows."
   },
   {
-   "name": "tsuchigumo",
+   "name": "tsuchigumo", "native": true,
    "width": 42,
    "refs": [
     "jorogumo"
@@ -85,7 +85,7 @@
    "prompt": "A Tsuchigumo, the Japanese 'earth spider', the giant that Minamoto no Raikō fought, shown with the Jorōgumo's disguise dropped: a huge hulking black spider body crusted with sandy tan clay and stone, its red markings still showing through the dirt, thick spiked legs with digging claws, and rising upright from its front a muscular grey-skinned oni torso with a horned, tusked head in profile facing right and ragged black hair, glaring. Accents: sandy tan (earth) crust and claws, dark indigo-violet (dark) in the shadows and the eyes."
   },
   {
-   "name": "norn",
+   "name": "norn", "native": true,
    "width": 42,
    "refs": [
     "loom_weaver"
@@ -93,7 +93,7 @@
    "prompt": "A Norn, the fate-spinning goddess of Norse myth (like the Greek Moirai): the next form after the Loom-Weaver, serene and tall. A woman's torso in a long hooded robe of dark indigo-violet and white, the hood thrown back, a thin warm-gold halo band above her brow and a faint peach-pink glint at the centre of her forehead, rises upright from the black spider body whose red markings have become fine gold runes; she holds a glowing warm-gold thread taut between both hands, a tiny pair of golden shears at her belt. Profile facing right. Accents: warm gold (light) thread and runes, soft peach pink (mind) glint, violet robe."
   },
   {
-   "name": "anansi",
+   "name": "anansi", "native": true,
    "width": 42,
    "refs": [
     "loom_weaver"
@@ -101,7 +101,7 @@
    "prompt": "Anansi, the Akan trickster spider who bought all the stories from the sky god: the next form after the Loom-Weaver, half man and half spider. The upper body of a lean, deep-brown-skinned man with a sly grin, in profile facing right, wears a wide-brimmed hat and a bright woven kente-style sash in gold and red, a small clay story-pot hanging at his belt and one hand holding a glowing thread of story; he rises upright from the black spider body with red markings and long thin legs. Accents: pale cyan (air) wisps around the thread, dark indigo-violet (dark) shadows, small warm touches in the sash."
   },
   {
-   "name": "cocoon_mother",
+   "name": "cocoon_mother", "native": true,
    "width": 46,
    "refs": [
     "brood_queen"
@@ -109,7 +109,7 @@
    "prompt": "A Cocoon-Mother: the next form after the Brood Queen, a swollen, heavy egg-layer. Her huge abdomen is wrapped in layers of sandy tan silk and strapped with several lumpy pale tan cocoons, each a rounded oval with a faint dark shape inside, one more cocoon clutched in her front legs; the black body with red markings shows at the head and legs. She sits low and heavy. Accents: sandy tan (earth) silk cocoons, dark indigo-violet (dark) shadows between the wrappings."
   },
   {
-   "name": "swarm_sovereign",
+   "name": "swarm_sovereign", "native": true,
    "width": 46,
    "refs": [
     "brood_queen"
@@ -117,7 +117,7 @@
    "prompt": "A Swarm Sovereign: the next form after the Brood Queen, a spider whose body is starting to disperse as a swarm. The black spider with red markings and a spiked chitin crown is still solid at the head and front legs, but its rear abdomen and back legs crumble into a tight cluster of dozens of tiny black spiderlings and specks right against the body, as real spiderlings disperse in a cloud, not a long trail. Accents: pale cyan (air) glints in the drifting swarm, dark indigo-violet (dark) shadows."
   },
   {
-   "name": "light_eater",
+   "name": "light_eater", "native": true,
    "width": 46,
    "refs": [
     "cave_matriarch"
@@ -125,7 +125,7 @@
    "prompt": "A Light-Eater, after Ungoliant who devours light: the next form after the Cave Matriarch, a bloated, hollow, pitch-black spider that seems to swallow the light around it, with no highlights on its body except a faint dark indigo-violet sheen, a wide gaping mouth, and a few small warm-gold sparks of devoured lamplight stuck on its fangs and spines, fading. The red markings are thin dark cracks. Accents: dark indigo-violet (dark) sheen, tiny warm gold (light) sparks being consumed."
   },
   {
-   "name": "chasm_weaver",
+   "name": "chasm_weaver", "native": true,
    "width": 46,
    "refs": [
     "cave_matriarch"
@@ -133,7 +133,7 @@
    "prompt": "A Chasm-Weaver, after Atlach-Nacha, the spider spinning a web bridge over a chasm: the next form after the Cave Matriarch, but tall and slender, with a streamlined black body with red markings on very long thin legs with sandy tan stone dust on the lower segments, her spinnerets raised at the back with a short thick coil of bright pale cyan silk cable looping from them close to her body. Accents: pale cyan (air) silk cable, sandy tan (earth) dust on the feet."
   },
   {
-   "name": "nightstalker",
+   "name": "nightstalker", "native": true,
    "width": 46,
    "refs": [
     "shadow_stalker"
@@ -141,7 +141,7 @@
    "prompt": "A Nightstalker: the next form after the Shadow-Stalker, an almost pure silhouette hunter, crouched low and ready to strike. Drawn as a matte pitch-black body with only a thin lighter rim-light on one edge and a clean dark outline, a flat low abdomen, two oversized curved scythe-like front legs raised high and forward, a row of six small pale cyan eyes, and hairline ember-red glow only at the leg joints and along the abdomen's midline; no smoke, no wisps. Accents: dark indigo-violet (dark) body sheen, pale cyan (air) eyes, ember red glow."
   },
   {
-   "name": "veil_spinner",
+   "name": "veil_spinner", "native": true,
    "width": 46,
    "refs": [
     "shadow_stalker"
@@ -149,7 +149,7 @@
    "prompt": "A Veil-Spinner, after the spider that spun a web over a cave mouth to hide a fugitive: the next form after the Shadow-Stalker, a delicate dark spider with red markings, raising her front legs to hold up a fine, sheer, translucent pale cyan web curtain draped over her back and hanging down both sides like a veil, with sandy tan cave dust on her feet. Calm and watchful. Accents: pale cyan (air) veil, sandy tan (earth) dust."
   },
   {
-   "name": "plaguemother",
+   "name": "plaguemother", "native": true,
    "width": 46,
    "refs": [
     "venomspinner"
@@ -157,7 +157,7 @@
    "prompt": "A Plaguemother: the next form after the Venomspinner, a bloated, sickly spider whose swollen abdomen is covered in blister-like sacs glowing clear blue and oozing, her legs thin and mottled, a faint pale grey-blue vapour curling off her back; the black body and red markings are still visible under the sores. Accents: clear water blue (water) blisters and ooze, dark indigo-violet (dark) vapour and shadows."
   },
   {
-   "name": "tarantella",
+   "name": "tarantella", "native": true,
    "width": 46,
    "refs": [
     "venomspinner"

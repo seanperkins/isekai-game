@@ -38,32 +38,32 @@ spawns = [{
 "pos": Vector2(322, 668)
 }, {
 "by": "PL",
-"id": "twin_wolf_fenrir",
-"pos": Vector2(85.2, 674)
+"id": "twin_wolf_gabriel_hound",
+"pos": Vector2(92.2, 674)
 }, {
 "by": "PL",
 "id": "twin_spider_swarm_sovereign",
-"pos": Vector2(203.5, 650)
-}, {
-"by": "PL",
-"id": "twin_prime",
-"pos": Vector2(502.8, 626)
-}, {
-"by": "PL",
-"id": "twin_spider_seven_spider_spirits",
-"pos": Vector2(61.4, 602)
+"pos": Vector2(68.399994, 602)
 }, {
 "by": "PL",
 "id": "twin_spider_tsuchigumo",
-"pos": Vector2(201.4, 554)
+"pos": Vector2(507, 626)
 }, {
 "by": "PL",
-"id": "twin_goblin_giant_killer",
-"pos": Vector2(369.5, 626)
+"id": "twin_spider_seven_spider_spirits",
+"pos": Vector2(206.3, 554)
 }, {
 "by": "PL",
-"id": "twin_undead_pharaoh",
-"pos": Vector2(48.8, 506)
+"id": "twin_stone",
+"pos": Vector2(202.8, 650)
+}, {
+"by": "PL",
+"id": "twin_undead_abomination",
+"pos": Vector2(375.1, 626)
+}, {
+"by": "PL",
+"id": "twin_undead_demilich",
+"pos": Vector2(49.5, 506)
 }, {
 "by": "PL",
 "id": "twin_phantom",

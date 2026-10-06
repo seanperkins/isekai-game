@@ -33,12 +33,12 @@ spawns = [{
 "pos": Vector2(1600, 314)
 }, {
 "by": "PL",
-"id": "twin_wolf_ulfhedinn",
-"pos": Vector2(135.25, 314)
+"id": "twin_wolf_loup_garou",
+"pos": Vector2(135.875, 314)
 }, {
 "by": "PL",
 "id": "twin_wolf_moonbound",
-"pos": Vector2(1809.2, 314)
+"pos": Vector2(1808.64, 314)
 }, {
 "by": "PL",
 "id": "twin_goblin_leprechaun",

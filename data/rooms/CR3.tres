@@ -46,15 +46,15 @@ spawns = [{
 }, {
 "by": "PL",
 "id": "twin_spider_shadow_stalker",
-"pos": Vector2(1809.625, 314)
+"pos": Vector2(1796.875, 314)
 }, {
 "by": "PL",
 "id": "twin_undead_revenant_knight",
-"pos": Vector2(529.5, 314)
+"pos": Vector2(530.125, 314)
 }, {
 "by": "PL",
 "id": "twin_wolf_barghest",
-"pos": Vector2(1394.5, 314)
+"pos": Vector2(1383, 314)
 }, {
 "by": "PL",
 "id": "bone_hound",
@@ -63,6 +63,10 @@ spawns = [{
 "by": "PL",
 "id": "junk",
 "pos": Vector2(732, 314)
+}, {
+"by": "PL",
+"id": "skeleton",
+"pos": Vector2(1601, 314)
 }]
 exits = [{
 "edge": "left",

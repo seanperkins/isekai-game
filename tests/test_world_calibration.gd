@@ -169,4 +169,4 @@ func test_the_lineages_open_in_the_design_docs_order_and_at_its_eats_on_the_old_
 func test_the_common_diet_opens_them_in_the_same_order_and_the_cave_ones_within_two_eats() -> void:
 	var order := _opening_order(common, "")
 	assert_eq(order.map(func(p: Array) -> String: return p[0]), ["toxic", "tide", "echo", "bulwark", "weaver"])
-	assert_eq(order.slice(0, 3), [["toxic", 14], ["tide", 19], ["echo", 20]], "within two eats of 15, 17 and 18: the Cave's new commons are met among the old creatures")
+	assert_eq(order.slice(0, 3), [["toxic", 15], ["tide", 19], ["echo", 20]], "within two eats of 15, 17 and 18: the Cave's new commons are met among the old creatures (the rooms were rebuilt for the rendered creatures' sizes: Toxic is now met at exactly 15)")
