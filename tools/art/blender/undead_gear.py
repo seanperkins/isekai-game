@@ -442,14 +442,14 @@ def antlers(k, color, **_):
     hb, s = m["head_base"], m["skull"]
     for side, y in (("n", -0.06), ("f", 0.06)):
         far = side == "f"
-        base = (0.04, y, hb + 0.92 * s)
-        a = (-0.06, y * 1.6, hb + 1.60 * s)
-        b = (-0.18, y * 2.0, hb + 2.30 * s)
-        k.l("ant_a" + side, base, a, 0.025, 0.02, "head", color, far, sides=5)
-        k.l("ant_b" + side, a, b, 0.02, 0.0, "head", color, far, sides=5)
-        k.l("ant_c" + side, a, (0.10, y * 1.8, hb + 2.0 * s), 0.016, 0.0, "head", color, far, sides=4)
-        k.l("ant_d" + side, ((a[0] + b[0]) / 2, y * 1.8, (a[2] + b[2]) / 2), (0.02, y * 2.0, hb + 2.45 * s), 0.014, 0.0, "head", color, far, sides=4)
-        k.l("ant_e" + side, (-0.02, y * 1.3, hb + 1.3 * s), (-0.22, y * 1.5, hb + 1.55 * s), 0.014, 0.0, "head", color, far, sides=4)
+        base = (0.02, y, hb + 0.92 * s)
+        a = (-0.14, y * 1.6, hb + 1.45 * s)
+        b = (-0.36, y * 2.0, hb + 1.90 * s)
+        k.l("ant_a" + side, base, a, 0.03, 0.024, "head", color, far, sides=5)
+        k.l("ant_b" + side, a, b, 0.024, 0.0, "head", color, far, sides=5)
+        k.l("ant_c" + side, a, (0.10, y * 1.8, hb + 2.0 * s), 0.02, 0.0, "head", color, far, sides=4)
+        k.l("ant_d" + side, ((a[0] + b[0]) / 2, y * 1.8, (a[2] + b[2]) / 2), (-0.12, y * 2.0, hb + 2.35 * s), 0.018, 0.0, "head", color, far, sides=4)
+        k.l("ant_e" + side, (-0.06, y * 1.3, hb + 1.2 * s), (-0.34, y * 1.5, hb + 1.25 * s), 0.018, 0.0, "head", color, far, sides=4)
 
 
 def snout(k, color, **_):
@@ -710,6 +710,15 @@ def iron_bands(k, color, **_):
             k.e("iron_%s%s" % (bone, s), c, (r, r, 0.02), bone + s, color, s == "f", seg=8, rings=3)
 
 
+def boulders(k, color, **_):
+    """Shoulders as broad as boulders and a heavy breastbone: a colossus is built of bones too big for a man."""
+    m = k.m
+    for s in "nf":
+        sh = k.raw["arm_" + s][0]
+        k.e("boulder_" + s, (sh[0] - 0.01, sh[1], sh[2] + 0.03), (0.13, 0.10, 0.10), "arm_" + s, color, s == "f", seg=8, rings=5)
+    k.loft("keel", [((0.06, 0, m["waist"] + 0.10), (0.10, 0.10)), ((0.08, 0, m["neck"] - 0.14), (0.14, 0.13)), ((0.06, 0, m["neck"] - 0.02), (0.10, 0.11))], "spine", shade(color, 0.92), sides=6)
+
+
 def rocks(k, color, **_):
     m = k.m
     for i, (x, y, z, bone) in enumerate(((0.05, -0.13, m["neck"] - 0.06, "spine"), (-0.06, 0.1, m["waist"] + 0.2, "spine"), (0.04, -0.12, m["hip"] - 0.02, "hips"))):
@@ -942,7 +951,7 @@ def whip(k, length=1.0, **_):
 def head_held(k, hair=(70, 60, 50), **_):
     """The dullahan's own head, under its far arm: pale, grinning, wild-haired."""
     h, t, _ = k.raw["held_head"]
-    c = (h[0] + 0.16, h[1] - 0.08, h[2] + 0.02)
+    c = (h[0] + 0.14, h[1] - 0.08, h[2] - 0.12)
     k.e("held_head", c, (0.10, 0.09, 0.11), "held_head", (226, 222, 208), True, seg=9, rings=6)
     k.e("held_hair", (c[0] - 0.03, c[1], c[2] + 0.05), (0.09, 0.085, 0.08), "held_head", hair, True, seg=8, rings=5)
     k.blade("held_hair_tuft", (c[0] - 0.06, c[1], c[2] + 0.06), (c[0] - 0.18, c[1], c[2] + 0.12), 0.06, 0.02, "held_head", hair, True)

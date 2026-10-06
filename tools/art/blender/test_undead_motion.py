@@ -62,11 +62,19 @@ class PostureTest(unittest.TestCase):
                 self.assertIn(form["arms"], bm.ARMS, name)
 
     def test_the_tree_is_the_game_tree(self):
-        self.assertEqual(len(forms.FORMS), 30)
-        for name, form in forms.FORMS.items():
-            if form["parent"]:
-                self.assertIn(form["parent"], forms.FORMS, name)
-                self.assertEqual(form["stage"], forms.FORMS[form["parent"]]["stage"] + 1 if form["parent"] != "skeleton" else 2, name)
+        """Every form of data/forms/undead_*.tres is here with the game's stage and parent (the game calls the base `undead`)."""
+        import glob
+        import re
+        root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "data", "forms")
+        game = {}
+        for path in glob.glob(os.path.join(root, "undead_*.tres")):
+            text = open(path).read()
+            name = re.search(r'^id = "undead_(\w+)"', text, re.M).group(1)
+            parent = re.search(r'^parents = \["(\w+)"\]', text, re.M).group(1)
+            game[name] = (int(re.search(r"^stage = (\d+)", text, re.M).group(1)), "skeleton" if parent == "undead" else parent[len("undead_"):])
+        self.assertEqual(set(game) | {"skeleton"}, set(forms.FORMS))
+        for name, (stage, parent) in game.items():
+            self.assertEqual((forms.FORMS[name]["stage"], forms.FORMS[name]["parent"]), (stage, parent), name)
 
 
 class IdleTest(unittest.TestCase):
@@ -102,7 +110,7 @@ class GaitTest(unittest.TestCase):
                 for s in slopes:
                     self.assertAlmostEqual(s, -stride / duty, delta=0.02 * stride / duty, msg="%s %s" % (name, gait))
 
-    def test_the_zombie_walks_slower_lower_and_pitching_more_than_the_skeleton(self):
+    def test_the_zombie_walks_pitching_more_bobbing_more_and_dragging_its_feet_more_than_the_skeleton(self):
         sk, zo = body_of("skeleton"), body_of("zombie")
         self.assertGreater(zo.gaits["walk"]["lean_amp"], sk.gaits["walk"]["lean_amp"] * 2)
         self.assertGreater(zo.gaits["walk"]["bob"], sk.gaits["walk"]["bob"])
@@ -239,8 +247,6 @@ class AttackTest(unittest.TestCase):
                 rot, root = clip.frames[-1]
                 a, b = body.skel.pose(*idle), body.skel.pose(rot, root)
                 for bone in a:
-                    if bone in um.SECONDARY:
-                        continue
                     for p, q in zip(a[bone][:2], b[bone][:2]):
                         self.assertLess(math.dist(p, q), 0.6 * PX, "%s %s ends where the idle starts" % (name, bone))
 
@@ -304,10 +310,13 @@ class AttackTest(unittest.TestCase):
             self.assertAlmostEqual(math.dist(shoulder, grip), sk.length("arm_f") + sk.length("fore_f"), delta=0.01, msg="the bow arm is straight")
             aim_dir = 90.0 + forms.FORMS[name].get("aim", 0.0)
             self.assertAlmostEqual(posed["arrow"][2], aim_dir, delta=8.0, msg="%s: the arrow points at the target" % name)
+            hand = posed["fore_n"][1]
             for bone in ("string_u", "string_l"):
                 h, t, _ = posed[bone]
-                along = ((t[0] - h[0]) * (posed["fore_n"][1][0] - h[0]) + (t[1] - h[1]) * (posed["fore_n"][1][1] - h[1])) / (sk.length(bone) * math.dist(h, posed["fore_n"][1]))
-                self.assertGreater(along, 0.99, "%s: the string runs to the hand" % name)
+                u = ((hand[0] - h[0]) * (t[0] - h[0]) + (hand[1] - h[1]) * (t[1] - h[1])) / sk.length(bone) ** 2
+                closest = (h[0] + u * (t[0] - h[0]), h[1] + u * (t[1] - h[1]))
+                self.assertLessEqual(u, 1.0, "%s: the string reaches the hand" % name)
+                self.assertLess(math.dist(closest, hand), 0.02 * body.L, "%s: the string runs through the hand" % name)
             loosed = sk.pose(*um.attack_pose(body, frames[w][0])[:2])
             self.assertAlmostEqual(loosed["arrow"][2] % 360.0, loosed["item_f"][2] % 360.0, delta=1.0, msg="the arrow is gone: it lies along the bow again")
             self.assertLess(loosed["fore_n"][1][0], posed["fore_n"][1][0], "the drawing hand flies back")
@@ -320,6 +329,7 @@ class AttackTest(unittest.TestCase):
         hand = posed["fore_n"][1]
         tip = posed["whip5"][1]
         self.assertGreater(tip[0], hand[0] + 0.3 * body.L)
+        self.assertLess(abs(tip[1] - hand[1]), 0.25 * body.L, "and level")
         rest = body.skel.pose(*um.idle_clip(body).frames[0])
         self.assertLess(rest["whip5"][1][1], rest["fore_n"][1][1] - 0.1 * body.L, "at rest it hangs in a coil below the hand")
         self.assertLess(abs(rest["whip5"][1][0] - rest["fore_n"][1][0]), 0.3 * body.L)
@@ -331,6 +341,7 @@ class AttackTest(unittest.TestCase):
         rest = bm.idle_pose(body, 0.0)
         for s in "nf":
             self.assertGreater(sole(body, s, *hit)[1][0], sole(body, s, *rest)[1][0] + 0.2 * body.L)
+        self.assertGreater(hit[1][0], rest[1][0] + 0.2 * body.L, "the whole body goes forward, not just the feet")
         lifted = um.attack_pose(body, frames[4][0])[:2]
         self.assertGreater(min(sole(body, "n", *lifted)[0][1], sole(body, "f", *lifted)[0][1]), 0.02, "both feet leave the ground together")
 
@@ -340,6 +351,7 @@ class AttackTest(unittest.TestCase):
         posed = body.skel.pose(*um.attack_pose(body, frames[w][0])[:2])
         self.assertLess(posed["fore_n"][1][1], posed["hips"][0][1] - 0.2 * body.L, "the fists go down below the hips")
         self.assertGreater(posed["fore_n"][1][0], posed["hips"][0][0] + 0.3 * body.L)
+        self.assertGreater(min(posed["fore_n"][1][1], posed["fore_f"][1][1]), 0.05 * body.L, "the fists stop above the ground")
 
 
 class SecondaryTest(unittest.TestCase):
@@ -364,6 +376,17 @@ class SecondaryTest(unittest.TestCase):
 
 
 class TimingTest(unittest.TestCase):
+    def test_at_its_own_speed_every_forms_gait_frames_last_long_enough_for_the_engines_20_ms_grid(self):
+        import sizing
+        for name in forms.FORMS:
+            body = body_of(name)
+            speed = sizing.speed_of("undead", None if name == "skeleton" else name)
+            for ppu in (18.0, 26.0, 34.0):
+                for gait, s in (("walk", speed), ("run", speed * um.RUN_SPEED)):
+                    cycle, _ = um.plan_gait(body, gait, s, ppu)
+                    n = len(um.gait_clip(body, gait, cycle, 0.3 * body.L).frames)
+                    self.assertGreaterEqual(cycle / n, 0.03, "%s %s at %.0f px/u" % (name, gait, ppu))
+
     def test_every_forms_clips_pass_the_engines_timing_check(self):
         constants = export_forms.engine_constants()
         for name in forms.FORMS:

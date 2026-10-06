@@ -141,19 +141,27 @@ class FloatBody:
 
 
 # ---- secondary ------------------------------------------------------------------------------------------------------------------
-def _with_secondary(body, frames, durations, wind, periodic, skip=()):
+def _with_secondary(body, frames, durations, wind, periodic, skip=(), settle=None):
     """Every hung thing's follow-through (SECONDARY) for a clip of (rot, root, extra) frames, then the extras on top: `extra["jaw"]` opens the jaw
-    that many degrees beyond where it rattles to. Bones in `skip` are posed by the clip itself (a whip in its crack)."""
+    that many degrees beyond where it rattles to. Bones in `skip` are posed by the clip itself (a whip in its crack). `settle` (an idle pose's
+    rotations) eases the hung things of a one-shot into that pose over its first and last two frames, so an attack or a flinch starts and ends on
+    exactly the idle's frame, hangings and all."""
     table = {k: v for k, v in SECONDARY.items() if k not in skip and not (v.get("after") in skip)}
     plain = [(rot, root) for rot, root, _ in frames]
     out = secondary.series(body.present, table, plain, wind, durations, periodic=periodic)
     result = []
+    n = len(frames)
     for i, (rot, root, extra) in enumerate(frames):
         for bone, series in out.items():
             rot[bone] = down(series[i])
         if extra.get("jaw") and "jaw" in body.present:
             j = rot.get("jaw", (0.0, 0.0, 0.0))
             rot["jaw"] = (0.0, j[1] + extra["jaw"], 0.0)
+        if settle is not None:
+            w = {0: 1.0, 1: 0.5, n - 2: 0.5, n - 1: 1.0}.get(i, 0.0)
+            for bone in list(out) + [b for b in skip if b in rot] + (["jaw"] if "jaw" in rot else []):
+                if bone in settle and w:
+                    rot[bone] = (0.0, rot[bone][1] + w * (settle[bone][1] - rot[bone][1]), 0.0)
         result.append((rot, root))
     return result
 
@@ -221,7 +229,7 @@ KINDS = {
     "whip": dict(d_lean=(-12, 4, 16, 18), d_head=(-6, 2, 10, 12), px=(-0.06, 0.04, 0.14, 0.15), pz=(-0.05, -0.05, -0.08, -0.05),
                  arm_n=(200, 150, 80, 60), fore_n=(222, 150, 72, 52), arm_f=(40, 30, 10, 10), fore_f=(80, 70, 60, 60), step=0.2),
     # a jiangshi's lunge: a little hop forward with both arms driven out, then a hop back
-    "hop_claw": dict(d_lean=(-6, 8, 14, 12), d_head=(-4, 4, 8, 8), px=(0.0, 0.0, 0.0, 0.0), pz=(-0.08, 0.06, -0.06, -0.03),
+    "hop_claw": dict(d_lean=(-6, 8, 14, 12), d_head=(-4, 4, 8, 8), px=(-0.04, 0.12, 0.28, 0.26), pz=(-0.08, 0.06, -0.06, -0.03),
                      arm_n=(70, 96, 100, 96), fore_n=(60, 100, 104, 98), arm_f=(66, 94, 98, 94), fore_f=(58, 98, 102, 96), both_feet=True, step=0.30, lift=0.14),
 }
 # a whip's lash: each segment's world direction over time, the segment k behind the handle that much later (a wave running down it): it hangs, is
@@ -550,8 +558,9 @@ def float_die_pose(body, time):
 
 
 # ---- clips ----------------------------------------------------------------------------------------------------------------------
-def _clip(body, poses, durations, wind, loop, grounded=False, skip=()):
-    return Clip(_with_secondary(body, poses, durations, wind, loop, skip), durations, loop, grounded)
+def _clip(body, poses, durations, wind, loop, grounded=False, skip=(), settle=False):
+    rest = idle_clip(body).frames[0][0] if settle else None
+    return Clip(_with_secondary(body, poses, durations, wind, loop, skip, rest), durations, loop, grounded)
 
 
 def _x(pose):
@@ -605,23 +614,23 @@ def attack_clip(body):
     if is_float(body):
         frames = TIMINGS["normal"]["frames"]
         dur = [d for _, d in frames]
-        return _clip(body, [float_attack_pose(body, t) for t, _ in frames], dur, 0.6, False)
+        return _clip(body, [float_attack_pose(body, t) for t, _ in frames], dur, 0.6, False, settle=True)
     frames, _ = attack_frames(body)
     dur = [d for _, d in frames]
     skip = WHIP if attack_kind(body.form) == "whip" else ()
-    return _clip(body, [attack_pose(body, t) for t, _ in frames], dur, 0.5, False, skip=skip)
+    return _clip(body, [attack_pose(body, t) for t, _ in frames], dur, 0.5, False, skip=skip, settle=True)
 
 
 def hurt_clip(body):
     spec = bm.hurt_frames()
     dur = [d for _, d in spec]
     if is_float(body):
-        return _clip(body, [float_hurt_pose(body, t) for t, _ in spec], dur, 0.5, False)
+        return _clip(body, [float_hurt_pose(body, t) for t, _ in spec], dur, 0.5, False, settle=True)
     poses = []
     for t, _ in spec:
         rot, root = bm.hurt_pose(body, t)
         poses.append((rot, root, {"jaw": anim.sample([(0.0, 0.0, "out"), (0.04, 16.0, "out"), (0.10, 22.0, "smooth"), (0.16, 6.0, "smooth"), (0.21, 0.0, "smooth")], t)}))
-    return _clip(body, poses, dur, 0.5, False)
+    return _clip(body, poses, dur, 0.5, False, settle=True)
 
 
 def die_clip(body):

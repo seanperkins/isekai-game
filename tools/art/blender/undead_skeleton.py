@@ -102,7 +102,7 @@ def biped_hung(form):
         a = o.get("half", 0.42)
         g = (0.13, m["sh"], m["wrist_z"] + 0.02)
         string_x = g[0] - o.get("depth", 0.10)
-        reach = (a * a + 0.50 ** 2) ** 0.5
+        reach = (a * a + (0.62 * m["arm"]) ** 2) ** 0.5   # the string reaches the drawing hand at full draw, however long the arm
         out += [("string_u", (string_x, m["sh"], g[2] + a), (string_x, m["sh"], g[2] + a - reach), "item_f"),
                 ("string_l", (string_x, m["sh"], g[2] - a), (string_x, m["sh"], g[2] - a + reach), "item_f"),
                 ("arrow", (g[0] - 0.02, m["sh"] - 0.03, g[2]), (g[0] - 0.02, m["sh"] - 0.03, g[2] + 0.30), "item_f")]
@@ -135,8 +135,8 @@ def candle_core(form):
         ("hips", (0.0, 0, 0.0), (0.0, 0, 0.16), None),
         ("spine", (0.0, 0, 0.16), (0.0, 0, 0.46), "hips"),
         ("head", (0.03, 0, 0.24), (0.06, 0, 0.40), "spine"),
-        ("tip1", (-0.01, 0, 0.44), (-0.05, 0, 0.58), "spine"),
-        ("tip2", (-0.05, 0, 0.58), (-0.11, 0, 0.68), "tip1"),
+        ("tip1", (-0.01, 0, 0.40), (-0.04, 0, 0.50), "spine"),
+        ("tip2", (-0.04, 0, 0.50), (-0.09, 0, 0.57), "tip1"),
     ]
 
 

@@ -226,14 +226,14 @@ class Undead:
         self.loft("stub", [((0.0, 0, 0.0), (0.085, 0.085)), ((0.0, 0, 0.10), (0.08, 0.08)), ((0.0, 0, 0.15), (0.07, 0.07))], "hips", wax, sides=8)
         self.e("drip", (0.06, -0.05, 0.10), (0.03, 0.025, 0.05), "hips", shade(wax, 0.92), seg=6, rings=4)
         self.l("wick", (0.0, 0, 0.14), (0.0, 0, 0.20), 0.012, 0.01, "hips", (40, 34, 40), sides=4)
-        self.loft("flame", [((0.0, 0, 0.13), (0.07, 0.07)), ((0.0, 0, 0.20), (0.135, 0.12)), ((0.0, 0, 0.30), (0.135, 0.12)), ((-0.01, 0, 0.40), (0.10, 0.09)),
-                            ((-0.02, 0, 0.47), (0.05, 0.05))], "spine", flame, sides=8)
+        self.loft("flame", [((0.0, 0, 0.13), (0.08, 0.08)), ((0.0, 0, 0.19), (0.155, 0.14)), ((0.0, 0, 0.29), (0.15, 0.135)), ((-0.01, 0, 0.37), (0.10, 0.09)),
+                            ((-0.02, 0, 0.42), (0.05, 0.05))], "spine", flame, sides=8)
         self.e("core", (0.0, -0.05, 0.25), (0.08, 0.07, 0.10), "spine", core, seg=8, rings=6)
         for s, y in (("n", -0.035), ("f", 0.035)):
             self.e("eye_" + s, (0.10, y - 0.10, 0.31), (0.032, 0.03, 0.038), "head", SOCKET, far=s == "f", seg=6, rings=4)
         self.box("mouth", (0.10, -0.12, 0.22), (0.03, 0.02, 0.01), "head", SOCKET)
-        self.blade("tip1", (0.0, 0, 0.40), (-0.06, 0, 0.60), 0.13, 0.08, "tip1", flame, glow=True)
-        self.blade("tip2", (-0.05, 0, 0.56), (-0.12, 0, 0.70), 0.07, 0.05, "tip2", flame, glow=True)
+        self.blade("tip1", (-0.01, 0, 0.37), (-0.05, 0, 0.52), 0.13, 0.08, "tip1", flame, glow=True)
+        self.blade("tip2", (-0.04, 0, 0.49), (-0.10, 0, 0.59), 0.07, 0.05, "tip2", flame, glow=True)
 
     def ghost(self):
         f = self.form
@@ -276,8 +276,8 @@ class Undead:
         self.e("brow_gem", (0.17, -0.02, 0.37), (0.03, 0.02, 0.035), "head", gem, glow=True, seg=6, rings=4)
         for s, y in (("n", -0.06), ("f", 0.06)):
             far = s == "f"
-            self.e("socket_" + s, (0.17, y, 0.25), (0.05, 0.035, 0.045), "head", SOCKET, far, seg=7, rings=5)
-            self.blade("flame_" + s, (0.19, y - 0.02, 0.23), (0.17, y - 0.02, 0.31), 0.05, 0.02, "head", eye, far, glow=True)
+            self.e("socket_" + s, (0.165, y * 1.2, 0.25), (0.065, 0.05, 0.06), "head", SOCKET, far, seg=7, rings=5)
+            self.blade("flame_" + s, (0.20, y * 1.2 - 0.03, 0.22), (0.18, y * 1.2 - 0.03, 0.32), 0.06, 0.02, "head", eye, far, glow=True)
         self.e("nasal", (0.215, -0.03, 0.18), (0.015, 0.015, 0.03), "head", SOCKET, seg=5, rings=3)
         self.box("teeth", (0.19, -0.02, 0.115), (0.05, 0.08, 0.016), "head", TEETH)
         for i, x in enumerate((0.15, 0.21)):
