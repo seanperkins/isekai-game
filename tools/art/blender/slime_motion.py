@@ -310,11 +310,18 @@ def _velocities(points, durations, periodic):
     return out
 
 
-def chain_rots(body, frames, durations, periodic, deliberate=None, rest_frame=None):
+def chain_rots(body, frames, durations, periodic, deliberate=None, rest_frame=None, start_frame=None, follow=None):
     """Fill each frame's rotations for the chains: a link chases its rest direction plus what the clip does on purpose (`deliberate(chain,
     link, i)`, degrees) plus a lag against how its root moves (a thing hung on a body trails it), on a spring, so it overshoots and settles.
-    A one-shot clip starts from, and ends on, `rest_frame`'s rotations (the idle's first frame), so the next clip starts where it left off."""
+    A one-shot clip's springs start at rest where `start_frame` (the idle's first frame) has the chains, so nothing snaps as it begins, and
+    it ends on `rest_frame`'s rotations, so the next clip starts where it left off. A chain with `spring` False (a hinged lid) goes exactly
+    where it is driven. `follow` is the spring (anim.follow; the tests swap it)."""
+    follow = follow or anim.follow
     n = len(frames)
+    start_dirs = None
+    if start_frame is not None and not periodic:
+        start_posed = body.skel.pose(start_frame[0], start_frame[1])
+        start_dirs = {b: start_posed[b][2] for ch in body.chains for b in ch["bones"]}
     for ch in body.chains:
         anchors = []
         for rot, root in frames:
@@ -333,7 +340,13 @@ def chain_rots(body, frames, durations, periodic, deliberate=None, rest_frame=No
                 lag = max(-LAG_MAX, min(LAG_MAX, lag))
                 extra = deliberate(ch, li, i) if deliberate else 0.0
                 driver.append(base + lag + extra)
-            chased = anim.follow(driver, durations, freq=ch.get("freq", 2.6) * (0.85 ** li), zeta=ch.get("zeta", 0.4), periodic=periodic)
+            spring = dict(freq=ch.get("freq", 2.6) * (0.85 ** li), zeta=ch.get("zeta", 0.4), periodic=periodic)
+            if not ch.get("spring", True):
+                chased = list(driver)
+            elif start_dirs is not None:     # a moment's lead-in from where the idle left the chain, at rest
+                chased = follow([start_dirs[b]] + driver, [1e-4] + list(durations), **spring)[1:]
+            else:
+                chased = follow(driver, durations, **spring)
             prev = chased
             for i in range(n):
                 frames[i][0].setdefault("_dirs", {})[b] = chased[i]
@@ -700,7 +713,7 @@ def _deliberate(body, clip, times):
     return fn, period
 
 
-def _assemble(body, clip, times, softs, roots, durations, periodic, blinks=None, rest_frame=None):
+def _assemble(body, clip, times, softs, roots, durations, periodic, blinks=None, rest_frame=None, start_frame=None):
     frames = []
     n = len(times)
     for i, (t, s, r) in enumerate(zip(times, softs, roots)):
@@ -718,7 +731,7 @@ def _assemble(body, clip, times, softs, roots, durations, periodic, blinks=None,
         if "inner" in rest_off:
             frames[-1][0][SOFT].setdefault("off", {})["inner"] = dict(rest_off["inner"])
     fn, _ = _deliberate(body, clip, times)
-    chain_rots(body, frames, durations, periodic, fn, rest_frame)
+    chain_rots(body, frames, durations, periodic, fn, rest_frame, start_frame or rest_frame)
     if rest_frame is not None:     # the last frame is exactly the pose the idle starts from
         frames[-1] = ({k: (dict(v) if isinstance(v, dict) else v) for k, v in rest_frame[0].items()}, tuple(rest_frame[1]))
     _clear_floor(body, frames)
@@ -799,7 +812,7 @@ def hurt_clip(body, rest_frame):
     return Clip(_assemble(body, "hurt", times, [p[0] for p in trip], [p[1] for p in trip], dur, False, [p[2] for p in trip], rest_frame), dur, False)
 
 
-def die_clip(body):
+def die_clip(body, start_frame=None):
     dur = [d for _, d in DIE_FRAMES]
     times = [t for t, _ in DIE_FRAMES]
     softs, roots, blinks = [], [], []
@@ -809,7 +822,7 @@ def die_clip(body):
         softs.append(dict(s0, sq=ch["sq"], vol=ch["vol"], lean=ch["lean"], wave=ch["wave"], phase=1.0 + i, bulge=0.0))
         roots.append((0.0, 0.0, r0[2] * (1.0 - max(0.0, min(1.0, ch["drop"]))) if body.hover else 0.0))
         blinks.append(ch["eyes"])
-    return Clip(_assemble(body, "die", times, softs, roots, dur, False, blinks), dur, False)
+    return Clip(_assemble(body, "die", times, softs, roots, dur, False, blinks, start_frame=start_frame), dur, False)
 
 
 def clips_for(body, speed, ppu):
@@ -821,4 +834,4 @@ def clips_for(body, speed, ppu):
     else:
         walk = hop_clip(body, "walk", *plan_hop(body, "walk", speed, ppu))
         run = hop_clip(body, "run", *plan_hop(body, "run", speed * RUN_SPEED, ppu))
-    return {"idle": idle, "walk": walk, "run": run, "attack": attack_clip(body, rest_frame), "hurt": hurt_clip(body, rest_frame), "die": die_clip(body)}
+    return {"idle": idle, "walk": walk, "run": run, "attack": attack_clip(body, rest_frame), "hurt": hurt_clip(body, rest_frame), "die": die_clip(body, rest_frame)}

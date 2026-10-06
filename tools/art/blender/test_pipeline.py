@@ -239,6 +239,8 @@ class PipelineTest(unittest.TestCase):
             self.assertEqual(probe["seen"][0]["rot"], {"arm": [0, -30, 0]})
             self.assertEqual(probe["seen"][0]["root"], [0.5, 0, 0])
             self.assertTrue(probe["seen"][0]["same_rig"])
+            self.assertEqual(probe["seen"][0]["bones"], probe["plain"]["bones"], "the hook sees the bones already solved")
+            self.assertNotEqual(probe["seen"][0]["bones"], probe["unposed"], "(which differ from the unposed rig)")
             self.assertEqual(probe["plain"]["bones"], probe["hooked"]["bones"], "the bones are solved as before")
             moved = [b[2] - a[2] for a, b in zip(probe["plain"]["verts"], probe["hooked"]["verts"])]
             self.assertGreater(max(moved), 0.1, "what the hook does to a mesh shows in the pose")
@@ -268,6 +270,9 @@ class PipelineTest(unittest.TestCase):
                         for g, w in zip(got, (want[0] + root[0], want[1] + root[1], want[2] + root[2])):
                             self.assertAlmostEqual(g, w, delta=1e-4, msg="%s %s %d" % (form, f["clip"], f["frame"]))
                     posed = sm.pose_bones(body, rot, root)
+                    for ch in body.chains:     # a chain's root is carried in depth too, so it stays on the surface as the body spreads
+                        want = sm.deform(ch["anchor"], soft, body.shape)[1] + root[1]
+                        self.assertAlmostEqual(f["depth"][ch["name"]], want, delta=1e-4, msg="%s %s %d %s depth" % (form, f["clip"], f["frame"], ch["name"]))
                     for bone, (head, tail, _) in posed.items():
                         want_head, want_tail = f["bones"][bone]
                         for got, want in ((head, want_head), (tail, want_tail)):

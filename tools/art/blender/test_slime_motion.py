@@ -249,6 +249,33 @@ class ClipTest(unittest.TestCase):
         lags = [sm.soft_of(rot)["off"]["inner"]["d"] for rot, _ in clips["idle"].frames]
         self.assertGreater(max(math.hypot(*d) for d in lags), 0.002)
 
+    def test_a_chain_lags_its_driver_on_a_spring(self):
+        """Swap the spring for no spring at all (the chain goes exactly where it is driven): the chains must move differently, by more than a
+        little, or the follow-through is not there."""
+        body = body_of("kraken")
+        idle = sm.idle_clip(body)
+        for gait in ("walk",):
+            cycle, length = sm.plan_hop(body, gait, forms.speed_of("kraken"), PPU)
+            n = sm.HOPS[gait]["frames"]
+            times = [i / n for i in range(n)]
+            dur = [cycle / n] * n
+            make = lambda: [(sm._frame(sm.hop_soft(body, gait, t)), sm.hop_root(body, gait, t, length)) for t in times]
+            fn, _ = sm._deliberate(body, gait, times)
+            sprung = sm.chain_rots(body, make(), dur, True, fn)
+            rigid = sm.chain_rots(body, make(), dur, True, fn, follow=lambda driver, durations, **kw: list(driver))
+            worst = max(abs(a[0][b][1] - r[0][b][1]) for a, r in zip(sprung, rigid) for ch in body.chains for b in ch["bones"])
+            self.assertGreater(worst, 8.0)
+
+    def test_nothing_snaps_as_an_action_starts(self):
+        for name in forms.FORMS:
+            body, clips = clips_of(name)
+            rest = sm.pose_bones(body, *clips["idle"].frames[0])
+            for cname in ("attack", "hurt", "die"):
+                first = sm.pose_bones(body, *clips[cname].frames[0])
+                for ch in body.chains:
+                    for b in ch["bones"]:
+                        self.assertAlmostEqual(first[b][2], rest[b][2], delta=4.0, msg="%s %s %s" % (name, cname, b))
+
     def test_chains_follow_through(self):
         for name, chain in (("kraken", "t_back2"), ("beanstalk", "vine3"), ("gleipnir", "rib_a2"), ("shoggoth", "p_front1")):
             body, clips = clips_of(name)
@@ -271,6 +298,7 @@ class ClipTest(unittest.TestCase):
         lid = [sm.pose_bones(body, rot, root)["lid1"][2] for rot, root in clips["attack"].frames]
         self.assertGreater(max(lid[:sm.WINDUP]) - lid[0], 30.0, "the lid opens wide on the coil")
         self.assertLess(lid[sm.WINDUP], lid[sm.WINDUP - 1] - 15.0, "and snaps shut on the impact")
+        self.assertLessEqual(lid[sm.WINDUP], body.skel.rest_direction("lid1") + 0.5, "shut, not half open")
         body, clips = clips_of("kraken")
         tip = [sm.pose_bones(body, rot, root)["t_front3"][1][0] for rot, root in clips["attack"].frames]
         self.assertGreater(tip[sm.WINDUP] - tip[0], 0.1, "the front tentacle lashes forward")

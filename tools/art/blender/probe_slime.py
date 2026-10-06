@@ -50,15 +50,17 @@ if argv[1] == "--hook":
     seen = []
 
     def hook(r, rot, root):
-        seen.append({"rot": {k: list(v) for k, v in rot.items()}, "root": list(root), "same_rig": r is rig})
+        seen.append({"rot": {k: list(v) for k, v in rot.items()}, "root": list(root), "same_rig": r is rig, "bones": bones(r)})
         ob.data.vertices[0].co = ob.data.vertices[0].co + Vector((0.0, 0.0, 0.25))
         ob.data.update()
         bpy.context.view_layer.update()
+    rig.pose({}, (0, 0, 0))
+    unposed = bones(rig)
     rig.post_pose = hook
     rig.pose({"arm": (0, -30, 0)}, (0.5, 0, 0))
     hooked = {"bones": bones(rig), "verts": evaluated(ob)}
     with open(out, "w") as fh:
-        json.dump({"plain": plain, "hooked": hooked, "seen": seen}, fh)
+        json.dump({"plain": plain, "hooked": hooked, "seen": seen, "unposed": unposed}, fh)
     sys.exit(0)
 
 form = argv[1]
@@ -77,6 +79,7 @@ for name, clip in clips.items():
     for i in sorted({0, len(clip.frames) // 2, len(clip.frames) - 1}):
         rot, root = clip.frames[i]
         rig.pose(rot, root)
-        result["frames"].append({"clip": name, "frame": i, "rot": rot, "root": list(root), "jelly": evaluated(jelly), "bones": bones(rig)})
+        depth = {ch["name"]: (rig.obj.matrix_world @ rig.obj.pose.bones[ch["bones"][0]].head).y for ch in kit.body.chains}
+        result["frames"].append({"clip": name, "frame": i, "rot": rot, "root": list(root), "jelly": evaluated(jelly), "bones": bones(rig), "depth": depth})
 with open(out, "w") as fh:
     json.dump(result, fh)

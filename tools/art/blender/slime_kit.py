@@ -269,8 +269,9 @@ class SlimeKit(kitbase.KitBase):
         soft = sm.soft_of(rot)
         for ch in self.body.chains:
             dx, dz = sm.chain_offset(soft, self.body, ch)
+            dy = sm.anchor_offset(soft, self.shape, ch["anchor"])[1]     # and in depth, so a root stays on the surface as the body spreads
             pb = rig.obj.pose.bones[ch["bones"][0]]
-            pb.matrix = Matrix.Translation(Vector((dx, 0.0, dz))) @ pb.matrix
+            pb.matrix = Matrix.Translation(Vector((dx, dy, dz))) @ pb.matrix
         for part in self.soft_parts:
             me = part["ob"].data
             flat = [c for v in self.posed_vertices(part, soft, -root[2]) for c in v]

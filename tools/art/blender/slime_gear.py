@@ -201,14 +201,16 @@ def crest(g, colour, deep, **_):
 
 
 def horns(g, colour, **_):
-    for i, phi in enumerate((-40, 20)):
-        base = g.S(40 + phi, 78, -0.03)
-        y = base[1]
-        mid = (base[0] - 0.02, y, base[2] + 0.15)
-        tip = (mid[0] - 0.12, y, mid[2] + 0.08)
+    """A pair of short curved coral horns standing up out of the crest, the near one in front of it."""
+    for i, phi in enumerate((-40, 40)):
+        base = g.S(phi, 66, -0.02)
+        y = base[1] - (0.08 if phi < 0 else 0.0)
+        base = (base[0], y, base[2])
+        mid = (base[0] - 0.03, y, base[2] + 0.20)
+        tip = (mid[0] - 0.14, y, mid[2] + 0.10)
         c = colour if phi < 0 else darker(colour, 0.25)
-        g.add(k.limb("horn%d" % i, base, mid, 0.05, 0.035, 7), c, "carry", base, far=phi > 0)
-        g.add(k.limb("horntip%d" % i, mid, tip, 0.035, 0.0, 7), c, "carry", base, far=phi > 0)
+        g.add(k.limb("horn%d" % i, base, mid, 0.06, 0.042, 8), c, "carry", base, far=phi > 0)
+        g.add(k.limb("horntip%d" % i, mid, tip, 0.042, 0.0, 8), c, "carry", base, far=phi > 0)
 
 
 def serpents(g, colour, **_):
@@ -243,12 +245,12 @@ def drips(g, colour, **_):
     for name in ("drip_a", "drip_b", "drip_c"):
         bones = g.chain_bones(name)
         for i, (b, h, t) in enumerate(bones):
-            g.on_bone(k.limb("drip_" + b, (h[0], -0.2, h[2]), (t[0], -0.2, t[2]), 0.05 - 0.012 * i, 0.034 - 0.01 * i, 7, smooth=True), b, colour)
+            g.on_bone(k.limb("drip_" + b, (h[0], -0.2, h[2]), (t[0], -0.2, t[2]), 0.055 - 0.012 * i, 0.038 - 0.01 * i, 7, smooth=True), b, colour)
         b, h, t = bones[-1]
         g.on_bone(k.ellipsoid("drop_" + b, (t[0], -0.2, t[2]), (0.04, 0.035, 0.05), 8, 6), b, lighter(colour, 0.2))
     for i, phi in enumerate((-150, -110, -60, -20)):
         p = g.S(phi, -78, 0.04)
-        g.blob("hang%d" % i, (p[0], p[1], 0.03), (0.03, 0.03, 0.03), colour, "skin", seg=6, rings=5)
+        g.blob("hang%d" % i, (p[0], p[1] - 0.02, 0.035), (0.04, 0.035, 0.035), colour, "skin", seg=6, rings=5)
 
 
 def blotches(g, colour, **_):
@@ -270,8 +272,8 @@ def miasma(g, colour, dark, **_):
         bones = g.chain_bones(name)
         for i, (b, h, t) in enumerate(bones):
             c = colour if (i + (name == "mia_b")) % 2 == 0 else dark
-            a, z = _overlap(h, t, 0.3)
-            g.on_bone(oriented_ellipsoid("mia_" + b, a, z, 0.04, 0.065 - 0.012 * i, -0.1, 8, 5), b, c)
+            a, z = _overlap(h, t, 0.12)
+            g.on_bone(oriented_ellipsoid("mia_" + b, a, z, 0.03, 0.04 - 0.007 * i, -0.1, 8, 5), b, c)
 
 
 def tatters(g, colour=None, **_):
@@ -416,9 +418,10 @@ def lid(g, colour, band, **_):
     g.on_bone(_arch("lid", cx, z, rx, D, rz), b, colour)
     for i, u in enumerate((-0.62, 0.62)):
         x = cx + u * rx
-        top = z + rz * math.sqrt(max(0.0, 1.0 - u * u))
-        g.on_bone(k.limb("lidstrap%d" % i, (x, -D - 0.01, z), (x, -D - 0.01, top + 0.01), 0.03, 0.03, 6), b, band)
-        g.on_bone(k.limb("lidstrapb%d" % i, (x, -D - 0.01, top), (x, 0.0, top + 0.02), 0.03, 0.03, 6), b, darker(band, 0.15))
+        s = math.sqrt(max(0.0, 1.0 - u * u)) * 1.03       # the lid's section at this x, a little proud of it: the strap hugs it over the top
+        pts = [(x, -D * s * math.cos(t), z + rz * s * math.sin(t)) for t in (math.radians(a) for a in range(0, 181, 15))]
+        for j, (p, q) in enumerate(zip(pts, pts[1:])):
+            g.on_bone(k.limb("lidstrap%d_%d" % (i, j), p, q, 0.028, 0.028, 6), b, band if p[1] <= 0.0 else darker(band, 0.2), far=p[1] > 0.0)
     g.on_bone(k.box("lidlip", (cx, 0.0, z + 0.02), (x1 - x0 + 0.04, D * 2.1, 0.05)), b, band)
     g.on_bone(k.box("lock", (x1 + 0.01, -D * 0.5, z + 0.05), (0.04, 0.08, 0.09)), b, lighter(band, 0.25))
     for i, (dx, dz, s) in enumerate(((-0.24, 0.13, 1.0), (-0.10, 0.12, 0.92))):
@@ -498,8 +501,8 @@ def many_eyes(g, colour=None, **_):
     for i, (phi, a, s) in enumerate(((-150, 50, 0.85), (-120, 15, 0.7), (-95, 58, 0.9), (-145, -25, 0.65), (-88, -20, 0.75), (-118, 80, 0.6),
                                      (-170, 15, 0.6), (-50, 62, 0.65), (-12, -30, 0.6))):
         c = g.S(phi, a, 0.0)
-        r = (0.06 * s, 0.035 * s, 0.075 * s * (0.8 + 0.4 * rng.random()))
-        g.blob("meyerim%d" % i, (c[0], c[1] + 0.01, c[2]), (r[0] * 1.45, r[1], r[2] * 1.3), (150, 110, 200), "carry", "eyes", seg=8, rings=6, anchor=c)
+        r = (0.075 * s, 0.04 * s, 0.095 * s * (0.8 + 0.4 * rng.random()))
+        g.blob("meyerim%d" % i, (c[0], c[1] + 0.01, c[2]), (r[0] * 1.4, r[1], r[2] * 1.3), (176, 140, 220), "carry", "eyes", seg=8, rings=6, anchor=c)
         g.blob("meye%d" % i, c, r, (14, 10, 22), "carry", "eyes", seg=8, rings=6, anchor=c)
         g.blob("meyeglint%d" % i, (c[0] - 0.01 * s, c[1] - 0.025, c[2] + 0.022 * s), (0.018 * s + 0.004,) * 3, (240, 230, 255), "carry", "eyes", glow=True, seg=5,
                rings=4, anchor=c)
