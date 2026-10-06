@@ -189,6 +189,10 @@ class ClipTest(unittest.TestCase):
             for cname, clip in clips.items():
                 for i, (rot, root) in enumerate(clip.frames):
                     self.assertGreaterEqual(sm.lowest(body, rot, root, verts), -1e-6, "%s %s %d" % (name, cname, i))
+                    posed = sm.pose_bones(body, rot, root)
+                    for ch in body.chains:
+                        low = min(posed[b][1][1] for b in ch["bones"])
+                        self.assertGreaterEqual(low, ch.get("clear", sm.CLEAR) - 1e-6, "%s %s %d %s keeps its thickness off the ground" % (name, cname, i, ch["name"]))
 
     def test_a_hopper_stands_on_the_ground_at_rest_and_lands_and_a_hover_form_floats(self):
         for name in forms.FORMS:

@@ -228,6 +228,75 @@ class PipelineTest(unittest.TestCase):
                     self.assertTrue(box[0] > 0 and box[1] > 0 and box[2] < size, "%s %d is inside the canvas: %s" % (anim, i, box))
                     self.assertLessEqual(box[3], ground + 1, "%s %d is not below the ground" % (anim, i))
 
+    def test_a_rig_calls_its_post_pose_hook_after_the_bones_and_poses_the_same_without_one(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "hook.json")
+            done = blender("-P", os.path.join(HERE, "probe_slime.py"), "--", path, "--hook")
+            self.assertTrue(os.path.exists(path), done.stdout[-1500:] + done.stderr[-1500:])
+            with open(path) as fh:
+                probe = json.load(fh)
+            self.assertEqual(len(probe["seen"]), 1, "called once per pose")
+            self.assertEqual(probe["seen"][0]["rot"], {"arm": [0, -30, 0]})
+            self.assertEqual(probe["seen"][0]["root"], [0.5, 0, 0])
+            self.assertTrue(probe["seen"][0]["same_rig"])
+            self.assertEqual(probe["plain"]["bones"], probe["hooked"]["bones"], "the bones are solved as before")
+            moved = [b[2] - a[2] for a, b in zip(probe["plain"]["verts"], probe["hooked"]["verts"])]
+            self.assertGreater(max(moved), 0.1, "what the hook does to a mesh shows in the pose")
+
+    def test_the_slimes_real_jelly_and_bones_are_where_the_pure_soft_body_puts_them(self):
+        sys.path.insert(0, HERE)
+        import slime_forms
+        import slime_motion as sm
+        for form in ("slime", "kraken", "poltergeist", "mimic"):
+            with self.subTest(form=form), tempfile.TemporaryDirectory() as tmp:
+                path = os.path.join(tmp, "probe.json")
+                done = blender("-P", os.path.join(HERE, "probe_slime.py"), "--", path, form)
+                self.assertTrue(os.path.exists(path), done.stdout[-1500:] + done.stderr[-1500:])
+                with open(path) as fh:
+                    probe = json.load(fh)
+                body = sm.SlimeBody(slime_forms.FORMS[form])
+                self.assertEqual({f["clip"] for f in probe["frames"]}, {"idle", "walk", "run", "attack", "hurt", "die"})
+                rest = [tuple(v) for v in probe["rest"]]
+                ours = body.shape.mesh()[0]
+                self.assertEqual(len(rest), len(ours))
+                for f in probe["frames"]:
+                    rot = {k: (tuple(v) if isinstance(v, list) else v) for k, v in f["rot"].items()}
+                    root = tuple(f["root"])
+                    soft = sm.soft_of(rot)
+                    for v, got in list(zip(rest, f["jelly"]))[::5]:
+                        want = sm.deform(v, soft, body.shape)
+                        for g, w in zip(got, (want[0] + root[0], want[1] + root[1], want[2] + root[2])):
+                            self.assertAlmostEqual(g, w, delta=1e-4, msg="%s %s %d" % (form, f["clip"], f["frame"]))
+                    posed = sm.pose_bones(body, rot, root)
+                    for bone, (head, tail, _) in posed.items():
+                        want_head, want_tail = f["bones"][bone]
+                        for got, want in ((head, want_head), (tail, want_tail)):
+                            self.assertAlmostEqual(got[0], want[0], delta=1e-4, msg="%s %s %d %s" % (form, f["clip"], f["frame"], bone))
+                            self.assertAlmostEqual(got[1], want[1], delta=1e-4, msg="%s %s %d %s" % (form, f["clip"], f["frame"], bone))
+
+    def test_every_frame_of_every_slime_clip_is_drawn_inside_its_canvas_and_never_below_the_ground(self):
+        sys.path.insert(0, HERE)
+        import export_forms
+        for form in ("kraken", "cloud_rider", "cube", "alkahest"):     # tentacles, a hover form, a stiff one, drips
+            with self.subTest(form=form), tempfile.TemporaryDirectory() as tmp:
+                done = blender("-P", os.path.join(HERE, "render_set.py"), "--", "--creature", "slime", "--variant", form, "--out", tmp, "--ss", "1")
+                self.assertEqual(done.returncode, 0, done.stdout[-1500:] + done.stderr[-1500:])
+                with open(os.path.join(tmp, "meta.json")) as fh:
+                    meta = json.load(fh)
+                export_forms.check_timing(meta, export_forms.engine_constants())
+                size, ground = meta["canvas"], meta["canvas"] - meta["margin"]
+                self.assertEqual(set(meta["anims"]), {"idle", "walk", "run", "attack", "hurt", "die"})
+                for anim, count in meta["anims"].items():
+                    self.assertEqual(len(meta["durations"][anim]), count, anim)
+                    for i in range(count):
+                        with Image.open(os.path.join(tmp, "%s_%d_albedo.png" % (anim, i))) as a:
+                            box = a.convert("RGBA").split()[3].point(lambda v: 255 if v > 127 else 0).getbbox()
+                        self.assertIsNotNone(box, "%s %d is drawn" % (anim, i))
+                        self.assertTrue(box[0] > 0 and box[1] > 0 and box[2] < size, "%s %d is inside the canvas: %s" % (anim, i, box))
+                        self.assertLessEqual(box[3], ground + 1, "%s %d is not below the ground" % (anim, i))
+                        if form != "cloud_rider" and anim == "idle":
+                            self.assertGreaterEqual(box[3], ground - 1, "%s %d stands on the ground" % (anim, i))
+
     def test_a_variant_changes_colours_and_parts_but_not_the_animation(self):
         with tempfile.TemporaryDirectory() as plain, tempfile.TemporaryDirectory() as red:
             self.render("goblin", plain)

@@ -43,6 +43,7 @@ HURT_FRAMES = [(0.00, 0.04), (0.04, 0.06), (0.10, 0.06), (0.16, 0.05), (0.21, 0.
 DIE_FRAMES = [(0.00, 0.06), (0.06, 0.08), (0.14, 0.08), (0.22, 0.10), (0.32, 0.12), (0.44, 0.16), (0.60, 0.30), (0.90, 0.30)]
 IDLE_FRAMES, IDLE_SECONDS = 8, 1.6
 RUN_SPEED = 1.9
+CLEAR = 0.05      # how far above the ground a chain's bones stay, by default (its flesh is drawn round them)
 
 # hops: `contact` the share of the cycle the base is down, `height` the top of the flight in body heights, `length` the hop a cycle aims for and
 # `longest` the most the body can throw itself, both in body widths, `cycle` the bounds on the cycle in seconds
@@ -712,19 +713,30 @@ def _assemble(body, clip, times, softs, roots, durations, periodic, blinks=None,
     return frames
 
 
-def _clear_floor(body, frames, clearance=0.0):
-    """Raise any chain that has swung down through the floor (a drip, a tentacle in a deep squash): nothing may be below the ground."""
+def _clear_floor(body, frames):
+    """Raise any chain that has swung down through the floor (a drip, a tentacle in a deep squash): nothing may be below the ground, and a chain
+    keeps its bones `clear` above it (its own thickness, so the flesh drawn round the bone stays above the ground too)."""
     for rot, root in frames:
         for ch in body.chains:
-            for _ in range(90):
+            clearance = ch.get("clear", CLEAR)
+            first = ch["bones"][0]
+            base = rot[first][1]
+
+            def low(theta):
+                rot[first] = (0.0, base + theta, 0.0)
                 posed = pose_bones(body, rot, root)
-                if min(min(posed[b][0][1], posed[b][1][1]) for b in ch["bones"]) >= clearance:
-                    break
-                # turn the chain the short way up from its root: one pointing back turns further back (a smaller direction, a larger
-                # rotation), one pointing forward further forward
-                first = ch["bones"][0]
-                sign = 1.0 if (posed[first][2] + 180.0) % 360.0 - 180.0 < 0 else -1.0
-                rot[first] = (0.0, rot[first][1] + 2.0 * sign, 0.0)
+                return min(posed[b][1][1] for b in ch["bones"])     # the tails: the root is on the body, however low it is squashed
+            # the smallest turn of the whole chain about its root, either way, that lifts it clear; failing that, the turn that lifts it most
+            best, best_low = 0.0, low(0.0)
+            if best_low < clearance:
+                for step in range(1, 91):
+                    for theta in (2.0 * step, -2.0 * step):
+                        z = low(theta)
+                        if z > best_low:
+                            best, best_low = theta, z
+                    if best_low >= clearance:
+                        break
+            rot[first] = (0.0, base + best, 0.0)
 
 
 def idle_clip(body):
