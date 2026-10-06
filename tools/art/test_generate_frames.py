@@ -54,7 +54,7 @@ class GenerateFramesTest(unittest.TestCase):
         for f in data["frames"]:
             self.assertTrue(g.valid_name(f["name"]), f["name"])
             self.assertGreater(f["width"], 20)
-            for r in f["refs"]:
+            for r in f.get("refs", []):   # a rendered (native) frame has no references: it was not generated
                 self.assertIn(r, names)
                 self.assertLess(names.index(r), names.index(f["name"]), "a reference must come earlier")
         self.assertEqual([f["name"] for f in data["frames"] if "attack_from" in f], ["tackle"])
