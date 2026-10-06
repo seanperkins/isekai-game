@@ -230,13 +230,21 @@ class PipelineTest(unittest.TestCase):
                     self.assertTrue(box[0] > 0 and box[1] > 0 and box[2] < size, "%s %d is inside the canvas: %s" % (anim, i, box))
                     self.assertLessEqual(box[3], ground + 1, "%s %d is not below the ground" % (anim, i))
 
+    @staticmethod
+    def _clips_of_a_body(variant):
+        """The clips a variant renders: the six every form has, and a player's body (the plain skeleton, as the plain goblin) its leaps, rolls, slides and clings besides."""
+        sys.path.insert(0, HERE)
+        import player_poses
+        base = {"idle", "walk", "run", "attack", "hurt", "die"}
+        return base | set(player_poses.FRAMES) if variant == "skeleton" else base
+
     def _same_as_armature(self, tmp, variant, creature, skel, bones_msg=""):
         path = os.path.join(tmp, "pose.json")
         done = blender("-P", os.path.join(HERE, "probe_pose.py"), "--", path, variant, creature)
         self.assertTrue(os.path.exists(path), done.stdout[-1500:] + done.stderr[-1500:])
         with open(path) as fh:
             probes = json.load(fh)
-        self.assertEqual({p["clip"] for p in probes}, {"idle", "walk", "run", "attack", "hurt", "die"})
+        self.assertEqual({p["clip"] for p in probes}, self._clips_of_a_body(variant) if creature == "undead" else {"idle", "walk", "run", "attack", "hurt", "die"})
         for probe in probes:
             self.assertEqual(set(probe["bones"]), set(skel.rest), bones_msg)
             posed = skel.pose({k: tuple(v) for k, v in probe["rot"].items()}, tuple(probe["root"]))
@@ -326,7 +334,7 @@ class PipelineTest(unittest.TestCase):
                 with open(os.path.join(tmp, "meta.json")) as fh:
                     meta = json.load(fh)
                 size, ground = meta["canvas"], meta["canvas"] - meta["margin"]
-                self.assertEqual(set(meta["anims"]), {"idle", "walk", "run", "attack", "hurt", "die"})
+                self.assertEqual(set(meta["anims"]), self._clips_of_a_body(variant) if creature == "undead" else {"idle", "walk", "run", "attack", "hurt", "die"})
                 for anim, count in meta["anims"].items():
                     self.assertEqual(len(meta["durations"][anim]), count, anim)
                     for i in range(count):
