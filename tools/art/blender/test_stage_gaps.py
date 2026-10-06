@@ -71,5 +71,21 @@ class RealCreatureTests(unittest.TestCase):
         self.assertGreater(json.loads(line[5:])["walk_run"]["foot_slide_px"], MAX_SLIDE_PX, "a goblin walking on one frozen pose is dragging its feet")
 
 
+    def test_a_slow_walk_is_measured_too_and_frozen_feet_are_caught_in_it(self):
+        ticks = [{"t": i / 60.0, "x": 100.0 + 11.5 * i / 60.0, "y": 0.0, "vx": 11.5, "vy": 0.0, "speed": 11.5, "crawl": False, "facing": 1, "verb": "", "on_floor": True,
+                  "surface": "floor", "normal": [0.0, -1.0]} for i in range(300)]
+        path = os.path.join(STAGE, "undead_slow_walk.json")
+        with open(path, "w") as fh:
+            json.dump({"species": "undead", "script": "walk_run", "fps": 60, "start": [100.0, 0.0], "ticks": ticks}, fh)
+        slid = {}
+        for flag in ([], ["--frozen-feet"]):
+            out = subprocess.run([BLENDER, "-b", "-P", os.path.join(os.path.dirname(os.path.abspath(__file__)), "stage_review.py"), "--", "--creature", "undead", "--gaps", *flag, "--recording", path],
+                                 capture_output=True, text=True)
+            slid[bool(flag)] = json.loads([x for x in out.stdout.splitlines() if x.startswith("GAPS ")][-1][5:])["walk_run"]["foot_slide_px"]
+        self.assertLess(slid[False], MAX_SLIDE_PX)
+        self.assertGreater(slid[True], 0.0, "twelve ticks between poses is no reason to measure nothing")
+        self.assertGreater(slid[True], slid[False])
+
+
 if __name__ == "__main__":
     unittest.main()

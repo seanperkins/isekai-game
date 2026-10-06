@@ -253,23 +253,31 @@ RUNS = {"goblin": ["walk_run", "jump_ledges", "wall_shaft"], "undead": ["walk_ru
 # ---- the feet themselves ----------------------------------------------------------------------------------------------------------
 
 class Change:
-    """A gait changing pose: to which `frame` of the clip of `state`, with the body at (x, y) at that very moment (between two ticks), and the frame it is posed as."""
-    def __init__(self, state, frame, x, y, pose_frame):
-        self.state, self.frame, self.x, self.y, self.pose_frame = state, frame, x, y, pose_frame
+    """A gait changing pose: to which `frame` of the clip of `state`, with the body at (x, y) at that very moment (between two ticks), and the frame it is posed as. `run` numbers
+    the stretch of one unbroken gait it belongs to: two changes of one run are two steps of the same stride, however slow."""
+    def __init__(self, state, frame, x, y, pose_frame, run=0):
+        self.state, self.frame, self.x, self.y, self.pose_frame, self.run = state, frame, x, y, pose_frame, run
         self.rot, self.root, self.grounded = pose_frame.rot, pose_frame.root, pose_frame.grounded
 
 
 def pose_changes(frames, clips, walk_speed, run_factor=RUN_SPEED):
     """The moments a walk or a run goes on to its next pose, from `frames` posed every tick: for each, where the body is when the gait's phase reaches the new frame, worked out between
     the two ticks it falls between. A planted foot is judged at these moments (the pose is the gait sampled exactly there), not where the ticks fall."""
-    out = []
+    out, run, was = [], 0, None
     for a, b in zip(frames, frames[1:]):
-        if a.state != b.state or a.state not in GAITS or a.normal != b.normal or a.missing or b.missing or a.frame == b.frame or b.phase <= a.phase:
+        gait = a.state == b.state and a.state in GAITS and a.normal == b.normal and not (a.missing or b.missing)
+        if not gait:
+            was = None  # standing, in the air, a verb: the stride is broken
+            continue
+        if was is None or a.state != was:
+            run += 1
+        was = a.state
+        if a.frame == b.frame or b.phase <= a.phase:
             continue
         durations = clips[b.clip].durations
         start = sum(durations[:b.frame]) / sum(durations)
         t = min(max((math.floor(b.phase) + start - a.phase) / (b.phase - a.phase), 0.0), 1.0)
-        out.append(Change(a.state, b.frame, a.x + t * (b.x - a.x), a.y + t * (b.y - a.y), b))
+        out.append(Change(a.state, b.frame, a.x + t * (b.x - a.x), a.y + t * (b.y - a.y), b, run))
     return out
 
 
@@ -437,7 +445,6 @@ def _world(scene):
 
 
 FOOT_EPS_PX = 0.6      # a vertex this close to the ground is resting on it
-STEP_TICKS = 8        # poses further apart than this are not the next step of the same stride
 NO_FEET = ("slime",)   # a jelly hops; it has no foot to plant
 
 
@@ -480,7 +487,7 @@ def foot_slide_px(rig, frames, clips, walk_speed, run_factor, ppu, frozen=None):
     (`pose_changes`, with the body where it really is then) and where each bone's vertices rest on the ground is compared with the pose before: a foot that is planted stays where it came
     down, so what it moves is the animation's error (the feet drifting with the body between two poses is the frame rate's, and nobody's to fix). `frozen` poses every moment the same way
     instead: a check that the measure notices feet that do not move."""
-    worst, before, last, gait = 0.0, None, None, None
+    worst, before, last = 0.0, None, None
     for c in pose_changes(frames, clips, walk_speed, run_factor):
         if c.pose_frame.angle != 0.0:
             before = None
@@ -489,9 +496,9 @@ def foot_slide_px(rig, frames, clips, walk_speed, run_factor, ppu, frozen=None):
         f.x, f.y = c.x, c.y
         _pose_rig(rig, f, ppu, frozen)
         spans = contact_spans(resting_points(rig, stage.px_to_units(-f.y, ppu), stage.px_to_units(FOOT_EPS_PX, ppu)))
-        if before is not None and c.state == gait and c.pose_frame.tick - last <= STEP_TICKS:  # the next pose of the same gait, not a walk handing over to a run
+        if before is not None and c.run == last:  # the next pose of the same unbroken gait, however slow: not a walk handing over to a run or starting again after a stop
             worst = max(worst, contact_slide(before, spans) * ppu)
-        before, last, gait = spans, c.pose_frame.tick, c.state
+        before, last = spans, c.run
     return worst
 
 

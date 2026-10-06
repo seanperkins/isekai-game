@@ -78,12 +78,12 @@
 
 **Interfaces:**
 - Consumes: the Task 2 course, a Task 3 recording, a creature module's pose functions (`biped_motion`, `quad_motion`, `spider_motion`, `slime_motion`, `player_poses`).
-- Produces: `.tmp/stage/<species>_<script>/frame_####.png` and `review.gif`; `pose_for(clips, state, phase)` (pure Python; `clips` is what a creature module's `clips_of` builds, since a pose needs the rig's measured feet) returning the pose the Blender side applies, or raising `NoPose(state)`.
+- Produces: `.tmp/stage/<creature>/<script>/frame_####.png` and `review.gif`; `pose_for(clips, state, phase)` (pure Python; `clips` is what a creature module's `clips_of` builds, since a pose needs the rig's measured feet) returning the pose the Blender side applies, or raising `NoPose(state)`.
 
-- [ ] **Step 1: Write the failing test** (pure Python, no Blender): `pose_for("goblin", "walk", 0.25, 60.0)` returns the biped walk pose at that phase; `pose_for("goblin", "wall", ...)` returns the wall pose; an unknown state raises `NoPose`; walk phase advances by speed divided by the stride length so feet do not slide (`phase_rate(speed, stride) == speed / stride`).
+- [ ] **Step 1: Write the failing test** (pure Python, no Blender): `pose_for(clips, "walk", 0.25)` returns the biped walk pose at that phase; `pose_for(clips, "wall", 0.0)` returns the wall pose; an unknown state raises `NoPose`; walk phase advances by speed divided by the stride length so feet do not slide (`phase_rate(speed, stride) == speed / stride`).
 - [ ] **Step 2: Run** `python3 -m unittest tools/art/blender/test_stage_review.py` — Expected: FAIL.
-- [ ] **Step 3: Implement** `pose_for` and `phase_rate` over the existing motion modules; then the Blender script that builds the course boxes (one mesh per rect, `stage.px_to_units`), the ground, a tracking camera on `stage.camera_params`, and per tick poses the rig at `(x, y)` with `pose_for`, rendering a low-resolution preview.
-- [ ] **Step 4: Run** `python3 tools/art/stage_review.py goblin --script jump_ledges` — Expected: writes `review.gif` under `.tmp/stage/goblin_jump_ledges/`; open it and check the feet land on the ledges.
+- [ ] **Step 3: Implement** `pose_for` and `phase_rate` over the existing motion modules; then the Blender script that builds the course boxes (one mesh per rect, `stage.px_to_units`), the ground, a tracking camera on `stage.camera_params`, and per tick poses the rig at `(x, y)` with `pose_for(clips, state, phase)`, rendering a low-resolution preview.
+- [ ] **Step 4: Run** `python3 tools/art/stage_review.py goblin --script jump_ledges` — Expected: writes `review.gif` under `.tmp/stage/goblin/jump_ledges/`; open it and check the feet land on the ledges.
 - [ ] **Step 5: Commit** `feat: review a species' movement on the 3D stage`.
 
 ### Task 5: Reviewing every species and the feel checks

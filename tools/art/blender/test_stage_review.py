@@ -369,6 +369,35 @@ class PoseChangeTests(unittest.TestCase):
         self.assertEqual(sr.pose_changes(frames, clips, WALK_SPEED), [])
 
 
+class StrideRunTests(unittest.TestCase):
+    """Which pose changes are steps of one stride: the check compares those, however slow the walk, and none across a stop or a change of gait."""
+
+    def rec(self, ticks):
+        return {"species": "goblin", "script": "w", "fps": 60, "start": [0.0, 0.0], "ticks": ticks}
+
+    def test_a_very_slow_walk_is_still_one_stride_with_many_ticks_between_steps(self):
+        clips = goblin_clips()
+        frames = sr.playback(self.rec([tick(i, x=11.5 * i / 60.0, vx=11.5) for i in range(300)]), clips, WALK_SPEED, every=1)
+        changes = sr.pose_changes(frames, clips, WALK_SPEED)
+        gaps = [b.pose_frame.tick - a.pose_frame.tick for a, b in zip(changes, changes[1:])]
+        self.assertGreater(min(gaps), 5, "a pose lasts six ticks or more: the rate is held at the game's lowest")
+        self.assertEqual({c.run for c in changes}, {changes[0].run}, "one stride")
+
+    def test_a_stop_and_a_change_of_gait_start_a_new_stride(self):
+        clips = goblin_clips()
+        walk = [tick(i, x=100.0 * i / 60.0, vx=100.0) for i in range(60)]
+        stop = [tick(60 + i, x=100.0) for i in range(30)]
+        run = [tick(90 + i, x=100.0 + 200.0 * i / 60.0, vx=200.0) for i in range(60)]
+        again = [tick(150 + i, x=300.0 + 100.0 * i / 60.0, vx=100.0) for i in range(60)]
+        frames = sr.playback(self.rec(walk + stop + run + again), clips, WALK_SPEED, every=1)
+        runs = []
+        for c in sr.pose_changes(frames, clips, WALK_SPEED):
+            if not runs or runs[-1][0] != c.run:
+                runs.append((c.run, c.state))
+        self.assertEqual([state for _, state in runs], ["walk", "run", "walk"])
+        self.assertEqual(len({r for r, _ in runs}), 3)
+
+
 class GifTests(unittest.TestCase):
     def test_a_gif_times_frames_in_hundredths_so_the_durations_share_out_the_rounding(self):
         d = sr.gif_durations(60, 60.0)  # a sixtieth of a second is not a whole hundredth
