@@ -9,6 +9,7 @@ const LOOKS := {
 	"spider": {"sheet": "spider", "clips": "res://data/enemy_clips.json", "key": "spider"},
 	"wolf": {"sheet": "gloom_wolf", "clips": "res://data/enemy_clips.json", "key": "gloom_wolf"},
 	"biped": {"sheet": "goblin", "clips": "res://data/enemy_clips.json", "key": "goblin"},
+	"undead": {"sheet": "undead_base", "clips": "res://data/enemy_clips.json", "key": "undead_base"},   # moves as a biped (profile "biped") and looks like a skeleton
 }
 ## Horizontal speed (px/s) above which the spider crawls and the wolf walks, and from which the wolf gallops.
 const MOVING_SPEED := 8.0
@@ -22,6 +23,10 @@ const STRIDE_PX := 24.0
 ## The slime's ball: a clip name for the animator (frame `fall`); the sandbox draws the ball itself with SlimeBall, since no
 ## sheet frame is round.
 const BALL_CLIP := {"frames": ["fall"], "fps": 1.0, "loop": false}
+
+## The look a species is drawn with: its own when it has one (the undead's skeleton), else the one its movement profile gives (the goblin is the biped's).
+static func look_of(species: String, profile_id: String) -> String:
+	return species if LOOKS.has(species) else profile_id
 
 static func has_look(species: String) -> bool:
 	return LOOKS.has(species)
@@ -56,7 +61,7 @@ static func clip_for(species: String, on_floor: bool, vy: float, vx: float, land
 			if not on_floor:
 				return "drop"
 			return "crawl" if absf(vx) > MOVING_SPEED else "hang"
-		"biped":
+		"biped", "undead":
 			if verb == "roll" or verb == "slide" or verb == "mantle":
 				return verb  # a verb beats the wall pose and the air poses
 			if wall:

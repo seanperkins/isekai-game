@@ -48,6 +48,11 @@ class PlanTest(unittest.TestCase):
         self.assertFalse(table["recover"]["loop"])
         self.assertAlmostEqual(len(table["recover"]["frames"]) * 0.02, 6 * 0.06, delta=0.03)
 
+    def test_the_skeleton_the_player_is_as_undead_has_the_same_states_as_the_goblin(self):
+        self.assertEqual(eb.SPECS["undead_base"]["states"], eb.SPECS["goblin"]["states"], "a biped body of the player's: the same clips ask for the same frames")
+        self.assertEqual(eb.SPECS["undead_base"]["render"], ("undead", "skeleton"))
+        self.assertEqual(eb.SPECS["undead_base"]["key"], "undead_base", "its own sheet, not named for the skeleton creature whose size the rooms read")
+
     def test_the_goblins_states_are_the_ones_the_player_asks_for(self):
         _, table = eb.plan(eb.SPECS["goblin"], dict(META, windup=4, anims=dict(META["anims"], rise=1, fall=1, roll=4, slide=1, mantle=2, wall=1, land=1),
                                                    durations=dict(META["durations"], rise=[0.1], fall=[0.1], roll=[0.1] * 4, slide=[0.1], mantle=[0.1, 0.1], wall=[0.1], land=[0.1])))

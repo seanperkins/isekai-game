@@ -189,11 +189,11 @@ func _block(r: Rect2) -> StaticBody2D:
 	add_child_autofree(b)
 	return b
 
-func test_a_goblin_and_an_undead_use_the_biped_profile_and_the_goblin_sheet() -> void:
-	for species in ["goblin", "undead"]:
-		await _spawn(species)
-		assert_eq(player.species_body.profile.id, "biped", species)
-		assert_eq(player.body_sheet().frame_size("idle_1"), SpriteSheet.load_set("goblin").frame_size("idle_1"), species)
+func test_a_goblin_and_an_undead_use_the_biped_profile_each_with_its_own_sheet() -> void:
+	for pair in [["goblin", "goblin"], ["undead", "undead_base"]]:
+		await _spawn(pair[0])
+		assert_eq(player.species_body.profile.id, "biped", pair[0])
+		assert_eq(player.body_sheet().frame_size("idle_1"), SpriteSheet.load_set(pair[1]).frame_size("idle_1"), pair[0])
 		player.queue_free()
 		await wait_physics_frames(2)
 

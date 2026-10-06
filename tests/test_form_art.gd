@@ -125,20 +125,20 @@ func test_a_form_with_no_still_keeps_the_animated_look() -> void:
 	await _spawn("wolf")
 	assert_eq(player.still_frame(), "", "the base wolf animates")
 
-func test_a_still_spider_on_a_wall_is_turned_to_it_and_keeps_its_thread() -> void:
+func test_an_animated_spider_on_a_wall_is_turned_to_it_and_keeps_its_thread() -> void:
 	await _spawn("spider")
 	var forms := FormLoader.load_all()
 	var stage2: Array = forms.values().filter(func(f: FormDef) -> bool: return f.species == "spider" and f.stage == 2)
 	assert_true(player.advance_form(stage2[0].id, true))
 	await _settle()
-	assert_ne(player.still_frame(), "")
+	assert_true(player.form_animates())
 	_block(Rect2(60.0, -600.0, 40, 600.0 + BodyConfig.BOTTOM))
 	await wait_physics_frames(2)
 	Input.action_press("move_right")
 	await wait_physics_frames(100)
 	var sprite: Sprite2D = player.get_node("Sprite")
 	assert_gt(absf(sprite.rotation), 1.0, "a quarter turn to the wall")
-	assert_eq(_tex_region(sprite), (SpriteSheet.load_set("forms_spider").frame_texture(player.still_frame()) as AtlasTexture).region)
+	assert_true(sprite.texture is CanvasTexture, "lit while it climbs")
 
 func test_a_form_whose_sheet_cannot_be_found_falls_back_to_the_base_look() -> void:
 	await _spawn("wolf")
@@ -191,7 +191,7 @@ func _bounds(points: PackedVector2Array) -> Rect2:
 		r = r.expand(p)
 	return r
 
-func test_a_still_spider_has_its_frames_hurt_shape_swells_through_evolution_and_flashes_when_hit() -> void:
+func test_an_animated_spider_has_its_idle_frames_hurt_shape_swells_through_evolution_and_flashes_when_hit() -> void:
 	await _spawn("spider")
 	var base_scale: float = (player.get_node("Sprite") as Sprite2D).scale.x
 	var forms := FormLoader.load_all()
@@ -201,18 +201,18 @@ func test_a_still_spider_has_its_frames_hurt_shape_swells_through_evolution_and_
 	var sprite: Sprite2D = player.get_node("Sprite")
 	assert_gt(sprite.scale.x, base_scale + 0.05, "swelling through the evolution moment")
 	await _settle()
-	var frame := player.still_frame()
+	var idle_frame: String = player._animator.clips["idle"]["frames"][0]
 	player.global_position.y -= 80.0  # in the air, where a spider is not turned to a surface
 	await wait_physics_frames(3)
-	var traced: PackedVector2Array = SpriteSheet.load_set("forms_spider").hurt(frame)
+	var traced: PackedVector2Array = player.body_sheet().hurt(idle_frame)
 	Input.action_press("move_left")  # in the air, turning round: the shape is mirrored with the sprite
 	await wait_physics_frames(12)
-	assert_true(sprite.flip_h, "facing left")
+	assert_false(sprite.flip_h, "turned round in the texture, so its normals turn with it")
 	var mirrored := PackedVector2Array()
 	for p in traced:
 		mirrored.append(Vector2(-p.x, p.y))
 	var expected := ShapeHit.moved(mirrored, player.global_position + Vector2(0.0, Player.BODY_BOTTOM), 1.0)
-	assert_eq(player.hurt_polygon(), expected, "the still's own traced shape, mirrored, point for point")
+	assert_eq(player.hurt_polygon(), expected, "the idle frame's own traced shape, mirrored, point for point")
 	player.receive_hit(1, "physical", player.global_position + Vector2(40.0, 0.0))
 	await wait_physics_frames(2)
 	assert_lt(sprite.modulate.g, sprite.modulate.r, "red for a moment when hurt")

@@ -12,5 +12,19 @@
       "damage_type": "physical",
       "cooldown": 0.55
     }
+  },
+  {
+    "species": "undead",
+    "name": "Slash",
+    "mp": 1,
+    "value": 3,
+    "text": "A short, notched slash with a rusty blade, close in front of you.",
+    "spec": {
+      "kind": "burst",
+      "range": 30,
+      "half_width": 16,
+      "damage_type": "physical",
+      "cooldown": 0.55
+    }
   }
 ]

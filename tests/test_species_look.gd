@@ -127,3 +127,14 @@ func test_a_pouncing_wolf_shows_the_leaping_frame_even_on_the_floor() -> void:
 	assert_eq(SpeciesLook.clip_for("wolf", true, 0.0, 0.0, 0.0, "pounce"), "windup")
 	assert_eq(SpeciesLook.clip_for("wolf", false, -50.0, 230.0, 0.0, "pounce"), "windup")
 	assert_eq(SpeciesLook.clip_for("wolf", true, 0.0, 230.0, 0.0), "charge", "no verb, no leap")
+
+func test_the_undead_is_a_skeleton_not_a_goblin_but_moves_as_a_biped() -> void:
+	assert_eq(SpeciesLook.look_of("undead", "biped"), "undead")
+	assert_eq(SpeciesLook.look_of("goblin", "biped"), "biped", "the goblin keeps the biped's look")
+	assert_eq(SpeciesLook.look_of("wolf", "wolf"), "wolf")
+	assert_not_null(SpeciesLook.sheet_for("undead"), "the skeleton's sheet is assembled and imported")
+	assert_ne(SpeciesLook.sheet_for("undead").frame_size("idle_1"), SpeciesLook.sheet_for("biped").frame_size("idle_1"))
+	assert_true(SpeciesLook.clips_for("undead").has("recover"), "it has the follow-through of its blow")
+	assert_eq(SpeciesLook.clip_for("undead", true, 0.0, 100.0, 0.0), "run")
+	assert_eq(SpeciesLook.clip_for("undead", false, -50.0, 0.0, 0.0), "rise")
+	assert_eq(SpeciesLook.clip_for("undead", true, 0.0, 0.0, 0.0, "roll"), "roll")

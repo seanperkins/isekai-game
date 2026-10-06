@@ -7,6 +7,7 @@ script = ExtResource("1_q4dwy")
 id = "undead"
 display_name = "Undead"
 movement_profile = "biped"
+verb = "verb_undead"
 unlock = {
 "creature": "bog_lizardman",
 "kind": "count",

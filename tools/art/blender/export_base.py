@@ -24,11 +24,13 @@ import clips  # noqa: E402
 # Two options name how the state is cut and never reach the sheet's spec: "name" (a one-frame state is called that, not `<state>_1`, for the code that asks the sheet
 # for a frame by name), and "even" (the picked frames are sampled around the whole clip: each lasts the clip's length divided by their number). A spec with `tight` cuts each frame to its own drawn pixels (a blob has no centre line to keep; a walker's frames are cut about its centre).
 # A spec writes its clips to its `file` (default data/enemy_clips.json) under its `key`; with a `file` of None it writes none.
-SPECS = {
-    "goblin": dict(render=("goblin", "goblin"), key="goblin", states=[
-        ("idle", "idle", None, True, {}), ("run", "run", None, True, {}), ("rise", "rise", [0], False, {}), ("fall", "fall", [0], False, {}),
+# the states of a player's two-legged body (the goblin, the skeleton): what species_look.gd asks of it, and the follow-through of its blow
+BIPED_STATES = [("idle", "idle", None, True, {}), ("run", "run", None, True, {}), ("rise", "rise", [0], False, {}), ("fall", "fall", [0], False, {}),
         ("roll", "roll", None, True, {}), ("slide", "slide", [0], False, {}), ("mantle", "mantle", None, False, {}), ("wall", "wall", [0], True, {}),
-        ("land", "land", [0], False, {}), ("recover", "attack", "recover", False, {})]),   # the player's blow: the frames from the impact on
+        ("land", "land", [0], False, {}), ("recover", "attack", "recover", False, {})]
+SPECS = {
+    "goblin": dict(render=("goblin", "goblin"), key="goblin", states=BIPED_STATES),
+    "undead_base": dict(render=("undead", "skeleton"), key="undead_base", states=BIPED_STATES),   # the player's undead body: not named for the skeleton creature, whose size the rooms read
     "gloom_wolf": dict(render=("wolf", "gloom_wolf"), key="gloom_wolf", states=[
         ("idle", "idle", None, True, {}), ("walk", "walk", None, True, {}), ("windup", "attack", [2], False, {}),
         ("charge", "run", None, True, {"attack_from": 0.55}), ("rest", "attack", [9], True, {}), ("stunned", "hurt", [2], False, {}),

@@ -88,10 +88,11 @@ func test_a_malformed_pick_starts_a_slime() -> void:
 
 # --- a species' own verb: the default goblin's weak blow ---
 
-func test_only_the_goblin_has_a_verb_of_its_own_so_far() -> void:
+func test_the_two_legged_species_have_a_blow_of_their_own_and_the_others_have_their_moves() -> void:
 	var catalog := SpeciesCatalog.load_all()
 	assert_eq(catalog["goblin"].verb, "verb_goblin")
-	for id in ["slime", "wolf", "undead", "spider"]:
+	assert_eq(catalog["undead"].verb, "verb_undead")
+	for id in ["slime", "wolf", "spider"]:
 		assert_eq(catalog[id].verb, "", id)
 	assert_eq(SpeciesCatalog.verb_of("goblin"), "verb_goblin")
 	assert_eq(SpeciesCatalog.verb_of("wolf"), "")

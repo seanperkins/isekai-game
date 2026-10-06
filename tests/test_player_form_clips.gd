@@ -94,8 +94,43 @@ func test_a_blow_to_it_plays_the_flinch() -> void:
 	await wait_physics_frames(2)
 	assert_eq(player._animator.state(), "hurt")
 
-func test_a_spider_form_still_draws_as_its_picture() -> void:
+func test_an_evolved_spider_animates_too_lit_and_mirrored_in_its_texture() -> void:
 	await _spawn("spider")
+	await _evolve("spider_weavermaid")
+	assert_true(player.form_animates())
+	assert_eq(player.still_frame(), "")
+	assert_true(_sprite().texture is CanvasTexture, "lit")
+	assert_eq(player._animator.state(), "idle")
+	Input.action_press("move_right")
+	await wait_physics_frames(30)
+	assert_true(["walk", "run"].has(player._animator.state()), "crawling: %s" % player._animator.state())
+	Input.action_release("move_right")
+	Input.action_press("move_left")
+	await wait_physics_frames(30)
+	assert_false(_sprite().flip_h, "turned round in the texture, so its normals turn with it")
+	assert_eq(_sprite().texture, player._sheet.texture_of(player._animator.frame(), true))
+
+func test_an_evolved_spider_is_turned_to_the_wall_it_climbs_and_keeps_its_clips() -> void:
+	await _spawn("spider")
+	await _evolve("spider_weavermaid")
+	var wall := StaticBody2D.new()
+	wall.position = Vector2(160.0, BodyConfig.BOTTOM - 150.0)
+	var shape := CollisionShape2D.new()
+	var rect := RectangleShape2D.new()
+	rect.size = Vector2(40.0, 340.0)
+	shape.shape = rect
+	wall.add_child(shape)
+	add_child_autofree(wall)
+	Input.action_press("move_right")
+	await wait_physics_frames(120)
+	assert_gt(absf(_sprite().rotation), 0.5, "turned to the wall")
+	assert_true(["walk", "run"].has(player._animator.state()), "its legs are walking up it: %s" % player._animator.state())
+
+func test_a_spider_form_without_clips_still_draws_as_its_picture() -> void:
+	await _spawn("spider")
+	var odd: FormDef = player.forms["spider_weavermaid"].duplicate()
+	odd.id = "spider_odd"  # no clips of its own
+	player.forms["spider_weavermaid"] = odd
 	await _evolve("spider_weavermaid")
 	assert_ne(player.still_frame(), "")
 	assert_false(player.form_animates())
@@ -109,3 +144,11 @@ func test_the_default_goblin_stabs_when_it_casts_its_blow_and_a_wolf_without_a_b
 	assert_eq(player._animator.state(), "recover", "the follow-through of the jab")
 	await wait_seconds(Player.CAST_POSE_SECONDS + 0.25)
 	assert_eq(player._animator.state(), "idle")
+
+func test_the_default_undead_is_drawn_as_the_skeleton_and_has_a_blow_of_its_own() -> void:
+	await _spawn("undead")
+	assert_eq(player.body_sheet().frame_size("idle_1"), SpriteSheet.load_set("undead_base").frame_size("idle_1"), "the skeleton's sheet, not the goblin's")
+	assert_eq(player.skillset.slots.use(0), "verb_undead")
+	player.use_active(0)
+	await wait_physics_frames(2)
+	assert_eq(player._animator.state(), "recover")

@@ -1247,5 +1247,201 @@
    "fps": 50.0,
    "loop": false
   }
+ },
+ "undead_base": {
+  "idle": {
+   "frames": [
+    "idle_1",
+    "idle_1",
+    "idle_1",
+    "idle_1",
+    "idle_1",
+    "idle_1",
+    "idle_1",
+    "idle_1",
+    "idle_2",
+    "idle_2",
+    "idle_2",
+    "idle_2",
+    "idle_2",
+    "idle_2",
+    "idle_2",
+    "idle_3",
+    "idle_3",
+    "idle_3",
+    "idle_3",
+    "idle_3",
+    "idle_3",
+    "idle_3",
+    "idle_3",
+    "idle_4",
+    "idle_4",
+    "idle_4",
+    "idle_4",
+    "idle_4",
+    "idle_4",
+    "idle_4",
+    "idle_5",
+    "idle_5",
+    "idle_5",
+    "idle_5",
+    "idle_5",
+    "idle_5",
+    "idle_5",
+    "idle_5",
+    "idle_6",
+    "idle_6",
+    "idle_6",
+    "idle_6",
+    "idle_6",
+    "idle_6",
+    "idle_6",
+    "idle_7",
+    "idle_7",
+    "idle_7",
+    "idle_7",
+    "idle_7",
+    "idle_7",
+    "idle_7",
+    "idle_7",
+    "idle_8",
+    "idle_8",
+    "idle_8",
+    "idle_8",
+    "idle_8",
+    "idle_8",
+    "idle_8"
+   ],
+   "fps": 50.0,
+   "loop": true
+  },
+  "run": {
+   "frames": [
+    "run_1",
+    "run_1",
+    "run_2",
+    "run_2",
+    "run_2",
+    "run_3",
+    "run_3",
+    "run_4",
+    "run_4",
+    "run_4",
+    "run_5",
+    "run_5",
+    "run_6",
+    "run_6",
+    "run_6",
+    "run_7",
+    "run_7",
+    "run_8",
+    "run_8",
+    "run_9",
+    "run_9",
+    "run_9",
+    "run_10",
+    "run_10"
+   ],
+   "fps": 50.0,
+   "loop": true
+  },
+  "rise": {
+   "frames": [
+    "rise_1"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "fall": {
+   "frames": [
+    "fall_1"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "roll": {
+   "frames": [
+    "roll_1",
+    "roll_1",
+    "roll_1",
+    "roll_1",
+    "roll_1",
+    "roll_2",
+    "roll_2",
+    "roll_2",
+    "roll_2",
+    "roll_2",
+    "roll_3",
+    "roll_3",
+    "roll_3",
+    "roll_3",
+    "roll_3",
+    "roll_4",
+    "roll_4",
+    "roll_4",
+    "roll_4",
+    "roll_4"
+   ],
+   "fps": 50.0,
+   "loop": true
+  },
+  "slide": {
+   "frames": [
+    "slide_1"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "mantle": {
+   "frames": [
+    "mantle_1",
+    "mantle_1",
+    "mantle_1",
+    "mantle_1",
+    "mantle_1",
+    "mantle_2",
+    "mantle_2",
+    "mantle_2",
+    "mantle_2",
+    "mantle_2"
+   ],
+   "fps": 50.0,
+   "loop": false
+  },
+  "wall": {
+   "frames": [
+    "wall_1"
+   ],
+   "fps": 1.0,
+   "loop": true
+  },
+  "land": {
+   "frames": [
+    "land_1"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "recover": {
+   "frames": [
+    "recover_1",
+    "recover_1",
+    "recover_1",
+    "recover_1",
+    "recover_2",
+    "recover_2",
+    "recover_2",
+    "recover_3",
+    "recover_3",
+    "recover_4",
+    "recover_4",
+    "recover_4",
+    "recover_5",
+    "recover_5",
+    "recover_5"
+   ],
+   "fps": 50.0,
+   "loop": false
+  }
  }
 }

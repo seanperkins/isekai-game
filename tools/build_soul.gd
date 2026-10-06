@@ -38,7 +38,7 @@ func _init() -> void:
 	failures += _save(_slime(), "res://data/species/slime.tres")
 	failures += _save(_species("wolf", "Wolf", "wolf", {"kind": "defeat", "creature": "gloom_wolf"}), "res://data/species/wolf.tres")
 	failures += _save(_species("goblin", "Goblin", "biped", {"kind": "count", "creature": "armed_ant", "n": 3}, "verb_goblin"), "res://data/species/goblin.tres")
-	failures += _save(_species("undead", "Undead", "biped", {"kind": "count", "creature": "bog_lizardman", "n": 3}), "res://data/species/undead.tres")
+	failures += _save(_species("undead", "Undead", "biped", {"kind": "count", "creature": "bog_lizardman", "n": 3}, "verb_undead"), "res://data/species/undead.tres")
 	failures += _save(_species("spider", "Spider", "spider", {"kind": "count", "creature": "spider", "n": 5}), "res://data/species/spider.tres")
 	failures += _save(_stats_perk(), "res://data/perks/stats.tres")
 	failures += _save(SoulRules.new(), "res://data/soul/soul_rules.tres")
