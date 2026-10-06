@@ -101,21 +101,41 @@ class GaitTest(unittest.TestCase):
     def poses(self, body, gait):
         return [(k / self.SAMPLES, gm.gait_pose(body, gait, k / self.SAMPLES, self.STRIDE)) for k in range(self.SAMPLES)]
 
-    def test_a_planted_foot_is_on_the_ground_and_its_contact_point_moves_back_at_one_speed_in_both_gaits(self):
+    def test_a_planted_foot_lies_flat_on_the_ground_and_moves_back_at_one_speed_through_the_middle_of_its_stance_in_both_gaits(self):
+        a, b = anim.ROLL
         for gait in ("walk", "run"):
             body = body_of()
             duty = gm.GAITS[gait]["duty"]
-            leg = body.legs["n"]
             xs = []
             for t, (rot, root) in self.poses(body, gait):
-                if t >= duty - 0.01:
-                    continue
+                if (a + 0.04) * duty < t < (b - 0.04) * duty:
+                    heel, toe = sole(body, "n", rot, root)
+                    self.assertAlmostEqual(heel[1], 0.0, places=6, msg="%s t=%.3f: the heel is on the ground" % (gait, t))
+                    self.assertAlmostEqual(toe[1], 0.0, places=6, msg="%s t=%.3f: and the toe" % (gait, t))
+                    xs.append((t, heel[0], toe[0]))
+            for index in (1, 2):
+                slopes = [(q[index] - p[index]) / (q[0] - p[0]) for p, q in zip(xs, xs[1:])]
+                self.assertAlmostEqual(sum(slopes) / len(slopes), -self.STRIDE / duty, delta=0.02, msg=gait)
+                self.assertLess(max(slopes) - min(slopes), 0.06 * self.STRIDE / duty, "%s: the speed does not change through the stance" % gait)
+
+    def test_the_heel_stays_put_on_landing_and_the_toe_at_toe_off_whatever_the_gait(self):
+        a, b = anim.ROLL
+        for gait in ("walk", "run"):
+            body = body_of()
+            duty = gm.GAITS[gait]["duty"]
+            heel_x, toe_x = [], []
+            for t, (rot, root) in self.poses(body, gait):
                 heel, toe = sole(body, "n", rot, root)
-                self.assertAlmostEqual(min(heel[1], toe[1]), 0.0, places=6, msg="%s t=%.3f: the sole is on the ground" % (gait, t))
-                xs.append((t, leg.contact(body.skel.pose(rot, root))))
-            slopes = [(b[1] - a[1]) / (b[0] - a[0]) for a, b in zip(xs, xs[1:])]
-            self.assertAlmostEqual(sum(slopes) / len(slopes), -self.STRIDE / duty, delta=0.02, msg=gait)
-            self.assertLess(max(slopes) - min(slopes), 0.06 * self.STRIDE / duty, "%s: the speed does not change through the stance" % gait)
+                if 0.02 * duty < t < a * duty:
+                    heel_x.append((t, heel[0], heel[1]))
+                if (b + 0.05) * duty < t < 0.98 * duty:
+                    toe_x.append((t, toe[0], toe[1]))
+            for points in (heel_x, toe_x):
+                slopes = [(q[1] - p[1]) / (q[0] - p[0]) for p, q in zip(points, points[1:])]
+                for slope in slopes:
+                    self.assertAlmostEqual(slope, -self.STRIDE / duty, delta=0.02, msg=gait)
+                for _, _, z in points:
+                    self.assertAlmostEqual(z, 0.0, places=6)
 
     def test_the_swinging_foot_clears_the_ground_and_never_goes_through_it(self):
         for gait in ("walk", "run"):

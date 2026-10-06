@@ -6,10 +6,8 @@ data, not new animation.
 Each form is sized so the still covers the same area (width times height) as the still its sheet frame has today (before/forms_goblin.json), so
 the game's size ladder is kept while the proportions are the form's own.
 """
-import json
 import math
 import os
-import re
 import sys
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -24,6 +22,7 @@ import goblin_motion as motion_  # noqa: E402
 import goblin_skeleton as skeleton  # noqa: E402
 import rigkit as k  # noqa: E402
 import secondary  # noqa: E402
+import sizing  # noqa: E402
 import skeleton2d  # noqa: E402
 from creatures import wolf  # noqa: E402
 from goblin_kit import down, up  # noqa: E402
@@ -122,35 +121,12 @@ def _rider_clip(rig, form, anim_name):
 
 # ---- sizing -----------------------------------------------------------------------------------------------------------------------
 def motion(variant):
-    """How fast this form crosses the ground in the game, in the sprite's own pixels per second: the enemy's speed (60 px/s times its spd
-    stat over 100) divided by the size its sprite is drawn at. The walk is built so a planted foot moves back at exactly this speed."""
-    speed, size = 60.0, 1.0
-    if variant and variant != "goblin":
-        path = os.path.join(HERE, "..", "..", "..", "data", "creatures", "twin_goblin_%s.tres" % variant)
-        try:
-            text = open(path).read()
-            spd = re.search(r'"spd":\s*(\d+)', text)
-            sz = re.search(r"^sprite_size = ([0-9.]+)", text, re.M)
-            speed = 60.0 * (float(spd.group(1)) if spd else 100.0) / 100.0
-            size = float(sz.group(1)) if sz else 1.0
-        except OSError:
-            pass
-    return speed / size
+    return sizing.speed_of("goblin", None if variant == "goblin" else variant)
 
 
 def today(variant):
-    """(width, height) in game pixels of the still the game had for this form before the 3D pass (tools/art/blender/before/), so a re-render
-    sizes the same whatever the live sheet holds; the base goblin uses its idle frame."""
-    if variant and variant != "goblin":
-        path, name = os.path.join(HERE, "before", "forms_goblin.json"), variant
-    else:
-        path, name = os.path.join(HERE, "..", "..", "..", "assets", "sheets", "goblin.json"), "idle_1"
-    try:
-        with open(path) as fh:
-            rect = json.load(fh)["frames"][name]["rect"]
-        return float(rect[2]), float(rect[3])
-    except (OSError, KeyError):  # nothing to match: fall back to the width in the table
-        return float(_form(variant)["width"]), None
+    base = (os.path.join(HERE, "..", "..", "..", "assets", "sheets", "goblin.json"), "idle_1") if not variant or variant == "goblin" else None
+    return sizing.today("goblin", variant, _form(variant)["width"], base)
 
 
 def _cycle(body_reach_px, speed, duty, lo, hi, stride_legs):

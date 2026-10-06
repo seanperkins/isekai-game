@@ -25,8 +25,9 @@ def aim(skel, rot, bone, direction):
 class Leg:
     """One leg of a biped: its two bones and its foot, as measured from the rig. `heel` and `toe` are how far the sole reaches behind and in
     front of the ankle, `ankle_h` how far the ankle is above the sole, all with the foot flat."""
-    def __init__(self, skel, side, ankle_h, heel, toe, thigh="thigh_", shin="shin_", foot="foot_"):
-        self.side = side
+    def __init__(self, skel, side, ankle_h, heel, toe, thigh="thigh_", shin="shin_", foot="foot_", bend=1):
+        self.side, self.bend = side, bend
+        self.above = skel.chain(thigh + side)  # the bones above the thigh: when they are turned, the thigh must turn back by as much
         self.names = (thigh + side, shin + side, foot + side)
         t, s, f = self.names
         self.l1, self.l2 = skel.length(t), skel.length(s)
@@ -35,13 +36,15 @@ class Leg:
         self.ankle_h, self.heel, self.toe = ankle_h, heel, toe
         self.reach = self.l1 + self.l2
 
-    def solve(self, hip, ankle, pitch):
+    def solve(self, hip, ankle, pitch, rot=None):
         """The rotations that put the ankle on `ankle` (world), the hip being at `hip` (world, x z), and tilt the foot `pitch` degrees, toe up
-        positive. The knee goes forward."""
-        a1, a2 = anim.ik2d(self.l1, self.l2, hip, ankle, 1)
+        positive. The knee goes forward (or back, for a leg built with bend -1: a dog's elbow). `rot` holds the rotations of the bones above the
+        thigh (a spine pitched forward), which the thigh has to undo; omit it when they are not turned."""
+        a1, a2 = anim.ik2d(self.l1, self.l2, hip, ankle, self.bend)
+        carried = sum(rot.get(b, (0.0, 0.0, 0.0))[1] for b in self.above) if rot else 0.0
         d1, d2 = math.degrees(a1) - self.rest1, math.degrees(a2) - self.rest2
         t, s, f = self.names
-        return {t: down(d1), s: down(d2 - d1), f: down(pitch - d2)}
+        return {t: down(d1 + carried), s: down(d2 - d1), f: down(pitch - d2)}
 
     def ankle_of(self, posed):
         return posed[self.names[1]][1]

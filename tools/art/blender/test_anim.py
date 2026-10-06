@@ -47,51 +47,62 @@ class FootTest(unittest.TestCase):
     STRIDE, DUTY, LIFT = 0.4, 0.6, 0.12
     HEEL, TOE, ANKLE = 0.08, 0.22, 0.11
 
-    def foot(self, u):
-        return anim.foot_pose(u, self.STRIDE, self.DUTY, self.LIFT, self.HEEL, self.TOE, self.ANKLE)
+    def foot(self, u, stride=None, lift=None, dims=None):
+        heel, toe, ankle = dims or (self.HEEL, self.TOE, self.ANKLE)
+        return anim.foot_pose(u, self.STRIDE if stride is None else stride, self.DUTY, self.LIFT if lift is None else lift, heel, toe, ankle)
 
-    def sole_low(self, u):
-        x, z, pitch, _ = self.foot(u)
-        return min(p[1] for p in anim.sole_points(x, z, pitch, self.HEEL, self.TOE, self.ANKLE))
+    def sole(self, u, dims=None):
+        heel, toe, ankle = dims or (self.HEEL, self.TOE, self.ANKLE)
+        x, z, pitch, _ = self.foot(u, dims=dims)
+        return anim.sole_points(x, z, pitch, heel, toe, ankle)
 
-    def test_the_ankle_path_has_no_jumps_across_the_whole_cycle_including_the_toe_off_and_the_wrap(self):
-        prev = self.foot(0.0)
-        worst = 0.0
-        for k in range(1, 2001):
-            cur = self.foot(k / 2000.0)
-            worst = max(worst, abs(cur[0] - prev[0]), abs(cur[1] - prev[1]), abs(cur[2] - prev[2]) * 0.01)
-            prev = cur
-        self.assertLess(worst, 0.01, "no step of more than a centimetre in 1/2000 of a cycle")
-        wrap = self.foot(0.0), self.foot(0.999999)
+    def test_the_ankle_path_and_its_velocity_have_no_jumps_across_the_whole_cycle_including_lift_off_landing_and_the_wrap(self):
+        n = 6000
+        pts = [self.foot(k / float(n)) for k in range(n + 1)]
+        vel = [((b[0] - a[0]) * n, (b[1] - a[1]) * n, (b[2] - a[2]) * n) for a, b in zip(pts, pts[1:])]
+        for (ax, az, ap), (bx, bz, bp) in zip(vel, vel[1:]):
+            self.assertLess(abs(bx - ax), 0.6, "x velocity does not jump (per cycle)")
+            self.assertLess(abs(bz - az), 0.6, "z velocity does not jump")
+            self.assertLess(abs(bp - ap), 600.0, "pitch velocity does not jump")
+        wrap = self.foot(0.0), self.foot(0.9999999)
         for a, b in zip(wrap[0][:3], wrap[1][:3]):
-            self.assertAlmostEqual(a, b, delta=0.01)
+            self.assertAlmostEqual(a, b, delta=0.002)
+        lo, hi = vel[int(self.DUTY * n) - 2], vel[int(self.DUTY * n) + 2]
+        self.assertAlmostEqual(lo[0], hi[0], delta=0.1 * abs(lo[0]) + 0.05, msg="the foot leaves the ground at the speed it was moving back")
 
-    def test_a_planted_foot_rests_exactly_on_the_ground_and_its_contact_point_moves_back_at_one_speed(self):
-        xs = []
-        for k in range(0, 600):
-            u = k / 1000.0
-            self.assertAlmostEqual(self.sole_low(u), 0.0, places=9)
-            x, z, pitch, grounded = self.foot(u)
-            self.assertTrue(grounded)
-            xs.append(anim.sole_contact(x, z, pitch, self.HEEL, self.TOE, self.ANKLE)[0])
-        steps = [a - b for a, b in zip(xs, xs[1:])]
-        for step in steps:
-            self.assertAlmostEqual(step, steps[0], places=6)
-        self.assertAlmostEqual(xs[0] - xs[-1], self.STRIDE * (0.599 / self.DUTY), delta=0.002)
+    def test_the_heel_does_not_move_over_the_ground_from_landing_until_the_foot_is_flat_and_nor_does_the_toe_from_the_heel_lifting_until_it_leaves(self):
+        speed = -self.STRIDE / self.DUTY   # the ground's speed under the foot, units per cycle
+        a, b = anim.ROLL
+        # (the part of the stance, the points of the sole that must be on the ground and moving with it)
+        for name, (lo, hi), pivots in (("heel", (0.0, a), (0,)), ("flat", (a, b), (0, 1)), ("toe", (b, 1.0), (1,))):
+            samples = []
+            for k in range(1, 200):
+                u = (lo + (hi - lo) * k / 200.0) * self.DUTY
+                samples.append((u, self.sole(u)))
+            for pivot in pivots:
+                for (u0, s0), (u1, s1) in zip(samples, samples[1:]):
+                    self.assertAlmostEqual((s1[pivot][0] - s0[pivot][0]) / (u1 - u0), speed, delta=0.002 * abs(speed), msg="%s phase, point %d" % (name, pivot))
+                    self.assertAlmostEqual(s1[pivot][1], 0.0, places=7, msg="%s phase, point %d is on the ground" % (name, pivot))
+
+    def test_a_planted_foot_never_has_a_point_below_the_ground(self):
+        for dims in ((self.HEEL, self.TOE, self.ANKLE), (0.03, 0.09, 0.2), (0.12, 0.30, 0.08)):
+            for k in range(0, 600):
+                heel, toe = self.sole(k / 1000.0, dims)
+                self.assertGreaterEqual(min(heel[1], toe[1]), -1e-9)
 
     def test_the_sole_never_goes_below_the_ground_in_swing_and_the_foot_comes_up_to_the_lift(self):
         peak = 0.0
         for k in range(601, 1000):
-            u = k / 1000.0
-            self.assertGreaterEqual(self.sole_low(u), -1e-9)
-            self.assertFalse(self.foot(u)[3])
-            peak = max(peak, self.sole_low(u))
+            heel, toe = self.sole(k / 1000.0)
+            self.assertGreaterEqual(min(heel[1], toe[1]), -1e-9)
+            self.assertFalse(self.foot(k / 1000.0)[3])
+            peak = max(peak, min(heel[1], toe[1]))
         self.assertGreater(peak, self.LIFT * 0.6)
 
     def test_the_heel_strikes_toe_up_rolls_flat_and_the_heel_lifts_before_the_toe_leaves(self):
-        self.assertGreater(self.foot(0.0)[2], 5.0)
-        self.assertAlmostEqual(self.foot(0.3)[2], 0.0, delta=2.0)
-        self.assertLess(self.foot(self.DUTY - 0.001)[2], -25.0)
+        self.assertGreater(self.foot(0.0)[2], 10.0)
+        self.assertAlmostEqual(self.foot(0.3)[2], 0.0, delta=0.5)
+        self.assertLess(self.foot(self.DUTY - 0.001)[2], -30.0)
 
     def test_the_other_leg_is_half_a_cycle_behind_so_a_foot_is_always_down_and_both_are_down_a_fifth_of_the_time(self):
         both = 0
@@ -108,19 +119,16 @@ class FootTest(unittest.TestCase):
         self.assertAlmostEqual(toe[0], 0.5 + self.TOE, places=9)
         self.assertAlmostEqual(heel[1], 0.3 - self.ANKLE, places=9)
 
-    def test_the_heel_is_what_stands_at_heel_strike_and_the_toe_at_toe_off(self):
-        x, z, p, _ = self.foot(0.0)
-        heel = anim.sole_points(x, z, p, self.HEEL, self.TOE, self.ANKLE)[0]
-        self.assertAlmostEqual(heel[0], self.STRIDE / 2.0, delta=0.005)
-        u = self.DUTY - 1e-6
-        x, z, p, _ = self.foot(u)
-        toe = anim.sole_points(x, z, p, self.HEEL, self.TOE, self.ANKLE)[1]
-        self.assertAlmostEqual(toe[0], self.STRIDE / 2.0 - self.STRIDE * (u / self.DUTY), delta=0.005)
+    def test_the_middle_of_the_flat_part_is_under_the_hip(self):
+        a, b = anim.ROLL
+        x, z, p, _ = self.foot((a + b) / 2.0 * self.DUTY)
+        self.assertAlmostEqual(x, 0.0, places=9)
+        self.assertAlmostEqual(z, self.ANKLE, places=9)
 
     def test_a_foot_swung_with_no_lift_still_does_not_go_through_the_floor(self):
         for k in range(601, 1000):
-            x, z, p, _ = anim.foot_pose(k / 1000.0, self.STRIDE, self.DUTY, 0.0, self.HEEL, self.TOE, self.ANKLE)
-            self.assertGreaterEqual(min(pt[1] for pt in anim.sole_points(x, z, p, self.HEEL, self.TOE, self.ANKLE)), -1e-9)
+            heel, toe = self.sole(k / 1000.0) if False else anim.sole_points(*self.foot(k / 1000.0, lift=0.0)[:3], self.HEEL, self.TOE, self.ANKLE)
+            self.assertGreaterEqual(min(heel[1], toe[1]), -1e-9)
 
     def test_a_short_stubby_foot_swung_low_is_lifted_clear_of_the_floor(self):
         heel, toe, ankle = 0.05, 0.1, 0.2  # a foot on which the swing's roll would otherwise dip the sole through the floor

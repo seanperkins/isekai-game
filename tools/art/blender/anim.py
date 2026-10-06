@@ -80,12 +80,8 @@ def ik2d(l1, l2, hip, target, bend=1):
 
 
 # ---- gait ----
-def pitch_at(u, duty):
-    """A foot's pitch in degrees over a cycle: the heel strikes toe-up, the foot rolls flat, the heel lifts before the toe leaves (toe-off at
-    `duty`), then in swing the toe trails and comes up to meet the ground."""
-    swing = 1.0 - duty
-    return sample([(0.0, 14.0, "smooth"), (0.18 * duty, 0.0, "linear"), (0.70 * duty, 0.0, "smooth"), (duty, -34.0, "smooth"),
-                   (duty + 0.25 * swing, -20.0, "smooth"), (duty + 0.80 * swing, 8.0, "smooth"), (1.0, 14.0, "linear")], u % 1.0)
+HEEL_STRIKE, TOE_OFF = 14.0, 34.0   # degrees the foot is tipped (toe up) as the heel lands, and (toe down) as the toe leaves
+ROLL = (0.16, 0.62)                 # of the stance: the foot turns about its heel until here, lies flat until there, then the heel lifts and it turns about its toe
 
 
 def sole_points(ax, az, pitch, heel, toe, ankle_h):
@@ -99,8 +95,8 @@ def sole_points(ax, az, pitch, heel, toe, ankle_h):
 
 
 def sole_contact(ax, az, pitch, heel, toe, ankle_h):
-    """Where the foot touches: the heel when it is the lower point, the toe when that is, the middle between them when the sole is flat.
-    Returns (x, lowest z)."""
+    """Where a standing foot touches: the heel when it is the lower point, the toe when that is, the middle between them when the sole is flat.
+    Returns (x, lowest z). For placing a foot that is standing; a walking foot is moved by foot_pose, which keeps its pivots still."""
     h, t = sole_points(ax, az, pitch, heel, toe, ankle_h)
     w = smooth(0.5 + (t[1] - h[1]) / (0.08 * (heel + toe)))
     return w * h[0] + (1.0 - w) * t[0], min(h[1], t[1])
@@ -120,27 +116,52 @@ def plant_toe(toe_x, pitch, heel, toe, ankle_h):
     return toe_x - tip[0], -tip[1]
 
 
+def stance_pose(tau, stride, heel, toe, ankle_h):
+    """The foot while it is on the ground, tau in [0, 1] through the stance: (ankle x, ankle z, pitch degrees). The ground moves back under the foot
+    by `stride` over the stance at a constant speed, and the foot is a rigid body on it: it lands on its heel (which then does not move over the
+    ground), settles flat (all of it still), and the heel lifts so that it leaves on its toe (which does not move either). Nothing slides.
+    x is from the hip, centred so that the middle of the flat part is under it."""
+    a, b = ROLL
+    flat = stride * (a + b) / 2.0 - stride * tau          # the ankle's x when the foot is lying flat
+    if tau < a:
+        p = HEEL_STRIKE * (1.0 - smooth(tau / a))
+        c, s = math.cos(math.radians(p)), math.sin(math.radians(p))
+        heel_x = flat - heel                              # the heel is a point of the ground: it keeps this x until the foot is flat
+        return heel_x + heel * c - ankle_h * s, heel * s + ankle_h * c, p
+    if tau <= b:
+        return flat, ankle_h, 0.0
+    p = -TOE_OFF * smooth((tau - b) / (1.0 - b))
+    c, s = math.cos(math.radians(p)), math.sin(math.radians(p))
+    toe_x = flat + toe                                    # and the toe likewise from here on
+    return toe_x - toe * c - ankle_h * s, ankle_h * c - toe * s, p
+
+
+def _hermite(p0, p1, m0, m1, s):
+    s2, s3 = s * s, s * s * s
+    return (2 * s3 - 3 * s2 + 1) * p0 + (s3 - 2 * s2 + s) * m0 + (-2 * s3 + 3 * s2) * p1 + (s3 - s2) * m1
+
+
 def foot_pose(u, stride, duty, lift, heel, toe, ankle_h):
-    """One foot over a cycle, u in [0, 1): the ankle (x, z), the pitch in degrees and whether it is planted. x is relative to the hip. In stance
-    the contact point moves back at a constant speed (the body moving forward over it) and the ankle is wherever that puts the sole on the
-    ground, rolling heel, flat, toe; swing joins the toe-off pose to the next heel strike on an arc `lift` high, so the path never jumps."""
+    """One foot over a cycle, u in [0, 1): the ankle (x, z), the pitch in degrees and whether it is planted. x is from the hip. The stance is
+    stance_pose: a rigid foot on moving ground, its heel then flat sole then toe holding still on it. The swing joins the toe-off pose to the next
+    heel strike on a cubic that arrives with the velocity the ground gives the foot, so the foot never jumps or lurches at lift-off or landing, and
+    rises `lift` on the way (zero slope at both ends); it is never allowed through the floor."""
     u = u % 1.0
-
-    def stance(s):
-        p = pitch_at(s * duty, duty)
-        cx, low = sole_contact(0.0, 0.0, p, heel, toe, ankle_h)
-        return stride / 2.0 - stride * s - cx, -low, p
-
     if u < duty:
-        x, z, p = stance(u / duty)
+        x, z, p = stance_pose(u / duty, stride, heel, toe, ankle_h)
         return x, z, p, True
-    x0, z0, _ = stance(1.0)
-    x1, z1, _ = stance(0.0)
+    eps = 1e-5
+    xe, ze, pe = stance_pose(1.0, stride, heel, toe, ankle_h)
+    xs, zs, ps = stance_pose(0.0, stride, heel, toe, ankle_h)
+    xe2, ze2, _ = stance_pose(1.0 - eps, stride, heel, toe, ankle_h)
+    xs2, zs2, _ = stance_pose(eps, stride, heel, toe, ankle_h)
+    k = (1.0 - duty) / duty                                 # swing time over stance time: a slope per stance unit becomes one per swing unit
+    mex, mez = (xe - xe2) / eps * k, (ze - ze2) / eps * k
+    msx, msz = (xs2 - xs) / eps * k, (zs2 - zs) / eps * k
     s = (u - duty) / (1.0 - duty)
-    k = smooth(s)
-    x = x0 + (x1 - x0) * k
-    z = z0 + (z1 - z0) * k + lift * math.sin(math.pi * s ** 0.85)
-    p = pitch_at(u, duty)
+    x = _hermite(xe, xs, mex, msx, s)
+    z = _hermite(ze, zs, mez, msz, s) + lift * math.sin(math.pi * s) ** 2
+    p = sample([(0.0, pe, "smooth"), (0.25, -20.0, "smooth"), (0.80, 8.0, "smooth"), (1.0, ps, "smooth")], s)
     z += max(0.0, -min(pt[1] for pt in sole_points(x, z, p, heel, toe, ankle_h)))  # never through the floor
     return x, z, p, False
 
