@@ -322,23 +322,29 @@ def tendrils(g, colour, **_):
 def plates(g, colour, rivet, **_):
     """Riveted bronze plates over the back and sides, each a curved patch of the surface (with a dark edge) that comes away when it dies."""
     edge = darker(colour, 0.4)
-    for gname, (phi, a, rp, ra) in zip(("plate0", "plate1", "plate2", "plate3"), ((-158, 22, 26, 44), (-112, 52, 26, 30), (-62, 50, 20, 26), (-120, 86, 70, 8))):
+    for gname, (phi, a, rp, ra) in zip(("plate0", "plate1", "plate2", "plate3"), ((-148, 20, 22, 40), (-112, 50, 22, 26), (-72, 66, 20, 16), (-138, -48, 22, 24))):
         g.patch(gname + "_edge", (phi, a), (rp + 3.0, ra + 3.0), edge, lift=0.03, group=gname, steps=(10, 8))
         g.patch(gname, (phi, a), (rp, ra), colour, lift=0.045, group=gname, steps=(10, 8))
         for j, (dp, da) in enumerate(((-0.65, 0.55), (0.65, 0.55), (-0.65, -0.55), (0.65, -0.55))):
             c = g.S(phi + dp * rp, a + da * ra, 0.06)
             g.blob("%s_rivet%d" % (gname, j), c, (0.018,) * 3, rivet, "skin", group=gname, seg=6, rings=4)
-    g.patch("plate_back_edge", (172, 40), (32, 40), edge, lift=0.03)
-    g.patch("plate_back", (172, 40), (28, 36), darker(colour, 0.1), lift=0.045)
+    g.patch("plate_back_edge", (172, 30), (32, 50), edge, lift=0.03)
+    g.patch("plate_back", (172, 30), (28, 46), darker(colour, 0.1), lift=0.045)
+
+
+def lava(g, colour, hot, **_):
+    """The molten core: glowing patches and cracks of lava in the middle of the near side, where the plates leave the jelly bare."""
+    g.patch("lava0", (-95.0, -10.0), (26.0, 24.0), colour, lift=0.01)
+    g.patch("lava1", (-88.0, -14.0), (12.0, 11.0), hot, glow=True, lift=0.014)
+    for i, pts in enumerate((((-120, 10), (-105, 0), (-110, -16), (-92, -30)), ((-70, 4), (-82, -6), (-74, -22)), ((-115, -30), (-100, -40), (-80, -36)))):
+        g.stripe("lavacrack%d" % i, list(pts), 3.5, hot, glow=True, lift=0.016)
 
 
 def nail(g, colour, ichor, **_):
     c = g.S(-35, -45, 0.06)
     g.blob("nail", c, (0.04, 0.03, 0.04), colour, "carry", seg=8, rings=5, smooth=False)
     g.blob("nailhead", (c[0] + 0.01, c[1] - 0.02, c[2] + 0.01), (0.018, 0.012, 0.018), lighter(colour, 0.4), "carry", seg=6, rings=4, anchor=c)
-    g.stripe("ichor", [(-38, -42), (-50, -34), (-62, -26), (-76, -24), (-90, -18)], 4.0, ichor, glow=True)
-    for i, pts in enumerate((((-100, -5), (-115, 10), (-112, 25)), ((-95, -20), (-125, -18), (-140, -30)))):
-        g.stripe("molten%d" % i, list(pts), 4.0, ichor, glow=True, lift=0.016)
+    g.stripe("ichor", [(-38, -42), (-50, -34), (-62, -26), (-72, -20)], 4.0, ichor, glow=True)
 
 
 def stone(g, colour, ring, **_):
@@ -363,14 +369,14 @@ def sparks(g, colour, **_):
 
 
 def coin(g, colour, **_):
-    c = g.near(-0.12, 0.46, 0.10)
+    c = g.near(-0.18, 0.44, 0.10)
     g.blob("coin", c, (0.11, 0.025, 0.11), colour, "carry", group="inner", seg=12, rings=4, anchor=c)
     g.blob("coin_mark", (c[0], c[1] - 0.025, c[2]), (0.035, 0.01, 0.065), darker(colour, 0.3), "carry", group="inner", seg=6, rings=4, anchor=c)
 
 
 def bone(g, colour, **_):
-    c = g.near(0.02, 0.18, 0.10)
-    a, b = (c[0] - 0.14, c[2] - 0.03), (c[0] + 0.14, c[2] + 0.05)
+    c = g.near(-0.08, 0.22, 0.10)
+    a, b = (c[0] - 0.14, c[2] - 0.05), (c[0] + 0.14, c[2] + 0.04)
     g.add(oriented_ellipsoid("bone_shaft", a, b, 0.025, 0.032, c[1]), colour, "carry", c, group="inner")
     for i, (x, z) in enumerate((a, b)):
         for j, dz in enumerate((-0.02, 0.02)):
@@ -528,7 +534,7 @@ def pulse(g, colour, **_):
         pts.append((x + 0.62 * math.cos(t), 0.6, z + 0.52 * math.sin(t)))     # behind the body: it shows round it
     for i in range(40):
         a, b = pts[i], pts[i + 1]
-        g.add(k.limb("pulse%d" % i, a, b, 0.02, 0.02, 4, caps=False), colour, "free", (x, y, z), "pulse", glow=True)
+        g.add(k.limb("pulse%d" % i, a, b, 0.02, 0.02, 4, caps=False), colour, "free", (x, y, z), "pulse", glow=True, flatten=True)     # it spreads along the ground
 
 
 def mirror(g, colour, dark, **_):

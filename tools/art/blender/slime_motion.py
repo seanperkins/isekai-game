@@ -43,6 +43,7 @@ HURT_FRAMES = [(0.00, 0.04), (0.04, 0.06), (0.10, 0.06), (0.16, 0.05), (0.21, 0.
 DIE_FRAMES = [(0.00, 0.06), (0.06, 0.08), (0.14, 0.08), (0.22, 0.10), (0.32, 0.12), (0.44, 0.16), (0.60, 0.30), (0.90, 0.30)]
 IDLE_FRAMES, IDLE_SECONDS = 8, 1.6
 RUN_SPEED = 1.9
+DRAG, LAG_MAX = 0.5, 32.0   # how hard a chain is dragged back by its root's speed (of its own `drag`), and the most it trails by, degrees
 CLEAR = 0.05      # how far above the ground a chain's bones stay, by default (its flesh is drawn round them)
 
 # hops: `contact` the share of the cycle the base is down, `height` the top of the flight in body heights, `length` the hop a cycle aims for and
@@ -154,7 +155,8 @@ class Shape:
                 hi = mid
         a = (lo + hi) / 2.0
         rho = self.profile(a)[0]
-        cx = max(-0.999, min(0.999, x / max(1e-6, self.R * rho)))
+        f = max(-0.999, min(0.999, x / max(1e-6, self.R * rho)))
+        cx = math.copysign(abs(f) ** (self.plan / 2.0), f)      # the plan is a superellipse: x = R rho sign(c) |c|^(2 / plan)
         return self.surface(-math.degrees(math.acos(cx)), a, lift)
 
     def gbar(self, bc):
@@ -259,13 +261,21 @@ class SlimeBody:
         return next(c for c in self.chains if c["name"] == name)
 
 
+def chain_offset(soft, body, ch):
+    """(dx, dz) a chain's bones are moved by: where the deformed surface has taken its root, plus any lift the clip gives it (`off` under
+    "chain:<name>": a tentacle kept off the floor when the body has puddled under it)."""
+    dx, _, dz = anchor_offset(soft, body.shape, ch["anchor"])
+    ex, ez = soft.get("off", {}).get("chain:" + ch["name"], {}).get("d", (0.0, 0.0))
+    return dx + ex, dz + ez
+
+
 def pose_bones(body, rot, root):
     """{bone: (head, tail, direction)} as the real armature has them after the kit's post_pose: the skeleton posed, and each chain carried by
     where the deformed surface has moved its root."""
     posed = body.skel.pose(rot, root)
     soft = soft_of(rot)
     for ch in body.chains:
-        dx, _, dz = anchor_offset(soft, body.shape, ch["anchor"])
+        dx, dz = chain_offset(soft, body, ch)
         for b in ch["bones"]:
             h, t, d = posed[b]
             posed[b] = ((h[0] + dx, h[1] + dz), (t[0] + dx, t[1] + dz), d)
@@ -311,7 +321,7 @@ def chain_rots(body, frames, durations, periodic, deliberate=None, rest_frame=No
             dx, _, dz = anchor_offset(soft_of(rot), body.shape, ch["anchor"])
             anchors.append((ch["anchor"][0] + dx + root[0], ch["anchor"][2] + dz + root[2]))
         vel = _velocities(anchors, durations, periodic)
-        k = ch.get("drag", 30.0)
+        k = DRAG * ch.get("drag", 30.0)
         prev = None
         for li, b in enumerate(ch["bones"]):
             rest = body.skel.rest_direction(b)
@@ -320,7 +330,7 @@ def chain_rots(body, frames, durations, periodic, deliberate=None, rest_frame=No
                 base = rest if prev is None else prev[i] + rest - body.skel.rest_direction(ch["bones"][li - 1])
                 d = math.radians(base)
                 lag = -k * (vel[i][0] * math.cos(d) + vel[i][1] * math.sin(d)) * (0.6 if prev is not None else 1.0)
-                lag = max(-50.0, min(50.0, lag))
+                lag = max(-LAG_MAX, min(LAG_MAX, lag))
                 extra = deliberate(ch, li, i) if deliberate else 0.0
                 driver.append(base + lag + extra)
             chased = anim.follow(driver, durations, freq=ch.get("freq", 2.6) * (0.85 ** li), zeta=ch.get("zeta", 0.4), periodic=periodic)
@@ -350,7 +360,8 @@ def _lagged(body, frames, durations, periodic, pivot, freq=2.2, zeta=0.35, gain=
     fx = anim.follow(xs, durations, freq=freq, zeta=zeta, periodic=periodic)
     fz = anim.follow(zs, durations, freq=freq, zeta=zeta, periodic=periodic)
     lim = limit * body.H
-    return [(max(-lim, min(lim, gain * (a - b))), max(-lim, min(lim, gain * (c - d)))) for a, b, c, d in zip(fx, xs, fz, zs)]
+    # it may sink a little behind a rising body, never far (what sits low in the jelly would go through the floor)
+    return [(max(-lim, min(lim, gain * (a - b))), max(-0.4 * lim, min(lim, gain * (c - d)))) for a, b, c, d in zip(fx, xs, fz, zs)]
 
 
 # ---- clips -----------------------------------------------------------------------------------------------------------------------------
@@ -598,7 +609,8 @@ def specials(body, clip, i, t, n, soft, root):
                 fall = anim.sample([(DIE_FRAMES[1][0], 0.0, "in"), (DIE_FRAMES[3][0], 1.0, "out"), (DIE_FRAMES[4][0], 0.92, "out"), (DIE_FRAMES[5][0], 1.0, "linear")], t)
                 ground = -(pivot[2] + root[2]) + f.get("pebble_r", 0.03)
                 dz = fall * ground
-                dx = 0.04 * W * (k - 1) * fall
+                side = 1.0 if pivot[0] >= 0.0 else -1.0     # they scatter out past the spreading puddle, where they can be seen
+                dx = side * (0.45 * W + 0.05 * W * k) * fall - pivot[0] * fall
             off[g] = dict(d=(dx, dz))
         elif g.startswith("puff"):
             k = int(g[4:] or 0)
@@ -737,6 +749,12 @@ def _clear_floor(body, frames):
                     if best_low >= clearance:
                         break
             rot[first] = (0.0, base + best, 0.0)
+            # a root squashed too near the floor for the flesh drawn round it (a puddle under a tentacle) is lifted by the difference
+            posed = pose_bones(body, rot, root)
+            need = ch.get("root_clear", 0.8 * clearance) - posed[first][0][1]
+            if need > 0.0:
+                off = rot[SOFT].setdefault("off", {})
+                off["chain:" + ch["name"]] = dict(d=(0.0, need))
 
 
 def idle_clip(body):

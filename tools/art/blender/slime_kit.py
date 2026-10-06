@@ -82,20 +82,35 @@ class SlimeKit(kitbase.KitBase):
 
     # ---- placing things on the body ----
     def S(self, phi, a, lift=0.0):
-        """The surface point at plan angle `phi` and placement elevation `a` (height spread evenly: Shape.point)."""
-        return self.shape.point(phi, a, lift)
+        """The surface point at plan angle `phi` and placement elevation `a` (height spread evenly: Shape.point), lifted off the surface along
+        its normal by `lift` half-widths of a standard body (0.5 units), so a decal stands off the top of the dome as well as off its sides."""
+        p = self.shape.point(phi, a, 0.0)
+        if not lift:
+            return p
+        e = 0.5
+        da = (self.shape.point(phi, min(89.9, a + e), 0.0), self.shape.point(phi, max(-89.9, a - e), 0.0))
+        dp = (self.shape.point(phi + e, a, 0.0), self.shape.point(phi - e, a, 0.0))
+        u = [da[0][i] - da[1][i] for i in range(3)]
+        v = [dp[0][i] - dp[1][i] for i in range(3)]
+        n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]]
+        out = (p[0], p[1], p[2] - 0.4 * self.shape.H)
+        if sum(x * y for x, y in zip(n, out)) < 0:
+            n = [-x for x in n]
+        length = math.sqrt(sum(x * x for x in n)) or 1.0
+        return tuple(p[i] + n[i] / length * lift * 0.5 for i in range(3))
 
     def near(self, x, z, lift=0.02):
         return self.shape.near_point(x, z, lift)
 
-    def add(self, ob, rgb, mode="skin", anchor=None, group=None, glow=False, far=False, bone="body"):
-        """Bind a part to the root bone and register how the soft body moves it."""
+    def add(self, ob, rgb, mode="skin", anchor=None, group=None, glow=False, far=False, bone="body", flatten=False):
+        """Bind a part to the root bone and register how the soft body moves it (`flatten`: a rigid part that is squashed on the ground rather
+        than lifted off it)."""
         self.rig.part(ob, bone, rgb, far, glow)
         if bone == "body":
             rest = [tuple(v.co) for v in ob.data.vertices]
             if mode == "carry" and anchor is None:
                 anchor = tuple(sum(v[i] for v in rest) / len(rest) for i in range(3))
-            self.soft_parts.append(dict(ob=ob, rest=rest, mode=mode, anchor=anchor, group=group))
+            self.soft_parts.append(dict(ob=ob, rest=rest, mode=mode, anchor=anchor, group=group, flatten=flatten))
         return ob
 
     def blob(self, name, c, r, rgb, mode="carry", group=None, glow=False, far=False, seg=10, rings=7, smooth=True, anchor=None):
@@ -231,25 +246,34 @@ class SlimeKit(kitbase.KitBase):
             return (v[0] + d[0], v[1] + d[1], v[2] + d[2])
         return v
 
-    def posed_vertices(self, part, soft):
-        """Where a registered part's vertices are (before the root) under the soft parameters: pure arithmetic, also what the tests check."""
+    def posed_vertices(self, part, soft, floor=None):
+        """Where a registered part's vertices are (before the root) under the soft parameters: pure arithmetic, also what the tests check. With
+        `floor` (the ground's height before the root: minus the root's z) nothing goes below it: a rigid part (carried or free) is lifted whole
+        until it clears the ground (a stone in a puddle, a crown that has fallen), a soft one (skinned, or a ring of light) is flattened on it."""
         off = soft.get("off", {})
         g = part["group"]
         out = [self.place(v, part["mode"], part["anchor"], soft) for v in part["rest"]]
         if g and g in off:
             pivot = self.place(self.pivots[g], part["mode"], part["anchor"], soft)     # the pivot moves as the part does
             out = [sm.group_transform(v, pivot, off[g]) for v in out]
+        if floor is not None:
+            if part["mode"] == "skin" or part.get("flatten"):
+                out = [(x, y, max(z, floor)) for x, y, z in out]
+            else:
+                low = min(v[2] for v in out)
+                if low < floor:
+                    out = [(x, y, z + floor - low) for x, y, z in out]
         return out
 
     def post_pose(self, rig, rot, root):
         soft = sm.soft_of(rot)
         for ch in self.body.chains:
-            d = sm.anchor_offset(soft, self.shape, ch["anchor"])
+            dx, dz = sm.chain_offset(soft, self.body, ch)
             pb = rig.obj.pose.bones[ch["bones"][0]]
-            pb.matrix = Matrix.Translation(Vector((d[0], 0.0, d[2]))) @ pb.matrix
+            pb.matrix = Matrix.Translation(Vector((dx, 0.0, dz))) @ pb.matrix
         for part in self.soft_parts:
             me = part["ob"].data
-            flat = [c for v in self.posed_vertices(part, soft) for c in v]
+            flat = [c for v in self.posed_vertices(part, soft, -root[2]) for c in v]
             me.vertices.foreach_set("co", flat)
             me.update()
         bpy.context.view_layer.update()
