@@ -42,7 +42,7 @@ spawns = [{
 }, {
 "by": "PL",
 "id": "twin_goblin_leprechaun",
-"pos": Vector2(360.8, 314)
+"pos": Vector2(360.1, 314)
 }, {
 "by": "PL",
 "id": "firefly_swarm",

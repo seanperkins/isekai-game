@@ -1,0 +1,144 @@
+{
+ "forms_goblin": {
+  "beast_rider": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "blender"
+  },
+  "beastcaller": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "blender"
+  },
+  "bloodcap": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "blender"
+  },
+  "boggart": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "blender"
+  },
+  "changeling": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "blender"
+  },
+  "giant_killer": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "blender"
+  },
+  "gremlin": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "blender"
+  },
+  "hearth_god": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "blender"
+  },
+  "hob": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "blender"
+  },
+  "horn_bearer": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "blender"
+  },
+  "ironboot": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "blender"
+  },
+  "knocker": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "blender"
+  },
+  "leprechaun": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "blender"
+  },
+  "lord_of_beasts": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "blender"
+  },
+  "mastersmith": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "blender"
+  },
+  "orpheus": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "blender"
+  },
+  "paladin": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "blender"
+  },
+  "pied_piper": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "blender"
+  },
+  "puck": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "blender"
+  },
+  "rat_king": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "blender"
+  },
+  "redcap": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "blender"
+  },
+  "ring_maker": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "blender"
+  },
+  "rumpelstiltskin": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "blender"
+  },
+  "skulker": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "blender"
+  },
+  "smith": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "blender"
+  },
+  "tinker": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "blender"
+  },
+  "tomte": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "blender"
+  },
+  "wolf_lord": {
+   "date": "2026-10-06",
+   "route": "native",
+   "source": "blender"
+  }
+ }
+}

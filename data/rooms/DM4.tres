@@ -40,7 +40,7 @@ spawns = [{
 }, {
 "by": "PL",
 "id": "twin_goblin_skulker",
-"pos": Vector2(234.64, 314)
+"pos": Vector2(236.88, 314)
 }]
 exits = [{
 "edge": "bottom",

@@ -100,7 +100,7 @@ spawns = [{
 }, {
 "by": "PL",
 "id": "twin_goblin_knocker",
-"pos": Vector2(261.125, 674)
+"pos": Vector2(261.75, 674)
 }, {
 "by": "PL",
 "id": "twin_undead_bone_warrior",

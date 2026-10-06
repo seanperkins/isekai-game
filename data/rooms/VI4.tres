@@ -24,16 +24,16 @@ spawns = [{
 "pos": Vector2(380, 314)
 }, {
 "by": "PL",
-"id": "twin_goblin_changeling",
+"id": "twin_goblin_gremlin",
 "pos": Vector2(48.8, 314)
 }, {
 "by": "PL",
-"id": "twin_goblin_gremlin",
-"pos": Vector2(528.8, 314)
+"id": "twin_goblin_changeling",
+"pos": Vector2(216.1, 314)
 }, {
 "by": "PL",
 "id": "twin_undead_jiangshi",
-"pos": Vector2(216.8, 314)
+"pos": Vector2(528.8, 314)
 }]
 exits = [{
 "edge": "right",

@@ -3,169 +3,169 @@
  "style": "Modern pixel art with soft lighting (Style D). The first reference image is the plain goblin: a small wiry goblin with olive-green skin, long pointed ears, a big hooked nose, bright amber eyes, a ragged brown leather vest, a faded red sash, wrapped hands and bare clawed feet. Keep its clean dark outline, chunky readable pixels, soft lighting and olive-green skin, pointed ears, hooked nose and amber eyes: every form is that same goblin grown up and better equipped. Any further reference image shows the same line's earlier form, so keep the same creature and carry its colours forward. Side view, the creature facing right, the whole figure fully inside the picture with a margin around it, never cropped. Draw only the creature (plus the mount or companion where the description says so): no ground, no wall, no shadow, no text, no letters, no border. Use dark violet, never magenta, and a soft rose pink, never magenta, for any pink.",
  "frames": [
   {
-   "name": "beastcaller",
+   "name": "beastcaller", "native": true,
    "width": 19,
    "refs": [],
    "prompt": "The goblin Beastcaller, the plain goblin grown into a wild-beast herder, a little taller and surer than before: it wears a tan hide jerkin with a shaggy fur collar over its old brown vest, a faded red sash, a necklace of animal teeth and small bone charms, and a pale cyan feather tucked into a leather headband. One hand is held out low and open with a scrap of dried meat on the palm in a coaxing, friendly offer; a short bone whistle hangs from its neck on a cord. Earth tan leather and fur with small pale cyan (air) accents, wrapped hands, bare clawed feet, a calm knowing grin. Standing, facing right, leaning slightly forward."
   },
   {
-   "name": "pied_piper",
+   "name": "pied_piper", "native": true,
    "width": 21,
    "refs": ["beastcaller"],
    "prompt": "The goblin Pied Piper, the Beastcaller grown into Hamelin's piper: it wears a motley patchwork long coat of patches in pale cyan, soft rose pink and cream, a tall soft cap with one long curling feather, and curled-toe boots, olive-green goblin skin with long pointed ears and amber eyes. It plays a slim wooden pipe held to its mouth with both hands, eyes half closed, head tilted, standing tall with one foot slightly forward, a faint soft pale glow around the pipe. Pale cyan (air) and soft rose pink (mind) accents on the coat. No floating notes, no text. Standing, facing right."
   },
   {
-   "name": "rat_king",
+   "name": "rat_king", "native": true,
    "width": 24,
    "refs": ["pied_piper"],
    "prompt": "The goblin Rat King, the Pied Piper grown dark and strange: a taller goblin in a ragged patched coat of dull earth tan and brown with a crown of twisted rat-tail cord on its head and the long pipe tucked in its belt. On its back it carries one big living ball of grey-brown rats, a lumpy knot of a dozen small rats whose tails are all tangled and knotted together in the middle, like a heavy living backpack, the rats' pink noses and beady eyes peeking out. The goblin keeps its olive-green skin, long pointed ears, hooked nose and amber eyes, with a proud sneer, standing, facing right. The knot of rats is part of its silhouette, close against its back."
   },
   {
-   "name": "orpheus",
+   "name": "orpheus", "native": true,
    "width": 24,
    "refs": ["pied_piper"],
    "prompt": "The goblin Orpheus, the Pied Piper grown into the legendary singer: a graceful goblin with olive-green skin, long pointed ears and amber eyes in a serene, gentle expression, crowned with a wreath of golden laurel leaves, wearing a flowing cream tunic with warm gold trim and a soft rose pink sash, and sandals. It cradles a small golden lyre in the crook of one arm and plucks its strings with the other hand, mouth slightly open as if singing, a warm gold (light) glow around the lyre, rose pink (mind) accents on the sash. Standing, facing right, head slightly raised."
   },
   {
-   "name": "beast_rider",
+   "name": "beast_rider", "native": true,
    "width": 30,
    "refs": ["beastcaller"],
    "prompt": "The goblin Beast-Rider: the Beastcaller riding astride a lean grey wolf, the classic goblin wolf-rider of fantasy. The goblin sits on a simple saddle blanket with rope reins held in one hand, wears tan leather armour over its old vest, a faded red sash and a leather cap, and carries a short spear upright in the other hand, olive-green skin, long pointed ears, hooked nose and amber eyes. The wolf is a rangy grey wolf with a pale belly, pricked ears and a rope halter, standing alert in profile. Earth tan and brown leather with grey fur. Side view, rider and wolf both facing right, drawn as one whole group."
   },
   {
-   "name": "wolf_lord",
+   "name": "wolf_lord", "native": true,
    "width": 34,
    "refs": ["beast_rider"],
    "prompt": "The goblin Wolf-Lord, the Beast-Rider grown into a war chief: a bigger, broader goblin chieftain in a fur-lined cloak and iron-studded leather armour with a small horned iron helm, couching a long spear forward and low in a charging stance, a pale cyan (air) pennant streaming back from below the spearhead, riding a huge dark grey dire wolf in studded leather barding in full gallop, the wolf's legs stretched, mouth open and snarling. Earth tan and brown leather, grey fur, small pale cyan accents, the goblin with olive-green skin, long ears and amber eyes. Side view, rider and wolf both facing right, drawn as one whole group."
   },
   {
-   "name": "lord_of_beasts",
+   "name": "lord_of_beasts", "native": true,
    "width": 34,
    "refs": ["beast_rider"],
    "prompt": "The goblin Lord of Beasts, the Beast-Rider grown into a master of animals: a regal goblin with olive-green skin, long ears and amber eyes, wearing a crown of two curved antlers and a mantle of tawny fur and feathers over tan leather armour, riding a great grey wolf at an easy walk. A tame hawk with spread pale cyan-tipped wings perches on its raised leather-gauntleted forearm, so the goblin is master of two companions at once. Earth tan, brown and grey fur with pale cyan (air) feather accents, a commanding calm pose. Side view, all facing right, drawn as one group: goblin, wolf, hawk."
   },
   {
-   "name": "tinker",
+   "name": "tinker", "native": true,
    "width": 19,
    "refs": [],
    "prompt": "The goblin Tinker, the plain goblin grown into a clever inventor and trap-maker: a slightly taller goblin with a leather cap and a pair of brass goggles pushed up on its forehead, a wide leather tool belt with pliers, a small wrench, a coil of wire and a little hammer, a satchel of springs and gears on one hip, and a faded red sash, with its old ragged vest and wrapped hands. In one hand it holds up a small home-made contraption, a clockwork spring trap with a tiny gear, and it grins proudly. Earth tan leather and dull brass accents, olive-green skin, long pointed ears, hooked nose, amber eyes. Standing, facing right."
   },
   {
-   "name": "knocker",
+   "name": "knocker", "native": true,
    "width": 21,
    "refs": ["tinker"],
    "prompt": "The goblin Knocker, the Tinker grown into a Cornish mine spirit: a goblin wearing a battered leather miner's cap with a small lit candle lantern clipped to the front, a dusty brown work jacket with patched knees, heavy boots, a small hanging lantern with a warm glow on its belt, and a short miner's pick held upright in both hands close in front of its body, head tilted and one long pointed ear cocked to listen. Rock dust on its shoulders, earth tan and brown, a hint of blue-grey on the cap. Olive-green skin, hooked nose, amber eyes. Standing upright and tall like the plain goblin's idle stance, arms close to the body, nothing sticking far out to the sides, facing right."
   },
   {
-   "name": "gremlin",
+   "name": "gremlin", "native": true,
    "width": 24,
    "refs": ["knocker"],
    "prompt": "The goblin Gremlin, the Knocker grown into a saboteur of machinery, in the manner of the RAF gremlins: a wiry impish goblin with bigger ears, wearing a leather aviator cap with ear flaps and round goggles, a pale cyan (air) scarf wound close around its neck with a short tail, a bandolier of bolts and nuts, a big monkey wrench held upright against its shoulder in one fist and a handful of cut wires and small gears held close to its chest in the other, a wicked gap-toothed grin, olive-green skin and amber eyes, earth tan and brown leather with oil-grey stains. Standing upright with the arms close to the body, nothing sticking far out to the sides, facing right."
   },
   {
-   "name": "rumpelstiltskin",
+   "name": "rumpelstiltskin", "native": true,
    "width": 24,
    "refs": ["knocker"],
    "prompt": "The goblin Rumpelstiltskin, the Knocker grown into the Grimm tale's spinner of straw into gold: a spry goblin with a short pointed beard, wearing a tall floppy pointed hat in earth tan, a soft rose pink (mind) waistcoat over a brown shirt, and a patched tan cloak, holding a wooden spindle in one hand with a bright skein of golden thread wound round it and a bundle of straw under the other arm. One foot is lifted in a gleeful little hopping dance, a sly cunning grin, olive-green skin, long pointed ears and amber eyes. Standing, facing right."
   },
   {
-   "name": "smith",
+   "name": "smith", "native": true,
    "width": 21,
    "refs": ["tinker"],
    "prompt": "The goblin Smith, the Tinker grown into a dwarf-style forger like Brokkr and Sindri: a strong goblin with thick forearms in a heavy sooty leather apron, a leather skullcap, leather gloves, and a faded red sash, holding a hammer upright against its shoulder in one hand and a pair of short tongs close in front of its chest in the other gripping a small glowing ember red-orange (fire) ingot, ember light on its face, soot smudges, earth tan leather and iron grey, olive-green skin, long pointed ears, hooked nose, amber eyes. Standing upright in a sturdy stance with the arms close to the body, nothing sticking far out to the sides, facing right."
   },
   {
-   "name": "mastersmith",
+   "name": "mastersmith", "native": true,
    "width": 34,
    "refs": ["smith"],
    "prompt": "The goblin Mastersmith, the Smith at the height of its craft: a broad, powerful goblin in a heavy leather apron reinforced with brass plates, a steel pauldron on one shoulder, brass goggles on its brow, a thick leather belt of tools, resting a huge forging hammer on its shoulder and holding up a freshly finished gleaming blade with a faint ember red-orange (fire) glow still on its edge. Earth tan leather, brass and polished steel, soot-smudged olive-green skin, long pointed ears, hooked nose, amber eyes, a proud, satisfied grin. Standing in a wide confident stance, facing right."
   },
   {
-   "name": "ring_maker",
+   "name": "ring_maker", "native": true,
    "width": 24,
    "refs": ["smith"],
    "prompt": "The goblin Ring-Maker, the Smith turned to a darker craft like Alberich the Nibelung: a hunched, gaunt goblin in a dark violet (dark) hooded cloak and a charcoal tunic, a small blacksmith's hammer and a pair of tongs hanging at its belt, holding up between thumb and finger a single glowing gold ring with a faint ember red-orange (fire) light, gazing at it greedily with a thin cruel smile, narrowed amber eyes, olive-green skin, long pointed ears, hooked nose, a faint dark violet shimmer around its shoulders. Standing, facing right."
   },
   {
-   "name": "skulker",
+   "name": "skulker", "native": true,
    "width": 19,
    "refs": [],
    "prompt": "The goblin Skulker, the plain goblin grown into a sneak and cutthroat: a lithe goblin in a dark violet-grey hood with a scarf drawn over the lower face, a dusky short cloak, dark leather wraps on the hands and a dark sash instead of the red one, a pouch of smoke bombs with a pale cyan (air) glow at its belt and a short dagger held close against its body in a reverse grip, the other hand at its side. Dark violet (dark) and charcoal colours, only the amber eyes and the pointed ears showing brightly. Standing upright and alert on bare clawed feet like the plain goblin's idle stance, weight on both feet, arms close to the body, nothing trailing, floating or sticking out beside it, facing right."
   },
   {
-   "name": "redcap",
+   "name": "redcap", "native": true,
    "width": 21,
    "refs": ["skulker"],
    "prompt": "The goblin Redcap, the Skulker grown into the Border legend of the murderous redcap: a wiry goblin wearing a tall, floppy cap dyed deep blood red (blood) and still glossy and wet, heavy iron-shod boots with a few small studs, a dark violet (dark) short jerkin, dark violet hand wraps stained with crimson, a rusty short axe held close against its body in one hand, the other hand at its side, long pointed ears, hooked nose, bright amber eyes and a savage grin showing small jagged teeth. Dark violet and crimson with dull iron grey boots. Standing upright and tall in a tense alert stance like the plain goblin's idle, weight on both feet, arms close to the body, facing right."
   },
   {
-   "name": "ironboot",
+   "name": "ironboot", "native": true,
    "width": 34,
    "refs": ["redcap"],
    "prompt": "The goblin Ironboot, the Redcap grown heavy and brutish: a broad, bulky goblin with thick legs in massive iron-shod boots with thick riveted iron plates, spikes on the toes and iron greaves up to the knees, a dark blood-red cap, a thick dark leather jerkin with iron shoulder plates, and a tan earth belt. It stands mid-stomp with one great boot raised high and about to slam down, fists clenched, a scowl, olive-green skin, long pointed ears, hooked nose and amber eyes. Earth tan, dark iron grey and dark violet (dark) with a red cap. Facing right."
   },
   {
-   "name": "bloodcap",
+   "name": "bloodcap", "native": true,
    "width": 24,
    "refs": ["redcap"],
    "prompt": "The goblin Bloodcap, the Redcap fed to the full: a lean, taut goblin in a dark violet (dark) cloak wearing a deep crimson (blood) cap that is now larger, spiked on its rim with small steel blades and dripping glossy crimson, a crimson sash, long pointed ears, hooked nose, glowing amber eyes and a bloodthirsty grin. It stands upright and tall, one hand holding a second crimson spiked cap close against its chest like a boomerang ready to throw, the other hand at its side, arms close to the body. Crimson and dark violet colours, olive-green skin. Facing right."
   },
   {
-   "name": "puck",
+   "name": "puck", "native": true,
    "width": 21,
    "refs": ["skulker"],
    "prompt": "The goblin Puck, the Skulker grown into Robin Goodfellow the shape-shifting trickster: a nimble, mischievous goblin with a crown of oak leaves and a tall jaunty feather in its cap, a tunic of overlapping dark violet (dark) and leaf-green leaves, curled-toe shoes, long pointed ears, a hooked nose and a wide mischievous grin with bright amber eyes, one hand holding a small iron lantern close at its side with a flickering pale cyan (air) will-o'-the-wisp flame inside and the other hand raised only a little with one finger beckoning. Standing upright and tall on both feet, light on its toes, arms close to the body, nothing sticking far out to the sides, facing right."
   },
   {
-   "name": "changeling",
+   "name": "changeling", "native": true,
    "width": 24,
    "refs": ["puck"],
    "prompt": "The goblin Changeling, the Puck grown into the fairy child-swapper: an uncanny goblin wearing a smooth pale porcelain mask pushed up on its forehead, the mask painted with a calm child-like face, a shawl and wrapped cloak of dark violet (dark) swaddling cloth tied at the waist with a faded sash, and in one hand a small straw doll-like decoy dangling by a string. Olive-green skin, long pointed ears, hooked nose, and one amber eye and one pale silver eye, a calm unsettling smile. Dark violet and charcoal with the pale mask. Standing, facing right."
   },
   {
-   "name": "leprechaun",
+   "name": "leprechaun", "native": true,
    "width": 24,
    "refs": ["puck"],
    "prompt": "The goblin Leprechaun, the Puck grown into the Irish cobbler: a spry goblin in a tall dark hat with a gold buckle, a dark green waistcoat with brass buttons, a leather cobbler's apron, curled buckled shoes, one hand holding a tiny cobbler's hammer, the other flipping a gold coin, a small leather pouch spilling gold coins at its belt, a pale cyan (air) swirl of wind trailing from its heels as if about to vanish, a sly grin, olive-green skin, long pointed ears, hooked nose and amber eyes. Dark green, dark (dark) charcoal and gold accents. Standing in a light on-the-toes pose, facing right."
   },
   {
-   "name": "hob",
+   "name": "hob", "native": true,
    "width": 19,
    "refs": [],
    "prompt": "The goblin Hob, the plain goblin grown into a small, kind, helpful household spirit like a brownie: a slightly stout, gentle goblin in a clean patched cream apron with a warm gold (light) patch, over its old ragged brown vest, with a small rolled-up sleeve, bare clawed feet, still olive-green with long pointed ears, hooked nose and amber eyes in a shy, kindly smile. It holds out a small wooden bowl of steaming porridge in both hands as an offering, a wooden spoon tucked in its sash, a soft warm gold glow around it. Warm gold and cream with brown. Standing, facing right."
   },
   {
-   "name": "tomte",
+   "name": "tomte", "native": true,
    "width": 21,
    "refs": ["hob"],
    "prompt": "The goblin Tomte, the Hob grown into the Scandinavian farm guardian: a goblin wearing a tall knitted red pointed cap, a long grey-white beard, a thick grey-brown wool coat with a belt, wooden clogs in earth tan, and holding a smooth round ward-stone in one hand that glows a warm gold (light), a small hand lantern in the other. Long pointed ears, hooked nose and amber eyes with a stern, fair gaze. Warm gold, grey wool and earth tan. Standing steady, facing right."
   },
   {
-   "name": "hearth_god",
+   "name": "hearth_god", "native": true,
    "width": 24,
    "refs": ["tomte"],
    "prompt": "The goblin Hearth-God, the Tomte grown into a Roman Lar household god: a graceful goblin in a short white tunic with a broad gold border and a gold girdle, a laurel wreath of gold leaves on its head, sandals, one foot lifted in a dancing step, one hand raised high holding a curved drinking horn and the other holding out a small shallow golden dish; its warm gold (light) is shown only in the bright gold of the trim, horn, dish and wreath. Olive-green skin, long pointed ears, hooked nose, amber eyes and a serene, welcoming smile. White, warm gold and a little cream. No halo, no glow, no sparkles, no particles or rays around it. Facing right."
   },
   {
-   "name": "boggart",
+   "name": "boggart", "native": true,
    "width": 24,
    "refs": ["tomte"],
    "prompt": "The goblin Boggart, the Tomte fallen into spite: a hunched, scowling goblin in a torn, darkened apron and a ragged dark violet (dark) cloak, a shabby dark pointed cap, the patched cream apron now stained grey and black, claws bared, jagged teeth, narrowed glowing amber eyes under heavy brows, one hand clutching a cracked black ward-stone that leaks dark violet light and smoke, a faint dark violet aura around its shoulders, long pointed ears and a hooked nose, olive-green skin. Dark violet, soot black and a little sickly yellow. Standing in a menacing crouch, facing right."
   },
   {
-   "name": "paladin",
+   "name": "paladin", "native": true,
    "width": 30,
    "refs": ["hob"],
    "prompt": "The goblin Paladin, the Hob grown into a holy knight like Charlemagne's paladins: a sturdy goblin in a padded tan leather and chainmail tunic, a pale cream cloak with a gold clasp, a small round shield with a warm gold (light) sunburst on its face in one arm, a bandolier of small vials and stones at its chest, ready to throw blessed throwables with the other hand, a small steel cap with a gold rim, olive-green skin, long pointed ears, hooked nose and steady amber eyes. Warm gold, cream and steel with a soft glow. Standing at ready, facing right."
   },
   {
-   "name": "horn_bearer",
+   "name": "horn_bearer", "native": true,
    "width": 34,
    "refs": ["paladin"],
    "prompt": "The goblin Horn-Bearer, the Paladin grown into a Roland-like champion blowing the Olifant: a tall goblin in tan leather and a chainmail tunic, a long pale cloak billowing back, a small round shield with a gold sunburst slung on its back, a winged steel helm with pale cyan (air) wing feathers, holding a great curved ivory horn with gold bands to its mouth with both hands, cheeks puffed in a mighty blast, a warm gold (light) glow, olive-green skin, long pointed ears, hooked nose and amber eyes. White, cream, warm gold and pale cyan. Standing firmly, facing right."
   },
   {
-   "name": "giant_killer",
+   "name": "giant_killer", "native": true,
    "width": 34,
    "refs": ["paladin"],
    "prompt": "The goblin Giant-Killer, the Paladin grown into Jack the Giant-Killer: a bold, bright-eyed goblin in a leather tunic with a wide gold-buckled belt, a short pale cloak, sturdy tan earth boots, a leather sling in one hand and a bandolier of smooth stones across its chest, an oversized broadsword far too big for it resting over its shoulder, the blade gleaming with a warm gold (light) edge. Earth tan, steel and gold with a cream cloak, olive-green skin, long pointed ears, hooked nose, amber eyes and a cocky confident grin. Standing in a wide, swaggering stance, facing right."
