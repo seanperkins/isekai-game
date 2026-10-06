@@ -71,20 +71,22 @@ func test_the_two_floor_holes_have_chains_back_up_standing_on_dry_floor() -> voi
 func _assert_door(room_id: String) -> void:
 	var r: RoomDef = rooms[room_id]
 	var top: Dictionary = r.exits.filter(func(e): return e["edge"] == "top" and e.get("gate", "") == "swim")[0]
-	var column: Rect2 = r.water.filter(func(w): return (w as Rect2).position.y <= 0.5 and (w as Rect2).end.x > float(top["from"]) and (w as Rect2).position.x < float(top["to"]))[0]
-	# (a) the top exit's span lies inside the column's x-range and the column reaches the room's top edge
-	assert_true(column.position.x <= float(top["from"]) and column.end.x >= float(top["to"]), "%s (a) the span is inside the column" % room_id)
-	# (b) no solid inside the column, and the sill clears the true non-swimmer reach plus 3
+	var water: Rect2 = r.water.filter(func(w): return (w as Rect2).position.y <= 0.5 and (w as Rect2).end.x > float(top["from"]) and (w as Rect2).position.x < float(top["to"]))[0]
+	var floor_top: float = r.pixel_size().y - RoomDef.FLOOR
+	# the shaft is the water under the exit's span (the water may run wider: F4 is flooded wall to wall, which keeps it in)
+	var column := Rect2(float(top["from"]), 0.0, float(top["to"]) - float(top["from"]), floor_top)
+	# (a) the top exit's span lies inside the water's x-range and the water reaches the room's top edge
+	assert_true(water.position.x <= float(top["from"]) and water.end.x >= float(top["to"]), "%s (a) the span is inside the water" % room_id)
+	# (b) no solid inside the shaft, and the sill clears the true non-swimmer reach plus 3
 	for s in r.solids:
-		assert_false((s as Rect2).intersects(column), "%s (b) no solid inside the column" % room_id)
+		assert_false((s as Rect2).intersects(column), "%s (b) no solid inside the shaft" % room_id)
 	var jh := 185.0
 	var b := PlayerWater.bob_apex(jh)
 	var b_entry := (pow(Player.JUMP_VELOCITY, 2.0) - pow(PlayerWater.BOB_VELOCITY, 2.0)) * jh / (2.0 * Player.GRAVITY * 100.0) + b
 	assert_almost_eq(b_entry, 160.8, 0.3)
-	var floor_top: float = r.pixel_size().y - RoomDef.FLOOR
 	var sill_height := floor_top - RoomDef.WALL
 	assert_gte(sill_height, b_entry + 3.0, "%s (b) the sill clears B_entry + 3" % room_id)
-	# (c) no dry surface beside the column is high enough that a lateral dry jump from it enters the column within B_entry of the sill
+	# (c) no dry surface beside the shaft is high enough that a lateral dry jump from it enters the shaft within B_entry of the sill
 	for s in r.solids:
 		var rr: Rect2 = s
 		var dry := true
@@ -93,7 +95,7 @@ func _assert_door(room_id: String) -> void:
 				dry = false
 		if not dry or rr.end.x < column.position.x - 160.0 or rr.position.x > column.end.x + 160.0:
 			continue
-		assert_lte((floor_top - rr.position.y) + b_entry + 3.0, sill_height, "%s (c) a dry ledge beside the column reaches the sill" % room_id)
+		assert_lte((floor_top - rr.position.y) + b_entry + 3.0, sill_height, "%s (c) a dry ledge beside the shaft reaches the sill" % room_id)
 
 func test_the_swim_doors_are_structural() -> void:
 	_assert_door("F2")
@@ -145,10 +147,12 @@ func test_f6_never_counts_toward_the_pacing_rule() -> void:
 	var with_f6 := ShippedRooms.first_time(rooms, creatures, ["F1", "F2", "F3", "F4", "F5", "F6"])
 	assert_eq(with_f6, 188 + 20, "the Storm Eel's first-time value is 20, and it is outside the rule")
 
-func test_f4s_column_does_not_overlap_its_platforms_or_hole() -> void:
+func test_f4s_shaft_does_not_overlap_its_platforms_or_hole() -> void:
 	var f4: RoomDef = rooms["F4"]
-	var column: Rect2 = f4.water[0]
+	var top: Dictionary = f4.exits.filter(func(e): return e["edge"] == "top")[0]
+	var shaft := Rect2(float(top["from"]), 0.0, float(top["to"]) - float(top["from"]), f4.pixel_size().y - RoomDef.FLOOR)
 	for s in f4.solids:
-		assert_false((s as Rect2).intersects(column), "no platform stands in the column")
+		assert_false((s as Rect2).intersects(shaft), "no platform stands in the shaft")
 	var hole: Dictionary = f4.exits.filter(func(e): return e["edge"] == "bottom")[0]
-	assert_lt(float(hole["to"]) + 40.0, column.position.x, "the column keeps clear of the floor hole")
+	assert_lt(float(hole["to"]) + 40.0, shaft.position.x, "the shaft keeps clear of the floor hole")
+	assert_eq(f4.water, [Rect2(Vector2.ZERO, f4.pixel_size())], "the room is flooded wall to wall: water is kept in by the room itself")

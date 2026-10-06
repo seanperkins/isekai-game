@@ -52,4 +52,4 @@ features = [{
 "text": "Water learns to carry you, and lightning learns to ride it.",
 "title": "Drowned tablet"
 }]
-water = [Rect2(40, 256, 140, 64)]
+water = [Rect2(20, 256, 160, 64)]

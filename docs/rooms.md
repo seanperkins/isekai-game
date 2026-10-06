@@ -73,11 +73,14 @@ Shallow water is decor (`flooded_puddle_glow`, `flooded_flowers`). The editor's 
 to the room, at least 32 px), selects, moves and deletes it, and its inspector edits X, Y, Width and Height; water is hit last (anything in
 it first), and a water finding in the problems list selects the rect.
 
-Three lint rules guard it: `water_rect` (a rect outside the room, under 32 px, or overlapping or touching another), `swimmer_dry` (an
-eel or a jelly spawned outside every water rect idles) and `water_exit` (a swimmer must be able to leave: the rect crosses an open exit
+Four lint rules guard it: `water_rect` (a rect outside the room, under 32 px, or overlapping or touching another), `swimmer_dry` (an
+eel or a jelly spawned outside every water rect idles), `water_exit` (a swimmer must be able to leave: the rect crosses an open exit
 span, or a **shore** lies within 24 px of it, its top between `RoomLint.SURFACE_LIFT` (44 px) above the surface and one body (12 px)
-below it). `RoomLint.water_groups` joins rects across open exit spans and `tests/test_flooded_rooms.gd` asserts no joined group is
-trapped.
+below it) and `water_contained`: **water always has something keeping it in, unless the whole floor is water** (Sean, 2026-10-06).
+Each side of a rect, down its whole depth, needs rock beside it, and rock lies under it, wherever it does not run to the room's own edge (a wall,
+or a doorway where it goes on into the next room, so a room can be water from wall to wall). A bank may stand up to 8 px below the surface
+(`RoomLint.BANK_LIP`); a one-way ledge lets things through, so it is no bank and no floor. `RoomLint.water_groups` joins rects across open
+exit spans and `tests/test_flooded_rooms.gd` asserts no joined group is trapped.
 
 The **Swim door** is a water column with no solid inside it and a top exit marked `gate: "swim"` (F2 into F3): a water-filled shaft only a
 swimmer climbs (Hydraulic Propulsion and threads may pass it, as they may pass G5's chimney). `test_flooded_rooms.gd` derives the bound:
@@ -103,7 +106,11 @@ These are the choices in the data that a test does not catch and a casual edit w
 - **G4's floor hole** (x 240-400) drops into F1; its content (the pool at x 470, the tablet at 580, the crystal and flowers, two crabs) stands
   clear of it, and F1's chain (top ledge at y 14, flush with x 240) climbs back up. F4's hole (x 220-380) and F5's chain are the same.
 - **F2's column** has nothing inside it on purpose: a ledge in the water would let a non-swimmer climb it. The gate test fails if one appears.
-- **F1's learning pool** (x 820-1080) has a far bank whose top (y 244) is its shore: without it `water_exit` would trap a swimmer there.
+- **F1's learning pool** (x 820-1080, y 280-320, 40 deep) is held by a low bank on its left (x 800-820, which a walker jumps) and a far bank whose top
+  (y 244) is its shore: without the far bank `water_exit` would trap a swimmer there, and without the near one `water_contained` fails.
+- **F4 is flooded from wall to wall** (it was a column of water with nothing round it, which was also the only way across the room): the whole room is
+  one rect, so no bank is needed, and the swim up to F6 is the same shaft. Its eels took the lizardmen's places; the crayfish walk the lake floor.
+- **F5's pool** runs from the west wall (x 20) to its east bank (x 180-220, top 260, a lip 4 px under the surface).
 - **G2's and G3's overhangs** (the slabs the vine snakes hang from) are mass, not ledges: they are not meant to be stood on.
 - **G3's hanging wall** (`Rect2(108, 20, 16, 400)`) drops from the ceiling to y 420, 100 px below the sill of the opening to G5
   (y 320), so the shaft between it and the west wall can only be climbed with Wall Cling. It is the one thing that makes the G5

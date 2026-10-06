@@ -8,7 +8,7 @@ id = "F1"
 area = "flooded"
 cell = Vector2i(10, 8)
 size = Vector2i(2, 1)
-solids = [Rect2(240, 14, 100, 12), Rect2(380, 62, 100, 12), Rect2(240, 110, 100, 12), Rect2(380, 158, 100, 12), Rect2(240, 206, 100, 12), Rect2(380, 254, 100, 12), Rect2(240, 302, 100, 12), Rect2(1080, 244, 100, 76)]
+solids = [Rect2(240, 14, 100, 12), Rect2(380, 62, 100, 12), Rect2(240, 110, 100, 12), Rect2(380, 158, 100, 12), Rect2(240, 206, 100, 12), Rect2(380, 254, 100, 12), Rect2(240, 302, 100, 12), Rect2(1080, 244, 100, 76), Rect2(800, 280, 20, 40)]
 decor = [{
 "id": "flooded_glow_fungus",
 "light": Color(0.5, 1, 0.6, 1),
@@ -35,13 +35,13 @@ decor = [{
 }]
 spawns = [{
 "id": "cave_crayfish",
-"pos": Vector2(780, 308)
+"pos": Vector2(770, 308)
 }, {
 "id": "cave_crayfish",
 "pos": Vector2(1130, 232)
 }, {
 "id": "drift_jelly",
-"pos": Vector2(880, 270)
+"pos": Vector2(880, 300)
 }, {
 "id": "drift_jelly",
 "pos": Vector2(980, 285)
@@ -68,4 +68,4 @@ features = [{
 "perk": "",
 "pos": Vector2(560, 320)
 }]
-water = [Rect2(820, 240, 260, 80)]
+water = [Rect2(820, 280, 260, 40)]

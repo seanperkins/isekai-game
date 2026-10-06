@@ -7,6 +7,8 @@ const ROOM_ID := "MENAGERIE"
 const NAME := "menagerie"
 ## The water pool is terrain, not a creature.
 const EXCLUDED := ["water_pool"]
+## How thick the banks of a swimmer's pool are.
+const BANK := 8.0
 const SPACING := 56.0
 const FIRST_X := 260.0  # far enough from START that nothing wakes when the room loads
 const START := Vector2(60, 308)
@@ -81,6 +83,8 @@ static func request(creatures: Array) -> Dictionary:
 		if c.swimmer:  # a swimmer lives in a pool of its own, with a small ledge over it to climb out on (clear of its neighbours)
 			var pool := Rect2(x - SWIM_WIDTH / 2.0, floor_y - SWIM_DEPTH, SWIM_WIDTH, SWIM_DEPTH)
 			room.water.append(pool)
+			room.solids.append(Rect2(pool.position.x - BANK, pool.position.y, BANK, pool.size.y))  # water is kept in: a bank each side (the floor is under it)
+			room.solids.append(Rect2(pool.end.x, pool.position.y, BANK, pool.size.y))
 			room.solids.append(Rect2(x - 8.0, pool.position.y - 4.0, 16.0, 8.0))
 			y = pool.position.y + SWIM_DEPTH / 2.0
 		room.spawns.append({"id": c.id, "pos": Vector2(x, y)})

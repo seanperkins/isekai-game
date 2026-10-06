@@ -2,6 +2,8 @@ extends SceneTree
 ## A creature attacking in a real room, frame by frame: it spawns beside the player, wakes, and every STRIDE-th frame of its windup, its blow and its recovery is
 ## saved, cropped to the fight. Needs a real renderer. Run from the project root:
 ##   tools/shot_run.sh tools/attack_shots.gd -- --id=twin_goblin_giant_killer --out=$PWD/.tmp/attack-shots/giant_killer [--dx=44] [--frames=150]
+## Add `--id=` nothing to leave the creature out, `--form=wolf_warg` or `--species=goblin` (the game's own flags) to shoot the player as that body,
+## `--press=move_right,jump` to hold those actions from frame 30 and `--cast=60` to cast the first skill on frame 60 (and every 40 after).
 ## Writes <out>/NNN.png. The player cannot be hurt, so the creature keeps attacking.
 
 const STRIDE := 3
@@ -17,6 +19,8 @@ var id := "twin_goblin_giant_killer"
 var dx := 44.0
 var frames := 150
 var shots := 0
+var press: Array = []
+var cast_at := -1
 
 func _initialize() -> void:
 	for a in OS.get_cmdline_user_args():
@@ -28,6 +32,10 @@ func _initialize() -> void:
 			dx = float(a.substr(5))
 		elif a.begins_with("--frames="):
 			frames = int(a.substr(9))
+		elif a.begins_with("--press="):
+			press = a.substr(8).split(",")
+		elif a.begins_with("--cast="):
+			cast_at = int(a.substr(7))
 	if out == "":
 		out = ProjectSettings.globalize_path("res://.tmp/attack-shots/" + id)
 	game = load("res://scenes/main.tscn").instantiate()
@@ -44,6 +52,11 @@ func _process(_delta: float) -> bool:
 		enemy.global_position = Vector2(p.global_position.x + dx, p.global_position.y)
 	elif frame > 20 and enemy != null and is_instance_valid(enemy):
 		p.set("_invuln", 1.0e9)
+		if frame == 30:
+			for a in press:
+				Input.action_press(a)
+		if cast_at >= 0 and frame >= 20 + cast_at and (frame - 20 - cast_at) % 40 == 0:
+			p.use_active(0)
 		if (frame - 20) % STRIDE == 0:
 			var img: Image = view.get_texture().get_image()
 			var mid: Vector2 = (p.get_global_transform_with_canvas().origin + enemy.get_global_transform_with_canvas().origin) / 2.0

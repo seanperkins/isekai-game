@@ -41,7 +41,7 @@ const FEATURE_BOX := {
 
 const RULES := ["solid_outside", "outside", "in_rock", "exit_blocked", "exit_narrow", "start_floor", "ledge_reach", "over_hole",
 	"altar_clearance", "feature_id", "shortcut_pair", "hint_unknown", "decor_unknown", "water_rect", "swimmer_dry", "water_exit",
-	"creature_fit", "boss_room", "tremor_range", "glimpse", "room_tag"]
+	"water_contained", "creature_fit", "boss_room", "tremor_range", "glimpse", "room_tag"]
 
 ## A standing creature needs this many times its tallest frame of clear height above its footing and this many times its widest
 ## frame of footing; a ceiling-anchored one the same height as a drop below its anchor and the same width at the anchor. The
@@ -100,6 +100,7 @@ static func check_room(r: RoomDef, rooms: Dictionary) -> Array:
 	out.append_array(_water_rect(r))
 	out.append_array(_swimmer_dry(r))
 	out.append_array(_water_exit(r))
+	out.append_array(_water_contained(r))
 	return out
 
 ## The findings that name a spawn of `r` (a spawn outside the room, in rock, over a floor hole, near an altar, or without the footing and
@@ -421,6 +422,53 @@ static func has_shore(r: RoomDef, rect: Rect2) -> bool:
 		if rr.position.y >= rect.position.y - SURFACE_LIFT and rr.position.y <= rect.position.y + BodyConfig.BOTTOM:
 			return true
 	return false
+
+## How closely a bank must lie to the water's edge, and how often the water's depth and width are sampled for it.
+const BANK_TOLERANCE := 1.0
+const BANK_SAMPLE := 4.0
+## A bank may stand this far below the water's surface (a lip): the top of the water is then not held, and the eye does not miss it.
+const BANK_LIP := 8.0
+
+## Water is kept in (Sean, 2026-10-06): rock beside it on each side down its whole depth, and rock under it, wherever it does not run to the room's own
+## edge (the room's wall, or a doorway where it goes on into the next room: the whole width of a room can be water). A one-way ledge lets things pass, so it is
+## no bank and no floor.
+static func _water_contained(r: RoomDef) -> Array:
+	var out: Array = []
+	var size := r.pixel_size()
+	var banks: Array = rock(r).filter(func(b: Rect2) -> bool: return not RoomBuilder.is_one_way(b, r.hard_ledges))
+	for i in r.water.size():
+		var w: Rect2 = r.water[i]
+		if not Rect2(Vector2.ZERO, size).encloses(w):
+			continue  # outside the room: water_rect says so
+		var lacking: PackedStringArray = []
+		var top := minf(w.position.y + BANK_LIP, w.end.y - 1.0)
+		if w.position.x > 0.5 and not _held(banks, w.position.x - BANK_TOLERANCE, top, w.position.x - BANK_TOLERANCE, w.end.y):
+			lacking.append("on its left")
+		if w.end.x < size.x - 0.5 and not _held(banks, w.end.x + BANK_TOLERANCE, top, w.end.x + BANK_TOLERANCE, w.end.y):
+			lacking.append("on its right")
+		if w.end.y < size.y - 0.5 and not _held(banks, w.position.x, w.end.y + BANK_TOLERANCE, w.end.x, w.end.y + BANK_TOLERANCE):
+			lacking.append("under it")
+		if not lacking.is_empty():
+			out.append(_f(r, "water_contained", "the water at %s has nothing keeping it in %s" % [_rect_text(w), " or ".join(lacking)], "water", i))
+	return out
+
+## Whether every sampled point of the segment from (x0, y0) to (x1, y1) lies in some bank. The segment's ends are the water's own corners, so the samples start half a
+## pixel inside them (Rect2.has_point leaves out a rect's right and bottom edges).
+static func _held(banks: Array, x0: float, y0: float, x1: float, y1: float) -> bool:
+	var length := maxf(absf(x1 - x0), absf(y1 - y0))
+	var steps := maxi(1, int(ceil(length / BANK_SAMPLE)))
+	var inset := minf(0.5, length / 2.0) / maxf(length, 0.001)
+	for k in steps + 1:
+		var t := lerpf(inset, 1.0 - inset, float(k) / steps)
+		var p := Vector2(lerpf(x0, x1, t), lerpf(y0, y1, t))
+		var in_bank := false
+		for b in banks:
+			if (b as Rect2).has_point(p):
+				in_bank = true
+				break
+		if not in_bank:
+			return false
+	return true
 
 ## A swimmer must be able to leave each water rect of the room: it crosses an open exit span, or it has a shore.
 static func _water_exit(r: RoomDef) -> Array:
