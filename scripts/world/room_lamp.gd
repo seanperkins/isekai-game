@@ -3,6 +3,7 @@ extends RoomDeed
 ## A lamp to drink from (Inspect, "drink"): `lamp_drunk`, once per life per lamp. It dims when drunk.
 
 var _light: Node
+var _dry := false
 
 func setup(f: Dictionary, ctx: Dictionary) -> void:
 	super.setup(f, ctx)
@@ -26,8 +27,15 @@ func _ready() -> void:
 func prompt() -> String:
 	return "drink"
 
-func interact(player: Node) -> void:
+## True once the lamp has been drunk (here or earlier in this life): it has nothing more to give.
+func is_dry() -> bool:
+	return _dry
+
+## Drinks the lamp. True when there was oil in it, false when it was dry already.
+func interact(player: Node) -> bool:
 	var drunk := report(Deeds.LAMP_DRUNK)  # false when it was drunk before, by this node or earlier in this life
+	_dry = true
 	if is_instance_valid(_light):
 		_light.queue_free()
 	player.inspect_report.emit(PackedStringArray(["Lamp", "You drink the oil. It tastes of smoke and old wax." if drunk else "The lamp is dry."]))
+	return drunk

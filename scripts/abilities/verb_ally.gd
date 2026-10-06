@@ -67,6 +67,14 @@ func launch(p_caster: Node2D, at: Vector2, power: int, seconds: float, tint: Col
 	add_child(s)
 
 static var _defs := {}
+static var _skills := {}
+
+## Every skill by id, as an enemy built from a creature file needs them to find its verb (loaded once).
+static func skill_defs() -> Dictionary:
+	if _skills.is_empty():
+		for d in DefLoader.load_dir("res://data/skills"):
+			_skills[d.id] = d
+	return _skills
 
 static func _creature(id: String) -> CreatureDef:
 	if _defs.is_empty():

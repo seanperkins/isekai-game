@@ -19,6 +19,7 @@ essences = {
 xp = 4
 pack = true
 charges = true
+undead = true
 bonds = ["pack"]
 origin = "support"
 role = "common"

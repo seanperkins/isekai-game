@@ -37,6 +37,13 @@ func route_target() -> Node2D:
 			best_d = d
 	return best
 
+## Where the route to its target goes: the start of a trail (the node itself sits at the origin), else the thing's own place.
+func route_point() -> Vector2:
+	var t := route_target()
+	if t == null:
+		return global_position
+	return t.start_point() if t.has_method("start_point") else t.global_position
+
 func _physics_process(delta: float) -> void:
 	_left -= delta
 	if _left <= 0.0 or not is_instance_valid(caster):
@@ -51,9 +58,8 @@ func _physics_process(delta: float) -> void:
 func _draw() -> void:
 	draw_circle(Vector2.ZERO, _r, Color(0.6, 0.8, 0.4, 0.2))
 	draw_arc(Vector2.ZERO, _r, 0.0, TAU, 40, Color(0.7, 0.9, 0.5, 0.5), 1.0)
-	var target := route_target()
-	if target != null:
-		var to := to_local(target.global_position)
+	if route_target() != null:
+		var to := to_local(route_point())
 		var steps := int(to.length() / 10.0)
 		for i in range(0, steps, 2):
 			draw_line(to * (float(i) / float(steps)), to * (float(i + 1) / float(steps)), Color(1.0, 0.95, 0.5, 0.7), 1.0)

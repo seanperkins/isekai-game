@@ -16,6 +16,7 @@ essences = {
 "dark": 2
 }
 xp = 3
+undead = true
 drops = [{"part": "ribs", "chance": 0.25}, {"part": "skull", "chance": 0.4}]
 origin = "support"
 species = "undead"

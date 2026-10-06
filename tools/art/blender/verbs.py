@@ -4,7 +4,7 @@ import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
-ENEMY_KINDS = ("bolt", "burst", "ring", "dash", "zone", "mark", "pull", "aura", "chain", "heal", "ward", "buff")   # scripts/abilities/verb_kinds.gd
+ENEMY_KINDS = ("bolt", "burst", "ring", "dash", "zone", "mark", "pull", "aura", "chain", "heal", "ward", "buff", "rage", "blink", "devour", "summon")   # scripts/abilities/verb_kinds.gd
 
 
 def table(path=None):

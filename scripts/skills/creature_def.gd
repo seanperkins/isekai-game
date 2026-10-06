@@ -59,6 +59,8 @@ extends Resource
 @export var possesses: bool = false
 @export var needs_glyph: bool = false
 @export var emitter: bool = false
+## It is of the dead whatever its species says (a ghost, a bone hound): holy light that burns only the living spares it.
+@export var undead: bool = false
 ## The skill id of the verb it casts at the player ("verb_wolf_fenrir"); "" for none. Enemy only casts the kinds in VerbKinds.ENEMY_KINDS.
 @export var verb: String = ""
 ## Its art: a still in a sheet (the form art track's sets), or the frames of a shipped creature it `wears`. Both empty: a plain placeholder.

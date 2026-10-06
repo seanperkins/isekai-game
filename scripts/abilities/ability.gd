@@ -103,14 +103,17 @@ func targets_around(radius: float) -> Array:
 ## Other-team actors along the aim within `range_px`, at most `half_width` off the line,
 ## nearest first.
 func targets_in_front(range_px: float, half_width: float) -> Array:
-	var dir := aim_dir()
+	return targets_from(actor.global_position, aim_dir(), range_px, half_width)
+
+## The same from a point and a direction of the caller's choosing (a thrown thing's line, kept as it was thrown).
+func targets_from(origin: Vector2, dir: Vector2, range_px: float, half_width: float) -> Array:
 	var out: Array = []
 	for n in _foes():
-		var d: Vector2 = n.global_position - actor.global_position
+		var d: Vector2 = n.global_position - origin
 		var along := d.dot(dir)
 		if along >= -4.0 and along <= range_px and absf(d.cross(dir)) <= half_width:
 			out.append(n)
-	out.sort_custom(func(a, b): return (a.global_position - actor.global_position).dot(dir) < (b.global_position - actor.global_position).dot(dir))
+	out.sort_custom(func(a, b): return (a.global_position - origin).dot(dir) < (b.global_position - origin).dot(dir))
 	return out
 
 ## The first terrain point on the segment, or null. Actors never block the thread.

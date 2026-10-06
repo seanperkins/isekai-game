@@ -27,9 +27,9 @@ def register(attacks, attack):
 # What a verb of each kind an enemy can cast looks like (tools/form_verbs.json; scripts/abilities/verb_kinds.gd ENEMY_KINDS). A blow with a weapon stays a weapon
 # blow when the verb is a bolt or a burst; anything else takes the attack that reads like the verb.
 BY_VERB = {"burst": "slam", "ring": "slam", "dash": "lunge", "zone": "guard", "aura": "roar", "buff": "roar", "ward": "guard", "mark": "cast", "pull": "cast",
-           "chain": "cast", "heal": "cast", "bolt": "cast"}
+           "chain": "cast", "heal": "cast", "bolt": "cast", "rage": "roar", "blink": "cast", "devour": "slam", "summon": "cast"}
 BY_VERB_QUAD = {"burst": "slam", "ring": "roar", "dash": "lunge", "zone": "guard", "aura": "roar", "buff": "roar", "ward": "guard", "mark": "roar", "pull": "bite",
-                "chain": "bite", "heal": "guard", "bolt": "roar"}
+                "chain": "bite", "heal": "guard", "bolt": "roar", "rage": "roar", "blink": "lunge", "devour": "bite", "summon": "roar"}
 WEAPON = ("chop", "stab", "thrust")
 
 

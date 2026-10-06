@@ -84,6 +84,8 @@ static func drinkable(a: Ability, reach: float) -> Node2D:
 	var best: Node2D = null
 	var best_d := reach + 0.001
 	for n in a.actor.get_tree().get_nodes_in_group("interactable"):
+		if n.has_method("is_dry") and n.is_dry():
+			continue  # a lamp drunk dry has nothing left
 		if n.has_method("prompt") and ["drink", "soak"].has(n.prompt()):
 			var d: float = n.global_position.distance_to(a.actor.global_position)
 			if d < best_d:
@@ -96,7 +98,9 @@ static func drink(a: Ability, spec: Dictionary) -> void:
 	var n := drinkable(a, float(spec.get("range", DRINK_RANGE)))
 	if n == null:
 		return
-	n.interact(a.actor)
+	var result = n.interact(a.actor)
+	if result is bool and not result:
+		return  # it was dry: nothing was drunk, so nothing is mended
 	var health = a.actor.get("health")
 	if health != null:
 		health.heal(int(spec.get("hp", 0)))
@@ -111,8 +115,8 @@ static func rig(a: Ability, spec: Dictionary) -> void:
 	if aim.y > 0.5:
 		VerbKinds._trap(a, {"seconds": RIG_TRAP_SECONDS, "stun": 2.0})
 		return
-	if not actor.has_method("corrode_parts") or actor.parts_carried() < 1:
-		return  # a throwable and a smoke bomb are made from a part
+	if not actor.has_method("corrode_parts") or actor.craft_count() < 1:
+		return  # a throwable and a smoke bomb are made from a part (a graft: never a key)
 	actor.corrode_parts(1)
 	if aim.y < -0.5:
 		VerbKinds._veil(a, {"radius": RIG_SMOKE_RADIUS, "seconds": RIG_SMOKE_SECONDS})
@@ -124,11 +128,11 @@ static func rig(a: Ability, spec: Dictionary) -> void:
 ## Two carried parts become one better one, a step up the ladder from the better of the two; the other is lost (Spin).
 static func spin(a: Ability, spec: Dictionary) -> void:
 	var actor = a.actor
-	if not actor.has_method("collect_part") or actor.inventory.carried_parts().size() < 2:
+	if not actor.has_method("collect_part") or actor.craft_count() < 2:
 		return
 	var ladder: Array = spec.get("ladder", SPIN_LADDER)
 	var rank := 0
 	for i in 2:
-		var id: String = actor.inventory.take_carried()
+		var id: String = actor.inventory.take_craft()
 		rank = maxi(rank, ladder.find(id))
 	actor.collect_part(ladder[mini(rank + 1, ladder.size() - 1)])

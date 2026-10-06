@@ -47,7 +47,7 @@ const SCHEMA := {
 	"rage": RAGE_KEYS,
 }
 ## The kinds that hurt, which take a `damage_type`; STRIKES are the instant ones, which also take a `status`.
-## The kinds an enemy casts (at the player, or on itself). The rest need a player's hands: a summon, a bridge, a vine, a reveal, a copy.
+## The kinds an enemy casts (at the player, or on itself); a summon calls hostile minions, a window is a buff, a blink is a short step. The rest need a player's hands: a bridge, a vine, a reveal, a copy.
 const ENEMY_KINDS := ["bolt", "burst", "ring", "dash", "zone", "mark", "pull", "aura", "chain", "heal", "ward", "buff", "rage", "blink", "devour", "summon"]
 const TYPED := ["bolt", "burst", "ring", "dash", "mark", "zone", "pull", "aura", "chain", "engulf", "dissolve"]
 const STRIKES := ["bolt", "burst", "ring", "dash", "mark", "chain", "dissolve"]
@@ -124,6 +124,8 @@ const BUFF_GENERATION := "verb_buff_generation"
 const BOLT_RANGE := 260.0
 const BOLT_HALF_WIDTH := 20.0
 const BOLT_RETURN := 0.35
+const COPY_RECAST := 0.6
+const COPY_MOVE_LIFE := 2.0
 const FORGE_REACH := 60.0
 const DYED_MULT := 1.5
 const LOOSE_RANGE := 220.0
@@ -310,25 +312,25 @@ static func _bolt(a: Ability, spec: Dictionary) -> void:
 		reach = from.distance_to(rock)
 	var half := float(spec.get("half_width", BOLT_HALF_WIDTH))
 	a.power_mult *= mult
-	_bolt_strike(a, spec, reach, half)
+	_bolt_strike(a, spec, reach, half, from, dir)
 	a.power_mult /= mult
 	Vfx.line(actor, from, from + dir * reach, _color(spec), 2.0, 0.25)
-	if bool(spec.get("returns", false)):  # a throw that returns
-		actor.get_tree().create_timer(BOLT_RETURN).timeout.connect(_bolt_returns.bind(a, spec, reach, half, mult))
+	if bool(spec.get("returns", false)):  # a throw that returns, along the line it went
+		actor.get_tree().create_timer(BOLT_RETURN).timeout.connect(_bolt_returns.bind(a, spec, reach, half, mult, from, dir))
 
-static func _bolt_strike(a: Ability, spec: Dictionary, reach: float, half: float) -> void:
-	var targets := a.targets_in_front(reach, half)
+static func _bolt_strike(a: Ability, spec: Dictionary, reach: float, half: float, from: Vector2, dir: Vector2) -> void:
+	var targets := a.targets_from(from, dir, reach, half)
 	if not bool(spec.get("pierce", true)):
 		targets = targets.slice(0, 1)
 	_strike(a, targets, spec)
 
-static func _bolt_returns(a, spec: Dictionary, reach: float, half: float, mult: float) -> void:  # untyped: the ability may be gone
+static func _bolt_returns(a, spec: Dictionary, reach: float, half: float, mult: float, from: Vector2, dir: Vector2) -> void:  # untyped: the ability may be gone
 	if not is_instance_valid(a) or not is_instance_valid(a.actor) or not a.actor.is_inside_tree():
 		return
 	a.power_mult *= mult
-	_bolt_strike(a, spec, reach, half)
+	_bolt_strike(a, spec, reach, half, from, dir)
 	a.power_mult /= mult
-	Vfx.line(a.actor, a.actor.global_position + a.aim_dir() * reach, a.actor.global_position, _color(spec), 2.0, 0.25)
+	Vfx.line(a.actor, from + dir * reach, from, _color(spec), 2.0, 0.25)
 
 ## What a shot costs the caster and what it is worth: a cursed Nth shot (it hits harder and costs HP), HP spent on it (all but one, and each is worth `hp_scale`
 ## damage), a loose object thrown, an essence that dyes it. The damage multiplier.
@@ -445,6 +447,10 @@ static func _hop(a: Ability, spec: Dictionary, dir: Vector2, bounding: bool) -> 
 	var from: Vector2 = a.actor.global_position
 	Vfx.line(a.actor, from, from + dir * reach, _color(spec), 4.0, 0.2)
 
+static func _free_node(node) -> void:  # untyped: it may be gone already
+	if is_instance_valid(node):
+		node.queue_free()
+
 static func _hop_again(a, spec: Dictionary, dir: Vector2, mult: float) -> void:  # untyped: the ability may be freed by now
 	if not is_instance_valid(a) or not is_instance_valid(a.actor) or not a.actor.is_inside_tree():
 		return
@@ -544,7 +550,7 @@ static func _copy(a: Ability, spec: Dictionary) -> void:
 			tmp.values = SkillEffects.active_values(a.actor._rules.get_def(a.actor.copy_def.verb))
 			a.actor.add_child(tmp)
 			run(tmp, move)
-			tmp.queue_free()
+			a.actor.get_tree().create_timer(COPY_MOVE_LIFE).timeout.connect(_free_node.bind(tmp))  # a delayed effect (a throw's return) needs it a while yet
 		return
 	var creature = a.actor.get("last_inspected")
 	if creature == null:
@@ -555,6 +561,7 @@ static func _copy(a: Ability, spec: Dictionary) -> void:
 		if v != 0:
 			mods.append({"stat": stat, "op": "add", "value": v})
 	_timed(a, COPY_SOURCE, mods, float(spec.get("seconds", COPY_SECONDS)))
+	a.cooldown_after = COPY_RECAST  # the creature's own move comes next, well inside the copy
 	if a.actor.has_method("copy_creature"):
 		a.actor.copy_creature(creature, float(spec.get("seconds", COPY_SECONDS)))
 
@@ -588,6 +595,8 @@ static func _chain(a: Ability, spec: Dictionary) -> void:
 static func _chain_hit(a, spec: Dictionary, current, from: Vector2, hit: Array, left: int, power: int) -> void:  # untyped: a timer may call this late
 	if left <= 0 or not is_instance_valid(a) or not is_instance_valid(a.actor) or not is_instance_valid(current) or not current.is_inside_tree():
 		return
+	if current.get("team") == a.actor.get("team"):
+		return  # it changed sides while the poison crept toward it
 	hit.append(current)
 	var here: Vector2 = current.global_position
 	_hit(current, power, spec, from, false, a.actor)
@@ -736,7 +745,7 @@ static func _summon_minions(a: Ability, spec: Dictionary) -> void:
 	var def := VerbAlly._creature(str(spec.get("look", "wild_slime")))
 	for i in maxi(0, count - alive):
 		var minion := Enemy.new()
-		minion.setup(def, {})
+		minion.setup(def, VerbAlly.skill_defs())  # with its own verb: a summoned imp curses too
 		caster.get_parent().add_child(minion)
 		minion.global_position = caster.global_position + Vector2((float(i) - float(count - 1) / 2.0) * SUMMON_SPACING * 1.5, -4.0)
 		minion.add_to_group("minions")
@@ -860,12 +869,12 @@ static func can_run(a: Ability, spec: Dictionary) -> bool:
 	var kind := str(spec.get("kind", ""))
 	if kind == "drink" and VerbWorld.drinkable(a, float(spec.get("range", VerbWorld.DRINK_RANGE))) == null:
 		return false  # no lamp or pool to eat
-	if kind == "spin" and a.actor.has_method("collect_part") and a.actor.inventory.carried_parts().size() < 2:
+	if kind == "spin" and a.actor.has_method("collect_part") and a.actor.craft_count() < 2:
 		return false  # two for one
 	if kind == "forge":
 		if bool(spec.get("needs_forge", false)) and not _forge_near(a):
 			return false  # needs a forge
-		return a.actor.has_method("parts_carried") and a.actor.parts_carried() >= int(spec.get("parts", FORGE_PARTS))
+		return a.actor.has_method("craft_count") and a.actor.craft_count() >= int(spec.get("parts", FORGE_PARTS))
 	return true
 
 static func _forge_near(a: Ability) -> bool:

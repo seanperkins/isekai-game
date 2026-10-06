@@ -48,7 +48,10 @@ SUPPORT_SPECIES = {"wild_slime": "slime", "skeleton": "undead", "village_goblin"
 SUPPORT_FLAGS = {"shield_guard": {"armored_charger": True}, "ghost": {"drifter": True}, "bone_hound": {"pack": True, "charges": True},
                  "demon_hound": {"charges": True}, "imp": {"holds": True}, "chapel_priest": {"holds": True, "emitter": True}, "ward_bearer": {"ward_side": True},
                  "rider": {"possesses": True}, "caller": {"needs_glyph": True}}
-FLAG_ORDER = ["armored_charger", "drifter", "pack", "charges", "holds", "ward_side", "possesses", "needs_glyph", "emitter"]
+SUPPORT_FLAGS["ghost"]["undead"] = True
+SUPPORT_FLAGS["bone_hound"]["undead"] = True
+SUPPORT_FLAGS["skeleton"] = {"undead": True}
+FLAG_ORDER = ["armored_charger", "drifter", "pack", "charges", "holds", "ward_side", "possesses", "needs_glyph", "emitter", "undead"]
 # The skills a support monster has (a gargoyle hangs from the ceiling and drops, as the spider does) and the verb tables' creatures (tools/monster_verbs.json).
 SUPPORT_SKILLS = {"gargoyle": [("ceiling_walk", 1)]}
 MONSTER_VERBS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "monster_verbs.json")

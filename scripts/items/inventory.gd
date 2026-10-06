@@ -53,6 +53,20 @@ func take_carried() -> String:
 			return id
 	return ""
 
+## The carried parts that can be spent as craft material (a forge, a rig, a spin, a corrosion): grafts. A key (a Moonstone) or a held item (a phylactery
+## shard) is carried for what it is for and is never spent that way.
+func craft_stock() -> Array:
+	return _carried.filter(func(id: String) -> bool: return not Inventory.is_cocoon(id) and _parts.has(id) and _parts[id].kind == "graft")
+
+## The first craft part, taken out of the pack; "" when none is carried.
+func take_craft() -> String:
+	for i in _carried.size():
+		var id: String = _carried[i]
+		if not Inventory.is_cocoon(id) and _parts.has(id) and _parts[id].kind == "graft":
+			_carried.remove_at(i)
+			return id
+	return ""
+
 ## A cocoon holding a living creature, carried; false (and nothing added) at COCOON_COUNT_MAX.
 func add_cocoon(creature_id: String) -> bool:
 	if cocoons().size() >= COCOON_COUNT_MAX:

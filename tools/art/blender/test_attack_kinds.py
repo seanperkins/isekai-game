@@ -13,13 +13,16 @@ import verbs  # noqa: E402
 class VerbsTest(unittest.TestCase):
     def test_the_table_has_the_goblins_and_the_wolves_verbs_by_form_id(self):
         t = verbs.table()
-        self.assertEqual(t["goblin_redcap"], "buff")
+        self.assertEqual(t["goblin_redcap"], "rage")
         self.assertEqual(t["wolf_hellhound"], "dash")
         self.assertEqual(t["kraken"], "pull")
 
     def test_a_verb_an_enemy_does_not_cast_is_no_verb(self):
         self.assertIsNone(verbs.kind_of("goblin_smith"))
-        self.assertEqual(verbs.kind_of("goblin_hob"), "ward")
+        self.assertIsNone(verbs.kind_of("goblin_hob"))  # a stone is a player's to plant
+        self.assertEqual(verbs.kind_of("goblin_redcap"), "rage")  # a window an enemy can open
+        self.assertEqual(verbs.kind_of("undead_zombie"), "devour")
+        self.assertEqual(verbs.kind_of("goblin_leprechaun"), "blink")
         self.assertIsNone(verbs.kind_of("nobody"))
 
 

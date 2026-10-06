@@ -1058,10 +1058,10 @@ func parts_carried() -> int:
 ## Spends `parts` carried parts (never a worn graft) on `amount` more of `stat` for the rest of the life; forges stack. False, and nothing
 ## spent, when too few are carried.
 func forge(stat: String, amount: int, parts: int) -> bool:
-	if not can_use_items() or parts_carried() < parts:
+	if not can_use_items() or craft_count() < parts:
 		return false
 	for i in parts:
-		inventory.take_carried()
+		inventory.take_craft()
 	forged[stat] = int(forged.get(stat, 0)) + amount
 	var mods := []
 	for s in forged:
@@ -1534,8 +1534,6 @@ func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, cau
 	end_channel()  # a hit ends any channel, including a poison hit that carries no `from`
 	var m := skillset.incoming(damage_type, health.hp, health.max_hp, global_position.distance_to(from) if from != Vector2.INF else 0.0, parts_carried())
 	var dealt := Damage.hit(raw, damage_type, stats.get_stat("def"), mini(100, int(m["percent_off"]) + rage.percent_off(damage_type)), m["flat_off"])
-	if dealt >= health.hp and _soul_rises():
-		return
 	if is_mounted():  # the mount is in the way
 		var taken := mini(dealt, _mount.hp)
 		var lost: bool = _mount.hurt(taken)
@@ -1545,6 +1543,8 @@ func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, cau
 		if dealt <= 0:
 			_invuln = INVULN_SECONDS
 			return
+	if dealt >= health.hp and _soul_rises():  # what is left of the blow would kill: a hidden soul is spent only then
+		return
 	health.take_hit(dealt, damage_type)
 	if _nail_t > 0.0 and from != Vector2.INF and signf(from.x - global_position.x) == -float(facing):
 		health.take_tick(_nail_drain)  # the nail on its back was hit
@@ -1886,7 +1886,11 @@ func kill_age() -> float:
 ## Loses `n` of the parts it carries (a dissolve that eats its own).
 func corrode_parts(n: int) -> void:
 	for i in n:
-		inventory.take_carried()
+		inventory.take_craft()
+
+## How many carried parts can be spent as craft material: grafts, never a key or a held item (a Moonstone, a phylactery shard).
+func craft_count() -> int:
+	return inventory.craft_stock().size()
 
 ## Ties a thread to `enemy`: the next blow it lands on the player is sent back to it (Fate thread). One thread at a time.
 func fate_tie(enemy: Enemy, seconds: float) -> void:

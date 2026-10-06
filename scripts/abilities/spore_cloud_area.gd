@@ -74,7 +74,7 @@ func _physics_process(delta: float) -> void:
 func _pulse() -> void:
 	if damage > 0:
 		for n in _enemies_inside():
-			if living_only and n is Enemy and n.def.species == "undead":
+			if living_only and n is Enemy and (n.def.species == "undead" or n.def.undead):
 				continue
 			n.receive_hit(damage, damage_type, global_position, "poison" if damage_type == "poison" else "")
 	if ally_heals and heals > 0:

@@ -485,6 +485,8 @@ func _feature_base(room_id: String, p: Vector2, kind: String) -> Variant:
 	var q := Vector2(snap(p.x), p.y)
 	if not bounds(r).has_point(q):
 		return "outside the room"
+	if kind == "weak_floor":
+		return q  # it spans a hole in the floor: where it is put is the surface it makes, and there is nothing under it to stand on
 	var y = surface_below(room_id, q - Vector2(0.0, 1.0))
 	if y == null:
 		return "nothing to stand on there: click open space above a floor or a ledge"
@@ -527,6 +529,8 @@ func add_feature(room_id: String, kind: String, pos: Vector2) -> String:
 			f["h"] = 64.0
 		"gap":
 			f["width"] = 50.0
+		"weak_floor":
+			f["width"] = 60.0
 	var before := _snap([room_id])
 	r.features.append(f)
 	_push(before)
@@ -1255,7 +1259,7 @@ func _feature_fields_error(f: Dictionary) -> String:
 			continue
 		if not (f[key] is float or f[key] is int) or float(f[key]) < 1.0 or float(f[key]) > 2000.0:
 			return "%s: expected a number from 1 to 2000" % key
-		var owners := ["gap"] if key == "width" else ["barrier", "hidden"]
+		var owners := ["gap", "weak_floor"] if key == "width" else ["barrier", "hidden"]
 		if not owners.has(kind):
 			return "a %s has no %s" % [kind, key]
 	match kind:

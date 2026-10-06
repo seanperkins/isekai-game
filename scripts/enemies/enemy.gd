@@ -157,6 +157,7 @@ var _curse_t := 0.0
 var _curse_mult := 1.0
 var _turned_t := 0.0
 var _turn_strike_in := 0.0
+const LIVE_LAYER := 1
 const GLYPH_REACH := 90.0
 const POSSESS_RANGE := 360.0
 const POSSESS_REACH := 22.0
@@ -1048,7 +1049,7 @@ func _possess_act(_delta: float) -> bool:
 	if body == null:
 		return false
 	var gap := body.global_position.x - global_position.x
-	if absf(gap) <= POSSESS_REACH:
+	if body.global_position.distance_to(global_position) <= POSSESS_REACH:
 		body.revive(POSSESS_HP)
 		queue_free()
 		return true
@@ -1064,6 +1065,10 @@ func revive(hp_fraction: float) -> void:
 	status.state = EnemyStatus.ACTIVE
 	possessed = true
 	modulate = POSSESSED_TINT
+	collision_layer = LIVE_LAYER  # a corpse blocks nothing and ignores the bodies about; a living body does not
+	for n in get_tree().get_nodes_in_group("actors"):
+		if n != self and n is CollisionObject2D:
+			remove_collision_exception_with(n)
 
 ## Fright, stagger and lure own the body while they last: they drop whatever was winding up and walk (a flier keeps its height). True while one does.
 func _mind_act(to_player: Vector2, delta: float) -> bool:
@@ -1108,7 +1113,7 @@ func _verb_act(to_player: Vector2, delta: float) -> bool:
 		_verb_t -= delta
 		if _verb_t <= 0.0:
 			_verb.aim = to_player.normalized()
-			if _verb.activate():
+			if (not def.needs_glyph or _glyph_lit()) and _verb.activate():  # a glyph put out during the windup spoils the cast
 				verb_casts += 1
 			_verb_state = "recover"
 			_verb_t = VERB_RECOVER

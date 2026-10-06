@@ -183,7 +183,7 @@ func _take_contact_hit() -> void:
 	if _hurt_in > 0.0 or _ward_t > 0.0:
 		return
 	for n in get_tree().get_nodes_in_group("actors"):
-		if not (n is Enemy) or n.dormant or n.is_rooted() or n.status.state != EnemyStatus.ACTIVE:
+		if not (n is Enemy) or n.dormant or n.is_rooted() or n.status.state != EnemyStatus.ACTIVE or n.is_turned():
 			continue
 		var d: Vector2 = n.global_position - global_position
 		if absf(d.x) <= HURT_REACH.x and absf(d.y) <= HURT_REACH.y:
