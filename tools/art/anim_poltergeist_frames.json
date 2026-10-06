@@ -1,5 +1,5 @@
 {
- "set": "anim_spider_cave_matriarch",
+ "set": "anim_poltergeist",
  "common_box": true,
  "frames": [
   {
@@ -93,16 +93,6 @@
    "native": true
   },
   {
-   "name": "walk_10",
-   "width": 0,
-   "native": true
-  },
-  {
-   "name": "walk_11",
-   "width": 0,
-   "native": true
-  },
-  {
    "name": "run_0",
    "width": 0,
    "native": true
@@ -139,6 +129,16 @@
   },
   {
    "name": "run_7",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "run_8",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "run_9",
    "width": 0,
    "native": true
   },

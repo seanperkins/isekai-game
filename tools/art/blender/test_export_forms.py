@@ -90,5 +90,13 @@ class TimingTest(unittest.TestCase):
             ex.check_timing(self.meta([0.2, 0.15, 0.1, 0.2], hurt=(0.4,)), self.CONSTANTS)
 
 
+class WearableTest(unittest.TestCase):
+    def test_a_form_with_no_twin_to_wear_its_clips_is_left_out(self):
+        have = {"twin_spider_norn.tres", "twin_kraken.tres"}
+        exists = lambda path: os.path.basename(path) in have
+        self.assertEqual(ex.wearable("spider", ["norn", "cave_matriarch"], exists), (["norn"], ["cave_matriarch"]))
+        self.assertEqual(ex.wearable("slime", ["kraken", "cube"], exists), (["kraken"], ["cube"]), "the slime twins are named bare")
+
+
 if __name__ == "__main__":
     unittest.main()

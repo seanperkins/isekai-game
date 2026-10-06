@@ -20,6 +20,8 @@ sys.path.insert(0, HERE)
 import clips  # noqa: E402
 
 # set -> where its render is and which state comes from which render clip: (state, render clip, frames or None for all, loops, options)
+# Two options name how the state is cut and never reach the sheet's spec: "name" (a one-frame state is called that, not `<state>_1`, for the code that asks the sheet
+# for a frame by name) and "even" (the picked frames are sampled around the whole clip: each lasts the clip's length divided by their number).
 SPECS = {
     "goblin": dict(render=("goblin", "goblin"), key="goblin", states=[
         ("idle", "idle", None, True, {}), ("run", "run", None, True, {}), ("rise", "rise", [0], False, {}), ("fall", "fall", [0], False, {}),
@@ -29,6 +31,9 @@ SPECS = {
         ("idle", "idle", None, True, {}), ("walk", "walk", None, True, {}), ("windup", "attack", [2], False, {}),
         ("charge", "run", None, True, {"attack_from": 0.55}), ("rest", "attack", [9], True, {}), ("stunned", "hurt", [2], False, {}),
         ("hurt", "hurt", [2], False, {}), ("downed", "die", [-1], False, {})]),
+    "spider": dict(render=("spider", "spider"), key="spider", states=[
+        ("hang", "idle", None, True, {}), ("drop", "attack", [3], False, {"name": "drop"}), ("crawl", "walk", [0, 3, 6, 9], True, {"even": True}),
+        ("stunned", "hurt", [3], False, {"name": "stunned"}), ("hurt", "hurt", [1], False, {"name": "hurt"}), ("downed", "die", [-1], False, {"name": "downed"})]),
 }
 
 
@@ -36,14 +41,18 @@ def plan(spec, meta):
     """([(new frame name, source frame name, options)], {state: clip}) for a spec and a render's meta.json."""
     frames, table = [], {}
     for state, source, picks, loop, options in spec["states"]:
+        options = dict(options)
+        called, even = options.pop("name", None), options.pop("even", False)
         count = meta["anims"][source]
         indices = list(range(count)) if picks is None else [i % count for i in picks]
         names = []
         for n, i in enumerate(indices, 1):
-            new = "%s_%d" % (state, n)
+            new = called if called and len(indices) == 1 else "%s_%d" % (state, n)
             frames.append((new, "%s_%d" % (source, i), options))
             names.append(new)
         durations = [meta["durations"][source][i] for i in indices]
+        if even:
+            durations = [sum(meta["durations"][source]) / len(indices)] * len(indices)
         table[state] = clips.on_grid(names, durations, loop) if len(names) > 1 else {"frames": names, "fps": 1.0, "loop": bool(loop)}
     return frames, table
 

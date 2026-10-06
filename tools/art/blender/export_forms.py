@@ -25,6 +25,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 sys.path.insert(0, HERE)
 import clips  # noqa: E402
+import sizing  # noqa: E402
 
 BASES = {"goblin": "goblin", "wolf": "gloom_wolf", "spider": "spider", "undead": "skeleton", "slime": "slime"}   # a family's base creature is not a twin: it has its own sheet
 ANIM_ORDER = ("idle", "walk", "run", "attack", "hurt", "die")
@@ -128,6 +129,12 @@ def write_clips(table, root=ROOT):
         fh.write("\n")
 
 
+def wearable(creature, forms, exists=os.path.exists):
+    """(forms a twin wears, forms no twin wears): an evolution with no enemy twin has no one to play its clips."""
+    kept = [f for f in forms if exists(sizing.twin_path(creature, f))]
+    return kept, [f for f in forms if f not in kept]
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("creature")
@@ -136,6 +143,10 @@ def main(argv=None):
     a = ap.parse_args(argv)
     source = a.source or os.path.join(ROOT, ".tmp", "%s-tree" % a.creature)
     forms = a.forms or sorted(d for d in os.listdir(source) if os.path.isdir(os.path.join(source, d, "raw")) and d != BASES.get(a.creature))
+    if not a.forms:
+        forms, left_out = wearable(a.creature, forms)
+        for form in left_out:
+            print("left out %s: no twin wears it" % form, flush=True)
     table = {}
     for form in forms:
         fid, c = install(a.creature, form, os.path.join(source, form))

@@ -44,6 +44,33 @@ class PlanTest(unittest.TestCase):
             self.assertIn(state, table)
 
 
+class SpiderPlanTest(unittest.TestCase):
+    META = {"anims": {"idle": 8, "walk": 12, "attack": 10, "hurt": 5, "die": 8},
+            "durations": {"idle": [0.15] * 8, "walk": [0.1] * 12, "attack": [0.06] * 10, "hurt": [0.05] * 5, "die": [0.1] * 8}}
+
+    def setUp(self):
+        self.frames, self.table = eb.plan(eb.SPECS["spider"], self.META)
+
+    def test_the_game_finds_every_frame_it_asks_the_sheet_for_by_name(self):
+        names = {new for new, _, _ in self.frames}   # the sandbox draws crawl_1..4 and drop by frame name; the enemy plays the clips
+        for name in ("hang_1", "hang_2", "drop", "crawl_1", "crawl_2", "crawl_3", "crawl_4", "stunned", "hurt", "downed"):
+            self.assertIn(name, names)
+        for state in ("hang", "drop", "crawl", "stunned", "hurt", "downed"):
+            self.assertTrue(set(self.table[state]["frames"]) <= names)
+
+    def test_crawl_is_four_even_frames_around_the_whole_walk_taking_as_long_as_it(self):
+        by = {new: src for new, src, _ in self.frames}
+        self.assertEqual([by["crawl_%d" % i] for i in (1, 2, 3, 4)], ["walk_0", "walk_3", "walk_6", "walk_9"])
+        frames = self.table["crawl"]["frames"]
+        self.assertAlmostEqual(len(frames) / self.table["crawl"]["fps"], 1.2, delta=0.04, msg="the walk's cycle")
+        self.assertEqual({frames.count("crawl_%d" % i) for i in (1, 2, 3, 4)}, {len(frames) // 4})
+
+    def test_what_names_a_frame_is_not_written_into_the_sheets_spec(self):
+        for new, _, options in self.frames:
+            self.assertNotIn("name", options, new)
+            self.assertNotIn("even", options, new)
+
+
 class SizingTest(unittest.TestCase):
     def test_a_base_creature_is_matched_by_the_dimension_the_game_reads_and_a_form_by_area(self):
         import sizing

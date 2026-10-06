@@ -111,7 +111,12 @@ func _pixels_near(a: Array, b: Array, limit: float) -> bool:
 
 ## Global positions of a sprite's opaque pixel centres, every `step`-th one, optionally only its edge.
 func _pixel_points(sprite: Sprite2D, image: Image, step: int, edge_only: bool) -> Array:
-	var region := (sprite.texture as AtlasTexture).region
+	var region: Rect2
+	if sprite.texture is CanvasTexture:  # a creature with a normal map is drawn lit: its picture is the canvas texture's own cut of the frame (already facing the way it is drawn)
+		image = ((sprite.texture as CanvasTexture).diffuse_texture as Texture2D).get_image()
+		region = Rect2(Vector2.ZERO, image.get_size())
+	else:
+		region = (sprite.texture as AtlasTexture).region
 	var size := region.size
 	var out: Array = []
 	for y in range(0, int(size.y), 1):

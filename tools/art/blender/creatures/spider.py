@@ -71,7 +71,8 @@ def motion(variant):
 
 
 def today(variant):
-    base = (os.path.join(HERE, "..", "..", "..", "assets", "sheets", "spider.json"), "crawl_1") if _name(variant) == BASE else None
+    """The plain spider is sized by the sheet it replaced (before/spider_base.json, saved before the render took its place); a form by the still it replaces."""
+    base = (os.path.join(HERE, "before", "spider_base.json"), "hang_1") if _name(variant) == BASE else None
     return sizing.today("spider", variant, _form(variant)["width"], base)
 
 
@@ -83,7 +84,7 @@ def clips_of(rig, variant):
     rig.pose(*idle.frames[0])
     x0, x1, z0, z1 = rig.extent()
     w, h = today(variant)
-    ppu = math.sqrt(w * h / ((x1 - x0) * (z1 - z0))) if h else w / (x1 - x0)
+    ppu = sizing.pixels_per_unit((x1 - x0, z1 - z0), (w, h), "width" if _name(variant) == BASE else "area")
     return motion_.clips_for(body, motion(variant), ppu, RUN_SPEED), ppu
 
 

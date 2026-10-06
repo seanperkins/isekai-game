@@ -3,12 +3,12 @@ extends GutTest
 ## not a drift. Sean, 2026-10-04: every monster must feel the right size next to the others; the player's body boxes and reach
 ## are tuned to fit that, not the other way round. Sizes within 2 px (the anchored sheets round).
 ## 2026-10-06: the goblin (also the player's two-legged body) and the gloom wolf are Blender renders now (tools/art/blender/export_base.py): the goblin crouches
-## with its feet apart and its arms forward, so it is as wide as it is tall (its height is within 2 px of the old drawing); the wolf is longer and lower.
+## with its feet apart and its arms forward, so it is as wide as it is tall (its height is within 2 px of the old drawing); the wolf is longer and lower, the spider (its legs spread, no longer tucked under it) longer and flatter.
 
 const LADDER := {
 	"vine_snake": ["slither_1", 46, 13],
 	"lizard": ["idle_1", 56, 18],
-	"spider": ["hang_1", 33, 23],
+	"spider": ["hang_1", 36, 18],
 	"toad": ["idle_1", 40, 25],
 	"bat": ["fly_1", 29, 29],
 	"slime": ["idle_1", 44, 33],
