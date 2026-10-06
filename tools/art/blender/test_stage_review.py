@@ -22,7 +22,8 @@ def goblin_clips():
     body = body_of()
     walk_cycle, walk_stride = bm.plan_gait(body, "walk", WALK_SPEED, PPU)
     run_cycle, run_stride = bm.plan_gait(body, "run", WALK_SPEED * sr.RUN_SPEED, PPU)
-    clips = {"idle": bm.idle_clip(body), "walk": bm.gait_clip(body, "walk", walk_cycle, walk_stride), "run": bm.gait_clip(body, "run", run_cycle, run_stride)}
+    clips = {"idle": bm.idle_clip(body), "walk": bm.gait_clip(body, "walk", walk_cycle, walk_stride), "run": bm.gait_clip(body, "run", run_cycle, run_stride),
+             "attack": bm.attack_clip(body)}
     clips.update({name: player_poses.clip(body, name) for name in player_poses.FRAMES})
     return clips
 
@@ -396,6 +397,49 @@ class StrideRunTests(unittest.TestCase):
                 runs.append((c.run, c.state))
         self.assertEqual([state for _, state in runs], ["walk", "run", "walk"])
         self.assertEqual(len({r for r, _ in runs}), 3)
+
+
+class CastTests(unittest.TestCase):
+    """A gesture judged in place: the body stands where the course starts and casts, for the time the engine gives a verb (windup 0.35 s, then recovery 0.30 s)."""
+
+    def test_a_cast_recording_stands_for_the_windup_and_the_recovery(self):
+        rec = sr.cast_recording("slam")
+        ticks = rec["ticks"]
+        cast = [t for t in ticks if t["cast"] == "slam"]
+        self.assertEqual(len(cast), 21 + 18, "0.35 s of windup and 0.30 s of recovery at 60 ticks a second")
+        self.assertEqual([t["cast"] for t in ticks[:3]], ["", "", ""], "it stands before it casts")
+        self.assertEqual(ticks[-1]["cast"], "", "and after")
+        self.assertEqual({(t["x"], t["y"]) for t in ticks}, {(100.0, 0.0)}, "the gesture does not move the body")
+        self.assertEqual([t["cast_t"] for t in cast][:2], [0.0, round(1.0 / 60.0, 4)])
+        self.assertTrue(all(t["on_floor"] and t["surface"] == "floor" and t["speed"] == 0.0 for t in ticks))
+
+    def test_a_cast_tick_is_in_the_cast_state(self):
+        ticks = sr.cast_recording("slam")["ticks"]
+        self.assertEqual(sr.state_of(ticks[0], WALK_SPEED), "idle")
+        self.assertEqual(sr.state_of([t for t in ticks if t["cast"]][0], WALK_SPEED), "cast")
+
+    def test_the_cast_plays_the_attack_clip_from_its_start_to_its_end(self):
+        clips = goblin_clips()
+        frames = sr.playback(sr.cast_recording("slam"), clips, WALK_SPEED, every=1)
+        cast = [f for f in frames if f.state == "cast"]
+        self.assertEqual({f.clip for f in cast}, {"attack"})
+        self.assertEqual(cast[0].frame, 0)
+        windup = bm.ATTACK_WINDUP
+        impact = [f for f in cast if f.t >= cast[0].t + 0.35 - 1e-9][0]
+        self.assertEqual(impact.frame, windup, "the first frame after the windup is showing when the verb fires")
+        self.assertEqual(cast[-1].frame, len(clips["attack"].frames) - 1, "the last frame is the rest pose it came from")
+
+    def test_a_creature_with_no_attack_clip_has_no_pose_for_a_cast(self):
+        clips = goblin_clips()
+        del clips["attack"]
+        with self.assertRaises(sr.NoPose) as caught:
+            sr.playback(sr.cast_recording("slam"), clips, WALK_SPEED, every=1)
+        self.assertEqual(caught.exception.state, "cast")
+
+    def test_every_gesture_can_be_cast(self):
+        import verb_anims
+        for name in verb_anims.ARCHETYPES:
+            self.assertEqual(sr.cast_recording(name)["script"], "gesture_" + name)
 
 
 class GifTests(unittest.TestCase):

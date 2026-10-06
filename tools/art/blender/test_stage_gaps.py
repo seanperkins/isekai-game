@@ -45,6 +45,14 @@ class RealCreatureTests(unittest.TestCase):
             assert lines, "%s: %s" % (species, (out.stdout + out.stderr)[-1500:])
             cls.reports[species] = json.loads(lines[-1][5:])
 
+    def test_a_creature_lacks_only_the_gestures_listed_as_missing(self):
+        script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "stage_review.py")
+        for species in sr.SPECIES:
+            out = subprocess.run([BLENDER, "-b", "-P", script, "--", "--creature", species, "--gesture-gaps"], capture_output=True, text=True)
+            line = [x for x in out.stdout.splitlines() if x.startswith("GESTURES ")]
+            self.assertTrue(line, "%s: %s" % (species, (out.stdout + out.stderr)[-800:]))
+            self.assertEqual(sorted(json.loads(line[-1][9:])["missing"]), sr.KNOWN_ARCHETYPES[species], "%s: the gestures with no preset changed" % species)
+
     def test_a_species_cannot_be_posed_only_in_the_states_listed_as_missing(self):
         for species, scripts in self.reports.items():
             for script, report in scripts.items():

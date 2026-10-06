@@ -79,3 +79,16 @@ def setup(rig, variant):
     info = {"durations": {n: c.durations for n, c in clips.items()}, "loops": {n: c.loop for n, c in clips.items()},
             "fps": {n: len(c.frames) / sum(c.durations) for n, c in clips.items()}, "windup": motion_.WINDUP}
     return {"canvas": canvas, "ppu": ppu, "margin": MARGIN, "center_x": 0.0, "anims": anims, "still": "idle_0", "extra": info}
+
+
+# ---- gestures ---------------------------------------------------------------------------------------------------------------------
+# the attack style of slime_motion that plays each gesture (verb_anims.ARCHETYPES); a gesture not listed is one the slimes cannot play yet
+GESTURES = {"slam": "slam", "lunge": "lunge", "throw": "throw", "pulse": "pulse", "cast": "lash", "claw": "bite"}
+
+
+def gesture_clip(rig, variant, archetype):
+    """The attack clip of this form playing the gesture `archetype`; a KeyError when it has no style for it."""
+    import copy
+    body = copy.copy(rig.slime_kit.body)
+    body.form = dict(body.form, attack=GESTURES[archetype])
+    return motion_.attack_clip(body, motion_.idle_clip(body).frames[0])

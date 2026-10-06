@@ -2,6 +2,7 @@
 
     python3 tools/art/stage_review.py goblin --script jump_ledges [--variant redcap] [--every 3] [--out DIR] [--reuse]
     python3 tools/art/stage_review.py goblin            (every script the species can run)      python3 tools/art/stage_review.py all     (every species)
+    python3 tools/art/stage_review.py goblin --gesture slam   (or `all`: every gesture of tools/verb_anims.json, cast in place; no recording)
 
 1. The game records the run (tools/record_movement.gd: the sandbox's own movement over its own course) to .tmp/stage/<species>_<script>.json; it is recorded again every time, so a
    review is never of an older game, unless --reuse says to take the file that is there.
@@ -21,12 +22,13 @@ from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "blender"))
-from stage_review import KNOWN_MISSING, RUNS, SPECIES, gif_durations, positive_int  # noqa: E402
+from stage_review import KNOWN_ARCHETYPES, KNOWN_MISSING, RUNS, SPECIES, gif_durations, positive_int  # noqa: E402
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 BLENDER = os.environ.get("BLENDER", "/Applications/Blender.app/Contents/MacOS/Blender")
 GODOT = os.environ.get("GODOT", "godot")
 STAGE = os.path.join(ROOT, ".tmp", "stage")
 SHEET_FRAMES = 8
+GESTURE_VIEW_PX = 150   # a gesture is judged close up
 
 
 def species_of(creature):
@@ -58,7 +60,9 @@ def assemble(out):
         meta = json.load(fh)
     frames = [Image.open(os.path.join(out, "frame_%04d.png" % f["frame"])).convert("RGB") for f in meta["frames"]]
     frames[0].save(os.path.join(out, "review.gif"), save_all=True, append_images=frames[1:], duration=gif_durations(len(frames), meta["fps"]), loop=0, optimize=False)
-    pick = [frames[int(i * (len(frames) - 1) / (SHEET_FRAMES - 1))] for i in range(SHEET_FRAMES)]
+    cast = [i for i, f in enumerate(meta["frames"]) if f["state"] == "cast"]  # a gesture's sheet is its own frames: the windup, the impact and the recovery
+    span = cast or list(range(len(frames)))
+    pick = [frames[span[int(i * (len(span) - 1) / (SHEET_FRAMES - 1))]] for i in range(SHEET_FRAMES)]
     w, h = pick[0].size
     sheet = Image.new("RGB", (w * 2, h * (SHEET_FRAMES // 2)))
     for i, im in enumerate(pick):
@@ -102,16 +106,44 @@ def review(creature, variant, scripts, every, out=None, reuse=False):
     return lines
 
 
+def gesture_review(creature, variant, name, every, out=None):
+    """Cast `name` (or every gesture) on the stage for one creature, and put each together; the lines name the gestures the creature has no preset for (and flag one KNOWN_ARCHETYPES does not list)."""
+    base = out or os.path.join(STAGE, creature + ("_" + variant if variant else ""), "gestures")
+    cmd = [BLENDER, "-b", "-P", os.path.join(HERE, "blender", "stage_review.py"), "--", "--creature", creature, "--gesture", name, "--out", base, "--every", str(every),
+           "--view-px", str(GESTURE_VIEW_PX)]
+    if variant:
+        cmd += ["--variant", variant]
+    done = subprocess.run(cmd, capture_output=True, text=True)
+    if done.returncode != 0:
+        sys.exit("render failed:\n" + (done.stdout + done.stderr)[-3000:])
+    with open(os.path.join(base, "gesture_gaps.json")) as fh:
+        missing = json.load(fh)["missing"]
+    lines = []
+    for folder in sorted(d for d in os.listdir(base) if d.startswith("gesture_") and os.path.isdir(os.path.join(base, d))):
+        meta = assemble(os.path.join(base, folder))
+        lines.append("%-8s %-8s %s" % (creature, folder[len("gesture_"):], os.path.join(base, folder, "review.gif")))
+    known = KNOWN_ARCHETYPES.get(creature, [])
+    new = [m for m in missing if m not in known]
+    lines.append("%-8s no preset for: %s%s" % (creature, ", ".join(missing) or "none", "   NEW: " + ", ".join(new) if new else ""))
+    return lines
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("creature", help="goblin, undead, wolf, spider or slime, or `all`")
     ap.add_argument("--script", help="walk_run, jump_ledges, wall_shaft, crawl, pounce, or `all` (every one the species can run; the default)")
+    ap.add_argument("--gesture", help="a gesture of tools/verb_anims.json, or `all`: cast in place instead of a recorded run")
     ap.add_argument("--variant")
     ap.add_argument("--out")
     ap.add_argument("--every", type=positive_int, default=3, help="pose every Nth recorded tick (60 ticks a second)")
     ap.add_argument("--reuse", action="store_true", help="take a recording that is already there instead of recording the run again")
     a = ap.parse_args()
     everything = a.creature == "all"
+    if a.gesture:
+        for creature in SPECIES if everything else [a.creature]:
+            for line in gesture_review(creature, a.variant, a.gesture, 2 if a.every == 3 else a.every, None if everything else a.out):
+                print(line)
+        return
     for creature in SPECIES if everything else [a.creature]:
         scripts = [a.script] if a.script and a.script != "all" and not everything else RUNS[species_of(creature)]
         for line in review(creature, a.variant, scripts, a.every, None if everything else a.out, a.reuse):

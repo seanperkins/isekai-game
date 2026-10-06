@@ -208,3 +208,16 @@ def setup(rig, variant):
     info["windup"] = wolf.motion_.WINDUP if form.get("ride") else motion_.ATTACK_WINDUP
     return {"canvas": canvas, "ppu": ppu, "margin": MARGIN, "center_x": 0.0, "anims": anims,
             "still": form.get("still", "idle_0"), "extra": info}
+
+
+# ---- gestures ---------------------------------------------------------------------------------------------------------------------
+# the preset of biped_motion.ATTACKS that plays each gesture (verb_anims.ARCHETYPES); a gesture not listed is one the two-legged bodies cannot play yet
+GESTURES = {"cast": "cast", "slam": "slam", "roar": "roar", "lunge": "lunge", "guard": "guard", "claw": "claw"}
+
+
+def gesture_clip(rig, variant, archetype):
+    """The attack clip of this form playing the gesture `archetype`; a KeyError when it has no preset for it (a rider's attack is its mount's, so it has none)."""
+    form = dict(_form(variant), attack=GESTURES[archetype])
+    if form.get("ride"):
+        raise KeyError(archetype)
+    return motion_.attack_clip(body_of(rig, form))

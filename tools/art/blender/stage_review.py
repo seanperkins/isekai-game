@@ -20,6 +20,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import stage  # noqa: E402
+import verb_anims  # noqa: E402
 
 # the game's rules for playing a gait (scripts/forms/form_pose.gd; test_stage_review.py keeps these equal to it)
 RUN_RATIO = 1.35
@@ -36,8 +37,12 @@ DEPTH = 1.0           # how thick the course is behind the creature, in units; i
 FRONT = 0.2
 
 # the clip each state is posed with; a state not listed here has no pose until someone gives it one
-STATE_CLIP = {"idle": "idle", "walk": "walk", "run": "run", "rise": "rise", "fall": "fall", "land": "land", "wall": "wall", "mantle": "mantle", "slide": "slide", "roll": "roll"}
+STATE_CLIP = {"idle": "idle", "walk": "walk", "run": "run", "rise": "rise", "fall": "fall", "land": "land", "wall": "wall", "mantle": "mantle", "slide": "slide", "roll": "roll",
+              "cast": "attack"}
 GAITS = ("walk", "run")
+# the engine's time for a verb: the windup before it fires and the recovery after it (scripts/enemies/enemy.gd VERB_WINDUP and VERB_RECOVER; export_forms.check_timing reads them)
+CAST_WINDUP = 0.35
+CAST_RECOVER = 0.30
 
 
 class NoPose(Exception):
@@ -83,6 +88,8 @@ def state_of(tick, walk_speed):
     gait whatever it crawls on: its walk is turned to lie on the surface (`surface_angle`), it is not a wall or a ceiling pose."""
     surface = tick["surface"]
     speed = tick.get("speed", abs(tick["vx"]))
+    if tick.get("cast"):
+        return "cast"  # a verb being cast: its gesture, whatever the body is doing under it
     if surface == "mantle":
         return "mantle"
     if tick["verb"]:
@@ -159,7 +166,7 @@ class Frame:
         self.phase, self.travel, self.angle, self.missing = phase, travel, angle, missing
 
 
-def _clip_and_phase(clips, state, k, run_start, run_len, fps, gait_phase, speed, walk_speed, run_factor):
+def _clip_and_phase(clips, state, k, run_start, run_len, fps, gait_phase, speed, walk_speed, run_factor, cast_t=None):
     """(clip name, phase, the gait phase after this tick) for a tick in `state`: a gait turns by speed over stride, any other clip runs by the time spent in the state."""
     if state in GAITS:
         clip = clips.get(state)
@@ -173,6 +180,8 @@ def _clip_and_phase(clips, state, k, run_start, run_len, fps, gait_phase, speed,
     clip = clips.get(name)
     if clip is None:
         raise NoPose(state, name)
+    if state == "cast" and cast_t is not None:  # a gesture runs by the time since the cast began, the clip's own length being the engine's windup and recovery
+        return name, cast_t / sum(clip.durations), gait_phase
     if clip.loop or len(clip.frames) == 1:
         return name, (k - run_start[k]) / fps / sum(clip.durations), gait_phase
     return name, (k - run_start[k]) / float(run_len[k]), gait_phase
@@ -214,7 +223,7 @@ def playback(recording, clips, walk_speed, every=1, hold_missing=False, run_fact
             facing = t["facing"]
         missing = None
         try:
-            name, phase, gait_phase = _clip_and_phase(clips, state, k, run_start, run_len, fps, gait_phase, t.get("speed", abs(t["vx"])), walk_speed, run_factor)
+            name, phase, gait_phase = _clip_and_phase(clips, state, k, run_start, run_len, fps, gait_phase, t.get("speed", abs(t["vx"])), walk_speed, run_factor, t.get("cast_t"))
             pose = pose_for(clips, state, phase)
         except NoPose:
             if not hold_missing or shown is None:
@@ -311,6 +320,16 @@ def positive_int(text):
     return n
 
 
+# the gestures (verb_anims.ARCHETYPES) each creature's base body has no preset for yet, by creature module (the next tasks author them): checked against the real creatures by test_stage_gaps.py
+KNOWN_ARCHETYPES = {
+    "goblin": ["craft", "drink", "point", "pulse", "sneak", "summon", "throw"],
+    "undead": ["craft", "drink", "guard", "lunge", "point", "pulse", "roar", "sneak", "summon"],
+    "wolf": ["cast", "craft", "drink", "point", "pulse", "sneak", "summon", "throw"],
+    "spider": ["craft", "drink", "guard", "point", "pulse", "roar", "sneak", "summon"],
+    "slime": ["craft", "drink", "guard", "point", "roar", "sneak", "summon"],
+}
+
+
 # the gaps in what each species can be posed in, by the scripts it is recorded on: states the recorded run reaches that none of its clips poses yet (the verb motions are
 # the next plan). Checked against the real creatures by test_stage_gaps.py: a gap that closes or a new one fails there until this says so.
 KNOWN_MISSING = {
@@ -321,6 +340,19 @@ KNOWN_MISSING = {
 
 
 # ---- the recording and the course --------------------------------------------------------------------------------------------------
+
+def cast_recording(archetype, windup=CAST_WINDUP, recover=CAST_RECOVER, fps=60, lead=0.3, tail=0.3, x=100.0):
+    """A recording of a body that stands where the course starts and casts a verb of gesture `archetype` once: it stands for `lead` seconds, casts for the engine's windup and
+    recovery (the ticks carry `cast` and the seconds since it began, `cast_t`) and stands for `tail` more. The gesture is judged on its own, the body does not move."""
+    def tick(i, cast_t=None):
+        return {"t": round(i / fps, 4), "x": x, "y": 0.0, "vx": 0.0, "vy": 0.0, "speed": 0.0, "crawl": False, "facing": 1, "verb": "", "on_floor": True, "surface": "floor",
+                "normal": [0.0, -1.0], "cast": archetype if cast_t is not None else "", "cast_t": cast_t if cast_t is not None else 0.0}
+    n_lead, n_cast, n_tail = int(round(lead * fps)), int(round(windup * fps)) + int(round(recover * fps)), int(round(tail * fps))
+    ticks = [tick(i) for i in range(n_lead)]
+    ticks += [tick(n_lead + i, round(i / fps, 4)) for i in range(n_cast)]
+    ticks += [tick(n_lead + n_cast + i) for i in range(n_tail)]
+    return {"species": "gesture", "script": "gesture_" + archetype, "fps": fps, "start": [x, 0.0], "ticks": ticks}
+
 
 def check_recording(recording, course):
     """Raise BadRecording unless the run can be reviewed: it has ticks, ends on something and never leaves the course (the floor's width, the top of the walls, the floor's bottom)."""
@@ -530,6 +562,21 @@ def _report(rec, clips, walk_speed, run_factor, course, rig, ppu, creature, froz
     return out
 
 
+def gesture_gaps(args):
+    """Without rendering: the gestures of verb_anims.ARCHETYPES this creature has no preset for, printed as one `GESTURES {json}` line."""
+    import rigkit
+    creature = _load(args.creature)
+    rigkit.reset()
+    rig = creature.build(args.variant)
+    lacking = []
+    for name in verb_anims.ARCHETYPES:
+        try:
+            creature.gesture_clip(rig, args.variant, name)
+        except KeyError:
+            lacking.append(name)
+    print("GESTURES " + json.dumps({"missing": lacking}))
+
+
 def render(args):
     import bpy
     import rigkit
@@ -552,13 +599,23 @@ def render(args):
         ob.data.materials.clear()
         ob.data.materials.append(mat)
     tinted = False
-    for path in args.recording:
+    runs, lacking = [], []  # (recording, the clips it is played with, its folder)
+    if args.gesture:
+        for name in (verb_anims.ARCHETYPES if args.gesture == "all" else [args.gesture]):
+            try:
+                gesture = creature.gesture_clip(rig, args.variant, name)
+            except KeyError:
+                lacking.append(name)  # a gap, named: nothing is rendered for a gesture the creature cannot play
+                continue
+            runs.append((cast_recording(name), dict(clips, attack=gesture), "gesture_" + name))
+    for path in args.recording or []:
         with open(path) as fh:
-            recording = json.load(fh)
+            runs.append((json.load(fh), clips, None))
+    for recording, run_clips, folder in runs:
         check_recording(recording, course)
-        frames = playback(recording, clips, walk_speed, args.every, hold_missing=not args.strict, run_factor=run_factor)
+        frames = playback(recording, run_clips, walk_speed, args.every, hold_missing=not args.strict, run_factor=run_factor)
         view_path = camera_path(frames, ppu, args.view_px, args.view_px * view_h / view_w)
-        out = args.out if len(args.recording) == 1 else os.path.join(args.out, recording["script"])
+        out = os.path.join(args.out, folder) if folder else (args.out if len(runs) == 1 else os.path.join(args.out, recording["script"]))
         os.makedirs(out, exist_ok=True)
         log = []
         for n, (f, (cx, cz)) in enumerate(zip(frames, view_path)):
@@ -575,10 +632,13 @@ def render(args):
                         "angle": round(f.angle, 2), "missing": f.missing or ""})
         meta = {"creature": args.creature, "variant": args.variant or "", "script": recording["script"], "ppu": ppu, "walk_speed": walk_speed, "view_px": args.view_px,
                 "every": args.every, "fps": float(recording.get("fps", 60)) / args.every, "frames": log}
-        meta.update(_report(recording, clips, walk_speed, run_factor, course, rig, ppu, args.creature))
+        meta.update(_report(recording, run_clips, walk_speed, run_factor, course, rig, ppu, args.creature))
         with open(os.path.join(out, "review.json"), "w") as fh:
             json.dump(meta, fh)
         print("%s %s: %d frames in %s" % (args.creature, recording["script"], len(frames), out))
+    if args.gesture:
+        with open(os.path.join(args.out, "gesture_gaps.json"), "w") as fh:
+            json.dump({"missing": lacking}, fh)
 
 
 def main():
@@ -586,7 +646,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--creature", required=True)
     ap.add_argument("--variant")
-    ap.add_argument("--recording", required=True, nargs="+", help="one or more recordings (tools/record_movement.gd); with several, --out gets a folder for each script")
+    ap.add_argument("--recording", nargs="*", help="one or more recordings (tools/record_movement.gd); with several, --out gets a folder for each script")
+    ap.add_argument("--gesture", help="a gesture of verb_anims.ARCHETYPES (or `all`) cast in place instead of a recording; --out gets a folder gesture_<name> for each")
+    ap.add_argument("--gesture-gaps", action="store_true", help="print the gestures the creature has no preset for and render nothing")
     ap.add_argument("--course", default=os.path.join(HERE, "..", "stage_course.json"))
     ap.add_argument("--out")
     ap.add_argument("--every", type=positive_int, default=3, help="pose every Nth recorded tick (60 ticks a second)")
@@ -597,9 +659,15 @@ def main():
     ap.add_argument("--frozen-feet", action="store_true", help="with --gaps: measure the feet with every walking frame posed as the first (a check that the measure notices)")
     a = ap.parse_args(argv)
     a.size = tuple(int(v) for v in a.size.split("x"))
-    if a.gaps:
+    if a.gesture_gaps:
+        gesture_gaps(a)
+    elif a.gaps:
+        if not a.recording:
+            ap.error("--gaps needs --recording")
         gaps(a)
     else:
+        if not (a.recording or a.gesture):
+            ap.error("give --recording or --gesture")
         if not a.out:
             ap.error("--out is required to render")
         render(a)

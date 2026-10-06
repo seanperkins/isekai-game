@@ -153,3 +153,13 @@ def setup(rig, variant):
     info = {"durations": {n: c.durations for n, c in clips.items()}, "loops": {n: c.loop for n, c in clips.items()},
             "fps": {n: len(c.frames) / sum(c.durations) for n, c in clips.items()}, "windup": motion_.WINDUP}
     return {"canvas": canvas, "ppu": ppu, "margin": MARGIN, "center_x": 0.0, "anims": anims, "still": "idle_0", "extra": info}
+
+
+# ---- gestures ---------------------------------------------------------------------------------------------------------------------
+# the preset of quad_motion.ATTACKS that plays each gesture (verb_anims.ARCHETYPES); a gesture not listed is one the wolves cannot play yet
+GESTURES = {"slam": "slam", "roar": "roar", "lunge": "lunge", "guard": "guard", "claw": "bite"}
+
+
+def gesture_clip(rig, variant, archetype):
+    """The attack clip of this form playing the gesture `archetype`; a KeyError when it has no preset for it."""
+    return motion_.attack_clip(body_of(rig, dict(_form(variant), attack=GESTURES[archetype])))

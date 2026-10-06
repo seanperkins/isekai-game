@@ -118,3 +118,16 @@ def setup(rig, variant):
     info = {"durations": {n: c.durations for n, c in clips.items()}, "loops": {n: c.loop for n, c in clips.items()},
             "fps": {n: len(c.frames) / sum(c.durations) for n, c in clips.items()}, "windup": windup(rig, variant)}
     return {"canvas": canvas, "ppu": ppu, "margin": MARGIN, "center_x": 0.0, "anims": anims, "still": form.get("still", "idle_0"), "extra": info}
+
+
+# ---- gestures ---------------------------------------------------------------------------------------------------------------------
+# the preset of undead_motion.KINDS that plays each gesture (verb_anims.ARCHETYPES); a gesture not listed is one the undead cannot play yet
+GESTURES = {"cast": "cast", "slam": "slam", "throw": "throw", "claw": "slash"}
+
+
+def gesture_clip(rig, variant, archetype):
+    """The attack clip of this form playing the gesture `archetype`; a KeyError when it has no preset for it (a floating body has its own attacks)."""
+    form = dict(_form(variant), attack=GESTURES[archetype])
+    if form["body"] in ("candle", "ghost", "skull"):
+        raise KeyError(archetype)
+    return motion_.attack_clip(body_of(rig, form))
