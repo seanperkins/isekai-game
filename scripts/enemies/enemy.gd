@@ -102,6 +102,11 @@ const VERB_WINDUP := 0.35
 const VERB_RECOVER := 0.3
 const VERB_POWER_CAP := 2
 const IMPULSE_SECONDS := 0.25
+## The mind conditions verbs lay on an enemy (flee_for, calm_for, lure_to, confuse_for): a frightened one runs this much faster than it walks, a
+## confused one changes the way it staggers this often, and a lured one stops this close to what it follows.
+const FLEE_MULT := 1.4
+const CONFUSE_TURN := 0.4
+const LURE_STOP := 8.0
 ## What a creature whose art is missing wears, so it is never invisible.
 const PLACEHOLDER_LOOK := "lizard"
 
@@ -135,6 +140,13 @@ var _verb_t := 0.0
 var _impulse_x := 0.0
 var _impulse_t := 0.0
 var _ward_t := 0.0
+var _flee_t := 0.0
+var _calm_t := 0.0
+var _confuse_t := 0.0
+var _confuse_turn_t := 0.0
+var _confuse_dir := 1
+var _lure: Node2D
+var _lure_t := 0.0
 var _slow := 0.0
 ## A verb's root (Bind): no AI, no contact hit, no eat, for this long. Not a stun, so it works on an enemy that cannot be stunned.
 var _root := 0.0
@@ -278,6 +290,7 @@ func _untouchable() -> bool:
 func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, cause: String = "", ignore_def := false) -> void:
 	if _untouchable():
 		return
+	_calm_t = 0.0  # a blow ends the calm
 	EventBus.world_event.emit("enemy_hit", {"pos": global_position})
 	_record_blow(damage_type, from, cause)
 	_cause = cause if cause != "" else cause_for(damage_type)
@@ -288,11 +301,11 @@ func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, cau
 
 func _record_blow(damage_type: String, from: Vector2, cause: String) -> void:
 	last_blow = {"from_behind": _blow_from_behind, "distance": global_position.distance_to(from) if from != Vector2.INF else 0.0,
-		"damage_type": damage_type, "cause": cause, "marked": has_meta("verb_marked") or appraised, "alert": is_alert(), "fleeing": _is_fleeing()}
+		"damage_type": damage_type, "cause": cause, "marked": has_meta("verb_marked") or appraised, "alert": is_alert(), "fleeing": is_fleeing() or _running_away()}
 	_blow_from_behind = false
 
 ## Moving away from the player faster than DeedTags.FLEE_SPEED.
-func _is_fleeing() -> bool:
+func _running_away() -> bool:
 	var player := get_tree().get_first_node_in_group("player") as Node2D if is_inside_tree() else null
 	if player == null or absf(velocity.x) <= DeedTags.FLEE_SPEED:
 		return false
@@ -345,6 +358,59 @@ func root_for(seconds: float) -> void:
 
 func is_rooted() -> bool:
 	return _root > 0.0
+
+## The mind conditions. A creature that always hunts (a boss in its arena) is moved by none of them: each returns whether it took.
+func _minded() -> bool:
+	return not hunting and not dormant
+
+## Frightened: it runs from the player and does not attack.
+func flee_for(seconds: float) -> bool:
+	if not _minded():
+		return false
+	_flee_t = maxf(_flee_t, seconds)
+	return true
+
+## Calm: it does not notice the player, and a blow ends it.
+func calm_for(seconds: float) -> bool:
+	if not _minded():
+		return false
+	_calm_t = maxf(_calm_t, seconds)
+	_alert = 0.0
+	return true
+
+## Lured: it goes after `target` (a decoy, a scent) instead of the player until the time is up or the target is gone.
+func lure_to(target: Node2D, seconds: float) -> bool:
+	if not _minded() or target == null:
+		return false
+	_lure = target
+	_lure_t = seconds
+	return true
+
+## Confused: it staggers about, first one way and then the other, and cannot make for the player.
+func confuse_for(seconds: float) -> bool:
+	if not _minded():
+		return false
+	if _confuse_t <= 0.0:
+		_confuse_dir = 1 if _rng.randf() < 0.5 else -1
+		_confuse_turn_t = CONFUSE_TURN
+	_confuse_t = maxf(_confuse_t, seconds)
+	return true
+
+func is_fleeing() -> bool:
+	return _flee_t > 0.0
+
+func is_calm() -> bool:
+	return _calm_t > 0.0
+
+func is_confused() -> bool:
+	return _confuse_t > 0.0
+
+func is_lured() -> bool:
+	return _lure_t > 0.0 and is_instance_valid(_lure)
+
+## Turns the face away from a point, leaving the rest of the stagger or the run to the caller.
+func reverse_facing() -> void:
+	facing = -facing
 
 func can_be_predated() -> bool:
 	return not dormant and _root <= 0.0 and def.predatable and status.predatable()
@@ -420,6 +486,10 @@ func _physics_process(delta: float) -> void:
 	_ward_t = maxf(0.0, _ward_t - delta)
 	_impulse_t = maxf(0.0, _impulse_t - delta)
 	_web_slow = maxf(0.0, _web_slow - delta)
+	_flee_t = maxf(0.0, _flee_t - delta)
+	_calm_t = maxf(0.0, _calm_t - delta)
+	_confuse_t = maxf(0.0, _confuse_t - delta)
+	_lure_t = maxf(0.0, _lure_t - delta)
 	var player: Node2D = get_tree().get_first_node_in_group("player")
 	var active := status.state == EnemyStatus.ACTIVE and _root <= 0.0
 	if def.swimmer and not _water_resolved:
@@ -456,7 +526,7 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	if def.swimmer and _home_water != null:
 		_confine()
-	if active and player != null and is_touching(player):
+	if active and player != null and _flee_t <= 0.0 and _calm_t <= 0.0 and is_touching(player):
 		player.receive_hit(stats.get_stat("atk"), def.contact_type, global_position, def.id)
 	_hurt_t = maxf(0.0, _hurt_t - delta)
 	_update_visual(delta)
@@ -523,7 +593,11 @@ func can_see(target: Node2D) -> bool:
 	return get_world_2d().direct_space_state.intersect_ray(query).is_empty()
 
 func _sense(player: Node2D, delta: float) -> void:
-	var sees := hunting or (global_position.distance_to(player.global_position) < CHASE_RANGE and can_see(player))
+	if _calm_t > 0.0:
+		_alert = 0.0
+		return
+	var hidden: bool = player.has_method("is_unseen") and player.is_unseen()
+	var sees := hunting or (not hidden and global_position.distance_to(player.global_position) < CHASE_RANGE and can_see(player))
 	if sees and def.swimmer and _home_water != null and not _home_water.world_rect().has_point(player.global_position):
 		sees = false  # an eel is stirred only by a player in its own water
 	if sees:
@@ -537,7 +611,7 @@ func _sense(player: Node2D, delta: float) -> void:
 ## another, and a pack does not chain across a level. `actors` also holds the player, the shortcut switch and test stubs.
 func _share_alert() -> void:
 	for n in get_tree().get_nodes_in_group("actors"):
-		if n is Enemy and n != self and n.def.pack and n.def.id == def.id and global_position.distance_to(n.global_position) <= PACK_RADIUS:
+		if n is Enemy and n != self and n.def.pack and n.def.id == def.id and n._calm_t <= 0.0 and global_position.distance_to(n.global_position) <= PACK_RADIUS:
 			n._alert = ALERT_MEMORY
 
 ## Holds a swimmer inside its water rect (shrunk by its half body): the position is clamped, the clamped velocity component is
@@ -781,6 +855,8 @@ func _speed() -> float:
 
 func _act(player: Node2D, delta: float) -> void:
 	var to_player: Vector2 = player.global_position - global_position
+	if _mind_act(to_player, delta):
+		return
 	if _verb_act(to_player, delta):
 		return
 	match kind:
@@ -808,6 +884,34 @@ func _act(player: Node2D, delta: float) -> void:
 				_walk(to_player)
 		_:
 			_walk(to_player)
+
+## Fright, stagger and lure own the body while they last: they drop whatever was winding up and walk (a flier keeps its height). True while one does.
+func _mind_act(to_player: Vector2, delta: float) -> bool:
+	var dir := 0
+	var speed := _speed()
+	if _flee_t > 0.0:
+		dir = -1 if to_player.x > 0.0 else 1
+		speed *= FLEE_MULT
+	elif _confuse_t > 0.0:
+		_confuse_turn_t -= delta
+		if _confuse_turn_t <= 0.0:
+			_confuse_dir = -_confuse_dir
+			_confuse_turn_t = CONFUSE_TURN
+		dir = _confuse_dir
+	elif _lure_t > 0.0 and is_instance_valid(_lure):
+		var gap := _lure.global_position.x - global_position.x
+		dir = 0 if absf(gap) <= LURE_STOP else int(signf(gap))
+	else:
+		return false
+	_verb_state = ""
+	if kind != Kind.SWOOPER:
+		_state = ""
+	if dir != 0:
+		facing = dir
+	velocity.x = 0.0 if dir == 0 or _blocked_ahead() else dir * speed
+	if kind == Kind.SWOOPER or kind == Kind.DRIFTER:
+		velocity.y = move_toward(velocity.y, 0.0, GRAVITY * delta)
+	return true
 
 ## The verb: alert and in range with the ability ready, wind up (telegraphed), cast at the player, hold still a moment. True while it owns the
 ## body. A heal waits until the enemy is under half its health.

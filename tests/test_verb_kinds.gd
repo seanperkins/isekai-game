@@ -196,7 +196,7 @@ func test_validate_reports_the_exact_messages() -> void:
 	assert_eq(Array(VerbKinds.validate({"kind": "ring", "width": 3})), ["ring: unknown key 'width'"])
 	assert_eq(Array(VerbKinds.validate({"kind": "buff", "stats": {"spd": "fast"}})), ["buff: stats must be a dictionary of stat id to number"])
 	assert_eq(Array(VerbKinds.validate({"kind": "buff", "stats": {"luck": 3}})), ["buff: stats must be a dictionary of stat id to number"])
-	assert_eq(Array(VerbKinds.validate({"kind": "bolt", "status": {"burn": 2}})), ["bolt: status must be slow, stun or root seconds"])
+	assert_eq(Array(VerbKinds.validate({"kind": "bolt", "status": {"burn": 2}})), ["bolt: status must be seconds of slow, stun, root, flee, calm or confuse"])
 
 func test_a_buff_survives_a_skill_refresh() -> void:
 	var p := _real_player()

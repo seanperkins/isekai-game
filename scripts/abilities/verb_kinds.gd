@@ -40,7 +40,7 @@ const SCHEMA := {
 const ENEMY_KINDS := ["bolt", "burst", "ring", "dash", "zone", "mark", "pull", "aura", "chain", "heal", "ward", "buff"]
 const TYPED := ["bolt", "burst", "ring", "dash", "mark", "zone", "pull", "aura", "chain", "engulf", "dissolve"]
 const STRIKES := ["bolt", "burst", "ring", "dash", "mark", "chain", "dissolve"]
-const STATUSES := ["slow", "stun", "root"]
+const STATUSES := ["slow", "stun", "root", "flee", "calm", "confuse"]
 const DASH_SPEED := 500.0
 const DASH_VERTICAL := 0.6
 const DASH_HIT_RANGE := 40.0
@@ -495,11 +495,18 @@ static func _hp(t) -> int:
 	return health.hp if health != null else -1
 
 ## slow: any actor that can be slowed. stun: an Enemy that can be eaten (the serpent cannot be stunned). root: any Enemy, a boss included.
+## flee, calm, confuse: an Enemy that is not a hunting boss (the mind conditions, Enemy.flee_for and its kin).
 static func _apply_status(t, status: Dictionary) -> void:
 	if status.has("slow") and t.has_method("slow_for"):
 		t.slow_for(float(status["slow"]))
 	if status.has("root") and t.has_method("root_for"):
 		t.root_for(float(status["root"]))
+	if status.has("flee") and t.has_method("flee_for"):
+		t.flee_for(float(status["flee"]))
+	if status.has("calm") and t.has_method("calm_for"):
+		t.calm_for(float(status["calm"]))
+	if status.has("confuse") and t.has_method("confuse_for"):
+		t.confuse_for(float(status["confuse"]))
 	if status.has("stun") and t.get("status") != null and t.get("def") != null and t.def.predatable:
 		t.status.stun(float(status["stun"]))
 
@@ -570,5 +577,5 @@ static func _expects(key: String, what: String) -> String:
 		"stats":
 			return "stats must be a dictionary of stat id to number"
 		"status":
-			return "status must be slow, stun or root seconds"
+			return "status must be seconds of slow, stun, root, flee, calm or confuse"
 	return "%s must be a number" % key
