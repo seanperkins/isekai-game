@@ -27,10 +27,14 @@ class Spider:
         self.lw = form.get("leg_w", 1.0)
         d = self.proportions["drider"]
         self.tall = d["tall"] if d else 1.0
-        self.chitin = room(form.get("chitin", BLACK), 52)
+        self.chitin = room(form.get("chitin", BLACK), form.get("floor", 52))
         self.dark = tuple(int(c * 0.78) for c in self.chitin)
-        self.leg_c = room(form.get("leg", LEG), 50)
+        self.leg_c = room(form.get("leg", LEG), form.get("floor", 50))
+        # dust or clay caked on the lower legs: set before the legs are built
         self.leg_low = None
+        for name, kw in form.get("gear", []):
+            if name in ("dust", "clay_crust"):
+                self.leg_low = kw.get("color", (176, 148, 104) if name == "clay_crust" else (196, 170, 124))
         self.mark = form.get("mark", MARK)
         self.eye = form.get("eye", EYE)
         self.joint = form.get("joint", JOINT)
@@ -83,6 +87,30 @@ class Spider:
             # the long axis lies along x; turning it up behind means the -x end rises
             v.co.x, v.co.z = c[0] + x * ca + z * sa, c[2] - x * sa + z * ca
         return self.rig.part(ob, self.pre + bone, rgb, far, glow)
+
+    # ---- the idle pose, for gear that is held where the idle puts a hand or a claw ----
+    def idle_posed(self):
+        if not hasattr(self, "_idle"):
+            import spider_motion
+            skel = skeleton.skeleton(**self.proportions)
+            body = spider_motion.SpiderBody(skel, {k: 0.006 for k in skeleton.LEGS}, dict(self.form, _hull=skeleton.hull_for(self.form)))
+            self._idle = skel, skel.pose(*spider_motion.idle_pose(body, 0.0))
+        return self._idle
+
+    def where(self, bone, u=1.0):
+        """Where the idle pose puts the point `u` of the way along a bone, (x, z)."""
+        _, posed = self.idle_posed()
+        h, t, _ = posed[bone]
+        return (h[0] + (t[0] - h[0]) * u, h[1] + (t[1] - h[1]) * u)
+
+    def rest_point(self, bone, world, y=0.0):
+        """The point (x, y, z) to build a part at, bound to `bone`, so that the idle pose carries it to `world` (x, z)."""
+        import skeleton2d as sk2
+        skel, posed = self.idle_posed()
+        head = skel.rest[bone][0]
+        total = skel.rest_direction(bone) - posed[bone][2]
+        dx, dz = sk2.turn((world[0] - posed[bone][0][0], world[1] - posed[bone][0][1]), -total)
+        return (head[0] + dx, y, head[1] + dz)
 
     # ---- points on the body ----
     def thorax_point(self, u, v, y=0.0):
@@ -249,11 +277,12 @@ class Spider:
         k_ = self.tall
         f = self.form
         skin = self.skin
+        bw = self.proportions["drider"].get("broad", 1.0)     # an oni is broader through the chest and the arms
         w, c, hd = self.bones["waist"], self.bones["chest"], self.bones["head"]
         self.loft("hips", [((w[0][0] - 0.01, 0, w[0][2] - 0.04), (0.085 * k_, 0.09 * k_)), ((w[0][0], 0, w[0][2] + 0.02), (0.07 * k_, 0.08 * k_)),
-                           ((w[1][0], 0, w[1][2]), (0.052 * k_, 0.062 * k_))], "waist", skin, "z", 8)
-        self.loft("torso", [((c[0][0], 0, c[0][2]), (0.052 * k_, 0.062 * k_)), ((c[0][0] + 0.3 * (c[1][0] - c[0][0]), 0, c[0][2] + 0.45 * (c[1][2] - c[0][2])), (0.060 * k_, 0.07 * k_)),
-                            ((c[1][0] - 0.005, 0, c[1][2] - 0.03 * k_), (0.062 * k_, 0.082 * k_)), ((c[1][0], 0, c[1][2]), (0.03 * k_, 0.04 * k_))], "chest", skin, "z", 8)
+                           ((w[1][0], 0, w[1][2]), (0.052 * k_ * bw, 0.062 * k_ * bw))], "waist", skin, "z", 8)
+        self.loft("torso", [((c[0][0], 0, c[0][2]), (0.052 * k_ * bw, 0.062 * k_ * bw)), ((c[0][0] + 0.3 * (c[1][0] - c[0][0]), 0, c[0][2] + 0.45 * (c[1][2] - c[0][2])), (0.060 * k_ * bw, 0.07 * k_ * bw)),
+                            ((c[1][0] - 0.005, 0, c[1][2] - 0.03 * k_), (0.062 * k_ * bw, 0.082 * k_ * bw)), ((c[1][0], 0, c[1][2]), (0.03 * k_ * bw, 0.04 * k_ * bw))], "chest", skin, "z", 8)
         self.l("neck", hd[0], self.head_point(0.45, 0.25), 0.022 * k_, 0.02 * k_, "head", skin, sides=6)
         self.e("skull", self.head_point(0.45, 0.55), (0.062 * k_, 0.055 * k_, 0.07 * k_), "head", skin, seg=8, rings=6)
         self.blade("nose", self.head_point(0.92, 0.50, -0.01), self.head_point(1.05, 0.42, -0.01), 0.02 * k_, 0.012, "head", skin)
@@ -267,9 +296,9 @@ class Spider:
         for s in "nf":
             far = s == "f"
             a, fo = self.bones["arm_" + s], self.bones["fore_" + s]
-            self.e("shoulder_" + s, a[0], (0.028 * k_,) * 3, "arm_" + s, skin, far, seg=6, rings=4)
-            self.l("arm_" + s, a[0], a[1], 0.022 * k_, 0.018 * k_, "arm_" + s, skin, far)
-            self.l("fore_" + s, fo[0], fo[1], 0.018 * k_, 0.014 * k_, "fore_" + s, skin, far)
+            self.e("shoulder_" + s, a[0], (0.028 * k_ * bw,) * 3, "arm_" + s, skin, far, seg=6, rings=4)
+            self.l("arm_" + s, a[0], a[1], 0.022 * k_ * bw, 0.018 * k_ * bw, "arm_" + s, skin, far)
+            self.l("fore_" + s, fo[0], fo[1], 0.018 * k_ * bw, 0.014 * k_ * bw, "fore_" + s, skin, far)
             self.e("hand_" + s, fo[1], (0.02 * k_, 0.016 * k_, 0.022 * k_), "fore_" + s, skin, far, seg=6, rings=4)
 
 

@@ -30,7 +30,7 @@ BEND = (1, 1, -1, -1)  # the knee is above the hip-to-ankle line: the IK bends a
 LEGS = ["%s%d" % (s, i) for i in range(PAIRS) for s, _ in SIDES]
 
 DEFAULTS = dict(span=1.0, ride=1.0, thorax=1.0, abdomen=1.0, abd_len=1.0, abd_lift=20.0, tars=1.0, drider=None, swarm=False, abd_h=1.0)
-DRIDER = dict(tall=1.0, lean=4.0, hair=1.0, cloth=1.0)
+DRIDER = dict(tall=1.0, lean=4.0, hair=1.0, cloth=1.0, broad=1.0)
 
 
 def proportions_of(form):
@@ -68,12 +68,13 @@ def leg_points(i, s, span, tars, sh):
     """(hip, knee, ankle, tip) of leg pair `i` on side sign `s`, as (x, y, z)."""
     xc, T, hc = sh["xc"], sh["T"], sh["hc"]
     hip = (xc + HIP_AT[i] * T * 1.1, s * 0.09 * sh["th_w"] / 0.12, hc - 0.03)
-    tip = (xc + FOOT_AT[i] * span, s * 0.52 * span, TIP_Z)
+    spread = (0.07 if i < 2 else -0.07) * span if s > 0 else 0.0       # the far legs splay a little wider, so eight legs do not draw as four
+    tip = (xc + FOOT_AT[i] * span + spread, s * 0.52 * span, TIP_Z)
     tl = 0.15 * span * tars
     dx, dz = _dir(TARSUS_DIR[i])
     ankle = (tip[0] - tl * dx, s * 0.48 * span, tip[2] - tl * dz)
     # the knee: high above the hip, most of the way out toward the ankle, so the leg arcs up and over
-    kz = hip[2] + KNEE_UP[i] * span + 1.1 * max(0.0, hc - 0.30 * span)   # a body carried high arches its knees higher still
+    kz = hip[2] + KNEE_UP[i] * span + 1.1 * max(0.0, hc - 0.30 * span) + (0.03 * span if s > 0 else 0.0)   # a body carried high arches its knees higher still
     # its x: where the femur is FEMUR times as long as the tibia in side view, so the leg can fold well up before the knee shuts
     lo, hi = hip[0], ankle[0] + 0.6 * (ankle[0] - hip[0])
     for _ in range(50):
@@ -84,7 +85,7 @@ def leg_points(i, s, span, tars, sh):
     return hip, knee, ankle, tip
 
 
-def drider_points(sh, tall=1.0, lean=4.0, hair=1.0, cloth=1.0):
+def drider_points(sh, tall=1.0, lean=4.0, hair=1.0, cloth=1.0, broad=1.0):
     """The upper body's joints (x, z) rising from the front of the cephalothorax."""
     xc, T, hc = sh["xc"], sh["T"], sh["hc"]
     k = tall
@@ -166,6 +167,7 @@ def hull(span=1.0, ride=1.0, thorax=1.0, abdomen=1.0, abd_len=1.0, abd_lift=20.0
     for k in range(5):
         a = math.pi + math.pi * k / 4.0
         pts.append(("body", (sh["xc"] + sh["T"] * 1.05 * math.cos(a), sh["hc"] + sh["th_h"] * 1.05 * math.sin(a))))
+    pts.append(("fang", None))      # the fangs' tips: the end of the fang bone (filled in by hull_for)
     if drider is not None:
         d = drider_points(sh, **drider)
         pts.append(("waist", (d["waist"][0] + 0.06 * drider["tall"], d["waist"][1] - 0.10)))
@@ -196,8 +198,15 @@ SCYTHE = 2.8   # a scythe blade reaches this many tarsus lengths past the ankle 
 def hull_for(form):
     """The hull of a form: its body's, and the points of gear that reach out past the bones (the tips of a pair of scythes)."""
     pts = hull(**proportions_of(form))
+    bones = {n: (h, t) for n, h, t, _ in core(**proportions_of(form))}
+    pts = [(b, p) if p is not None else (b, (bones[b][1][0], bones[b][1][2])) for b, p in pts]
+    if any(name == "hair" for name, _ in form.get("gear", [])):
+        # a tarantula's tufts stand out a quarter past the abdomen's outline (spider_gear.hair)
+        c = shape(**proportions_of(form))["a_centre"]
+        pts += [(b, (c[0] + 1.25 / 1.03 * (p[0] - c[0]), c[1] + 1.25 / 1.03 * (p[1] - c[1]))) for b, p in list(pts) if b == "abdomen"]
+    if "cloth2" in bones:
+        pts.append(("cloth2", (bones["cloth2"][1][0], bones["cloth2"][1][2])))   # the hem
     if any(name == "scythes" for name, _ in form.get("gear", [])):
-        bones = {n: (h, t) for n, h, t, _ in core(**proportions_of(form))}
         for s in "nf":
             h, t = bones["tar_%s0" % s]
             pts.append(("tar_%s0" % s, (h[0] + SCYTHE * (t[0] - h[0]), h[2] + SCYTHE * (t[2] - h[2]))))

@@ -258,6 +258,18 @@ class PlanTest(unittest.TestCase):
                 self.assertGreaterEqual(cycle / n, sm.TICK - 1e-9 if n > 4 else 0.0)
                 self.assertLessEqual(n, sm.GAIT_FRAMES[gait])
 
+    def test_at_every_forms_own_speed_each_gait_frame_lasts_at_least_the_engines_tick(self):
+        import sizing
+        for name in sf.FORMS:
+            b = body(name)
+            speed = sizing.speed_of("spider", None if name == "spider" else name)
+            for ppu in (24.0, 30.0, 36.0):   # the forms are drawn at 25 to 35 pixels to the unit
+                for gait, s in (("walk", speed), ("run", speed * 1.9)):
+                    cycle, _ = sm.plan_gait(b, gait, s, ppu)
+                    n = sm.gait_frames(gait, cycle)
+                    self.assertGreaterEqual(cycle / n, sm.TICK - 1e-9, "%s %s at %.0f px/unit" % (name, gait, ppu))
+                    self.assertGreaterEqual(n, 6, "%s %s at %.0f px/unit: enough frames to read" % (name, gait, ppu))
+
     def test_the_stride_grows_with_the_speed_until_the_legs_cannot_reach_further(self):
         b = body("spider")
         strides = [sm.plan_gait(b, "walk", s, 28.0)[1] for s in (15.0, 40.0, 200.0)]
@@ -269,23 +281,45 @@ class ActionTest(unittest.TestCase):
     def planted_keys(self, b):
         return [k for k in ss.LEGS if sm.pair_of(k) >= 2]
 
-    def test_the_attacks_keep_the_hind_claws_planted_and_reaching(self):
+    def test_in_an_attack_a_claw_on_the_ground_does_not_slide_and_every_claw_reaches_its_mark(self):
         for name in sf.FORMS:
             b = body(name)
-            spots = {}
+            prev = None
             for t, _ in sm.FRAMES:
                 rot, root = sm.attack_pose(b, t)
+                tips = sm.attack_tips(b, t)
+                targets = {k: sm.ankle_for(b, k, tips[k][:2], tips[k][2]) for k in ss.LEGS}
+                self.assertLess(sm.reach_error(b, rot, root, targets), 1e-4, "%s t=%.2f" % (name, t))
                 posed = b.skel.pose(rot, root)
-                for k in self.planted_keys(b):
-                    x, z = tip(b, k, posed)
-                    self.assertAlmostEqual(z, PAD, places=6, msg="%s %s" % (name, k))
-                    spots.setdefault(k, []).append(x)
-                c = sm._carriage(b)
-                targets = {k: sm.ankle_for(b, k, c["tips"][k][:2], c["tips"][k][2]) for k in self.planted_keys(b)}
-                self.assertLess(sm.reach_error(b, rot, root, targets), 1e-6, name)
+                now = {k: tip(b, k, posed) for k in ss.LEGS}
+                for k in ss.LEGS:
+                    self.assertGreaterEqual(now[k][1], PAD - TOL, "%s %s" % (name, k))
+                    if prev and now[k][1] < PAD + TOL and prev[k][1] < PAD + TOL:
+                        self.assertAlmostEqual(now[k][0], prev[k][0], places=6, msg="%s %s slides at t=%.2f" % (name, k, t))
                 self.assertGreaterEqual(lowest_part(b, rot, root), -TOL, "%s t=%.2f" % (name, t))
-            for k, xs in spots.items():
-                self.assertLess(max(xs) - min(xs), 1e-6, "%s %s slides" % (name, k))
+                self.assertGreaterEqual(sum(1 for k in ss.LEGS if now[k][1] < PAD + TOL), 4 if b.form.get("attack") != "pounce" else 0, name)
+                prev = now
+
+    def test_a_flinch_does_not_slide_a_claw_either(self):
+        for name in sf.FORMS:
+            b = body(name)
+            prev = None
+            for t, _ in sm.HURT_FRAMES:
+                posed = b.skel.pose(*sm.hurt_pose(b, t))
+                now = {k: tip(b, k, posed) for k in ss.LEGS}
+                for k in ss.LEGS:
+                    if prev and now[k][1] < PAD + TOL and prev[k][1] < PAD + TOL:
+                        self.assertAlmostEqual(now[k][0], prev[k][0], places=6, msg="%s %s slides at t=%.2f" % (name, k, t))
+                prev = now
+
+    def test_a_pounce_leaves_the_ground_and_lands_on_all_eight(self):
+        for name in ("stalker", "shadow_stalker", "veil_spinner"):
+            b = body(name)
+            air = b.skel.pose(*sm.attack_pose(b, sm.T_MID))
+            self.assertTrue(all(tip(b, k, air)[1] > PAD + 0.05 * b.U for k in ss.LEGS), "%s is in the air" % name)
+            land = b.skel.pose(*sm.attack_pose(b, sm.T_HIT))
+            hind = [k for k in ss.LEGS if sm.pair_of(k) >= 1]
+            self.assertTrue(all(tip(b, k, land)[1] < PAD + TOL for k in hind), "%s lands" % name)
 
     def test_a_bite_rears_back_then_lunges_and_a_pounce_goes_further(self):
         def reach(name):
@@ -403,6 +437,13 @@ class ClipTest(unittest.TestCase):
             if b.drider:
                 hair = [rot["hair2"][1] for rot, _ in c["attack"].frames]
                 self.assertGreater(max(hair) - min(hair), 4.0)
+
+    def test_the_swarm_clusters_twitch_on_their_own_beats_in_an_action(self):
+        b = body("swarm_sovereign")
+        frames = clips(b)["attack"].frames
+        series = [[rot[bone][1] for rot, _ in frames] for bone in b.swarm]
+        rel = [a - z for a, z in zip(series[0], series[1])]
+        self.assertGreater(max(rel) - min(rel), 4.0, "two clusters move against each other")
 
     def test_the_swarm_scuttles_and_its_loop_closes(self):
         b = body("swarm_sovereign")

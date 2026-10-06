@@ -156,11 +156,11 @@ def cocoons(g, color=(214, 196, 150), core=(120, 100, 84), **_):
 
 
 def held_cocoon(g, color=(214, 196, 150), core=(120, 100, 84), **_):
-    """One more cocoon clutched between the front legs, held in close under the head."""
-    a = _held_tip(g, "n0", 98.0, 0.62)
-    c = (a[0] - 0.04, -0.12, a[2] - 0.02)
-    g.e("held", c, (0.10, 0.07, 0.075), "body", color, seg=8, rings=6)
-    g.e("held_c", (c[0] + 0.01, c[1] - 0.06, c[2]), (0.045, 0.02, 0.03), "body", core, seg=6, rings=4)
+    """One more cocoon clutched in the front claws: built where the idle holds the near claw and bound to its tarsus, so it goes where the claw goes."""
+    x, z = g.where("tar_n0", 0.7)
+    c = g.rest_point("tar_n0", (x - 0.03, z - 0.06), -0.14)
+    g.e("held", c, (0.10, 0.07, 0.075), "tar_n0", color, seg=8, rings=6)
+    g.e("held_c", (c[0] + 0.01, c[1] - 0.06, c[2]), (0.045, 0.02, 0.03), "tar_n0", core, seg=6, rings=4)
 
 
 def swarmlings(g, **_):
@@ -195,7 +195,7 @@ def leg_spikes(g, color=TAN, **_):
 
 
 def dust(g, color=TAN, **_):
-    g.leg_low = color
+    """Dust caked on the lower legs (the kit colours the tarsi when it builds them)."""
 
 
 def clay_crust(g, color=(176, 148, 104), **_):
@@ -205,7 +205,6 @@ def clay_crust(g, color=(176, 148, 104), **_):
         p = g.abdomen_point(-0.95 + 1.9 * rnd(), -0.2 + 1.2 * rnd(), -1.0 + 1.0 * rnd(), out=1.0)
         r = 0.06 + 0.04 * rnd()
         g.e("clay%d" % i, p, (r, 0.8 * r, 0.7 * r), "abdomen", color if i % 3 else CLAY, seg=5, rings=4)
-    g.leg_low = color
 
 
 def hair(g, **_):
@@ -213,7 +212,7 @@ def hair(g, **_):
     for i in range(12):
         a = math.radians(30 + 300 * i / 11.0)
         p = g.abdomen_point(math.cos(a), math.sin(a), -0.1, out=1.0)
-        q = g.abdomen_point(math.cos(a) * 1.25, math.sin(a) * 1.25, -0.1, out=1.0)
+        q = g.abdomen_point(math.cos(a), math.sin(a), -0.1, out=1.25)
         g.blade("tuft%d" % i, p, q, 0.06, 0.03, "abdomen", (112, 96, 112))
     for key in g.leg_keys:
         for bone in ("fem_", "tib_"):
@@ -490,10 +489,13 @@ def halo(g, color=GOLD, gem=PEACH, **_):
 
 
 def gold_thread(g, color=GOLD, **_):
-    """A glowing gold thread held taut between the hands."""
-    hn, _, _ = g.bones["item_n"]
-    hf, _, _ = g.bones["item_f"]
-    g.l("thread", hn, (hf[0], -0.10 * g.tall, hf[2]), 0.008, 0.008, "item_n", color, glow=True, sides=4)
+    """A glowing gold thread held taut between the hands: each half bound to its own hand, built where the idle holds the hands so the two halves
+    meet in the middle (they part a little when she casts)."""
+    a, b = g.where("item_n", 0.0), g.where("item_f", 0.0)
+    mid = (0.5 * (a[0] + b[0]), 0.5 * (a[1] + b[1]))
+    y = -0.10 * g.tall
+    for side, hand in (("n", a), ("f", b)):
+        g.l("thread_" + side, g.rest_point("item_" + side, hand, y), g.rest_point("item_" + side, mid, y), 0.011, 0.011, "item_" + side, color, glow=True, sides=4)
 
 
 def shears(g, color=GOLD, **_):

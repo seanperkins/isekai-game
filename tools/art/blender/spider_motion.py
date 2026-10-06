@@ -384,6 +384,9 @@ WINDUP = 5
 T_WIND, T_HOLD, T_MID, T_HIT, T_FOLLOW, T_END = 0.12, 0.27, 0.31, 0.35, 0.48, 0.59
 
 
+T_RET = 0.5 * (T_FOLLOW + T_END)   # a claw that stepped out in the blow is lifted on its way home, not dragged
+
+
 def _swing(windup, mid, hit, follow, rest=0.0):
     return [(0.0, rest, "out"), (T_WIND, windup, "smooth"), (T_HOLD, windup, "in"), (T_MID, mid, "linear"), (T_HIT, hit, "out"), (T_FOLLOW, follow, "smooth"), (T_END, rest, "smooth")]
 
@@ -392,36 +395,55 @@ def _rest_swing(windup, mid, hit, follow):
     return _swing(windup, mid, hit, follow, REST)
 
 
-BITE = {   # rear back with the forelegs up and the fangs wide, then lunge and drive the fangs down
-    "root_x": _swing(-0.22, 0.25, 0.55, 0.40), "root_z": _swing(0.10, 0.05, -0.12, -0.06),
-    "pitch": _swing(16.0, 4.0, -12.0, -6.0), "abd": _swing(-6.0, 4.0, 10.0, 5.0), "fang": _swing(34.0, 40.0, -2.0, 4.0),
-    "f0x": _swing(-0.35, 0.40, 0.95, 0.70), "f0z": _swing(1.05, 0.80, 0.10, 0.0), "f0c": _swing(70.0, 50.0, 10.0, 0.0),
-    "f1x": _swing(-0.10, 0.10, 0.30, 0.20), "f1z": _swing(0.35, 0.30, 0.0, 0.0),
-}
-POUNCE = {  # sink low and far back on the hind legs with the forelegs high, then spring the length of the body and slam them down
-    "root_x": _swing(-0.40, 0.45, 1.05, 0.85), "root_z": _swing(-0.22, 0.25, -0.05, -0.10),
-    "pitch": _swing(14.0, 8.0, -14.0, -8.0), "abd": _swing(-4.0, 8.0, 12.0, 6.0), "fang": _swing(26.0, 36.0, 0.0, 4.0),
-    "f0x": _swing(-0.20, 1.00, 1.60, 1.30), "f0z": _swing(2.70, 1.90, 0.05, 0.0), "f0c": _swing(80.0, 60.0, 5.0, 0.0),
-    "f1x": _swing(-0.15, 0.50, 0.75, 0.60), "f1z": _swing(0.20, 0.55, 0.0, 0.0),
-}
-SLASH = {   # the scythes go up and back over the body, then hew down in front
-    "root_x": _swing(-0.25, 0.20, 0.45, 0.35), "root_z": _swing(-0.08, 0.04, -0.10, -0.06),
-    "pitch": _swing(12.0, 6.0, -10.0, -5.0), "abd": _swing(-6.0, 2.0, 8.0, 4.0), "fang": _swing(20.0, 26.0, 8.0, 4.0),
-    "f0x": _swing(-2.80, -0.60, 1.40, 1.10), "f0z": _swing(3.10, 3.00, 0.15, 0.30), "f0c": _swing(140.0, 90.0, 10.0, 20.0),
-    "f1x": _swing(0.0, 0.0, 0.15, 0.10), "f1z": _swing(0.0, 0.0, 0.0, 0.0),
-}
-SPIT = {    # rear right up with the abdomen tucked under and the fangs wide, then snap the head down and forward: the venom flies
-    "root_x": _swing(-0.15, 0.05, 0.22, 0.15), "root_z": _swing(0.18, 0.12, -0.06, -0.03),
-    "pitch": _swing(26.0, 14.0, -10.0, -4.0), "abd": _swing(-16.0, -8.0, 10.0, 4.0), "fang": _swing(30.0, 44.0, 44.0, 16.0),
-    "f0x": _swing(-0.25, 0.0, 0.35, 0.20), "f0z": _swing(0.95, 0.60, 0.15, 0.0), "f0c": _swing(60.0, 40.0, 10.0, 0.0),
-    "f1x": _swing(-0.10, 0.0, 0.10, 0.05), "f1z": _swing(0.20, 0.15, 0.0, 0.0),
-}
-LOWER = {   # a drider's spider half under a gesture: it gathers back, then leans its whole weight into the blow
-    "root_x": _swing(-0.18, 0.10, 0.30, 0.22), "root_z": _swing(-0.05, 0.0, -0.06, -0.04),
-    "pitch": _swing(8.0, 2.0, -6.0, -3.0), "abd": _swing(-4.0, 2.0, 6.0, 3.0), "fang": _swing(0.0, 0.0, 0.0, 0.0),
-    "f0x": _swing(-0.20, 0.20, 0.50, 0.35), "f0z": _swing(0.55, 0.40, 0.0, 0.0), "f0c": _swing(30.0, 20.0, 0.0, 0.0),
-    "f1x": _swing(0.0, 0.0, 0.12, 0.08), "f1z": _swing(0.0, 0.0, 0.0, 0.0),
-}
+def _front(windup, mid, hit, home=0.45):
+    """The front pair's claw path, each key (x, height, curl) in U and degrees from where it stands at rest: up in the windup, through the swing, down
+    on the impact, held there (a claw on the ground does not slide), then lifted `home` on its way back."""
+    (wx, wz, wc), (mx, mz, mc), (hx, hz, hc) = windup, mid, hit
+    x = [(0.0, 0.0, "out"), (T_WIND, wx, "smooth"), (T_HOLD, wx, "in"), (T_MID, mx, "linear"), (T_HIT, hx, "out"), (T_FOLLOW, hx, "smooth"), (T_END, 0.0, "smooth")]
+    z = [(0.0, 0.0, "out"), (T_WIND, wz, "smooth"), (T_HOLD, wz, "in"), (T_MID, mz, "linear"), (T_HIT, hz, "out"), (T_FOLLOW, hz, "smooth"),
+         (T_RET, hz + home, "smooth"), (T_END, 0.0, "smooth")]
+    c = [(0.0, 0.0, "out"), (T_WIND, wc, "smooth"), (T_HOLD, wc, "in"), (T_MID, mc, "linear"), (T_HIT, hc, "out"), (T_FOLLOW, hc, "smooth"), (T_END, 0.0, "smooth")]
+    return {"f0x": x, "f0z": z, "f0c": c}
+
+
+def _step(prefix, reach, lift, leave=T_HOLD):
+    """A pair of legs stepping `reach` (U) forward into the blow: lifted from `leave` to the impact, down and still through the follow-through, lifted
+    again on the way home."""
+    x = [(0.0, 0.0, "smooth"), (leave, 0.0, "smooth"), (T_HIT, reach, "out"), (T_FOLLOW, reach, "smooth"), (T_END, 0.0, "smooth")]
+    z = [(0.0, 0.0, "smooth"), (leave, 0.0, "smooth"), (0.5 * (leave + T_HIT), lift, "smooth"), (T_HIT, 0.0, "smooth"), (T_FOLLOW, 0.0, "smooth"),
+         (T_RET, 0.6 * lift if reach else 0.0, "smooth"), (T_END, 0.0, "smooth")]
+    return {prefix + "x": x, prefix + "z": z}
+
+
+def _attack_keys(body_keys, front, f1, hind=None):
+    out = dict(body_keys)
+    out.update(_front(*front))
+    out.update(_step("f1", *f1))
+    if hind:
+        out.update(_step("h", *hind, leave=T_HOLD + 0.01))
+    return out
+
+
+BITE = _attack_keys(   # rear back with the forelegs up and the fangs wide, then lunge and drive the fangs down
+    {"root_x": _swing(-0.22, 0.25, 0.55, 0.45), "root_z": _swing(0.10, 0.05, -0.12, -0.06),
+     "pitch": _swing(16.0, 4.0, -12.0, -6.0), "abd": _swing(-6.0, 4.0, 10.0, 5.0), "fang": _swing(34.0, 40.0, -2.0, 4.0)},
+    front=((-0.35, 1.05, 70.0), (0.40, 0.80, 50.0), (0.95, 0.0, 10.0)), f1=(0.40, 0.35))
+POUNCE = _attack_keys(  # sink low and far back with the forelegs high, then spring clear of the ground the length of the body and land on the prey
+    {"root_x": _swing(-0.40, 0.70, 1.60, 1.45), "root_z": _swing(-0.22, 0.45, -0.05, -0.08),
+     "pitch": _swing(14.0, 10.0, -14.0, -8.0), "abd": _swing(-4.0, 8.0, 12.0, 6.0), "fang": _swing(26.0, 36.0, 0.0, 4.0)},
+    front=((-0.20, 2.70, 80.0), (1.00, 1.90, 60.0), (2.20, 0.0, 5.0)), f1=(1.55, 0.55), hind=(1.45, 0.45))
+SLASH = _attack_keys(   # the scythes go up and back over the body, then hew down in front
+    {"root_x": _swing(-0.25, 0.20, 0.45, 0.35), "root_z": _swing(-0.08, 0.04, -0.10, -0.06),
+     "pitch": _swing(12.0, 6.0, -10.0, -5.0), "abd": _swing(-6.0, 2.0, 8.0, 4.0), "fang": _swing(20.0, 26.0, 8.0, 4.0)},
+    front=((-2.80, 3.10, 140.0), (-0.60, 3.00, 90.0), (1.10, 0.15, 10.0)), f1=(0.25, 0.25))
+SPIT = _attack_keys(    # rear right up with the abdomen tucked under and the fangs wide, then snap the head down and forward: the venom flies
+    {"root_x": _swing(-0.15, 0.05, 0.22, 0.15), "root_z": _swing(0.18, 0.12, -0.06, -0.03),
+     "pitch": _swing(26.0, 14.0, -10.0, -4.0), "abd": _swing(-16.0, -8.0, 10.0, 4.0), "fang": _swing(30.0, 44.0, 44.0, 16.0)},
+    front=((-0.25, 0.95, 60.0), (0.0, 0.60, 40.0), (0.35, 0.0, 10.0)), f1=(0.15, 0.20))
+LOWER = _attack_keys(   # a drider's spider half under a gesture: it gathers back, then leans its whole weight into the blow
+    {"root_x": _swing(-0.18, 0.10, 0.30, 0.22), "root_z": _swing(-0.05, 0.0, -0.06, -0.04),
+     "pitch": _swing(8.0, 2.0, -6.0, -3.0), "abd": _swing(-4.0, 2.0, 6.0, 3.0), "fang": _swing(0.0, 0.0, 0.0, 0.0)},
+    front=((-0.20, 0.55, 30.0), (0.20, 0.40, 20.0), (0.50, 0.0, 0.0)), f1=(0.20, 0.20))
 # the drider's gestures: (windup, mid, impact, follow) world directions of each arm bone and the item, and the lean and head (degrees forward)
 GESTURES = {
     # a spell or a cast of silk: both hands drawn up and back, then flung forward
@@ -443,6 +465,12 @@ ATTACKS = {"bite": BITE, "pounce": POUNCE, "slash": SLASH, "spit": SPIT}
 
 def attack_kind(form):
     return form.get("attack", "bite")
+
+
+def attack_tips(body, time):
+    """{leg: (claw x, claw z, curl)} the attack puts each claw at, at `time`: what its IK has to reach."""
+    attack_pose(body, time)
+    return dict(body._last_tips)
 
 
 def attack_frames(body):
@@ -520,10 +548,12 @@ def _pose_offsets(body, c, ch, t=0.0, gesture=None, time=0.0, front_placed=False
             x, z = x + root[0] - c["root"][0], z + root[2] - c["root"][2]
         elif i == 1:
             x, z = x + ch.get("f1x", 0.0) * U, z + ch.get("f1z", 0.0) * U
+        else:
+            x, z = x + ch.get("hx", 0.0) * U, z + ch.get("hz", 0.0) * U
         tips[key] = (x, max(body.pad[key], z), curl)
     solve_legs(body, rot, root, tips)
     _keep_gear_up(body, rot, root, tips)
-    return rot, root
+    return rot, root, tips
 
 
 def _keep_gear_up(body, rot, root, tips, clearance=0.01):
@@ -544,7 +574,8 @@ def attack_pose(body, time):
     gesture = GESTURES.get(kind)
     keys = LOWER if gesture else ATTACKS[kind]
     ch = _offsets(keys, time, c, body)
-    rot, root = _pose_offsets(body, c, ch, gesture=gesture, time=time, front_placed=True)
+    rot, root, tips = _pose_offsets(body, c, ch, gesture=gesture, time=time, front_placed=True)
+    body._last_tips = tips
     _jitter_one_shot(body, rot, time, T_END)
     return rot, root
 
@@ -556,7 +587,7 @@ def _jitter_one_shot(body, rot, time, end, amount=1.6):
     base = {}
     _jitter(body, base, 0.0)
     for j, bone in enumerate(body.swarm):
-        a = (8.0 + 2.0 * j) * math.sin(math.pi * 6 * anim.clamp(time / end) + 0.0) * amount
+        a = (8.0 + 2.0 * j) * math.sin(math.pi * (5 + 2 * j) * anim.clamp(time / end)) * amount   # each cluster on its own beat
         rot[bone] = (0.0, base[bone][1] - a, 0.0)
 
 
@@ -585,7 +616,8 @@ def hurt_pose(body, time):
     ch = _offsets(HURT, time)
     if body.raised or body.form.get("idle") in ("dance", "ready"):
         ch["f0z"] *= 0.4          # legs already up are thrown a little further, not up again
-    rot, root = _pose_offsets(body, c, ch)
+    rot, root, tips = _pose_offsets(body, c, ch)
+    body._last_tips = tips
     _jitter_one_shot(body, rot, time, HURT_FRAMES[-1][0], 2.0)
     return rot, root
 
@@ -676,12 +708,12 @@ def hull_points(body, rot, root, posed=None):
 
 def lift_clear(body, rot, root, clearance=0.012):
     """Raise an abdomen (or a hem) that has swung down through the floor: the sprite sits on its lowest point, so nothing may go below the claws."""
-    for bone in ("abdomen", "cloth1"):
-        if bone not in rot or not any(b == bone for b, _ in body.hull):
+    for bone, riders in (("abdomen", ("abdomen",)), ("cloth1", ("cloth1", "cloth2"))):
+        if bone not in rot or not any(b in riders for b, _ in body.hull):
             continue
         sign = 1.0 if bone == "abdomen" else -1.0
         for _ in range(60):
-            low = min(p[1] for b, p in hull_points(body, rot, root) if b == bone)
+            low = min(p[1] for b, p in hull_points(body, rot, root) if b in riders)
             if low >= clearance:
                 break
             rot[bone] = (0.0, rot[bone][1] + sign * 1.5, 0.0)
