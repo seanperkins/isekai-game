@@ -375,11 +375,12 @@ func move_to(delta: Vector2) -> void:
 		"feature":
 			var orig: Vector2 = _drag["orig"]
 			var kind: String = r.features[sel["index"]]["kind"]
-			var base = _feature_base(sel["room"], orig + d, kind)
+			var span := float(r.features[sel["index"]].get("width", 0.0))  # a weak floor is as wide as it was made
+			var base = _feature_base(sel["room"], orig + d, kind, span)
 			if base is String and d.y != 0.0:
 				# a hand never drags dead level: a pointer a pixel below the floor line puts the candidate inside the surface the
 				# feature stands on, so try the same x at the original height and keep sliding along it
-				base = _feature_base(sel["room"], orig + Vector2(d.x, 0.0), kind)
+				base = _feature_base(sel["room"], orig + Vector2(d.x, 0.0), kind, span)
 			if base is Vector2:
 				r.features[sel["index"]]["pos"] = base
 		"decor":
@@ -481,13 +482,13 @@ func floor_spot(room_id: String, p: Vector2, with_gates := true) -> Variant:
 ## on a surface top, as every drag step is, finds that surface instead of being "inside" it). y is not snapped: it only picks the
 ## surface, and a surface top need not be on the grid (C1's ledges are at 266, 214, ...), so snapping it would sink a feature that
 ## stands on one into the ledge. A Vector2, or the reason it is refused.
-func _feature_base(room_id: String, p: Vector2, kind: String) -> Variant:
+func _feature_base(room_id: String, p: Vector2, kind: String, span := 0.0) -> Variant:
 	var r: RoomDef = rooms[room_id]
 	var q := Vector2(snap(p.x), p.y)
 	if not bounds(r).has_point(q):
 		return "outside the room"
 	if kind == "weak_floor":  # it spans a hole in the floor: where it is put is the surface it makes, and there is nothing under it to stand on
-		return "stuck in rock or a wall" if RoomLint.embedded(r, q, kind, WEAK_FLOOR_WIDTH) else q
+		return "stuck in rock or a wall" if RoomLint.embedded(r, q, kind, span) else q
 	var y = surface_below(room_id, q - Vector2(0.0, 1.0))
 	if y == null:
 		return "nothing to stand on there: click open space above a floor or a ledge"
@@ -510,7 +511,7 @@ func _feature_id(room_id: String, kind: String) -> String:
 func add_feature(room_id: String, kind: String, pos: Vector2) -> String:
 	if not FEATURE_KINDS.has(kind):
 		return "unknown feature '%s'" % kind
-	var base = _feature_base(room_id, pos, kind)
+	var base = _feature_base(room_id, pos, kind, WEAK_FLOOR_WIDTH)  # a new weak floor is made this wide
 	if base is String:
 		return base
 	var r: RoomDef = rooms[room_id]
@@ -1232,7 +1233,7 @@ func _feature_error(room_id: String, f: Dictionary) -> String:
 	var fields := _feature_fields_error(f)
 	if fields != "":
 		return fields
-	var base = _feature_base(room_id, f["pos"], f["kind"])
+	var base = _feature_base(room_id, f["pos"], f["kind"], float(f.get("width", 0.0)))
 	if base is String:
 		return base
 	if absf(base.y - (f["pos"] as Vector2).y) > 0.5:

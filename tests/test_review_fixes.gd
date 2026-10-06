@@ -266,6 +266,17 @@ func _rider_and_a_corpse(above: float) -> Array:
 		e.set_physics_process(false)
 	return [rider, corpse]
 
+func _weak_floor_errors(width: float, x: float) -> Array:
+	var src := AreaKit.room("TW4", "forest", Vector2i(40, 40))
+	AreaKit.feature(src, "weak_floor", "TW4_weak", x, 320.0, {"width": width})
+	var parsed := RoomSpec.content_from_json(JSON.parse_string(JSON.stringify(RoomSpec.to_json(src))))
+	var bare := AreaKit.room("TW4", "forest", Vector2i(40, 40))  # a room that does not hold it yet, so the import is checked
+	return RoomEditModel.new({"TW4": bare}, []).apply_content("TW4", parsed["content"])
+
+func test_an_imported_weak_floor_is_checked_at_its_own_width() -> void:
+	assert_eq(_weak_floor_errors(40.0, 44.0), [], "a narrow floor at x = 44 ends at x = 24, clear of the 20 px wall")
+	assert_ne(_weak_floor_errors(80.0, 52.0), [], "a wide floor at x = 52 reaches x = 12, into the wall")
+
 func test_a_rider_ignores_a_corpse_on_another_floor_and_goes_on_with_its_own_ai() -> void:
 	var pair := _rider_and_a_corpse(100.0)
 	assert_null(pair[0]._possess_target())
@@ -299,6 +310,10 @@ func test_a_rider_ignores_a_corpse_it_cannot_reach_along_the_floor() -> void:
 	var pair := _rider_and_a_corpse(30.0)  # inside the old 40 px band, beyond its 22 px reach straight up
 	assert_null(pair[0]._possess_target())
 	assert_false(pair[0]._possess_act(0.0))
+
+func test_a_rider_takes_a_corpse_already_within_its_reach_though_a_little_off_the_floor() -> void:
+	var pair := _rider_and_a_corpse(20.0)  # past the 16 px band but inside the 22 px reach
+	assert_eq(pair[0]._possess_target(), pair[1])
 
 func test_a_rider_still_takes_a_corpse_a_few_pixels_off_the_floor() -> void:
 	var pair := _rider_and_a_corpse(10.0)
