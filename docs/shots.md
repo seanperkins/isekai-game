@@ -9,6 +9,7 @@ tools/shot_run.sh tools/room_shots.gd -- C1 300,180 1000,180
 tools/shot_run.sh tools/evolution_shots.gd
 SHOT_HOME="$PWD/.tmp/editor-home" tools/shot_run.sh tools/editor_shots.gd
 tools/menagerie_shots.sh 1000 4400          # frames of the Menagerie room at those positions
+tools/creature_sheet.sh                      # one contact sheet of every creature, named, at .tmp/creature-sheet/sheet.png
 ```
 
 What it does:
