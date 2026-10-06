@@ -78,7 +78,7 @@
 
 **Interfaces:**
 - Consumes: the Task 2 course, a Task 3 recording, a creature module's pose functions (`biped_motion`, `quad_motion`, `spider_motion`, `slime_motion`, `player_poses`).
-- Produces: `.tmp/stage/<species>_<script>/frame_####.png` and `review.gif`; `pose_for(creature, state, phase, speed)` (pure Python) returning the pose parameters the Blender side applies, or raising `NoPose(state)`.
+- Produces: `.tmp/stage/<species>_<script>/frame_####.png` and `review.gif`; `pose_for(clips, state, phase)` (pure Python; `clips` is what a creature module's `clips_of` builds, since a pose needs the rig's measured feet) returning the pose the Blender side applies, or raising `NoPose(state)`.
 
 - [ ] **Step 1: Write the failing test** (pure Python, no Blender): `pose_for("goblin", "walk", 0.25, 60.0)` returns the biped walk pose at that phase; `pose_for("goblin", "wall", ...)` returns the wall pose; an unknown state raises `NoPose`; walk phase advances by speed divided by the stride length so feet do not slide (`phase_rate(speed, stride) == speed / stride`).
 - [ ] **Step 2: Run** `python3 -m unittest tools/art/blender/test_stage_review.py` — Expected: FAIL.
@@ -93,7 +93,7 @@
 
 - [ ] **Step 1: Write the failing test**: for every species and script the recorder can make, `NoPose` is raised only for states listed in an explicit `KNOWN_MISSING` table (so a missing pose is a visible, named gap).
 - [ ] **Step 2: Run** the test — Expected: FAIL until the table is filled from what the species actually lacks.
-- [ ] **Step 3: Add the foot-slide check**: from a walk recording, `slide_px(recording, stride)` (the distance a planted foot moves in the world) stays under 1.5 px per step for each species' authored walk speed; the test fails and names the species when it does not.
+- [ ] **Step 3: Add the foot-slide check**: from the `walk_run` recording, the rig is posed at each moment the gait goes on to its next pose and where each foot bone's vertices rest on the ground is compared with the pose before (`foot_slide_px`); it stays under 1.5 px for each species with feet (the jelly hops), the same measure with every pose frozen goes over it, and the test fails and names the species when it does not.
 - [ ] **Step 4: Run** the whole suite and `python3 tools/art/stage_review.py all` — Expected: a GIF per species and script, and a printed list of the named gaps.
 - [ ] **Step 5: Commit** `feat: the stage reviews every species and names what it cannot pose`.
 

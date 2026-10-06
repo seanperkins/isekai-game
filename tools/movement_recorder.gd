@@ -68,15 +68,32 @@ static func make_script(script_name: String) -> Dictionary:
 	return {}
 
 var profile_id := ""
+## The run being recorded: the sandbox, its steps, the settling ticks left, which step and tick of it was fed in last, and the ticks so far.
+var _job := {}
+
+signal _finished
+
+func _ready() -> void:
+	process_physics_priority = 100  # after the sandbox's own step in the same tick, so what it records is what that step did
+	set_physics_process(false)
 
 ## Runs `script_name` as `species` and returns `{"species", "script", "profile", "fps", "start", "ticks": [...]}`, or {} for a species or script it does not know. Each
 ## tick is `{"t", "x", "y", "vx", "vy", "speed", "crawl", "body", "facing", "verb", "on_floor", "surface", "normal"}`: x and y are the body's contact with what it stands on (the feet on a
 ## floor), in game px with y DOWN; `surface` is floor, wall, ceiling, air or mantle; `speed` is how fast it goes along what it stands on (a crawler moves by shifting the body, so its
-## velocity is zero and its speed is read from where the body was: `body` is its origin, which does not jump at a corner as the contact does); `crawl` says it is on a surface it crawls (the spider's), whatever the surface, and `normal` which way is out of it.
+## velocity is zero and its speed is read from where the body was: `body` is its origin, which does not jump at a corner as the contact does); `crawl` says it is on a surface it crawls (the
+## spider's), whatever the surface, and `normal` which way is out of it. Tick 0 is the body settled before the first input; tick n is where the sandbox's n-th step left it.
 func record(species: String, script_name: String) -> Dictionary:
+	if not scripts_for(species).has(script_name):
+		return {}
+	var result: Dictionary = await record_script(species, make_script(script_name))
+	if not result.is_empty():
+		result["script"] = script_name
+	return result
+
+## The same for a script given outright (`{"start": Vector2, "steps": [...]}`); its "script" is "custom".
+func record_script(species: String, sc: Dictionary) -> Dictionary:
 	profile_id = MovementProfile.SPECIES_PROFILE.get(species, "")
-	var sc := make_script(script_name)
-	if profile_id == "" or sc.is_empty() or not scripts_for(species).has(script_name):
+	if profile_id == "" or sc.is_empty() or not _job.is_empty():
 		return {}
 	var sb: MovementSandbox = load(SCENE).instantiate()
 	add_child(sb)
@@ -86,31 +103,67 @@ func record(species: String, script_name: String) -> Dictionary:
 		var at: Vector2 = sc["start"]
 		sb.body.global_position = at + Vector2(0.0, -BodyConfig.BOTTOM)
 		sb.body.velocity = Vector2.ZERO
-	for _k in SETTLE_TICKS:
-		await get_tree().physics_frame
-	var ticks: Array = [_tick(sb, 0, {})]
-	for step: Dictionary in sc["steps"]:
-		var count := int(round(float(step.get("seconds", 0.0)) * FPS))
-		var dir := float(step.get("dir", 0.0))
-		for k in count:
-			var inp := sb.scripted
-			inp.dir = dir
-			inp.up = float(step.get("up", 0.0))
-			inp.down = float(step.get("down", 0.0))
-			inp.jump_pressed = k == 0 and bool(step.get("jump", false))
-			inp.jump_held = bool(step.get("hold_jump", false)) or inp.jump_pressed
-			inp.signature_pressed = k == 0 and bool(step.get("signature", false))
-			await get_tree().physics_frame
-			ticks.append(_tick(sb, ticks.size(), ticks[-1]))
-			var here: float = ticks[-1]["x"]
-			if step.has("until_x") and ((dir > 0.0 and here >= float(step["until_x"])) or (dir < 0.0 and here <= float(step["until_x"]))):
-				break
-			if step.get("until_floor", false) and k >= AIR_TICKS and sb.body.is_on_floor():
-				break
-	var start: Array = [ticks[0]["x"], ticks[0]["y"]]
+	_job = {"sb": sb, "steps": sc["steps"], "settle": SETTLE_TICKS, "step": 0, "k": 0, "ticks": []}
+	set_physics_process(true)
+	await _finished
+	await get_tree().process_frame  # out of this node's own signal: whoever awaits the run may free the recorder when it resumes
+	set_physics_process(false)
+	var ticks: Array = _job["ticks"]
+	_job = {}
 	sb.scripted = null
 	sb.free()  # at once: a sandbox left for the end of the frame runs one more tick over freed floors
-	return {"species": species, "script": script_name, "profile": profile_id, "fps": FPS, "start": start, "ticks": ticks}
+	return {"species": species, "script": "custom", "profile": profile_id, "fps": FPS, "start": [ticks[0]["x"], ticks[0]["y"]], "ticks": ticks}
+
+func _physics_process(_delta: float) -> void:
+	if _job.is_empty():
+		return
+	if _job.is_empty() or _job.get("ended", false):
+		return
+	var sb: MovementSandbox = _job["sb"]
+	var ticks: Array = _job["ticks"]
+	if _job["settle"] > 0:
+		_job["settle"] -= 1
+		if _job["settle"] > 0:
+			return
+		ticks.append(_tick(sb, 0, {}))
+	else:
+		ticks.append(_tick(sb, ticks.size(), ticks[-1]))  # the sandbox has just taken the step the last input asked for
+		var steps: Array = _job["steps"]
+		var step: Dictionary = steps[_job["step"]]
+		var k: int = _job["k"]
+		var dir := float(step.get("dir", 0.0))
+		var here: float = ticks[-1]["x"]
+		var done := k + 1 >= _count(step)
+		done = done or (step.has("until_x") and ((dir > 0.0 and here >= float(step["until_x"])) or (dir < 0.0 and here <= float(step["until_x"]))))
+		done = done or (step.get("until_floor", false) and k >= AIR_TICKS and sb.body.is_on_floor())
+		if done:
+			_job["step"] += 1
+			_job["k"] = 0
+		else:
+			_job["k"] = k + 1
+	_feed_next(sb)
+
+## Sets the input for the next tick (skipping steps that last no time), or ends the run when the steps are used up.
+func _feed_next(sb: MovementSandbox) -> void:
+	var steps: Array = _job["steps"]
+	while _job["step"] < steps.size() and _count(steps[_job["step"]]) == 0:
+		_job["step"] += 1
+	if _job["step"] >= steps.size():
+		_job["ended"] = true
+		_finished.emit.call_deferred()
+		return
+	var step: Dictionary = steps[_job["step"]]
+	var inp := sb.scripted
+	var first: bool = _job["k"] == 0
+	inp.dir = float(step.get("dir", 0.0))
+	inp.up = float(step.get("up", 0.0))
+	inp.down = float(step.get("down", 0.0))
+	inp.jump_pressed = first and bool(step.get("jump", false))
+	inp.jump_held = bool(step.get("hold_jump", false)) or inp.jump_pressed
+	inp.signature_pressed = first and bool(step.get("signature", false))
+
+func _count(step: Dictionary) -> int:
+	return int(round(float(step.get("seconds", 0.0)) * FPS))
 
 func _tick(sb: MovementSandbox, index: int, previous: Dictionary) -> Dictionary:
 	var st: MoveState = sb.state

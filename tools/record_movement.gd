@@ -31,6 +31,10 @@ func _initialize() -> void:
 			continue
 		var path := "%s/%s_%s.json" % [OUT_DIR, job[0], job[1]]
 		var f := FileAccess.open(path, FileAccess.WRITE)
+		if f == null:
+			push_error("cannot write %s (error %d)" % [path, FileAccess.get_open_error()])
+			failed = true
+			continue
 		f.store_string(JSON.stringify(r))
 		f.close()
 		print("%s: %d ticks" % [path, r["ticks"].size()])

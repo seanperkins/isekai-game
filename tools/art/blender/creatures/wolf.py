@@ -122,6 +122,11 @@ def clips_for(body, speed, ppu, run_speed=RUN_SPEED):
     return dict(locomotion, attack=motion_.attack_clip(body), hurt=motion_.hurt_clip(body), die=motion_.die_clip(body))
 
 
+def run_factor(variant):
+    """How many times faster than its walk this form's run was built: the base wolf's run is its charge."""
+    return CHARGE_SPEED if variant in (None, "gloom_wolf") else RUN_SPEED
+
+
 def clips_of(rig, variant):
     """({name: Clip}, pixels per unit) for this form: the unit is sized so the still covers the area of the still it replaces."""
     form = _form(variant)
@@ -130,7 +135,7 @@ def clips_of(rig, variant):
     rig.pose(*idle.frames[0])
     x0, x1, z0, z1 = rig.extent()
     ppu = sizing.pixels_per_unit((x1 - x0, z1 - z0), today(variant), "width" if variant in (None, "gloom_wolf") else "area")
-    return clips_for(body, motion(variant), ppu, CHARGE_SPEED if variant in (None, "gloom_wolf") else RUN_SPEED), ppu
+    return clips_for(body, motion(variant), ppu, run_factor(variant)), ppu
 
 
 def setup(rig, variant):

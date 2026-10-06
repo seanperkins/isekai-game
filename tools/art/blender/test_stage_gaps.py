@@ -50,10 +50,25 @@ class RealCreatureTests(unittest.TestCase):
             for script, report in scripts.items():
                 self.assertEqual(report["missing"], sr.KNOWN_MISSING.get(species, {}).get(script, []), "%s %s: the states with no pose changed" % (species, script))
 
-    def test_no_species_skates(self):
+    def test_the_playback_does_not_drag_a_foot(self):
         for species, scripts in self.reports.items():
             for script, report in scripts.items():
-                self.assertLess(report["slide_px"], MAX_SLIDE_PX, "%s %s: a planted foot is dragged over the ground" % (species, script))
+                self.assertLess(report["slide_px"], MAX_SLIDE_PX, "%s %s: the playback's own arithmetic drags a planted foot" % (species, script))
+
+    def test_no_species_skates_on_the_posed_meshes(self):
+        for species, scripts in self.reports.items():
+            slid = scripts["walk_run"]["foot_slide_px"]
+            if species == "slime":
+                self.assertIsNone(slid, "a jelly has no foot to plant")
+            else:
+                self.assertIsNotNone(slid, species)
+                self.assertLess(slid, MAX_SLIDE_PX, "%s: a planted foot moves over the ground from one pose to the next" % species)
+
+    def test_the_measure_notices_feet_that_do_not_move(self):
+        out = subprocess.run([BLENDER, "-b", "-P", os.path.join(os.path.dirname(os.path.abspath(__file__)), "stage_review.py"), "--", "--creature", "goblin", "--gaps", "--frozen-feet",
+                              "--recording", os.path.join(STAGE, "goblin_walk_run.json")], capture_output=True, text=True)
+        line = [x for x in out.stdout.splitlines() if x.startswith("GAPS ")][-1]
+        self.assertGreater(json.loads(line[5:])["walk_run"]["foot_slide_px"], MAX_SLIDE_PX, "a goblin walking on one frozen pose is dragging its feet")
 
 
 if __name__ == "__main__":

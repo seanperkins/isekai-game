@@ -303,5 +303,107 @@ class SlideTests(unittest.TestCase):
         self.assertEqual(sr.slide_px(frames, clips, WALK_SPEED), 0.0)
 
 
+class ContactTests(unittest.TestCase):
+    """Where the rig's mesh rests on the ground, bone by bone: the foot-slide check measures these, not the numbers the playback was made from."""
+
+    def test_each_bone_that_touches_has_the_span_of_its_resting_vertices(self):
+        pts = {"foot_n": [(0.0, 0.0), (0.2, 0.0), (0.1, 0.0)], "foot_f": [(1.0, 0.0)], "shin_n": []}
+        self.assertEqual(sr.contact_spans(pts), {"foot_n": (0.0, 0.2), "foot_f": (1.0, 1.0)})
+        self.assertEqual(sr.contact_spans({}), {})
+
+    def test_a_foot_that_stays_planted_while_it_rolls_does_not_slide(self):
+        self.assertEqual(sr.contact_slide({"foot_n": (1.0, 1.0)}, {"foot_n": (1.0, 1.3)}), 0.0, "the heel stays where it came down")
+        self.assertEqual(sr.contact_slide({"foot_n": (1.0, 1.3)}, {"foot_n": (1.3, 1.3)}), 0.0, "the toe stays where it is as the heel lifts")
+
+    def test_a_foot_dragged_along_the_ground_slides_by_how_far(self):
+        self.assertAlmostEqual(sr.contact_slide({"foot_n": (1.0, 1.3)}, {"foot_n": (1.05, 1.35)}), 0.05)
+
+    def test_a_foot_that_has_just_come_down_or_gone_up_is_not_a_slide(self):
+        self.assertEqual(sr.contact_slide({}, {"foot_n": (5.0, 5.3)}), 0.0)
+        self.assertEqual(sr.contact_slide({"foot_n": (1.0, 1.3)}, {}), 0.0)
+
+    def test_the_other_foot_taking_the_step_is_not_the_first_one_sliding(self):
+        self.assertEqual(sr.contact_slide({"foot_n": (0.0, 0.2)}, {"foot_f": (0.3, 0.5)}), 0.0)
+        self.assertEqual(sr.contact_slide({"foot_n": (0.0, 0.2), "foot_f": (1.0, 1.2)}, {"foot_n": (0.0, 0.2), "foot_f": (1.0, 1.2)}), 0.0)
+
+    def test_the_worst_foot_is_the_one_reported(self):
+        self.assertAlmostEqual(sr.contact_slide({"a": (0.0, 0.2), "b": (1.0, 1.2)}, {"a": (0.0, 0.2), "b": (1.1, 1.3)}), 0.1)
+
+    def test_a_body_walking_on_frozen_feet_slides_by_how_far_it_goes(self):
+        # the feet rest on the same spot in the pose but the body moves 2.33 px a tick: a planted foot is carried along
+        before = sr.contact_spans({"foot_n": [(1.0, 0.0), (1.2, 0.0)]})
+        after = sr.contact_spans({"foot_n": [(1.0 + 0.0583, 0.0), (1.2 + 0.0583, 0.0)]})
+        self.assertAlmostEqual(sr.contact_slide(before, after) * 40.0, 2.33, places=2)
+
+
+class PoseChangeTests(unittest.TestCase):
+    """The instants a gait changes pose, found between the ticks: a planted foot is judged where the continuous gait would be, not where the 60 hertz ticks happen to fall."""
+
+    def walking(self, vx, ticks=240):
+        return {"species": "goblin", "script": "w", "fps": 60, "start": [0.0, 0.0], "ticks": [tick(i, x=vx * i / 60.0, vx=vx) for i in range(ticks)]}
+
+    def test_consecutive_changes_are_a_frames_worth_of_stride_apart(self):
+        clips = goblin_clips()
+        for vx in (60.0, 105.0, 140.0):
+            changes = sr.pose_changes(sr.playback(self.walking(vx), clips, WALK_SPEED, every=1), clips, WALK_SPEED)
+            self.assertGreater(len(changes), 20)
+            n = len(clips["walk"].frames)
+            step = sr.stride_of(clips["walk"], "walk", WALK_SPEED) / n
+            for a, b in zip(changes, changes[1:]):
+                skipped = (b.frame - a.frame) % n  # a body faster than the clip's own pace passes over a frame now and then, as the game's does
+                self.assertGreaterEqual(skipped, 1)
+                self.assertAlmostEqual(b.x - a.x, step * skipped, places=6, msg="speed %s" % vx)
+
+    def test_a_change_carries_the_pose_it_changes_to_and_where_the_body_is_then(self):
+        clips = goblin_clips()
+        frames = sr.playback(self.walking(105.0), clips, WALK_SPEED, every=1)
+        c = sr.pose_changes(frames, clips, WALK_SPEED)[3]
+        self.assertEqual((c.rot, c.root), clips["walk"].frames[c.frame])
+        self.assertEqual(c.state, "walk")
+        self.assertTrue(any(f.x <= c.x <= f.x + 105.0 / 60.0 + 1e-9 for f in frames), "between two ticks")
+
+    def test_standing_and_flying_change_no_gait_pose(self):
+        clips = goblin_clips()
+        ticks = [tick(i, surface="air", on_floor=False, vy=-50.0, x=i * 2.0) for i in range(30)]
+        frames = sr.playback({"species": "goblin", "script": "j", "fps": 60, "start": [0.0, 0.0], "ticks": ticks}, clips, WALK_SPEED, every=1)
+        self.assertEqual(sr.pose_changes(frames, clips, WALK_SPEED), [])
+
+
+class GifTests(unittest.TestCase):
+    def test_a_gif_times_frames_in_hundredths_so_the_durations_share_out_the_rounding(self):
+        d = sr.gif_durations(60, 60.0)  # a sixtieth of a second is not a whole hundredth
+        self.assertEqual(sum(d), 1000)
+        self.assertTrue(set(d) <= {10, 20})
+        d = sr.gif_durations(40, 20.0)
+        self.assertEqual(set(d), {50})
+
+    def test_the_total_is_what_the_frames_take_to_play(self):
+        for n, fps in ((61, 60.0), (37, 30.0), (13, 24.0)):
+            self.assertAlmostEqual(sum(sr.gif_durations(n, fps)), 1000.0 * n / fps, delta=10)
+
+
+class ArgumentTests(unittest.TestCase):
+    def test_a_decimation_below_one_is_refused(self):
+        import argparse
+        for bad in ("0", "-2", "x"):
+            with self.assertRaises(argparse.ArgumentTypeError):
+                sr.positive_int(bad)
+        self.assertEqual(sr.positive_int("3"), 3)
+
+
+class RunFactorTests(unittest.TestCase):
+    def test_a_creatures_own_run_factor_sets_the_stride_of_its_run(self):
+        clips = goblin_clips()
+        self.assertAlmostEqual(sr.stride_of(clips["run"], "run", WALK_SPEED, 3.0), WALK_SPEED * 3.0 * sum(clips["run"].durations))
+        self.assertAlmostEqual(sr.stride_of(clips["walk"], "walk", WALK_SPEED, 3.0), WALK_SPEED * sum(clips["walk"].durations), msg="a walk is the walk's")
+
+    def test_playback_turns_a_run_by_its_own_factor(self):
+        clips = goblin_clips()
+        rec = {"species": "wolf", "script": "r", "fps": 60, "start": [0.0, 0.0], "ticks": [tick(i, x=300.0 * i / 60.0, vx=300.0) for i in range(60)]}
+        a = sr.playback(rec, clips, WALK_SPEED, every=1, run_factor=1.9)
+        b = sr.playback(rec, clips, WALK_SPEED, every=1, run_factor=3.0)
+        self.assertAlmostEqual(a[-1].phase * 1.9, b[-1].phase * 3.0, places=6, msg="a faster-built run turns slower for the same speed")
+
+
 if __name__ == "__main__":
     unittest.main()

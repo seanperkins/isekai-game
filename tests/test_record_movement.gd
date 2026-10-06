@@ -109,3 +109,29 @@ func test_a_speed_does_not_spike_where_a_crawler_turns_a_corner() -> void:
 	for t: Dictionary in r["ticks"]:
 		fastest = maxf(fastest, float(t["speed"]))
 	assert_lt(fastest, 160.0, "the body wraps round a corner in a tick: that is not a speed")
+
+func test_a_tick_shows_the_step_the_last_input_asked_for() -> void:
+	var r: Dictionary = await rec.record_script("goblin", {"steps": [{"seconds": 3.0 / 60.0, "dir": 1.0}]})
+	var ticks: Array = r["ticks"]
+	assert_eq(ticks.size(), 4, "the settled body, then one tick for each of the three inputs")
+	assert_eq(float(ticks[0]["vx"]), 0.0)
+	assert_gt(float(ticks[1]["vx"]), 0.0, "the first input has been taken by the first tick")
+	assert_gt(float(ticks[3]["vx"]), float(ticks[2]["vx"]), "the last input is in the record")
+	assert_gt(float(ticks[2]["vx"]), float(ticks[1]["vx"]))
+
+func test_a_jump_pressed_on_the_first_tick_is_underway_in_the_first_record() -> void:
+	var r: Dictionary = await rec.record_script("goblin", {"steps": [{"seconds": 0.3, "jump": true, "hold_jump": true}]})
+	assert_lt(float(r["ticks"][1]["vy"]), 0.0, "rising after the one tick")
+	assert_lt(float(r["ticks"][1]["y"]), 0.0 - 0.1, "off the floor")
+
+func test_a_step_that_lasts_no_time_is_skipped() -> void:
+	var r: Dictionary = await rec.record_script("goblin", {"steps": [{"seconds": 0.0, "dir": -1.0}, {"seconds": 2.0 / 60.0, "dir": 1.0}]})
+	assert_eq(r["ticks"].size(), 3)
+	assert_gt(float(r["ticks"][1]["vx"]), 0.0, "it never went left")
+
+func test_a_script_with_no_steps_is_just_the_settled_body() -> void:
+	var r: Dictionary = await rec.record_script("goblin", {"steps": []})
+	assert_eq(r["ticks"].size(), 1)
+
+func test_a_script_for_a_species_nobody_knows_records_nothing() -> void:
+	assert_eq(await rec.record_script("dragon", {"steps": [{"seconds": 0.2}]}), {})
