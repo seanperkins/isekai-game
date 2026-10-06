@@ -58,6 +58,41 @@ In your Blender 5.2: one user add-on, MPFB (MakeHuman). Bundled with Blender its
 
 My reading: the render and shade step is small enough (`toon.py` is 135 lines; the whole harness is about 600, all tested) that owning it is cheaper than depending on a GUI tool, and it can run in a batch or CI. The things worth borrowing are Spider Walker for multi-leg gaits and a Mixamo retargeter for biped motion. Godot Pixel Renderer is the one to compare `toon.py` against for look.
 
+## The pilot: the whole goblin tree
+
+Your answer to "which line" was the goblin tree, so all 28 forms and the base goblin are done the same way (images in `docs/research/images/goblin-tree/`; run `python3 tools/art/blender/goblin_tree.py`).
+
+What it took:
+
+| Piece | Size |
+| --- | --- |
+| One skeleton and body builder with two proportion knobs (`bx`, `tall`) plus head and ear size | `goblin_kit.py`, 91 lines |
+| A gear library: hats, coats, boots, tools, instruments, weapons, a rat backpack, a hawk | `goblin_gear.py`, 60 pieces, 389 lines, each written once and fitted to any body |
+| The 28 forms as data: build, colours, gear list, arm pose, stance, mount | `goblin_forms.py`, 132 lines (3 to 8 lines a form) |
+| Arm poses, stances, mounts, held-item stabilising, per-form camera fitting | `creatures/goblin.py`, 202 lines |
+| The three riders reuse the wolf kit as their mount (`wolf.build_into`, scaled, with barding for the Wolf-Lord) | no new modelling |
+
+Every form gets idle, walk and attack (the riders get the wolf's walk and pounce) with no animating: 29 forms times 20 frames, two passes each, in about a minute. Changing the base body (I made every goblin stockier after the first pass) re-renders the whole tree the same way.
+
+It went into the game with no engine change. The 28 rendered stills were checked and imported into the `forms_goblin` sheet with `tools/art/handdraw.py import forms_goblin <folder> --native --source blender`, and the twins, the player's forms and the Menagerie draw them (`tools/creature_sheet.sh`). Each form is sized to cover roughly the area of the still it replaces: median +10% area, +12% height, with Mastersmith, Ironboot and Giant-Killer the tall outliers (a big hammer, big boots, an oversized sword).
+
+What swapping art costs, which is worth knowing before doing it to more of the game (`docs/hand-drawing.md`, "After you change art"):
+
+- creature placement in the generated rooms uses drawn sizes, so `tools/build_areas.sh` rewrote 21 rooms, and without it two placement tests fail;
+- the bestiary and evolutions pages keep their own copies of the sheets and a test pins the bestiary's, so both need rebuilding;
+- nothing else broke: 3589 of 3590 passed with the first swap, the one failure being the bestiary copy.
+
+What it looks like, honestly:
+
+- **Each form reads as itself.** The silhouettes differ and the gear is recognisable at game size: the Paladin's sunburst shield, the Rat King's pack of rats, the Gremlin's wrench and scarf, the Giant-Killer's oversized sword, the Redcap's red cap. Every form is consistent with its neighbours in a way the generated stills are not.
+- **They have less character.** All 28 share one body, one face (a nose and an amber eye) and one skin colour. The painted originals vary faces, posture and weathering form to form, and that is a lot of what makes them feel like different creatures. The renders are bolder and flatter.
+- **The mounted forms are small.** A rider and wolf together cover about 30 px of width, so the rider is only a few pixels of detail.
+- **Some gear is crude.** Orpheus's lyre is a gold box, the Pied Piper's pipe a bar, the Changeling's mask a white blob. That is my modelling, not the pipeline's.
+
+What it does not do yet: the game still draws twins as one still with a code-made breath and hop. The walk, idle and attack frames and the normal maps are rendered but not used, because that needs the enemy code to play a clip for a twin (the shipped creatures do, through `data/enemy_clips.json`).
+
+Where this leaves the choice: for a line of this shape (many forms on one body plan) the approach pays for itself, since a new form is a few lines and the whole tree stays consistent and re-renderable. It is not a substitute for what a painter does with a single hero creature, and the look is a different style from today's, so the call is yours: render the lines where consistency and quantity matter, and keep hand-drawing or generating the ones that carry a character.
+
 ## What bringing this into the game would still need
 
 1. **A cell mode in the assembler.** `assemble_frames.py` crops each frame to its drawn pixels and anchors it bottom-centre, which makes a rendered cycle's feet jitter sideways. A frame set rendered in a fixed cell must keep its canvas (crop once to the union box of the whole animation).

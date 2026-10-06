@@ -54,3 +54,16 @@ as hand-drawn, so `inventory` always says what is left to redraw.
   slime line also reuses the shipped `slime` set). The hi-res sources of the `forms_*` sets are git-ignored (about 160 MB): back them up, or
   `pack` falls back to the built sprite as the underlay.
 - Hurt and attack shapes are traced from your outline automatically; you do not draw them.
+
+## After you change art
+
+A sprite's size is data the rest of the game reads, so a changed sheet has ripples. In order (learned by swapping the 28 goblin stills for renders; see `docs/research/blender-pipeline-spike.md`):
+
+1. `godot --headless --import` (twice in a fresh worktree) so Godot sees the new PNGs.
+2. `tools/build_areas.sh`: creature placement in the generated rooms uses the drawn sizes, so the goblin swap changed 21 rooms. Without it `test_placement` and `test_placement_world` fail.
+3. `python3 tools/build_bestiary.py` and `python3 tools/build_evolutions.py`: both pages keep their own copy of the sheets, and a test pins the bestiary copy to the game's.
+4. `tools/run_tests.sh` (the form, scale and look tests read the sheets too).
+
+Publishing the pages (`tools/publish_bestiary.sh`, `tools/publish_evolutions.sh`) is separate and only when you ask.
+
+`import` takes `--source blender` for frames that are renders rather than drawings, so `inventory` shows what is hand-drawn and what is rendered.
