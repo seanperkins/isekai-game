@@ -101,18 +101,22 @@ def motion(variant):
 
 
 def today(variant):
-    base = (os.path.join(HERE, "..", "..", "..", "assets", "sheets", "gloom_wolf.json"), "idle_1") if variant in (None, "gloom_wolf") else None
+    """The gloom wolf is sized by the sheet it replaced (before/gloom_wolf_base.json, saved before the render took its place)."""
+    base = (os.path.join(HERE, "before", "gloom_wolf_base.json"), "idle_1") if variant in (None, "gloom_wolf") else None
     return sizing.today("wolf", variant, _form(variant)["width"], base)
 
 
-def clips_for(body, speed, ppu):
-    """{name: Clip} for a canine body whose everyday speed is `speed` game px/s with a sprite drawn at `ppu` pixels to the unit."""
+CHARGE_SPEED = 3.0   # a charging creature goes this many times as fast as it walks (enemy.gd: CHARGE_MULT): the base wolf's `run` is its charge
+
+
+def clips_for(body, speed, ppu, run_speed=RUN_SPEED):
+    """{name: Clip} for a canine body whose everyday speed is `speed` game px/s with a sprite drawn at `ppu` pixels to the unit; its run is `run_speed` times faster."""
     if body.form.get("gait") == "glide":   # a creature that flies hovers, glides and never plants a paw
         locomotion = {"idle": motion_.glide_clip(body, "hover"), "walk": motion_.glide_clip(body, "fly"), "run": motion_.glide_clip(body, "fast")}
     else:
         walk = motion_.walking_gait(body, speed, ppu)
         walk_cycle, walk_stride = motion_.plan_gait(body, walk, speed, ppu)
-        run_cycle, run_stride = motion_.plan_gait(body, "gallop", speed * RUN_SPEED, ppu)
+        run_cycle, run_stride = motion_.plan_gait(body, "gallop", speed * run_speed, ppu)
         locomotion = {"idle": motion_.idle_clip(body), "walk": motion_.gait_clip(body, walk, walk_cycle, walk_stride),
                       "run": motion_.gait_clip(body, "gallop", run_cycle, run_stride)}
     return dict(locomotion, attack=motion_.attack_clip(body), hurt=motion_.hurt_clip(body), die=motion_.die_clip(body))
@@ -125,9 +129,8 @@ def clips_of(rig, variant):
     idle = motion_.idle_clip(body)
     rig.pose(*idle.frames[0])
     x0, x1, z0, z1 = rig.extent()
-    w, h = today(variant)
-    ppu = math.sqrt(w * h / ((x1 - x0) * (z1 - z0))) if h else w / (x1 - x0)
-    return clips_for(body, motion(variant), ppu), ppu
+    ppu = sizing.pixels_per_unit((x1 - x0, z1 - z0), today(variant), "width" if variant in (None, "gloom_wolf") else "area")
+    return clips_for(body, motion(variant), ppu, CHARGE_SPEED if variant in (None, "gloom_wolf") else RUN_SPEED), ppu
 
 
 def setup(rig, variant):

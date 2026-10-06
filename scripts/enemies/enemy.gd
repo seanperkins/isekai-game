@@ -689,13 +689,7 @@ func _form_rate() -> float:
 
 func _show_form_frame(frame: String) -> void:
 	var size := def.sprite_size
-	var lit := _form_sheet.lit_texture(frame, facing < 0)
-	if lit != null:
-		_sprite.texture = lit
-		_sprite.flip_h = false  # mirrored in the texture, so the normals are mirrored with it
-	else:
-		_sprite.texture = _form_sheet.frame_texture(frame)
-		_sprite.flip_h = facing < 0
+	_form_sheet.draw_on(_sprite, frame, facing < 0)
 	_sprite.flip_v = false
 	_sprite.rotation = 0.0
 	_sprite.scale = Vector2(size, size)
@@ -741,13 +735,25 @@ func _draw_sheet_frame(delta: float) -> void:
 	_anim_state = state
 	_animator.play(state)
 	if not dormant:
-		_animator.advance(delta)
+		_animator.advance(delta * (_sheet_rate(state) if _sheet.has_normals() else 1.0))
 	var frame := _animator.frame()
-	_sprite.texture = _sheet.frame_texture(frame)
+	_sheet.draw_on(_sprite, frame, facing < 0)
 	_sprite.position.y = BODY_BOTTOM - _sheet.frame_size(frame).y / 2.0
-	_sprite.flip_h = facing < 0
 	_sprite.flip_v = false
 	_shapes.refresh(_sheet, frame, facing < 0)
+
+## How fast to play a rendered sheet's walk, run or charge: as fast as the creature really goes against the speed the clip was built for (a charge is built for
+## CHARGE_MULT times the walk), so a planted foot does not slide when it patrols at half speed or is slowed. A drawn sheet plays at its own pace.
+func _sheet_rate(state: String) -> float:
+	var speed := absf(velocity.x)
+	if speed <= 1.0:
+		return 1.0
+	match state:
+		"walk", "run", "crawl":
+			return clampf(speed / _walk_speed(), FORM_RATE_RANGE.x, FORM_RATE_RANGE.y)
+		"charge":
+			return clampf(speed / (_walk_speed() * CHARGE_MULT), FORM_RATE_RANGE.x, FORM_RATE_RANGE.y)
+	return 1.0
 
 func telegraphing() -> bool:
 	if _verb_state == "windup":

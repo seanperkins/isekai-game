@@ -1,155 +1,1145 @@
 {
-  "bat": {
-    "fly": {"frames": ["fly_1", "fly_2", "fly_3", "fly_4"], "fps": 10.0, "loop": true},
-    "hover": {"frames": ["hover_1", "hover_2"], "fps": 6.0, "loop": true},
-    "warn": {"frames": ["hover_2"], "fps": 1.0, "loop": false},
-    "dive": {"frames": ["dive"], "fps": 1.0, "loop": false},
-    "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
-    "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
-    "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
+ "bat": {
+  "fly": {
+   "frames": [
+    "fly_1",
+    "fly_2",
+    "fly_3",
+    "fly_4"
+   ],
+   "fps": 10.0,
+   "loop": true
   },
-  "toad": {
-    "idle": {"frames": ["idle_1", "idle_2"], "fps": 2.0, "loop": true},
-    "walk": {"frames": ["walk_1", "walk_2", "walk_3", "walk_2"], "fps": 8.0, "loop": true},
-    "puff": {"frames": ["puff_1", "puff_2"], "fps": 5.0, "loop": false},
-    "spit": {"frames": ["spit"], "fps": 1.0, "loop": false},
-    "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
-    "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
-    "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
+  "hover": {
+   "frames": [
+    "hover_1",
+    "hover_2"
+   ],
+   "fps": 6.0,
+   "loop": true
   },
-  "lizard": {
-    "idle": {"frames": ["idle_1", "idle_2"], "fps": 2.0, "loop": true},
-    "walk": {"frames": ["walk_1", "walk_2", "walk_3", "walk_4"], "fps": 8.0, "loop": true},
-    "windup": {"frames": ["windup_1", "windup_2"], "fps": 4.0, "loop": false},
-    "charge": {"frames": ["charge_1", "charge_2", "charge_3"], "fps": 12.0, "loop": true},
-    "rest": {"frames": ["rest_1", "rest_2"], "fps": 3.0, "loop": true},
-    "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
-    "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
-    "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
+  "warn": {
+   "frames": [
+    "hover_2"
+   ],
+   "fps": 1.0,
+   "loop": false
   },
-  "spider": {
-    "hang": {"frames": ["hang_1", "hang_2"], "fps": 2.0, "loop": true},
-    "drop": {"frames": ["drop"], "fps": 1.0, "loop": false},
-    "crawl": {"frames": ["crawl_1", "crawl_2", "crawl_3", "crawl_4"], "fps": 8.0, "loop": true},
-    "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
-    "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
-    "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
+  "dive": {
+   "frames": [
+    "dive"
+   ],
+   "fps": 1.0,
+   "loop": false
   },
-  "spore_moth": {
-    "fly": {"frames": ["fly_1", "fly_2", "fly_3", "fly_4"], "fps": 10.0, "loop": true},
-    "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
-    "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
-    "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
+  "stunned": {
+   "frames": [
+    "stunned"
+   ],
+   "fps": 1.0,
+   "loop": false
   },
-  "mushroom_crab": {
-    "idle": {"frames": ["idle_1"], "fps": 1.0, "loop": true},
-    "walk": {"frames": ["walk_1", "walk_2", "walk_3", "walk_2"], "fps": 8.0, "loop": true},
-    "windup": {"frames": ["windup_1"], "fps": 1.0, "loop": false},
-    "charge": {"frames": ["charge_1", "charge_2"], "fps": 12.0, "loop": true},
-    "rest": {"frames": ["rest_1"], "fps": 1.0, "loop": true},
-    "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
-    "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
-    "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
+  "hurt": {
+   "frames": [
+    "hurt"
+   ],
+   "fps": 1.0,
+   "loop": false
   },
-  "vine_snake": {
-    "hide": {"frames": ["hide_1"], "fps": 1.0, "loop": true},
-    "coil": {"frames": ["coil_1"], "fps": 1.0, "loop": false},
-    "lunge": {"frames": ["lunge_1", "lunge_2"], "fps": 10.0, "loop": false},
-    "rest": {"frames": ["slither_1", "slither_2", "slither_1", "slither_3"], "fps": 8.0, "loop": true},
-    "slither": {"frames": ["slither_1", "slither_2", "slither_1", "slither_3"], "fps": 8.0, "loop": true},
-    "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
-    "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
-    "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
-  },
-  "pale_moth": {
-    "fly": {"frames": ["fly_1", "fly_2", "fly_3", "fly_4"], "fps": 10.0, "loop": true},
-    "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
-    "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
-    "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
-  },
-  "glass_eel": {
-    "swim": {"frames": ["swim_1", "swim_2", "swim_3", "swim_2"], "fps": 8.0, "loop": true},
-    "warn": {"frames": ["warn"], "fps": 1.0, "loop": false},
-    "dart": {"frames": ["dart"], "fps": 1.0, "loop": false},
-    "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
-    "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
-    "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
-  },
-  "drift_jelly": {
-    "drift": {"frames": ["drift_1", "drift_2", "drift_3", "drift_2"], "fps": 5.0, "loop": true},
-    "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
-    "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
-    "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
-  },
-  "cave_crayfish": {
-    "idle": {"frames": ["idle_1"], "fps": 1.0, "loop": true},
-    "walk": {"frames": ["walk_1", "walk_2", "walk_3", "walk_2"], "fps": 8.0, "loop": true},
-    "windup": {"frames": ["windup_1"], "fps": 1.0, "loop": false},
-    "charge": {"frames": ["charge_1", "charge_2"], "fps": 12.0, "loop": true},
-    "rest": {"frames": ["rest_1"], "fps": 1.0, "loop": true},
-    "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
-    "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
-    "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
-  },
-  "bog_lizardman": {
-    "idle": {"frames": ["idle_1"], "fps": 1.0, "loop": true},
-    "walk": {"frames": ["walk_1", "walk_2", "walk_3", "walk_2"], "fps": 8.0, "loop": true},
-    "puff": {"frames": ["windup_1"], "fps": 1.0, "loop": false},
-    "spit": {"frames": ["throw_1"], "fps": 1.0, "loop": false},
-    "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
-    "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
-    "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
-  },
-  "storm_eel": {
-    "swim": {"frames": ["swim_1", "swim_2", "swim_3", "swim_2"], "fps": 8.0, "loop": true},
-    "warn": {"frames": ["warn"], "fps": 1.0, "loop": false},
-    "dart": {"frames": ["dart"], "fps": 1.0, "loop": false},
-    "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
-    "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
-    "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
-  },
-  "gloom_wolf": {
-    "idle": {"frames": ["idle_1"], "fps": 1.0, "loop": true},
-    "walk": {"frames": ["walk_1", "walk_2", "walk_3", "walk_2"], "fps": 8.0, "loop": true},
-    "windup": {"frames": ["windup_1"], "fps": 1.0, "loop": false},
-    "charge": {"frames": ["charge_1", "charge_2"], "fps": 12.0, "loop": true},
-    "rest": {"frames": ["rest_1"], "fps": 1.0, "loop": true},
-    "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
-    "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
-    "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
-  },
-  "armed_ant": {
-    "idle": {"frames": ["idle_1"], "fps": 1.0, "loop": true},
-    "walk": {"frames": ["walk_1", "walk_2", "walk_3", "walk_2"], "fps": 10.0, "loop": true},
-    "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
-    "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
-    "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
-  },
-  "stone_drake": {
-    "idle": {"frames": ["idle_1"], "fps": 1.0, "loop": true},
-    "walk": {"frames": ["walk_1", "walk_2", "walk_3", "walk_2"], "fps": 6.0, "loop": true},
-    "windup": {"frames": ["windup_1"], "fps": 1.0, "loop": false},
-    "stomp": {"frames": ["stomp_1"], "fps": 1.0, "loop": true},
-    "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
-    "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
-    "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
-  },
-  "taratect": {
-    "hang": {"frames": ["hang_1", "hang_2"], "fps": 2.0, "loop": true},
-    "drop": {"frames": ["drop"], "fps": 1.0, "loop": false},
-    "crawl": {"frames": ["crawl_1", "crawl_2", "crawl_3", "crawl_4"], "fps": 8.0, "loop": true},
-    "stunned": {"frames": ["stunned"], "fps": 1.0, "loop": false},
-    "hurt": {"frames": ["hurt"], "fps": 1.0, "loop": false},
-    "downed": {"frames": ["downed"], "fps": 1.0, "loop": false}
-  },
-  "goblin": {
-    "idle": {"frames": ["idle_1", "idle_2"], "fps": 2.0, "loop": true},
-    "run": {"frames": ["run_1", "run_2", "run_3", "run_4"], "fps": 10.0, "loop": true},
-    "rise": {"frames": ["rise"], "fps": 1.0, "loop": false},
-    "fall": {"frames": ["fall"], "fps": 1.0, "loop": false},
-    "roll": {"frames": ["roll_1", "roll_2"], "fps": 14.0, "loop": true},
-    "slide": {"frames": ["slide"], "fps": 1.0, "loop": false},
-    "mantle": {"frames": ["mantle_1", "mantle_2"], "fps": 8.0, "loop": false},
-    "wall": {"frames": ["wall"], "fps": 1.0, "loop": true}
+  "downed": {
+   "frames": [
+    "downed"
+   ],
+   "fps": 1.0,
+   "loop": false
   }
+ },
+ "toad": {
+  "idle": {
+   "frames": [
+    "idle_1",
+    "idle_2"
+   ],
+   "fps": 2.0,
+   "loop": true
+  },
+  "walk": {
+   "frames": [
+    "walk_1",
+    "walk_2",
+    "walk_3",
+    "walk_2"
+   ],
+   "fps": 8.0,
+   "loop": true
+  },
+  "puff": {
+   "frames": [
+    "puff_1",
+    "puff_2"
+   ],
+   "fps": 5.0,
+   "loop": false
+  },
+  "spit": {
+   "frames": [
+    "spit"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "stunned": {
+   "frames": [
+    "stunned"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "hurt": {
+   "frames": [
+    "hurt"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "downed": {
+   "frames": [
+    "downed"
+   ],
+   "fps": 1.0,
+   "loop": false
+  }
+ },
+ "lizard": {
+  "idle": {
+   "frames": [
+    "idle_1",
+    "idle_2"
+   ],
+   "fps": 2.0,
+   "loop": true
+  },
+  "walk": {
+   "frames": [
+    "walk_1",
+    "walk_2",
+    "walk_3",
+    "walk_4"
+   ],
+   "fps": 8.0,
+   "loop": true
+  },
+  "windup": {
+   "frames": [
+    "windup_1",
+    "windup_2"
+   ],
+   "fps": 4.0,
+   "loop": false
+  },
+  "charge": {
+   "frames": [
+    "charge_1",
+    "charge_2",
+    "charge_3"
+   ],
+   "fps": 12.0,
+   "loop": true
+  },
+  "rest": {
+   "frames": [
+    "rest_1",
+    "rest_2"
+   ],
+   "fps": 3.0,
+   "loop": true
+  },
+  "stunned": {
+   "frames": [
+    "stunned"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "hurt": {
+   "frames": [
+    "hurt"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "downed": {
+   "frames": [
+    "downed"
+   ],
+   "fps": 1.0,
+   "loop": false
+  }
+ },
+ "spider": {
+  "hang": {
+   "frames": [
+    "hang_1",
+    "hang_2"
+   ],
+   "fps": 2.0,
+   "loop": true
+  },
+  "drop": {
+   "frames": [
+    "drop"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "crawl": {
+   "frames": [
+    "crawl_1",
+    "crawl_2",
+    "crawl_3",
+    "crawl_4"
+   ],
+   "fps": 8.0,
+   "loop": true
+  },
+  "stunned": {
+   "frames": [
+    "stunned"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "hurt": {
+   "frames": [
+    "hurt"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "downed": {
+   "frames": [
+    "downed"
+   ],
+   "fps": 1.0,
+   "loop": false
+  }
+ },
+ "spore_moth": {
+  "fly": {
+   "frames": [
+    "fly_1",
+    "fly_2",
+    "fly_3",
+    "fly_4"
+   ],
+   "fps": 10.0,
+   "loop": true
+  },
+  "stunned": {
+   "frames": [
+    "stunned"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "hurt": {
+   "frames": [
+    "hurt"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "downed": {
+   "frames": [
+    "downed"
+   ],
+   "fps": 1.0,
+   "loop": false
+  }
+ },
+ "mushroom_crab": {
+  "idle": {
+   "frames": [
+    "idle_1"
+   ],
+   "fps": 1.0,
+   "loop": true
+  },
+  "walk": {
+   "frames": [
+    "walk_1",
+    "walk_2",
+    "walk_3",
+    "walk_2"
+   ],
+   "fps": 8.0,
+   "loop": true
+  },
+  "windup": {
+   "frames": [
+    "windup_1"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "charge": {
+   "frames": [
+    "charge_1",
+    "charge_2"
+   ],
+   "fps": 12.0,
+   "loop": true
+  },
+  "rest": {
+   "frames": [
+    "rest_1"
+   ],
+   "fps": 1.0,
+   "loop": true
+  },
+  "stunned": {
+   "frames": [
+    "stunned"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "hurt": {
+   "frames": [
+    "hurt"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "downed": {
+   "frames": [
+    "downed"
+   ],
+   "fps": 1.0,
+   "loop": false
+  }
+ },
+ "vine_snake": {
+  "hide": {
+   "frames": [
+    "hide_1"
+   ],
+   "fps": 1.0,
+   "loop": true
+  },
+  "coil": {
+   "frames": [
+    "coil_1"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "lunge": {
+   "frames": [
+    "lunge_1",
+    "lunge_2"
+   ],
+   "fps": 10.0,
+   "loop": false
+  },
+  "rest": {
+   "frames": [
+    "slither_1",
+    "slither_2",
+    "slither_1",
+    "slither_3"
+   ],
+   "fps": 8.0,
+   "loop": true
+  },
+  "slither": {
+   "frames": [
+    "slither_1",
+    "slither_2",
+    "slither_1",
+    "slither_3"
+   ],
+   "fps": 8.0,
+   "loop": true
+  },
+  "stunned": {
+   "frames": [
+    "stunned"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "hurt": {
+   "frames": [
+    "hurt"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "downed": {
+   "frames": [
+    "downed"
+   ],
+   "fps": 1.0,
+   "loop": false
+  }
+ },
+ "pale_moth": {
+  "fly": {
+   "frames": [
+    "fly_1",
+    "fly_2",
+    "fly_3",
+    "fly_4"
+   ],
+   "fps": 10.0,
+   "loop": true
+  },
+  "stunned": {
+   "frames": [
+    "stunned"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "hurt": {
+   "frames": [
+    "hurt"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "downed": {
+   "frames": [
+    "downed"
+   ],
+   "fps": 1.0,
+   "loop": false
+  }
+ },
+ "glass_eel": {
+  "swim": {
+   "frames": [
+    "swim_1",
+    "swim_2",
+    "swim_3",
+    "swim_2"
+   ],
+   "fps": 8.0,
+   "loop": true
+  },
+  "warn": {
+   "frames": [
+    "warn"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "dart": {
+   "frames": [
+    "dart"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "stunned": {
+   "frames": [
+    "stunned"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "hurt": {
+   "frames": [
+    "hurt"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "downed": {
+   "frames": [
+    "downed"
+   ],
+   "fps": 1.0,
+   "loop": false
+  }
+ },
+ "drift_jelly": {
+  "drift": {
+   "frames": [
+    "drift_1",
+    "drift_2",
+    "drift_3",
+    "drift_2"
+   ],
+   "fps": 5.0,
+   "loop": true
+  },
+  "stunned": {
+   "frames": [
+    "stunned"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "hurt": {
+   "frames": [
+    "hurt"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "downed": {
+   "frames": [
+    "downed"
+   ],
+   "fps": 1.0,
+   "loop": false
+  }
+ },
+ "cave_crayfish": {
+  "idle": {
+   "frames": [
+    "idle_1"
+   ],
+   "fps": 1.0,
+   "loop": true
+  },
+  "walk": {
+   "frames": [
+    "walk_1",
+    "walk_2",
+    "walk_3",
+    "walk_2"
+   ],
+   "fps": 8.0,
+   "loop": true
+  },
+  "windup": {
+   "frames": [
+    "windup_1"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "charge": {
+   "frames": [
+    "charge_1",
+    "charge_2"
+   ],
+   "fps": 12.0,
+   "loop": true
+  },
+  "rest": {
+   "frames": [
+    "rest_1"
+   ],
+   "fps": 1.0,
+   "loop": true
+  },
+  "stunned": {
+   "frames": [
+    "stunned"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "hurt": {
+   "frames": [
+    "hurt"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "downed": {
+   "frames": [
+    "downed"
+   ],
+   "fps": 1.0,
+   "loop": false
+  }
+ },
+ "bog_lizardman": {
+  "idle": {
+   "frames": [
+    "idle_1"
+   ],
+   "fps": 1.0,
+   "loop": true
+  },
+  "walk": {
+   "frames": [
+    "walk_1",
+    "walk_2",
+    "walk_3",
+    "walk_2"
+   ],
+   "fps": 8.0,
+   "loop": true
+  },
+  "puff": {
+   "frames": [
+    "windup_1"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "spit": {
+   "frames": [
+    "throw_1"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "stunned": {
+   "frames": [
+    "stunned"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "hurt": {
+   "frames": [
+    "hurt"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "downed": {
+   "frames": [
+    "downed"
+   ],
+   "fps": 1.0,
+   "loop": false
+  }
+ },
+ "storm_eel": {
+  "swim": {
+   "frames": [
+    "swim_1",
+    "swim_2",
+    "swim_3",
+    "swim_2"
+   ],
+   "fps": 8.0,
+   "loop": true
+  },
+  "warn": {
+   "frames": [
+    "warn"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "dart": {
+   "frames": [
+    "dart"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "stunned": {
+   "frames": [
+    "stunned"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "hurt": {
+   "frames": [
+    "hurt"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "downed": {
+   "frames": [
+    "downed"
+   ],
+   "fps": 1.0,
+   "loop": false
+  }
+ },
+ "gloom_wolf": {
+  "idle": {
+   "frames": [
+    "idle_1",
+    "idle_1",
+    "idle_1",
+    "idle_1",
+    "idle_1",
+    "idle_1",
+    "idle_1",
+    "idle_1",
+    "idle_1",
+    "idle_1",
+    "idle_2",
+    "idle_2",
+    "idle_2",
+    "idle_2",
+    "idle_2",
+    "idle_2",
+    "idle_2",
+    "idle_2",
+    "idle_2",
+    "idle_2",
+    "idle_3",
+    "idle_3",
+    "idle_3",
+    "idle_3",
+    "idle_3",
+    "idle_3",
+    "idle_3",
+    "idle_3",
+    "idle_3",
+    "idle_3",
+    "idle_4",
+    "idle_4",
+    "idle_4",
+    "idle_4",
+    "idle_4",
+    "idle_4",
+    "idle_4",
+    "idle_4",
+    "idle_4",
+    "idle_4",
+    "idle_5",
+    "idle_5",
+    "idle_5",
+    "idle_5",
+    "idle_5",
+    "idle_5",
+    "idle_5",
+    "idle_5",
+    "idle_5",
+    "idle_5",
+    "idle_6",
+    "idle_6",
+    "idle_6",
+    "idle_6",
+    "idle_6",
+    "idle_6",
+    "idle_6",
+    "idle_6",
+    "idle_6",
+    "idle_6",
+    "idle_7",
+    "idle_7",
+    "idle_7",
+    "idle_7",
+    "idle_7",
+    "idle_7",
+    "idle_7",
+    "idle_7",
+    "idle_7",
+    "idle_7",
+    "idle_8",
+    "idle_8",
+    "idle_8",
+    "idle_8",
+    "idle_8",
+    "idle_8",
+    "idle_8",
+    "idle_8",
+    "idle_8",
+    "idle_8"
+   ],
+   "fps": 50.0,
+   "loop": true
+  },
+  "walk": {
+   "frames": [
+    "walk_1",
+    "walk_1",
+    "walk_2",
+    "walk_2",
+    "walk_2",
+    "walk_3",
+    "walk_3",
+    "walk_4",
+    "walk_4",
+    "walk_4",
+    "walk_5",
+    "walk_5",
+    "walk_6",
+    "walk_6",
+    "walk_6",
+    "walk_7",
+    "walk_7",
+    "walk_8",
+    "walk_8",
+    "walk_8",
+    "walk_9",
+    "walk_9",
+    "walk_10",
+    "walk_10",
+    "walk_10"
+   ],
+   "fps": 50.0,
+   "loop": true
+  },
+  "windup": {
+   "frames": [
+    "windup_1"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "charge": {
+   "frames": [
+    "charge_1",
+    "charge_2",
+    "charge_3",
+    "charge_4",
+    "charge_5",
+    "charge_6",
+    "charge_7",
+    "charge_8",
+    "charge_9",
+    "charge_10",
+    "charge_11",
+    "charge_12",
+    "charge_13",
+    "charge_14",
+    "charge_15",
+    "charge_16"
+   ],
+   "fps": 50.0,
+   "loop": true
+  },
+  "rest": {
+   "frames": [
+    "rest_1"
+   ],
+   "fps": 1.0,
+   "loop": true
+  },
+  "stunned": {
+   "frames": [
+    "stunned_1"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "hurt": {
+   "frames": [
+    "hurt_1"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "downed": {
+   "frames": [
+    "downed_1"
+   ],
+   "fps": 1.0,
+   "loop": false
+  }
+ },
+ "armed_ant": {
+  "idle": {
+   "frames": [
+    "idle_1"
+   ],
+   "fps": 1.0,
+   "loop": true
+  },
+  "walk": {
+   "frames": [
+    "walk_1",
+    "walk_2",
+    "walk_3",
+    "walk_2"
+   ],
+   "fps": 10.0,
+   "loop": true
+  },
+  "stunned": {
+   "frames": [
+    "stunned"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "hurt": {
+   "frames": [
+    "hurt"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "downed": {
+   "frames": [
+    "downed"
+   ],
+   "fps": 1.0,
+   "loop": false
+  }
+ },
+ "stone_drake": {
+  "idle": {
+   "frames": [
+    "idle_1"
+   ],
+   "fps": 1.0,
+   "loop": true
+  },
+  "walk": {
+   "frames": [
+    "walk_1",
+    "walk_2",
+    "walk_3",
+    "walk_2"
+   ],
+   "fps": 6.0,
+   "loop": true
+  },
+  "windup": {
+   "frames": [
+    "windup_1"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "stomp": {
+   "frames": [
+    "stomp_1"
+   ],
+   "fps": 1.0,
+   "loop": true
+  },
+  "stunned": {
+   "frames": [
+    "stunned"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "hurt": {
+   "frames": [
+    "hurt"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "downed": {
+   "frames": [
+    "downed"
+   ],
+   "fps": 1.0,
+   "loop": false
+  }
+ },
+ "taratect": {
+  "hang": {
+   "frames": [
+    "hang_1",
+    "hang_2"
+   ],
+   "fps": 2.0,
+   "loop": true
+  },
+  "drop": {
+   "frames": [
+    "drop"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "crawl": {
+   "frames": [
+    "crawl_1",
+    "crawl_2",
+    "crawl_3",
+    "crawl_4"
+   ],
+   "fps": 8.0,
+   "loop": true
+  },
+  "stunned": {
+   "frames": [
+    "stunned"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "hurt": {
+   "frames": [
+    "hurt"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "downed": {
+   "frames": [
+    "downed"
+   ],
+   "fps": 1.0,
+   "loop": false
+  }
+ },
+ "goblin": {
+  "idle": {
+   "frames": [
+    "idle_1",
+    "idle_1",
+    "idle_1",
+    "idle_1",
+    "idle_1",
+    "idle_1",
+    "idle_1",
+    "idle_1",
+    "idle_2",
+    "idle_2",
+    "idle_2",
+    "idle_2",
+    "idle_2",
+    "idle_2",
+    "idle_2",
+    "idle_3",
+    "idle_3",
+    "idle_3",
+    "idle_3",
+    "idle_3",
+    "idle_3",
+    "idle_3",
+    "idle_3",
+    "idle_4",
+    "idle_4",
+    "idle_4",
+    "idle_4",
+    "idle_4",
+    "idle_4",
+    "idle_4",
+    "idle_5",
+    "idle_5",
+    "idle_5",
+    "idle_5",
+    "idle_5",
+    "idle_5",
+    "idle_5",
+    "idle_5",
+    "idle_6",
+    "idle_6",
+    "idle_6",
+    "idle_6",
+    "idle_6",
+    "idle_6",
+    "idle_6",
+    "idle_7",
+    "idle_7",
+    "idle_7",
+    "idle_7",
+    "idle_7",
+    "idle_7",
+    "idle_7",
+    "idle_7",
+    "idle_8",
+    "idle_8",
+    "idle_8",
+    "idle_8",
+    "idle_8",
+    "idle_8",
+    "idle_8"
+   ],
+   "fps": 50.0,
+   "loop": true
+  },
+  "run": {
+   "frames": [
+    "run_1",
+    "run_2",
+    "run_2",
+    "run_3",
+    "run_4",
+    "run_5",
+    "run_6",
+    "run_6",
+    "run_7",
+    "run_8",
+    "run_9",
+    "run_10",
+    "run_10"
+   ],
+   "fps": 50.0,
+   "loop": true
+  },
+  "rise": {
+   "frames": [
+    "rise_1"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "fall": {
+   "frames": [
+    "fall_1"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "roll": {
+   "frames": [
+    "roll_1",
+    "roll_1",
+    "roll_1",
+    "roll_1",
+    "roll_1",
+    "roll_2",
+    "roll_2",
+    "roll_2",
+    "roll_2",
+    "roll_2",
+    "roll_3",
+    "roll_3",
+    "roll_3",
+    "roll_3",
+    "roll_3",
+    "roll_4",
+    "roll_4",
+    "roll_4",
+    "roll_4",
+    "roll_4"
+   ],
+   "fps": 50.0,
+   "loop": true
+  },
+  "slide": {
+   "frames": [
+    "slide_1"
+   ],
+   "fps": 1.0,
+   "loop": false
+  },
+  "mantle": {
+   "frames": [
+    "mantle_1",
+    "mantle_1",
+    "mantle_1",
+    "mantle_1",
+    "mantle_1",
+    "mantle_2",
+    "mantle_2",
+    "mantle_2",
+    "mantle_2",
+    "mantle_2"
+   ],
+   "fps": 50.0,
+   "loop": false
+  },
+  "wall": {
+   "frames": [
+    "wall_1"
+   ],
+   "fps": 1.0,
+   "loop": true
+  },
+  "land": {
+   "frames": [
+    "land_1"
+   ],
+   "fps": 1.0,
+   "loop": false
+  }
+ }
 }

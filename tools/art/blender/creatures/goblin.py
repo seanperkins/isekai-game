@@ -131,12 +131,18 @@ def rider_clips(rig, form, variant):
 
 
 # ---- sizing -----------------------------------------------------------------------------------------------------------------------
+PLAYER_SPEED = 105.0   # px/s: the base goblin is the player's two-legged body, whose run is about twice this (data/movement/biped.tres)
+
+
 def motion(variant):
-    return sizing.speed_of("goblin", None if variant == "goblin" else variant)
+    if not variant or variant == "goblin":
+        return PLAYER_SPEED
+    return sizing.speed_of("goblin", variant)
 
 
 def today(variant):
-    base = (os.path.join(HERE, "..", "..", "..", "assets", "sheets", "goblin.json"), "idle_1") if not variant or variant == "goblin" else None
+    """The base goblin is sized by the sheet it replaced (before/goblin_base.json, saved before the render took its place)."""
+    base = (os.path.join(HERE, "before", "goblin_base.json"), "idle_1") if not variant or variant == "goblin" else None
     return sizing.today("goblin", variant, _form(variant)["width"], base)
 
 
@@ -149,8 +155,7 @@ def clips_of(rig, variant):
     idle = motion_.idle_clip(body)
     rig.pose(*idle.frames[0])
     x0, x1, z0, z1 = rig.extent()
-    w, h = today(variant)
-    ppu = math.sqrt(w * h / ((x1 - x0) * (z1 - z0))) if h else w / (x1 - x0)
+    ppu = sizing.pixels_per_unit((x1 - x0, z1 - z0), today(variant), "height" if not variant or variant == "goblin" else "area")
     speed = motion(variant)
     walk_cycle, walk_stride = motion_.plan_gait(body, "walk", speed, ppu)
     run_cycle, run_stride = motion_.plan_gait(body, "run", speed * WALK_SPEED_RUN, ppu)

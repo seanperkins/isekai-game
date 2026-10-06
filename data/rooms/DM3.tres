@@ -39,11 +39,11 @@ spawns = [{
 }, {
 "by": "PL",
 "id": "demon_hound",
-"pos": Vector2(396, 314)
+"pos": Vector2(399, 314)
 }, {
 "by": "PL",
 "id": "blinker",
-"pos": Vector2(578, 314)
+"pos": Vector2(218, 314)
 }]
 exits = [{
 "edge": "top",

@@ -76,6 +76,13 @@ def native_frame(im, box=None):
     return crisp_alpha(keyed(im.convert("RGBA")).crop(box or native_box(im)))
 
 
+def centred_box(box, centre):
+    """The box widened to be even about the column `centre`: a frame cut to it keeps the creature's own centre in the middle, whatever it is doing with its limbs, and
+    keeps its own height (a tall pose is tall, a low one low), so the creature does not drift sideways between frames."""
+    half = max(centre - box[0], box[2] - centre)
+    return (int(math.floor(centre - half)), box[1], int(math.ceil(centre + half)), box[3])
+
+
 def shared_box(boxes, centre=None):
     """One box that holds every box in `boxes` (left, top, right, bottom): the frames of an animation cut to it keep their places relative to
     one another. With `centre` (a column) the box is widened to be even about it, so a creature drawn about that column stays centred, and
@@ -279,6 +286,7 @@ def main():
         by_name = {f["name"]: f for f in data["frames"]}
         scale = anchor_scale(Image.open(os.path.join(SRC, src_set, data["anchor"] + ".png")), by_name[data["anchor"]]["width"])
     shared = None
+    centre_each = bool(data.get("centred_frames"))   # each frame cut to its own height but even about the creature's centre (a shipped creature's states differ in height)
     if data.get("common_box"):  # an animation: one box for all its frames, even about the column the creature is drawn about
         sources = [Image.open(os.path.join(SRC, src_set, f["name"] + ".png")) for f in data["frames"]]
         shared = shared_box([native_box(im) for im in sources], sources[0].width / 2.0 if data.get("centred", True) else None)
@@ -288,10 +296,11 @@ def main():
             raise SystemExit("missing %s (generate it first)" % src)
         if is_native(data, f):
             source = Image.open(src)
-            fitted[f["name"]] = native_frame(source, shared)
+            box = shared or (centred_box(native_box(source), source.width / 2.0) if centre_each else None)
+            fitted[f["name"]] = native_frame(source, box)
             normal_src = os.path.join(SRC, src_set, f["name"] + "_n.png")
             if os.path.exists(normal_src):  # the normal map beside it, cut the same way, drawn only where the frame is
-                cut = Image.open(normal_src).convert("RGBA").crop(shared or native_box(source))
+                cut = Image.open(normal_src).convert("RGBA").crop(box or native_box(source))
                 cut.putalpha(fitted[f["name"]].split()[3])
                 normals[f["name"]] = cut
         else:

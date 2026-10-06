@@ -441,11 +441,10 @@ func _update_visual(delta: float) -> void:
 	var left := _faces_left(state, get_wall_normal() if is_on_wall() else Vector2.ZERO)
 	var glow := evolve_glow()
 	var body_scale := body_scale() * (1.0 + EVOLVE_SWELL * glow)
-	_sprite.texture = _sheet.frame_texture(frame)
+	_sheet.draw_on(_sprite, frame, left)
 	_sprite.position.y = BODY_BOTTOM - _sheet.frame_size(frame).y * body_scale / 2.0
 	_sprite.scale = Vector2.ONE * body_scale
 	_sprite.modulate = body_tint().lerp(Color(2.2, 2.2, 2.2), glow * 0.8)
-	_sprite.flip_h = left
 	_shapes.refresh(_sheet, frame, left)
 
 ## The species' body: its movement, and (with a sheet) its look in place of the slime's.
@@ -503,15 +502,15 @@ func _update_visual_species(delta: float) -> void:
 	var frame := _animator.frame()
 	var glow := evolve_glow()
 	var scale := body_scale() * (1.0 + EVOLVE_SWELL * glow)
-	_sprite.texture = _sheet.frame_texture(frame)
+	var mirrored := (st.wall_side < 0) if clip == "wall" else facing < 0
+	_sheet.draw_on(_sprite, frame, mirrored)
 	_sprite.position.y = BODY_BOTTOM - _sheet.frame_size(frame).y * scale / 2.0
 	_sprite.scale = Vector2.ONE * scale
 	var tint := body_tint().lerp(Color(2.2, 2.2, 2.2), glow * 0.8)
 	if _invuln > INVULN_SECONDS - HURT_FLASH and not evolving():
 		tint = tint.lerp(Color(1.0, 0.45, 0.45), 0.6)
 	_sprite.modulate = tint
-	_sprite.flip_h = (st.wall_side < 0) if clip == "wall" else facing < 0
-	_shapes.refresh(_sheet, frame, _sprite.flip_h)
+	_shapes.refresh(_sheet, frame, mirrored)
 
 ## A form with a still: that frame at the sheet's own size, mirrored when it faces left, swelling and glowing through the evolution
 ## moment, red for a moment when hurt. The hurt shape is the frame's traced one.

@@ -40,6 +40,20 @@ class SharedBoxTest(unittest.TestCase):
         self.assertEqual(cut_small.getpixel((0, 0))[3], 0)
 
 
+class CentredBoxTest(unittest.TestCase):
+    def test_a_frame_keeps_its_own_height_and_is_even_about_the_centre(self):
+        self.assertEqual(a.centred_box((4, 6, 10, 30), 16), (4, 6, 28, 30))
+        self.assertEqual(a.centred_box((12, 2, 22, 20), 16), (10, 2, 22, 20))
+
+    def test_two_frames_of_different_poses_cut_this_way_share_a_centre_and_a_floor_but_not_a_height(self):
+        low = frame(40, 40, (16, 30, 26, 36))
+        tall = frame(40, 40, (14, 8, 22, 36))
+        c0, c1 = a.native_frame(low, a.centred_box(a.native_box(low), 20)), a.native_frame(tall, a.centred_box(a.native_box(tall), 20))
+        self.assertNotEqual(c0.height, c1.height)
+        self.assertEqual(c0.width % 2, 0)
+        self.assertEqual(c0.getpixel((c0.width // 2 + 2, c0.height - 1))[3], 255, "its feet are on its floor")
+
+
 class AssembleFramesTest(unittest.TestCase):
     def test_fit_scales_to_the_width_and_keeps_the_aspect(self):
         out = a.fit_frame(frame(100, 50, (20, 10, 80, 40)), 30)  # the subject is 60x30

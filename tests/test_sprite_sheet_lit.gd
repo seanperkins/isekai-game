@@ -66,3 +66,19 @@ func test_a_point_light_hangs_above_the_picture_so_normals_matter() -> void:
 	assert_eq(l.height, Art.LIGHT_HEIGHT)
 	assert_gt(l.height, 0.0)
 	l.free()
+
+func test_a_frame_is_drawn_lit_and_mirrored_in_the_texture_when_the_sheet_has_normals_and_flipped_when_it_has_none() -> void:
+	SpriteSheet.dir = "res://tests/support/sheets/"
+	var sprite := Sprite2D.new()
+	add_child_autofree(sprite)
+	var lit := SpriteSheet.load_set("fixture_lit")
+	lit.draw_on(sprite, lit.frame_names()[0], true)
+	assert_true(sprite.texture is CanvasTexture)
+	assert_false(sprite.flip_h, "mirrored in the texture, so the normals are mirrored with it")
+	var plain := SpriteSheet.load_set("fixture_plain")
+	plain.draw_on(sprite, plain.frame_names()[0], true)
+	assert_true(sprite.texture is AtlasTexture)
+	assert_true(sprite.flip_h)
+	plain.draw_on(sprite, plain.frame_names()[0], false)
+	assert_false(sprite.flip_h)
+	SpriteSheet.dir = SpriteSheet.DIR

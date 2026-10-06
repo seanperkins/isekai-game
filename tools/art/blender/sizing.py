@@ -47,3 +47,15 @@ def today(species, variant, width, base=None):
         return float(rect[2]), float(rect[3])
     except (OSError, KeyError):
         return float(width), None
+
+
+def pixels_per_unit(extent, old, fit="area"):
+    """Pixels to the unit that draws a pose whose extent is `extent` (width, height in units) the size of `old` (width, height in px, height None when there is no
+    still to match). A form is matched by area; a base creature, whose frames the game's rooms and the player's body read, by the one dimension they read: the
+    width for a wolf (the rooms' footing), the height for a goblin (the player's body)."""
+    w, h = old
+    if h is None or fit == "width":
+        return w / extent[0]
+    if fit == "height":
+        return h / extent[1]
+    return (w * h / (extent[0] * extent[1])) ** 0.5
