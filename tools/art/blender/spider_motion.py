@@ -116,13 +116,26 @@ def planted(body, key, dx=0.0):
 def raised_tip(body, key, t=0.0, lift=1.0):
     """Where a raised leg's claw is held: up and forward of the body, a pair that is never put down (scythes, a veil) high, swaying a little."""
     i = pair_of(key)
-    U = body.U
+    leg = body.legs[key]
     far = 1.0 if key[0] == "f" else 0.0
-    x0, _ = body.rest_tip[key]
-    sway = 0.04 * U * math.sin(2.0 * math.pi * t + 1.3 * i + 0.6 * far)
-    if i == 0:
-        return (x0 - 0.15 * U - 0.10 * U * far + sway, (1.25 - 0.15 * far) * U * lift + 0.04 * U * math.sin(2.0 * math.pi * t + far), 70.0 * lift)
-    return (x0 - 0.10 * U + sway, (0.7 - 0.1 * far) * U * lift, 50.0 * lift)
+    # (direction from the hip, degrees from straight down; reach, of the leg's; the tarsus's world direction) for each way of holding a pair up
+    angle, reach, tarsus = RAISED.get(body.form.get("raised_pose", "ready"), RAISED["ready"]) if i == 0 else (100.0, 0.7, 60.0)
+    angle -= 9.0 * far                                   # the far one a little lower and behind, so the two do not sit on one line
+    a = math.radians(angle + 3.0 * math.sin(2.0 * math.pi * t + 0.8 * far))
+    d = reach * leg.reach * (0.6 + 0.4 * lift)
+    hip = leg.hip
+    x = hip[0] + d * math.sin(a)
+    z = hip[1] + body.z0 - d * math.cos(a)
+    curl = (tarsus + 4.0 * math.sin(2.0 * math.pi * t + 1.3)) * lift + body.rest_tar[key] * (1.0 - lift) - body.rest_tar[key]
+    return (x, z, curl)
+
+
+RAISED = {
+    "ready": (112.0, 0.80, 70.0),      # forelegs up and out in front, ready to pounce
+    "scythe": (150.0, 0.78, 10.0),     # scythes held high, their blades hanging down in front
+    "veil": (140.0, 0.84, 150.0),      # held up high to carry a veil
+    "hold": (98.0, 0.62, -20.0),       # held in close, clutching something
+}
 
 
 # ---- the body ---------------------------------------------------------------------------------------------------------------------
@@ -140,11 +153,11 @@ def _trunk(body, rot, pitch=0.0, abd=0.0, fang=0.0, palp=0.0, t=0.0):
 
 # the drider's arms: how a form holds them at rest, as world directions (upper arm, forearm) for the near and the far arm, and the item's tilt
 ARMS = {
-    "silk": dict(arm_n=28.0, fore_n=96.0, arm_f=22.0, fore_f=84.0),         # silk drawn out between the hands, in front
+    "silk": dict(arm_n=18.0, fore_n=70.0, arm_f=12.0, fore_f=58.0),         # silk drawn out between the hands, in front
     "fan": dict(arm_n=24.0, fore_n=150.0, arm_f=10.0, fore_f=40.0),          # a fan held up by the face
-    "shuttle": dict(arm_n=30.0, fore_n=80.0, arm_f=14.0, fore_f=60.0),
+    "shuttle": dict(arm_n=22.0, fore_n=66.0, arm_f=8.0, fore_f=40.0),
     "thread": dict(arm_n=46.0, fore_n=118.0, arm_f=16.0, fore_f=70.0),       # a thread held taut, one hand high, one low
-    "fists": dict(arm_n=34.0, fore_n=74.0, arm_f=26.0, fore_f=64.0),
+    "fists": dict(arm_n=26.0, fore_n=62.0, arm_f=18.0, fore_f=50.0),
     "story": dict(arm_n=40.0, fore_n=110.0, arm_f=8.0, fore_f=26.0),         # one hand out holding a glowing thread
 }
 
@@ -383,13 +396,13 @@ BITE = {   # rear back with the forelegs up and the fangs wide, then lunge and d
 POUNCE = {  # sink low and far back on the hind legs with the forelegs high, then spring the length of the body and slam them down
     "root_x": _swing(-0.40, 0.45, 1.05, 0.85), "root_z": _swing(-0.22, 0.25, -0.05, -0.10),
     "pitch": _swing(14.0, 8.0, -14.0, -8.0), "abd": _swing(-4.0, 8.0, 12.0, 6.0), "fang": _swing(26.0, 36.0, 0.0, 4.0),
-    "f0x": _swing(-0.40, 0.90, 1.50, 1.20), "f0z": _swing(1.35, 1.00, 0.05, 0.0), "f0c": _swing(80.0, 60.0, 5.0, 0.0),
+    "f0x": _swing(-0.20, 1.00, 1.60, 1.30), "f0z": _swing(2.70, 1.90, 0.05, 0.0), "f0c": _swing(80.0, 60.0, 5.0, 0.0),
     "f1x": _swing(-0.15, 0.50, 0.75, 0.60), "f1z": _swing(0.20, 0.55, 0.0, 0.0),
 }
 SLASH = {   # the scythes go up and back over the body, then hew down in front
     "root_x": _swing(-0.25, 0.20, 0.45, 0.35), "root_z": _swing(-0.08, 0.04, -0.10, -0.06),
     "pitch": _swing(12.0, 6.0, -10.0, -5.0), "abd": _swing(-6.0, 2.0, 8.0, 4.0), "fang": _swing(20.0, 26.0, 8.0, 4.0),
-    "f0x": _swing(-0.90, 0.30, 1.30, 1.00), "f0z": _swing(1.10, 1.40, 0.05, 0.10), "f0c": _swing(-40.0, 80.0, 0.0, 0.0),
+    "f0x": _swing(-2.80, -0.60, 1.40, 1.10), "f0z": _swing(3.10, 3.00, 0.15, 0.30), "f0c": _swing(140.0, 90.0, 10.0, 20.0),
     "f1x": _swing(0.0, 0.0, 0.15, 0.10), "f1z": _swing(0.0, 0.0, 0.0, 0.0),
 }
 SPIT = {    # rear right up with the abdomen tucked under and the fangs wide, then snap the head down and forward: the venom flies
@@ -445,11 +458,23 @@ def _carriage(body):
                 dirs={b: posed[b][2] for b in posed})
 
 
-def _offsets(keys, time):
-    return {name: anim.sample(k, time) for name, k in keys.items()}
+FRONT = ("f0x", "f0z", "f0c")   # the front pair's claw in an attack: where it goes (from where it stands at rest, in U) and its curl, not offsets
 
 
-def _pose_offsets(body, c, ch, t=0.0, gesture=None, time=0.0):
+def _offsets(keys, time, c=None, body=None):
+    """The channels at `time`. With the carriage `c`, the front pair's channels are places the claw goes to from wherever the carriage holds it (on the
+    ground, or already up for a form that holds its forelegs up) and back."""
+    out = {}
+    for name, k in keys.items():
+        if c is not None and name in FRONT:
+            x, z, curl = c["tips"]["n0"]
+            rest = {"f0x": (x - body.rest_tip["n0"][0]) / body.U, "f0z": (z - body.pad["n0"]) / body.U, "f0c": curl}[name]
+            k = [(k[0][0], rest, k[0][2])] + list(k[1:-1]) + [(k[-1][0], rest, k[-1][2])]
+        out[name] = anim.sample(k, time)
+    return out
+
+
+def _pose_offsets(body, c, ch, t=0.0, gesture=None, time=0.0, front_placed=False):
     """A pose from the carriage `c` and channel offsets `ch`: the body moved and pitched, the front pairs' claws moved, every other claw planted where it
     stands."""
     U = body.U
@@ -479,9 +504,16 @@ def _pose_offsets(body, c, ch, t=0.0, gesture=None, time=0.0):
     for key in ss.LEGS:
         x, z, curl = c["tips"][key]
         i = pair_of(key)
-        if i == 0:
+        if i == 0 and front_placed:
+            # both claws of the pair follow the near one's path, each keeping its own place against it from the carriage
+            nx, nz, nc = c["tips"]["n0"]
+            x, z, curl = x - nx + body.rest_tip["n0"][0] + ch["f0x"] * U, z - nz + body.pad["n0"] + ch["f0z"] * U, curl - nc + ch["f0c"]
+        elif i == 0:
             x, z, curl = x + ch.get("f0x", 0.0) * U, z + ch.get("f0z", 0.0) * U, curl + ch.get("f0c", 0.0)
-        elif i == 1 and i not in body.raised:
+        elif i == 1 and z > body.pad[key] + 0.1 * U:
+            # held up already (the dance): it rides with the body
+            x, z = x + root[0] - c["root"][0], z + root[2] - c["root"][2]
+        elif i == 1:
             x, z = x + ch.get("f1x", 0.0) * U, z + ch.get("f1z", 0.0) * U
         tips[key] = (x, max(body.pad[key], z), curl)
     solve_legs(body, rot, root, tips)
@@ -493,8 +525,8 @@ def attack_pose(body, time):
     kind = attack_kind(body.form)
     gesture = GESTURES.get(kind)
     keys = LOWER if gesture else ATTACKS[kind]
-    ch = _offsets(keys, time)
-    rot, root = _pose_offsets(body, c, ch, gesture=gesture, time=time)
+    ch = _offsets(keys, time, c, body)
+    rot, root = _pose_offsets(body, c, ch, gesture=gesture, time=time, front_placed=True)
     _jitter_one_shot(body, rot, time, T_END)
     return rot, root
 

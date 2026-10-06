@@ -21,7 +21,7 @@ SIDES = (("n", -1.0), ("f", 1.0))
 TIP_Z = 0.012     # the claw's bone end stands this high at rest; the mesh's own tip is the foot
 # per pair, front to back: where the hip sits along the cephalothorax (of its half length), where the foot stands (from the thorax's middle, of
 # `span`), the tarsus's direction (degrees from straight down, forward positive), how high the knee rises above the hip (of `span`)
-HIP_AT = (0.62, 0.22, -0.18, -0.58)
+HIP_AT = (0.80, 0.30, -0.15, -0.55)
 FOOT_AT = (0.58, 0.36, -0.30, -0.58)
 FEMUR = 0.86      # the femur's length against the tibia's, in side view
 TARSUS_DIR = (34.0, 16.0, -14.0, -30.0)
@@ -51,7 +51,7 @@ def shape(span=1.0, ride=1.0, thorax=1.0, abdomen=1.0, abd_len=1.0, abd_lift=20.
     """The sizes the meshes are built to, in standard coordinates: the thorax's centre and half sizes, the pedicel, the abdomen's axis (from the pedicel,
     its direction), its half length, half width and half height, and the height the body rides at (raised when a big abdomen would drag)."""
     th = thorax
-    xc, T = 0.10, 0.13 * th
+    xc, T = 0.10, 0.145 * th
     ax, ay, az = 0.33 * abdomen * abd_len, 0.27 * abdomen, 0.29 * abdomen * abd_h
     a_dir = -(90.0 + abd_lift)
     # the abdomen's lowest point is to clear the ground by a margin when the body rides at its usual height
@@ -61,13 +61,13 @@ def shape(span=1.0, ride=1.0, thorax=1.0, abdomen=1.0, abd_len=1.0, abd_lift=20.
     hc += max(0.0, 0.14 * ride - low)
     pedicel = (xc - 0.95 * T, hc + 0.02)
     centre = (pedicel[0] + 0.95 * ax * ux, pedicel[1] + 0.95 * ax * uz)
-    return dict(xc=xc, T=T, th_h=0.10 * th, th_w=0.12 * th, hc=hc, pedicel=pedicel, a_dir=a_dir, a_centre=centre, ax=ax, ay=ay, az=az)
+    return dict(xc=xc, T=T, th_h=0.11 * th, th_w=0.12 * th, hc=hc, pedicel=pedicel, a_dir=a_dir, a_centre=centre, ax=ax, ay=ay, az=az)
 
 
 def leg_points(i, s, span, tars, sh):
     """(hip, knee, ankle, tip) of leg pair `i` on side sign `s`, as (x, y, z)."""
     xc, T, hc = sh["xc"], sh["T"], sh["hc"]
-    hip = (xc + HIP_AT[i] * T * 1.1, s * 0.09 * sh["th_w"] / 0.12, hc + 0.01)
+    hip = (xc + HIP_AT[i] * T * 1.1, s * 0.09 * sh["th_w"] / 0.12, hc - 0.03)
     tip = (xc + FOOT_AT[i] * span, s * 0.52 * span, TIP_Z)
     tl = 0.15 * span * tars
     dx, dz = _dir(TARSUS_DIR[i])
@@ -88,7 +88,7 @@ def drider_points(sh, tall=1.0, lean=4.0, hair=1.0, cloth=1.0):
     """The upper body's joints (x, z) rising from the front of the cephalothorax."""
     xc, T, hc = sh["xc"], sh["T"], sh["hc"]
     k = tall
-    waist = (xc + 0.62 * T, hc + 0.06)
+    waist = (xc + 0.35 * T, hc + 0.07)
     ux, uz = _dir(180.0 - lean)
     belly = (waist[0] + 0.15 * k * ux, waist[1] + 0.15 * k * uz)
     neck = (belly[0] + 0.22 * k * ux, belly[1] + 0.22 * k * uz)
@@ -122,7 +122,7 @@ def core(span=1.0, ride=1.0, thorax=1.0, abdomen=1.0, abd_len=1.0, abd_lift=20.0
     if swarm:
         # four bones the spiderlings of a crumbling rear ride on, spread over the back half of the abdomen
         c = sh["a_centre"]
-        for j, (u, v) in enumerate(((-0.2, 0.7), (-0.75, 0.35), (-0.95, -0.25), (-0.5, -0.75)), 1):
+        for j, (u, v) in enumerate(((-0.55, 0.95), (-1.1, 0.55), (-1.3, -0.05), (-1.05, -0.6)), 1):     # at the rear, out past the surface
             at = (c[0] + u * sh["ax"], c[1] + v * sh["az"])
             bones.append(("swarm%d" % j, (at[0] + 0.03, 0.0, at[1]), (at[0] - 0.05, 0.0, at[1] + 0.02), "abdomen"))
     if drider is not None:

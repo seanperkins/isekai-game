@@ -190,6 +190,51 @@ class PipelineTest(unittest.TestCase):
                     self.assertTrue(box[0] > 0 and box[1] > 0 and box[2] < size, "%s %d is inside the canvas: %s" % (anim, i, box))
                     self.assertLessEqual(box[3], ground + 1, "%s %d is not below the ground" % (anim, i))
 
+    def test_the_flat_spider_skeleton_matches_the_real_armature_in_every_clip(self):
+        sys.path.insert(0, HERE)
+        import spider_forms
+        import spider_skeleton as ss
+        for variant in ("spider", "jorogumo", "tarantella", "swarm_sovereign", "nightstalker"):   # plain, a drider, a dancer, a swarm, six legs
+            with self.subTest(variant=variant), tempfile.TemporaryDirectory() as tmp:
+                path = os.path.join(tmp, "pose.json")
+                done = blender("-P", os.path.join(HERE, "probe_pose.py"), "--", path, variant, "spider")
+                self.assertTrue(os.path.exists(path), done.stdout[-1500:] + done.stderr[-1500:])
+                with open(path) as fh:
+                    probes = json.load(fh)
+                skel = ss.skeleton_for(spider_forms.FORMS[variant])
+                self.assertEqual({p["clip"] for p in probes}, {"idle", "walk", "run", "attack", "hurt", "die"})
+                for probe in probes:
+                    self.assertEqual(set(probe["bones"]), set(skel.rest))
+                    posed = skel.pose({k: tuple(v) for k, v in probe["rot"].items()}, tuple(probe["root"]))
+                    for bone, (head, tail, _) in posed.items():
+                        want_head, want_tail = probe["bones"][bone]
+                        for got, want in ((head, want_head), (tail, want_tail)):
+                            self.assertAlmostEqual(got[0], want[0], delta=1e-4, msg="%s %d %s" % (probe["clip"], probe["frame"], bone))
+                            self.assertAlmostEqual(got[1], want[1], delta=1e-4, msg="%s %d %s" % (probe["clip"], probe["frame"], bone))
+
+    def test_every_frame_of_every_spider_clip_is_drawn_inside_its_canvas_and_never_below_the_ground(self):
+        sys.path.insert(0, HERE)
+        import export_forms
+        for variant in ("norn", "tarantella", "plaguemother", "nightstalker"):
+            with self.subTest(variant=variant), tempfile.TemporaryDirectory() as tmp:
+                done = blender("-P", os.path.join(HERE, "render_set.py"), "--", "--creature", "spider", "--variant", variant, "--out", tmp, "--ss", "1")
+                self.assertEqual(done.returncode, 0, done.stdout[-1500:] + done.stderr[-1500:])
+                with open(os.path.join(tmp, "meta.json")) as fh:
+                    meta = json.load(fh)
+                export_forms.check_timing(meta, export_forms.engine_constants())
+                size, ground = meta["canvas"], meta["canvas"] - meta["margin"]
+                self.assertEqual(set(meta["anims"]), {"idle", "walk", "run", "attack", "hurt", "die"})
+                for anim, count in meta["anims"].items():
+                    self.assertEqual(len(meta["durations"][anim]), count, anim)
+                    for i in range(count):
+                        with Image.open(os.path.join(tmp, "%s_%d_albedo.png" % (anim, i))) as a:
+                            box = a.convert("RGBA").split()[3].point(lambda v: 255 if v > 127 else 0).getbbox()
+                        self.assertIsNotNone(box, "%s %d is drawn" % (anim, i))
+                        self.assertTrue(box[0] > 0 and box[1] > 0 and box[2] < size, "%s %d is inside the canvas: %s" % (anim, i, box))
+                        self.assertLessEqual(box[3], ground + 1, "%s %d is not below the ground" % (anim, i))
+                        if anim in ("idle", "walk", "attack", "hurt"):
+                            self.assertGreaterEqual(box[3], ground - 1, "%s %d stands on the ground" % (anim, i))
+
     def test_a_variant_changes_colours_and_parts_but_not_the_animation(self):
         with tempfile.TemporaryDirectory() as plain, tempfile.TemporaryDirectory() as red:
             self.render("goblin", plain)
