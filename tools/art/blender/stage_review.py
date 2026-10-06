@@ -325,8 +325,8 @@ KNOWN_ARCHETYPES = {
     "goblin": [],
     "undead": [],
     "wolf": [],
-    "spider": ["craft", "drink", "guard", "point", "pulse", "roar", "sneak", "summon"],
-    "slime": ["craft", "drink", "guard", "point", "roar", "sneak", "summon"],
+    "spider": [],
+    "slime": [],
 }
 
 

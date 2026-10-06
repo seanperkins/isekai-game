@@ -526,13 +526,20 @@ REACH = {   # a form that strikes with an appendage stays mostly put: the body c
 LASH = _swing(-55.0, 40.0, 75.0, 30.0, -10.0)     # degrees a striking chain swings forward (+) from its rest: back on the coil, whipping through
 
 
+# the channels of each attack style a form can name; one not here is the lunge
+STYLES = {"slam": SLAM, "lash": REACH, "throw": REACH, "pulse": REACH, "lunge": LUNGE}
+
+import slime_gestures  # noqa: E402  (the verb gestures beyond these styles: roar, guard, point, toss, summon, drink, craft, sneak, throb)
+slime_gestures.register(STYLES, _swing)
+
+
 def attack_style(body):
     return body.form.get("attack", "slam" if body.stiff < 0.6 else "lunge")
 
 
 def attack_soft_root(body, t):
     style = attack_style(body)
-    keys = SLAM if style == "slam" else (REACH if style in ("lash", "throw", "pulse") else LUNGE)
+    keys = STYLES.get(style, LUNGE)
     s0, r0 = _rest(body)
     ch = {name: anim.sample(k, t) for name, k in keys.items()}
     soft = dict(s0)

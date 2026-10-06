@@ -19,6 +19,7 @@ import spider_gear as gear  # noqa: E402
 import spider_kit as kit  # noqa: E402
 import spider_motion as motion_  # noqa: E402
 import spider_skeleton as skeleton  # noqa: E402
+import verb_anims  # noqa: E402
 
 NAME = "spider"
 BASE = "spider"
@@ -106,10 +107,16 @@ def setup(rig, variant):
 
 
 # ---- gestures ---------------------------------------------------------------------------------------------------------------------
-# the preset of spider_motion.ATTACKS or GESTURES that plays each gesture (verb_anims.ARCHETYPES); a gesture not listed is one the spiders cannot play yet
-GESTURES = {"cast": "cast", "throw": "throw", "slam": "smash", "lunge": "pounce", "claw": "slash"}
+# the preset of spider_motion.ATTACKS that plays each gesture on a plain spider (verb_anims.ARCHETYPES): its blows for the cast (a spit), the lunge (a pounce) and the claw (a slash), its own
+# for the rest; a drider plays the arms of spider_motion.GESTURES (its own cast, throw and smash, the biped's for the rest) instead
+GESTURES = {name: name for name in verb_anims.ARCHETYPES}
+GESTURES.update({"cast": "spit", "lunge": "pounce", "claw": "slash"})
+DRIDER_GESTURES = {name: name for name in verb_anims.ARCHETYPES if name != "slam"}
+DRIDER_GESTURES["slam"] = "smash"
 
 
 def gesture_clip(rig, variant, archetype):
     """The attack clip of this form playing the gesture `archetype`; a KeyError when it has no preset for it."""
-    return motion_.attack_clip(body_of(rig, dict(_form(variant), attack=GESTURES[archetype])))
+    form = _form(variant)
+    preset = (DRIDER_GESTURES if form.get("drider") else GESTURES)[archetype]
+    return motion_.attack_clip(body_of(rig, dict(form, attack=preset)))

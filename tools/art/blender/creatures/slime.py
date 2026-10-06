@@ -18,6 +18,7 @@ import slime_forms as forms  # noqa: E402
 import slime_gear as gear  # noqa: E402
 import slime_kit as kit  # noqa: E402
 import slime_motion as motion_  # noqa: E402
+import verb_anims  # noqa: E402
 
 NAME = "slime"
 MARGIN = 3
@@ -83,7 +84,8 @@ def setup(rig, variant):
 
 # ---- gestures ---------------------------------------------------------------------------------------------------------------------
 # the attack style of slime_motion that plays each gesture (verb_anims.ARCHETYPES); a gesture not listed is one the slimes cannot play yet
-GESTURES = {"slam": "slam", "lunge": "lunge", "throw": "throw", "pulse": "pulse", "cast": "lash", "claw": "bite"}
+GESTURES = {name: name for name in verb_anims.ARCHETYPES}
+GESTURES.update({"cast": "lash", "claw": "bite", "throw": "toss", "pulse": "throb"})   # the styles forms name (lash, bite, throw, pulse) are not changed: the gestures have their own
 
 
 def gesture_clip(rig, variant, archetype):

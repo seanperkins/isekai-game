@@ -462,6 +462,12 @@ GESTURES = {
 }
 ATTACKS = {"bite": BITE, "pounce": POUNCE, "slash": SLASH, "spit": SPIT}
 
+import attack_kinds  # noqa: E402  (the biped's verb gestures, which a drider's upper body takes)
+import biped_motion  # noqa: E402
+import spider_gestures  # noqa: E402  (the plain spider's own: slam, roar, guard, point, throw, summon, drink, craft, sneak, pulse)
+spider_gestures.register(ATTACKS, _swing, _attack_keys)
+spider_gestures.register_drider(GESTURES, attack_kinds.SPECS, biped_motion.GOBLIN_LEAN, biped_motion.GOBLIN_HEAD)
+
 
 def attack_kind(form):
     return form.get("attack", "bite")
@@ -571,7 +577,7 @@ def _keep_gear_up(body, rot, root, tips, clearance=0.01):
 def attack_pose(body, time):
     c = _carriage(body)
     kind = attack_kind(body.form)
-    gesture = GESTURES.get(kind)
+    gesture = GESTURES.get(kind) if body.drider or kind not in ATTACKS else None   # a kind both tables have is the plain spider's own blow, and the drider's arms
     keys = LOWER if gesture else ATTACKS[kind]
     ch = _offsets(keys, time, c, body)
     rot, root, tips = _pose_offsets(body, c, ch, gesture=gesture, time=time, front_placed=True)

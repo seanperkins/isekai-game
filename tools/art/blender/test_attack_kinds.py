@@ -8,6 +8,9 @@ import attack_kinds as ak  # noqa: E402
 import anim  # noqa: E402
 import biped_motion as gm  # noqa: E402
 import quad_motion as qm  # noqa: E402
+import slime_motion as slm  # noqa: E402
+import spider_motion as sm  # noqa: E402
+import test_spider_motion as TS  # noqa: E402
 import test_biped_motion as T  # noqa: E402
 import test_undead_motion as TU  # noqa: E402
 import undead_motion as um  # noqa: E402
@@ -161,6 +164,72 @@ class QuadGestureTest(unittest.TestCase):
             for b in kinds[i + 1:]:
                 apart = max(sum(abs(x - y) for x, y in zip(pa, pb)) for pa, pb in zip(poses[a], poses[b]))
                 self.assertGreater(apart, 50.0, "%s and %s read as the same gesture" % (a, b))
+
+
+class SpiderGestureTest(unittest.TestCase):
+    """The gestures on the spiders: a plain spider has its own presets (its blows for the cast, the lunge and the claw), a drider the biped's arms for the rest."""
+    PLAIN = {"cast": "spit", "lunge": "pounce", "claw": "slash"}   # creatures/spider.py GESTURES
+
+    def test_a_plain_spider_has_a_preset_for_every_gesture(self):
+        self.assertEqual([a for a in verb_anims.ARCHETYPES if self.PLAIN.get(a, a) not in sm.ATTACKS], [])
+
+    def test_a_drider_has_the_arms_for_every_gesture(self):
+        self.assertEqual([a for a in verb_anims.ARCHETYPES if a != "slam" and a not in sm.GESTURES], [])
+        self.assertIn("smash", sm.GESTURES, "the drider's own slam")
+        self.assertEqual(sm.GESTURES["cast"]["arm_n"], (150, 110, 82, 72), "a gesture the driders had keeps its own arms")
+
+    def test_no_two_plain_gestures_are_the_same_motion_under_two_names(self):
+        channels = ("root_x", "root_z", "pitch", "abd", "fang", "f0x", "f0z", "f0c")
+
+        def key_poses(name):
+            keys = sm.ATTACKS[self.PLAIN.get(name, name)]
+            return [[anim.sample(keys[c], t) * (30.0 if c in ("f0x", "f0z", "root_x", "root_z") else 1.0) for c in channels] for t in (sm.T_HOLD, sm.T_HIT)]
+        poses = {a: key_poses(a) for a in verb_anims.ARCHETYPES}
+        names = list(poses)
+        for i, a in enumerate(names):
+            for b in names[i + 1:]:
+                apart = max(sum(abs(x - y) for x, y in zip(pa, pb)) for pa, pb in zip(poses[a], poses[b]))
+                self.assertGreater(apart, 45.0, "%s and %s read as the same gesture" % (a, b))
+
+    def test_a_kind_both_tables_have_is_a_plain_spiders_own_blow_and_a_driders_arms(self):
+        import spider_forms as sf
+        plain = TS.body_of("spider")
+        rest = sm.attack_pose(plain, 0.0)[1][2]
+        for kind, when in (("slam", sm.T_HOLD), ("summon", sm.T_HIT)):   # reared up in the windup, and held up at the impact
+            plain.form = dict(plain.form, attack=kind)
+            self.assertGreater(sm.attack_pose(plain, when)[1][2], rest + 0.2 * plain.U, "%s rears the plain spider up" % kind)
+        norn = TS.body_of("norn")
+        norn.form = dict(norn.form, attack="roar")
+        up = norn.skel.pose(*sm.attack_pose(norn, sm.T_HIT))
+        self.assertGreater(up["arm_n"][1][1], up["chest"][0][1], "a drider's roar lifts its arms above its chest")
+
+
+class SlimeGestureTest(unittest.TestCase):
+    """The gestures on the jellies: attack styles of their own, the styles forms name (lash, throw, pulse) left alone."""
+
+    def test_the_slimes_have_a_style_for_every_gesture_they_have_one_for(self):
+        for style in ("roar", "guard", "point", "toss", "summon", "drink", "craft", "sneak", "throb"):
+            self.assertIn(style, slm.STYLES)
+        self.assertIs(slm.STYLES["throw"], slm.STYLES["lash"], "the named styles are as they were")
+        self.assertIs(slm.STYLES["pulse"], slm.STYLES["lash"])
+
+    def test_every_style_has_every_channel_the_soft_body_reads_and_ends_where_it_began(self):
+        for name, keys in slm.STYLES.items():
+            self.assertEqual(set(keys), {"sq", "lean", "bulge", "wave", "x", "z"}, name)
+            for channel, path in keys.items():
+                self.assertEqual(path[0][1], 0.0, "%s %s starts at rest" % (name, channel))
+                self.assertEqual(path[-1][1], 0.0, "%s %s ends at rest" % (name, channel))
+
+    def test_no_two_slime_gestures_are_the_same_motion_under_two_names(self):
+        styles = ["roar", "guard", "point", "toss", "summon", "drink", "craft", "sneak", "throb", "slam", "lunge"]
+
+        def key_poses(name):
+            return [[10.0 * anim.sample(slm.STYLES[name][c], t) for c in ("sq", "lean", "bulge", "wave", "x", "z")] for t in (slm.T_HOLD, slm.T_HIT)]
+        poses = {a: key_poses(a) for a in styles}
+        for i, a in enumerate(styles):
+            for b in styles[i + 1:]:
+                apart = max(sum(abs(x - y) for x, y in zip(pa, pb)) for pa, pb in zip(poses[a], poses[b]))
+                self.assertGreater(apart, 2.5, "%s and %s read as the same gesture" % (a, b))
 
 
 if __name__ == "__main__":
