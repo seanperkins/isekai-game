@@ -135,6 +135,18 @@ class Rig:
             low = min(low, min((ev.matrix_world @ Vector(c)).z for c in ev.bound_box))
         return low
 
+    def extent(self):
+        """(min x, max x, min z, max z) of every part in the current pose."""
+        deps = bpy.context.evaluated_depsgraph_get()
+        xs, zs = [], []
+        for ob, _, _ in self.parts:
+            ev = ob.evaluated_get(deps)
+            for c in ev.bound_box:
+                w = ev.matrix_world @ Vector(c)
+                xs.append(w.x)
+                zs.append(w.z)
+        return min(xs), max(xs), min(zs), max(zs)
+
     def stand(self, rot=None, root=(0.0, 0.0, 0.0)):
         """Pose, then drop or lift the whole creature until its lowest point rests on the ground (z = 0), a stand-in for foot IK.
         The root's z is then a height above the ground (0 for a creature standing, more for a leap)."""
@@ -183,13 +195,13 @@ def normal_material():
     return _emission_material("normal", setup)
 
 
-def setup_camera(scene, canvas, ppu, margin, supersample):
+def setup_camera(scene, canvas, ppu, margin, supersample, center_x=0.0):
     """A side-on orthographic camera: `canvas` game pixels square at `ppu` pixels per unit, the ground `margin` pixels above the bottom."""
     data = bpy.data.cameras.new("cam")
     data.type = "ORTHO"
     data.ortho_scale = canvas / ppu
     cam = bpy.data.objects.new("cam", data)
-    cam.location = (0.0, -20.0, canvas / (2.0 * ppu) - margin / ppu)
+    cam.location = (center_x, -20.0, canvas / (2.0 * ppu) - margin / ppu)
     cam.rotation_euler = (math.radians(90), 0.0, 0.0)
     scene.collection.objects.link(cam)
     scene.camera = cam

@@ -41,12 +41,17 @@ def main():
     scene = rigkit.reset()
     creature = load(a.creature)
     rig = creature.build(a.variant)
-    rigkit.setup_camera(scene, creature.CANVAS, creature.PPU, creature.MARGIN, a.ss)
-    wanted = a.anims.split(",") if a.anims else list(creature.ANIMS)
+    if hasattr(creature, "setup"):  # a creature with many forms sizes its camera and animations per form
+        cfg = creature.setup(rig, a.variant)
+    else:
+        cfg = {"canvas": creature.CANVAS, "ppu": creature.PPU, "margin": creature.MARGIN, "center_x": 0.0, "anims": creature.ANIMS}
+    rigkit.setup_camera(scene, cfg["canvas"], cfg["ppu"], cfg["margin"], a.ss, cfg.get("center_x", 0.0))
+    wanted = a.anims.split(",") if a.anims else list(cfg["anims"])
     materials = sorted({rigkit.shown_colour(rgb, far) for _, rgb, far in rig.parts})
-    meta = {"creature": a.creature, "variant": a.variant or "", "canvas": creature.CANVAS, "ppu": creature.PPU, "margin": creature.MARGIN, "ss": a.ss, "materials": materials, "anims": {}}
+    meta = {"creature": a.creature, "variant": a.variant or "", "canvas": cfg["canvas"], "ppu": cfg["ppu"], "margin": cfg["margin"], "ss": a.ss,
+            "still": cfg.get("still", "idle_0"), "materials": materials, "anims": {}}
     for anim in wanted:
-        count, fn, grounded = creature.ANIMS[anim]
+        count, fn, grounded = cfg["anims"][anim]
         for i in range(count):
             rot, root = fn(i, count)
             (rig.stand if grounded else rig.pose)(rot, root)

@@ -186,6 +186,14 @@ class WorkflowTest(unittest.TestCase):
         self.assertEqual(prov["wolf"]["run"]["date"], "2026-10-05")
         self.assertNotIn("idle", prov["wolf"])
 
+    def test_import_can_record_another_source_than_hand(self):
+        self.drawn(["idle"])
+        h.import_frames(self.root, "wolf", self.out, run=self.fake_run, stamp="T1", today="2026-10-06", source="blender")
+        prov = json.loads(read(os.path.join(self.root, "tools", "art", "provenance.json")))
+        self.assertEqual(prov["wolf"]["idle"]["source"], "blender")
+        rows = {r["set"]: r for r in h.inventory(self.root)}
+        self.assertEqual((rows["wolf"]["hand"], rows["wolf"]["blender"]), (0, 1))
+
     def test_import_refuses_a_name_the_set_does_not_have_and_installs_nothing(self):
         self.drawn(["idle", "gallop"])
         with self.assertRaises(ValueError) as ctx:

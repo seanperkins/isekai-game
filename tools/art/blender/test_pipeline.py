@@ -87,6 +87,29 @@ class PipelineTest(unittest.TestCase):
                 glowing = [p for p in px if p[3] and all(abs(a - b) <= 4 for a, b in zip(p[:3], lit))]
                 self.assertGreater(len(glowing), 4, "the eyes and marks face the light")
 
+    def test_a_goblin_form_fits_its_canvas_stands_on_the_ground_and_keeps_the_footprint_of_the_still_it_replaces(self):
+        with open(os.path.join(HERE, "before", "forms_goblin.json")) as fh:
+            before = json.load(fh)["frames"]
+        for form in ("hob", "rat_king", "beast_rider"):  # a stout one, one with a backpack of rats, one on a wolf
+            with self.subTest(form=form), tempfile.TemporaryDirectory() as tmp:
+                done = blender("-P", os.path.join(HERE, "render_set.py"), "--", "--creature", "goblin", "--variant", form, "--out", tmp, "--anims", "idle", "--ss", "2")
+                self.assertEqual(done.returncode, 0, done.stdout[-1500:] + done.stderr[-1500:])
+                with open(os.path.join(tmp, "meta.json")) as fh:
+                    meta = json.load(fh)
+                size, ss = meta["canvas"] * meta["ss"], meta["ss"]
+                for i in range(meta["anims"]["idle"]):
+                    with Image.open(os.path.join(tmp, "idle_%d_albedo.png" % i)) as a:
+                        box = a.convert("RGBA").split()[3].point(lambda v: 255 if v > 127 else 0).getbbox()
+                    self.assertGreater(box[0], 0)
+                    self.assertLess(box[2], size)
+                    self.assertGreater(box[1], 0)
+                    self.assertAlmostEqual(box[3], size - meta["margin"] * ss, delta=ss)
+                with Image.open(os.path.join(tmp, "idle_0_albedo.png")) as a:
+                    box = a.convert("RGBA").split()[3].point(lambda v: 255 if v > 127 else 0).getbbox()
+                w, h = (box[2] - box[0]) / ss, (box[3] - box[1]) / ss
+                rect = before[form]["rect"]
+                self.assertTrue(0.6 < (w * h) / (rect[2] * rect[3]) < 1.7, "%s covers %.0f px against %d before" % (form, w * h, rect[2] * rect[3]))
+
     def test_a_variant_changes_colours_and_parts_but_not_the_animation(self):
         with tempfile.TemporaryDirectory() as plain, tempfile.TemporaryDirectory() as red:
             self.render("goblin", plain)

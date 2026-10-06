@@ -1,129 +1,202 @@
-"""The goblin: a biped. About 1.6 units tall, rendered at 26 px per unit, so about 42 game pixels, a little taller than today's goblin.
+"""The goblin tree: the base goblin and its 28 forms on one skeleton (goblin_kit.py), dressed from a table (goblin_forms.py) with gear
+(goblin_gear.py). A rider's mount is the wolf kit. Every form gets idle, walk and attack; the pose of its arms, its stance and the angle of
+whatever it holds come from small presets, so a new form is a few lines of data, not new animation.
 
-Animations are functions (frame, count) -> (rotations, root offset); see rigkit.Rig.pose. Angles are degrees about the world axes. Two helpers
-name the direction so the tables read in the picture: `down(d)` swings a bone that hangs down so its tip goes forward by d degrees (the
-way a leg swings forward), `up(d)` leans a bone that points up forward by d degrees.
+Each form is sized so the still covers the same area (width times height) as the still its sheet frame has today (assets/sheets/forms_goblin.json), so
+the game's size ladder is kept while the proportions are the form's own.
 """
+import json
 import math
+import os
+import sys
 
-import rigkit as k
+HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if HERE not in sys.path:
+    sys.path.insert(0, HERE)
+
+import goblin_forms as forms  # noqa: E402
+import goblin_gear as gear  # noqa: E402
+import goblin_kit as kit  # noqa: E402
+import rigkit as k  # noqa: E402
+from creatures import wolf  # noqa: E402
+from goblin_kit import down, up  # noqa: E402
 
 NAME = "goblin"
-CANVAS = 64
-PPU = 26.0
 MARGIN = 3
+PAD = 4
+RIDER_SCALE = 1.0
 
-SKIN, EAR, NOSE = (98, 162, 74), (120, 180, 90), (84, 140, 62)
-CLOTH, EYE, TOOTH = (124, 86, 54), (255, 232, 92), (240, 236, 210)
-WOOD, WOOD_DARK = (122, 84, 50), (88, 60, 38)
-
-VARIANTS = {
-    "grunt": {},
-    "redcap": {"cloth": (150, 40, 40), "hat": (190, 40, 40), "skin": (110, 150, 80)},
-    "shaman": {"cloth": (92, 60, 140), "skin": (88, 150, 110), "weapon": "staff", "hat": (92, 60, 140)},
+# (near upper arm, near forearm, far upper arm, far forearm, how much it still swings), degrees; see goblin_kit.down
+ARMS = {
+    "free": (10, 34, 6, 20, 1.0),
+    "guard": (24, 82, 24, 82, 0.15),          # both hands close to the chest
+    "guard_n": (24, 82, 4, 24, 0.15),         # the near hand up, the other at the side
+    "fists": (20, 70, 20, 70, 0.1),
+    "offer": (48, 8, 40, 16, 0.2),            # arms out in front, giving
+    "offer_up": (62, 30, 6, 24, 0.2),         # the near hand held up and out
+    "carry": (38, 46, 12, 30, 0.3),
+    "play": (76, 98, 76, 98, 0.0),            # both hands at the mouth
+    "cradle": (36, 78, 44, 92, 0.0),          # an instrument held in the crook of an arm
+    "raise_n": (150, 24, 8, 28, 0.2),         # the near arm high
+    "raise_f": (22, 40, 150, 24, 0.2),        # the far arm high
+    "lantern": (20, 30, 70, 30, 0.2),         # a lantern low, the other hand beckoning
+    "shield": (40, 70, 36, 50, 0.15),
+    "sword": (60, 50, 8, 24, 0.2),            # a blade over the shoulder
 }
+# extra degrees on named bones: the way a form stands
+STANCES = {
+    "hunch": {"spine": up(16), "head": up(-8), "thigh_n": down(12), "thigh_f": down(12), "shin_n": down(-24), "shin_f": down(-24), "foot_n": down(12), "foot_f": down(12)},
+    "wide": {"thigh_n": down(16), "thigh_f": down(-16), "shin_n": down(-8), "shin_f": down(-8), "foot_n": down(-8), "foot_f": down(8)},
+    "stomp": {"thigh_f": down(55), "shin_f": down(-70), "foot_f": down(20), "spine": up(6)},
+    "hop": {"thigh_f": down(60), "shin_f": down(-80), "foot_f": down(20), "spine": up(-4)},
+    "dance": {"thigh_n": down(-6), "thigh_f": down(50), "shin_f": down(-70), "foot_f": down(20), "spine": up(-6)},
+    "tiptoe": {"foot_n": down(-32), "foot_f": down(-32), "thigh_n": down(4), "thigh_f": down(4), "shin_n": down(2), "shin_f": down(2)},
+    "listen": {"head": (0.0, 14.0, 0.0), "spine": up(-3)},
+    "ride": {"thigh_n": down(84), "thigh_f": down(84), "shin_n": down(-88), "shin_f": down(-88), "foot_n": down(6), "foot_f": down(6), "spine": up(2)},
+}
+ATTACK = {  # per frame: windup, windup peak, swing, impact, follow through, recover: the near arm and the spine
+    "arm_n": [0, -100, -150, -10, 55, 20], "fore_n": [34, 40, 50, 30, 10, 25], "spine": [4, -6, -10, 8, 16, 6], "head": [-2, 4, 6, -4, -8, -2],
+    "thigh_n": [8, -6, -10, 12, 22, 8], "shin_n": [-16, 6, 10, -16, -30, -16], "foot_n": [8, 0, 0, 4, 8, 8],
+    "thigh_f": [8, 10, 12, 8, 0, 8], "shin_f": [-16, -18, -20, -14, -4, -16], "foot_f": [8, 8, 8, 6, 4, 8],
+}
+ITEM_SWING = [0, 50, 80, -30, -70, -10]  # the held thing, degrees clockwise from where it was made
+COUNTS = {"idle": 6, "walk": 8, "attack": 6}
 
 
-def down(d):
-    return (0.0, -d, 0.0)
-
-
-def up(d):
-    return (0.0, d, 0.0)
+def _form(variant):
+    return forms.FORMS[variant or "goblin"]
 
 
 def build(variant=None):
-    v = dict(VARIANTS.get(variant or "grunt", {}))
-    skin, cloth = v.get("skin", SKIN), v.get("cloth", CLOTH)
-    rig = k.Rig("goblin")
-    rig.bone("hips", (0, 0, 0.80), (0, 0, 0.95))
-    rig.bone("spine", (0, 0, 0.95), (0.05, 0, 1.30), "hips")
-    rig.bone("head", (0.07, 0, 1.32), (0.13, 0, 1.62), "spine")
-    for s, y in (("n", -0.20), ("f", 0.20)):
-        rig.bone("arm_" + s, (0.06, y, 1.28), (0.10, y, 1.04), "spine")
-        rig.bone("fore_" + s, (0.10, y, 1.04), (0.22, y, 0.84), "arm_" + s)
-    for s, y in (("n", -0.11), ("f", 0.11)):
-        rig.bone("thigh_" + s, (0.0, y, 0.80), (0.03, y, 0.48), "hips")
-        rig.bone("shin_" + s, (0.03, y, 0.48), (0.0, y, 0.11), "thigh_" + s)
-        rig.bone("foot_" + s, (0.0, y, 0.11), (0.22, y, 0.05), "shin_" + s)
-    rig.bone("weapon", (0.22, -0.20, 0.84), (0.52, -0.20, 1.14), "fore_n")
+    form = _form(variant)
+    rig = k.Rig("goblin_" + (variant or "goblin"))
+    scale, origin, mount = 1.0, (0.0, 0.0, 0.0), form.get("ride") and form["mount"]
+    if mount:
+        ws = mount["scale"]
+        wolf.build_into(rig, "w_", ws, (0, 0, 0), fur=mount["fur"], belly=mount["belly"], barding=mount.get("barding"))
+        scale = RIDER_SCALE
+        seat = 0.78 * ws - 0.06
+        origin = (0.02 * ws, 0.0, seat - 0.80 * form.get("tall", 1.0) * scale)
+    g = kit.Goblin(rig, form, "", scale, origin)
+    if mount:
+        g.root_parent = "w_spine"
+    g.build()
+    for name, kw in form["gear"]:
+        gear.GEAR[name](g, **kw)
     rig.build()
-
-    rig.part(k.ellipsoid("pelvis", (0, 0, 0.88), (0.17, 0.15, 0.13)), "hips", skin)
-    rig.part(k.limb("loincloth", (0.0, 0, 0.94), (0.05, 0, 0.58), 0.18, 0.12, 6), "hips", cloth)
-    rig.part(k.ellipsoid("torso", (0.04, 0, 1.13), (0.20, 0.17, 0.24)), "spine", skin)
-    rig.part(k.ellipsoid("head", (0.14, 0, 1.56), (0.23, 0.20, 0.21)), "head", skin)
-    rig.part(k.limb("nose", (0.30, 0, 1.56), (0.46, 0, 1.50), 0.055, 0.0, 6), "head", NOSE)
-    rig.part(k.limb("ear_n", (0.10, -0.16, 1.62), (-0.20, -0.46, 1.84), 0.07, 0.0, 5), "head", EAR)
-    rig.part(k.limb("ear_f", (0.10, 0.16, 1.62), (-0.20, 0.46, 1.84), 0.07, 0.0, 5), "head", EAR, far=True)
-    rig.part(k.ellipsoid("eye_n", (0.31, -0.10, 1.62), (0.05, 0.05, 0.05)), "head", EYE, glow=True)
-    rig.part(k.ellipsoid("eye_f", (0.31, 0.10, 1.62), (0.05, 0.05, 0.05)), "head", EYE, far=True, glow=True)
-    rig.part(k.limb("tooth", (0.30, -0.05, 1.46), (0.30, -0.05, 1.38), 0.025, 0.0, 4), "head", TOOTH)
-    if v.get("hat"):
-        rig.part(k.limb("hat", (0.14, 0, 1.70), (0.04, 0, 2.02), 0.20, 0.0, 7), "head", v["hat"])
-    for s, y in (("n", -0.20), ("f", 0.20)):
-        far = s == "f"
-        rig.part(k.limb("arm_" + s, (0.06, y, 1.28), (0.10, y, 1.04), 0.065, 0.052, 6), "arm_" + s, skin, far)
-        rig.part(k.limb("fore_" + s, (0.10, y, 1.04), (0.22, y, 0.84), 0.052, 0.045, 6), "fore_" + s, skin, far)
-        rig.part(k.ellipsoid("hand_" + s, (0.23, y, 0.82), (0.065, 0.06, 0.065)), "fore_" + s, skin, far)
-    for s, y in (("n", -0.11), ("f", 0.11)):
-        far = s == "f"
-        rig.part(k.limb("thigh_" + s, (0.0, y, 0.80), (0.03, y, 0.48), 0.085, 0.066, 7), "thigh_" + s, skin, far)
-        rig.part(k.limb("shin_" + s, (0.03, y, 0.48), (0.0, y, 0.11), 0.066, 0.048, 7), "shin_" + s, skin, far)
-        rig.part(k.ellipsoid("foot_" + s, (0.09, y, 0.065), (0.15, 0.065, 0.065)), "foot_" + s, skin, far)
-    weapon = v.get("weapon", "club")
-    if weapon == "club":
-        rig.part(k.limb("handle", (0.20, -0.20, 0.82), (0.50, -0.20, 1.12), 0.035, 0.045, 6), "weapon", WOOD)
-        rig.part(k.ellipsoid("knob", (0.57, -0.20, 1.19), (0.10, 0.10, 0.10)), "weapon", WOOD_DARK)
-    else:  # a staff with a crystal
-        rig.part(k.limb("staff", (0.14, -0.20, 0.55), (0.46, -0.20, 1.72), 0.03, 0.03, 6), "weapon", WOOD)
-        rig.part(k.ellipsoid("crystal", (0.47, -0.20, 1.82), (0.07, 0.07, 0.11), 6, 4), "weapon", (170, 120, 255))
     return rig
 
 
-def walk(i, n):
-    p = i / n * 2 * math.pi
+# ---- poses ----
+def _add(rot, bone, delta):
+    cur = rot.get(bone, (0.0, 0.0, 0.0))
+    rot[bone] = (cur[0] + delta[0], cur[1] + delta[1], cur[2] + delta[2])
+
+
+def _legs_walk(rot, p):
     s, c = math.sin(p), math.cos(p)
     flex_n, flex_f = 55 * max(0.0, c), 55 * max(0.0, -c)
     thigh_n, thigh_f = 34 * s, -34 * s
-    lean = 6 + 2 * math.sin(2 * p)
-    return ({
-        "thigh_n": down(thigh_n), "shin_n": down(-flex_n), "foot_n": down(-0.7 * (thigh_n - flex_n)),
-        "thigh_f": down(thigh_f), "shin_f": down(-flex_f), "foot_f": down(-0.7 * (thigh_f - flex_f)),
-        "arm_n": down(-12 * s + 8), "fore_n": down(34),
-        "arm_f": down(30 * s), "fore_f": down(18 + 10 * s),
-        "spine": up(lean), "head": up(-lean * 0.7 + 2 * math.cos(2 * p)),
-    }, (0.0, 0.0, 0.0))
+    rot.update({"thigh_n": down(thigh_n), "shin_n": down(-flex_n), "foot_n": down(-0.7 * (thigh_n - flex_n)),
+                "thigh_f": down(thigh_f), "shin_f": down(-flex_f), "foot_f": down(-0.7 * (thigh_f - flex_f))})
 
 
-def idle(i, n):
+def _legs_idle(rot, p):
+    bend = 7 + 2 * math.sin(p)
+    rot.update({"thigh_n": down(bend), "shin_n": down(-2 * bend), "foot_n": down(bend),
+                "thigh_f": down(bend), "shin_f": down(-2 * bend), "foot_f": down(bend)})
+
+
+def goblin_pose(form, anim, i, n):
+    """The goblin's own bones for frame i of an animation, with no prefix."""
     p = i / n * 2 * math.pi
     s = math.sin(p)
-    bend = 7 + 2 * s
-    return ({
-        "thigh_n": down(bend), "shin_n": down(-2 * bend), "foot_n": down(bend),
-        "thigh_f": down(bend), "shin_f": down(-2 * bend), "foot_f": down(bend),
-        "arm_n": down(10 + 2 * s), "fore_n": down(30), "arm_f": down(6 - 2 * s), "fore_f": down(20),
-        "spine": up(4 + 1.5 * s), "head": up(-2 - 1.5 * s),
-    }, (0.0, 0.0, 0.0))
-
-
-ATTACK = {  # per frame: windup, windup peak, swing, impact, follow through, recover
-    "arm_n": [0, -100, -150, -10, 55, 20], "fore_n": [34, 40, 50, 30, 10, 25],
-    "spine": [4, -6, -10, 8, 16, 6], "head": [-2, 4, 6, -4, -8, -2],
-    "thigh_n": [8, -6, -10, 12, 22, 8], "shin_n": [-16, 6, 10, -16, -30, -16], "foot_n": [8, 0, 0, 4, 8, 8],
-    "thigh_f": [8, 10, 12, 8, 0, 8], "shin_f": [-16, -18, -20, -14, -4, -16], "foot_f": [8, 8, 8, 6, 4, 8],
-    "arm_f": [6, 20, 30, 0, -14, 6], "fore_f": [20, 30, 40, 20, 10, 20],
-}
-
-
-def attack(i, n):
     rot = {}
-    for bone, track in ATTACK.items():
-        d = track[i]
-        rot[bone] = up(d) if bone in ("spine", "head") else down(d)
-    return rot, (0.0, 0.0, 0.0)
+    a = ARMS[form.get("arms", "free")]
+    if anim == "walk":
+        _legs_walk(rot, p)
+        lean = 6 + 2 * math.sin(2 * p)
+        rot["spine"], rot["head"] = up(lean), up(-lean * 0.7 + 2 * math.cos(2 * p))
+        sway = 20 * s
+    elif anim == "idle":
+        _legs_idle(rot, p)
+        rot["spine"], rot["head"] = up(4 + 1.5 * s), up(-2 - 1.5 * s)
+        sway = 4 * s
+    else:  # attack
+        for bone, track in ATTACK.items():
+            rot[bone] = up(track[i]) if bone in ("spine", "head") else down(track[i])
+        sway = 0.0
+    rot["arm_n"], rot["fore_n"] = down(a[0] - a[4] * sway), down(a[1])
+    rot["arm_f"], rot["fore_f"] = down(a[2] + a[4] * sway), down(a[3])
+    if anim == "attack":  # the near arm swings whatever it holds
+        rot["arm_n"], rot["fore_n"] = down(a[0] + ATTACK["arm_n"][i] * 0.7), down(a[1] + (ATTACK["fore_n"][i] - 34) * 0.5)
+    stance = form.get("stance")
+    if form.get("ride"):
+        rot.update({b: (0.0, 0.0, 0.0) for b in ("thigh_n", "thigh_f", "shin_n", "shin_f", "foot_n", "foot_f")})
+        stance = "ride"
+    if stance:
+        for bone, delta in STANCES[stance].items():
+            _add(rot, bone, delta)
+    return rot
 
 
-# name: (frames, function, rest the lowest point on the ground)
-ANIMS = {"idle": (6, idle, True), "walk": (8, walk, True), "attack": (6, attack, True)}
+def _hold_items(form, rot, anim, i):
+    """Keep whatever the goblin holds at the angle it was made at (or swinging, in an attack), whatever the arms do: the item bone cancels
+    the rotation of the bones above it."""
+    for s in "nf":
+        chain = ["hips", "spine", "arm_" + s, "fore_" + s]
+        if form.get("ride"):
+            chain = ["w_hips", "w_spine"] + chain
+        above = sum(rot.get(b, (0.0, 0.0, 0.0))[1] for b in chain)
+        want = ITEM_SWING[i] if (anim == "attack" and s == "n") else form.get("item_angle", {}).get(s, 0.0)
+        rot["item_" + s] = (0.0, want - above, 0.0)
+
+
+def make(form, anim):
+    def fn(i, n):
+        rot, root = {}, (0.0, 0.0, 0.0)
+        if form.get("ride"):
+            wolf_fn = {"idle": wolf.idle, "walk": wolf.walk, "attack": wolf.pounce}[anim]
+            rot, root = wolf_fn(i, n, "w_")
+            root = (root[0], root[1], root[2] * form["mount"]["scale"])
+        rot = dict(rot)
+        rot.update(goblin_pose(form, anim, i, n))
+        _hold_items(form, rot, anim, i)
+        return rot, root
+    return COUNTS[anim], fn, True
+
+
+def today(variant):
+    """(width, height) in game pixels of the still the game had for this form before the 3D pass (tools/art/blender/before/), so a re-render
+    sizes the same whatever the live sheet holds; the base goblin uses its idle frame."""
+    if variant and variant != "goblin":
+        path, name = os.path.join(HERE, "before", "forms_goblin.json"), variant
+    else:
+        path, name = os.path.join(HERE, "..", "..", "..", "assets", "sheets", "goblin.json"), "idle_1"
+    try:
+        with open(path) as fh:
+            rect = json.load(fh)["frames"][name]["rect"]
+        return float(rect[2]), float(rect[3])
+    except (OSError, KeyError):  # nothing to match: fall back to the width in the table
+        return float(_form(variant)["width"]), None
+
+
+def setup(rig, variant):
+    """Size the camera for this form: the still covers the area of today's still, and the canvas holds every frame."""
+    form = _form(variant)
+    anims = {name: make(form, name) for name in COUNTS}
+    count, fn, _ = anims["idle"]
+    rig.stand(*fn(0, count))
+    x0, x1, z0, z1 = rig.extent()
+    w, h = today(variant)
+    ppu = math.sqrt(w * h / ((x1 - x0) * (z1 - z0))) if h else w / (x1 - x0)
+    lo_x, hi_x, hi_z = 1e9, -1e9, 0.0
+    for name, (count, fn, _) in anims.items():
+        for i in range(count):
+            rig.stand(*fn(i, count))
+            a, b, _, top = rig.extent()
+            lo_x, hi_x, hi_z = min(lo_x, a), max(hi_x, b), max(hi_z, top)
+    need = max((hi_x - lo_x) * ppu + 2 * PAD, hi_z * ppu + MARGIN + PAD)
+    canvas = int(math.ceil(need / 8.0) * 8)
+    still = form.get("still", "idle_0")
+    return {"canvas": canvas, "ppu": ppu, "margin": MARGIN, "center_x": (lo_x + hi_x) / 2.0, "anims": anims, "still": still}

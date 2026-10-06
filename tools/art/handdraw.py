@@ -361,8 +361,9 @@ def default_run(root):
     return run
 
 
-def import_frames(root, set_name, folder, native=False, run=None, stamp=None, today=None):
-    """Install a folder of exported frames as the set's sources and rebuild its sheet. Nothing is touched unless every frame is accepted."""
+def import_frames(root, set_name, folder, native=False, run=None, stamp=None, today=None, source="hand"):
+    """Install a folder of exported frames as the set's sources and rebuild its sheet. Nothing is touched unless every frame is accepted.
+    `source` is what provenance records them as: "hand" for drawings, "blender" for renders (tools/art/blender)."""
     spec = load_spec(root, set_name)
     if "derive_from" in spec:
         raise ValueError("%s is a recolor of %s: draw %s instead" % (set_name, spec["derive_from"], spec["derive_from"]))
@@ -400,7 +401,7 @@ def import_frames(root, set_name, folder, native=False, run=None, stamp=None, to
             fh.write(marked)
     prov = load_provenance(root)
     for n in names:
-        prov.setdefault(set_name, {})[n] = {"source": "hand", "route": "native" if native else "paint", "date": today}
+        prov.setdefault(set_name, {})[n] = {"source": source, "route": "native" if native else "paint", "date": today}
     with open(_prov_path(root), "w") as fh:
         json.dump(prov, fh, indent=1, sort_keys=True)
         fh.write("\n")
@@ -416,7 +417,8 @@ def inventory(root):
         with open(path, encoding="utf-8") as fh:
             spec = json.load(fh)
         src = source_dir(root, spec, name)
-        rows.append({"set": name, "frames": len(spec["frames"]), "hand": len(prov.get(name, {})),
+        rows.append({"set": name, "frames": len(spec["frames"]), "hand": sum(1 for v in prov.get(name, {}).values() if v.get("source") == "hand"),
+                     "blender": sum(1 for v in prov.get(name, {}).values() if v.get("source") == "blender"),
                      "sources": sum(os.path.exists(os.path.join(src, f["name"] + ".png")) for f in spec["frames"]),
                      "derived": spec.get("derive_from", "")})
     return rows
@@ -450,13 +452,15 @@ def main(argv=None):
         p.add_argument("set")
         p.add_argument("folder")
         p.add_argument("--native", action="store_true")
+        if name == "import":
+            p.add_argument("--source", default="hand", choices=["hand", "blender"], help="what to record the frames as (default hand)")
     args = ap.parse_args(argv)
     try:
         if args.cmd == "inventory":
-            print("%-22s %6s %5s %8s  %s" % ("set", "frames", "hand", "sources", "note"))
+            print("%-22s %6s %5s %7s %8s  %s" % ("set", "frames", "hand", "blender", "sources", "note"))
             for r in inventory(ROOT):
                 note = "recolor of " + r["derived"] if r["derived"] else ("sources not on this disk" if r["sources"] == 0 else "")
-                print("%-22s %6d %5d %8d  %s" % (r["set"], r["frames"], r["hand"], r["sources"], note))
+                print("%-22s %6d %5d %7d %8d  %s" % (r["set"], r["frames"], r["hand"], r["blender"], r["sources"], note))
         elif args.cmd == "pack":
             out = args.out or os.path.join(ROOT, ".tmp", "handdraw", args.set)
             only = args.frames.split(",") if args.frames else None
@@ -467,7 +471,7 @@ def main(argv=None):
             print("preview: %s" % os.path.join(args.folder, "preview.png"))
             return 1 if bad else 0
         elif args.cmd == "import":
-            names = import_frames(ROOT, args.set, args.folder, native=args.native)
+            names = import_frames(ROOT, args.set, args.folder, native=args.native, source=args.source)
             print("installed %d frame(s) into %s and rebuilt assets/sheets/%s.png; the old ones are in art_source/.replaced/" % (len(names), args.set, args.set))
             print("see it in the game: tools/creature_sheet.sh")
     except ValueError as err:
