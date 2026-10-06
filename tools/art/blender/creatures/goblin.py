@@ -210,7 +210,7 @@ def idle_pose(form, legs, i, n):
     breath = 0.5 - 0.5 * math.cos(2.0 * math.pi * t)
     pel_z = leg.hip[1] - 0.04 * L + pz * L - 0.012 * L * breath
     rot = {}
-    for side, stand in (("n", 0.03), ("f", -0.03)):  # planted, a little apart: the pelvis sways over them
+    for side, stand in (("n", 0.20), ("f", -0.17)):  # planted a step apart so both legs show from the side; the pelvis sways over them
         dx, dz, dpitch = st.get("feet", {}).get(side, (0.0, 0.0, 0.0))
         ankle = legs[side].ankle(legs[side].hip[0] + (stand + dx) * L, dz * L, dpitch, dz == 0.0)
         rot.update(legs[side].solve(pel_z, ankle, dpitch, side))

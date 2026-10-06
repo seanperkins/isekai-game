@@ -20,13 +20,12 @@ from PIL import Image, ImageDraw
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 sys.path.insert(0, HERE)
+import shade  # noqa: E402
 import toon  # noqa: E402
 
 BLENDER = os.environ.get("BLENDER", "/Applications/Blender.app/Contents/MacOS/Blender")
 BACKDROP = (36, 36, 46, 255)
 GROUND = (70, 70, 90, 255)
-SHADOW = ((60, 50, 130), 0.55)  # the cool tint of the dark band
-GLOW = ((255, 236, 190), 0.5)    # the warm tint of the lit band
 ZOOM = 4
 # what the game draws today for each creature, to put beside the render: (sheet, frames)
 CURRENT = {
@@ -50,43 +49,51 @@ def render(creature, out, variant=None, anims=None, ss=4):
         raise RuntimeError("Blender failed:\n" + done.stdout[-2500:] + done.stderr[-2500:])
 
 
-def _normal_small(normal, alpha_source, size):
-    """The normal pass at game size: averaged, then masked by the sprite's own alpha so the two always agree."""
-    rgb = normal.convert("RGB").resize(size, Image.BOX).convert("RGBA")
-    mask = alpha_source.split()[3]
-    rgb.putalpha(mask)
-    return rgb
+BAKE = 1.0   # how much of the lighting is painted into the sprite (1: a five-step ramp per material; 0.5: three steps, leaving more to the room's lights)
 
 
-def process(raw, out, colours=24, outline=True):
-    """Light, shrink, outline and palette-snap every frame in `raw` (what render() wrote); returns {anim: [frame names]}."""
+def _flat_outline_normals(lit, normals):
+    """The normal map for a sprite that has an outline: the outline's pixels, which have no surface of their own, face the viewer."""
+    out = normals.copy()
+    lp, op = lit.load(), out.load()
+    for y in range(lit.height):
+        for x in range(lit.width):
+            if lp[x, y][3] and not op[x, y][3]:
+                op[x, y] = (128, 128, 255, 255)
+    return out
+
+
+def process(raw, out, colours=24, outline=True, bake=BAKE):
+    """Shrink, light, outline and palette-snap every frame in `raw` (what render() wrote); returns {anim: [frame names]}. Writes each frame
+    and its normal map to out/frames."""
     meta = json.load(open(os.path.join(raw, "meta.json")))
     canvas = meta["canvas"]
+    materials = [tuple(m) for m in meta["materials"]]
     os.makedirs(os.path.join(out, "frames"), exist_ok=True)
-    names, small, normals = [], {}, {}
-    for anim, count in meta["anims"].items():
-        for i in range(count):
-            key = "%s_%d" % (anim, i)
-            with Image.open(os.path.join(raw, key + "_albedo.png")) as a, Image.open(os.path.join(raw, key + "_normal.png")) as n:
-                albedo, normal = a.convert("RGBA"), n.convert("RGBA")
-            lit = toon.downscale(toon.shade(albedo, normal, shadow=SHADOW, glow=GLOW), (canvas, canvas))
-            if outline:
-                lit = toon.outline(lit)
-            small[key] = lit
-            normals[key] = _normal_small(normal, lit, (canvas, canvas))
-            names.append(key)
-    if meta.get("materials"):  # a palette made of the creature's own materials, so a small bright part is never merged away
-        pal = toon.palette_of(toon.palette_colours([tuple(m) for m in meta["materials"]], shadow=SHADOW, glow=GLOW))
-    else:
-        pal = toon.palette(list(small.values()), colours)
+    pal = toon.palette_of(shade.palette_colours(materials, bake))
     result = {}
     for anim, count in meta["anims"].items():
-        result[anim] = []
-        for i in range(count):
-            key = "%s_%d" % (anim, i)
-            toon.apply_palette(small[key], pal).save(os.path.join(out, "frames", key + ".png"))
-            normals[key].save(os.path.join(out, "frames", key + "_n.png"))
-            result[anim].append(key)
+        keys = ["%s_%d" % (anim, i) for i in range(count)]
+        passes = []
+        for key in keys:
+            with Image.open(os.path.join(raw, key + "_albedo.png")) as a, Image.open(os.path.join(raw, key + "_normal.png")) as n:
+                passes.append((a.convert("RGBA"), n.convert("RGBA")))
+        prev_a, prev_steps, done = None, None, []
+        for lap in range(2):  # the second lap starts from the last frame of the first, so the loop's seam is as steady as the rest
+            done = []
+            for a, n in passes:
+                small_a, small_n = shade.reduce_passes(a, n, (canvas, canvas), materials, previous=prev_a)
+                steps = {}
+                lit = shade.shade(small_a, small_n, bake=bake, previous=prev_steps, record=steps)
+                prev_a, prev_steps = small_a, steps
+                done.append((lit, small_n))
+        result[anim] = keys
+        for key, (lit, small_n) in zip(keys, done):
+            if outline:
+                lit = toon.outline(lit)
+            lit = toon.apply_palette(lit, pal)
+            lit.save(os.path.join(out, "frames", key + ".png"))
+            _flat_outline_normals(lit, small_n).save(os.path.join(out, "frames", key + "_n.png"))
     return result
 
 
