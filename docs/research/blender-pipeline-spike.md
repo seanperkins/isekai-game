@@ -89,11 +89,13 @@ What it looks like, honestly:
 - **The mounted forms are small.** A rider and wolf together cover about 30 px of width, so the rider is only a few pixels of detail.
 - **Some gear is crude.** Orpheus's lyre is a gold box, the Pied Piper's pipe a bar, the Changeling's mask a white blob. That is my modelling, not the pipeline's.
 
-What it does not do yet: the game still draws twins as one still with a code-made breath and hop. The walk, idle and attack frames and the normal maps are rendered but not used, because that needs the enemy code to play a clip for a twin (the shipped creatures do, through `data/enemy_clips.json`).
+What it did not do yet, when this report was written (the spike snapshot; all of it is done since, see `docs/art-kit-guide.md`): the game drew twins as one still with a code-made breath and hop, and the walk, idle and attack frames and the normal maps were rendered but not used. Twins now play their form's clips (`data/form_clips.json`, `Enemy._draw_form_frame`), lit by the room's lights through their normal maps.
 
 Where this leaves the choice: for a line of this shape (many forms on one body plan) the approach pays for itself, since a new form is a few lines and the whole tree stays consistent and re-renderable. It is not a substitute for what a painter does with a single hero creature, and the look is a different style from today's, so the call is yours: render the lines where consistency and quantity matter, and keep hand-drawing or generating the ones that carry a character.
 
 ## What bringing this into the game would still need
+
+(The spike's list, all done since: the assembler's cell mode is `common_box`/`centred_frames` in `assemble_frames.py`, the normal maps ship beside every sheet and `SpriteSheet.draw_on` lights them, and the model per creature is the family kits in `docs/art-kit-guide.md`. Palettes per area are still open.)
 
 1. **A cell mode in the assembler.** `assemble_frames.py` crops each frame to its drawn pixels and anchors it bottom-centre, which makes a rendered cycle's feet jitter sideways. A frame set rendered in a fixed cell must keep its canvas (crop once to the union box of the whole animation).
 2. **Normal maps in the sheets.** The pipeline already writes `<frame>_n.png`; the game would load them as the normal texture of the sprite for 2D lights. Whether the game uses 2D lights is not verified.

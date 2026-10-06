@@ -12,7 +12,10 @@ var texture: Texture2D
 var normal_texture: Texture2D
 var _frames := {}   # name -> {"rect": Rect2, "hurt": PackedVector2Array, "attack": PackedVector2Array}
 var _atlas := {}    # name -> AtlasTexture
-var _lit := {}      # "name:mirrored" -> CanvasTexture
+## Every load of a sheet shares its lit frames and its decoded images (a room of one form loads the sheet once per creature): keyed by the sheet's path, so each
+## frame is cut once however many creatures wear it.
+static var _lit_shared := {}     # "sheet path|name:mirrored" -> CanvasTexture
+static var _images_shared := {}  # sheet path -> [colour Image, normal Image]
 
 static func available(set_name: String) -> bool:
 	return ResourceLoader.exists(dir + set_name + ".png") and FileAccess.file_exists(dir + set_name + ".json")
@@ -76,11 +79,12 @@ func has_normals() -> bool:
 func lit_texture(name: String, mirrored := false) -> Texture2D:
 	if normal_texture == null:
 		return null
-	var key := "%s:%d" % [name, 1 if mirrored else 0]
-	if not _lit.has(key):
+	var key := "%s|%s:%d" % [texture.resource_path, name, 1 if mirrored else 0]
+	if not _lit_shared.has(key):
 		var rect := Rect2i(_frames[name]["rect"])
-		var color := texture.get_image().get_region(rect)
-		var normal := normal_texture.get_image().get_region(rect)
+		var images := _sheet_images()
+		var color: Image = (images[0] as Image).get_region(rect)
+		var normal: Image = (images[1] as Image).get_region(rect)
 		if mirrored:
 			color.flip_x()
 			normal.flip_x()
@@ -93,8 +97,15 @@ func lit_texture(name: String, mirrored := false) -> Texture2D:
 		canvas.diffuse_texture = ImageTexture.create_from_image(color)
 		canvas.normal_texture = ImageTexture.create_from_image(normal)
 		canvas.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		_lit[key] = canvas
-	return _lit[key]
+		_lit_shared[key] = canvas
+	return _lit_shared[key]
+
+## The colour sheet's and the normal sheet's images, decoded once for every creature that wears the sheet.
+func _sheet_images() -> Array:
+	var path := texture.resource_path
+	if not _images_shared.has(path):
+		_images_shared[path] = [texture.get_image(), normal_texture.get_image()]
+	return _images_shared[path]
 
 ## Draw a frame on a sprite, facing left or not. A sheet with normal maps is drawn lit by the room's lights, mirrored in the texture itself so its normals mirror
 ## with it (the sprite's flip_h stays false); a plain sheet is the frame, flipped.

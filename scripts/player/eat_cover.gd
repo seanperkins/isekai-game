@@ -20,6 +20,7 @@ var _prey_sprite: Sprite2D
 var _prey_was_visible := true
 var _look_tint := Color.WHITE
 var _look_scale := 1.0
+var _left := false  # the prey is to the left: the cover is drawn turned round
 var _cut: Node2D
 var _bottom := 0.0
 var _tex_height := 0.0  # the prey's drawn height
@@ -67,7 +68,7 @@ func begin(target: Node2D, sheet: SpriteSheet, left: bool = false) -> void:
 		add_child(prey_halves)
 	cover.z_index = 1
 	cover.modulate.a = BODY_ALPHA
-	cover.flip_h = left
+	_left = left
 	add_child(cover)
 	_show("cover_1")
 
@@ -97,5 +98,5 @@ func set_look(tint: Color, body_scale: float) -> void:
 	cover.modulate = Color(tint.r, tint.g, tint.b, BODY_ALPHA)
 
 func _show(frame: String) -> void:
-	cover.texture = _sheet.frame_texture(frame)
+	_sheet.draw_on(cover, frame, _left)  # lit when the sheet has normal maps (turned round in its texture), else flipped
 	cover.position.y = -_sheet.frame_size(frame).y * _look_scale / 2.0

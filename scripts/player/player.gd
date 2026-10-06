@@ -571,14 +571,14 @@ func _draw_spider(delta: float) -> void:
 	var squeeze := 1.0 - 0.55 * sin(PI * (1.0 - _spider_pivot / SPIDER_PIVOT_SECONDS)) if _spider_pivot > 0.0 else 1.0
 	var size := _sheet.frame_size(clip)
 	var scale := _form_scale()
-	_sprite.texture = _sheet.frame_texture(clip)
+	var mirrored := _spider_sense < 0.0  # the sprite's right is the clockwise tangent: against it, mirror
+	_sheet.draw_on(_sprite, clip, mirrored)  # a sheet with normal maps is turned round in its texture (and lit), a plain one is flipped
 	_sprite.rotation = _spider_angle
-	_sprite.flip_h = _spider_sense < 0.0  # the sprite's right is the clockwise tangent: against it, mirror
 	_sprite.scale = Vector2(squeeze, 1.0) * scale
 	_sprite.position = _spider_off + Vector2.UP.rotated(_spider_angle) * (size.y * scale / 2.0 - SurfaceStep.HN)
 	_sprite.modulate = _form_tint()
 	if _still != "" and _shapes != null:
-		_shapes.refresh(_sheet, _still, _sprite.flip_h)  # a turned spider uses the body box instead (hurt_polygon)
+		_shapes.refresh(_sheet, _still, mirrored)  # a turned spider uses the body box instead (hurt_polygon)
 	_spider_prev = global_position
 	_update_thread(delta)
 

@@ -76,7 +76,7 @@ const RUN_RATIO := 1.35
 ## A run clip is built for this many times the walk's speed (tools/art/blender: the goblin's WALK_SPEED_RUN), and a walk or a run plays at
 ## the creature's real speed relative to that, within these limits.
 const RUN_SPEED := 1.9
-const FORM_RATE_RANGE := Vector2(0.3, 4.0)
+const FORM_RATE_RANGE := Vector2(0.2, 4.0)
 static var _form_clip_cache := {}  # path -> parsed file
 ## The Bog Lizardman's spear: how far, how level and how often it throws (the toad's are SPIT_*; Spear.SPEED is its speed).
 const SPEAR_RANGE := 140.0
@@ -1110,6 +1110,7 @@ func _load_sheet() -> void:
 	if _sheet == null:
 		return
 	_animator = SlimeAnimator.new(clips[look])
+	_authored_speed = BASE_SPEED * float(def.stats.get("spd", 100)) / 100.0  # a rendered sheet's walk was built for this, whatever buffs and slows make of it
 	for first in ["idle", "fly", "swim", "drift", "hide"]:  # the clip a creature starts on: its resting loop
 		if _animator.clips.has(first):
 			_animator.play(first)

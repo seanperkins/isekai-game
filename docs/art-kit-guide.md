@@ -55,11 +55,12 @@ creature is lifted (`wolf_kit.room`) so the shading ramps have room. Do not draw
 ## Looking at it
 
 ```
-python3 tools/art/blender/spike.py <creature> [--variant form] --out .tmp/x      # render + shade one form: .tmp/x/<name>/frames/<clip>_<n>.png
-python3 tools/art/blender/strip.py .tmp/x/<name> idle,walk,run,attack,hurt,die --zoom 3   # every frame in rows: strip.png
+python3 tools/art/blender/species_tree.py <species> <form> --out .tmp/x                # render + shade one form of any family: .tmp/x/<form>/frames/<clip>_<n>.png
+python3 tools/art/blender/strip.py .tmp/x/<form> idle,walk,run,attack,hurt,die --zoom 3   # every frame in rows: strip.png
 python3 tools/art/blender/lookdev.py form1 form2 ... --creature <creature>        # several forms side by side in one pose
-python3 tools/art/blender/species_tree.py <species> [--only-quads] [form ...]    # the whole tree: tree.png, compare.png, walk.gif
+python3 tools/art/blender/species_tree.py <species> [--only quads|bipeds] [form ...] --out .tmp/<species>-tree   # the whole tree: tree.png, compare.png, walk.gif
 ```
+(`spike.py <creature> [--variant form]` does the same for goblin, spider and wolf only: its `CURRENT` table (the shipped sheets it compares against) has no undead or slime.)
 (`species_tree.py` knows a species by its entry in `SPECIES`.) Always look at the frames, at native size and at 3x to 6x, before saying a pose works.
 Scratch output goes in `.tmp/` (ignored). Blender is `/Applications/Blender.app/Contents/MacOS/Blender`.
 
@@ -83,4 +84,4 @@ python3 tools/art/blender/export_forms.py <species> --from .tmp/<species>-tree  
 python3 tools/build_bestiary.py && TEST_TIMEOUT=1700 tools/run_tests.sh                # the pages and the full suite
 tools/shot_run.sh tools/form_anim_shots.gd -- --form=<species>_<form> --out=$PWD/.tmp/form-anim/<name>   # the real Enemy drawing it
 ```
-A twin plays its form's clips when `data/creatures/twin_<species>_<form>.tres` has `form = "<species>_<form>"` and `assets/sheets/anim_<species>_<form>.png` exists.
+A twin plays its form's clips when `data/creatures/twin_<species>_<form>.tres` has `form = "<species>_<form>"` and `assets/sheets/anim_<species>_<form>.png` exists. The slime's twins are named bare (`twin_<form>.tres`, `form = "<form>"`, `anim_<form>.png`; shoot one with `--form=<form>`); a form with no twin is left out of the export. `export_base.py <creature>` does the same for a base creature (goblin, gloom_wolf, spider, slime).

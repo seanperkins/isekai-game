@@ -44,9 +44,9 @@ func test_it_hides_the_prey_and_draws_a_shrinking_copy_under_a_translucent_slime
 func test_the_cover_sprite_changes_frame_with_the_progress() -> void:
 	var cover := _cover(_prey())
 	cover.tick(0.016, 0.05)
-	assert_eq(cover.cover.texture, sheet.frame_texture("cover_1"))
+	assert_eq(cover.cover.texture, sheet.texture_of("cover_1"))
 	cover.tick(0.016, 0.95)
-	assert_eq(cover.cover.texture, sheet.frame_texture("cover_5"))
+	assert_eq(cover.cover.texture, sheet.texture_of("cover_5"))
 
 func test_the_cover_sits_on_the_prey_and_follows_it() -> void:
 	var prey := _prey()
@@ -72,7 +72,8 @@ func test_the_cover_mirrors_when_the_prey_is_to_the_left() -> void:
 	var cover := EatCover.new()
 	add_child_autofree(cover)
 	cover.begin(prey, sheet, true)
-	assert_true(cover.cover.flip_h)
+	assert_true(cover.cover.flip_h or (sheet.has_normals() and cover.cover.texture == sheet.texture_of("cover_1", true)), "flipped, or a lit sheet's texture is turned round in itself")
+	assert_ne(cover.cover.texture, sheet.texture_of("cover_1"), "and not the way it faces right")
 
 func test_finishing_restores_the_prey() -> void:
 	var prey := _prey()

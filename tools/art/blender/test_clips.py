@@ -56,6 +56,17 @@ class OnGridTest(unittest.TestCase):
     def test_a_frame_shorter_than_a_tick_still_shows_for_one(self):
         self.assertEqual(clips.on_grid(["a", "b"], [0.001, 0.06], True, 0.02)["frames"], ["a", "b", "b"], "a one-tick minimum for a, and b makes up the rest of the three ticks the clip should have")
 
+    def test_a_loop_of_poses_shorter_than_a_tick_skips_some_rather_than_running_long(self):
+        # the base wolf's charge: 16 poses of 17.83 ms, a 0.2853 s cycle. One tick each would make it 0.32 s and the paws would slide.
+        c = clips.on_grid(["p%d" % i for i in range(16)], [0.285333 / 16] * 16, True, 0.02)
+        self.assertAlmostEqual(len(c["frames"]) * 0.02, 0.285333, delta=0.01, msg="the cycle is as long as it should be to within half a tick")
+        self.assertEqual(c["frames"][0], "p0", "it still begins on its first pose")
+        self.assertEqual(len(c["frames"]), len(set(c["frames"])), "no pose is held: each shown is one tick")
+        self.assertLess(len(set(c["frames"])), 16, "a few poses were skipped")
+
+    def test_an_action_never_skips_a_pose_however_short(self):
+        self.assertEqual(clips.on_grid(["a", "b", "c", "d"], [0.005] * 4, False, 0.02)["frames"], ["a", "b", "c", "d"])
+
     def test_the_errors_do_not_add_up_a_clip_is_as_long_as_asked_to_within_half_a_tick_however_many_frames(self):
         durations = [0.07, 0.13, 0.05, 0.09] * 5
         c = clips.on_grid(list("abcd") * 5, durations, True, 0.02)

@@ -5,213 +5,213 @@
  "frames": [
   {
    "name": "idle_1",
-   "width": 0,
+   "width": 58,
    "native": true
   },
   {
    "name": "idle_2",
-   "width": 0,
+   "width": 56,
    "native": true
   },
   {
    "name": "idle_3",
-   "width": 0,
+   "width": 56,
    "native": true
   },
   {
    "name": "idle_4",
-   "width": 0,
+   "width": 56,
    "native": true
   },
   {
    "name": "idle_5",
-   "width": 0,
+   "width": 56,
    "native": true
   },
   {
    "name": "idle_6",
-   "width": 0,
+   "width": 58,
    "native": true
   },
   {
    "name": "idle_7",
-   "width": 0,
+   "width": 58,
    "native": true
   },
   {
    "name": "idle_8",
-   "width": 0,
+   "width": 58,
    "native": true
   },
   {
    "name": "walk_1",
-   "width": 0,
+   "width": 60,
    "native": true
   },
   {
    "name": "walk_2",
-   "width": 0,
+   "width": 60,
    "native": true
   },
   {
    "name": "walk_3",
-   "width": 0,
+   "width": 60,
    "native": true
   },
   {
    "name": "walk_4",
-   "width": 0,
+   "width": 60,
    "native": true
   },
   {
    "name": "walk_5",
-   "width": 0,
+   "width": 58,
    "native": true
   },
   {
    "name": "walk_6",
-   "width": 0,
+   "width": 58,
    "native": true
   },
   {
    "name": "walk_7",
-   "width": 0,
+   "width": 58,
    "native": true
   },
   {
    "name": "walk_8",
-   "width": 0,
+   "width": 58,
    "native": true
   },
   {
    "name": "walk_9",
-   "width": 0,
+   "width": 60,
    "native": true
   },
   {
    "name": "walk_10",
-   "width": 0,
+   "width": 60,
    "native": true
   },
   {
    "name": "windup_1",
-   "width": 0,
+   "width": 60,
    "native": true
   },
   {
    "name": "charge_1",
-   "width": 0,
+   "width": 60,
    "native": true,
    "attack_from": 0.55
   },
   {
    "name": "charge_2",
-   "width": 0,
+   "width": 58,
    "native": true,
    "attack_from": 0.55
   },
   {
    "name": "charge_3",
-   "width": 0,
+   "width": 60,
    "native": true,
    "attack_from": 0.55
   },
   {
    "name": "charge_4",
-   "width": 0,
+   "width": 60,
    "native": true,
    "attack_from": 0.55
   },
   {
    "name": "charge_5",
-   "width": 0,
+   "width": 60,
    "native": true,
    "attack_from": 0.55
   },
   {
    "name": "charge_6",
-   "width": 0,
+   "width": 60,
    "native": true,
    "attack_from": 0.55
   },
   {
    "name": "charge_7",
-   "width": 0,
+   "width": 60,
    "native": true,
    "attack_from": 0.55
   },
   {
    "name": "charge_8",
-   "width": 0,
+   "width": 60,
    "native": true,
    "attack_from": 0.55
   },
   {
    "name": "charge_9",
-   "width": 0,
+   "width": 60,
    "native": true,
    "attack_from": 0.55
   },
   {
    "name": "charge_10",
-   "width": 0,
+   "width": 58,
    "native": true,
    "attack_from": 0.55
   },
   {
    "name": "charge_11",
-   "width": 0,
+   "width": 58,
    "native": true,
    "attack_from": 0.55
   },
   {
    "name": "charge_12",
-   "width": 0,
+   "width": 60,
    "native": true,
    "attack_from": 0.55
   },
   {
    "name": "charge_13",
-   "width": 0,
+   "width": 58,
    "native": true,
    "attack_from": 0.55
   },
   {
    "name": "charge_14",
-   "width": 0,
+   "width": 60,
    "native": true,
    "attack_from": 0.55
   },
   {
    "name": "charge_15",
-   "width": 0,
+   "width": 60,
    "native": true,
    "attack_from": 0.55
   },
   {
    "name": "charge_16",
-   "width": 0,
+   "width": 60,
    "native": true,
    "attack_from": 0.55
   },
   {
    "name": "rest_1",
-   "width": 0,
+   "width": 58,
    "native": true
   },
   {
    "name": "stunned_1",
-   "width": 0,
+   "width": 60,
    "native": true
   },
   {
    "name": "hurt_1",
-   "width": 0,
+   "width": 60,
    "native": true
   },
   {
    "name": "downed_1",
-   "width": 0,
+   "width": 62,
    "native": true
   }
  ]

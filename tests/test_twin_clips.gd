@@ -142,6 +142,27 @@ func test_a_buff_to_its_speed_quickens_its_step_instead_of_cancelling_it() -> vo
 	_step(e, 0.2)
 	assert_eq(e._animator.frame(), "walk_1", "at 1.5 times the speed 0.2 s is 0.3 s of walk: the second frame (0.125 s each) has begun")
 
+func test_a_buff_to_a_rendered_base_creatures_speed_quickens_its_step_too() -> void:
+	SpriteSheet.dir = SpriteSheet.DIR  # the real sheets: the gloom wolf's own
+	var def: CreatureDef = null
+	for c in DefLoader.load_dir("res://data/creatures"):
+		if (c as CreatureDef).id == "gloom_wolf":
+			def = c
+	var e := _enemy(def)
+	assert_true(e._sheet != null and e._sheet.has_normals(), "the gloom wolf is a render, with normal maps")
+	var walking := e._walk_speed()
+	e.stats.set_modifiers("haste", [{"stat": "spd", "op": "add", "value": 50}])
+	assert_almost_eq(e._walk_speed(), walking, 0.001, "the clip's speed is the one it was built for, not the buffed one")
+	e.velocity.x = e._speed()
+	assert_almost_eq(e._sheet_rate("walk"), 1.5, 0.01, "at 1.5 times the speed it steps 1.5 times as fast")
+
+func test_a_slowed_creature_on_patrol_steps_as_slowly_as_it_goes() -> void:
+	var e := _enemy(_fixture_def())
+	e.velocity.x = e._walk_speed() * 0.25  # a patrol is half its speed, and a slow halves that again
+	_step(e)
+	assert_eq(e._animator.state(), "walk")
+	assert_almost_eq(e._form_rate(), 0.25, 0.001, "its foot is not carried 20% too fast over the ground")
+
 func test_a_new_blow_starts_the_flinch_again_even_in_the_middle_of_one() -> void:
 	var e := _enemy(_fixture_def())
 	e._hurt_t = 0.25

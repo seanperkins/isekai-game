@@ -34,11 +34,12 @@ stiff), lash (kraken, shoggoth, beanstalk), bite (mimic), throw (poltergeist), p
 
 ## For the integrator
 
-* The slime twins are `data/creatures/twin_<form>.tres` with `form = "<form>"` (not `twin_slime_<form>` and `slime_<form>` like the other
-  families). `export_forms.py slime` would install `anim_slime_<form>` under the id `slime_<form>`, which the engine would not find: rename
-  the forms in the data, or install the slime under bare form ids.
-* `export_forms.BASES` has no `"slime": "slime"`, so the base would be installed as a form.
-* `sizing.speed_of("slime", form)` reads `twin_slime_<form>.tres`, which does not exist, and falls back to 60 px/s. `slime_forms.speed_of`
-  reads the twin's own file (every form: spd 80, sprite size 1.4, so 34.3 px/s).
+Handled, and kept here as the reasons for the code:
+
+* The slime twins are `data/creatures/twin_<form>.tres` with `form = "<form>"` (not `twin_slime_<form>` like the other families), and their sheets are
+  `anim_<form>`. `sizing.twin_path`, `export_forms.form_id` and `BASES` (`"slime": "slime"`) know it, so `export_forms.py slime` installs under
+  the bare form ids; shoot one with `--form=<form>` (not `slime_<form>`).
+* `slime_forms.speed_of` reads the twin's own file (every form: spd 80, sprite size 1.4, so 34.3 px/s).
 * `species_tree.py slime` lays the forms out one per row (their stage-three parents, snare, arachne, tempest..., belong to other species, so
   every form's `parent` is the base and its real branch is kept as `branch`).
+* `spike.py` has no slime entry (its `CURRENT` table holds goblin, spider and wolf): render a slime form with `species_tree.py slime <form> --out .tmp/x`.

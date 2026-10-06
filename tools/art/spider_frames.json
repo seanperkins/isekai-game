@@ -5,82 +5,82 @@
  "frames": [
   {
    "name": "hang_1",
-   "width": 0,
+   "width": 36,
    "native": true
   },
   {
    "name": "hang_2",
-   "width": 0,
+   "width": 36,
    "native": true
   },
   {
    "name": "hang_3",
-   "width": 0,
+   "width": 36,
    "native": true
   },
   {
    "name": "hang_4",
-   "width": 0,
+   "width": 34,
    "native": true
   },
   {
    "name": "hang_5",
-   "width": 0,
+   "width": 36,
    "native": true
   },
   {
    "name": "hang_6",
-   "width": 0,
+   "width": 36,
    "native": true
   },
   {
    "name": "hang_7",
-   "width": 0,
+   "width": 36,
    "native": true
   },
   {
    "name": "hang_8",
-   "width": 0,
+   "width": 36,
    "native": true
   },
   {
    "name": "drop",
-   "width": 0,
+   "width": 40,
    "native": true
   },
   {
    "name": "crawl_1",
-   "width": 0,
+   "width": 36,
    "native": true
   },
   {
    "name": "crawl_2",
-   "width": 0,
+   "width": 36,
    "native": true
   },
   {
    "name": "crawl_3",
-   "width": 0,
+   "width": 42,
    "native": true
   },
   {
    "name": "crawl_4",
-   "width": 0,
+   "width": 36,
    "native": true
   },
   {
    "name": "stunned",
-   "width": 0,
+   "width": 38,
    "native": true
   },
   {
    "name": "hurt",
-   "width": 0,
+   "width": 38,
    "native": true
   },
   {
    "name": "downed",
-   "width": 0,
+   "width": 36,
    "native": true
   }
  ]

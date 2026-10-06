@@ -152,6 +152,12 @@ class WidthsTest(unittest.TestCase):
 
 
 class SizingTest(unittest.TestCase):
+    def test_a_base_creature_walks_at_the_speed_of_its_own_stat_not_the_default(self):
+        import sizing
+        self.assertAlmostEqual(sizing.speed_of("spider", None), 66.0, msg="spd 110 (data/creatures/spider.tres)")
+        self.assertAlmostEqual(sizing.speed_of("wolf", None), 60.0, msg="spd 100 (data/creatures/gloom_wolf.tres)")
+        self.assertAlmostEqual(sizing.speed_of("goblin", None), 60.0, msg="the base goblin is the player's: the glue gives it its own")
+
     def test_a_base_creature_is_matched_by_the_dimension_the_game_reads_and_a_form_by_area(self):
         import sizing
         old = (54.0, 37.0)

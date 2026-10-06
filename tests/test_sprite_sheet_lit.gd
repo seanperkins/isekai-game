@@ -26,6 +26,16 @@ func test_a_lit_frame_is_the_frame_cut_from_both_sheets() -> void:
 	assert_eq(color.get_pixel(3, 0), Color8(40, 40, 220))
 	assert_eq(t.normal_texture.get_image().get_pixel(0, 0), Color8(200, 128, 255))
 
+func test_every_load_of_a_sheet_shares_its_lit_frames() -> void:
+	# a room full of one form loads its sheet once per creature: each frame is cut once, not once per creature
+	var a := SpriteSheet.load_set("fixture_lit")
+	var b := SpriteSheet.load_set("fixture_lit")
+	assert_not_same(a, b)
+	assert_same(a.lit_texture("a"), b.lit_texture("a"))
+	assert_same(a.lit_texture("a", true), b.lit_texture("a", true))
+	assert_not_same(a.lit_texture("a"), a.lit_texture("a", true), "facing left is its own texture")
+	assert_not_same(a.lit_texture("a"), SpriteSheet.load_set("fixture_plain").frame_texture("a"))
+
 func test_the_second_frame_is_cut_from_its_own_rect() -> void:
 	var t := SpriteSheet.load_set("fixture_lit").lit_texture("b") as CanvasTexture
 	assert_eq(t.diffuse_texture.get_size(), Vector2(2, 2))

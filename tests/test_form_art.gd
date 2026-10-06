@@ -222,6 +222,19 @@ func test_a_still_spider_has_its_frames_hurt_shape_swells_through_evolution_and_
 	await wait_physics_frames(2)
 	assert_lt(sprite.modulate.g, sprite.modulate.r, "red for a moment when hurt")
 
+func test_the_base_spider_is_drawn_lit_and_turned_round_in_its_texture() -> void:
+	await _spawn("spider")
+	await _settle()
+	var sprite: Sprite2D = player.get_node("Sprite")
+	assert_true(player._sheet.has_normals(), "the base spider's sheet has a normal map")
+	assert_true(sprite.texture is CanvasTexture, "so the room's lights shade it")
+	player.global_position.y -= 80.0  # in the air, where a spider is not turned to a surface
+	Input.action_press("move_left")
+	await wait_physics_frames(12)
+	Input.action_release("move_left")
+	assert_true(sprite.texture is CanvasTexture)
+	assert_false(sprite.flip_h, "turned round in the texture, so its normals turn with it")
+
 func test_look_falls_back_to_the_base_when_the_requested_frame_is_missing() -> void:
 	var broken: FormDef = FormLoader.load_all()["wolf_warg"].duplicate()
 	broken.sprite_frame = "no_such_frame"

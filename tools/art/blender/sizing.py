@@ -18,13 +18,18 @@ def twin_path(species, variant):
     return os.path.join(ROOT, "data", "creatures", name + ".tres")
 
 
+# the creature a species' base render is (data/creatures/<id>.tres): its stats are the ones its walk is built for
+BASE_CREATURES = {"wolf": "gloom_wolf", "spider": "spider"}
+
+
 def speed_of(species, variant):
     """How fast this form crosses the ground in the game, in the sprite's own pixels per second: the enemy's speed (60 px/s times its spd stat
-    over 100) divided by the size its sprite is drawn at. A form with no twin walks at 60."""
+    over 100) divided by the size its sprite is drawn at. A form with no twin walks at 60; a species' base creature at the speed of its own stat."""
     speed, size = BASE_SPEED, 1.0
-    if variant:
+    path = twin_path(species, variant) if variant else (os.path.join(ROOT, "data", "creatures", BASE_CREATURES[species] + ".tres") if species in BASE_CREATURES else None)
+    if path:
         try:
-            with open(twin_path(species, variant)) as fh:
+            with open(path) as fh:
                 text = fh.read()
             spd = re.search(r'"spd":\s*(\d+)', text)
             sz = re.search(r"^sprite_size = ([0-9.]+)", text, re.M)
