@@ -491,3 +491,7 @@ def die_clip(body):
     spec = die_frames()
     dur = [d for _, d in spec]
     return Clip(_with_secondary(body, [die_pose(body, t) for t, _ in spec], dur, 0.3, False), dur, False, grounded=True)
+
+
+import attack_kinds  # noqa: E402  (the verb-shaped attacks: slam, roar, lunge, guard)
+attack_kinds.register(ATTACKS, _attack)

@@ -204,13 +204,50 @@ def _swing(windup, mid, hit, follow):
     return [(0.0, 0.0, "out"), (T_WIND, windup, "smooth"), (T_HOLD, windup, "in"), (T_MID, mid, "linear"), (T_HIT, hit, "out"), (T_FOLLOW, follow, "smooth"), (T_END, 0.0, "smooth")]
 
 
-BITES = {
-    "root_x": _swing(-0.10, 0.28, 0.55, 0.42), "root_z": _swing(-0.14, -0.04, 0.0, -0.02),
-    "hips": _swing(4.0, -3.0, -6.0, -4.0), "spine": _swing(-9.0, 2.0, 5.0, 3.0),
-    "neck": _swing(-22.0, -8.0, -4.0, -6.0), "head": _swing(-4.0, 8.0, 12.0, 6.0), "jaw": _swing(0.0, 32.0, 4.0, 0.0),
-    "fn_x": _swing(0.0, 0.10, 0.34, 0.20), "fn_lift": _swing(0.0, 0.10, 0.12, 0.06),
-    "ff_x": _swing(0.0, 0.0, 0.18, 0.10), "ff_lift": _swing(0.0, 0.0, 0.04, 0.0),
+# (windup, mid-swing, impact, follow-through) per channel; the lunge-bite is the everyday attack, and a creature that casts a verb of another kind uses the kind
+# that reads like it: a lunge for a dash, a roar for a howl or a mark, a slam (rearing up and crashing down) for a burst, a guard (crouched, growling) for a ward
+ATTACKS = {
+    "bite": {
+        "root_x": _swing(-0.10, 0.28, 0.55, 0.42), "root_z": _swing(-0.14, -0.04, 0.0, -0.02),
+        "hips": _swing(4.0, -3.0, -6.0, -4.0), "spine": _swing(-9.0, 2.0, 5.0, 3.0),
+        "neck": _swing(-22.0, -8.0, -4.0, -6.0), "head": _swing(-4.0, 8.0, 12.0, 6.0), "jaw": _swing(0.0, 32.0, 4.0, 0.0),
+        "fn_x": _swing(0.0, 0.10, 0.34, 0.20), "fn_lift": _swing(0.0, 0.10, 0.12, 0.06),
+        "ff_x": _swing(0.0, 0.0, 0.18, 0.10), "ff_lift": _swing(0.0, 0.0, 0.04, 0.0),
+    },
+    "lunge": {
+        "root_x": _swing(-0.16, 0.55, 1.05, 0.7), "root_z": _swing(-0.18, -0.06, -0.02, -0.04),
+        "hips": _swing(6.0, -4.0, -8.0, -5.0), "spine": _swing(-12.0, 4.0, 8.0, 4.0),
+        "neck": _swing(-26.0, -10.0, -6.0, -8.0), "head": _swing(-6.0, 8.0, 14.0, 6.0), "jaw": _swing(0.0, 30.0, 6.0, 0.0),
+        "fn_x": _swing(0.0, 0.18, 0.5, 0.3), "fn_lift": _swing(0.0, 0.14, 0.14, 0.06),
+        "ff_x": _swing(0.0, 0.08, 0.3, 0.16), "ff_lift": _swing(0.0, 0.06, 0.06, 0.0),
+    },
+    "roar": {
+        "root_x": _swing(-0.04, -0.02, -0.02, 0.0), "root_z": _swing(-0.10, 0.03, 0.04, 0.02),
+        "hips": _swing(6.0, -4.0, -6.0, -2.0), "spine": _swing(-6.0, 10.0, 14.0, 8.0),
+        "neck": _swing(-12.0, 28.0, 36.0, 22.0), "head": _swing(-6.0, 34.0, 42.0, 24.0), "jaw": _swing(8.0, 38.0, 44.0, 20.0),
+        "fn_x": _swing(0.0, 0.0, 0.0, 0.0), "fn_lift": _swing(0.0, 0.10, 0.18, 0.08),
+        "ff_x": _swing(0.0, 0.0, 0.0, 0.0), "ff_lift": _swing(0.0, 0.0, 0.0, 0.0),
+    },
+    "slam": {
+        "root_x": _swing(-0.06, 0.04, 0.12, 0.08), "root_z": _swing(0.02, 0.06, -0.08, -0.04),
+        "hips": _swing(10.0, 6.0, -8.0, -4.0), "spine": _swing(16.0, 20.0, -8.0, -2.0),
+        "neck": _swing(10.0, 16.0, -14.0, -4.0), "head": _swing(6.0, 12.0, -6.0, 0.0), "jaw": _swing(14.0, 24.0, 6.0, 0.0),
+        "fn_x": _swing(-0.05, 0.10, 0.34, 0.2), "fn_lift": _swing(0.75, 0.9, 0.0, 0.0),
+        "ff_x": _swing(-0.05, 0.08, 0.28, 0.16), "ff_lift": _swing(0.7, 0.85, 0.0, 0.0),
+    },
+    "guard": {
+        "root_x": _swing(-0.04, -0.06, -0.06, -0.03), "root_z": _swing(-0.16, -0.20, -0.20, -0.12),
+        "hips": _swing(8.0, 10.0, 10.0, 6.0), "spine": _swing(-8.0, -12.0, -12.0, -6.0),
+        "neck": _swing(-20.0, -26.0, -26.0, -14.0), "head": _swing(-6.0, -10.0, -10.0, -4.0), "jaw": _swing(10.0, 26.0, 26.0, 10.0),
+        "fn_x": _swing(0.0, -0.06, -0.06, 0.0), "fn_lift": _swing(0.0, 0.0, 0.0, 0.0),
+        "ff_x": _swing(0.0, 0.0, 0.0, 0.0), "ff_lift": _swing(0.0, 0.0, 0.0, 0.0),
+    },
 }
+BITES = ATTACKS["bite"]
+
+
+def attack_kind(form):
+    return form.get("attack", "bite") if form.get("attack") in ATTACKS else "bite"
 
 
 def attack_frames(body):
@@ -220,7 +257,7 @@ def attack_frames(body):
 def attack_pose(body, time):
     d, z0 = _carriage(body)
     L = body.L["f"]
-    ch = {name: anim.sample(keys, time) for name, keys in BITES.items()}
+    ch = {name: anim.sample(keys, time) for name, keys in ATTACKS[attack_kind(body.form)].items()}
     rot = {}
     _trunk(body, rot, d["hips"] + ch["hips"], d["spine"] + ch["spine"], d["neck"] + ch["neck"], d["head"] + ch["head"], ch["jaw"])
     root = (ch["root_x"] * L, 0.0, z0 + ch["root_z"] * L)

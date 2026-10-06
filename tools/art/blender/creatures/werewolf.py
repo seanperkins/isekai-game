@@ -10,6 +10,7 @@ HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if HERE not in sys.path:
     sys.path.insert(0, HERE)
 
+import attack_kinds  # noqa: E402
 import biped_motion as motion_  # noqa: E402
 import rigkit as k  # noqa: E402
 import sizing  # noqa: E402
@@ -25,7 +26,8 @@ RUN_SPEED = 1.9   # a run covers the ground this many times as fast as the walk 
 
 
 def _form(variant):
-    return forms.FORMS[variant]
+    form = forms.FORMS[variant]
+    return dict(form, attack=attack_kinds.resolve(form, "wolf_" + variant, motion_.attack_kind(form)))
 
 
 def build(variant):

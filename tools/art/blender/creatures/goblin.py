@@ -15,6 +15,7 @@ if HERE not in sys.path:
     sys.path.insert(0, HERE)
 
 import anim  # noqa: E402
+import attack_kinds  # noqa: E402
 import goblin_forms as forms  # noqa: E402
 import goblin_gear as gear  # noqa: E402
 import goblin_kit as kit  # noqa: E402
@@ -37,7 +38,9 @@ WALK_SPEED_RUN = 1.9   # a run covers the ground this many times as fast as the 
 
 
 def _form(variant):
-    return forms.FORMS[variant or "goblin"]
+    """The form's table entry with the attack it uses: what it holds and the verb it casts decide it (attack_kinds.resolve)."""
+    form = forms.FORMS[variant or "goblin"]
+    return dict(form, attack=attack_kinds.resolve(form, "goblin_" + variant if variant else "goblin", motion_.attack_kind(form)))
 
 
 def build(variant=None):
@@ -107,7 +110,7 @@ def rider_clips(rig, form, variant):
     """({name: Clip}, ppu) for a goblin on a wolf: the wolf moves as a wolf does (the quadruped motion on the mount's own flat skeleton, its bones
     prefixed) and the rider sits on it."""
     mount = form["mount"]
-    mform = wolf.mount_form(mount["fur"], mount["belly"], mount.get("barding"))
+    mform = dict(wolf.mount_form(mount["fur"], mount["belly"], mount.get("barding")), attack=attack_kinds.resolve({}, "goblin_" + (variant or ""), "bite", quad=True))
     body = wolf.body_of(rig, mform, "w_")
     rig.pose(*_rider_frame(form, wolf.motion_.idle_clip(body).frames[0][0], wolf.motion_.idle_clip(body).frames[0][1], 0.0))
     x0, x1, z0, z1 = rig.extent()

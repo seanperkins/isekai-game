@@ -11,6 +11,7 @@ HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if HERE not in sys.path:
     sys.path.insert(0, HERE)
 
+import attack_kinds  # noqa: E402
 import quad_motion as motion_  # noqa: E402
 import quad_skeleton as skeleton  # noqa: E402
 import rigkit as k  # noqa: E402
@@ -28,7 +29,9 @@ BONES = {name for name, _, _, _ in skeleton.core()}
 
 
 def _form(variant):
-    return forms.FORMS[variant or "gloom_wolf"]
+    """The form's table entry with the attack it uses, chosen by the verb it casts (attack_kinds.resolve)."""
+    form = forms.FORMS[variant or "gloom_wolf"]
+    return dict(form, attack=attack_kinds.resolve(form, "wolf_" + variant if variant else "wolf", "bite", quad=True))
 
 
 def mount_form(fur, belly, barding=None):

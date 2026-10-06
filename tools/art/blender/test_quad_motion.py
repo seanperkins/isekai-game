@@ -173,7 +173,7 @@ class ActionTest(unittest.TestCase):
         self.assertLess(max(contacts) - min(contacts), 0.02, "the hind paws do not slide")
         heads = [body.skel.pose(*f)["head"][1][0] for f in frames]
         self.assertGreater(max(heads) - heads[0], 0.4 * body.L["f"], "the head goes well ahead")
-        jaws = [qm.anim.sample(qm.BITES["jaw"], t) for t, _ in qm.FRAMES]
+        jaws = [qm.anim.sample(qm.ATTACKS["bite"]["jaw"], t) for t, _ in qm.FRAMES]
         self.assertGreater(max(jaws), 20.0)
         self.assertLess(jaws[qm.WINDUP], 8.0, "snapped shut on the impact frame")
 
@@ -202,6 +202,41 @@ class ActionTest(unittest.TestCase):
         self.assertLess(max(max(p[0][1], p[1][1]) for p in core) - min(min(p[0][1], p[1][1]) for p in core), 0.35)
         self.assertLess(posed["meta_n"][1][0], posed["hips"][0][0], "the hind legs are stretched behind")
         self.assertGreater(posed["paw_n"][1][0], posed["spine"][1][0] - 0.05, "the forelegs are stretched ahead")
+
+
+class AttackKindsTest(unittest.TestCase):
+    def test_every_kind_keeps_its_hind_paws_down_through_the_blow_ends_at_rest_and_comes_up_with_the_engines_timing(self):
+        for kind in qm.ATTACKS:
+            body = qm.QuadBody(qs.skeleton(), FEET, {"attack": kind})
+            idle, _ = qm.idle_pose(body, 0.0)
+            frames = [qm.attack_pose(body, t) for t, _ in qm.FRAMES]
+            for rot, root in frames:
+                for k in ("hn", "hf"):
+                    self.assertGreaterEqual(low(body, k, rot, root), -1e-6, kind)
+                for r in (rot,):
+                    for bone in ("spine", "neck", "head"):
+                        self.assertTrue(math.isfinite(r[bone][1]))
+            for bone in ("spine", "neck", "head", "thigh_n", "sho_n"):
+                self.assertAlmostEqual(frames[-1][0][bone][1], idle[bone][1], delta=1.5, msg="%s %s" % (kind, bone))
+            self.assertAlmostEqual(sum(d for _, d in qm.FRAMES[:qm.WINDUP]), qm.ENGINE_WINDUP, places=9)
+
+    def test_a_roar_throws_the_head_up_a_slam_rears_the_forepaws_and_a_guard_drops_the_body(self):
+        def at(kind, t):
+            body = qm.QuadBody(qs.skeleton(), FEET, {"attack": kind})
+            return body, body.skel.pose(*qm.attack_pose(body, t))
+        body, rest = at("bite", 0.0)
+        _, roar = at("roar", qm.T_HIT)
+        self.assertGreater(roar["head"][1][1], rest["head"][1][1] + 0.08)
+        _, rear = at("slam", qm.T_HOLD - 0.01)
+        self.assertGreater(rear["paw_n"][1][1], 0.2, "the forepaws are well off the ground")
+        _, slammed = at("slam", qm.T_HIT)
+        self.assertLess(slammed["paw_n"][1][1], 0.06, "and come down")
+        _, crouch = at("guard", qm.T_HIT)
+        self.assertLess(crouch["spine"][1][1], rest["spine"][1][1] - 0.04)
+
+    def test_an_unknown_kind_is_a_bite(self):
+        self.assertEqual(qm.attack_kind({"attack": "nonsense"}), "bite")
+        self.assertEqual(qm.attack_kind({}), "bite")
 
 
 class TimingTest(unittest.TestCase):
