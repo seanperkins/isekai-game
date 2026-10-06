@@ -58,8 +58,8 @@ class TimingTest(unittest.TestCase):
         self.assertEqual(set(c), {"windup", "recover", "hurt", "run_speed"})
         self.assertGreater(c["windup"], c["recover"])
 
-    def test_the_art_the_goblin_motion_makes_matches_the_engine(self):
-        import goblin_motion as gm
+    def test_the_art_the_biped_motion_makes_matches_the_engine(self):
+        import biped_motion as gm
         c = ex.engine_constants()
         self.assertEqual((gm.ENGINE_WINDUP, gm.ENGINE_RECOVER, gm.ENGINE_HURT), (c["windup"], c["recover"], c["hurt"]))
         import quad_motion as qm

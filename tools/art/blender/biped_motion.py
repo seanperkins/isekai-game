@@ -1,5 +1,6 @@
-"""How a goblin moves: idle, walk, run, attack, hurt and die, as poses for the rig of goblin_skeleton.py. Pure Python (no Blender), so it is
-tested in test_goblin_motion.py; creatures/goblin.py feeds it the measured feet and renders what it makes.
+"""How a two-legged creature moves: idle, walk, run, attack, hurt and die, as poses for a rig like the goblin's (goblin_skeleton.py). Pure Python (no
+Blender), so it is tested in test_biped_motion.py; creatures/goblin.py feeds it the measured feet and renders what it makes. A family sets its own
+posture (POSTURES: how low it crouches, how far it leans, how it gaits) and everything else follows.
 
 The goblin goes about in a crouch (docs/research/images/art-target/goblin-reference-sheet.png): the chest leans about 30 degrees forward, the head
 is thrust ahead of it, the hips are low over bent knees and the feet are a wide step apart. Everything is placed in the world, not
@@ -46,9 +47,12 @@ STANCES = {
     "listen": {"head": 10.0, "lean": -4.0},
 }
 
-CROUCH = 0.82          # hip height above the ankle, as a fraction of the leg's length, standing: a bend of about 58 degrees at the knee
-STANCE_HALF = 0.31     # each foot this far (of L) either side of the hips in idle: a step 0.62 L wide
-LEAN, HEAD_LEAN = 28.0, 12.0
+# How a family carries itself. `crouch`: the hip's height above the ankle, standing, as a fraction of the leg's length (0.82: a bend of about 58 degrees at
+# the knee); `stance_half`: each foot this far (of L) either side of the hips in idle; `lean` and `head_lean`: how far the chest and the head are tipped
+# forward; `recoil`: how much a blow throws the body (1 is the goblin's); `gaits`: overrides of GAITS for this family (a man is upright and long of stride).
+POSTURES = {
+    "goblin": dict(crouch=0.82, stance_half=0.31, lean=28.0, head_lean=12.0, recoil=1.0, gaits={}),
+}
 
 GAITS = {
     "walk": dict(duty=0.6, crouch=0.76, bob=0.035, lift=0.14, lean=34.0, lean_amp=1.4, head=12.0, swing=18.0, wind=1.0, stride_legs=0.9, max_stride=1.0, cycle=(0.35, 0.9)),
@@ -91,16 +95,19 @@ def attack_kind(form):
 class Body:
     """What the motion needs to know about one goblin: its flat skeleton, the feet as measured from its meshes (ankle_h, heel, toe), its form and
     the bones its rig really has (gear adds some)."""
-    def __init__(self, skel, feet, form, present=None):
+    def __init__(self, skel, feet, form, present=None, posture="goblin"):
         self.skel, self.form = skel, form
+        self.posture = dict(POSTURES[posture]) if isinstance(posture, str) else dict(POSTURES["goblin"], **posture)
+        self.gaits = {name: dict(g, **self.posture.get("gaits", {}).get(name, {})) for name, g in GAITS.items()}
         self.present = set(present) if present is not None else set(skel.rest)
         self.legs = {s: Leg(skel, s, *feet[s]) for s in "nf"}
         self.L = self.legs["n"].reach
         self.hip = self.legs["n"].hip
         self.stance = STANCES.get(form.get("stance"), {})
 
-    def hip_z(self, crouch):
+    def hip_z(self, crouch=None):
         leg = self.legs["n"]
+        crouch = self.posture["crouch"] if crouch is None else crouch
         return leg.ankle_h + crouch * self.L + self.stance.get("pelvis", (0.0, 0.0))[1] * self.L
 
 
@@ -161,13 +168,13 @@ def _foot_base(body, side):
     """(contact x, lift, pitch) of a foot standing in the form's stance."""
     L = body.L
     dx, dz, dpitch = body.stance.get("feet", {}).get(side, (0.0, 0.0, 0.0))
-    return body.hip[0] + ((STANCE_HALF if side == "n" else -STANCE_HALF) + dx) * L, dz * L, dpitch
+    return body.hip[0] + ((body.posture["stance_half"] if side == "n" else -body.posture["stance_half"]) + dx) * L, dz * L, dpitch
 
 
 def _stand_feet(body, rot, hip, shift=0.0):
     """Both feet planted in the idle stance, a step apart (so both legs show from the side), each of them moved by the form's stance."""
     L = body.L
-    for side, half in (("n", STANCE_HALF), ("f", -STANCE_HALF)):
+    for side, half in (("n", body.posture["stance_half"]), ("f", -body.posture["stance_half"])):
         dx, dz, dpitch = body.stance.get("feet", {}).get(side, (0.0, 0.0, 0.0))
         _plant(body, rot, side, hip, body.hip[0] + (half + dx + shift) * L, dpitch, dz * L)
 
@@ -179,11 +186,11 @@ def idle_pose(body, t):
     st = body.stance
     breath = 0.5 - 0.5 * math.cos(2.0 * math.pi * t)
     px = st.get("pelvis", (0.0, 0.0))[0] * L + 0.012 * L * math.sin(2.0 * math.pi * t)
-    hip = (body.hip[0] + px, body.hip_z(CROUCH) - 0.012 * L * breath)
+    hip = (body.hip[0] + px, body.hip_z() - 0.012 * L * breath)
     rot = {}
     _stand_feet(body, rot, hip)
-    lean = LEAN + st.get("lean", 0.0) + 1.6 * math.sin(2.0 * math.pi * t - 0.6)
-    head = HEAD_LEAN + st.get("head", 0.0) + 1.5 * math.sin(2.0 * math.pi * t + 0.9)
+    lean = body.posture["lean"] + st.get("lean", 0.0) + 1.6 * math.sin(2.0 * math.pi * t - 0.6)
+    head = body.posture["head_lean"] + st.get("head", 0.0) + 1.5 * math.sin(2.0 * math.pi * t + 0.9)
     _posture(body, rot, lean, head)
     _arms(body, rot, t, 3.0, lag=0.15)
     _hold_items(body, rot)
@@ -194,7 +201,7 @@ def idle_pose(body, t):
 def gait_pose(body, gait, t, stride):
     """One pose of a walk or a run at cycle position t in [0, 1): `stride` is how far each planted foot travels while it is down (the body is
     still in the picture and the ground slides back under it)."""
-    g = GAITS[gait]
+    g = body.gaits[gait]
     L = body.L
     st = body.stance
     pel_z = body.hip_z(g["crouch"]) + anim.pelvis_height(t, 0.0, g["bob"] * L, g["duty"])
@@ -222,6 +229,7 @@ REST = "rest"   # in a key: the form's own resting value of that channel (its id
 # frames, so the clips are the same length; what differs is the path the body and the weapon take.
 ENGINE_WINDUP, ENGINE_RECOVER, ENGINE_HURT = 0.35, 0.30, 0.25   # scripts/enemies/enemy.gd: VERB_WINDUP, VERB_RECOVER, HURT_SECONDS (test_export_forms checks)
 # the windup frames add up to the engine's windup, so the impact frame comes up the moment the verb fires, and the recovery frames to its recover
+GOBLIN_LEAN, GOBLIN_HEAD = 28.0, 12.0   # the attacks below are written in the goblin's degrees of lean and head; a family applies them as offsets from its own
 ATTACK_FRAMES = [(0.00, 0.06), (0.06, 0.06), (0.12, 0.15), (0.27, 0.04), (0.31, 0.04), (0.35, 0.08), (0.43, 0.05), (0.48, 0.05), (0.53, 0.06), (0.59, 0.06)]
 ATTACK_WINDUP = 5
 T_WIND, T_HOLD, T_MID, T_HIT, T_FOLLOW, T_END = 0.12, 0.27, 0.31, 0.35, 0.48, 0.59   # the last frame starts at T_END, so it is the rest pose
@@ -237,7 +245,7 @@ def _swing(channel, windup, mid, hit, follow, rest=True):
 def _attack(lean, head, px, pz, arm_n, fore_n, item, arm_f, fore_f, step=0.2, lift=0.10, heel=-24.0):
     """One attack from its four-key paths (windup, mid-swing, impact, follow-through) per channel."""
     return dict(frames=ATTACK_FRAMES, windup=ATTACK_WINDUP, keys={
-        "lean": _swing("lean", *lean), "head": _swing("head", *head),
+        "d_lean": _swing("d_lean", *[v - GOBLIN_LEAN for v in lean], rest=False), "d_head": _swing("d_head", *[v - GOBLIN_HEAD for v in head], rest=False),
         "pelvis_x": _swing("pelvis_x", *px, rest=False), "pelvis_z": _swing("pelvis_z", *pz, rest=False),
         "arm_n": _swing("arm_n", *arm_n), "fore_n": _swing("fore_n", *fore_n), "item_n": _swing("item_n", *item),
         "arm_f": _swing("arm_f", *arm_f), "fore_f": _swing("fore_f", *fore_f),
@@ -291,7 +299,7 @@ def attack_pose(body, time):
         resolved = [(t, rest.get(name, 0.0) if v == REST else v, e) for t, v, e in keys]
         ch[name] = anim.sample(resolved, time)
     L = body.L
-    hip = (body.hip[0] + ch["pelvis_x"] * L, body.hip_z(CROUCH) + ch["pelvis_z"] * L)
+    hip = (body.hip[0] + ch["pelvis_x"] * L, body.hip_z() + ch["pelvis_z"] * L)
     rot = {}
     # each foot starts from where the form's stance puts it; the near one steps into the blow (lifted on the way out and home), the far one stays
     # put and its heel comes up about the toe
@@ -301,7 +309,7 @@ def attack_pose(body, time):
         _plant(body, rot, "f", hip, fx, fpitch, flift)
     else:
         _plant_heel(body, rot, "f", hip, fx, ch["heel_f"])
-    _posture(body, rot, ch["lean"], ch["head"])
+    _posture(body, rot, rest["lean"] + ch["d_lean"], rest["head"] + ch["d_head"])
     sk = body.skel
     aim(sk, rot, "arm_n", ch["arm_n"])
     aim(sk, rot, "fore_n", ch["fore_n"])
@@ -318,8 +326,8 @@ def attack_pose(body, time):
 HURT = dict(
     frames=[(0.00, 0.04), (0.04, 0.06), (0.10, 0.06), (0.16, 0.05), (0.21, 0.04)],   # a quarter of a second, the engine's flinch: the last frame is the rest pose
     keys={
-        "lean": [(0.0, REST, "out"), (0.04, 10.0, "out"), (0.10, -6.0, "smooth"), (0.16, 20.0, "smooth"), (0.21, REST, "smooth")],
-        "head": [(0.0, REST, "out"), (0.04, -8.0, "out"), (0.10, -26.0, "smooth"), (0.16, 4.0, "smooth"), (0.21, REST, "smooth")],
+        "d_lean": [(0.0, 0.0, "out"), (0.04, -18.0, "out"), (0.10, -34.0, "smooth"), (0.16, -8.0, "smooth"), (0.21, 0.0, "smooth")],
+        "d_head": [(0.0, 0.0, "out"), (0.04, -20.0, "out"), (0.10, -38.0, "smooth"), (0.16, -8.0, "smooth"), (0.21, 0.0, "smooth")],
         "pelvis_x": [(0.0, 0.0, "out"), (0.04, -0.06, "out"), (0.10, -0.13, "smooth"), (0.16, -0.04, "smooth"), (0.21, 0.0, "smooth")],
         "pelvis_z": [(0.0, 0.0, "out"), (0.04, -0.03, "out"), (0.10, -0.08, "smooth"), (0.16, -0.03, "smooth"), (0.21, 0.0, "smooth")],
         "d_arm_n": [(0.0, 0.0, "out"), (0.04, -40.0, "out"), (0.10, -62.0, "smooth"), (0.16, -20.0, "smooth"), (0.21, 0.0, "smooth")],
@@ -340,16 +348,17 @@ def hurt_pose(body, time):
     for name, keys in HURT["keys"].items():
         ch[name] = anim.sample([(t, rest.get(name, 0.0) if v == REST else v, e) for t, v, e in keys], time)
     L = body.L
-    hip = (body.hip[0] + ch["pelvis_x"] * L, body.hip_z(CROUCH) + ch["pelvis_z"] * L)
+    r = body.posture["recoil"]
+    hip = (body.hip[0] + r * ch["pelvis_x"] * L, body.hip_z() + r * ch["pelvis_z"] * L)
     rot = {}
     _stand_feet(body, rot, hip)
-    _posture(body, rot, ch["lean"], ch["head"])
+    _posture(body, rot, rest["lean"] + r * ch["d_lean"], rest["head"] + r * ch["d_head"])
     sk = body.skel
     for bone in ("arm_n", "fore_n", "arm_f", "fore_f"):
         aim(sk, rot, bone, rest[bone] + ch["d_" + bone])
     _hold_items(body, rot)
     aim(sk, rot, "item_n", 180.0 - (rest["item_n"] + ch["d_item_n"]))
-    return rot, (ch["pelvis_x"] * L, 0.0, hip[1] - body.hip[1])
+    return rot, (r * ch["pelvis_x"] * L, 0.0, hip[1] - body.hip[1])
 
 
 # ---- die ------------------------------------------------------------------------------------------------------------------------
@@ -425,7 +434,7 @@ def plan_gait(body, gait, speed, ppu):
     unit. A foot is down for `duty` of the cycle and the ground slides back under it at `speed`, so the stride is fixed by the cycle; the cycle is chosen
     for a brisk step of the usual length, kept within the usual bounds, and then shortened if the stride it gives is longer than the leg can reach.
     Never longer than the leg can take, whatever the speed."""
-    g = GAITS[gait]
+    g = body.gaits[gait]
     reach_px = body.L * ppu
     target = g["stride_legs"] * reach_px / (speed * g["duty"])
     cycle = min(g["cycle"][1], max(g["cycle"][0], target))
@@ -441,7 +450,7 @@ def gait_clip(body, gait, cycle, stride):
     n = WALK_FRAMES if gait == "walk" else RUN_FRAMES
     dur = [cycle / n] * n
     frames = [gait_pose(body, gait, i / n, stride) for i in range(n)]
-    return Clip(_with_secondary(body, frames, dur, GAITS[gait]["wind"], True), dur, True)
+    return Clip(_with_secondary(body, frames, dur, body.gaits[gait]["wind"], True), dur, True)
 
 
 def attack_clip(body):

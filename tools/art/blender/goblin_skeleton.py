@@ -1,5 +1,5 @@
 """The goblin's skeleton as data, in standard goblin coordinates (see goblin_kit.py): the kit builds the armature from it and the motion code
-(goblin_motion.py) and its tests read the same numbers, so a bone moved here moves everywhere. Pure Python.
+(biped_motion.py) and its tests read the same numbers, so a bone moved here moves everywhere. Pure Python.
 """
 import skeleton2d
 

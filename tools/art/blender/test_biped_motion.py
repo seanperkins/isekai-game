@@ -1,4 +1,4 @@
-"""How a goblin moves (goblin_motion.py), checked on a flat copy of its skeleton: pure Python. Feet are measured where they touch the ground,
+"""How a goblin moves (biped_motion.py), checked on a flat copy of its skeleton: pure Python. Feet are measured where they touch the ground,
 so these fail when a foot skates, floats or sinks, whatever the angles say."""
 import math
 import os
@@ -8,7 +8,7 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import anim  # noqa: E402
 import goblin_forms as forms  # noqa: E402
-import goblin_motion as gm  # noqa: E402
+import biped_motion as gm  # noqa: E402
 import goblin_skeleton as gs  # noqa: E402
 
 FEET = {"n": (0.11, 0.06, 0.24), "f": (0.11, 0.06, 0.24)}

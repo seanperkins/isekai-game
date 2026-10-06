@@ -11,7 +11,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 sys.path.insert(0, HERE)
 import goblin_forms as forms  # noqa: E402
-import goblin_motion as motion  # noqa: E402
+import biped_motion as motion  # noqa: E402
 import goblin_tree as tree  # noqa: E402
 
 

@@ -1,5 +1,5 @@
 """The goblin tree in Blender: the base goblin and its 28 forms on one skeleton (goblin_kit.py), dressed from a table (goblin_forms.py) with gear
-(goblin_gear.py) and moved by goblin_motion.py (pure Python, tested without Blender). A rider's mount is the wolf kit. Every form gets idle,
+(goblin_gear.py) and moved by biped_motion.py (pure Python, tested without Blender). A rider's mount is the wolf kit. Every form gets idle,
 walk, run, attack, hurt and die; the pose of its arms, its stance and what it holds come from small presets, so a new form is a few lines of
 data, not new animation.
 
@@ -18,7 +18,7 @@ import anim  # noqa: E402
 import goblin_forms as forms  # noqa: E402
 import goblin_gear as gear  # noqa: E402
 import goblin_kit as kit  # noqa: E402
-import goblin_motion as motion_  # noqa: E402
+import biped_motion as motion_  # noqa: E402
 import goblin_skeleton as skeleton  # noqa: E402
 import rigkit as k  # noqa: E402
 import secondary  # noqa: E402
