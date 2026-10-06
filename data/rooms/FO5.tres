@@ -25,7 +25,7 @@ spawns = [{
 }, {
 "by": "PL",
 "id": "twin_goblin_beast_rider",
-"pos": Vector2(195.375, 1034)
+"pos": Vector2(194.125, 1034)
 }, {
 "by": "PL",
 "id": "twin_spider_loom_weaver",
@@ -37,7 +37,7 @@ spawns = [{
 }, {
 "by": "PL",
 "id": "twin_goblin_beastcaller",
-"pos": Vector2(421.52, 1034)
+"pos": Vector2(423.76, 1034)
 }]
 exits = [{
 "edge": "bottom",

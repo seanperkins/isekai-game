@@ -68,8 +68,8 @@ spawns = [{
 "pos": Vector2(795.4, 314)
 }, {
 "by": "PL",
-"id": "twin_goblin_giant_killer",
-"pos": Vector2(987.6, 314)
+"id": "twin_undead_heart_weigher",
+"pos": Vector2(986.9, 314)
 }, {
 "by": "PL",
 "id": "twin_undead_arash",
