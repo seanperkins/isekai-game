@@ -214,5 +214,94 @@ class StageTests(unittest.TestCase):
             self.assertLessEqual(cz - view_h / 2.0, -sr.GROUND_MARGIN_PX / 40.0 + 1e-6, "the ground is in the frame")
 
 
+class CrawlTests(unittest.TestCase):
+    """The spider moves by shifting its body over a surface: its velocity is zero and its speed is read from where it was."""
+
+    def crawl(self, i, x, y, normal, speed=70.0, surface="wall"):
+        t = tick(i, x=x, y=y, vx=0.0, surface=surface)
+        t.update({"crawl": True, "speed": speed, "normal": normal})
+        return t
+
+    def test_a_crawl_is_a_gait_by_its_speed_not_a_wall_or_a_ceiling(self):
+        for surface, normal in (("wall", [-1.0, 0.0]), ("ceiling", [0.0, 1.0]), ("floor", [0.0, -1.0])):
+            self.assertEqual(sr.state_of(self.crawl(0, 0.0, 0.0, normal, 40.0, surface), 66.0), "walk", surface)
+            self.assertEqual(sr.state_of(self.crawl(0, 0.0, 0.0, normal, 100.0, surface), 66.0), "run", surface)
+            self.assertEqual(sr.state_of(self.crawl(0, 0.0, 0.0, normal, 0.0, surface), 66.0), "idle", surface)
+
+    def test_a_tick_with_no_speed_goes_by_its_velocity(self):
+        self.assertEqual(sr.state_of(tick(0, vx=-200.0), 105.0), "run")
+
+    def test_the_body_is_turned_to_lie_on_its_surface(self):
+        self.assertAlmostEqual(sr.surface_angle([0.0, -1.0]), 0.0)
+        self.assertAlmostEqual(sr.surface_angle([-1.0, 0.0]), -90.0)
+        self.assertAlmostEqual(sr.surface_angle([1.0, 0.0]), 90.0)
+        self.assertAlmostEqual(abs(sr.surface_angle([0.0, 1.0])), 180.0)
+
+    def test_a_crawler_faces_the_way_it_goes_along_its_surface(self):
+        clips = goblin_clips()
+        up = [self.crawl(i, 760.0, -2.0 * i, [-1.0, 0.0]) for i in range(6)]  # up a wall that is on its right
+        down = [self.crawl(i, 760.0, 2.0 * i, [-1.0, 0.0]) for i in range(6)]
+        rec = lambda ticks: {"species": "spider", "script": "c", "fps": 60, "start": [0.0, 0.0], "ticks": ticks}
+        self.assertEqual(sr.playback(rec(up), clips, 66.0, every=1)[-1].facing, 1)
+        self.assertEqual(sr.playback(rec(down), clips, 66.0, every=1)[-1].facing, -1)
+        over = [self.crawl(i, 2.0 * i, -180.0, [0.0, 1.0], surface="ceiling") for i in range(6)]  # hanging, going right: upside down, so its right is the screen's left
+        f = sr.playback(rec(over), clips, 66.0, every=1)[-1]
+        self.assertEqual((f.facing, round(abs(f.angle))), (-1, 180))
+
+    def test_a_walker_keeps_the_facing_the_game_gave_it(self):
+        f = sr.playback({"species": "goblin", "script": "w", "fps": 60, "start": [0.0, 0.0], "ticks": [tick(0, facing=-1)]}, goblin_clips(), WALK_SPEED, every=1)[0]
+        self.assertEqual((f.facing, f.angle), (-1, 0.0))
+
+
+class GapTests(unittest.TestCase):
+    def rec(self, ticks):
+        return {"species": "wolf", "script": "s", "fps": 60, "start": [0.0, 0.0], "ticks": ticks}
+
+    def test_the_missing_states_are_the_ones_the_run_needs_and_the_clips_lack(self):
+        ticks = [tick(0), tick(1, surface="air", on_floor=False, vy=-100.0), tick(2, surface="air", on_floor=False, vy=100.0), tick(3, vx=300.0)]
+        self.assertEqual(sr.missing_states(self.rec(ticks), {"idle", "walk", "run"}, WALK_SPEED), ["fall", "rise"])
+        self.assertEqual(sr.missing_states(self.rec(ticks), {"idle", "walk", "run", "rise", "fall"}, WALK_SPEED), [])
+
+    def test_a_verb_with_no_clip_is_missing_by_its_name(self):
+        self.assertEqual(sr.missing_states(self.rec([tick(0, verb="pounce")]), {"idle"}, WALK_SPEED), ["pounce"])
+
+    def test_playback_can_hold_a_missing_pose_and_say_so_instead_of_stopping(self):
+        clips = goblin_clips()
+        del clips["wall"]
+        ticks = [tick(0), tick(1, surface="wall", on_floor=False), tick(2, surface="wall", on_floor=False), tick(3)]
+        frames = sr.playback(self.rec(ticks), clips, WALK_SPEED, every=1, hold_missing=True)
+        self.assertEqual([f.missing for f in frames], [None, "wall", "wall", None])
+        self.assertEqual(frames[1].clip, frames[0].clip, "the last pose is held")
+
+    def test_the_known_gaps_name_real_states_of_known_species(self):
+        for species, scripts in sr.KNOWN_MISSING.items():
+            self.assertIn(species, ("goblin", "undead", "slime", "wolf", "spider"))
+            for script, states in scripts.items():
+                self.assertTrue(states and states == sorted(states), (species, script))
+                for state in states:
+                    self.assertNotIn(state, ("idle", "walk", "run"), "every body has these")
+
+
+class SlideTests(unittest.TestCase):
+    def walking(self, vx):
+        return {"species": "goblin", "script": "w", "fps": 60, "start": [0.0, 0.0], "ticks": [tick(i, x=vx * i / 60.0, vx=vx, ) for i in range(180)]}
+
+    def test_a_steady_walk_does_not_slide(self):
+        clips = goblin_clips()
+        frames = sr.playback(self.walking(100.0), clips, WALK_SPEED, every=1)
+        self.assertLess(sr.slide_px(frames, clips, WALK_SPEED), 0.01)
+
+    def test_a_body_too_slow_for_the_games_playback_range_slides_and_is_measured(self):
+        clips = goblin_clips()
+        frames = sr.playback(self.walking(5.0), clips, WALK_SPEED, every=1)  # the rate is held at 0.2, so the planted foot is dragged
+        self.assertGreater(sr.slide_px(frames, clips, WALK_SPEED), 0.01)
+
+    def test_standing_and_flying_have_no_planted_foot_to_slide(self):
+        clips = goblin_clips()
+        ticks = [tick(i, surface="air", on_floor=False, vy=-50.0, x=i * 2.0) for i in range(30)]
+        frames = sr.playback({"species": "goblin", "script": "j", "fps": 60, "start": [0.0, 0.0], "ticks": ticks}, clips, WALK_SPEED, every=1)
+        self.assertEqual(sr.slide_px(frames, clips, WALK_SPEED), 0.0)
+
+
 if __name__ == "__main__":
     unittest.main()

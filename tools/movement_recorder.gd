@@ -70,8 +70,9 @@ static func make_script(script_name: String) -> Dictionary:
 var profile_id := ""
 
 ## Runs `script_name` as `species` and returns `{"species", "script", "profile", "fps", "start", "ticks": [...]}`, or {} for a species or script it does not know. Each
-## tick is `{"t", "x", "y", "vx", "vy", "facing", "verb", "on_floor", "surface", "normal"}`: x and y are the body's contact with what it stands on (the feet on a floor), in
-## game px with y DOWN; `surface` is floor, wall, ceiling, air or mantle.
+## tick is `{"t", "x", "y", "vx", "vy", "speed", "crawl", "body", "facing", "verb", "on_floor", "surface", "normal"}`: x and y are the body's contact with what it stands on (the feet on a
+## floor), in game px with y DOWN; `surface` is floor, wall, ceiling, air or mantle; `speed` is how fast it goes along what it stands on (a crawler moves by shifting the body, so its
+## velocity is zero and its speed is read from where the body was: `body` is its origin, which does not jump at a corner as the contact does); `crawl` says it is on a surface it crawls (the spider's), whatever the surface, and `normal` which way is out of it.
 func record(species: String, script_name: String) -> Dictionary:
 	profile_id = MovementProfile.SPECIES_PROFILE.get(species, "")
 	var sc := make_script(script_name)
@@ -87,7 +88,7 @@ func record(species: String, script_name: String) -> Dictionary:
 		sb.body.velocity = Vector2.ZERO
 	for _k in SETTLE_TICKS:
 		await get_tree().physics_frame
-	var ticks: Array = [_tick(sb, 0)]
+	var ticks: Array = [_tick(sb, 0, {})]
 	for step: Dictionary in sc["steps"]:
 		var count := int(round(float(step.get("seconds", 0.0)) * FPS))
 		var dir := float(step.get("dir", 0.0))
@@ -100,7 +101,7 @@ func record(species: String, script_name: String) -> Dictionary:
 			inp.jump_held = bool(step.get("hold_jump", false)) or inp.jump_pressed
 			inp.signature_pressed = k == 0 and bool(step.get("signature", false))
 			await get_tree().physics_frame
-			ticks.append(_tick(sb, ticks.size()))
+			ticks.append(_tick(sb, ticks.size(), ticks[-1]))
 			var here: float = ticks[-1]["x"]
 			if step.has("until_x") and ((dir > 0.0 and here >= float(step["until_x"])) or (dir < 0.0 and here <= float(step["until_x"]))):
 				break
@@ -111,16 +112,25 @@ func record(species: String, script_name: String) -> Dictionary:
 	sb.free()  # at once: a sandbox left for the end of the frame runs one more tick over freed floors
 	return {"species": species, "script": script_name, "profile": profile_id, "fps": FPS, "start": start, "ticks": ticks}
 
-func _tick(sb: MovementSandbox, index: int) -> Dictionary:
+func _tick(sb: MovementSandbox, index: int, previous: Dictionary) -> Dictionary:
 	var st: MoveState = sb.state
 	var up := Vector2.UP if st.surface_n == Vector2.ZERO else st.surface_n  # which way is out of the surface it is on
 	var shape: CollisionShape2D = sb.body.get_node("Shape")
 	var size: Vector2 = (shape.shape as RectangleShape2D).size
 	var contact := shape.global_position - up * (absf(up.x) * size.x / 2.0 + absf(up.y) * size.y / 2.0)
+	var crawl := st.surface_n != Vector2.ZERO
+	var speed := absf(sb.body.velocity.x)
+	var body_at: Vector2 = sb.body.global_position
+	if crawl and not previous.is_empty():
+		if Vector2(previous["normal"][0], previous["normal"][1]) == up:
+			speed = (body_at - Vector2(previous["body"][0], previous["body"][1])).length() * FPS
+		else:
+			speed = float(previous["speed"])  # the body wraps round a corner in one tick: that is not a speed, so it keeps the one it had
 	return {
 		"t": snappedf(float(index) / FPS, 0.0001),
 		"x": snappedf(contact.x, 0.01), "y": snappedf(contact.y, 0.01),
 		"vx": snappedf(sb.body.velocity.x, 0.01), "vy": snappedf(sb.body.velocity.y, 0.01),
+		"speed": snappedf(speed, 0.01), "crawl": crawl, "body": [snappedf(body_at.x, 0.01), snappedf(body_at.y, 0.01)],
 		"facing": st.facing, "verb": st.verb, "on_floor": sb.body.is_on_floor(),
 		"surface": _surface(sb), "normal": [up.x, up.y],
 	}

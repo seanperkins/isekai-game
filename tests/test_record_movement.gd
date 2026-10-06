@@ -87,3 +87,25 @@ func test_a_script_with_no_start_begins_at_the_sandboxs_start() -> void:
 	var r: Dictionary = await rec.record("goblin", "walk_run")
 	assert_almost_eq(float(r["ticks"][0]["x"]), MovementSandbox.START.x, 1.0)
 	assert_almost_eq(float(r["ticks"][0]["y"]), MovementSandbox.START.y, 1.0)
+
+func test_a_crawler_has_a_speed_though_its_velocity_is_zero() -> void:
+	var r: Dictionary = await rec.record("spider", "walk_run")
+	var fastest := 0.0
+	for t: Dictionary in r["ticks"]:
+		assert_true(t["crawl"], "the spider is on a surface it crawls, floor or not")
+		assert_eq(t["vx"], 0.0, "it moves by shifting its body")
+		fastest = maxf(fastest, float(t["speed"]))
+	assert_gt(fastest, 60.0, "its speed is read from where the body was")
+
+func test_a_walker_has_its_velocity_as_its_speed_and_does_not_crawl() -> void:
+	var r: Dictionary = await rec.record("goblin", "walk_run")
+	for t: Dictionary in r["ticks"]:
+		assert_false(t["crawl"])
+		assert_almost_eq(float(t["speed"]), absf(float(t["vx"])), 0.01)
+
+func test_a_speed_does_not_spike_where_a_crawler_turns_a_corner() -> void:
+	var r: Dictionary = await rec.record("spider", "crawl")
+	var fastest := 0.0
+	for t: Dictionary in r["ticks"]:
+		fastest = maxf(fastest, float(t["speed"]))
+	assert_lt(fastest, 160.0, "the body wraps round a corner in a tick: that is not a speed")

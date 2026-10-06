@@ -70,21 +70,28 @@ def stride_of(clip, gait, walk_speed):
 
 # ---- states ------------------------------------------------------------------------------------------------------------------------
 
+def _gait_of(speed, walk_speed):
+    if speed <= MOVING:
+        return "idle"
+    return "run" if speed > walk_speed * RUN_RATIO else "walk"
+
+
 def state_of(tick, walk_speed):
-    """The state a recorded tick is posed in (not counting a landing, which needs the ticks before it: see `states_of`)."""
+    """The state a recorded tick is posed in (not counting a landing, which needs the ticks before it: see `states_of`). A body that crawls (the spider's) is on its
+    gait whatever it crawls on: its walk is turned to lie on the surface (`surface_angle`), it is not a wall or a ceiling pose."""
     surface = tick["surface"]
+    speed = tick.get("speed", abs(tick["vx"]))
     if surface == "mantle":
         return "mantle"
     if tick["verb"]:
         return tick["verb"]
+    if tick.get("crawl") and surface != "air":
+        return _gait_of(speed, walk_speed)
     if surface in ("wall", "ceiling"):
         return surface
     if surface == "air" or not tick["on_floor"]:
         return "rise" if tick["vy"] < 0.0 else "fall"
-    speed = abs(tick["vx"])
-    if speed <= MOVING:
-        return "idle"
-    return "run" if speed > walk_speed * RUN_RATIO else "walk"
+    return _gait_of(speed, walk_speed)
 
 
 def states_of(ticks, walk_speed):
@@ -135,17 +142,44 @@ def pose_for(clips, state, phase):
     return Pose(name, i, rot, root, clip.grounded)
 
 
+def surface_angle(normal):
+    """The turn about the camera's axis (degrees, Blender's Y) that lays a body's up on the surface it is on, given the surface's normal in game px (y down)."""
+    return math.degrees(math.atan2(normal[0], -normal[1]))
+
+
 class Frame:
-    """One output frame of a review: which tick, where the body is, how it is posed."""
-    def __init__(self, tick, t, x, y, facing, state, pose, phase, travel):
+    """One output frame of a review: which tick, where the body is, how it is posed. `angle` turns the body onto a surface it crawls; `missing` names the state it has no pose for
+    (the pose shown is then the last one it had)."""
+    def __init__(self, tick, t, x, y, facing, state, pose, phase, travel, angle=0.0, missing=None, normal=None):
         self.tick, self.t, self.x, self.y, self.facing, self.state = tick, t, x, y, facing, state
+        self.normal = normal
         self.clip, self.frame, self.rot, self.root, self.grounded = pose.clip, pose.frame, pose.rot, pose.root, pose.grounded
-        self.phase, self.travel = phase, travel
+        self.phase, self.travel, self.angle, self.missing = phase, travel, angle, missing
 
 
-def playback(recording, clips, walk_speed, every=1):
+def _clip_and_phase(clips, state, k, run_start, run_len, fps, gait_phase, speed, walk_speed):
+    """(clip name, phase, the gait phase after this tick) for a tick in `state`: a gait turns by speed over stride, any other clip runs by the time spent in the state."""
+    if state in GAITS:
+        clip = clips.get(state)
+        if clip is None:
+            raise NoPose(state, state)
+        authored = authored_speed(state, walk_speed)
+        eff = min(max(speed, RATE_RANGE[0] * authored), RATE_RANGE[1] * authored)
+        gait_phase += phase_rate(eff, stride_of(clip, state, walk_speed)) / fps
+        return state, gait_phase, gait_phase
+    name = STATE_CLIP.get(state, "")
+    clip = clips.get(name)
+    if clip is None:
+        raise NoPose(state, name)
+    if clip.loop or len(clip.frames) == 1:
+        return name, (k - run_start[k]) / fps / sum(clip.durations), gait_phase
+    return name, (k - run_start[k]) / float(run_len[k]), gait_phase
+
+
+def playback(recording, clips, walk_speed, every=1, hold_missing=False):
     """Every `every`th tick of a recording as a Frame. A gait's phase is cumulative cycles, advanced every tick by the body's speed over the gait's stride (the speed kept within
-    the game's playback range of the one the clip was built for); any other clip runs by the time spent in its state, a clip that does not loop by how far through the state it is."""
+    the game's playback range of the one the clip was built for); any other clip runs by the time spent in its state, a clip that does not loop by how far through the state it is.
+    A state the creature has no pose for raises NoPose, or with `hold_missing` keeps the last pose it had and marks the frame `missing`."""
     ticks = recording["ticks"]
     fps = float(recording.get("fps", 60))
     states = states_of(ticks, walk_speed)
@@ -159,30 +193,67 @@ def playback(recording, clips, walk_speed, every=1):
             run_start[k], run_len[k] = i, j - i
         i = j
     out = []
-    phase, travel, gait_phase = 0.0, 0.0, 0.0
+    travel, gait_phase, shown, facing = 0.0, 0.0, None, ticks[0]["facing"] if ticks else 1
     for k, t in enumerate(ticks):
         if k:
-            travel += abs(t["x"] - ticks[k - 1]["x"])
-        state = states[k]
-        if state in GAITS:
-            clip = clips.get(state)
-            if clip is None:
-                raise NoPose(state, state)
-            authored = authored_speed(state, walk_speed)
-            speed = min(max(abs(t["vx"]), RATE_RANGE[0] * authored), RATE_RANGE[1] * authored)
-            gait_phase += phase_rate(speed, stride_of(clip, state, walk_speed)) / fps
-            phase = gait_phase
-        else:
-            clip = clips.get(STATE_CLIP.get(state, ""))
-            if clip is None:
-                raise NoPose(state, STATE_CLIP.get(state, ""))
-            if clip.loop or len(clip.frames) == 1:
-                phase = (k - run_start[k]) / fps / sum(clip.durations)
+            prev = ticks[k - 1]
+            if t.get("crawl") and "body" in t and "body" in prev:  # a crawler goes along its surface, up a wall as well as across a floor
+                travel += math.hypot(t["body"][0] - prev["body"][0], t["body"][1] - prev["body"][1])
             else:
-                phase = (k - run_start[k]) / float(run_len[k])
+                travel += abs(t["x"] - prev["x"])
+        state = states[k]
+        crawling = bool(t.get("crawl")) and t["surface"] != "air"
+        angle = surface_angle(t["normal"]) if crawling else 0.0
+        if crawling and k:
+            along = (t["x"] - ticks[k - 1]["x"]) * math.cos(math.radians(angle)) + (-(t["y"] - ticks[k - 1]["y"])) * -math.sin(math.radians(angle))
+            if abs(along) > 1e-6:
+                facing = 1 if along > 0.0 else -1
+        elif not crawling:
+            facing = t["facing"]
+        missing = None
+        try:
+            name, phase, gait_phase = _clip_and_phase(clips, state, k, run_start, run_len, fps, gait_phase, t.get("speed", abs(t["vx"])), walk_speed)
+            pose = pose_for(clips, state, phase)
+        except NoPose:
+            if not hold_missing or shown is None:
+                raise
+            missing, pose, phase = state, shown, 0.0
+        shown = pose
         if k % every == 0:
-            out.append(Frame(k, t["t"], t["x"], t["y"], t["facing"], state, pose_for(clips, state, phase), phase, travel))
+            out.append(Frame(k, t["t"], t["x"], t["y"], facing, state, pose, phase, travel, angle, missing, tuple(t["normal"])))
     return out
+
+
+def slide_px(frames, clips, walk_speed):
+    """How far a planted foot is dragged over the ground, the most in one step between frames: the body went `travel` px while the gait's phase advanced by `phase` cycles, which
+    puts the foot back by phase times the stride. Zero for a body that is not walking or running."""
+    worst = 0.0
+    for a, b in zip(frames, frames[1:]):
+        if a.state == b.state and a.state in GAITS and a.normal == b.normal and not (a.missing or b.missing):  # not over a corner, where the surface turns
+            stride = stride_of(clips[a.state], a.state, walk_speed)
+            worst = max(worst, abs((b.travel - a.travel) - (b.phase - a.phase) * stride))
+    return worst
+
+
+def missing_states(recording, clip_names, walk_speed):
+    """The states a recorded run puts a creature in that none of its clips poses (the names of the clips it has go in `clip_names`), sorted."""
+    needed = set(states_of(recording["ticks"], walk_speed))
+    return sorted(s for s in needed if STATE_CLIP.get(s) not in clip_names)
+
+
+SPECIES = ["goblin", "undead", "wolf", "spider", "slime"]
+# what the recorder can run for each species (tools/movement_recorder.gd SCRIPTS_FOR)
+RUNS = {"goblin": ["walk_run", "jump_ledges", "wall_shaft"], "undead": ["walk_run", "jump_ledges", "wall_shaft"], "slime": ["walk_run", "jump_ledges", "wall_shaft"],
+        "wolf": ["walk_run", "jump_ledges", "pounce"], "spider": ["walk_run", "jump_ledges", "crawl"]}
+
+
+# the gaps in what each species can be posed in, by the scripts it is recorded on: states the recorded run reaches that none of its clips poses yet (the verb motions are
+# the next plan). Checked against the real creatures by test_stage_gaps.py: a gap that closes or a new one fails there until this says so.
+KNOWN_MISSING = {
+    "wolf": {"jump_ledges": ["fall", "rise"], "pounce": ["pounce"]},
+    "spider": {"jump_ledges": ["fall", "rise"]},
+    "slime": {"jump_ledges": ["fall", "rise"], "wall_shaft": ["fall", "rise", "wall"]},
+}
 
 
 # ---- the recording and the course --------------------------------------------------------------------------------------------------
@@ -307,45 +378,83 @@ def _world(scene):
     scene.render.film_transparent = False
 
 
+def gaps(args):
+    """Without rendering: for each recording, the states the creature has no pose for and the worst planted-foot slide; printed as one `GAPS {json}` line."""
+    import rigkit
+    creature = _load(args.creature)
+    rigkit.reset()
+    rig = creature.build(args.variant)
+    clips, _, walk_speed = clips_for(creature, rig, args.variant)
+    out = {}
+    for path in args.recording:
+        with open(path) as fh:
+            rec = json.load(fh)
+        out[rec["script"]] = _report(rec, clips, walk_speed)
+    print("GAPS " + json.dumps(out))
+
+
+def _report(rec, clips, walk_speed):
+    frames = playback(rec, clips, walk_speed, 1, hold_missing=True)
+    return {"missing": missing_states(rec, set(clips), walk_speed), "slide_px": round(slide_px(frames, clips, walk_speed), 4)}
+
+
 def render(args):
     import bpy
     import rigkit
-    course = json.load(open(args.course))
-    recording = json.load(open(args.recording))
-    check_recording(recording, course)
+    with open(args.course) as fh:
+        course = json.load(fh)
     creature = _load(args.creature)
     scene = rigkit.reset()
     rig = creature.build(args.variant)
     clips, ppu, walk_speed = clips_for(creature, rig, args.variant)
-    frames = playback(recording, clips, walk_speed, args.every)  # a NoPose stops here: nothing is rendered for a creature that cannot be posed
-    view_w, view_h = args.size
-    path = camera_path(frames, ppu, args.view_px, args.view_px * view_h / view_w)
     rigkit.setup_camera(scene, 64, ppu, 0, 1)  # the bake's engine settings; the camera is then made a tracking one
     cam = scene.camera
     cam.data.ortho_scale = stage.tracking_camera_params(args.view_px, ppu, 0.0, 0.0)["ortho_scale"]
+    view_w, view_h = args.size
     scene.render.resolution_x, scene.render.resolution_y = view_w, view_h
     _world(scene)
     _build_course(course_boxes(course, ppu), rigkit)
-    for ob, rgb, far in rig.parts:
+    own = {ob: rigkit.colour_material(rigkit.shown_colour(rgb, far)) for ob, rgb, far in rig.parts}
+    red = rigkit.colour_material((225, 45, 45))  # a pose the creature does not have is shown held, in red
+    for ob, mat in own.items():
         ob.data.materials.clear()
-        ob.data.materials.append(rigkit.colour_material(rigkit.shown_colour(rgb, far)))
-    os.makedirs(args.out, exist_ok=True)
-    log = []
-    for n, (f, (cx, cz)) in enumerate(zip(frames, path)):
-        x, z = stage.px_to_units(f.x, ppu), stage.px_to_units(-f.y, ppu)
-        cam.location = stage.tracking_camera_params(args.view_px, ppu, cx, cz)["location"]
-        rig.obj.scale.x = float(f.facing)
-        rig.obj.location.x = x
-        if f.grounded:
-            rig.stand(f.rot, (0.0, 0.0, z))
-        else:
-            rig.pose(f.rot, (f.root[0], f.root[1], f.root[2] + z))
-        scene.render.filepath = os.path.join(args.out, "frame_%04d.png" % n)
-        bpy.ops.render.render(write_still=True)
-        log.append({"frame": n, "tick": f.tick, "t": f.t, "x": f.x, "y": f.y, "state": f.state, "clip": f.clip, "clip_frame": f.frame, "facing": f.facing})
-    json.dump({"creature": args.creature, "variant": args.variant or "", "ppu": ppu, "walk_speed": walk_speed, "view_px": args.view_px, "every": args.every,
-               "fps": float(recording.get("fps", 60)) / args.every, "frames": log}, open(os.path.join(args.out, "review.json"), "w"))
-    print("%s: %d frames in %s" % (args.creature, len(frames), args.out))
+        ob.data.materials.append(mat)
+    tinted = False
+    for path in args.recording:
+        with open(path) as fh:
+            recording = json.load(fh)
+        check_recording(recording, course)
+        frames = playback(recording, clips, walk_speed, args.every, hold_missing=not args.strict)
+        view_path = camera_path(frames, ppu, args.view_px, args.view_px * view_h / view_w)
+        out = args.out if len(args.recording) == 1 else os.path.join(args.out, recording["script"])
+        os.makedirs(out, exist_ok=True)
+        log = []
+        for n, (f, (cx, cz)) in enumerate(zip(frames, view_path)):
+            x, z = stage.px_to_units(f.x, ppu), stage.px_to_units(-f.y, ppu)
+            cam.location = stage.tracking_camera_params(args.view_px, ppu, cx, cz)["location"]
+            rig.obj.scale = (float(f.facing), 1.0, 1.0)
+            rig.obj.rotation_euler = (0.0, math.radians(f.angle), 0.0)
+            if f.grounded:  # set on the ground by its lowest point, then lifted to where the body is
+                rig.obj.location = (x, 0.0, 0.0)
+                rig.stand(f.rot, (0.0, 0.0, z))
+            else:  # a stance carries its own root; the body's place is the rig's, so a body turned onto a wall is turned about its contact
+                rig.obj.location = (x, 0.0, z)
+                rig.pose(f.rot, f.root)
+            if bool(f.missing) != tinted:
+                tinted = bool(f.missing)
+                for ob, mat in own.items():
+                    ob.data.materials.clear()
+                    ob.data.materials.append(red if tinted else mat)
+            scene.render.filepath = os.path.join(out, "frame_%04d.png" % n)
+            bpy.ops.render.render(write_still=True)
+            log.append({"frame": n, "tick": f.tick, "t": f.t, "x": f.x, "y": f.y, "state": f.state, "clip": f.clip, "clip_frame": f.frame, "facing": f.facing,
+                        "angle": round(f.angle, 2), "missing": f.missing or ""})
+        meta = {"creature": args.creature, "variant": args.variant or "", "script": recording["script"], "ppu": ppu, "walk_speed": walk_speed, "view_px": args.view_px,
+                "every": args.every, "fps": float(recording.get("fps", 60)) / args.every, "frames": log}
+        meta.update(_report(recording, clips, walk_speed))
+        with open(os.path.join(out, "review.json"), "w") as fh:
+            json.dump(meta, fh)
+        print("%s %s: %d frames in %s" % (args.creature, recording["script"], len(frames), out))
 
 
 def main():
@@ -353,15 +462,22 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--creature", required=True)
     ap.add_argument("--variant")
-    ap.add_argument("--recording", required=True)
+    ap.add_argument("--recording", required=True, nargs="+", help="one or more recordings (tools/record_movement.gd); with several, --out gets a folder for each script")
     ap.add_argument("--course", default=os.path.join(HERE, "..", "stage_course.json"))
-    ap.add_argument("--out", required=True)
+    ap.add_argument("--out")
     ap.add_argument("--every", type=int, default=3, help="pose every Nth recorded tick (60 ticks a second)")
     ap.add_argument("--size", default="640x360", help="the render, WxH")
     ap.add_argument("--view-px", type=float, default=360.0, help="how many game pixels wide the view is")
+    ap.add_argument("--strict", action="store_true", help="stop at a state the creature has no pose for instead of holding the last pose in red")
+    ap.add_argument("--gaps", action="store_true", help="print the missing states and the planted-foot slide of each recording and render nothing")
     a = ap.parse_args(argv)
     a.size = tuple(int(v) for v in a.size.split("x"))
-    render(a)
+    if a.gaps:
+        gaps(a)
+    else:
+        if not a.out:
+            ap.error("--out is required to render")
+        render(a)
 
 
 if __name__ == "__main__":
