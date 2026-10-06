@@ -572,7 +572,7 @@ def wrap_stripes(k, color, **_):
 
 def bandages(k, color, **_):
     for bone in ("band1", "band2", "band_h"):
-        _strips(k, bone, bone, color, 0.05)
+        _strips(k, bone, bone, color, 0.085)
 
 
 def collar_gold(k, color, **_):
@@ -831,7 +831,6 @@ def bone_cleaver(k, side="n", color=RUST, **_):
     k.l("femur_haft", (x, y, z - 0.10), (x, y, z + 0.45), 0.034, 0.03, b, BONE, _far(side), sides=5)
     k.e("femur_knob", (x, y, z - 0.12), (0.045, 0.04, 0.04), b, BONE, _far(side), seg=6, rings=4)
     k.box("bc_blade", (x + 0.12, y - 0.005, z + 0.36), (0.13, 0.02, 0.20), b, color, _far(side))
-    k.blade("bc_edge", (x + 0.25, y - 0.02, z + 0.16), (x + 0.25, y - 0.02, z + 0.56), 0.03, 0.01, b, (196, 150, 110), _far(side))
 
 
 def greatsword(k, side="n", color=(130, 128, 136), length=1.1, **_):

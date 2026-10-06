@@ -230,8 +230,8 @@ class Undead:
                             ((-0.02, 0, 0.47), (0.05, 0.05))], "spine", flame, sides=8)
         self.e("core", (0.0, -0.05, 0.25), (0.08, 0.07, 0.10), "spine", core, seg=8, rings=6)
         for s, y in (("n", -0.035), ("f", 0.035)):
-            self.e("eye_" + s, (0.11, y - 0.05, 0.31), (0.03, 0.03, 0.036), "head", SOCKET, far=s == "f", seg=6, rings=4)
-        self.box("mouth", (0.125, -0.06, 0.22), (0.02, 0.03, 0.01), "head", SOCKET)
+            self.e("eye_" + s, (0.10, y - 0.10, 0.31), (0.032, 0.03, 0.038), "head", SOCKET, far=s == "f", seg=6, rings=4)
+        self.box("mouth", (0.10, -0.12, 0.22), (0.03, 0.02, 0.01), "head", SOCKET)
         self.blade("tip1", (0.0, 0, 0.40), (-0.06, 0, 0.60), 0.13, 0.08, "tip1", flame, glow=True)
         self.blade("tip2", (-0.05, 0, 0.56), (-0.12, 0, 0.70), 0.07, 0.05, "tip2", flame, glow=True)
 

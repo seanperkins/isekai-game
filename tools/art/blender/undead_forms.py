@@ -139,7 +139,7 @@ FORMS = {
                        gear=[G("nimbus", color=GOLD), G("robe", color=(226, 218, 196), length=0.84, trim=GOLD), G("stole", color=GOLD, bands=ROSE),
                              G("cap", style="ceremonial", color=(230, 222, 200), band=GOLD), G("staff", side="n", color=GOLD, top="sun", glow=GOLD, length=1.3)]),
     "mummy_priest": dict(stage=3, parent="adept", width=21, body="biped", posture="mummy", style="mummy", skin=(206, 184, 136), eyes=VIOLET, attack="cast",
-                         arms="raise_n", shape=dict(tall=0.98, bx=1.0), bulk=1.05,
+                         arms="raise_n", shape=dict(tall=0.98, bx=1.05), bulk=1.25,
                          gear=[G("wrap_stripes", color=(140, 118, 84)), G("collar_gold", color=GOLD), G("headcloth", color=DKVIOLET, stripes=(132, 112, 160)),
                                G("bandages", color=(196, 180, 140)), G("sand", color=(196, 170, 120))]),
     "pharaoh": dict(stage=4, parent="mummy_priest", width=24, body="biped", posture="regal", style="mummy", skin=LINEN, eyes=VIOLET, attack="cast",

@@ -62,7 +62,7 @@ POSTURES = {
     # big and heavy: wide feet, a slow rolling walk with a deep rise and fall, a blow rocks it hard
     "heavy": _posture(0.88, 0.24, 16.0, 8.0, 1.25, walk=dict(duty=0.65, crouch=0.85, bob=0.05, lift=0.08, lean=20.0, lean_amp=3.5, head=8.0, swing=8.0, stride_legs=0.6,
                                                           max_stride=0.75, cycle=(0.8, 1.4)),
-                      run=dict(duty=0.48, crouch=0.76, lean=28.0, lean_amp=4.0, swing=14.0, max_stride=0.9, cycle=(0.45, 0.8))),
+                      run=dict(duty=0.48, crouch=0.80, lean=28.0, lean_amp=4.0, swing=14.0, max_stride=0.9, cycle=(0.45, 0.8))),
     # a giant: barely bends, swings its legs like pendulums, sinks into each step; a blow hardly moves it
     "giant": _posture(0.91, 0.24, 14.0, 4.0, 0.6, walk=dict(duty=0.66, crouch=0.87, bob=0.05, lift=0.07, lean=16.0, lean_amp=2.5, head=4.0, swing=6.0, stride_legs=0.5,
                                                          max_stride=0.6, cycle=(0.9, 1.6)),
@@ -81,6 +81,9 @@ HOPS = {
 # the hung things the undead have beyond the goblin's (biped_motion.SECONDARY); a skeleton's jaw is a quick, loose spring, so it chatters
 SECONDARY = dict(bm.SECONDARY, **{
     "jaw": dict(parents=["hips", "spine", "head"], bob=360.0, wind=0.0, freq=7.0, zeta=0.22),
+    # a long cloak is heavy cloth: it lags the body but does not fly up like a flag when the body pitches
+    "cloak1": dict(parents=["hips"], bob=100.0, wind=-8.0, freq=2.2, zeta=0.75),
+    "cloak2": dict(after="cloak1", bob=160.0, wind=-10.0, freq=2.0, zeta=0.7),
     "rag": dict(parents=["hips"], bob=240.0, wind=-10.0, freq=3.2, zeta=0.35),
     "rag_b": dict(parents=["hips"], bob=240.0, wind=-16.0, freq=3.0, zeta=0.35),
     "band1": dict(parents=["hips", "spine"], bob=200.0, wind=-18.0, freq=2.6, zeta=0.35),
