@@ -42,9 +42,12 @@ def render(creature, out, variant=None, anims=None, ss=4):
         cmd += ["--variant", variant]
     if anims:
         cmd += ["--anims", anims]
+    stale = os.path.join(out, "meta.json")
+    if os.path.exists(stale):
+        os.remove(stale)  # Blender exits cleanly on a Python error: only a fresh meta.json proves the run finished
     done = subprocess.run(cmd, capture_output=True, text=True)
-    if done.returncode != 0 or not os.path.exists(os.path.join(out, "meta.json")):
-        raise RuntimeError("Blender failed:\n" + done.stdout[-2000:] + done.stderr[-2000:])
+    if done.returncode != 0 or "Traceback" in done.stdout + done.stderr or not os.path.exists(stale):
+        raise RuntimeError("Blender failed:\n" + done.stdout[-2500:] + done.stderr[-2500:])
 
 
 def _normal_small(normal, alpha_source, size):

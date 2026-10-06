@@ -16,7 +16,8 @@ def cap(g, color, tip=(0.02, 0, 2.02), base=1.69, r=0.215, **_):
 
 def floppy_cap(g, color, height=0.30, **_):
     g.l("cap_a", (0.13, 0, 1.69), (0.10, 0, 1.69 + height), 0.215, 0.12, "head", color, sides=8)
-    g.l("cap_b", (0.10, 0, 1.69 + height), (-0.14, 0, 1.69 + height - 0.08), 0.12, 0.0, "head", color, sides=7)
+    g.bone("cap_tip", (0.10, 0, 1.69 + height), (-0.14, 0, 1.69 + height - 0.08), "head")
+    g.l("cap_b", (0.10, 0, 1.69 + height), (-0.14, 0, 1.69 + height - 0.08), 0.12, 0.0, "cap_tip", color, sides=7)
 
 
 def headband(g, color, **_):
@@ -29,13 +30,15 @@ def feather(g, color, base=(0.10, 0.12, 1.72), tip=(-0.12, 0.16, 2.05), **_):
 
 def hood(g, color, **_):
     g.e("hood", (0.07, 0, 1.58), (0.27, 0.24, 0.27), "head", color)
-    g.l("hood_tip", (-0.05, 0, 1.70), (-0.30, 0, 1.48), 0.16, 0.0, "head", color, sides=7)
+    g.bone("hood_tip", (-0.05, 0, 1.70), (-0.30, 0, 1.48), "head")
+    g.l("hood_tip", (-0.05, 0, 1.70), (-0.30, 0, 1.48), 0.16, 0.0, "hood_tip", color, sides=7)
 
 
 def scarf(g, color, face=False, tail=True, **_):
     g.e("scarf", (0.10, 0, 1.38), (0.19, 0.18, 0.07), "spine", color)
     if tail:
-        g.l("scarf_tail", (-0.04, -0.12, 1.36), (-0.30, -0.14, 1.12), 0.05, 0.03, "spine", color, sides=5)
+        g.bone("scarf_tail", (-0.04, -0.12, 1.36), (-0.30, -0.14, 1.12), "spine")
+        g.l("scarf_tail", (-0.04, -0.12, 1.36), (-0.30, -0.14, 1.12), 0.05, 0.03, "scarf_tail", color, sides=5)
     if face:
         g.e("scarf_face", (0.26, 0, 1.46), (0.13, 0.17, 0.08), "head", color)
 
@@ -110,7 +113,12 @@ def apron(g, color, trim=None, **_):
 
 
 def cloak(g, color, length=0.80, spread=0.18, **_):
-    g.l("cloak", (-0.08, 0, 1.36), (-0.20 - spread, 0, 1.36 - length), 0.11, 0.22, "spine", color, sides=7)
+    top, end = (-0.08, 0, 1.36), (-0.20 - spread, 0, 1.36 - length)
+    mid = tuple((a + b) / 2.0 for a, b in zip(top, end))
+    g.bone("cloak1", top, mid, "spine")
+    g.bone("cloak2", mid, end, "cloak1")
+    g.l("cloak_top", top, mid, 0.11, 0.165, "cloak1", color, sides=7)
+    g.l("cloak_low", mid, end, 0.165, 0.22, "cloak2", color, sides=7)
 
 
 def belt(g, color, buckle=None, **_):
@@ -153,12 +161,13 @@ def patches(g, colors, **_):
 def rat_ball(g, **_):
     import math
     pelt = [(120, 108, 98), (136, 122, 110), (106, 96, 92)]
+    g.bone("pack", (-0.14, 0, 1.30), (-0.26, 0, 1.00), "spine")
     for i in range(8):
         a = 2 * math.pi * i / 8
         c = (-0.20 + 0.10 * math.cos(a), 0.10 * math.sin(a) * 0.5, 1.12 + 0.12 * math.sin(a * 1.3))
-        g.e("rat%d" % i, c, (0.10, 0.09, 0.09), "spine", pelt[i % 3], seg=8, rings=6)
-    g.e("rat_nose", (-0.07, -0.05, 1.18), (0.03, 0.03, 0.03), "spine", PINK, seg=6, rings=4)
-    g.e("rat_nose2", (-0.10, -0.04, 1.00), (0.03, 0.03, 0.03), "spine", PINK, seg=6, rings=4)
+        g.e("rat%d" % i, c, (0.10, 0.09, 0.09), "pack", pelt[i % 3], seg=8, rings=6)
+    g.e("rat_nose", (-0.07, -0.05, 1.18), (0.03, 0.03, 0.03), "pack", PINK, seg=6, rings=4)
+    g.e("rat_nose2", (-0.10, -0.04, 1.00), (0.03, 0.03, 0.03), "pack", PINK, seg=6, rings=4)
 
 
 def hawk(g, side="n", **_):

@@ -122,15 +122,18 @@ def main(argv=None):
     both = {n: [current_still(n), stills[n]] for n in names}
     cw = max(sum((p.width if p else 0) for p in v) for v in both.values()) * 2 + 24
     board(rows, lambda n: both[n], cw, 2, "today (left) and rendered (right)").save(os.path.join(args.out, "compare.png"))
-    # the tree walking: each form cropped once to the union of its walk so it does not jump
-    walks = {n: [frame(args.out, n, "walk_%d" % i) for i in range(8)] for n in names if os.path.exists(os.path.join(args.out, n, "frames", "walk_7.png"))}
+    # the tree walking: each form cropped once to the union of its walk so it does not jump, at the speed its own walk cycle was built for
+    metas = {n: json.load(open(os.path.join(args.out, n, "raw", "meta.json"))) for n in names}
+    walks = {n: [frame(args.out, n, "walk_%d" % i) for i in range(metas[n]["anims"]["walk"])] for n in names if "walk" in metas[n]["anims"]}
     crops = {n: union_box(v) for n, v in walks.items()}
     cell_w = max((c[2] - c[0]) for c in crops.values()) * zoom + 10
+    count = max(len(v) for v in walks.values())
+    fps = sum(metas[n]["fps"].get("walk", 12.0) for n in walks) / len(walks)
     frames = []
-    for i in range(8):
-        pic = board(rows, lambda n, i=i: [walks[n][i].crop(crops[n])] if n in walks else [], cell_w, zoom, "the goblin tree, walking")
+    for i in range(count):
+        pic = board(rows, lambda n, i=i: [walks[n][i % len(walks[n])].crop(crops[n])] if n in walks else [], cell_w, zoom, "the goblin tree, walking")
         frames.append(pic.convert("P", palette=Image.ADAPTIVE))
-    frames[0].save(os.path.join(args.out, "walk.gif"), save_all=True, append_images=frames[1:], duration=110, loop=0, disposal=2)
+    frames[0].save(os.path.join(args.out, "walk.gif"), save_all=True, append_images=frames[1:], duration=int(1000 / fps), loop=0, disposal=2)
     print("wrote", args.out)
     return 0
 

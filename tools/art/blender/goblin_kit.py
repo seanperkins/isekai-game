@@ -76,7 +76,9 @@ class Goblin:
         self.e("skull", (0.14, 0, 1.56), (0.23 * hd, 0.20 * hd, 0.21 * hd), "head", sk)
         self.l("nose", (0.30 * hd, 0, 1.56), (0.46 * hd, 0, 1.50), 0.055, 0.0, "head", sk, sides=6)
         for s, y in (("n", -1), ("f", 1)):
-            self.l("ear_" + s, (0.10, y * 0.16, 1.62), (-0.20 * ears, y * 0.46 * ears, 1.62 + 0.22 * ears), 0.07, 0.0, "head", sk, far=s == "f", sides=5)
+            tip = (-0.20 * ears, y * 0.46 * ears, 1.62 + 0.22 * ears)
+            self.bone("ear_" + s, (0.10, y * 0.16, 1.62), tip, "head")
+            self.l("ear_" + s, (0.10, y * 0.16, 1.62), tip, 0.07, 0.0, "ear_" + s, sk, far=s == "f", sides=5)
             self.e("eye_" + s, (0.31 * hd, y * 0.10, 1.62), (0.05, 0.05, 0.05), "head", AMBER, far=s == "f", glow=True, seg=8, rings=6)
         self.e("tooth", (0.30 * hd, -0.05, 1.42), (0.025, 0.02, 0.05), "head", (240, 236, 210), seg=6, rings=4)
         for s, y in (("n", NEAR), ("f", FAR)):
