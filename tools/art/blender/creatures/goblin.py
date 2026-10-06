@@ -34,6 +34,7 @@ MARGIN = 3
 PAD = 4
 RIDER_SCALE = 1.0
 ARMS, STANCES = motion_.ARMS, motion_.STANCES
+SLUMP_SPINE, SLUMP_HEAD, SLUMP_ARMS = 48.0, 28.0, 0.85   # a rider whose mount dies: how far (degrees) its spine and head fold forward, and how much of its arms' lift goes
 RIDE = {"thigh_n": down(84), "thigh_f": down(84), "shin_n": down(-88), "shin_f": down(-88), "foot_n": down(6), "foot_f": down(6), "spine": up(2)}
 WALK_SPEED_RUN = 1.9   # a run covers the ground this many times as fast as the walk does
 
@@ -83,28 +84,40 @@ def body_of(rig, form):
 
 
 # ---- a rider ----------------------------------------------------------------------------------------------------------------------
-def _rider_arms(rot, form, t, swing_deg, lag=0.2):
-    """A seated rider's arms from the preset, relative to its body (which moves with the mount): they swing a little against the wolf's stride."""
+def _rider_arms(rot, form, t, swing_deg, lag=0.2, slump=0.0):
+    """A seated rider's arms from the preset, relative to its body (which moves with the mount): they swing a little against the wolf's stride, and a slumping
+    rider's go slack and hang (`slump` 0 to 1)."""
     a = ARMS[form.get("arms", "free")]
     c = math.cos(2.0 * math.pi * (t - lag))
     amp = swing_deg * a[4]
-    rot["arm_n"], rot["fore_n"] = down(a[0] - amp * c), down(a[1] + 0.6 * amp * (0.5 - 0.5 * c))
-    rot["arm_f"], rot["fore_f"] = down(a[2] + amp * c), down(a[3] + 0.6 * amp * (0.5 + 0.5 * c))
+    slack = 1.0 - SLUMP_ARMS * slump
+    rot["arm_n"], rot["fore_n"] = down(slack * (a[0] - amp * c)), down(slack * (a[1] + 0.6 * amp * (0.5 - 0.5 * c)))
+    rot["arm_f"], rot["fore_f"] = down(slack * (a[2] + amp * c)), down(slack * (a[3] + 0.6 * amp * (0.5 + 0.5 * c)))
 
 
-def _rider_frame(form, mount_rot, root, t):
+def _rider_frame(form, mount_rot, root, t, slump=0.0):
     """One frame of a rider: the mount's pose (its bones prefixed), the rider seated on it with its arms from the preset, and what it holds kept
-    at the angle it was made at whatever the arm does."""
+    at the angle it was made at whatever the arm does. A rider whose mount is dying (`slump` 0 to 1) folds forward over its neck, its head and arms
+    drop, and what it holds is no longer kept upright: it goes with the body."""
     out = {"w_" + b: v for b, v in mount_rot.items()}
     out.update(RIDE)
-    _rider_arms(out, form, t, 6.0)
-    out["spine"] = up(2.0 + 1.5 * math.sin(4.0 * math.pi * t))
+    _rider_arms(out, form, t, 6.0, slump=slump)
+    out["spine"] = up(2.0 + 1.5 * math.sin(4.0 * math.pi * t) + SLUMP_SPINE * slump)
+    out["head"] = up(SLUMP_HEAD * slump)
     for s in "nf":
         chain = ["w_hips", "w_spine", "hips", "spine", "arm_" + s, "fore_" + s]
         above = sum(out.get(b, (0.0, 0.0, 0.0))[1] for b in chain)
         arm = out.get("arm_" + s, (0, 0, 0))[1] + out.get("fore_" + s, (0, 0, 0))[1]
-        out["item_" + s] = (0.0, form.get("item_angle", {}).get(s, 0.0) + 0.25 * arm - above, 0.0)
+        out["item_" + s] = (0.0, form.get("item_angle", {}).get(s, 0.0) + 0.25 * arm - above * (1.0 - slump), 0.0)
     return out, root
+
+
+def _slump(clip, i, n):
+    """How far a rider has folded over by frame `i` of `n` of `clip`: nothing but in the death, where it eases in over the mount's fall and then holds."""
+    if clip != "die" or n < 2:
+        return 0.0
+    p = min(1.0, i / (0.7 * (n - 1)))
+    return p * p * (3.0 - 2.0 * p)
 
 
 def rider_clips(rig, form, variant):
@@ -120,7 +133,7 @@ def rider_clips(rig, form, variant):
     clips = {}
     for name, c in wolf.clips_for(body, motion(variant), ppu).items():
         n = len(c.frames)
-        frames = [_rider_frame(form, rot, root, i / n if c.loop else 0.0) for i, (rot, root) in enumerate(c.frames)]
+        frames = [_rider_frame(form, rot, root, i / n if c.loop else 0.0, _slump(name, i, n)) for i, (rot, root) in enumerate(c.frames)]
         out = secondary.series(set(rig.rest), motion_.SECONDARY, frames, {"idle": 0.15, "attack": 0.5, "hurt": 0.5, "die": 0.3}.get(name, 1.0), c.durations,
                                extra_chain=("w_hips", "w_spine"), periodic=c.loop)
         for i, (rot, _) in enumerate(frames):

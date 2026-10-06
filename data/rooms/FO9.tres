@@ -24,12 +24,12 @@ spawns = [{
 "pos": Vector2(164.2, 314)
 }, {
 "by": "PL",
-"id": "twin_spider_cocoon_mother",
-"pos": Vector2(503.9, 314)
+"id": "twin_wolf_lycaon",
+"pos": Vector2(505.3, 314)
 }, {
 "by": "PL",
-"id": "twin_wolf_lycaon",
-"pos": Vector2(283.7, 314)
+"id": "twin_wolf_beast_of_gevaudan",
+"pos": Vector2(287.9, 314)
 }]
 exits = [{
 "edge": "left",

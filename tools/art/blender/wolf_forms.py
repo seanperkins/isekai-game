@@ -65,7 +65,7 @@ FORMS = {
                       gear=[G("pelt"), G("straps"), G("bracers"), G("paint")]),
     "beast_of_gevaudan": dict(stage=4, parent="loup_garou", width=56, body="biped", creature="werewolf", tall=1.1, arm=1.15, bulk=0.95, head=1.1, stance="hunch", arms="offer", attack="claw",
                               eye=(200, 210, 230), gear=[G("mane"), G("stripe"), G("blood")]),
-    "lycaon": dict(stage=4, parent="loup_garou", width=56, body="biped", creature="werewolf", tall=1.1, bulk=0.9, attack="cast", arms="raise_n", eye=(220, 210, 255),
+    "lycaon": dict(stage=4, parent="loup_garou", width=56, body="biped", creature="werewolf", tall=1.1, bulk=0.9, attack="cast", arms="offer_up", eye=(220, 210, 255),
                    tail_colour=(60, 52, 80), gear=[G("cloak"), G("crown")]),
     "wolfskin_champion": dict(stage=4, parent="ulfhedinn", width=56, body="biped", creature="werewolf", tall=1.12, bulk=1.25, arms="shield", attack="claw", eye=(220, 214, 255),
                               gear=[G("pelt"), G("straps"), G("bracers"), G("trophies"), G("paint"), G("shield")]),

@@ -61,11 +61,12 @@ def cloak(g, color=(70, 50, 100), **_):
     g.sheet("cloak", cols, lambda z: {"spine": 1.0}, color)
 
 
-def crown(g, color=(120, 120, 130), **_):
+def crown(g, color=(222, 182, 70), **_):
+    """Three gold points on the brow: tall enough to stand out of the skull's outline at sprite size."""
     h = g.at("head", 0.55)
     for i in range(3):
         a = math.radians(-50 + 50 * i)
-        g.blade("crown%d" % i, (h[0] + 0.03 * math.cos(a), 0.10 * math.sin(a), h[2] + 0.09), (h[0] + 0.03 * math.cos(a), 0.10 * math.sin(a), h[2] + 0.22 - 0.03 * (i % 2)), 0.07, 0.025, "head", color)
+        g.blade("crown%d" % i, (h[0] + 0.03 * math.cos(a), 0.10 * math.sin(a), h[2] + 0.08), (h[0] + 0.03 * math.cos(a), 0.10 * math.sin(a), h[2] + 0.29 - 0.04 * (i % 2)), 0.09, 0.03, "head", color)
 
 
 def mane(g, color=None, size=1.0, **_):
