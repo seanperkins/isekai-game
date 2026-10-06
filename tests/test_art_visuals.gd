@@ -30,10 +30,11 @@ func test_player_draws_the_slime_and_flips_with_facing() -> void:
 	var p := Player.new()
 	p.setup(rules, CompendiumModel.new([], []), [], func(_n: String, _t: Dictionary) -> void: pass)
 	add_child_autofree(p)
-	assert_eq(_sprite(p).texture, p._sheet.frame_texture("idle_1"))
+	assert_eq(_sprite(p).texture, p._sheet.texture_of("idle_1"))
 	p.facing = -1
 	p._update_visual(0.016)
-	assert_true(_sprite(p).flip_h)
+	var s := _sprite(p)
+	assert_true(s.flip_h or (p._sheet.has_normals() and s.texture == p._sheet.texture_of(p._animator.frame(), true)), "facing left: the sprite flips, or a lit sheet's texture is mirrored in itself")
 
 func test_enemy_frames_follow_behaviour() -> void:
 	var bat := _enemy("bat")

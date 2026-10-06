@@ -81,7 +81,7 @@ func test_only_the_tackle_has_an_attack_shape_and_it_is_in_front() -> void:
 
 func test_the_poses_have_the_proportions_their_names_promise() -> void:
 	var idle := sheet.frame_size("idle_1")
-	assert_eq(int(idle.x), 44)
+	assert_eq(int(idle.x), 46, "the render is two px wider than the drawing it replaced (44)")
 	assert_gt(sheet.frame_size("rise").y, idle.y, "rising is taller than resting")
 	assert_lt(sheet.frame_size("land").y, idle.y, "landing is flatter")
 	assert_lt(sheet.frame_size("spread_2").y, idle.y * 0.6, "the puddle is flat")

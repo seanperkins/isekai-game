@@ -45,7 +45,7 @@ def motion(variant):
 
 
 def today(variant):
-    base = (os.path.join(HERE, "..", "..", "..", "assets", "sheets", "slime.json"), "idle_1") if variant in (None, "slime") else None
+    base = (os.path.join(HERE, "before", "slime_base.json"), "idle_1") if variant in (None, "slime") else None   # the sheet it replaced, saved before the render took its place
     return sizing.today("slime", variant, _form(variant)["width"], base)
 
 

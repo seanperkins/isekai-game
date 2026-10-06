@@ -99,10 +99,11 @@ func lit_texture(name: String, mirrored := false) -> Texture2D:
 ## Draw a frame on a sprite, facing left or not. A sheet with normal maps is drawn lit by the room's lights, mirrored in the texture itself so its normals mirror
 ## with it (the sprite's flip_h stays false); a plain sheet is the frame, flipped.
 func draw_on(sprite: Sprite2D, name: String, mirrored := false) -> void:
+	sprite.texture = texture_of(name, mirrored)
+	sprite.flip_h = mirrored and not has_normals()
+
+## The texture `draw_on` puts on a sprite for this frame: the lit one for a sheet with normal maps (mirrored in the texture itself), else the plain frame
+## (a sprite flips it).
+func texture_of(name: String, mirrored := false) -> Texture2D:
 	var lit := lit_texture(name, mirrored)
-	if lit != null:
-		sprite.texture = lit
-		sprite.flip_h = false
-	else:
-		sprite.texture = frame_texture(name)
-		sprite.flip_h = mirrored
+	return lit if lit != null else frame_texture(name)

@@ -1,6 +1,8 @@
 """Cutting a render into a shipped creature's states (export_base.py): pure Python."""
+import json
 import os
 import sys
+import tempfile
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -69,6 +71,84 @@ class SpiderPlanTest(unittest.TestCase):
         for new, _, options in self.frames:
             self.assertNotIn("name", options, new)
             self.assertNotIn("even", options, new)
+
+
+class SlimePlanTest(unittest.TestCase):
+    META = {"anims": {"idle": 8, "walk": 12, "run": 10, "attack": 10, "hurt": 5, "die": 8},
+            "durations": {"idle": [0.2] * 8, "walk": [0.05] * 12, "run": [0.04] * 10, "attack": [0.06] * 10, "hurt": [0.05] * 5, "die": [0.1] * 8}}
+
+    def setUp(self):
+        self.frames, self.table = eb.plan(eb.SPECS["slime"], self.META)
+        self.names = {new for new, _, _ in self.frames}
+
+    def test_the_sheet_has_the_frames_the_slimes_clips_and_the_cover_name(self):
+        # data/slime_clips.json and EatCover name these; the weaver line's own sheets share them, so the clips stay as they are and the sheet fits them
+        for name in ("idle_1", "idle_2", "run_1", "run_2", "run_3", "run_4", "rise", "fall", "land", "wall_1", "wall_2", "tackle", "spread_1", "spread_2",
+                     "hurt", "rope", "cover_1", "cover_2", "cover_3", "cover_4", "cover_5"):
+            self.assertIn(name, self.names)
+        self.assertNotIn("idle_3", self.names, "the idle is two poses and the run four, as the clips have them")
+        self.assertNotIn("run_5", self.names)
+
+    def test_the_clips_file_is_left_as_it_is(self):
+        self.assertIsNone(eb.SPECS["slime"].get("file"), "the slime's own clips stay")
+
+    def test_a_flat_pose_is_taken_from_the_flat_frames_of_the_death_and_a_tall_one_from_a_tall_frame(self):
+        by = {new: src for new, src, _ in self.frames}
+        self.assertEqual([by["spread_1"], by["spread_2"]], ["die_3", "die_4"])
+        self.assertEqual(by["rise"], "run_4")
+        self.assertEqual({new: o for new, _, o in self.frames}["tackle"], {"attack_from": 0.62}, "the tackle's attack region is in front of it, as it was drawn")
+        self.assertEqual([by["cover_3"], by["cover_4"]], ["die_3", "die_4"], "the engulfing is the flat spread, held")
+
+
+class InstallTest(unittest.TestCase):
+    def render(self, tmp, meta):
+        """A fake render of a base creature in `tmp`/render: meta.json and one tiny frame (and normal map) for each frame the meta names."""
+        from PIL import Image
+        os.makedirs(os.path.join(tmp, "render", "raw"))
+        os.makedirs(os.path.join(tmp, "render", "frames"))
+        with open(os.path.join(tmp, "render", "raw", "meta.json"), "w") as fh:
+            json.dump(meta, fh)
+        for anim, count in meta["anims"].items():
+            for i in range(count):
+                for suffix in ("", "_n"):
+                    Image.new("RGBA", (4, 4), (10, 20, 30, 255)).save(os.path.join(tmp, "render", "frames", "%s_%d%s.png" % (anim, i, suffix)))
+        os.makedirs(os.path.join(tmp, "data"))
+        os.makedirs(os.path.join(tmp, "tools", "art"))
+        return os.path.join(tmp, "render")
+
+    def test_a_slime_is_cut_to_its_own_pixels_and_a_walker_about_its_centre_and_each_writes_its_own_clip_file(self):
+        meta = SlimePlanTest.META
+        for name, centred, path, key in (("slime", False, None, None), ("spider", True, "data/enemy_clips.json", "spider")):
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as tmp:
+                folder = self.render(tmp, dict(meta, anims=dict(meta["anims"]), durations=meta["durations"]))
+                if name == "spider":
+                    with open(os.path.join(tmp, "data", "enemy_clips.json"), "w") as fh:
+                        json.dump({"spider": {}, "wolf": {"keep": True}}, fh)
+                eb.install(name, folder, root=tmp, assemble=False)
+                with open(os.path.join(tmp, "tools", "art", name + "_frames.json")) as fh:
+                    self.assertEqual(json.load(fh).get("centred_frames"), centred)
+                if path is None:
+                    self.assertEqual(os.listdir(os.path.join(tmp, "data")), [], "the clips file is not written")
+                    continue
+                with open(os.path.join(tmp, path)) as fh:
+                    written = json.load(fh)
+                self.assertIn("crawl", written[key])
+                self.assertEqual(written["wolf"], {"keep": True}, "the others' clips are left alone")
+
+
+class WidthsTest(unittest.TestCase):
+    def test_a_manifest_names_the_width_each_frame_came_out_at(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            manifest, sheet = os.path.join(tmp, "m.json"), os.path.join(tmp, "s.json")
+            with open(manifest, "w") as fh:
+                json.dump({"set": "x", "frames": [{"name": "a", "width": 0, "native": True}, {"name": "b", "width": 0, "native": True, "attack_from": 0.5}]}, fh)
+            with open(sheet, "w") as fh:
+                json.dump({"frames": {"a": {"rect": [0, 0, 31, 20]}, "b": {"rect": [32, 0, 47, 20]}}}, fh)
+            eb.write_widths(manifest, sheet)
+            with open(manifest) as fh:
+                frames = json.load(fh)["frames"]
+            self.assertEqual([f["width"] for f in frames], [31, 47])
+            self.assertEqual(frames[1]["attack_from"], 0.5, "the rest of an entry stays")
 
 
 class SizingTest(unittest.TestCase):

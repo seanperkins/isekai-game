@@ -1660,7 +1660,7 @@ func _build_body() -> void:
 		_animator = SlimeAnimator.new(SlimeAnimator.load_clips())
 		_animator.play("idle")
 		var first := _animator.frame()
-		_sprite.texture = _sheet.frame_texture(first)
+		_sheet.draw_on(_sprite, first)
 		_sprite.position.y = BODY_BOTTOM - _sheet.frame_size(first).y / 2.0
 		_shapes = SlimeShapes.new()
 		_shapes.position = Vector2(0.0, BODY_BOTTOM)

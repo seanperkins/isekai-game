@@ -55,7 +55,7 @@ spawns = [{
 }, {
 "by": "PL",
 "id": "twin_stone",
-"pos": Vector2(202.8, 650)
+"pos": Vector2(204.2, 650)
 }, {
 "by": "PL",
 "id": "twin_undead_abomination",
@@ -67,7 +67,7 @@ spawns = [{
 }, {
 "by": "PL",
 "id": "twin_phantom",
-"pos": Vector2(199.5, 458)
+"pos": Vector2(200.75, 458)
 }]
 exits = [{
 "edge": "left",

@@ -21,7 +21,8 @@ import clips  # noqa: E402
 
 # set -> where its render is and which state comes from which render clip: (state, render clip, frames or None for all, loops, options)
 # Two options name how the state is cut and never reach the sheet's spec: "name" (a one-frame state is called that, not `<state>_1`, for the code that asks the sheet
-# for a frame by name) and "even" (the picked frames are sampled around the whole clip: each lasts the clip's length divided by their number).
+# for a frame by name), and "even" (the picked frames are sampled around the whole clip: each lasts the clip's length divided by their number). A spec with `tight` cuts each frame to its own drawn pixels (a blob has no centre line to keep; a walker's frames are cut about its centre).
+# A spec writes its clips to its `file` (default data/enemy_clips.json) under its `key`; with a `file` of None it writes none.
 SPECS = {
     "goblin": dict(render=("goblin", "goblin"), key="goblin", states=[
         ("idle", "idle", None, True, {}), ("run", "run", None, True, {}), ("rise", "rise", [0], False, {}), ("fall", "fall", [0], False, {}),
@@ -34,6 +35,15 @@ SPECS = {
     "spider": dict(render=("spider", "spider"), key="spider", states=[
         ("hang", "idle", None, True, {}), ("drop", "attack", [3], False, {"name": "drop"}), ("crawl", "walk", [0, 3, 6, 9], True, {"even": True}),
         ("stunned", "hurt", [3], False, {"name": "stunned"}), ("hurt", "hurt", [1], False, {"name": "hurt"}), ("downed", "die", [-1], False, {"name": "downed"})]),
+    # the slime's clips (data/slime_clips.json) and the cover (EatCover) name these frames, and the weaver line's own sheets share them: a two-pose idle, a four-pose run,
+    # the five covers; so the clips are left as they are and the sheet fits them
+    "slime": dict(render=("slime", "slime"), key=None, file=None, tight=True, states=[
+        ("idle", "idle", [0, 5], True, {}), ("run", "run", [0, 1, 3, 5], True, {}),
+        ("rise", "run", [4], False, {"name": "rise"}), ("fall", "run", [5], False, {"name": "fall"}), ("land", "run", [0], False, {"name": "land"}),
+        ("wall", "run", [1, 4], True, {}), ("tackle", "attack", [3], False, {"name": "tackle", "attack_from": 0.62}),
+        ("spread", "die", [3, 4], False, {}), ("hurt", "hurt", [1], False, {"name": "hurt"}), ("rope", "run", [1], False, {"name": "rope"}),
+        ("cover_1", "idle", [0], False, {"name": "cover_1"}), ("cover_2", "die", [2], False, {"name": "cover_2"}), ("cover_3", "die", [3], False, {"name": "cover_3"}),
+        ("cover_4", "die", [4], False, {"name": "cover_4"}), ("cover_5", "idle", [0], False, {"name": "cover_5"})]),
 }
 
 
@@ -57,6 +67,18 @@ def plan(spec, meta):
     return frames, table
 
 
+def write_widths(manifest, sheet):
+    """Put into a sheet's manifest the width each frame came out at (a native frame is not resized, so its entry starts with none), for what reads the manifest."""
+    with open(sheet) as fh:
+        built = json.load(fh)["frames"]
+    with open(manifest) as fh:
+        spec = json.load(fh)
+    for entry in spec["frames"]:
+        entry["width"] = int(built[entry["name"]]["rect"][2])
+    with open(manifest, "w") as fh:
+        json.dump(spec, fh, indent=1)
+
+
 def install(name, folder, root=ROOT, assemble=True):
     spec = SPECS[name]
     with open(os.path.join(folder, "raw", "meta.json")) as fh:
@@ -75,18 +97,21 @@ def install(name, folder, root=ROOT, assemble=True):
         entry.update(options)
         entries.append(entry)
     with open(os.path.join(root, "tools", "art", name + "_frames.json"), "w") as fh:
-        json.dump({"set": name, "centred_frames": True, "anchor": frames[0][0], "frames": entries}, fh, indent=1)
+        json.dump({"set": name, "centred_frames": not spec.get("tight"), "anchor": frames[0][0], "frames": entries}, fh, indent=1)
     if assemble:
         done = subprocess.run([sys.executable, os.path.join("tools", "art", "assemble_frames.py"), name], cwd=root, capture_output=True, text=True)
         if done.returncode != 0:
             raise RuntimeError("assemble_frames failed for %s:\n%s%s" % (name, done.stdout[-1500:], done.stderr[-1500:]))
-    path = os.path.join(root, "data", "enemy_clips.json")
-    with open(path) as fh:
-        current = json.load(fh)
-    current[spec["key"]] = table
-    with open(path, "w") as fh:
-        json.dump(current, fh, indent=1)
-        fh.write("\n")
+        write_widths(os.path.join(root, "tools", "art", name + "_frames.json"), os.path.join(root, "assets", "sheets", name + ".json"))
+    clips_file = spec.get("file", "data/enemy_clips.json")
+    if clips_file is not None:
+        path = os.path.join(root, clips_file)
+        with open(path) as fh:
+            current = json.load(fh)
+        current[spec["key"]] = table
+        with open(path, "w") as fh:
+            json.dump(current, fh, indent=1)
+            fh.write("\n")
     return table
 
 

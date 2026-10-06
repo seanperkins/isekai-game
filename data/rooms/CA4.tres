@@ -28,11 +28,11 @@ spawns = [{
 }, {
 "by": "PL",
 "id": "twin_radiant",
-"pos": Vector2(179.5, 1034)
+"pos": Vector2(180.75, 1034)
 }, {
 "by": "PL",
 "id": "twin_crystal",
-"pos": Vector2(559.5, 1034)
+"pos": Vector2(560.75, 1034)
 }, {
 "by": "PL",
 "id": "stained_glass_moth",
