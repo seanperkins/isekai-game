@@ -10,6 +10,7 @@ Parts are placed relative to the bones and sizes of the form's own skeleton, so 
 import math
 
 import rigkit as k
+import spider_forms as sf
 import spider_skeleton as skeleton
 from wolf_kit import room
 
@@ -28,9 +29,10 @@ class Spider:
         self.lw = form.get("leg_w", 1.0)
         d = self.proportions["drider"]
         self.tall = d["tall"] if d else 1.0
-        self.chitin = room(form.get("chitin", BLACK), form.get("floor", 52))
+        roles = sf.colours_of(form)
+        self.chitin = roles["chitin"]
         self.dark = tuple(int(c * 0.78) for c in self.chitin)
-        self.leg_c = room(form.get("leg", LEG), form.get("floor", 50))
+        self.leg_c = roles["leg"]
         # dust or clay caked on the lower legs: set before the legs are built
         self.leg_low = None
         for name, kw in form.get("gear", []):
@@ -38,7 +40,7 @@ class Spider:
                 self.leg_low = kw.get("color", (176, 148, 104) if name == "clay_crust" else (196, 170, 124))
         self.mark = form.get("mark", MARK)
         self.eye = form.get("eye", EYE)
-        self.joint = form.get("joint", JOINT)
+        self.joint = roles["joint"]
         self.fang_c = room(FANG, 90)
         self.skin = form.get("skin", SKIN)
         self.hair_c = room(form.get("hair", HAIR), 70)

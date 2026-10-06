@@ -10,18 +10,13 @@ import math
 
 import quad_skeleton as skeleton
 import rigkit as k
+import sweepkit
 
 FUR, FUR_DARK, BELLY, EAR = (62, 56, 70), (48, 43, 56), (96, 88, 106), (40, 36, 48)
 
 
-def room(rgb, floor=76):
-    """A dark colour lifted so its shadows have somewhere to go: the shading ramps darken a colour in steps, and from near black there is nothing below.
-    A colour already as light as `floor` is left alone."""
-    lum = 0.30 * rgb[0] + 0.59 * rgb[1] + 0.11 * rgb[2]
-    if lum >= floor:
-        return tuple(rgb)
-    k = min(1.9, floor / max(lum, 1.0))
-    return tuple(min(255, int(round(c * k))) for c in rgb)
+from palette import room  # noqa: E402,F401   (the colour roles live in palette.py; this name stays for the kits that import it from here)
+CLAW = (36, 32, 40)
 EYE, STAR, NOSE, TAIL, FANG = (236, 232, 156), (150, 120, 208), (22, 20, 26), (66, 60, 76), (232, 228, 208)
 
 
@@ -86,14 +81,51 @@ class Wolf:
         ob = k.sheet(self.pre + name, cols)
         self.rig.skin(ob, lambda v: {self.pre + b: w for b, w in weights(v.z).items()}, rgb, far, glow)
 
-    def paw(self, name, side, bone, rgb, hind, far=False):
-        """A paw: from the wrist or hock to the toes, a low dome with its sole on the ground."""
+    def sweep(self, name, pts, secs, bone, rgb, far=False, bones=None, joints=(), width=0.045, sides=12, per=3):
+        """A smooth tube through `pts` (standard coordinates) with a (half width, half depth) section at each. Bound to one `bone`, or skinned across `bones` (in order along the
+        path) with their joints at the control points whose indexes are `joints`, so it bends like skin."""
+        world = [self.P(*p) for p in pts]
+        ob = k.sweep(self.pre + name, world, [(self.R(x), self.R(y)) for x, y in secs], sides, per)
+        if not bones:
+            return self.rig.part(ob, self.pre + bone, rgb, far)
+        run = [0.0]
+        for p, q in zip(pts, pts[1:]):
+            run.append(run[-1] + math.dist(p, q))
+        arcs = [run[i] for i in joints]
+
+        def weights(co):
+            std = ((co.x - self.o[0]) / self.s, (co.y - self.o[1]) / self.s, (co.z - self.o[2]) / self.s)
+            w = sweepkit.joint_weights(sweepkit.arclength_of(std, pts), arcs, width)
+            return {self.pre + bone_: v for bone_, v in zip(bones, w)}
+        return self.rig.skin(ob, weights, rgb, far)
+
+    def limb(self, side, upper, lower, foot, hind, rgb, pale, far):
+        """A leg in two tubes that overlap at the wrist: the fur from the shoulder or the hip through the elbow or the stifle, and the paler sock from just above the wrist or the
+        hock down to a paw lying flat. Each is skinned across its bones, so the leg bends like skin; the toes and claws are bound to the paw bone."""
         y = skeleton.NEAR if side == "n" else skeleton.FAR
-        h, t, _ = self.bones[bone]
-        x0, bk = h[0], self.bulk
-        rings = [((x0 - 0.03, y, 0.0), (0.040 * bk, 0.040 * bk), 1.0), ((x0 + 0.04, y, 0.0), (0.050 * bk, 0.048 * bk), 1.0),
-                 ((x0 + 0.11, y, 0.0), (0.042 * bk, 0.050 * bk), 1.0), ((x0 + 0.16, y, 0.0), (0.020 * bk, 0.036 * bk), 1.0)]
-        self.loft(name, rings, bone, rgb, "x", 8, far)
+        bk = self.bulk
+        hu, knee, _ = self.bones[upper + side]
+        wrist = self.bones[lower + side][1]
+        toe = self.bones[foot + side][1]
+        down = (wrist[0] - knee[0], wrist[2] - knee[2])
+        run = math.hypot(*down)
+        into = (down[0] / run * 0.03, down[1] / run * 0.03)         # the way the shin runs, to overlap the two tubes
+        ax, az = toe[0] - 0.05, 0.034                                # where the foot goes flat
+        bx, ex = toe[0] + 0.012, toe[0] + 0.065
+        top = (hu[0] + (0.02 if hind else -0.01), y, hu[2] - (0.02 if hind else 0.03))
+        mid = ((wrist[0] + ax) / 2 + (0.012 if hind else 0.008), y, (wrist[2] + az) / 2)
+        top_secs = [(0.110, 0.085), (0.068, 0.062), (0.043, 0.043)] if hind else [(0.084, 0.070), (0.064, 0.057), (0.040, 0.040)]
+        self.sweep("leg_%s%s" % (foot, side), [top, knee, wrist],
+                   [(x * bk, z * bk) for x, z in top_secs], upper + side, rgb, far, bones=[upper + side, lower + side], joints=[1], width=0.05, per=4)
+        cuff = 1.04
+        pts = [(wrist[0] - into[0], y, wrist[2] - into[1]), wrist, mid, (ax, y, az), (bx, y, 0.032), (ex, y, 0.025), (ex + 0.022, y, 0.020)]
+        sec0 = top_secs[-1]
+        secs = [(sec0[0] * cuff, sec0[1] * cuff), (sec0[0] * cuff, sec0[1] * cuff), (0.036, 0.041), (0.034, 0.050), (0.032, 0.054), (0.024, 0.047), (0.008, 0.030)]
+        self.sweep("sock_%s%s" % (foot, side), pts, [(x * bk, z * bk) for x, z in secs], lower + side, pale, far, bones=[lower + side, foot + side], joints=[1], width=0.04, per=4)
+        for i, (dy, dx) in enumerate(((-0.026, 0.0), (0.0, 0.016), (0.026, 0.0))):      # three toes show at the front, the middle one longest
+            c = (ex + 0.004 + dx, y + dy * bk, 0.019)
+            self.e("toe%d_%s%s" % (i, foot, side), c, (0.020 * bk, 0.017 * bk, 0.016 * bk), foot + side, pale, far, seg=6, rings=4)
+            self.blade("claw%d_%s%s" % (i, foot, side), (c[0] + 0.012, c[1], 0.017), (c[0] + 0.034, c[1], 0.008), 0.012 * bk, 0.008, foot + side, CLAW, far)
 
     # ---- the body ----
     def build(self):
@@ -152,20 +184,10 @@ class Wolf:
                 self.e("tail_joint%d" % i, t, (c * b,) * 3, "tail%d" % i, tcol, seg=8, rings=6)
         t3 = self.bones["tail3"][1]
         self.e("tail_tip", t3, (0.044 * tr * b, 0.046 * tr * b, 0.044 * tr * b), "tail3", f.get("tail_tip", tcol), seg=8, rings=6)
-        # the legs: thin tapering limbs with round joints and flat paws; the hind ones are digitigrade
+        # the legs: each is one tube from the shoulder or the hip down to a paw lying flat, skinned across its bones so it bends like skin
         for s, y in (("n", skeleton.NEAR), ("f", skeleton.FAR)):
             far = s == "f"
-            for upper, lower, foot, r in (("sho_", "fore_", "paw_", (0.082, 0.056, 0.042)), ("thigh_", "shin_", "meta_", (0.112, 0.074, 0.048))):
-                hu, tu, _ = self.bones[upper + s]
-                hl, tl, _ = self.bones[lower + s]
-                hf, tf, _ = self.bones[foot + s]
-                c = dark if far else fur
-                pale = self.socks_far if far else self.socks
-                self.l(upper + s, hu, tu, r[0] * b, r[1] * b * 1.05, upper + s, c, far)
-                self.e("joint_" + upper + s, tu, (r[1] * b * 1.02,) * 3, upper + s, c, far, seg=8, rings=6)
-                self.l(lower + s, hl, tl, r[1] * b, r[2] * b * 1.2, lower + s, pale, far)
-                self.e("joint_" + lower + s, tl, (r[2] * b * 1.12,) * 3, lower + s, pale, far, seg=8, rings=6)
-                self.l(foot + s, hf, tf, r[2] * b * 1.1, r[2] * b * 0.9, foot + s, pale, far)
-                self.paw("pad_" + foot + s, s, foot + s, pale, upper == "thigh_", far)
+            self.limb(s, "sho_", "fore_", "paw_", False, dark if far else fur, self.socks_far if far else self.socks, far)
+            self.limb(s, "thigh_", "shin_", "meta_", True, dark if far else fur, self.socks_far if far else self.socks, far)
             hh = self.bones["thigh_" + s]
             self.e("haunch_" + s, (hh[0][0] + 0.03, y, hh[0][2] - 0.07), (0.115 * b, 0.075 * b, 0.145 * b), "thigh_" + s, dark if far else fur, far, seg=8, rings=6)

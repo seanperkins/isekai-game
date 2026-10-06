@@ -81,7 +81,8 @@ def measure_feet(rig, prefix=""):
     for key in ("fn", "ff", "hn", "hf"):
         bone = prefix + ("paw_" if key[0] == "f" else "meta_") + key[1]
         ankle = rig.rest[bone][0]
-        x0, x1, z0, _ = rig.bounds_of(bone)
+        foot = ("paw_" if key[0] == "f" else "meta_") + key[1]
+        x0, x1, z0 = rig.sole_bounds(lambda n: n == prefix + "sock_" + foot or (n.startswith(prefix + "toe") and n.endswith(foot)), 0.022)   # the paw lying on the ground
         out[key] = (ankle.z - z0, ankle.x - x0, x1 - ankle.x)
     return out
 

@@ -166,7 +166,7 @@
   },
   {
    "name": "charge_12",
-   "width": 58,
+   "width": 60,
    "native": true,
    "attack_from": 0.55
   },
@@ -178,7 +178,7 @@
   },
   {
    "name": "charge_14",
-   "width": 60,
+   "width": 62,
    "native": true,
    "attack_from": 0.55
   },
@@ -211,7 +211,7 @@
   },
   {
    "name": "downed_1",
-   "width": 64,
+   "width": 66,
    "native": true
   }
  ]

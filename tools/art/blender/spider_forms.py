@@ -20,6 +20,22 @@ from spider_gear import AIR, BLOOD, CLAY, DARK, EMBER, GOLD, PEACH, RED, SILK, T
 
 BLACK, PITCH, INK = (44, 40, 54), (30, 28, 40), (36, 32, 52)
 
+# the colour roles: the carapace and abdomen are the primary colour, the legs the secondary (kept `LEG_GAP` apart from the body in value, so a leg in front of the body is not lost in
+# it), the knee rings and the markings the tertiary
+CHITIN, LEG, JOINT = (40, 36, 48), (40, 34, 46), (176, 34, 44)
+LEG_GAP = 30.0
+
+
+def colours_of(form):
+    """The primary, secondary and tertiary colours of a form: {"chitin", "leg", "joint"}."""
+    import palette
+    chitin = palette.room(form.get("chitin", CHITIN), form.get("floor", 52))
+    leg = palette.apart(chitin, palette.room(form.get("leg", LEG), form.get("floor", 50)), LEG_GAP)
+    joint = tuple(form.get("joint", JOINT))
+    if palette.dist(joint, leg) < 60.0:      # an accent that is a near match for the leg is moved off it in value
+        joint = palette.apart(leg, joint, LEG_GAP)
+    return {"chitin": chitin, "leg": leg, "joint": joint}
+
 
 def G(name, **kw):
     return (name, kw)

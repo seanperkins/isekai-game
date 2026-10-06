@@ -41,7 +41,7 @@ spawns = [{
 }, {
 "by": "PL",
 "id": "demon_hound",
-"pos": Vector2(328, 314)
+"pos": Vector2(329, 314)
 }, {
 "by": "PL",
 "id": "blinker",

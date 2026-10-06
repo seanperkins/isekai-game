@@ -96,6 +96,24 @@ def loft(name, rings, axis="z", sides=8, smooth=False, caps=True):
     return _object(name, bm, smooth)
 
 
+def sweep(name, path, sections, sides=12, per=3, smooth=False):
+    """A smooth tube along `path` (points through the joints of a limb) with a (half width, half depth) section at each point, as sweepkit.rings lays them out: one mesh with
+    no seam where a leg bends. Both ends are closed flat, so end it with a small section or bury the end inside another shape."""
+    import sweepkit
+    pts, secs, _ = sweepkit.resample(path, sections, per)
+    rings = sweepkit.rings(pts, secs, sides)
+    bm = bmesh.new()
+    rows = [[bm.verts.new(p) for p in ring] for ring in rings]
+    for r0, r1 in zip(rows, rows[1:]):
+        for i in range(sides):
+            j = (i + 1) % sides
+            bm.faces.new((r0[i], r0[j], r1[j], r1[i]))
+    for row in (rows[0], rows[-1][::-1]):
+        bm.faces.new(row)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
+    return _object(name, bm, smooth)
+
+
 def blade(name, root, tip, width, thick, smooth=False):
     """A flat triangular slab (an ear, a horn, a spike, a hem point): `width` across the root, `thick` through it, narrowing to the tip.
     The flat face is the one seen from the side, so for a slab pointing along x its width runs along z."""
@@ -278,6 +296,22 @@ class Rig:
                 xs.append(w.x)
                 zs.append(w.z)
         return (min(xs), max(xs), min(zs), max(zs)) if xs else None
+
+    def sole_bounds(self, match, below):
+        """(min x, max x, min z) over the vertices lower than `below` of the parts whose name `match` accepts, in the current pose: the paw lying on the ground, found in a leg that
+        is one mesh from the hip to the toe."""
+        deps = bpy.context.evaluated_depsgraph_get()
+        xs, zs = [], []
+        for ob, _, _ in self.parts:
+            if not match(ob.name):
+                continue
+            ev = ob.evaluated_get(deps)
+            for v in ev.data.vertices:
+                w = ev.matrix_world @ v.co
+                if w.z < below:
+                    xs.append(w.x)
+                    zs.append(w.z)
+        return (min(xs), max(xs), min(zs)) if xs else None
 
     def stand(self, rot=None, root=(0.0, 0.0, 0.0)):
         """Pose, then drop or lift the whole creature until its lowest point rests on the ground (z = 0), a stand-in for foot IK.
