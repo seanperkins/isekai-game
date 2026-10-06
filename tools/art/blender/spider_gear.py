@@ -26,8 +26,8 @@ def _rng(seed):
 
 # ---- markings and eyes ------------------------------------------------------------------------------------------------------------
 def hourglass(g, color=None, dim=False, cracks=False, slim=False, woven=False, runes=False, **_):
-    """The red markings on the abdomen's side: the hourglass of a widow (two triangles meeting point to point, as on the plain spider), or thin
-    glowing cracks, a woven diamond band, gold runes."""
+    """The markings on the abdomen's side: the red hourglass of a widow (two triangles meeting point to point), worn only by a spider that is poisonous (the venomspinner and the
+    two it leads to: test_spider_gear.PoisonMarkTest), or thin glowing cracks, a woven diamond band, gold runes, which are other markings and stay with their forms."""
     color = color or g.mark
     if runes:
         color = GOLD
@@ -49,7 +49,7 @@ def hourglass(g, color=None, dim=False, cracks=False, slim=False, woven=False, r
 
 
 # (u along the carapace, v up it, y across it, size) of one side's four eyes: two big ones forward, a smaller pair behind and further out
-EYE_POINTS = ((1.04, 1.16, 0.20, 1.0), (0.96, 1.18, 0.52, 0.7), (0.76, 1.38, 0.24, 0.75), (0.70, 1.30, 0.52, 0.6))
+EYE_POINTS = ((1.10, 1.24, 0.20, 1.6), (0.98, 1.22, 0.52, 0.9), (0.78, 1.42, 0.24, 0.85), (0.70, 1.32, 0.52, 0.6))
 
 
 def eyes(g, color=None, small=False, big=False, **_):

@@ -1,6 +1,6 @@
 """The spider kit: one skeleton (spider_skeleton.py) for the whole spider family, a body built from it and gear (spider_gear.py) added from a table
 (spider_forms.py). Runs inside Blender. The body is glossy and faceted: a domed carapace with the eyes at its front, a big round abdomen carried up
-behind (a tilted, flat-shaded egg whose facets catch the light) with an hourglass painted on its side, eight eyes on a low mound at the front of the carapace,
+behind (a tilted, flat-shaded egg whose facets catch the light) (with a red hourglass painted on its side if it is poisonous), eight eyes on a low mound at the front of the carapace,
 stout tapering legs that arc up to high knees (well above the carapace, as a real spider's do) with a ring of colour at each joint, and
 for a drider a person's upper body rising from the front: a slim torso, a small head with hair that hangs on its own bones, thin arms, and clothes
 that are thin sheets skinned to the body and the cloth bones.

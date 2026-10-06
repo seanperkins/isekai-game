@@ -65,7 +65,7 @@ creature is lifted (`wolf_kit.room`) so the shading ramps have room. Do not draw
 Build an animal from photographs, not from the goblin's style: find a few (Wikimedia Commons, with their licences; keep them out of git, in `.tmp/refs/`),
 lay the model beside them from the side, the three quarters and the front, and fix what differs. The sprites are 30 to 60 px, so what must read is the silhouette:
 the wolf's thick neck carried level with its back, an upright triangular ear, a long deep muzzle, a ruff, a deep chest, pale socks, a tail that hangs; the spider's
-eight legs that rise to knees above its carapace, the eyes on a mound at its front, the hourglass on a round abdomen. The tests pin the proportions that took a
+eight legs that rise to knees above its carapace, the eyes on a mound at its front, a round abdomen, and the red hourglass only on a poisonous one. The tests pin the proportions that took a
 photograph to find (`test_quad_motion` head carriage, `test_spider_motion` knee height and reach, `test_spider_gear` hourglass); the size ladder
 (`tests/test_creature_scale.gd`) still decides how big the sprite is, so a leggier model is drawn smaller in the same box.
 

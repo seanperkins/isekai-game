@@ -67,6 +67,30 @@ class HourglassTest(unittest.TestCase):
             self.assertTrue(all(len(outline) == 2 for _, outline, _, _ in g.shapes), kw)
 
 
+class PoisonMarkTest(unittest.TestCase):
+    """The red hourglass is a widow's warning: only a spider that is poisonous wears it. A form's cracks, woven band or runes are different markings and may stay."""
+    ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
+    def poisonous(self, name):
+        path = os.path.join(self.ROOT, "data", "forms", "spider_%s.tres" % name)
+        if not os.path.exists(path):
+            return False
+        with open(path) as fh:
+            lines = [l for l in fh if l.startswith(("blurb", "verb_text"))]
+        return any(("poison" in l.lower() or "venom" in l.lower()) for l in lines)
+
+    def test_a_form_wears_the_plain_hourglass_exactly_when_the_game_says_it_is_poisonous(self):
+        wears = {}
+        for name, form in sf.FORMS.items():
+            plain = [kw for gear, kw in form.get("gear", []) if gear == "hourglass" and not (kw.get("cracks") or kw.get("woven") or kw.get("runes"))]
+            wears[name] = bool(plain)
+        for name in sf.FORMS:
+            self.assertEqual(wears[name], self.poisonous(name), "%s: %s" % (name, "wears an hourglass it has no poison for" if wears[name] else "is poisonous and has no hourglass"))
+
+    def test_the_poisonous_ones_are_the_venomspinner_and_the_two_it_leads_to(self):
+        self.assertEqual({n for n in sf.FORMS if self.poisonous(n)}, {"venomspinner", "plaguemother", "tarantella"})
+
+
 class EyeKit:
     """Stands in for the kit: places the eyes where the kit's thorax_point would, and records them."""
     eye = (255, 70, 70)
