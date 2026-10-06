@@ -17,3 +17,10 @@ def kind_of(form_id, kinds=None):
     """The kind of the verb `form_id` casts, or None when it has none or an enemy does not cast it."""
     kind = (kinds if kinds is not None else table()).get(form_id)
     return kind if kind in ENEMY_KINDS else None
+
+
+def anim_of(form_id, kinds=None):
+    """The gesture the verb `form_id` casts plays (verb_anims.py), or None when it has no verb."""
+    import verb_anims
+    kind = (kinds if kinds is not None else table()).get(form_id)
+    return verb_anims.archetype_of(kind) if kind else None
