@@ -1,6 +1,6 @@
 """Run the Dead Cells style pipeline for one creature and see the result.
 
-    python3 tools/art/blender/spike.py goblin [--variant redcap] [--out DIR] [--colours 24] [--anims idle,walk,attack]
+    python3 tools/art/blender/spike.py goblin [--variant redcap] [--out DIR] [--anims idle,walk,attack]
 
 1. Blender renders each frame as a colour pass and a normal pass (render_set.py, headless, no window).
 2. toon.py lights them with a cel shade, shrinks to game size with crisp alpha, outlines, and snaps every frame to one shared palette.
@@ -64,14 +64,15 @@ def _flat_outline_normals(lit, normals):
     return out
 
 
-def process(raw, out, colours=24, outline=True, bake=BAKE):
+def process(raw, out, outline=True, bake=BAKE):
     """Shrink, light, outline and palette-snap every frame in `raw` (what render() wrote); returns {anim: [frame names]}. Writes each frame
     and its normal map to out/frames."""
     meta = json.load(open(os.path.join(raw, "meta.json")))
     canvas = meta["canvas"]
     materials = [tuple(m) for m in meta["materials"]]
     os.makedirs(os.path.join(out, "frames"), exist_ok=True)
-    pal = toon.palette_of(shade.palette_colours(materials, bake))
+    colours = shade.palette_colours(materials, bake)
+    pal = toon.palette_of(colours)  # every colour a creature can show: its materials' ramps and their outline darks (refuses more than a palette can hold)
     result = {}
     for anim, count in meta["anims"].items():
         keys = ["%s_%d" % (anim, i) for i in range(count)]
@@ -80,7 +81,7 @@ def process(raw, out, colours=24, outline=True, bake=BAKE):
             with Image.open(os.path.join(raw, key + "_albedo.png")) as a, Image.open(os.path.join(raw, key + "_normal.png")) as n:
                 passes.append((a.convert("RGBA"), n.convert("RGBA")))
         prev_a, prev_steps, done = None, None, []
-        for lap in range(2):  # the second lap starts from the last frame of the first, so the loop's seam is as steady as the rest
+        for lap in range(2 if meta.get("loops", {}).get(anim, True) else 1):  # a loop's second lap starts from the last frame of the first, so its seam is as steady as the rest; an action starts cold
             done = []
             for a, n in passes:
                 small_a, small_n = shade.reduce_passes(a, n, (canvas, canvas), materials, previous=prev_a)
@@ -159,7 +160,6 @@ def main(argv=None):
     ap.add_argument("creature", choices=sorted(CURRENT))
     ap.add_argument("--variant")
     ap.add_argument("--out", default=os.path.join(ROOT, ".tmp", "blender-spike"))
-    ap.add_argument("--colours", type=int, default=24)
     ap.add_argument("--anims")
     ap.add_argument("--no-outline", action="store_true")
     args = ap.parse_args(argv)
@@ -168,7 +168,7 @@ def main(argv=None):
     raw = os.path.join(out, "raw")
     os.makedirs(raw, exist_ok=True)
     render(args.creature, raw, args.variant, args.anims)
-    frames = process(raw, out, args.colours, not args.no_outline)
+    frames = process(raw, out, not args.no_outline)
     meta = json.load(open(os.path.join(raw, "meta.json")))
     gifs(out, frames, meta["margin"])
     board(out, args.creature, frames)

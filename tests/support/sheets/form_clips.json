@@ -33,9 +33,10 @@
   },
   "hurt": {
    "frames": [
-    "hurt"
+    "hurt",
+    "downed"
    ],
-   "fps": 1.0,
+   "fps": 4.0,
    "loop": false
   },
   "downed": {
@@ -52,6 +53,14 @@
    ],
    "fps": 12.0,
    "loop": true
+  },
+  "die": {
+   "frames": [
+    "hurt",
+    "downed"
+   ],
+   "fps": 5.0,
+   "loop": false
   }
  }
 }

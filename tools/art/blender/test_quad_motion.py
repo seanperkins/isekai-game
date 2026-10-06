@@ -175,7 +175,7 @@ class ActionTest(unittest.TestCase):
         self.assertGreater(max(heads) - heads[0], 0.4 * body.L["f"], "the head goes well ahead")
         jaws = [qm.anim.sample(qm.BITES["jaw"], t) for t, _ in qm.FRAMES]
         self.assertGreater(max(jaws), 20.0)
-        self.assertLess(jaws[qm.WINDUP + 2], 8.0)
+        self.assertLess(jaws[qm.WINDUP], 8.0, "snapped shut on the impact frame")
 
     def test_the_windup_sinks_back_with_the_head_low_before_the_spring(self):
         body = body_of()
@@ -191,7 +191,7 @@ class ActionTest(unittest.TestCase):
             rot, root = qm.hurt_pose(body, t)
             for k in body.legs:
                 self.assertAlmostEqual(low(body, k, rot, root), 0.0, places=6)
-        peak = body.skel.pose(*qm.hurt_pose(body, 0.12))
+        peak = body.skel.pose(*qm.hurt_pose(body, 0.10))
         self.assertGreater(peak["head"][1][1], rest["head"][1][1] + 0.05)
 
     def test_it_falls_and_ends_lying_flat_with_its_legs_stretched_out(self):
@@ -204,6 +204,62 @@ class ActionTest(unittest.TestCase):
         self.assertGreater(posed["paw_n"][1][0], posed["spine"][1][0] - 0.05, "the forelegs are stretched ahead")
 
 
+class TimingTest(unittest.TestCase):
+    def test_the_windup_and_recovery_frames_last_what_the_engines_verb_states_do_and_the_flinch_its_flinch(self):
+        self.assertAlmostEqual(sum(d for _, d in qm.FRAMES[:qm.WINDUP]), qm.ENGINE_WINDUP, places=9)
+        self.assertAlmostEqual(sum(d for _, d in qm.FRAMES[qm.WINDUP:]), qm.ENGINE_RECOVER, places=9)
+        self.assertAlmostEqual(sum(d for _, d in qm.HURT_FRAMES), qm.ENGINE_HURT, places=9)
+
+    def test_the_last_frames_are_the_rest_pose_the_next_clip_starts_from(self):
+        body = body_of()
+        idle, _ = qm.idle_pose(body, 0.0)
+        for rot in (qm.attack_pose(body, qm.FRAMES[-1][0])[0], qm.hurt_pose(body, qm.HURT_FRAMES[-1][0])[0]):
+            for bone in ("spine", "neck", "head", "thigh_n", "sho_n"):
+                self.assertAlmostEqual(rot[bone][1], idle[bone][1], delta=1.5, msg=bone)
+
+
+class TailTest(unittest.TestCase):
+    def test_the_tail_never_hangs_below_the_floor_in_any_frame_of_any_clip(self):
+        body = body_of()
+        clips = [qm.idle_clip(body), qm.gait_clip(body, "walk", 0.8, 0.5), qm.gait_clip(body, "trot", 0.5, 0.6), qm.gait_clip(body, "gallop", 0.4, 0.5),
+                 qm.attack_clip(body), qm.hurt_clip(body)]
+        for clip in clips:
+            for rot, root in clip.frames:
+                posed = body.skel.pose(rot, root)
+                for b in ("tail1", "tail2", "tail3"):
+                    self.assertGreaterEqual(posed[b][1][1], 0.0, b)
+
+
+class PlanTest(unittest.TestCase):
+    def test_a_slow_creature_walks_a_quick_one_trots_and_the_stride_is_never_longer_than_the_legs_reach(self):
+        body = body_of()
+        self.assertEqual(qm.walking_gait(body, 20.0, 26.0), "walk")
+        self.assertEqual(qm.walking_gait(body, 90.0, 26.0), "trot")
+        for gait in qm.GAITS:
+            g = qm.GAITS[gait]
+            for speed in (15.0, 40.0, 70.0, 110.0, 200.0):
+                cycle, stride = qm.plan_gait(body, gait, speed, 26.0)
+                self.assertLessEqual(stride, g["max_stride"] * body.H + 1e-9, "%s %s" % (gait, speed))
+                self.assertGreater(cycle, 0.0)
+
+    def test_every_planned_paw_reaches_its_target(self):
+        worst = 0.0
+        body = body_of()
+        for gait in qm.GAITS:
+            g = qm.GAITS[gait]
+            for speed in (15.0, 60.0, 130.0, 260.0):
+                cycle, stride = qm.plan_gait(body, gait, speed, 26.0)
+                for k in range(24):
+                    t = k / 24.0
+                    rot, root = qm.gait_pose(body, gait, t, stride)
+                    posed = body.skel.pose(rot, root)
+                    targets, _ = qm.gait_targets(body, gait, t, stride)
+                    for key, leg in body.legs.items():
+                        ankle = leg.ankle_of(posed)
+                        worst = max(worst, ((ankle[0] - targets[key][0]) ** 2 + (ankle[1] - targets[key][1]) ** 2) ** 0.5)
+        self.assertLess(worst, 0.004)
+
+
 class ClipTest(unittest.TestCase):
     def test_every_clip_is_finite_and_has_a_duration_per_frame_and_the_tail_and_ears_move(self):
         body = body_of()
@@ -214,8 +270,9 @@ class ClipTest(unittest.TestCase):
             for rot, root in clip.frames:
                 for v in list(root) + [a for r in rot.values() for a in r]:
                     self.assertTrue(math.isfinite(v))
-        tail = [rot["tail3"][1] for rot, _ in clips[2].frames]
-        self.assertGreater(max(tail) - min(tail), 4.0)
+        for bone, least in (("tail1", 4.0), ("tail3", 2.0)):
+            swing = [rot[bone][1] for rot, _ in clips[2].frames]
+            self.assertGreater(max(swing) - min(swing), least, bone)
         self.assertTrue(clips[1].loop and not clips[4].loop and clips[6].grounded)
 
 

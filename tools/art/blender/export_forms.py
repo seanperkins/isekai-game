@@ -16,6 +16,7 @@ An attack becomes two clips that the engine's verb states play: `windup` (the an
 import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -26,6 +27,31 @@ sys.path.insert(0, HERE)
 import clips  # noqa: E402
 
 ANIM_ORDER = ("idle", "walk", "run", "attack", "hurt", "die")
+ENEMY_GD = os.path.join(ROOT, "scripts", "enemies", "enemy.gd")
+
+
+def engine_constants(path=ENEMY_GD):
+    """The timings the game's enemy runs on, read from its source so the art cannot drift from it: {"windup", "recover", "hurt", "run_speed"}."""
+    with open(path) as fh:
+        text = fh.read()
+    names = {"windup": "VERB_WINDUP", "recover": "VERB_RECOVER", "hurt": "HURT_SECONDS", "run_speed": "RUN_SPEED"}
+    return {key: float(re.search(r"^const %s := ([0-9.]+)" % const, text, re.M).group(1)) for key, const in names.items()}
+
+
+def check_timing(meta, constants, slack=0.011):
+    """Raise ValueError unless the attack's windup frames last as long as the engine's windup (so the impact frame comes up as the verb fires), its
+    recovery frames no longer than the engine's recover (so nothing slides under the animation once the creature is free to move), and the flinch
+    as long as the engine's."""
+    d = meta["durations"]
+    if "attack" in d:
+        split = meta["windup"]
+        windup, recover = sum(d["attack"][:split]), sum(d["attack"][split:])
+        if abs(windup - constants["windup"]) > slack:
+            raise ValueError("the windup frames last %.3f s, the engine's windup %.3f s" % (windup, constants["windup"]))
+        if recover > constants["recover"] + slack:
+            raise ValueError("the recovery frames last %.3f s, longer than the engine's recover %.3f s" % (recover, constants["recover"]))
+    if "hurt" in d and abs(sum(d["hurt"]) - constants["hurt"]) > slack:
+        raise ValueError("the flinch lasts %.3f s, the engine's %.3f s" % (sum(d["hurt"]), constants["hurt"]))
 CLIPS_PATH = os.path.join("data", "form_clips.json")
 
 
@@ -57,11 +83,13 @@ def spec_of(set_name, names):
     return {"set": set_name, "common_box": True, "frames": [{"name": n, "width": 0, "native": True} for n in names]}
 
 
-def install(creature, form, folder, root=ROOT, assemble=True):
+def install(creature, form, folder, root=ROOT, assemble=True, check=True):
     """Put one rendered form in the game. Returns (form id, its clips)."""
     set_name = "anim_%s_%s" % (creature, form)
     with open(os.path.join(folder, "raw", "meta.json")) as fh:
         meta = json.load(fh)
+    if check:
+        check_timing(meta, engine_constants())
     dest = os.path.join(root, "art_source", "frames", set_name)
     if os.path.isdir(dest):
         shutil.rmtree(dest)

@@ -11,6 +11,16 @@ import quad_skeleton as skeleton
 import rigkit as k
 
 FUR, FUR_DARK, BELLY, EAR = (62, 56, 70), (48, 43, 56), (96, 88, 106), (40, 36, 48)
+
+
+def room(rgb, floor=96):
+    """A dark colour lifted so its shadows have somewhere to go: the shading ramps darken a colour in steps, and from near black there is nothing below.
+    A colour already as light as `floor` is left alone."""
+    lum = 0.30 * rgb[0] + 0.59 * rgb[1] + 0.11 * rgb[2]
+    if lum >= floor:
+        return tuple(rgb)
+    k = min(1.9, floor / max(lum, 1.0))
+    return tuple(min(255, int(round(c * k))) for c in rgb)
 EYE, STAR, NOSE, TAIL, FANG = (236, 232, 156), (150, 120, 208), (22, 20, 26), (66, 60, 76), (232, 228, 208)
 
 
@@ -22,8 +32,8 @@ class Wolf:
         self.tail_f = form.get("tail", 1.0)
         self.head_f = form.get("head", 1.0)
         self.bulk = form.get("bulk", 1.0)          # how thick every part of the body is
-        self.fur, self.belly = form.get("fur", FUR), form.get("belly", BELLY)
-        self.dark = form.get("dark", tuple(int(c * 0.78) for c in self.fur))
+        self.fur, self.belly = room(form.get("fur", FUR)), room(form.get("belly", BELLY), 128)
+        self.dark = room(form.get("dark", tuple(int(c * 0.82) for c in self.fur)), 80)
         self.proportions = dict(leg=self.leg, neck=self.neck_f, tail=self.tail_f, head=self.head_f, tail_shape=form.get("tail_shape", skeleton.TAIL_DROOPING))
         self.bones = {n: (h, t, p) for n, h, t, p in skeleton.core(**self.proportions)}
 
@@ -91,10 +101,12 @@ class Wolf:
         hips, spine = self.bones["hips"], self.bones["spine"]
         zc = lambda x: hips[0][2] + (x - hips[0][0]) / max(1e-6, spine[1][0] - hips[0][0]) * (spine[1][2] - hips[0][2])  # the trunk's height at x
         # the chest: deep behind the shoulders, tucked up toward the waist; the pelvis: broad over the haunches
+        # the two halves overlap with the same section where they meet, so no seam shows between them
         self.loft("chest", [((0.34, 0, zc(0.34) - 0.01), (0.140 * b, 0.100 * b)), ((0.24, 0, zc(0.24) - 0.03), (0.178 * b, 0.122 * b)),
-                            ((0.10, 0, zc(0.10) - 0.045), (0.185 * b, 0.124 * b)), ((-0.06, 0, zc(-0.06) - 0.02), (0.150 * b, 0.110 * b))], "spine", fur)
-        self.loft("pelvis", [((-0.10, 0, zc(-0.10) - 0.01), (0.140 * b, 0.105 * b)), ((-0.24, 0, zc(-0.24) - 0.01), (0.160 * b, 0.118 * b)),
-                             ((-0.38, 0, zc(-0.38) - 0.02), (0.135 * b, 0.100 * b))], "hips", fur)
+                            ((0.10, 0, zc(0.10) - 0.045), (0.185 * b, 0.124 * b)), ((-0.06, 0, zc(-0.06) - 0.025), (0.158 * b, 0.112 * b)),
+                            ((-0.16, 0, zc(-0.16) - 0.02), (0.152 * b, 0.110 * b))], "spine", fur)
+        self.loft("pelvis", [((-0.06, 0, zc(-0.06) - 0.025), (0.158 * b, 0.112 * b)), ((-0.16, 0, zc(-0.16) - 0.02), (0.152 * b, 0.110 * b)),
+                             ((-0.26, 0, zc(-0.26) - 0.01), (0.160 * b, 0.118 * b)), ((-0.38, 0, zc(-0.38) - 0.02), (0.135 * b, 0.100 * b))], "hips", fur)
         self.loft("belly", [((0.14, 0, zc(0.14) - 0.12), (0.060 * b, 0.075 * b)), ((-0.04, 0, zc(-0.04) - 0.10), (0.045 * b, 0.065 * b))], "spine", belly)
         # the neck: a thick wedge from the shoulders to the skull
         self.l("neck", self.at("neck", 0.0), self.at("neck", 1.0), 0.140 * b, 0.100 * b, "neck", fur, sides=7)
@@ -110,16 +122,17 @@ class Wolf:
                            ((jaw[1][0] - 0.02, 0, jaw[1][2] + 0.01), (0.020 * hs, 0.028 * hs))], "jaw", belly, sides=6)
         for s, y in (("n", -1), ("f", 1)):
             h, t, _ = self.bones["ear_" + s]
-            self.blade("ear_" + s, h, t, 0.10 * hs, 0.020, "ear_" + s, EAR, far=s == "f")
+            self.blade("ear_" + s, h, t, 0.13 * hs * f.get("ears", 1.0), 0.024, "ear_" + s, f.get("ear", self.dark), far=s == "f")
             self.e("eye_" + s, hp(0.55, 0.035, y * 0.078 * hs), (0.028, 0.026, 0.028), "head", f.get("eye", EYE), far=s == "f", glow=True, seg=8, rings=6)
         self.blade("fang_u", hp(0.82, -0.050), hp(0.82, -0.098), 0.020, 0.016, "head", FANG)
         self.blade("fang_l", hp(0.82, -0.080), hp(0.84, -0.040), 0.020, 0.016, "jaw", FANG)
         if f.get("star", True):
             self.e("star", hp(0.40, 0.085), (0.024, 0.014, 0.034), "head", f.get("star_colour", STAR), glow=True, seg=6, rings=4)
         # the tail: three bushy tapering segments
-        for i, (a, c) in enumerate(((0.062, 0.082), (0.082, 0.086), (0.086, 0.0)), 1):
+        tr = f.get("tail_r", 1.0)
+        for i, (a, c) in enumerate(((0.075 * tr, 0.100 * tr), (0.100 * tr, 0.105 * tr), (0.105 * tr, 0.0)), 1):
             h, t, _ = self.bones["tail%d" % i]
-            self.l("tail%d" % i, h, t, a * b, c * b, "tail%d" % i, f.get("tail_colour", TAIL), sides=6)
+            self.l("tail%d" % i, h, t, a * b, c * b, "tail%d" % i, room(f.get("tail_colour", TAIL), 100), sides=6)
         # the legs: thin tapering limbs with round joints and flat paws; the hind ones are digitigrade
         for s, y in (("n", skeleton.NEAR), ("f", skeleton.FAR)):
             far = s == "f"

@@ -161,5 +161,11 @@ class PaletteTest(unittest.TestCase):
         self.assertEqual(toon.apply_palette(a, pal).getpixel((0, 0))[:3], toon.apply_palette(solid(2, 2, (240, 20, 20, 255)), pal).getpixel((0, 0))[:3])
 
 
+class PaletteSizeTest(unittest.TestCase):
+    def test_more_colours_than_a_palette_holds_are_refused_not_silently_cut(self):
+        with self.assertRaises(ValueError):
+            toon.palette_of([(i % 256, (i // 256) % 256, 7) for i in range(300)])
+
+
 if __name__ == "__main__":
     unittest.main()

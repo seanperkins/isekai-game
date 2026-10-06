@@ -33,8 +33,6 @@ PAD = 4
 RIDER_SCALE = 1.0
 ARMS, STANCES = motion_.ARMS, motion_.STANCES
 RIDE = {"thigh_n": down(84), "thigh_f": down(84), "shin_n": down(-88), "shin_f": down(-88), "foot_n": down(6), "foot_f": down(6), "spine": up(2)}
-RIDER_COUNTS = {"idle": 12, "walk": 12, "attack": 12}
-RIDER_SECONDS = {"idle": 1.4, "walk": 0.6, "attack": 0.84}
 WALK_SPEED_RUN = 1.9   # a run covers the ground this many times as fast as the walk does
 
 
@@ -90,33 +88,42 @@ def _rider_arms(rot, form, t, swing_deg, lag=0.2):
     rot["arm_f"], rot["fore_f"] = down(a[2] + amp * c), down(a[3] + 0.6 * amp * (0.5 + 0.5 * c))
 
 
-def _rider_frame(form, anim_name, i, n):
-    t = i / n
-    rot = dict(RIDE)
-    _rider_arms(rot, form, t, 6.0)
-    rot["spine"] = up(2.0 + 1.5 * math.sin(4.0 * math.pi * t))
-    wolf_fn = {"idle": wolf.idle, "walk": wolf.walk, "attack": wolf.pounce}[anim_name]
-    wrot, root = wolf_fn(min(5, i * 6 // n), 6, "w_") if anim_name == "attack" else wolf_fn(i, n, "w_")
-    out = dict(wrot)
-    out.update(rot)
-    for s in "nf":  # what it holds keeps its angle whatever the arm does
+def _rider_frame(form, mount_rot, root, t):
+    """One frame of a rider: the mount's pose (its bones prefixed), the rider seated on it with its arms from the preset, and what it holds kept
+    at the angle it was made at whatever the arm does."""
+    out = {"w_" + b: v for b, v in mount_rot.items()}
+    out.update(RIDE)
+    _rider_arms(out, form, t, 6.0)
+    out["spine"] = up(2.0 + 1.5 * math.sin(4.0 * math.pi * t))
+    for s in "nf":
         chain = ["w_hips", "w_spine", "hips", "spine", "arm_" + s, "fore_" + s]
         above = sum(out.get(b, (0.0, 0.0, 0.0))[1] for b in chain)
         arm = out.get("arm_" + s, (0, 0, 0))[1] + out.get("fore_" + s, (0, 0, 0))[1]
         out["item_" + s] = (0.0, form.get("item_angle", {}).get(s, 0.0) + 0.25 * arm - above, 0.0)
-    return out, (root[0], root[1], root[2] * form["mount"]["scale"])
+    return out, root
 
 
-def _rider_clip(rig, form, anim_name):
-    n = RIDER_COUNTS[anim_name]
-    frames = [_rider_frame(form, anim_name, i, n) for i in range(n)]
-    dur = [RIDER_SECONDS[anim_name] / n] * n
-    out = secondary.series(set(rig.rest), motion_.SECONDARY, frames, {"walk": 1.0, "idle": 0.15, "attack": 0.5}[anim_name], dur,
-                           extra_chain=("w_hips", "w_spine"), periodic=anim_name != "attack")
-    for i, (rot, _) in enumerate(frames):
-        for bone, series in out.items():
-            rot[bone] = down(series[i])
-    return motion_.Clip(frames, dur, anim_name != "attack", grounded=True)
+def rider_clips(rig, form, variant):
+    """({name: Clip}, ppu) for a goblin on a wolf: the wolf moves as a wolf does (the quadruped motion on the mount's own flat skeleton, its bones
+    prefixed) and the rider sits on it."""
+    mount = form["mount"]
+    mform = wolf.mount_form(mount["fur"], mount["belly"], mount.get("barding"))
+    body = wolf.body_of(rig, mform, "w_")
+    rig.pose(*_rider_frame(form, wolf.motion_.idle_clip(body).frames[0][0], wolf.motion_.idle_clip(body).frames[0][1], 0.0))
+    x0, x1, z0, z1 = rig.extent()
+    w, h = today(variant)
+    ppu = math.sqrt(w * h / ((x1 - x0) * (z1 - z0))) if h else w / (x1 - x0)
+    clips = {}
+    for name, c in wolf.clips_for(body, motion(variant), ppu).items():
+        n = len(c.frames)
+        frames = [_rider_frame(form, rot, root, i / n if c.loop else 0.0) for i, (rot, root) in enumerate(c.frames)]
+        out = secondary.series(set(rig.rest), motion_.SECONDARY, frames, {"idle": 0.15, "attack": 0.5, "hurt": 0.5, "die": 0.3}.get(name, 1.0), c.durations,
+                               extra_chain=("w_hips", "w_spine"), periodic=c.loop)
+        for i, (rot, _) in enumerate(frames):
+            for bone, series in out.items():
+                rot[bone] = down(series[i])
+        clips[name] = motion_.Clip(frames, c.durations, c.loop, c.grounded)
+    return clips, ppu
 
 
 # ---- sizing -----------------------------------------------------------------------------------------------------------------------
@@ -129,39 +136,24 @@ def today(variant):
     return sizing.today("goblin", variant, _form(variant)["width"], base)
 
 
-def _cycle(body_reach_px, speed, duty, lo, hi, stride_legs):
-    """(cycle seconds, stride in px) for a gait that covers the ground at `speed` px/s with feet that stay down for `duty` of the cycle: a
-    brisk step is `stride_legs` leg lengths."""
-    cycle = min(hi, max(lo, stride_legs * body_reach_px / (speed * duty)))
-    return cycle, speed * duty * cycle
-
-
 def clips_of(rig, variant):
-    """{name: motion.Clip} for this form, plus the camera sizing: the pixels per unit, from the area of the still the form replaces."""
+    """({name: motion.Clip}, pixels per unit) for this form: the unit is sized so the still covers the area of the still the form replaces."""
     form = _form(variant)
-    riding = bool(form.get("ride"))
-    if riding:
-        clips = {name: _rider_clip(rig, form, name) for name in RIDER_COUNTS}
-        first = clips["idle"]
-        rig.stand(*first.frames[0])
-        reach = None
-    else:
-        body = body_of(rig, form)
-        idle = motion_.idle_clip(body)
-        rig.pose(*idle.frames[0])
-        reach = body.L
+    if form.get("ride"):
+        return rider_clips(rig, form, variant)
+    body = body_of(rig, form)
+    idle = motion_.idle_clip(body)
+    rig.pose(*idle.frames[0])
     x0, x1, z0, z1 = rig.extent()
     w, h = today(variant)
     ppu = math.sqrt(w * h / ((x1 - x0) * (z1 - z0))) if h else w / (x1 - x0)
-    if riding:
-        return clips, ppu
     speed = motion(variant)
-    walk_cycle, walk_stride = _cycle(reach * ppu, speed, motion_.GAITS["walk"]["duty"], 0.35, 0.9, 0.9)
-    run_cycle, run_stride = _cycle(reach * ppu, speed * WALK_SPEED_RUN, motion_.GAITS["run"]["duty"], 0.28, 0.6, 1.5)
+    walk_cycle, walk_stride = motion_.plan_gait(body, "walk", speed, ppu)
+    run_cycle, run_stride = motion_.plan_gait(body, "run", speed * WALK_SPEED_RUN, ppu)
     clips = {
         "idle": idle,
-        "walk": motion_.gait_clip(body, "walk", walk_cycle, walk_stride / ppu),
-        "run": motion_.gait_clip(body, "run", run_cycle, run_stride / ppu),
+        "walk": motion_.gait_clip(body, "walk", walk_cycle, walk_stride),
+        "run": motion_.gait_clip(body, "run", run_cycle, run_stride),
         "attack": motion_.attack_clip(body),
         "hurt": motion_.hurt_clip(body),
         "die": motion_.die_clip(body),
@@ -185,8 +177,6 @@ def setup(rig, variant):
     canvas = int(math.ceil(need / 8.0) * 8)
     info = {"durations": {name: c.durations for name, c in clips.items()}, "loops": {name: c.loop for name, c in clips.items()},
             "fps": {name: len(c.frames) / sum(c.durations) for name, c in clips.items()}}
-    if not form.get("ride"):
-        spec, windup = motion_.attack_frames(motion_.Body(skeleton2d.Skeleton2D.from_rig(rig), measure_feet(rig), form, present=set(rig.rest)))
-        info["windup"] = windup
+    info["windup"] = wolf.motion_.WINDUP if form.get("ride") else motion_.ATTACK_WINDUP
     return {"canvas": canvas, "ppu": ppu, "margin": MARGIN, "center_x": 0.0, "anims": anims,
             "still": form.get("still", "idle_0"), "extra": info}

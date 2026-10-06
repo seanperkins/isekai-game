@@ -60,3 +60,9 @@ func locked() -> bool:
 		return false
 	var clip: Dictionary = clips[_state]
 	return not bool(clip["loop"]) and int(_time * float(clip["fps"])) < (clip["frames"] as Array).size()
+
+## Forget the clip it is on, so the next play() of the same state starts it over (a second blow in the middle of a flinch).
+func restart() -> void:
+	_state = ""
+	_time = 0.0
+	_exit = []

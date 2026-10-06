@@ -73,6 +73,10 @@ const CLIPS := "res://data/enemy_clips.json"
 static var form_clips_path := "res://data/form_clips.json"
 ## An animated twin runs (plays its run clip) when it is charging or moving faster than its walking speed by this much.
 const RUN_RATIO := 1.35
+## A run clip is built for this many times the walk's speed (tools/art/blender: the goblin's WALK_SPEED_RUN), and a walk or a run plays at
+## the creature's real speed relative to that, within these limits.
+const RUN_SPEED := 1.9
+const FORM_RATE_RANGE := Vector2(0.3, 3.0)
 static var _form_clip_cache := {}  # path -> parsed file
 ## The Bog Lizardman's spear: how far, how level and how often it throws (the toad's are SPIT_*; Spear.SPEED is its speed).
 const SPEAR_RANGE := 140.0
@@ -158,6 +162,7 @@ var hunting := false
 var _sheet: SpriteSheet
 var _still: SpriteSheet  # the sheet of a creature that is one still (a twin), null for the rest
 var _form_sheet: SpriteSheet  # the animated sheet of a twin's form (assets/sheets/anim_<form>), null when it has none
+var _form_hurt_seen := 0.0    # the last flinch timer it drew, so a fresh blow can restart the flinch
 var _animator: SlimeAnimator
 var _shapes: SlimeShapes
 var _hurt_t := 0.0
@@ -652,15 +657,35 @@ func _draw_still() -> void:
 ## windup, a recover, a hurt) plays out before the creature goes back to walking or standing; a hit, a stun or a new verb state interrupts it.
 ## Its hurt box stays the body's, as a still's does.
 func _draw_form_frame(delta: float) -> void:
+	if _hurt_t > _form_hurt_seen:
+		_animator.restart()  # a new blow starts the flinch again, even in the middle of one
+	_form_hurt_seen = _hurt_t
 	if not dormant:
-		_animator.advance(delta)  # first, so a one-shot that has just finished no longer holds the creature
+		_animator.advance(delta * _form_rate())  # first, so a one-shot that has just finished no longer holds the creature
 	var state := EnemyState.pick_form(_animator.clips, EnemyStatus.ACTIVE if dormant else status.state, "" if dormant else _verb_state,
-		absf(velocity.x) > 1.0 and not dormant, _hurt_t > 0.0 and not dormant, charge_state() == "charge" or absf(velocity.x) > _speed() * RUN_RATIO)
+		absf(velocity.x) > 1.0 and not dormant, _hurt_t > 0.0 and not dormant, charge_state() == "charge" or absf(velocity.x) > _walk_speed() * RUN_RATIO)
 	if _animator.locked() and EnemyState.is_locomotion(state) and not dormant:
 		state = _animator.state()
 	_anim_state = state
 	_animator.play(state)
-	var frame := _animator.frame()
+	_show_form_frame(_animator.frame())
+
+## The speed its walk clip was built for: the creature's own, whatever slows it now.
+func _walk_speed() -> float:
+	return BASE_SPEED * stats.get_stat("spd") / 100.0
+
+## How fast to play the clip: a walk or a run plays as fast as the creature is really going (so a planted foot stays planted when it patrols at half
+## speed, is slowed, or charges), everything else at its own pace.
+func _form_rate() -> float:
+	var speed := absf(velocity.x)
+	match _animator.state():
+		"walk":
+			return clampf(speed / _walk_speed(), FORM_RATE_RANGE.x, FORM_RATE_RANGE.y) if speed > 1.0 else 1.0
+		"run":
+			return clampf(speed / (_walk_speed() * RUN_SPEED), FORM_RATE_RANGE.x, FORM_RATE_RANGE.y) if speed > 1.0 else 1.0
+	return 1.0
+
+func _show_form_frame(frame: String) -> void:
 	var size := def.sprite_size
 	var lit := _form_sheet.lit_texture(frame, facing < 0)
 	if lit != null:
@@ -673,6 +698,25 @@ func _draw_form_frame(delta: float) -> void:
 	_sprite.rotation = 0.0
 	_sprite.scale = Vector2(size, size)
 	_sprite.position = Vector2(0.0, BODY_BOTTOM - _form_sheet.frame_size(frame).y * size / 2.0)
+
+## Whether this creature has an animated clip of that name (a twin whose form has been animated).
+func has_form_clip(state: String) -> bool:
+	return _form_sheet != null and _animator != null and _animator.clips.has(state)
+
+## How long a clip plays, in seconds (0 when there is none).
+func form_clip_seconds(state: String) -> float:
+	if not has_form_clip(state):
+		return 0.0
+	var clip: Dictionary = _animator.clips[state]
+	return float((clip["frames"] as Array).size()) / float(clip["fps"])
+
+## Draw a clip at a time since it began (a one-shot holds its last frame): for an effect that plays the creature's own animation, like its death.
+func draw_form_clip(state: String, time: float) -> void:
+	if not has_form_clip(state):
+		return
+	var clip: Dictionary = _animator.clips[state]
+	var frames: Array = clip["frames"]
+	_show_form_frame(frames[clampi(int(time * float(clip["fps"])), 0, frames.size() - 1)])
 
 ## Strands while a thread slows it, the cocoon while a thread holds it, nothing once either ends or it is down.
 func _update_web() -> void:

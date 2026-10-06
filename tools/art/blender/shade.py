@@ -109,7 +109,7 @@ def _settle(lum, raw, was, count):
 def shade(albedo, normal, bake=1.0, rim=True, creases=True, previous=None, record=None):
     """Light every pixel from its material's ramp: the step comes from the normal's angle to the key light, a rim light lifts edges turned
     from the camera toward the back light, and a crease between two neighbours whose normals disagree darkens the darker one. `previous` is
-    the last frame's {pixel: step} (hysteresis, as in reduce_passes); `record`, if a dict, receives this frame's steps for the next call."""
+    the last frame's {pixel: (material colour, step)} (hysteresis, as in reduce_passes; a pixel that now shows another material has no history); `record`, if a dict, receives this frame's steps for the next call."""
     key, back = unit(LIGHT), unit(RIM)
     w, h = albedo.size
     pa, pn = albedo.load(), normal.load()
@@ -123,9 +123,11 @@ def shade(albedo, normal, bake=1.0, rim=True, creases=True, previous=None, recor
             r = ramps.setdefault(colour, ramp(colour, bake))
             n = decode(pn[x, y])
             lum[(x, y)] = _lum(n, key)
-            i = _settle(lum[(x, y)], _step(lum[(x, y)], len(r)), (previous or {}).get((x, y)), len(r))
+            was = (previous or {}).get((x, y))
+            was = was[1] if was is not None and was[0] == colour else None   # only what the same material showed here last frame counts
+            i = _settle(lum[(x, y)], _step(lum[(x, y)], len(r)), was, len(r))
             if record is not None:
-                record[(x, y)] = i
+                record[(x, y)] = (colour, i)
             if rim and len(r) > 1 and n[2] < 0.45 and _lum(n, back) > 0.55:
                 i = min(len(r) - 1, i + 1)
             steps[(x, y)] = i
@@ -146,12 +148,23 @@ def shade(albedo, normal, bake=1.0, rim=True, creases=True, previous=None, recor
     return out
 
 
-def palette_colours(materials, bake=1.0, dark=DARK):
-    """Every colour a creature can show: its materials' ramps, and each of those darkened for the outline."""
+def palette_colours(materials, bake=1.0, dark=DARK, lit_dark=0.62, limit=256):
+    """Every colour a creature can show: its materials' ramps, and for the outline a dark of each material's shadow, base and lit steps (the outline
+    is darker where it touches shadow and lighter where it touches light, and is snapped to the nearest of these). A creature with many materials
+    keeps the ramps and drops outline darks, the least needed first, rather than overflow a palette."""
+    ramps = [ramp(tuple(rgb), bake) for rgb in materials]
     seen = []
-    for rgb in materials:
-        for c in ramp(tuple(rgb), bake):
-            for colour in (c, tuple(int(v * dark) for v in c)):
-                if colour not in seen:
-                    seen.append(colour)
+
+    def add(colour):
+        if colour not in seen:
+            seen.append(colour)
+    for r in ramps:
+        for c in r:
+            add(c)
+    for factor, pick in ((dark, 2), (lit_dark, 3), (dark, 1), (lit_dark, 2)):
+        for r in ramps:
+            c = r[min(pick, len(r) - 1)]
+            colour = tuple(int(v * factor) for v in c)
+            if colour not in seen and len(seen) < limit:
+                seen.append(colour)
     return seen

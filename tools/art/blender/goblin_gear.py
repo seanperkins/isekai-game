@@ -231,35 +231,38 @@ def club(g, side="n", **_):
 
 
 def dagger(g, side="n", color=STEEL, **_):
+    """A short blade held point down, a flat slab you can see from the side."""
     y, b = Y[side], "item_" + side
-    g.l("dagger", (0.24, y, 0.88), (0.22, y, 0.50), 0.03, 0.0, b, color, sides=4)
-    g.e("hilt", (0.24, y, 0.88), (0.05, 0.04, 0.03), b, (80, 60, 50))
+    g.blade("dagger", (0.25, y, 0.82), (0.23, y, 0.42), 0.075, 0.03, b, color)
+    g.box("hilt", (0.25, y, 0.82), (0.045, 0.05, 0.02), b, (80, 60, 50))
 
 
-def axe(g, side="n", color=(150, 120, 100), **_):
+def axe(g, side="n", color=(168, 176, 188), **_):
+    """A haft and a wedge of a blade, wide at the cutting edge in front, so the head is a clear shape against the body."""
     y, b = Y[side], "item_" + side
-    g.l("axe_h", (0.22, y, 0.82), (0.30, y, 1.14), 0.03, 0.03, b, WOOD, sides=5)
-    g.e("axe_head", (0.34, y, 1.12), (0.08, 0.02, 0.11), b, color)
+    g.l("axe_h", (0.22, y, 0.80), (0.30, y, 1.16), 0.030, 0.030, b, WOOD, sides=5)
+    g.blade("axe_head", (0.47, y, 1.10), (0.31, y, 1.10), 0.22, 0.035, b, color)
+    g.box("axe_eye", (0.31, y, 1.10), (0.04, 0.04, 0.05), b, (96, 100, 112))
 
 
 def spear(g, side="n", length=1.4, couched=False, pennant=None, **_):
     y, b = Y[side], "item_" + side
     if couched:
         g.l("spear", (-0.15, y, 0.92), (0.95, y, 0.84), 0.028, 0.025, b, WOOD, sides=5)
-        g.l("spearhead", (0.95, y, 0.84), (1.17, y, 0.82), 0.055, 0.0, b, STEEL, sides=5)
+        g.blade("spearhead", (0.95, y, 0.84), (1.20, y, 0.82), 0.10, 0.03, b, STEEL)
         if pennant:
             g.e("pennant", (0.80, y, 0.93), (0.20, 0.015, 0.07), b, pennant, glow=True, seg=8, rings=6)
     else:
         g.l("spear", (0.22, y, 0.55), (0.30, y, 0.55 + length), 0.026, 0.026, b, WOOD, sides=5)
-        g.l("spearhead", (0.30, y, 0.55 + length), (0.32, y, 0.78 + length), 0.05, 0.0, b, STEEL, sides=5)
+        g.blade("spearhead", (0.30, y, 0.55 + length), (0.32, y, 0.80 + length), 0.10, 0.03, b, STEEL)
 
 
 def sword_big(g, side="n", length=1.3, **_):
     y, b = Y[side], "item_" + side
     f = length / 1.3
     tip = (0.20 - 0.50 * f, y, 0.95 + 1.20 * f)
-    g.l("blade", (0.20, y, 0.95), tip, 0.065, 0.03, b, STEEL, sides=4)
-    g.l("edge", (0.20, y + 0.04, 0.95), (tip[0], y + 0.04, tip[2]), 0.02, 0.01, b, GOLD, glow=True, sides=4)
+    g.blade("blade", (0.20, y, 0.99), tip, 0.11, 0.03, b, STEEL)
+    g.blade("edge", (0.20, y + 0.03, 0.99), tip, 0.03, 0.01, b, GOLD, glow=True)
     g.e("guard", (0.21, y, 0.97), (0.04, 0.04, 0.12), b, GOLD)
 
 

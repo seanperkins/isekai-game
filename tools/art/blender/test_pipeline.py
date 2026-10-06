@@ -65,17 +65,16 @@ class PipelineTest(unittest.TestCase):
         with open(os.path.join(tmp, "meta.json")) as fh:
             return json.load(fh)
 
-    def test_a_crouching_creature_is_lowered_until_it_touches_the_ground_and_a_leaping_one_is_lifted_off_it(self):
+    def test_a_galloping_wolf_has_frames_on_the_ground_and_frames_in_the_air(self):
         with tempfile.TemporaryDirectory() as tmp:
-            meta = self.render_anim("wolf", "pounce", tmp)
+            meta = self.render_anim("wolf", "run", tmp)
             ground = (meta["canvas"] - meta["margin"]) * meta["ss"]
-            for i, airborne in enumerate((False, False, True, True, False, False)):
-                with Image.open(os.path.join(tmp, "pounce_%d_albedo.png" % i)) as a:
-                    box = a.convert("RGBA").split()[3].point(lambda v: 255 if v > 127 else 0).getbbox()
-                if airborne:
-                    self.assertLess(box[3], ground - 4 * meta["ss"], "frame %d is off the ground" % i)
-                else:
-                    self.assertAlmostEqual(box[3], ground, delta=meta["ss"], msg="frame %d rests on the ground" % i)
+            bottoms = []
+            for i in range(meta["anims"]["run"]):
+                with Image.open(os.path.join(tmp, "run_%d_albedo.png" % i)) as a:
+                    bottoms.append(a.convert("RGBA").split()[3].point(lambda v: 255 if v > 127 else 0).getbbox()[3])
+            self.assertTrue(any(abs(b - ground) <= meta["ss"] for b in bottoms), "a paw is down in some frame")
+            self.assertTrue(any(b < ground - 3 * meta["ss"] for b in bottoms), "and in some frame every paw is off the ground")
 
     def test_glowing_parts_take_the_lit_band_whatever_their_shape(self):
         lit = tuple(int(round((0.5 + 0.5 * c / 0.99) * 255)) for c in (-0.45, 0.70, 0.55))
@@ -150,6 +149,46 @@ class PipelineTest(unittest.TestCase):
                         for got, want in ((head, want_head), (tail, want_tail)):
                             self.assertAlmostEqual(got[0], want[0], delta=1e-4, msg="%s %d %s" % (probe["clip"], probe["frame"], bone))
                             self.assertAlmostEqual(got[1], want[1], delta=1e-4, msg="%s %d %s" % (probe["clip"], probe["frame"], bone))
+
+    def test_the_flat_canine_skeleton_matches_the_real_armature_in_every_clip(self):
+        sys.path.insert(0, HERE)
+        import quad_skeleton as qs
+        import wolf_forms
+        for variant in ("gloom_wolf", "dire_wolf", "wepwawet"):
+            with self.subTest(variant=variant), tempfile.TemporaryDirectory() as tmp:
+                path = os.path.join(tmp, "pose.json")
+                done = blender("-P", os.path.join(HERE, "probe_pose.py"), "--", path, variant, "wolf")
+                self.assertTrue(os.path.exists(path), done.stdout[-1500:] + done.stderr[-1500:])
+                with open(path) as fh:
+                    probes = json.load(fh)
+                form = wolf_forms.FORMS[variant]
+                skel = qs.skeleton(leg=form.get("leg", 1.0), neck=form.get("neck", 1.0), tail=form.get("tail", 1.0), head=form.get("head", 1.0),
+                                   tail_shape=form.get("tail_shape", qs.TAIL_DROOPING))
+                self.assertEqual({p["clip"] for p in probes}, {"idle", "walk", "run", "attack", "hurt", "die"})
+                for probe in probes:
+                    posed = skel.pose({k: tuple(v) for k, v in probe["rot"].items()}, tuple(probe["root"]))
+                    for bone, (head, tail, _) in posed.items():
+                        want_head, want_tail = probe["bones"][bone]
+                        for got, want in ((head, want_head), (tail, want_tail)):
+                            self.assertAlmostEqual(got[0], want[0], delta=1e-4, msg="%s %d %s" % (probe["clip"], probe["frame"], bone))
+                            self.assertAlmostEqual(got[1], want[1], delta=1e-4, msg="%s %d %s" % (probe["clip"], probe["frame"], bone))
+
+    def test_every_frame_of_every_wolf_clip_is_drawn_inside_its_canvas_and_never_below_the_ground(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            done = blender("-P", os.path.join(HERE, "render_set.py"), "--", "--creature", "wolf", "--variant", "warg", "--out", tmp, "--ss", "1")
+            self.assertEqual(done.returncode, 0, done.stdout[-1500:] + done.stderr[-1500:])
+            with open(os.path.join(tmp, "meta.json")) as fh:
+                meta = json.load(fh)
+            size, ground = meta["canvas"], meta["canvas"] - meta["margin"]
+            self.assertEqual(set(meta["anims"]), {"idle", "walk", "run", "attack", "hurt", "die"})
+            for anim, count in meta["anims"].items():
+                self.assertEqual(len(meta["durations"][anim]), count, anim)
+                for i in range(count):
+                    with Image.open(os.path.join(tmp, "%s_%d_albedo.png" % (anim, i))) as a:
+                        box = a.convert("RGBA").split()[3].point(lambda v: 255 if v > 127 else 0).getbbox()
+                    self.assertIsNotNone(box, "%s %d is drawn" % (anim, i))
+                    self.assertTrue(box[0] > 0 and box[1] > 0 and box[2] < size, "%s %d is inside the canvas: %s" % (anim, i, box))
+                    self.assertLessEqual(box[3], ground + 1, "%s %d is not below the ground" % (anim, i))
 
     def test_a_variant_changes_colours_and_parts_but_not_the_animation(self):
         with tempfile.TemporaryDirectory() as plain, tempfile.TemporaryDirectory() as red:

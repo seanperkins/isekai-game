@@ -79,6 +79,14 @@ def ik2d(l1, l2, hip, target, bend=1):
     return a1, math.atan2(end[0] - knee[0], -(end[1] - knee[1]))
 
 
+def ik2d_error(l1, l2, hip, target, bend=1):
+    """How far a two-bone limb solved to `target` ends from it: zero when it can reach, the shortfall when it cannot (ik2d straightens it and lets
+    it fall short, silently)."""
+    a1, a2 = ik2d(l1, l2, hip, target, bend)
+    _, end = fk2d(l1, l2, hip, a1, a2)
+    return math.hypot(end[0] - target[0], end[1] - target[1])
+
+
 # ---- gait ----
 HEEL_STRIKE, TOE_OFF = 14.0, 34.0   # degrees the foot is tipped (toe up) as the heel lands, and (toe down) as the toe leaves
 ROLL = (0.16, 0.62)                 # of the stance: the foot turns about its heel until here, lies flat until there, then the heel lifts and it turns about its toe

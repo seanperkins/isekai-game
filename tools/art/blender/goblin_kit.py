@@ -126,12 +126,13 @@ class Goblin:
         """A thin sheet of cloth through `columns` [(top, bottom)] (standard points), bound to several bones by `weights(z) -> {bone: weight}`."""
         cols = [(self.P(*a), self.P(*b)) for a, b in columns]
         ob = k.sheet(self.pre + name, cols)
-        self.rig.skin(ob, lambda v: {self.pre + b: w for b, w in weights(v.z).items()}, rgb, far, glow)
+        # the weights are written for the standard goblin: hand them the standard height of the vertex, whatever this goblin's height or mount
+        self.rig.skin(ob, lambda v: {self.pre + b: w for b, w in weights((v.z - self.o[2]) / (self.tall * self.s)).items()}, rgb, far, glow)
 
     def torso(self, name, bone, rgb, grow=1.0, top=1.36, bottom=0.96, far=False):
         """The chest and waist as a flat shaded wedge through four cross-sections: narrow at the waist, broad across the upper back, taking the
         grown size (a jerkin is the torso a little bigger)."""
-        rings = [((0.015, 0, bottom), (0.072, 0.100)), ((0.03, 0, 1.08), (0.086, 0.125)), ((0.058, 0, 1.20), (0.104, 0.150)), ((0.07, 0, top), (0.082, 0.120))]
+        rings = [((0.015, 0, bottom), (0.074, 0.100)), ((0.03, 0, 1.08), (0.100, 0.128)), ((0.058, 0, 1.20), (0.132, 0.154)), ((0.07, 0, top), (0.100, 0.124))]
         self.loft(name, [(c, (a * grow, b * grow)) for c, (a, b) in rings], bone, rgb, raw=True, sides=8)
 
     def foot(self, name, side, bone, rgb, big=1.0, length=1.0, far=False, plate=None, toe_lift=0.0):
@@ -161,7 +162,7 @@ class Goblin:
         self.e("skull", (0.12, 0, 1.55), (0.130 * hd, 0.118 * hd, 0.135 * hd), "head", sk, raw=True, seg=10, rings=7, smooth=False)
         self.loft("brow", [((0.18, 0, 1.585), (0.030 * hd, 0.100 * hd)), ((0.245, 0, 1.585), (0.022 * hd, 0.075 * hd))], "head", sk, axis="x", raw=True, sides=6)
         self.loft("snout", [((0.17, 0, 1.52), (0.052 * hd, 0.082 * hd)), ((0.27, 0, 1.50), (0.036 * hd, 0.056 * hd))], "head", sk, axis="x", raw=True, sides=6)
-        self.blade("nose", (0.25, 0, 1.545), (0.40 * hd, 0, 1.495), 0.062 * hd, 0.056 * hd, "head", sk, raw=True)
+        self.blade("nose", (0.25, 0, 1.545), (0.33 * hd, 0, 1.505), 0.062 * hd, 0.056 * hd, "head", sk, raw=True)
         self.loft("jaw", [((0.09, 0, 1.46), (0.045 * hd, 0.085 * hd)), ((0.22, 0, 1.44), (0.028 * hd, 0.050 * hd))], "head", sk, axis="x", raw=True, sides=6)
         for s, y in (("n", -1), ("f", 1)):
             root, tip = (0.08, y * 0.13, 1.60), (-0.14 * ears, y * 0.30 * ears, 1.63 + 0.05 * ears)
@@ -171,10 +172,10 @@ class Goblin:
         # arms: thin, tapering, with a round elbow and a mitten of a hand
         for s, y in (("n", NEAR), ("f", FAR)):
             far = s == "f"
-            self.e("shoulder_" + s, (0.06, y, 1.27), (0.056, 0.056, 0.056), "arm_" + s, sk, far, raw=True, seg=8, rings=6)
-            self.l("arm_" + s, (0.06, y, 1.27), (0.10, y, 1.02), 0.044, 0.034, "arm_" + s, sk, far, sides=6, raw=True)
-            self.e("elbow_" + s, (0.10, y, 1.02), (0.038, 0.038, 0.038), "arm_" + s, sk, far, raw=True, seg=8, rings=6)
-            self.l("fore_" + s, (0.10, y, 1.02), (0.24, y, 0.79), 0.034, 0.026, "fore_" + s, sk, far, sides=6, raw=True)
+            self.e("shoulder_" + s, (0.06, y, 1.27), (0.074, 0.070, 0.074), "arm_" + s, sk, far, raw=True, seg=8, rings=6)
+            self.l("arm_" + s, (0.06, y, 1.27), (0.10, y, 1.02), 0.052, 0.040, "arm_" + s, sk, far, sides=6, raw=True)
+            self.e("elbow_" + s, (0.10, y, 1.02), (0.044, 0.044, 0.044), "arm_" + s, sk, far, raw=True, seg=8, rings=6)
+            self.l("fore_" + s, (0.10, y, 1.02), (0.24, y, 0.79), 0.040, 0.030, "fore_" + s, sk, far, sides=6, raw=True)
             self.e("hand_" + s, (0.25, y, 0.76), (0.050, 0.042, 0.052), "fore_" + s, sk, far, raw=True, seg=8, rings=6)
         # legs: a thigh tapering to a round knee, a thin shin, a flat foot
         for s, y in (("n", skeleton.LEG_NEAR), ("f", skeleton.LEG_FAR)):

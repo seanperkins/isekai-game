@@ -187,6 +187,38 @@ class GaitTest(unittest.TestCase):
         self.assertLess(arm(0.0 + 0.07), arm(0.5 + 0.07), "the near arm is back as the near leg is forward")
 
 
+class ReachTest(unittest.TestCase):
+    def test_every_foot_reaches_where_the_gait_puts_it_at_every_speed_and_scale_a_form_can_have(self):
+        worst = 0.0
+        for name in ("goblin", "hob", "ironboot", "gremlin", "mastersmith", "knocker"):
+            body = body_of(name)
+            for gait in ("walk", "run"):
+                g = gm.GAITS[gait]
+                for speed in (12.0, 30.0, 54.0, 80.0, 130.0, 200.0):
+                    for ppu in (18.0, 26.0, 36.0):
+                        s = speed * (1.9 if gait == "run" else 1.0)
+                        cycle, stride = gm.plan_gait(body, gait, s, ppu)
+                        self.assertLessEqual(stride, g["max_stride"] * body.L + 1e-9, "%s %s %s %s" % (name, gait, speed, ppu))
+                        self.assertAlmostEqual(stride * ppu, min(s * g["duty"] * cycle, g["max_stride"] * body.L * ppu), places=6)
+                        for k in range(24):
+                            t = k / 24.0
+                            rot, root = gm.gait_pose(body, gait, t, stride)
+                            posed = body.skel.pose(rot, root)
+                            for side, phase in (("n", 0.0), ("f", 0.5)):
+                                leg = body.legs[side]
+                                x, z, _, _ = anim.foot_pose(t + phase, stride, g["duty"], g["lift"] * body.L, leg.heel, leg.toe, leg.ankle_h)
+                                ankle = leg.ankle_of(posed)
+                                worst = max(worst, math.hypot(ankle[0] - (body.hip[0] + x), ankle[1] - z))
+        self.assertLess(worst, 0.004, "no foot falls short of its target by more than a tenth of a pixel")
+
+    def test_a_cycle_is_never_longer_than_a_slow_walk_nor_shorter_than_the_stride_allows(self):
+        body = body_of()
+        slow = gm.plan_gait(body, "walk", 6.0, 26.0)
+        self.assertLessEqual(slow[0], gm.GAITS["walk"]["cycle"][1] + 1e-9)
+        fast = gm.plan_gait(body, "run", 400.0, 26.0)
+        self.assertLess(fast[0], gm.GAITS["run"]["cycle"][0], "faster than the usual limit: it quickens its step rather than overreach")
+
+
 class AttackTest(unittest.TestCase):
     def tip(self, body, rot, root, length=0.5):
         """Where the end of something `length` long held in the near hand (it points up from the hand at rest) is."""
@@ -211,7 +243,7 @@ class AttackTest(unittest.TestCase):
         frames = self.frames(body)
         toes = [sole(body, "n", *p)[1] for p in frames]
         self.assertGreater(max(t[0] for t in toes), toes[0][0] + 0.1 * body.L)
-        held = [i for i, (t, _) in enumerate(gm.attack_frames(body)[0]) if 0.30 <= t <= 0.55]
+        held = [i for i, (t, _) in enumerate(gm.attack_frames(body)[0]) if gm.T_HIT <= t <= 0.43]
         for i in held:
             self.assertAlmostEqual(toes[i][1], 0.0, places=6, msg="frame %d" % i)
             self.assertAlmostEqual(toes[i][0], toes[held[0]][0], delta=0.01)
@@ -220,12 +252,12 @@ class AttackTest(unittest.TestCase):
         body = body_of("redcap")
         frames = self.frames(body)
         spec = gm.attack_frames(body)[0]
-        windup = frames[gm.attack_frames(body)[1] - 1]
+        windup = frames[2]   # the apex of the windup, held
         tip = self.tip(body, *windup)
         head = body.skel.pose(*windup)["head"][0]
         self.assertGreater(tip[1], head[1], "raised above the head")
         self.assertLess(tip[0], head[0], "and behind it")
-        impact = frames[[i for i, (t, _) in enumerate(spec) if t >= 0.30][0]]
+        impact = frames[gm.attack_frames(body)[1]]   # the first frame after the windup: the one the engine shows as the verb fires
         posed = body.skel.pose(*impact)
         chest = posed["spine"][1]
         reach = self.tip(body, *impact)[0] - chest[0]
@@ -245,10 +277,26 @@ class AttackTest(unittest.TestCase):
         self.assertEqual(frames[0][0], 0.0)
         for (t, d), (nt, _) in zip(frames, frames[1:]):
             self.assertAlmostEqual(t + d, nt, places=9, msg="frames follow each other")
-        self.assertGreaterEqual(max(durations[:windup]), 0.1)
-        self.assertLessEqual(min(durations[windup:windup + 2]), 0.04)
-        self.assertGreaterEqual(max(durations[windup + 2:windup + 3]), 0.08)
-        self.assertTrue(0.5 < sum(durations) < 0.9)
+        self.assertGreaterEqual(max(durations[:windup]), 0.1, "the anticipation is held")
+        self.assertLessEqual(max(durations[windup - 2:windup]), 0.04, "the swing is the fastest part")
+        self.assertGreaterEqual(durations[windup], 0.08, "the impact is held")
+
+    def test_the_windup_frames_last_exactly_as_long_as_the_engines_windup_and_the_recovery_no_longer_than_its_recover(self):
+        for kind in gm.ATTACKS:
+            body = body_of("redcap", attack=kind)
+            frames, windup = gm.attack_frames(body)
+            self.assertAlmostEqual(sum(d for _, d in frames[:windup]), gm.ENGINE_WINDUP, places=9, msg=kind)
+            self.assertAlmostEqual(sum(d for _, d in frames[windup:]), gm.ENGINE_RECOVER, places=9, msg=kind)
+
+    def test_the_last_frame_of_an_attack_and_of_a_flinch_is_the_rest_pose_the_next_clip_starts_from(self):
+        body = body_of("redcap")
+        idle, _ = gm.idle_pose(body, 0.0)
+        for rot in (gm.attack_pose(body, gm.attack_frames(body)[0][-1][0])[0], gm.hurt_pose(body, gm.hurt_frames()[-1][0])[0]):
+            for bone in ("spine", "head", "arm_n", "fore_n", "thigh_n", "shin_n"):
+                self.assertAlmostEqual(rot[bone][1], idle[bone][1], delta=0.6, msg=bone)
+
+    def test_the_flinch_lasts_the_engines_flinch(self):
+        self.assertAlmostEqual(sum(d for _, d in gm.hurt_frames()), gm.ENGINE_HURT, places=9)
 
     def test_every_form_attacks_in_a_way_that_exists(self):
         for name, form in forms.FORMS.items():

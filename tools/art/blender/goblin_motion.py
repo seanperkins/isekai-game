@@ -51,8 +51,8 @@ STANCE_HALF = 0.31     # each foot this far (of L) either side of the hips in id
 LEAN, HEAD_LEAN = 28.0, 12.0
 
 GAITS = {
-    "walk": dict(duty=0.6, crouch=0.82, bob=0.045, lift=0.19, lean=30.0, lean_amp=1.4, head=12.0, swing=18.0, wind=1.0),
-    "run": dict(duty=0.4, crouch=0.74, bob=-0.085, lift=0.34, lean=42.0, lean_amp=2.5, head=18.0, swing=40.0, wind=1.5),
+    "walk": dict(duty=0.6, crouch=0.76, bob=0.035, lift=0.14, lean=34.0, lean_amp=1.4, head=12.0, swing=18.0, wind=1.0, stride_legs=0.9, max_stride=1.0, cycle=(0.35, 0.9)),
+    "run": dict(duty=0.4, crouch=0.74, bob=-0.060, lift=0.27, lean=44.0, lean_amp=2.5, head=18.0, swing=40.0, wind=1.5, stride_legs=1.15, max_stride=1.15, cycle=(0.2, 0.6)),
 }
 WALK_FRAMES, RUN_FRAMES, IDLE_FRAMES = 12, 10, 8
 IDLE_SECONDS = 1.2
@@ -157,6 +157,13 @@ def _plant_heel(body, rot, side, hip, contact_x, pitch):
     rot.update(leg.solve(hip, (ax, az), min(0.0, pitch)))
 
 
+def _foot_base(body, side):
+    """(contact x, lift, pitch) of a foot standing in the form's stance."""
+    L = body.L
+    dx, dz, dpitch = body.stance.get("feet", {}).get(side, (0.0, 0.0, 0.0))
+    return body.hip[0] + ((STANCE_HALF if side == "n" else -STANCE_HALF) + dx) * L, dz * L, dpitch
+
+
 def _stand_feet(body, rot, hip, shift=0.0):
     """Both feet planted in the idle stance, a step apart (so both legs show from the side), each of them moved by the form's stance."""
     L = body.L
@@ -213,9 +220,11 @@ REST = "rest"   # in a key: the form's own resting value of that channel (its id
 # far forward the weapon is tipped, clockwise as the camera sees it (so a weapon that points up swings forward as the number rises, and one that
 # points down, a dagger, swings back). The anticipation is held, the swing is fast, the impact is held, the recovery slow. Every kind has the same
 # frames, so the clips are the same length; what differs is the path the body and the weapon take.
-ATTACK_FRAMES = [(0.00, 0.06), (0.06, 0.06), (0.12, 0.12), (0.24, 0.03), (0.27, 0.03), (0.30, 0.09), (0.39, 0.06), (0.45, 0.06), (0.51, 0.09), (0.60, 0.12)]
-ATTACK_WINDUP = 3
-T_WIND, T_HOLD, T_MID, T_HIT, T_FOLLOW, T_END = 0.12, 0.24, 0.27, 0.30, 0.46, 0.72
+ENGINE_WINDUP, ENGINE_RECOVER, ENGINE_HURT = 0.35, 0.30, 0.25   # scripts/enemies/enemy.gd: VERB_WINDUP, VERB_RECOVER, HURT_SECONDS (test_export_forms checks)
+# the windup frames add up to the engine's windup, so the impact frame comes up the moment the verb fires, and the recovery frames to its recover
+ATTACK_FRAMES = [(0.00, 0.06), (0.06, 0.06), (0.12, 0.15), (0.27, 0.04), (0.31, 0.04), (0.35, 0.08), (0.43, 0.05), (0.48, 0.05), (0.53, 0.06), (0.59, 0.06)]
+ATTACK_WINDUP = 5
+T_WIND, T_HOLD, T_MID, T_HIT, T_FOLLOW, T_END = 0.12, 0.27, 0.31, 0.35, 0.48, 0.59   # the last frame starts at T_END, so it is the rest pose
 
 
 def _swing(channel, windup, mid, hit, follow, rest=True):
@@ -232,9 +241,10 @@ def _attack(lean, head, px, pz, arm_n, fore_n, item, arm_f, fore_f, step=0.2, li
         "pelvis_x": _swing("pelvis_x", *px, rest=False), "pelvis_z": _swing("pelvis_z", *pz, rest=False),
         "arm_n": _swing("arm_n", *arm_n), "fore_n": _swing("fore_n", *fore_n), "item_n": _swing("item_n", *item),
         "arm_f": _swing("arm_f", *arm_f), "fore_f": _swing("fore_f", *fore_f),
-        "step_n": [(0.0, 0.0, "smooth"), (T_HOLD, 0.0, "in"), (T_HIT, step, "out"), (0.55, step, "smooth"), (T_END, 0.0, "smooth")],
-        "lift_n": [(0.0, 0.0, "smooth"), (T_HOLD, 0.0, "smooth"), (T_MID, lift, "smooth"), (T_HIT, 0.0, "smooth")],
-        "heel_f": [(0.0, 0.0, "smooth"), (T_HIT, 0.0, "out"), (0.36, heel, "smooth"), (0.60, 0.85 * heel, "smooth"), (T_END, 0.0, "smooth")],
+        "step_n": [(0.0, 0.0, "smooth"), (T_HOLD, 0.0, "in"), (T_HIT, step, "out"), (T_FOLLOW, step, "smooth"), (T_END, 0.0, "smooth")],
+        "lift_n": [(0.0, 0.0, "smooth"), (T_HOLD, 0.0, "smooth"), (T_MID, lift, "smooth"), (T_HIT, 0.0, "smooth"), (T_FOLLOW, 0.0, "smooth"),
+                   (0.535, lift if step else 0.0, "smooth"), (T_END, 0.0, "smooth")],   # the stepping foot is lifted on its way home, not dragged
+        "heel_f": [(0.0, 0.0, "smooth"), (T_HIT, 0.0, "out"), (0.40, heel, "smooth"), (T_FOLLOW, 0.85 * heel, "smooth"), (T_END, 0.0, "smooth")],
     })
 
 
@@ -242,26 +252,26 @@ def _attack(lean, head, px, pz, arm_n, fore_n, item, arm_f, fore_f, step=0.2, li
 ATTACKS = {
     # an overhead blow with an axe, a club, a hammer: the weapon goes up and back, then over and down in front
     "chop": _attack(lean=(12, 28, 44, 48), head=(4, 14, 26, 28), px=(-0.07, 0.04, 0.16, 0.17), pz=(-0.07, -0.07, -0.08, -0.05),
-                    arm_n=(205, 120, 48, 28), fore_n=(235, 140, 58, 34), item=(-62, 10, 58, 40), arm_f=(60, 20, -20, -10), fore_f=(100, 60, 20, 20)),
-    # a dagger held point down: raised over the head, then driven down and forward
-    "stab": _attack(lean=(10, 30, 46, 50), head=(2, 14, 28, 30), px=(-0.08, 0.05, 0.18, 0.19), pz=(-0.08, -0.08, -0.10, -0.06),
-                    arm_n=(175, 110, 62, 44), fore_n=(205, 125, 72, 50), item=(140, 60, -50, -62), arm_f=(40, 10, -30, -20), fore_f=(80, 50, 10, 10), step=0.22),
+                    arm_n=(205, 120, 48, 28), fore_n=(235, 140, 70, 45), item=(-70, 25, 100, 115), arm_f=(60, 20, -20, -10), fore_f=(100, 60, 20, 20)),
+    # a dagger held point down: drawn back to the hip, then driven straight out in front (a tilt of -90 swings a point-down blade level)
+    "stab": _attack(lean=(14, 30, 44, 46), head=(4, 14, 26, 28), px=(-0.09, 0.05, 0.19, 0.19), pz=(-0.08, -0.08, -0.10, -0.06),
+                    arm_n=(20, 65, 85, 70), fore_n=(100, 95, 90, 75), item=(-20, -65, -90, -75), arm_f=(40, 10, -30, -20), fore_f=(80, 50, 10, 10), step=0.22),
     # a long weapon held upright: drawn back, then driven straight out in front with the whole body behind it
     "thrust": _attack(lean=(20, 34, 42, 40), head=(10, 18, 24, 22), px=(-0.10, 0.06, 0.20, 0.19), pz=(-0.09, -0.09, -0.10, -0.07),
                       arm_n=(20, 60, 84, 78), fore_n=(70, 80, 88, 84), item=(-12, 40, 78, 74), arm_f=(30, 60, 82, 78), fore_f=(60, 80, 86, 82), step=0.26, lift=0.12),
     # a spell: the free hand and the focus raised, then thrown forward with the chest behind it, the feet staying put
     "cast": _attack(lean=(14, 30, 38, 36), head=(6, 16, 22, 22), px=(-0.05, 0.02, 0.07, 0.07), pz=(-0.05, -0.06, -0.06, -0.04),
-                    arm_n=(150, 100, 74, 64), fore_n=(175, 112, 70, 60), item=(10, 36, 54, 50), arm_f=(120, 60, 20, 10), fore_f=(150, 80, 20, 20), step=0.06, lift=0.0, heel=-10.0),
+                    arm_n=(150, 100, 74, 64), fore_n=(175, 112, 70, 60), item=(0, 0, 0, 0), arm_f=(120, 80, 95, 85), fore_f=(150, 100, 100, 90), step=0.0, lift=0.0, heel=-10.0),
     # empty hands: a backhand swipe from behind the hip, up and across
     "swipe": _attack(lean=(16, 30, 42, 44), head=(6, 14, 24, 26), px=(-0.06, 0.04, 0.14, 0.15), pz=(-0.06, -0.07, -0.08, -0.05),
-                     arm_n=(-30, 40, 100, 120), fore_n=(0, 60, 96, 110), item=(0, 20, 50, 60), arm_f=(40, 20, -10, -10), fore_f=(70, 40, 20, 20)),
+                     arm_n=(-65, 35, 85, 110), fore_n=(-25, 65, 95, 105), item=(0, 20, 50, 60), arm_f=(40, 20, -10, -10), fore_f=(70, 40, 20, 20)),
 }
 
 
 def _rest_channels(body):
     """The values a form's idle pose has for the channels attacks key from REST."""
     rot, _ = idle_pose(body, 0.0)
-    return {"lean": LEAN + body.stance.get("lean", 0.0), "head": HEAD_LEAN + body.stance.get("head", 0.0),
+    return {"lean": 180.0 - direction_of(body, rot, "spine"), "head": 180.0 - direction_of(body, rot, "head"),
             "arm_n": direction_of(body, rot, "arm_n"), "fore_n": direction_of(body, rot, "fore_n"),
             "arm_f": direction_of(body, rot, "arm_f"), "fore_f": direction_of(body, rot, "fore_f"),
             "item_n": 180.0 - direction_of(body, rot, "item_n")}
@@ -283,10 +293,14 @@ def attack_pose(body, time):
     L = body.L
     hip = (body.hip[0] + ch["pelvis_x"] * L, body.hip_z(CROUCH) + ch["pelvis_z"] * L)
     rot = {}
-    # the planted foot stays where it is; the near foot steps into the blow
-    lift, pitch = ch["lift_n"] * L, 0.0
-    _plant(body, rot, "n", hip, body.hip[0] + (STANCE_HALF + ch["step_n"]) * L, pitch, lift)
-    _plant_heel(body, rot, "f", hip, body.hip[0] - STANCE_HALF * L, ch["heel_f"])
+    # each foot starts from where the form's stance puts it; the near one steps into the blow (lifted on the way out and home), the far one stays
+    # put and its heel comes up about the toe
+    (nx, nlift, npitch), (fx, flift, fpitch) = _foot_base(body, "n"), _foot_base(body, "f")
+    _plant(body, rot, "n", hip, nx + ch["step_n"] * L, npitch, nlift + ch["lift_n"] * L)
+    if flift > 0.0 or fpitch != 0.0:
+        _plant(body, rot, "f", hip, fx, fpitch, flift)
+    else:
+        _plant_heel(body, rot, "f", hip, fx, ch["heel_f"])
     _posture(body, rot, ch["lean"], ch["head"])
     sk = body.skel
     aim(sk, rot, "arm_n", ch["arm_n"])
@@ -302,17 +316,17 @@ def attack_pose(body, time):
 # A blow rocks the goblin back on its feet (the feet stay planted): the chest snaps up, the head throws back, the hips go back and down and the
 # arms fling, then it settles. Keys named d_* are degrees added to the form's resting direction of that bone.
 HURT = dict(
-    frames=[(0.00, 0.04), (0.04, 0.07), (0.11, 0.07), (0.18, 0.08), (0.26, 0.10)],
+    frames=[(0.00, 0.04), (0.04, 0.06), (0.10, 0.06), (0.16, 0.05), (0.21, 0.04)],   # a quarter of a second, the engine's flinch: the last frame is the rest pose
     keys={
-        "lean": [(0.0, REST, "out"), (0.04, 10.0, "out"), (0.11, 6.0, "smooth"), (0.18, 20.0, "smooth"), (0.32, REST, "smooth")],
-        "head": [(0.0, REST, "out"), (0.04, -8.0, "out"), (0.11, -16.0, "smooth"), (0.18, 4.0, "smooth"), (0.32, REST, "smooth")],
-        "pelvis_x": [(0.0, 0.0, "out"), (0.04, -0.05, "out"), (0.11, -0.09, "smooth"), (0.18, -0.04, "smooth"), (0.32, 0.0, "smooth")],
-        "pelvis_z": [(0.0, 0.0, "out"), (0.04, -0.02, "out"), (0.11, -0.05, "smooth"), (0.18, -0.03, "smooth"), (0.32, 0.0, "smooth")],
-        "d_arm_n": [(0.0, 0.0, "out"), (0.04, -40.0, "out"), (0.11, -62.0, "smooth"), (0.18, -20.0, "smooth"), (0.32, 0.0, "smooth")],
-        "d_fore_n": [(0.0, 0.0, "out"), (0.04, -30.0, "out"), (0.11, -50.0, "smooth"), (0.18, -12.0, "smooth"), (0.32, 0.0, "smooth")],
-        "d_arm_f": [(0.0, 0.0, "out"), (0.04, -34.0, "out"), (0.11, -56.0, "smooth"), (0.18, -16.0, "smooth"), (0.32, 0.0, "smooth")],
-        "d_fore_f": [(0.0, 0.0, "out"), (0.04, -20.0, "out"), (0.11, -40.0, "smooth"), (0.18, -10.0, "smooth"), (0.32, 0.0, "smooth")],
-        "d_item_n": [(0.0, 0.0, "out"), (0.04, -20.0, "out"), (0.11, -34.0, "smooth"), (0.18, -8.0, "smooth"), (0.32, 0.0, "smooth")],
+        "lean": [(0.0, REST, "out"), (0.04, 10.0, "out"), (0.10, -6.0, "smooth"), (0.16, 20.0, "smooth"), (0.21, REST, "smooth")],
+        "head": [(0.0, REST, "out"), (0.04, -8.0, "out"), (0.10, -26.0, "smooth"), (0.16, 4.0, "smooth"), (0.21, REST, "smooth")],
+        "pelvis_x": [(0.0, 0.0, "out"), (0.04, -0.06, "out"), (0.10, -0.13, "smooth"), (0.16, -0.04, "smooth"), (0.21, 0.0, "smooth")],
+        "pelvis_z": [(0.0, 0.0, "out"), (0.04, -0.03, "out"), (0.10, -0.08, "smooth"), (0.16, -0.03, "smooth"), (0.21, 0.0, "smooth")],
+        "d_arm_n": [(0.0, 0.0, "out"), (0.04, -40.0, "out"), (0.10, -62.0, "smooth"), (0.16, -20.0, "smooth"), (0.21, 0.0, "smooth")],
+        "d_fore_n": [(0.0, 0.0, "out"), (0.04, -30.0, "out"), (0.10, -50.0, "smooth"), (0.16, -12.0, "smooth"), (0.21, 0.0, "smooth")],
+        "d_arm_f": [(0.0, 0.0, "out"), (0.04, -34.0, "out"), (0.10, -56.0, "smooth"), (0.16, -16.0, "smooth"), (0.21, 0.0, "smooth")],
+        "d_fore_f": [(0.0, 0.0, "out"), (0.04, -20.0, "out"), (0.10, -40.0, "smooth"), (0.16, -10.0, "smooth"), (0.21, 0.0, "smooth")],
+        "d_item_n": [(0.0, 0.0, "out"), (0.04, -20.0, "out"), (0.10, -34.0, "smooth"), (0.16, -8.0, "smooth"), (0.21, 0.0, "smooth")],
     })
 
 
@@ -349,7 +363,7 @@ DIE = dict(
         "hips": [(0.0, 0.0, "out"), (0.14, 8.0, "smooth"), (0.22, 22.0, "smooth"), (0.32, 46.0, "smooth"), (0.44, 78.0, "out"), (0.9, 84.0, "smooth")],
         "lean": [(0.0, REST, "out"), (0.06, 8.0, "out"), (0.14, 22.0, "smooth"), (0.22, 52.0, "in"), (0.32, 76.0, "in"), (0.44, 92.0, "out"), (0.60, 96.0, "smooth"), (0.9, 96.0, "smooth")],
         "head": [(0.0, REST, "out"), (0.06, -4.0, "out"), (0.14, 18.0, "smooth"), (0.22, 40.0, "smooth"), (0.44, 100.0, "out"), (0.60, 104.0, "smooth"), (0.9, 104.0, "smooth")],
-        "thigh_n": [(0.0, REST, "out"), (0.14, 62.0, "smooth"), (0.22, 40.0, "smooth"), (0.32, 0.0, "smooth"), (0.44, -70.0, "out"), (0.9, -80.0, "smooth")],
+        "thigh_n": [(0.0, REST, "out"), (0.14, 62.0, "smooth"), (0.22, 40.0, "smooth"), (0.21, 0.0, "smooth"), (0.44, -70.0, "out"), (0.9, -80.0, "smooth")],
         "shin_n": [(0.0, REST, "out"), (0.14, -40.0, "smooth"), (0.22, -60.0, "smooth"), (0.32, -80.0, "smooth"), (0.44, -96.0, "out"), (0.9, -100.0, "smooth")],
         "foot_n": [(0.0, REST, "out"), (0.14, 100.0, "smooth"), (0.32, 60.0, "smooth"), (0.44, -70.0, "out"), (0.9, -76.0, "smooth")],
         "thigh_f": [(0.0, REST, "out"), (0.14, 50.0, "smooth"), (0.22, 20.0, "smooth"), (0.32, -20.0, "smooth"), (0.44, -86.0, "out"), (0.9, -96.0, "smooth")],
@@ -371,7 +385,7 @@ def die_pose(body, time):
     sk = body.skel
     rot0, root0 = idle_pose(body, 0.0)
     rest = {b: direction_of(body, rot0, b) for b in ("thigh_n", "shin_n", "foot_n", "thigh_f", "shin_f", "foot_f", "arm_n", "fore_n", "arm_f", "fore_f")}
-    rest["lean"], rest["head"] = LEAN + body.stance.get("lean", 0.0), HEAD_LEAN + body.stance.get("head", 0.0)
+    rest["lean"], rest["head"] = 180.0 - direction_of(body, rot0, "spine"), 180.0 - direction_of(body, rot0, "head")
     rest["item_n"] = 180.0 - direction_of(body, rot0, "item_n")
     ch = {name: anim.sample([(t, rest.get(name, 0.0) if v == REST else v, e) for t, v, e in keys], time) for name, keys in DIE["keys"].items()}
     rot = {}
@@ -404,6 +418,23 @@ def idle_clip(body):
     n = IDLE_FRAMES
     dur = [IDLE_SECONDS / n] * n
     return Clip(_with_secondary(body, [idle_pose(body, i / n) for i in range(n)], dur, 0.15, True), dur, True)
+
+
+def plan_gait(body, gait, speed, ppu):
+    """(cycle seconds, stride in units) for a gait that covers the ground at `speed` game pixels per second with a sprite drawn at `ppu` pixels to the
+    unit. A foot is down for `duty` of the cycle and the ground slides back under it at `speed`, so the stride is fixed by the cycle; the cycle is chosen
+    for a brisk step of the usual length, kept within the usual bounds, and then shortened if the stride it gives is longer than the leg can reach.
+    Never longer than the leg can take, whatever the speed."""
+    g = GAITS[gait]
+    reach_px = body.L * ppu
+    target = g["stride_legs"] * reach_px / (speed * g["duty"])
+    cycle = min(g["cycle"][1], max(g["cycle"][0], target))
+    stride_px = speed * g["duty"] * cycle
+    longest = g["max_stride"] * reach_px
+    if stride_px > longest:
+        stride_px = longest
+        cycle = stride_px / (speed * g["duty"])
+    return cycle, stride_px / ppu
 
 
 def gait_clip(body, gait, cycle, stride):

@@ -169,19 +169,39 @@ class HysteresisTest(unittest.TestCase):
             side = math.sqrt(max(0.0, 1 - lum * lum))
             return shade.encode(tuple(lum * key[i] + side * rest[i] for i in range(3)))
         a = Image.new("RGBA", (1, 1), GREEN + (255,))
-        prev_steps = {(0, 0): 2}
+        prev_steps = {(0, 0): (GREEN, 2)}
         near = Image.new("RGBA", (1, 1), lit(edge + 0.02) + (255,))
         far = Image.new("RGBA", (1, 1), lit(edge + 0.2) + (255,))
         stays = shade.shade(a, near, creases=False, rim=False, previous=prev_steps)
         goes = shade.shade(a, far, creases=False, rim=False, previous=prev_steps)
         recorded = {}
         shade.shade(a, far, creases=False, rim=False, record=recorded)
-        self.assertEqual(recorded, {(0, 0): 3})
+        self.assertEqual(recorded, {(0, 0): (GREEN, 3)})
         self.assertEqual(stays.getpixel((0, 0))[:3], ramp[2])
         self.assertEqual(goes.getpixel((0, 0))[:3], ramp[3])
 
+    def test_a_pixel_that_now_shows_another_material_does_not_inherit_the_old_ones_step(self):
+        ramp = shade.ramp(GREEN)
+        edge = shade.BANDS[2]
+        key = shade.unit(shade.LIGHT)
+        rest = shade.unit((-key[1], key[0], 0.0))
+        lum = edge + 0.02
+        n = shade.encode(tuple(lum * key[i] + math.sqrt(1 - lum * lum) * rest[i] for i in range(3)))
+        a = Image.new("RGBA", (1, 1), GREEN + (255,))
+        normal = Image.new("RGBA", (1, 1), n + (255,))
+        inherited = shade.shade(a, normal, creases=False, rim=False, previous={(0, 0): (RED, 2)})
+        self.assertEqual(inherited.getpixel((0, 0))[:3], ramp[3], "the red there before is not the green here: its history does not hold it back")
+
 
 class PaletteTest(unittest.TestCase):
+    def test_a_creature_with_a_great_many_materials_gets_a_palette_that_fits_with_every_ramp_in_it(self):
+        materials = [((i * 37) % 256, (i * 91) % 256, (i * 53) % 256) for i in range(45)]
+        colours = shade.palette_colours(materials)
+        self.assertLessEqual(len(colours), 256)
+        for m in materials:
+            for c in shade.ramp(m):
+                self.assertIn(c, colours)
+
     def test_the_palette_of_a_creature_is_its_ramps_and_the_outline_darks(self):
         colours = shade.palette_colours([GREEN, RED])
         for c in shade.ramp(GREEN) + shade.ramp(RED):

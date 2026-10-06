@@ -54,12 +54,16 @@ class OnGridTest(unittest.TestCase):
         self.assertFalse(c["loop"])
 
     def test_a_frame_shorter_than_a_tick_still_shows_for_one(self):
-        self.assertEqual(clips.on_grid(["a", "b"], [0.001, 0.06], True, 0.02)["frames"], ["a", "b", "b", "b"])
+        self.assertEqual(clips.on_grid(["a", "b"], [0.001, 0.06], True, 0.02)["frames"], ["a", "b", "b"], "a one-tick minimum for a, and b makes up the rest of the three ticks the clip should have")
 
-    def test_the_total_stays_within_half_a_tick_per_frame_of_what_was_asked(self):
-        durations = [0.07, 0.13, 0.05, 0.09]
-        c = clips.on_grid(list("abcd"), durations, True, 0.02)
-        self.assertAlmostEqual(len(c["frames"]) / c["fps"], sum(durations), delta=0.5 * 0.02 * len(durations))
+    def test_the_errors_do_not_add_up_a_clip_is_as_long_as_asked_to_within_half_a_tick_however_many_frames(self):
+        durations = [0.07, 0.13, 0.05, 0.09] * 5
+        c = clips.on_grid(list("abcd") * 5, durations, True, 0.02)
+        self.assertAlmostEqual(len(c["frames"]) / c["fps"], sum(durations), delta=0.5 * 0.02 + 1e-9)
+
+    def test_eight_frames_of_a_hundred_and_fifty_milliseconds_make_exactly_one_point_two_seconds(self):
+        c = clips.on_grid(list("abcdefgh"), [0.15] * 8, True, 0.02)
+        self.assertEqual(len(c["frames"]), 60)
 
     def test_lengths_must_match(self):
         with self.assertRaises(ValueError):

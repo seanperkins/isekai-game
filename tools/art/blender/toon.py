@@ -138,6 +138,8 @@ def palette_colours(materials, bands=BANDS, shadow=None, glow=None, dark=0.35):
 def palette_of(colours):
     """A Pillow 'P' image whose palette is exactly these colours (at most 256)."""
     pal = Image.new("P", (1, 1))
-    flat = [v for c in colours[:256] for v in c]
+    if len(colours) > 256:
+        raise ValueError("%d colours do not fit in a palette of 256" % len(colours))
+    flat = [v for c in colours for v in c]
     pal.putpalette(flat + [0] * (768 - len(flat)))
     return pal

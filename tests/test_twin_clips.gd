@@ -119,6 +119,47 @@ func test_it_turns_with_a_mirrored_picture_and_flipped_normals() -> void:
 	var was := right.normal_texture.get_image().get_pixel(3, 0)
 	assert_eq(n.r8, 255 - was.r8)
 
+func test_a_walk_plays_as_fast_as_the_creature_really_goes() -> void:
+	var half := _enemy(_fixture_def())
+	half.velocity.x = half._walk_speed() * 0.5
+	_step(half)
+	_step(half, 0.2)  # 8 fps: a frame lasts 0.125 s, and at half speed 0.2 s is only 0.1 s of walk
+	var full := _enemy(_fixture_def())
+	full.velocity.x = full._walk_speed()
+	_step(full)
+	_step(full, 0.2)
+	assert_eq(half._animator.frame(), "walk_0")
+	assert_eq(full._animator.frame(), "walk_1")
+
+func test_a_new_blow_starts_the_flinch_again_even_in_the_middle_of_one() -> void:
+	var e := _enemy(_fixture_def())
+	e._hurt_t = 0.25
+	_step(e)
+	_step(e, 0.3)  # 4 fps: past its first frame
+	assert_eq(e._animator.frame(), "downed")
+	e._hurt_t = 0.1  # the timer has run down some
+	_step(e)
+	e._hurt_t = 0.25  # and a second blow sets it again
+	_step(e)
+	assert_eq(e._animator.frame(), "hurt", "the flinch begins again")
+
+func test_a_creature_with_a_death_animation_plays_it_when_it_dies_of_no_special_cause() -> void:
+	var e := _enemy(_fixture_def())
+	assert_true(e.has_form_clip("die"))
+	assert_almost_eq(e.form_clip_seconds("die"), 0.4, 0.001)
+	var fx := DeathFx.new()
+	e.add_child(fx)
+	var done := []
+	fx.finished.connect(func() -> void: done.append(true))
+	fx.begin(e, "other", Vector2.INF)
+	fx.advance(0.05)
+	assert_eq(e._sprite.texture.diffuse_texture.get_image().get_pixel(0, 0), Color8(180, 170, 95), "the first frame of the death")
+	fx.advance(0.3)  # now 0.35 s in: the second frame
+	assert_eq(e._sprite.texture.diffuse_texture.get_image().get_pixel(0, 0), Color8(200, 180, 80))
+	assert_true(done.is_empty(), "the beat of an ordinary death (0.3 s) is not the end of the animation")
+	fx.advance(0.1)
+	assert_false(done.is_empty())
+
 func test_its_hurt_box_stays_the_bodys() -> void:
 	var e := _enemy(_fixture_def())
 	_step(e)

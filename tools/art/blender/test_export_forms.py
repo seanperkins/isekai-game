@@ -47,5 +47,41 @@ class ClipsOfTest(unittest.TestCase):
         self.assertTrue(all(f["native"] for f in spec["frames"]))
 
 
+class TimingTest(unittest.TestCase):
+    CONSTANTS = {"windup": 0.35, "recover": 0.30, "hurt": 0.25, "run_speed": 1.9}
+
+    def meta(self, attack, hurt=(0.25,)):
+        return {"anims": {"attack": len(attack), "hurt": len(hurt)}, "durations": {"attack": list(attack), "hurt": list(hurt)}, "windup": 2}
+
+    def test_it_reads_the_timings_from_the_enemy_so_the_art_cannot_drift(self):
+        c = ex.engine_constants()
+        self.assertEqual(set(c), {"windup", "recover", "hurt", "run_speed"})
+        self.assertGreater(c["windup"], c["recover"])
+
+    def test_the_art_the_goblin_motion_makes_matches_the_engine(self):
+        import goblin_motion as gm
+        c = ex.engine_constants()
+        self.assertEqual((gm.ENGINE_WINDUP, gm.ENGINE_RECOVER, gm.ENGINE_HURT), (c["windup"], c["recover"], c["hurt"]))
+        import quad_motion as qm
+        self.assertEqual((qm.ENGINE_WINDUP, qm.ENGINE_RECOVER, qm.ENGINE_HURT), (c["windup"], c["recover"], c["hurt"]))
+
+    def test_matching_timings_pass(self):
+        ex.check_timing(self.meta([0.2, 0.15, 0.1, 0.2]), self.CONSTANTS)
+
+    def test_a_windup_that_is_too_short_or_too_long_is_refused(self):
+        for attack in ([0.2, 0.1, 0.1, 0.2], [0.2, 0.2, 0.1, 0.2]):
+            with self.assertRaises(ValueError):
+                ex.check_timing(self.meta(attack), self.CONSTANTS)
+
+    def test_a_recovery_that_outlasts_the_engines_is_refused_one_that_is_shorter_is_fine(self):
+        with self.assertRaises(ValueError):
+            ex.check_timing(self.meta([0.2, 0.15, 0.2, 0.2]), self.CONSTANTS)
+        ex.check_timing(self.meta([0.2, 0.15, 0.1, 0.1]), self.CONSTANTS)
+
+    def test_a_flinch_of_the_wrong_length_is_refused(self):
+        with self.assertRaises(ValueError):
+            ex.check_timing(self.meta([0.2, 0.15, 0.1, 0.2], hurt=(0.4,)), self.CONSTANTS)
+
+
 if __name__ == "__main__":
     unittest.main()

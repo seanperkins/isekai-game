@@ -29,7 +29,7 @@ def main(argv=None):
         os.makedirs(raw, exist_ok=True)
         variant = None if name in ("goblin", "base") else name
         spike.render(a.creature, raw, variant, a.anim, 4)
-        spike.process(raw, os.path.join(a.out, name), colours=24, outline=True)
+        spike.process(raw, os.path.join(a.out, name), outline=True)
         im = Image.open(os.path.join(a.out, name, "frames", "%s_%d.png" % (a.anim, a.frame))).convert("RGBA")
         shots.append((name, im.crop(im.getbbox())))
     pad, head = 8, 14

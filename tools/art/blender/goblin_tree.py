@@ -45,7 +45,7 @@ def render_form(name, out):
     raw = os.path.join(out, name, "raw")
     os.makedirs(raw, exist_ok=True)
     spike.render("goblin", raw, None if name == "goblin" else name, None, 4)
-    return spike.process(raw, os.path.join(out, name), colours=24, outline=True)
+    return spike.process(raw, os.path.join(out, name), outline=True)
 
 
 def frame(out, name, key):

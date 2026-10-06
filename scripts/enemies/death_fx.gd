@@ -5,7 +5,7 @@ extends Node2D
 ##   tackle  hops the body away from the tackler, spinning onto its back (the only effect that moves it)
 ##   poison  turns the body green and melts it toward the floor
 ##   blade   replaces the sprite with two halves cut along the blade, sliding apart and falling
-##   other   holds a beat
+##   other   holds a beat (a creature that has its own death animation plays it instead)
 ## Every effect ends with `finished`; the enemy then lies downed and its eat window starts.
 
 signal finished
@@ -39,6 +39,7 @@ var _slide_x := 1.0  # +1 or -1: which way the upper half slides off
 var _fall: Array[float] = [0.0, 0.0]
 var _fall_v: Array[float] = [0.0, 0.0]
 var _fall_max: Array[float] = [0.0, 0.0]
+var _clip_seconds := 0.0  # how long the creature's own death animation plays, 0 for none
 
 static func duration(for_cause: String) -> float:
 	match for_cause:
@@ -53,6 +54,7 @@ static func duration(for_cause: String) -> float:
 func begin(enemy: Enemy, p_cause: String, from: Vector2) -> void:
 	_enemy = enemy
 	cause = p_cause
+	_clip_seconds = enemy.form_clip_seconds("die") if cause == "other" else 0.0
 	_sprite = enemy.get_node_or_null("Sprite")
 	if _sprite != null:
 		_base_y = _sprite.position.y
@@ -65,11 +67,16 @@ func begin(enemy: Enemy, p_cause: String, from: Vector2) -> void:
 func _physics_process(delta: float) -> void:
 	advance(delta)
 
+func _length() -> float:
+	return maxf(duration(cause), _clip_seconds)
+
 func advance(delta: float) -> void:
 	if _done:
 		return
 	_t += delta
-	var k := clampf(_t / duration(cause), 0.0, 1.0)
+	var k := clampf(_t / _length(), 0.0, 1.0)
+	if _clip_seconds > 0.0:
+		_enemy.draw_form_clip("die", _t)
 	match cause:
 		"tackle":
 			_step_tackle(k)
@@ -77,7 +84,7 @@ func advance(delta: float) -> void:
 			_step_poison(k)
 		"blade":
 			_step_blade(delta, k)
-	if _t >= duration(cause):
+	if _t >= _length():
 		_finish()
 
 # --- tackle ---

@@ -25,11 +25,15 @@ def table(creature, by_state):
 
 
 def on_grid(names, durations, loop, tick=0.02):
-    """A clip from frame names and how long each lasts in seconds, with every duration rounded to a whole number of `tick`s (at least one), the
-    way the engine plays: one rate, a frame held by repeating its name. Unlike clip(), nothing is refused: a frame is off by half a tick at most."""
+    """A clip from frame names and how long each lasts in seconds, on the engine's one rate: a frame is held by repeating its name. Each frame ends
+    on the tick nearest where it should end in time (so the errors do not add up: a clip is as long as it should be to within half a tick, however
+    many frames it has), and no frame is shorter than one tick."""
     if len(names) != len(durations):
         raise ValueError("%d names but %d durations" % (len(names), len(durations)))
-    frames = []
+    frames, used, elapsed = [], 0, 0.0
     for name, d in zip(names, durations):
-        frames += [name] * max(1, int(round(d / tick)))
+        elapsed += d
+        count = max(1, int(round(elapsed / tick + 1e-9)) - used)
+        frames += [name] * count
+        used += count
     return {"frames": frames, "fps": round(1.0 / tick, 6), "loop": bool(loop)}
