@@ -147,6 +147,7 @@ class Rig:
         self.parts = []  # (object, rgb 0..255, far)
         self.owner = {}  # part -> the bone it is bound to
         self.glowing = set()  # parts lit whatever their shape: eyes, marks
+        self.post_pose = None  # optional fn(rig, rot, root), called after the bones are solved: a kit deforms its meshes from the pose (a slime's jelly)
 
     def bone(self, name, head, tail, parent=None):
         self.rest[name] = (Vector(head), Vector(tail), parent)
@@ -214,6 +215,8 @@ class Rig:
             pb = self.obj.pose.bones[name]
             pb.matrix = mats[name] @ pb.bone.matrix_local
             bpy.context.view_layer.update()
+        if self.post_pose is not None:
+            self.post_pose(self, rot, root)
 
     def lowest(self):
         """The lowest world z of any part in the current pose."""
