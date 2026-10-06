@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_caller"
+display_name = "Summon imps"
+description = "Emits two imps for ten seconds, but only while its glyph is lit."
+announce = "New verb. Acquired [Summon imps]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "summon", "count": 2, "seconds": 10.0, "look": "imp", "cooldown": 6.0}}]
+mp_cost = 5

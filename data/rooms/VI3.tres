@@ -77,4 +77,8 @@ features = [{
 "id": "VI3_lamp",
 "kind": "lamp",
 "pos": Vector2(700, 320)
+}, {
+"id": "VI3_forge",
+"kind": "forge",
+"pos": Vector2(860, 320)
 }]

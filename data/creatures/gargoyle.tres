@@ -16,6 +16,10 @@ essences = {
 "earth": 3
 }
 xp = 5
+skills = [{
+"id": "ceiling_walk",
+"level": 1
+}]
 origin = "support"
 role = "common"
 wears = "spider"

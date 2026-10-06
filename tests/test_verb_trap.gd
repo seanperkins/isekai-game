@@ -182,7 +182,7 @@ func test_a_trap_is_not_a_kind_an_enemy_casts() -> void:
 	add_child_autofree(twin)
 	assert_null(twin._build_verb(skills_by_id["verb_goblin_tinker"]), "the Tinker's twin has hands for nothing")
 
-func test_the_tinkers_verb_is_the_trap() -> void:
+func test_the_tinkers_verb_is_the_rig_and_its_trap_is_the_one_aimed_down() -> void:
 	var sd: SkillDef = skills_by_id["verb_goblin_tinker"]
-	assert_eq(SkillEffects.active_spec(sd), {"kind": "trap", "seconds": 30.0, "stun": 2.0, "cooldown": 2.0})
+	assert_eq(SkillEffects.active_spec(sd), {"kind": "rig", "range": 200, "cooldown": 2.0})
 	assert_eq(sd.display_name, "Rig")

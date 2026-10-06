@@ -14,7 +14,8 @@ stats = {
 "atk": 3,
 "def": 1,
 "max_hp": 22,
-"max_mp": 10
+"max_mp": 10,
+"spd": -10
 }
 grants = ["verb_undead_pharaoh"]
 verb = "verb_undead_pharaoh"

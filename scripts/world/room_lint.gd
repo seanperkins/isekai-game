@@ -38,6 +38,10 @@ const FEATURE_BOX := {
 	"lamp": Rect2(-6, -16, 12, 16),
 	"vigil": Rect2(-8, -16, 16, 16),
 	"talisman": Rect2(-4, -16, 8, 16),
+	"forge": Rect2(-12, -14, 24, 14),
+	"weak_floor": Rect2(-20, 0, 40, 8),
+	"snare": Rect2(-8, -6, 16, 6),
+	"glyph": Rect2(-14, -14, 28, 14),
 }
 
 const RULES := ["solid_outside", "outside", "in_rock", "exit_blocked", "exit_narrow", "start_floor", "ledge_reach", "over_hole",

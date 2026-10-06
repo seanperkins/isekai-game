@@ -6,7 +6,7 @@
 script = ExtResource("1_rpc81")
 id = "verb_mimic"
 display_name = "Copy"
-description = "Take the shape and one move of the last creature you inspected, for a short time."
+description = "Copy: take the shape, attack and defence of the last creature you inspected for eight seconds; cast again to make its own move. The copy fades."
 announce = "New verb. Acquired [Copy]."
 source = "form_verb"
 effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "copy", "seconds": 8.0, "cooldown": 10.0}}]

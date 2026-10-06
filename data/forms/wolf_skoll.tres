@@ -18,6 +18,7 @@ stats = {
 "max_mp": 10,
 "spd": 12
 }
+traits = ["no_stand"]
 grants = ["verb_wolf_skoll"]
 verb = "verb_wolf_skoll"
 tint = Color(0.8, 0.825, 0.975, 1)

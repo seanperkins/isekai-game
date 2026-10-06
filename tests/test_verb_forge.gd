@@ -171,4 +171,4 @@ func test_the_smiths_verb_is_the_forge() -> void:
 	for d in skills:
 		if d.id == "verb_goblin_smith":
 			sd = d
-	assert_eq(SkillEffects.active_spec(sd), {"kind": "forge", "stat": "atk", "amount": 2, "parts": 2, "deed": "weapon_forged", "cooldown": 10.0})
+	assert_eq(SkillEffects.active_spec(sd), {"kind": "forge", "stat": "atk", "amount": 2, "parts": 2, "needs_forge": true, "named": true, "still": 1.5, "deed": "weapon_forged", "cooldown": 10.0})

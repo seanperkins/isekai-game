@@ -12,13 +12,19 @@
   "wolf_dire_wolf": {
     "traits": [
       "knockback_proof"
-    ]
+    ],
+    "stats": {
+      "spd": -12
+    }
   },
   "undead_abomination": {
     "traits": [
       "extra_grafts",
       "stench"
-    ]
+    ],
+    "stats": {
+      "spd": -15
+    }
   },
   "undead_bone_colossus": {
     "traits": [
@@ -66,6 +72,184 @@
   "spider_cave_matriarch": {
     "stats": {
       "spd": -15
+    }
+  },
+  "spider_plaguemother": {
+    "traits": [
+      "miasma_death"
+    ],
+    "stats": {
+      "spd": -10
+    }
+  },
+  "spider_loom_weaver": {
+    "stats": {
+      "spd": -5
+    }
+  },
+  "cube": {
+    "stats": {
+      "jump_height": -30
+    }
+  },
+  "spider_light_eater": {
+    "traits": [
+      "light_frail"
+    ]
+  },
+  "philosophers_stone": {
+    "stats": {
+      "predation_time": -30
+    }
+  },
+  "goblin_tinker": {
+    "stats": {
+      "atk": -1
+    }
+  },
+  "wolf_wepwawet": {
+    "stats": {
+      "atk": -1
+    }
+  },
+  "goblin_knocker": {
+    "stats": {
+      "atk": -1
+    }
+  },
+  "spider_anansi": {
+    "stats": {
+      "atk": -1
+    }
+  },
+  "undead_mummy_priest": {
+    "traits": [
+      "fire_frail"
+    ]
+  },
+  "undead_draugr": {
+    "stats": {
+      "spd": -25,
+      "jump_height": -100
+    }
+  },
+  "undead_zombie": {
+    "stats": {
+      "spd": -15,
+      "jump_height": -30
+    }
+  },
+  "wolf_warg": {
+    "stats": {
+      "spd": -10
+    }
+  },
+  "undead_pharaoh": {
+    "stats": {
+      "spd": -10
+    }
+  },
+  "goblin_paladin": {
+    "stats": {
+      "spd": -10
+    }
+  },
+  "undead_bone_warrior": {
+    "stats": {
+      "spd": -10
+    }
+  },
+  "undead_revenant_knight": {
+    "stats": {
+      "spd": -8
+    }
+  },
+  "spider_broodmother": {
+    "traits": [
+      "weak_alone"
+    ],
+    "stats": {
+      "spd": -10
+    }
+  },
+  "spider_brood_queen": {
+    "traits": [
+      "weak_alone"
+    ]
+  },
+  "wolf_lupa": {
+    "stats": {
+      "atk": -1
+    }
+  },
+  "wolf_lycaon": {
+    "traits": [
+      "weak_alone"
+    ]
+  },
+  "goblin_beastcaller": {
+    "traits": [
+      "weak_alone"
+    ]
+  },
+  "undead_sower_of_teeth": {
+    "traits": [
+      "weak_alone"
+    ]
+  },
+  "wolf_skoll": {
+    "traits": [
+      "no_stand"
+    ]
+  },
+  "goblin_ironboot": {
+    "traits": [
+      "loud"
+    ]
+  },
+  "undead_skeletal_archer": {
+    "stats": {
+      "max_hp": -5
+    }
+  },
+  "undead_adept": {
+    "stats": {
+      "max_hp": -5
+    }
+  },
+  "undead_lich": {
+    "stats": {
+      "max_hp": -5
+    }
+  },
+  "spider_norn": {
+    "stats": {
+      "max_hp": -6
+    }
+  },
+  "spider_venomspinner": {
+    "stats": {
+      "atk": -1
+    }
+  },
+  "goblin_skulker": {
+    "stats": {
+      "atk": -1
+    }
+  },
+  "goblin_puck": {
+    "stats": {
+      "atk": -1
+    }
+  },
+  "goblin_leprechaun": {
+    "stats": {
+      "atk": -1
+    }
+  },
+  "goblin_hob": {
+    "stats": {
+      "atk": -1
     }
   }
 }

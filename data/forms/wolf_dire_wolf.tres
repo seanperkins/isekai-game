@@ -14,7 +14,8 @@ stats = {
 "atk": 1,
 "def": 2,
 "max_hp": 12,
-"max_mp": 6
+"max_mp": 6,
+"spd": -12
 }
 traits = ["knockback_proof"]
 grants = ["verb_wolf_dire_wolf"]

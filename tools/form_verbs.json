@@ -25,11 +25,12 @@
     "value": 5,
     "fidelity": "full",
     "note": "",
-    "text": "Extrudes long limbs for reach.",
+    "text": "Pseudopod: extrude long limbs for reach, a reach that is never quite the same twice: shapeless.",
     "spec": {
       "kind": "bolt",
       "range": 150,
-      "half_width": 12
+      "half_width": 12,
+      "jitter": 0.3
     }
   },
   {
@@ -53,16 +54,17 @@
     "name": "Maelstrom",
     "mp": 8,
     "value": 2,
-    "fidelity": "approx",
-    "note": "The whirlpool draws foes in and hurts them; it does not pull loose parts of yours too.",
-    "text": "A whirlpool that pulls enemies in.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Maelstrom: a whirlpool that pulls enemies in and hurts them. It pulls loose parts on the floor in too.",
     "spec": {
       "kind": "pull",
       "radius": 96,
       "seconds": 3.0,
-      "strength": 90,
+      "strength": 90.0,
       "damage": true,
       "damage_type": "water",
+      "pickups": true,
       "cooldown": 6.0
     }
   },
@@ -71,14 +73,14 @@
     "name": "Flood",
     "mp": 7,
     "value": 0,
-    "fidelity": "approx",
-    "note": "It slows everything in a wide patch; it does not fill the room's low ground with swimmable water.",
-    "text": "Floods the low ground for a while.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Flood: fill the low ground round you with real, swimmable water for six seconds. It slows you too unless you swim, and everything else that cannot swim.",
     "spec": {
-      "kind": "zone",
-      "radius": 120,
+      "kind": "flood",
+      "width": 320,
+      "depth": 96,
       "seconds": 6.0,
-      "slow": true,
       "cooldown": 8.0
     }
   },
@@ -87,13 +89,14 @@
     "name": "Dissolve",
     "mp": 5,
     "value": 6,
-    "fidelity": "approx",
-    "note": "Skips armour and opens anything in the group `dissolvable`; the world's weak gates and grates arrive with the new areas (F2). It does not corrode your own held parts.",
-    "text": "Eats through a weak gate, grate or armour plate.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Dissolve: eat through a weak gate, grate or armour plate. Each time it eats something it corrodes one of your own carried parts.",
     "spec": {
       "kind": "dissolve",
       "range": 60,
-      "half_width": 40
+      "half_width": 40,
+      "corrode": 1
     }
   },
   {
@@ -103,13 +106,14 @@
     "value": 3,
     "fidelity": "full",
     "note": "",
-    "text": "Poison jumps between enemies standing close.",
+    "text": "Contagion: poison jumps between enemies standing close, one hop at a time. Slow to build.",
     "spec": {
       "kind": "chain",
       "range": 160,
       "jump": 80,
       "hops": 3,
-      "damage_type": "poison"
+      "damage_type": "poison",
+      "hop_delay": 0.5
     }
   },
   {
@@ -117,14 +121,14 @@
     "name": "Network",
     "mp": 5,
     "value": 0,
-    "fidelity": "approx",
-    "note": "It slows enemies on a creeping patch; it does not show the shortest route to a mark.",
-    "text": "A growth spreads along the floor and slows enemies on it.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Network: a growth that creeps slowly outward along the floor, slows enemies it reaches, and shows the way to a mark.",
     "spec": {
-      "kind": "zone",
+      "kind": "network",
       "radius": 140,
       "seconds": 8.0,
-      "slow": true,
+      "grow": 20.0,
       "cooldown": 10.0
     }
   },
@@ -133,14 +137,18 @@
     "name": "Guardian",
     "mp": 7,
     "value": 2,
-    "fidelity": "approx",
-    "note": "A patrol aura that hurts what comes near; it has no visible nail that drains you when hit.",
-    "text": "A patrol aura that hurts what comes near.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Guardian: a patrol aura that hurts what comes near. The nail on your back is a weak point: a blow from behind drains you.",
     "spec": {
       "kind": "aura",
       "radius": 60,
       "seconds": 6.0,
       "damage": true,
+      "nail": {
+        "drain": 3,
+        "seconds": 6.0
+      },
       "cooldown": 10.0
     }
   },
@@ -149,13 +157,14 @@
     "name": "Engulf",
     "mp": 6,
     "value": 2,
-    "fidelity": "approx",
-    "note": "It stuns the enemy where it stands and digests it; the enemy is not drawn inside the body.",
-    "text": "Swallows a small enemy and holds it while it digests.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Engulf: swallow a small enemy and hold it inside your body, digesting it. Big enemies are too big to swallow.",
     "spec": {
       "kind": "engulf",
       "range": 40,
       "seconds": 3.0,
+      "small": 12,
       "cooldown": 6.0
     }
   },
@@ -164,13 +173,14 @@
     "name": "Ride",
     "mp": 3,
     "value": 0,
-    "fidelity": "approx",
-    "note": "A plain glide: the fall slows for a moment; no cloud is drawn and it does not carry you sideways.",
-    "text": "A short glide on a cloud.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Ride: a short glide on a cloud that carries you sideways. The cloud is brief.",
     "spec": {
       "kind": "glide",
       "seconds": 1.5,
       "fall": 40,
+      "drift": 90,
       "cooldown": 3.0
     }
   },
@@ -179,12 +189,12 @@
     "name": "Recall",
     "mp": 4,
     "value": 0,
-    "fidelity": "approx",
-    "note": "The first cast lays a mark; the second puts you back on it in one step, not along a walked trail.",
-    "text": "Lay a trail, then return along it to its start.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Recall: the first cast lays a trail behind you; the second walks you back along it to where it began. The trail must be laid first.",
     "spec": {
-      "kind": "anchor",
-      "seconds": 30,
+      "kind": "trail",
+      "seconds": 30.0,
       "cooldown": 1.0
     }
   },
@@ -227,13 +237,15 @@
     "name": "Stalk",
     "mp": 6,
     "value": 0,
-    "fidelity": "approx",
-    "note": "A stack of one-way steps appears at once; it is not a vine you hold, and it does not grow slowly.",
-    "text": "Grow a climbable vine from the floor.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Stalk: grow a climbable vine from the floor, slowly. Hold on and climb it; only one vine stands at a time.",
     "spec": {
       "kind": "vine",
       "height": 160,
-      "seconds": 10.0,
+      "seconds": 12.0,
+      "grow": 60.0,
+      "climb": true,
       "cooldown": 6.0
     }
   },
@@ -242,13 +254,14 @@
     "name": "Transmute",
     "mp": 4,
     "value": 0,
-    "fidelity": "approx",
-    "note": "Moves three of the most held first-pass element into two of the least held; there is no element chooser, it never makes fire, mind or blood, and it does not digest parts faster.",
-    "text": "Convert held essence of one element into another at a loss.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Transmute: convert held essence of the element you hold most into the one you aim at (right water, then round: earth, air, light, dark, fire, mind, blood), three for two. With no aim it makes the one held least. You digest parts faster.",
     "spec": {
       "kind": "transmute",
       "from_units": 3,
       "to_units": 2,
+      "choose": true,
       "cooldown": 4.0
     }
   },
@@ -257,9 +270,9 @@
     "name": "Copy",
     "mp": 6,
     "value": 0,
-    "fidelity": "needs",
-    "note": "Takes the last appraised creature's attack and defence for eight seconds; its shape and one of its moves wait for the creature kits (F1).",
-    "text": "Take the shape and one move of the last creature you inspected, for a short time.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Copy: take the shape, attack and defence of the last creature you inspected for eight seconds; cast again to make its own move. The copy fades.",
     "spec": {
       "kind": "copy",
       "seconds": 8.0,
@@ -462,14 +475,19 @@
     "name": "Burning pounce",
     "mp": 7,
     "value": 10,
-    "fidelity": "approx",
-    "note": "A fire lunge; it leaves no flame trail and it does not hurt a packmate.",
-    "text": "A burning pounce and a flame trail.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Burning pounce: a fire lunge that leaves a flame trail. The fire burns your own packmate too.",
     "spec": {
       "kind": "dash",
       "speed": 400,
       "hit_range": 56,
       "damage_type": "fire",
+      "trail": {
+        "seconds": 3.0,
+        "count": 3,
+        "gap": 24.0
+      },
       "cooldown": 6.0
     }
   },
@@ -511,13 +529,15 @@
     "name": "Hunt's passage",
     "mp": 4,
     "value": 0,
-    "fidelity": "approx",
-    "note": "A long glide that needs no kill first; no pack carries you.",
-    "text": "The pack carries you over one gap (a short glide).",
+    "fidelity": "full",
+    "note": "",
+    "text": "Hunt's passage: the pack carries you forward in a long glide over a gap, but only within eight seconds of a kill.",
     "spec": {
       "kind": "glide",
       "seconds": 2.5,
       "fall": 25,
+      "drift": 110,
+      "needs_kill": 8.0,
       "cooldown": 6.0
     }
   },
@@ -582,9 +602,9 @@
     "name": "Unbound",
     "mp": 8,
     "value": 12,
-    "fidelity": "approx",
-    "note": "Breaks armour and anything in the group dissolvable; the world's barriers and grates arrive with the new areas (F2).",
-    "text": "Breaks barriers and grates (a gate-breaking verb).",
+    "fidelity": "full",
+    "note": "",
+    "text": "Unbound: breaks barriers and grates (anything in the group dissolvable), and armour.",
     "spec": {
       "kind": "dissolve",
       "range": 80,
@@ -635,12 +655,12 @@
     "name": "Opener",
     "mp": 3,
     "value": 0,
-    "fidelity": "needs",
-    "note": "Shows nodes in the group hidden; the world's hidden exits and shortcuts arrive with the new areas (F2).",
-    "text": "Reveals hidden exits and shortcuts in a room.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Opener: reveals every hidden exit, shortcut, weak floor and trap in the room.",
     "spec": {
       "kind": "reveal",
-      "radius": 200,
+      "radius": 900,
       "cooldown": 8.0
     }
   },
@@ -1159,13 +1179,22 @@
     "value": 3,
     "fidelity": "full",
     "note": "",
-    "text": "Bandages bind enemies; a sand gust.",
+    "text": "Wrap: bandages bind an enemy fast; every second cast is a gust of sand that blinds and slows what is in front. Fire hurts.",
     "spec": {
       "kind": "bolt",
       "range": 160,
       "pierce": false,
       "status": {
         "root": 3.0
+      },
+      "alt": {
+        "kind": "burst",
+        "range": 90,
+        "half_width": 60,
+        "status": {
+          "confuse": 2.0,
+          "slow": 3.0
+        }
       },
       "cooldown": 9.0
     }
@@ -1306,15 +1335,17 @@
     "name": "Tapestry",
     "mp": 6,
     "value": 0,
-    "fidelity": "approx",
-    "note": "A patch of web that slows for twelve seconds; it does not catch and hold.",
-    "text": "Weave a patterned web that stays as a trap and a snare.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Tapestry: weave a web that stays for two minutes as a snare, holding the first enemy to cross it. Slow to weave.",
     "spec": {
-      "kind": "zone",
-      "radius": 70,
-      "seconds": 12.0,
-      "slow": true,
-      "cooldown": 10.0
+      "kind": "trap",
+      "seconds": 120.0,
+      "root": 2.5,
+      "damage": false,
+      "web": true,
+      "still": 0.8,
+      "cooldown": 4.0
     }
   },
   {
@@ -1337,12 +1368,12 @@
     "name": "Steal",
     "mp": 6,
     "value": 0,
-    "fidelity": "needs",
-    "note": "Takes the last appraised creature's attack and defence for ten seconds; stealing a power or essence waits for the creature kits (F1).",
-    "text": "Take a power or essence from a living enemy without killing it.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Steal: take an essence and a power from a living creature without killing it. A creature gives once. Weak direct damage.",
     "spec": {
-      "kind": "copy",
-      "seconds": 10.0,
+      "kind": "steal",
+      "range": 50,
       "cooldown": 12.0
     }
   },
@@ -1443,11 +1474,12 @@
     "name": "Drink",
     "mp": 2,
     "value": 0,
-    "fidelity": "approx",
-    "note": "Heals HP and MP; no lamp or pool is eaten and no room darkens.",
-    "text": "Eat lamps and glow pools to darken a room and heal.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Drink: eat the nearest lamp or glow pool to darken it and heal. With none in reach it will not cast. You are hurt by sacred light.",
     "spec": {
-      "kind": "heal",
+      "kind": "drink",
+      "range": 50,
       "hp": 6,
       "mp": 4,
       "cooldown": 10.0
@@ -1458,13 +1490,15 @@
     "name": "Span",
     "mp": 6,
     "value": 0,
-    "fidelity": "approx",
-    "note": "A plank of web laid ahead for fifteen seconds; it is not permanent and needs no anchors.",
-    "text": "Spin a permanent web bridge across a gap (a traversal gate).",
+    "fidelity": "full",
+    "note": "",
+    "text": "Span: spin a permanent web bridge across a gap. It needs ground to hold at both ends, and it is slow to spin.",
     "spec": {
       "kind": "bridge",
       "length": 160,
-      "seconds": 15.0,
+      "permanent": true,
+      "anchors": true,
+      "still": 0.8,
       "cooldown": 8.0
     }
   },
@@ -1545,16 +1579,18 @@
     "name": "Venom web",
     "mp": 6,
     "value": 1,
-    "fidelity": "approx",
-    "note": "A web patch that slows and poisons what is in it; the poison does not spread through trap webs.",
-    "text": "Webs apply poison that spreads through trap webs.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Venom web: a web that slows and poisons, and whose poison runs through the other webs you have spun nearby.",
     "spec": {
       "kind": "zone",
       "radius": 70,
       "seconds": 8.0,
       "slow": true,
+      "web": true,
       "damage": true,
       "damage_type": "poison",
+      "spreads": true,
       "cooldown": 10.0
     }
   },
@@ -1563,9 +1599,9 @@
     "name": "Miasma",
     "mp": 8,
     "value": 2,
-    "fidelity": "approx",
-    "note": "A poison cloud for eight seconds; it does not spread when you die.",
-    "text": "A poison cloud that spreads on death.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Miasma: a poison cloud for eight seconds, and another spreads where you die. Slow.",
     "spec": {
       "kind": "zone",
       "radius": 90,
@@ -1726,13 +1762,12 @@
     "name": "Rig",
     "mp": 3,
     "value": 5,
-    "fidelity": "approx",
-    "note": "One kind of trap, a spring that hurts and stuns; crafted throwables and recipe slots wait for the item wheel.",
-    "text": "Rig a trap that hurts and stuns the first enemy to step on it.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Rig: craft by your aim: forward a throwable from a carried part, down a rigged trap, up a smoke bomb from a part. Weak in melee.",
     "spec": {
-      "kind": "trap",
-      "seconds": 30.0,
-      "stun": 2.0,
+      "kind": "rig",
+      "range": 200,
       "cooldown": 2.0
     }
   },
@@ -1741,12 +1776,12 @@
     "name": "Tap",
     "mp": 3,
     "value": 0,
-    "fidelity": "needs",
-    "note": "Shows nodes in the group hidden; hidden walls, weak floors and traps arrive with the new areas (F2).",
-    "text": "Senses hidden walls, weak floors and traps in a room.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Tap: senses hidden walls, weak floors and traps in a room.",
     "spec": {
       "kind": "reveal",
-      "radius": 180,
+      "radius": 700,
       "cooldown": 8.0
     }
   },
@@ -1772,13 +1807,11 @@
     "name": "Spin",
     "mp": 5,
     "value": 0,
-    "fidelity": "approx",
-    "note": "Moves essence between elements at a loss; junk and parts are not modeled.",
-    "text": "Transmute junk into a better part, two for one.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Spin: two carried parts become one better one, a step up the ladder; the other is lost.",
     "spec": {
-      "kind": "transmute",
-      "from_units": 2,
-      "to_units": 2,
+      "kind": "spin",
       "cooldown": 6.0
     }
   },
@@ -1787,14 +1820,17 @@
     "name": "Forge",
     "mp": 6,
     "value": 0,
-    "fidelity": "approx",
-    "note": "A portable forge: two carried parts become a lasting +2 ATK for the life; forges in the village rooms come with F2.",
-    "text": "Forge a named weapon from two carried parts: a lasting +2 ATK.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Forge: at a forge, spend two carried parts to craft a named weapon (+2 ATK for the life). It takes time, and it needs a forge.",
     "spec": {
       "kind": "forge",
       "stat": "atk",
       "amount": 2,
       "parts": 2,
+      "needs_forge": true,
+      "named": true,
+      "still": 1.5,
       "deed": "weapon_forged",
       "cooldown": 10.0
     }

@@ -8,23 +8,23 @@ Status: `todo`, `done` (full, tested), `kept approx` (needs a system that does n
 
 | Form | Verb | Was | Pack | Agreed (DOC) | Drawback (DRAW, a mechanic) | Test | Status |
 |---|---|---|---|---|---|---|---|
-| gleipnir | Bind | full | audit | **Bind**: roots one big enemy or boss for a few seconds | long cooldown | | todo |
-| shoggoth | Pseudopod | full | audit | **Pseudopod**: extrude long limbs for reach | shapeless: no steady form | | todo |
+| gleipnir | Bind | full | audit | **Bind**: roots one big enemy or boss for a few seconds | long cooldown | tests/test_pack_e3_forms.gd + test_pack_e3.gd | done |
+| shoggoth | Pseudopod | full | audit | **Pseudopod**: extrude long limbs for reach | shapeless: no steady form | tests/test_pack_e3_forms.gd + test_pack_e3.gd | done |
 | poltergeist | Hurl | approx | D | **Hurl**: throw loose rubble in the room at enemies | needs loose objects | tests/test_pack_d_forms.gd + test_pack_d_mechanics.gd | done |
-| kraken | Maelstrom | approx | E | **Maelstrom**: a whirlpool that pulls enemies in | pulls loose parts too | | todo |
-| tiamat | Flood | approx | E | **Flood**: fills the room's low ground with water for a while | it slows you too unless you swim | | todo |
-| alkahest | Dissolve | approx | E | **Dissolve**: eat through a weak gate, grate or armour plate | corrodes your own held parts | | todo |
-| pestilence | Contagion | full | audit | **Contagion**: poison jumps between enemies standing close | slow to build | | todo |
-| slime_mold | Network | approx | E | **Network**: a growth spreads along the floor, slows enemies on it and shows the shortest route to a mark (a map aid) | creeps slowly | | todo |
-| talos | Guardian | approx | F | **Guardian**: a patrol aura; if the visible nail is hit it drains you | the nail is a weak point | | todo |
-| cube | Engulf | approx | F | **Engulf**: swallow a small enemy and hold it inside, digesting | big; a low jump | | todo |
-| cloud_rider | Ride | approx | E | **Ride**: a short glide on a cloud | the cloud is brief | | todo |
-| ariadne | Recall | approx | E | **Recall**: lay a trail, then return along it to its start | the trail must be laid first | | todo |
+| kraken | Maelstrom | approx | E | **Maelstrom**: a whirlpool that pulls enemies in | pulls loose parts too | tests/test_pack_e1_forms.gd + test_pack_e1/e2/e3 mechanics | done |
+| tiamat | Flood | approx | E | **Flood**: fills the room's low ground with water for a while | it slows you too unless you swim | tests/test_pack_e2_forms.gd + test_pack_e1/e2/e3 mechanics | done |
+| alkahest | Dissolve | approx | E | **Dissolve**: eat through a weak gate, grate or armour plate | corrodes your own held parts | tests/test_pack_e1_forms.gd + test_pack_e1/e2/e3 mechanics | done |
+| pestilence | Contagion | full | audit | **Contagion**: poison jumps between enemies standing close | slow to build | tests/test_pack_e3_forms.gd + test_pack_e3.gd | done |
+| slime_mold | Network | approx | E | **Network**: a growth spreads along the floor, slows enemies on it and shows the shortest route to a mark (a map aid) | creeps slowly | tests/test_pack_e2_forms.gd + test_pack_e1/e2/e3 mechanics | done |
+| talos | Guardian | approx | F | **Guardian**: a patrol aura; if the visible nail is hit it drains you | the nail is a weak point | tests/test_pack_e2_forms.gd + test_pack_e1/e2/e3 mechanics | done |
+| cube | Engulf | approx | F | **Engulf**: swallow a small enemy and hold it inside, digesting | big; a low jump | tests/test_pack_e2_forms.gd + test_pack_e1/e2/e3 mechanics | done |
+| cloud_rider | Ride | approx | E | **Ride**: a short glide on a cloud | the cloud is brief | tests/test_pack_e1_forms.gd + test_pack_e1/e2/e3 mechanics | done |
+| ariadne | Recall | approx | E | **Recall**: lay a trail, then return along it to its start | the trail must be laid first | tests/test_pack_e2_forms.gd + test_pack_e1/e2/e3 mechanics | done |
 | selkie | Shed | approx | A | **Shed**: leave a husk decoy and slip away | the husk is gone until you rest | tests/test_pack_a_forms.gd + test_verb_mind.gd | done |
 | king_slime | Court | approx | C | **Court**: spawns a few lesser slimes that fight for you | the court dies in one hit | tests/test_pack_c_forms.gd + test_verb_allies/companions/stones + test_pack_c_mechanics | done |
-| beanstalk | Stalk | approx | E | **Stalk**: grow a climbable vine from the floor | one at a time, slow to grow | | todo |
-| philosophers_stone | Transmute | approx | E | **Transmute**: convert held essence of one element into another at a loss; digest parts faster | the conversion loss | | todo |
-| mimic | Copy | needs | F | **Copy**: take the shape and one move of the last creature you inspected, for a short time | the copy fades | | todo |
+| beanstalk | Stalk | approx | E | **Stalk**: grow a climbable vine from the floor | one at a time, slow to grow | tests/test_pack_e2_forms.gd + test_pack_e1/e2/e3 mechanics | done |
+| philosophers_stone | Transmute | approx | E | **Transmute**: convert held essence of one element into another at a loss; digest parts faster | the conversion loss | tests/test_pack_e3_forms.gd + test_pack_e3.gd | done |
+| mimic | Copy | needs | F | **Copy**: take the shape and one move of the last creature you inspected, for a short time | the copy fades | tests/test_pack_e3_forms.gd + test_pack_e3.gd | done |
 | wolf_moonbound | Rise | approx | B | **Rise**: stand on two legs for claws and items, drop to four to gallop | rising costs a beat; no pounce while up | tests/test_pack_b_forms.gd + test_rage.gd + test_pack_b_mechanics.gd | done |
 | wolf_loup_garou | Frenzy | approx | B | **Frenzy**: each kill stokes a bloodlust meter (faster, bleeding bites); at full you cannot stop | no guard, no items while frenzied | tests/test_pack_b_forms.gd + test_rage.gd + test_pack_b_mechanics.gd | done |
 | wolf_beast_of_gevaudan | Stalk-kill | approx | A | **Stalk-kill**: a stealth opener that deals huge damage to the first target, shrugs off ranged hits | helpless against crowds | tests/test_pack_a_forms.gd + test_verb_mind.gd | done |
@@ -34,17 +34,17 @@ Status: `todo`, `done` (full, tested), `kept approx` (needs a system that does n
 | wolf_skoll | Chaser | approx | A | **Chaser**: gallop never slows; mark a fleeing enemy and the pounce is free when you catch it | no stand-and-fight tools | tests/test_pack_a_forms.gd + test_verb_mind.gd | done |
 | wolf_black_dog | Slink | approx | A | **Slink**: a silent gait in dark rooms; unseen until the pounce | weak in lit rooms | tests/test_pack_a_forms.gd + test_verb_mind.gd | done |
 | wolf_barghest | Fear howl | approx | A | **Fear howl**: enemies falter and flee | cannot pounce while howling | tests/test_pack_a_forms.gd + test_verb_mind.gd | done |
-| wolf_hellhound | Burning pounce | approx | E | **Burning pounce** and a flame trail; a gate-guard verb | fire hurts your own packmate | | todo |
+| wolf_hellhound | Burning pounce | approx | E | **Burning pounce** and a flame trail; a gate-guard verb | fire hurts your own packmate | tests/test_pack_e1_forms.gd + test_pack_e1/e2/e3 mechanics | done |
 | wolf_black_shuck | Omen | approx | A | **Omen**: mark one enemy; it dies in ten seconds unless it cleanses | one mark at a time | tests/test_pack_a_forms.gd + test_verb_mind.gd | done |
 | wolf_cwn_annwn | Spectral pack | approx | C | **Spectral pack**: two echoes of you pounce with you | the echoes fade after eight seconds | tests/test_pack_c_forms.gd + test_verb_allies/companions/stones + test_pack_c_mechanics | done |
-| wolf_gabriel_hound | Hunt's passage | approx | E | **Hunt's passage**: the pack carries you over one gap (a short glide) | glide only after a kill | | todo |
+| wolf_gabriel_hound | Hunt's passage | approx | E | **Hunt's passage**: the pack carries you over one gap (a short glide) | glide only after a kill | tests/test_pack_e1_forms.gd + test_pack_e1/e2/e3 mechanics | done |
 | wolf_cu_sith | Three barks | approx | D | **Three barks**: two warnings, then a lunge you cannot dodge from range | stand still to bark | tests/test_pack_d_forms.gd + test_pack_d_mechanics.gd | done |
 | wolf_warg | Bond | approx | C | **Bond**: a heavier pounce, knockback, one bonded packmate | slow gallop | tests/test_pack_c_forms.gd + test_verb_allies/companions/stones + test_pack_c_mechanics | done |
 | wolf_dire_wolf | Tank | approx | B | **Tank**: the pounce knocks down heavy targets; knockback-proof | slow | tests/test_pack_b_forms.gd + test_rage.gd + test_pack_b_mechanics.gd | done |
-| wolf_fenrir | Unbound | approx | E | **Unbound**: breaks barriers and grates (a gate-breaking verb) | too big for small gaps | | todo |
+| wolf_fenrir | Unbound | approx | E | **Unbound**: breaks barriers and grates (a gate-breaking verb) | too big for small gaps | tests/test_pack_e1_forms.gd + test_pack_e1/e2/e3 mechanics | done |
 | wolf_amarok | Lone hunter | approx | B | **Lone hunter**: strongest with no packmate, hunts isolated prey | the bond is disabled | tests/test_pack_b_forms.gd + test_rage.gd + test_pack_b_mechanics.gd | done |
 | wolf_church_grim | Guardian | approx | C | **Guardian**: wards a packmate, holds holy ground, unharmed in holy zones | tethered to a sacred spot | tests/test_pack_c_forms.gd + test_verb_allies/companions/stones + test_pack_c_mechanics | done |
-| wolf_wepwawet | Opener | needs | E | **Opener**: reveals hidden exits and shortcuts in a room | low damage | | todo |
+| wolf_wepwawet | Opener | needs | E | **Opener**: reveals hidden exits and shortcuts in a room | low damage | tests/test_pack_e3_forms.gd + test_pack_e3.gd | done |
 | wolf_lupa | Suckle | approx | C | **Suckle**: heals packmates and grows a pup into a second packmate | weak pounce | tests/test_pack_c_forms.gd + test_verb_allies/companions/stones + test_pack_c_mechanics | done |
 | undead_zombie | Devour | approx | B | Devour corpses to heal; slow, heavy swings. |  | tests/test_pack_b_forms.gd + test_rage.gd + test_pack_b_mechanics.gd | done |
 | undead_ghoul | Rend | approx | B | Claws, a paralysing touch, a stench cloud. |  | tests/test_pack_b_forms.gd + test_rage.gd + test_pack_b_mechanics.gd | done |
@@ -72,29 +72,29 @@ Status: `todo`, `done` (full, tested), `kept approx` (needs a system that does n
 | undead_deathless | Hidden soul | approx | F | **Hidden soul**: place an anchor; if you die in range you rise there once per life | the anchor can be destroyed | tests/test_pack_c_forms.gd + test_verb_allies/companions/stones + test_pack_c_mechanics | done |
 | undead_demilich | Float | approx | E | a floating skull, very frail, very strong | the frailest form | tests/test_pack_b_forms.gd + test_rage.gd + test_pack_b_mechanics.gd | done |
 | undead_hierophant | Consecrate | approx | C | A ring of light that heals you and your summons and burns the living. |  | tests/test_pack_c_forms.gd + test_verb_allies/companions/stones + test_pack_c_mechanics | done |
-| undead_mummy_priest | Wrap | full | audit | **Wrap**: bandages bind enemies; a sand gust | fire hurts | | todo |
+| undead_mummy_priest | Wrap | full | audit | **Wrap**: bandages bind enemies; a sand gust | fire hurts | tests/test_pack_e3_forms.gd + test_pack_e3.gd | done |
 | undead_pharaoh | Decree | approx | C | **Decree**: a curse ring marks everything in the room; tomb guards rise | slow | tests/test_pack_c_forms.gd + test_verb_allies/companions/stones + test_pack_c_mechanics | done |
 | undead_heart_weigher | Weigh | approx | B | **Weigh**: if a creature's essence is lower than yours, drain it at once | useless against stronger foes | tests/test_pack_b_forms.gd + test_rage.gd + test_pack_b_mechanics.gd | done |
 | spider_weavermaid | Hands | approx | B | **Hands**: a person's torso on a spider body; uses items, tools and bows | a slower wall crawl | tests/test_pack_b_forms.gd + test_pack_b3.gd | done |
 | spider_jorogumo | Veil | approx | A | **Veil**: pass as a goblin or villager (village standing reads you as welcome); revealing it bursts the veil | the veil drops when hit; no webbing while veiled | tests/test_pack_a_forms.gd + test_verb_mind.gd | done |
 | spider_seven_spider_spirits | Sisters | approx | C | **Sisters**: split into seven decoys that web | each decoy dies in one hit | tests/test_pack_c_forms.gd + test_verb_allies/companions/stones + test_pack_c_mechanics | done |
 | spider_tsuchigumo | True form | approx | B | **True form**: drop the veil into a giant; burrow a lair; call lesser spiders | too big for small gaps | tests/test_pack_b_forms.gd + test_pack_b3.gd | done |
-| spider_loom_weaver | Tapestry | approx | E | **Tapestry**: weave a patterned web that stays as a trap and a snare | slow to weave | | todo |
+| spider_loom_weaver | Tapestry | approx | E | **Tapestry**: weave a patterned web that stays as a trap and a snare | slow to weave | tests/test_pack_e1_forms.gd + test_pack_e1/e2/e3 mechanics | done |
 | spider_norn | Fate thread | approx | A | **Fate thread**: tie a thread to an enemy; the next hit it lands on you is sent back | fragile | tests/test_pack_a_forms.gd + test_verb_mind.gd | done |
-| spider_anansi | Steal | needs | F | **Steal**: take a power or essence from a living enemy without killing it (the decided future method) | weak direct damage | | todo |
+| spider_anansi | Steal | needs | F | **Steal**: take a power or essence from a living enemy without killing it (the decided future method) | weak direct damage | tests/test_pack_e3_forms.gd + test_pack_e3.gd | done |
 | spider_broodmother | Brood | approx | C | **Brood**: cocoons hatch spiderlings that carry and harass | slow; fewer solo kills | tests/test_pack_c_forms.gd + test_verb_allies/companions/stones + test_pack_c_mechanics | done |
 | spider_brood_queen | Command | approx | C | **Command**: spiderlings follow your lead | fewer solo kills | tests/test_pack_c_forms.gd + test_verb_allies/companions/stones + test_pack_c_mechanics | done |
 | spider_cocoon_mother | Hatch | approx | C | prey cocooned alive hatch into stronger young | takes time | tests/test_pack_c_forms.gd + test_verb_allies/companions/stones + test_pack_c_mechanics | done |
 | spider_swarm_sovereign | Disperse | approx | A | **Disperse**: the body breaks into a swarm that squeezes through grates and reforms (a traversal gate) | cannot fight while dispersed | tests/test_pack_a_forms.gd + test_verb_mind.gd | done |
 | spider_cave_matriarch | Heavy bite | approx | B | a huge lone hunter: heavy bite, a web wall | slow; no small gaps | tests/test_pack_b_forms.gd + test_pack_b3.gd | done |
-| spider_light_eater | Drink | approx | E | **Drink**: eat lamps and glow pools to darken a room and heal | hurt by sacred light | | todo |
-| spider_chasm_weaver | Span | approx | E | **Span**: spin a permanent web bridge across a gap (a traversal gate) | slow; both ends need anchors | | todo |
+| spider_light_eater | Drink | approx | E | **Drink**: eat lamps and glow pools to darken a room and heal | hurt by sacred light | tests/test_pack_e3_forms.gd + test_pack_e3.gd | done |
+| spider_chasm_weaver | Span | approx | E | **Span**: spin a permanent web bridge across a gap (a traversal gate) | slow; both ends need anchors | tests/test_pack_e1_forms.gd + test_pack_e1/e2/e3 mechanics | done |
 | spider_stalker | Ambush | approx | B | **Ambush**: a ceiling drop and a web zip | weak in lit rooms | tests/test_pack_b_forms.gd + test_rage.gd + test_pack_b_mechanics.gd | done |
 | spider_shadow_stalker | Silent drop | approx | B | **Silent drop**: a bonus strike in dim light | weak in lit rooms | tests/test_pack_b_forms.gd + test_rage.gd + test_pack_b_mechanics.gd | done |
 | spider_nightstalker | Reset | approx | A | kills reset the zip; unseen in shadow | needs shadow | tests/test_pack_b_forms.gd + test_rage.gd + test_pack_b_mechanics.gd | done |
 | spider_veil_spinner | Veil | approx | A | **Veil**: spin a web over a doorway that hides you and allies | the veil breaks on any attack | tests/test_pack_a_forms.gd + test_verb_mind.gd | done |
-| spider_venomspinner | Venom web | approx | E | webs apply poison that spreads through trap webs | lower direct damage | | todo |
-| spider_plaguemother | Miasma | approx | E | a poison cloud that spreads on death | slow | | todo |
+| spider_venomspinner | Venom web | approx | E | webs apply poison that spreads through trap webs | lower direct damage | tests/test_pack_e1_forms.gd + test_pack_e1/e2/e3 mechanics | done |
+| spider_plaguemother | Miasma | approx | E | a poison cloud that spreads on death | slow | tests/test_pack_e1_forms.gd + test_pack_e1/e2/e3 mechanics | done |
 | spider_tarantella | Dance-venom | approx | A | **Dance-venom**: a bitten enemy staggers erratically into hazards | slow to take hold | tests/test_pack_a_forms.gd + test_verb_mind.gd | done |
 | goblin_beastcaller | Offer | approx | C | **Offer**: an item to a weakened creature, which follows you (decided taming) | weak alone | tests/test_pack_c_forms.gd + test_verb_allies/companions/stones + test_pack_c_mechanics | done |
 | goblin_pied_piper | Tune | approx | C | **Tune**: a pipe call commands a small group and draws vermin | cannot throw while playing | tests/test_pack_c_forms.gd + test_verb_allies/companions/stones + test_pack_c_mechanics | done |
@@ -103,11 +103,11 @@ Status: `todo`, `done` (full, tested), `kept approx` (needs a system that does n
 | goblin_beast_rider | Mount | approx | C | **Mount**: fuse with the companion for a ride (the guide's Rider) | the companion is exposed | tests/test_pack_c_forms.gd + test_verb_allies/companions/stones + test_pack_c_mechanics | done |
 | goblin_wolf_lord | Spear charge | approx | C | a spear charge and gallop while mounted | on foot you are weak | tests/test_pack_c_forms.gd + test_verb_allies/companions/stones + test_pack_c_mechanics | done |
 | goblin_lord_of_beasts | Two companions | approx | C | **Two companions** at once (a decided capstone exception to the one-at-a-time rule) | fragile companions | tests/test_pack_c_forms.gd + test_verb_allies/companions/stones + test_pack_c_mechanics | done |
-| goblin_tinker | Rig | approx | E | crafted throwables, rigged traps, more recipe slots | weak in melee | | todo |
-| goblin_knocker | Tap | needs | E | **Tap**: senses hidden walls, weak floors and traps in a room | low damage | | todo |
+| goblin_tinker | Rig | approx | E | crafted throwables, rigged traps, more recipe slots | weak in melee | tests/test_pack_e3_forms.gd + test_pack_e3.gd | done |
+| goblin_knocker | Tap | needs | E | **Tap**: senses hidden walls, weak floors and traps in a room | low damage | tests/test_pack_e3_forms.gd + test_pack_e3.gd | done |
 | goblin_gremlin | Sabotage | approx | A | **Sabotage**: disable an enemy device or turn a trap against its owner | backfires sometimes | tests/test_pack_a_forms.gd + test_verb_mind.gd | done |
-| goblin_rumpelstiltskin | Spin | approx | E | **Spin**: transmute junk into a better part, two for one | wasteful | | todo |
-| goblin_smith | Forge | approx | E | **Forge**: craft a named weapon from parts at a forge | needs a forge and time | | todo |
+| goblin_rumpelstiltskin | Spin | approx | E | **Spin**: transmute junk into a better part, two for one | wasteful | tests/test_pack_e3_forms.gd + test_pack_e3.gd | done |
+| goblin_smith | Forge | approx | E | **Forge**: craft a named weapon from parts at a forge | needs a forge and time | tests/test_pack_e3_forms.gd + test_pack_e3.gd | done |
 | goblin_mastersmith | Flawless gear | approx | B | a second gear slot; flawless upgrades | high cost | tests/test_pack_b_forms.gd + test_rage.gd + test_pack_b_mechanics.gd | done |
 | goblin_ring_maker | Cursed gear | approx | B | **Cursed gear**: huge stats with a real cost | the curse | tests/test_pack_b_forms.gd + test_rage.gd + test_pack_b_mechanics.gd | done |
 | goblin_skulker | Sneak strike | approx | A | sneak strike, smoke bomb | weak in melee | tests/test_pack_a_forms.gd + test_verb_mind.gd | done |
@@ -129,32 +129,43 @@ Status: `todo`, `done` (full, tested), `kept approx` (needs a system that does n
 
 | Creature | Agreed kit | Test | Status |
 |---|---|---|---|
-| imp | holds position, curses | | todo |
-| demon_hound | a dasher with a wind-up | | todo |
-| caller | emits imps while its glyph is lit | | todo |
-| blinker | a short teleport with a fake-out | | todo |
-| ward_bearer | nullifies hits from one side | | todo |
-| rider | possesses a dormant corpse | | todo |
-| chapel_priest | spits holy light, carries the emitter, drops a focus | | todo |
-| shield_guard | an armoured charger; drops a weapon arm | | todo |
-| gargoyle | a ceiling dropper; earth | | todo |
-| ghost | a drifter; mind, and a drain target for undead | | todo |
-| goblin_shaman | a source of its essences; no special kit agreed | | todo |
-| candle_wisp | a source of its essences; no special kit agreed | | todo |
-| stained_glass_moth | a source of its essences; no special kit agreed | | todo |
-| carrion_crow | a source of its essences; no special kit agreed | | todo |
-| vampire_bat | a source of its essences; no special kit agreed | | todo |
-| bone_hound | a source of its essences; no special kit agreed | | todo |
-| ember_beetle | a source of its essences; no special kit agreed | | todo |
-| lava_salamander | a source of its essences; no special kit agreed | | todo |
-| ash_moth | a source of its essences; no special kit agreed | | todo |
-| moon_hare | a source of its essences; no special kit agreed | | todo |
-| tusker_boar | a source of its essences; no special kit agreed | | todo |
-| blood_leech | a source of its essences; no special kit agreed | | todo |
-| bog_wisp | a source of its essences; no special kit agreed | | todo |
-| firefly_swarm | a source of its essences; no special kit agreed | | todo |
-| cave_rat | a source of its essences; no special kit agreed | | todo |
-| junk | a source of its essences; no special kit agreed | | todo |
-| wild_slime | a source of its essences; no special kit agreed | | todo |
-| skeleton | a source of its essences; no special kit agreed | | todo |
-| village_goblin | a source of its essences; no special kit agreed | | todo |
+| imp | holds position, curses | tests/test_monster_kits.gd | done |
+| demon_hound | a dasher with a wind-up | tests/test_monster_kits.gd | done |
+| caller | emits imps while its glyph is lit | tests/test_monster_kits.gd | done |
+| blinker | a short teleport with a fake-out | tests/test_monster_kits.gd | done |
+| ward_bearer | nullifies hits from one side | tests/test_monster_kits.gd | done |
+| rider | possesses a dormant corpse | tests/test_monster_kits.gd | done |
+| chapel_priest | spits holy light, carries the emitter, drops a focus | tests/test_monster_kits.gd | done |
+| shield_guard | an armoured charger; drops a weapon arm | tests/test_monster_kits.gd | done |
+| gargoyle | a ceiling dropper; earth | tests/test_monster_kits.gd | done |
+| ghost | a drifter; mind, and a drain target for undead | tests/test_monster_kits.gd | done |
+| goblin_shaman | a source of its essences; no special kit agreed | no special kit agreed: a source of its essences | n/a |
+| candle_wisp | a source of its essences; no special kit agreed | no special kit agreed: a source of its essences | n/a |
+| stained_glass_moth | a source of its essences; no special kit agreed | no special kit agreed: a source of its essences | n/a |
+| carrion_crow | a source of its essences; no special kit agreed | no special kit agreed: a source of its essences | n/a |
+| vampire_bat | a source of its essences; no special kit agreed | no special kit agreed: a source of its essences | n/a |
+| bone_hound | a source of its essences; no special kit agreed | no special kit agreed: a source of its essences | n/a |
+| ember_beetle | a source of its essences; no special kit agreed | no special kit agreed: a source of its essences | n/a |
+| lava_salamander | a source of its essences; no special kit agreed | no special kit agreed: a source of its essences | n/a |
+| ash_moth | a source of its essences; no special kit agreed | no special kit agreed: a source of its essences | n/a |
+| moon_hare | a source of its essences; no special kit agreed | no special kit agreed: a source of its essences | n/a |
+| tusker_boar | a source of its essences; no special kit agreed | no special kit agreed: a source of its essences | n/a |
+| blood_leech | a source of its essences; no special kit agreed | no special kit agreed: a source of its essences | n/a |
+| bog_wisp | a source of its essences; no special kit agreed | no special kit agreed: a source of its essences | n/a |
+| firefly_swarm | a source of its essences; no special kit agreed | no special kit agreed: a source of its essences | n/a |
+| cave_rat | a source of its essences; no special kit agreed | no special kit agreed: a source of its essences | n/a |
+| junk | a source of its essences; no special kit agreed | no special kit agreed: a source of its essences | n/a |
+| wild_slime | a source of its essences; no special kit agreed | no special kit agreed: a source of its essences | n/a |
+| skeleton | a source of its essences; no special kit agreed | no special kit agreed: a source of its essences | n/a |
+| village_goblin | a source of its essences; no special kit agreed | no special kit agreed: a source of its essences | n/a |
+
+
+## Known gaps (what is not a mechanic yet, listed so they are not mistaken for done)
+
+- **Too big for small gaps** (Fenrir, Bone Colossus, Cave Matriarch, and the Colossus's "double size"): the game has no gap-width obstacle and the player's collision box does not scale with a form. Tsuchigumo's version is built (its true form needs headroom).
+- **Barrow-King "stuck to the room's hoard"** and **Tomte "static"**: no mechanic; the stones are static by being stones.
+- **Veil spinner "hides you and allies"**: enemies only ever chase the player, so hiding allies has nothing to do.
+- **Weak floors** exist as a room feature (RoomWeakFloor) and a Tap reveals them, but no room has one yet; one forge (VI3) and one snare (VI4) are placed in the village.
+- **Wepwawet and Knocker** reveal hidden walls, weak floors and traps; shortcuts are switches that are always visible.
+- **Moonbound's "items"**: no wolf verb uses an item, so only the claws (the stat bonus) are modelled.
+- **Every verb plays the form's one generic strike clip.** Motion archetypes per verb are the next art program (see the 3D stage plan).

@@ -6,7 +6,7 @@
 script = ExtResource("1_rpc81")
 id = "verb_wolf_fenrir"
 display_name = "Unbound"
-description = "Breaks barriers and grates (a gate-breaking verb)."
+description = "Unbound: breaks barriers and grates (anything in the group dissolvable), and armour."
 announce = "New verb. Acquired [Unbound]."
 source = "form_verb"
 effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [12], "spec": {"kind": "dissolve", "range": 80, "half_width": 50, "cooldown": 6.0}}]

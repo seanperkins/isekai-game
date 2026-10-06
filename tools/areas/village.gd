@@ -73,6 +73,7 @@ func _yard() -> RoomDef:
 	AreaKit.decor(r, "root_hang", 900.0, 20.0)
 	AreaKit.decor(r, "stalagmite", 1230.0, 320.0)
 	AreaKit.feature(r, "lamp", "VI3_lamp", 700.0, 320.0)
+	AreaKit.feature(r, "forge", "VI3_forge", 860.0, 320.0)  # the village smith's: a Smith forges a named weapon beside it
 	return r
 
 # --- VI4 the Chieftain Hall: a dead end west of the Yard ---
@@ -83,6 +84,7 @@ func _hall() -> RoomDef:
 	AreaKit.decor(r, "stalagmite", 120.0, 320.0)
 	AreaKit.decor(r, "rubble", 540.0, 320.0)
 	AreaKit.decor(r, "vine", 300.0, 20.0)
+	AreaKit.feature(r, "snare", "VI4_snare", 260.0, 320.0)  # hidden in the floor on the way to the Chieftain: a Knocker taps it out
 	return r
 
 # --- VI5 the Sump: a flooded shaft from the Yard down to the Flooded Tunnels; the climb out stands in the water ---

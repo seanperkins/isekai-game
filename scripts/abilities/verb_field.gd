@@ -15,6 +15,8 @@ var _pull := 0.0
 var _damage := 0
 var _type := "physical"
 var _ignore_def := false
+var _pickups := false   # loose parts are drawn in too
+var _pack := false      # and it burns the caster's own packmates
 var _color := Color(1, 1, 1, 0.25)
 var _seconds := 0.0
 var _elapsed := 0.0
@@ -34,6 +36,8 @@ func launch(caster: Node2D, at: Vector2, p_radius: float, seconds: float, opts :
 	_damage = int(opts.get("damage", 0))
 	_type = str(opts.get("damage_type", "physical"))
 	_ignore_def = bool(opts.get("ignore_def", false))
+	_pickups = bool(opts.get("pickups", false))
+	_pack = bool(opts.get("pack", false))
 	_color = opts.get("color", _color)
 
 func _physics_process(delta: float) -> void:
@@ -46,6 +50,10 @@ func _physics_process(delta: float) -> void:
 	if _pull > 0.0:
 		for n in _foes_inside():
 			_draw_in(n, delta)
+		if _pickups:
+			for n in get_tree().get_nodes_in_group("pickups"):
+				if n.global_position.distance_to(global_position) <= radius:
+					n.global_position = n.global_position.move_toward(global_position, _pull * delta)
 	while float(_ticks + 1) * TICK_SECONDS <= _elapsed + EPS and float(_ticks + 1) * TICK_SECONDS <= _seconds + EPS:
 		_ticks += 1
 		_pulse()
@@ -56,6 +64,10 @@ func _physics_process(delta: float) -> void:
 func _pulse() -> void:
 	if _damage <= 0:
 		return
+	if _pack:
+		for pal in get_tree().get_nodes_in_group("companions"):
+			if pal.caster == _caster and pal.global_position.distance_to(global_position) <= radius:
+				pal.hurt(_damage)
 	for n in _foes_inside():
 		if _ignore_def and n is Enemy:
 			n.receive_hit(_damage, _type, global_position, "", true)

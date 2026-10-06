@@ -14,7 +14,8 @@ stats = {
 "atk": 2,
 "def": 3,
 "max_hp": 22,
-"max_mp": 10
+"max_mp": 10,
+"jump_height": -30
 }
 traits = ["hard_shell"]
 grants = ["body_armor", "verb_cube"]

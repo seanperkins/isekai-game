@@ -11,7 +11,7 @@ stage = 4
 lineage = "warg"
 parents = ["wolf_church_grim"]
 stats = {
-"atk": 2,
+"atk": 1,
 "def": 1,
 "jump_height": 15,
 "max_hp": 22,

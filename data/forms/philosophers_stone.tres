@@ -14,7 +14,8 @@ stats = {
 "atk": 2,
 "def": 3,
 "max_hp": 22,
-"max_mp": 12
+"max_mp": 12,
+"predation_time": -30
 }
 traits = ["hard_shell"]
 grants = ["body_armor", "verb_philosophers_stone"]

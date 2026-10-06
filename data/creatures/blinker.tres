@@ -19,5 +19,6 @@ essences = {
 xp = 4
 origin = "support"
 role = "common"
+verb = "verb_blinker"
 wears = "pale_moth"
 sprite_tint = Color(0.55, 0.45, 0.65, 1)

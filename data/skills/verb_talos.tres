@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_talos"
 display_name = "Guardian"
-description = "A patrol aura that hurts what comes near."
+description = "Guardian: a patrol aura that hurts what comes near. The nail on your back is a weak point: a blow from behind drains you."
 announce = "New verb. Acquired [Guardian]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [2], "spec": {"kind": "aura", "radius": 60, "seconds": 6.0, "damage": true, "cooldown": 10.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [2], "spec": {"kind": "aura", "radius": 60, "seconds": 6.0, "damage": true, "nail": {"drain": 3, "seconds": 6.0}, "cooldown": 10.0}}]
 mp_cost = 7

@@ -12,7 +12,7 @@ lineage = "adept"
 parents = ["undead_adept"]
 stats = {
 "atk": 2,
-"max_hp": 12,
+"max_hp": 7,
 "max_mp": 9
 }
 grants = ["verb_undead_lich"]

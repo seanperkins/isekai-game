@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_pestilence"
 display_name = "Contagion"
-description = "Poison jumps between enemies standing close."
+description = "Contagion: poison jumps between enemies standing close, one hop at a time. Slow to build."
 announce = "New verb. Acquired [Contagion]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [3], "spec": {"kind": "chain", "range": 160, "jump": 80, "hops": 3, "damage_type": "poison"}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [3], "spec": {"kind": "chain", "range": 160, "jump": 80, "hops": 3, "damage_type": "poison", "hop_delay": 0.5}}]
 mp_cost = 6

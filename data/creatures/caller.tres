@@ -18,7 +18,9 @@ essences = {
 "mind": 2
 }
 xp = 10
+needs_glyph = true
 origin = "support"
 role = "elite"
+verb = "verb_caller"
 wears = "bog_lizardman"
 sprite_tint = Color(0.55, 0.45, 0.65, 1)

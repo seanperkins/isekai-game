@@ -14,8 +14,10 @@ stats = {
 "atk": 1,
 "def": 1,
 "max_hp": 5,
-"max_mp": 3
+"max_mp": 3,
+"spd": -10
 }
+traits = ["weak_alone"]
 grants = ["verb_spider_broodmother"]
 verb = "verb_spider_broodmother"
 tint = Color(0.8, 0.69, 0.725, 1)

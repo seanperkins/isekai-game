@@ -49,3 +49,8 @@ exits = [{
 "room": "DM4",
 "to": 680.0
 }]
+features = [{
+"id": "DM6_glyph",
+"kind": "glyph",
+"pos": Vector2(330, 680)
+}]

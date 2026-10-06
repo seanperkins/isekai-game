@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_spider_loom_weaver"
 display_name = "Tapestry"
-description = "Weave a patterned web that stays as a trap and a snare."
+description = "Tapestry: weave a web that stays for two minutes as a snare, holding the first enemy to cross it. Slow to weave."
 announce = "New verb. Acquired [Tapestry]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "zone", "radius": 70, "seconds": 12.0, "slow": true, "cooldown": 10.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "trap", "seconds": 120.0, "root": 2.5, "damage": false, "web": true, "still": 0.8, "cooldown": 4.0}}]
 mp_cost = 6

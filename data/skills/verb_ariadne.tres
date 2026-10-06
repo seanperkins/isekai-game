@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_ariadne"
 display_name = "Recall"
-description = "Lay a trail, then return along it to its start."
+description = "Recall: the first cast lays a trail behind you; the second walks you back along it to where it began. The trail must be laid first."
 announce = "New verb. Acquired [Recall]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "anchor", "seconds": 30, "cooldown": 1.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "trail", "seconds": 30.0, "cooldown": 1.0}}]
 mp_cost = 4

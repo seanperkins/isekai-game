@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_wolf_wepwawet"
 display_name = "Opener"
-description = "Reveals hidden exits and shortcuts in a room."
+description = "Opener: reveals every hidden exit, shortcut, weak floor and trap in the room."
 announce = "New verb. Acquired [Opener]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "reveal", "radius": 200, "cooldown": 8.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "reveal", "radius": 900, "cooldown": 8.0}}]
 mp_cost = 3

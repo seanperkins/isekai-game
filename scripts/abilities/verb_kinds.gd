@@ -5,7 +5,7 @@ extends RefCounted
 
 ## The scene every data-defined verb uses.
 const SCENE := "res://scenes/abilities/verb.tscn"
-const KINDS := ["bolt", "burst", "ring", "dash", "zone", "mark", "heal", "ward", "buff", "pull", "aura", "chain", "engulf", "dissolve", "glide", "anchor", "decoy", "summon", "vine", "transmute", "copy", "reveal", "bridge", "trap", "forge", "rage", "weigh", "devour", "raise", "soul", "hunt", "bark", "companion", "offer", "suckle", "roar", "mount", "stone", "veil", "stalk", "swap", "blink", "light", "omen", "fate", "sabotage", "chase", "disperse"]
+const KINDS := ["bolt", "burst", "ring", "dash", "zone", "mark", "heal", "ward", "buff", "pull", "aura", "chain", "engulf", "dissolve", "glide", "anchor", "decoy", "summon", "vine", "transmute", "copy", "reveal", "bridge", "trap", "forge", "rage", "weigh", "devour", "raise", "soul", "hunt", "bark", "flood", "trail", "network", "drink", "rig", "spin", "steal", "companion", "offer", "suckle", "roar", "mount", "stone", "veil", "stalk", "swap", "blink", "light", "omen", "fate", "sabotage", "chase", "disperse"]
 ## Each kind's keys and what they hold (validate() checks them). Every kind also takes `cooldown` (seconds, in place of the default);
 ## the kinds in TYPED also take damage_type, and those in STRIKES a status and `drain` (the fraction of the damage the caster heals).
 ## The keys of a window (Rage), as a verb's own spec (kind rage) or inside any verb's `rage`.
@@ -17,32 +17,32 @@ const RAGE_KEYS := {"seconds": "number", "stats": "dict", "kill_refill": "number
 const SUMMON_KEYS := {"count": "number", "seconds": "number", "mortal": "bool", "hp": "number", "look": "text", "web": "bool", "echo": "bool", "command": "bool",
 	"carry": "bool", "delay": "number", "lure": "number", "turn": "dict", "from_cocoons": "number", "power_mult": "number", "focus": "dict"}
 const SCHEMA := {
-	"bolt": {"range": "number", "half_width": "number", "pierce": "bool", "returns": "bool", "cursed": "dict", "spend_hp": "bool", "hp_scale": "number", "loose": "bool",
+	"bolt": {"range": "number", "half_width": "number", "pierce": "bool", "jitter": "number", "returns": "bool", "cursed": "dict", "spend_hp": "bool", "hp_scale": "number", "loose": "bool",
 		"reach_with": "dict", "spend_essence": "dict"},
 	"burst": {"range": "number", "half_width": "number"},
 	"ring": {"radius": "number"},
-	"dash": {"speed": "number", "vertical": "number", "hit_range": "number", "hit_half_width": "number", "opener": "number", "smoke": "number", "ride": "dict", "drop": "number", "dim": "number", "lit_mult": "number", "hops": "number", "hop_gap": "number", "hop_lift": "number"},
-	"zone": {"radius": "number", "seconds": "number", "slow": "bool", "heals": "number", "damage": "bool", "living_only": "bool", "ally_heals": "bool"},
+	"dash": {"speed": "number", "vertical": "number", "hit_range": "number", "hit_half_width": "number", "opener": "number", "smoke": "number", "ride": "dict", "trail": "dict", "drop": "number", "dim": "number", "lit_mult": "number", "hops": "number", "hop_gap": "number", "hop_lift": "number"},
+	"zone": {"radius": "number", "seconds": "number", "slow": "bool", "heals": "number", "damage": "bool", "living_only": "bool", "ally_heals": "bool", "spreads": "bool"},
 	"mark": {"range": "number", "delay": "number"},
 	"heal": {"hp": "number", "mp": "number"},
 	"ward": {"seconds": "number"},
 	"buff": {"stats": "stats", "seconds": "number"},
-	"pull": {"radius": "number", "seconds": "number", "strength": "number", "damage": "bool", "ahead": "number"},
-	"aura": {"radius": "number", "seconds": "number", "damage": "bool"},
-	"chain": {"range": "number", "jump": "number", "hops": "number", "half_width": "number"},
-	"engulf": {"range": "number", "seconds": "number"},
-	"dissolve": {"range": "number", "half_width": "number"},
-	"glide": {"seconds": "number", "fall": "number"},
+	"pull": {"radius": "number", "seconds": "number", "strength": "number", "damage": "bool", "ahead": "number", "pickups": "bool"},
+	"aura": {"radius": "number", "seconds": "number", "damage": "bool", "nail": "dict"},
+	"chain": {"range": "number", "jump": "number", "hops": "number", "half_width": "number", "hop_delay": "number"},
+	"engulf": {"range": "number", "seconds": "number", "small": "number"},
+	"dissolve": {"range": "number", "half_width": "number", "corrode": "number"},
+	"glide": {"seconds": "number", "fall": "number", "drift": "number", "needs_kill": "number"},
 	"anchor": {"seconds": "number"},
 	"decoy": {"seconds": "number", "speed": "number", "ward": "number", "lure": "number", "reverse": "number"},
 	"summon": SUMMON_KEYS,
-	"vine": {"height": "number", "seconds": "number"},
-	"transmute": {"from_units": "number", "to_units": "number"},
+	"vine": {"height": "number", "seconds": "number", "grow": "number", "climb": "bool"},
+	"transmute": {"from_units": "number", "to_units": "number", "choose": "bool"},
 	"copy": {"seconds": "number"},
 	"reveal": {"radius": "number"},
-	"bridge": {"length": "number", "seconds": "number"},
+	"bridge": {"length": "number", "seconds": "number", "permanent": "bool", "anchors": "bool"},
 	"trap": {"seconds": "number", "stun": "number", "lure": "number", "root": "number", "damage": "bool"},
-	"forge": {"stat": "stat", "amount": "number", "parts": "number", "also": "dict"},
+	"forge": {"stat": "stat", "amount": "number", "parts": "number", "also": "dict", "needs_forge": "bool", "named": "bool"},
 	"veil": {"seconds": "number", "lit_seconds": "number", "radius": "number", "disguise": "text", "no_web": "bool"},
 	"rage": RAGE_KEYS,
 }
@@ -60,6 +60,7 @@ const DASH_VERTICAL := 0.6
 const DASH_HIT_RANGE := 40.0
 const DASH_HIT_HALF_WIDTH := 24.0
 const HOP_GAP := 0.35
+const WEB_SPREAD := 300.0
 const HOP_LIFT := 220.0
 const ZONE_RADIUS := 60.0
 const ZONE_SECONDS := 3.0
@@ -81,6 +82,7 @@ const ENGULF_RANGE := 40.0
 const ENGULF_HALF_WIDTH := 30.0
 const ENGULF_SECONDS := 3.0
 const ENGULF_RADIUS := 6.0
+const ENGULF_SMALL := 12
 const DISSOLVE_RANGE := 60.0
 const DISSOLVE_HALF_WIDTH := 40.0
 const GLIDE_SECONDS := 1.5
@@ -106,6 +108,7 @@ const REVEAL_RADIUS := 160.0
 const BRIDGE_LENGTH := 160.0
 const BRIDGE_SECONDS := 15.0
 const BRIDGE_REACH := 8.0
+const ANCHOR_PROBE := 24.0
 const TRAP_SECONDS := 30.0
 const TRAP_STUN := 2.0
 ## How many of one caster's traps stand at once: a cast beyond it takes the place of the oldest.
@@ -121,6 +124,7 @@ const BUFF_GENERATION := "verb_buff_generation"
 const BOLT_RANGE := 260.0
 const BOLT_HALF_WIDTH := 20.0
 const BOLT_RETURN := 0.35
+const FORGE_REACH := 60.0
 const DYED_MULT := 1.5
 const LOOSE_RANGE := 220.0
 const BURST_RANGE := 60.0
@@ -217,6 +221,8 @@ static func _run_kind(ability: Ability, spec: Dictionary) -> void:
 				VerbBody.run(kind, ability, spec)
 			elif VerbBond.KINDS.has(kind):
 				VerbBond.run(kind, ability, spec)
+			elif VerbWorld.KINDS.has(kind):
+				VerbWorld.run(kind, ability, spec)
 
 ## What a cast costs the caster besides MP, from the keys any kind may carry: it holds still, its own blow is locked, enemies around it wake, and a verb
 ## cast once between rests is spent.
@@ -296,6 +302,8 @@ static func _bolt(a: Ability, spec: Dictionary) -> void:
 		var gear = actor.get("inventory")
 		if gear != null and gear.count(str(spec["reach_with"].get("part", ""))) > 0:
 			reach *= float(spec["reach_with"].get("mult", 1.0))
+	if spec.has("jitter"):  # shapeless: its reach is never quite the same
+		reach *= 1.0 + VerbMind.rng.randf_range(-float(spec["jitter"]), float(spec["jitter"]))
 	var mult := _shot_cost(a, spec)
 	var rock = a.terrain_hit(from, from + dir * reach)
 	if rock != null:
@@ -405,11 +413,23 @@ static func _dash(a: Ability, spec: Dictionary) -> void:
 	_hop(a, spec, dir, hops > 1)
 	a.power_mult /= mult
 	a.aim = aim_before
+	if spec.has("trail"):
+		_flame_trail(a, spec, dir)
 	var gap := float(spec.get("hop_gap", HOP_GAP))
 	for i in range(1, hops):
 		actor.get_tree().create_timer(gap * float(i)).timeout.connect(_hop_again.bind(a, spec, dir, mult))
 	if spec.has("smoke") and actor.has_method("veil_for"):
 		actor.veil_for(float(spec["smoke"]))  # a smoke bomb left behind hides the way out
+
+## A trail of fire laid along the dash: small fields that burn what stands in them, and the caster's own packmates too.
+static func _flame_trail(a: Ability, spec: Dictionary, dir: Vector2) -> void:
+	var t: Dictionary = spec["trail"]
+	var power := maxi(1, a.power() / 2)
+	for i in maxi(1, int(t.get("count", 3))):
+		var flame := VerbField.new()
+		a.actor.get_parent().add_child(flame)
+		flame.launch(a.actor, a.actor.global_position + Vector2(dir.x * float(t.get("gap", 24.0)) * float(i + 1), 0.0), float(t.get("radius", 14.0)), float(t.get("seconds", 3.0)),
+			{"damage": power, "damage_type": str(spec.get("damage_type", "fire")), "pack": true, "color": _color(spec, 0.35)})
 
 ## One leap and its blow. A bounding verb holds the caster's direction between its hops.
 static func _hop(a: Ability, spec: Dictionary, dir: Vector2, bounding: bool) -> void:
@@ -440,6 +460,11 @@ static func _zone(a: Ability, spec: Dictionary) -> void:
 	cloud.launch(a.actor.global_position, float(spec.get("radius", ZONE_RADIUS)), float(spec.get("seconds", ZONE_SECONDS)), a.actor,
 		{"damage": power, "slow": bool(spec.get("slow", true)), "heals": int(spec.get("heals", 0)), "color": _color(spec, 0.3),
 		"damage_type": str(spec.get("damage_type", "poison")), "living_only": bool(spec.get("living_only", false)), "ally_heals": bool(spec.get("ally_heals", false))})
+	if bool(spec.get("web", false)):
+		for old in a.actor.get_tree().get_nodes_in_group("player_webs"):
+			if bool(spec.get("spreads", false)) and old.global_position.distance_to(cloud.global_position) <= WEB_SPREAD:
+				old.poison_up(maxi(1, power))  # the poison runs through the webs already spun
+		cloud.add_to_group("player_webs")
 
 ## Brands the nearest foe in range; the hit lands `delay` seconds later if it is still there. The power is fixed at the cast.
 static func _mark(a: Ability, spec: Dictionary) -> void:
@@ -498,11 +523,29 @@ static func _timed_ends(actor, source: String, generation: int) -> void:
 
 ## Moves held essence from the element held most to the one held least, at a loss (Transmute).
 static func _transmute(a: Ability, spec: Dictionary) -> void:
-	if a.actor.has_method("transmute_essence"):
-		a.actor.transmute_essence(int(spec.get("from_units", TRANSMUTE_FROM)), int(spec.get("to_units", TRANSMUTE_TO)))
+	if not a.actor.has_method("transmute_essence"):
+		return
+	var to := ""
+	if bool(spec.get("choose", false)) and a.aim != Vector2.ZERO:  # aimed: the ring of elements, going round from the right
+		var octant := posmod(roundi(atan2(-a.aim.y, a.aim.x) / (PI / 4.0)), 8)
+		to = str(FormEffects.ELEMENT_WHEEL[octant])
+	a.actor.transmute_essence(int(spec.get("from_units", TRANSMUTE_FROM)), int(spec.get("to_units", TRANSMUTE_TO)), to)
 
-## The caster takes the last appraised creature's attack and defence for a while (Copy).
+## The caster takes the last appraised creature's shape and attack and defence for a while, and the shape fades with the time; cast again while it lasts, it makes
+## that creature's own move (Copy).
 static func _copy(a: Ability, spec: Dictionary) -> void:
+	if a.actor.has_method("is_copying") and a.actor.is_copying():
+		var move: Dictionary = a.actor.copy_move()
+		if not move.is_empty():
+			var tmp := VerbAbility.new()
+			tmp.actor = a.actor
+			tmp.spec = move
+			tmp.skill_id = a.actor.copy_def.verb
+			tmp.values = SkillEffects.active_values(a.actor._rules.get_def(a.actor.copy_def.verb))
+			a.actor.add_child(tmp)
+			run(tmp, move)
+			tmp.queue_free()
+		return
 	var creature = a.actor.get("last_inspected")
 	if creature == null:
 		return
@@ -512,14 +555,18 @@ static func _copy(a: Ability, spec: Dictionary) -> void:
 		if v != 0:
 			mods.append({"stat": stat, "op": "add", "value": v})
 	_timed(a, COPY_SOURCE, mods, float(spec.get("seconds", COPY_SECONDS)))
+	if a.actor.has_method("copy_creature"):
+		a.actor.copy_creature(creature, float(spec.get("seconds", COPY_SECONDS)))
 
 ## A field centred `ahead` of the caster that draws foes in (Maelstrom), and hurts them each second when the spec says.
 static func _pull(a: Ability, spec: Dictionary) -> void:
 	var at: Vector2 = a.actor.global_position + a.aim_dir() * float(spec.get("ahead", PULL_AHEAD))
-	_field(a, spec, at, {"pull": float(spec.get("strength", PULL_STRENGTH))}, PULL_RADIUS, PULL_SECONDS)
+	_field(a, spec, at, {"pull": float(spec.get("strength", PULL_STRENGTH)), "pickups": bool(spec.get("pickups", false))}, PULL_RADIUS, PULL_SECONDS)
 
 ## A field that stays on the caster and hurts what comes near (Guardian).
 static func _aura(a: Ability, spec: Dictionary) -> void:
+	if spec.has("nail") and a.actor.has_method("nail_for"):  # a visible weak point on the keeper
+		a.actor.nail_for(float(spec["nail"].get("seconds", AURA_SECONDS)), int(spec["nail"].get("drain", 3)))
 	_field(a, spec, a.actor.global_position, {"follow": a.actor}, AURA_RADIUS, AURA_SECONDS)
 
 static func _field(a: Ability, spec: Dictionary, at: Vector2, opts: Dictionary, radius: float, seconds: float) -> void:
@@ -535,35 +582,41 @@ static func _chain(a: Ability, spec: Dictionary) -> void:
 	var first := a.targets_in_front(float(spec.get("range", CHAIN_RANGE)), float(spec.get("half_width", CHAIN_HALF_WIDTH)))
 	if first.is_empty():
 		return
-	var power := a.power()
-	var jump := float(spec.get("jump", CHAIN_JUMP))
-	var hit: Array = []
-	var current = first[0]
-	var from: Vector2 = a.actor.global_position
-	for i in 1 + int(spec.get("hops", CHAIN_HOPS)):
-		hit.append(current)
-		var here: Vector2 = current.global_position
-		_hit(current, power, spec, from, false, a.actor)
-		Vfx.line(a.actor, from, here, _color(spec), 2.0, 0.3)
-		var next = null
-		var best := jump + 0.001
-		for f in a.targets_around(1.0e9):
-			var d: float = f.global_position.distance_to(here)
-			if not hit.has(f) and d < best:
-				next = f
-				best = d
-		if next == null:
-			break
-		from = here
-		current = next
+	_chain_hit(a, spec, first[0], a.actor.global_position, [], 1 + int(spec.get("hops", CHAIN_HOPS)), a.power())
+
+## One link of a chain: hits `current`, then jumps to the nearest foe not yet hit, at once or, for a contagion slow to build, after `hop_delay`.
+static func _chain_hit(a, spec: Dictionary, current, from: Vector2, hit: Array, left: int, power: int) -> void:  # untyped: a timer may call this late
+	if left <= 0 or not is_instance_valid(a) or not is_instance_valid(a.actor) or not is_instance_valid(current) or not current.is_inside_tree():
+		return
+	hit.append(current)
+	var here: Vector2 = current.global_position
+	_hit(current, power, spec, from, false, a.actor)
+	Vfx.line(a.actor, from, here, _color(spec), 2.0, 0.3)
+	var next = null
+	var best := float(spec.get("jump", CHAIN_JUMP)) + 0.001
+	for f in a.targets_around(1.0e9):
+		var d: float = f.global_position.distance_to(here)
+		if not hit.has(f) and d < best:
+			next = f
+			best = d
+	if next == null:
+		return
+	var delay := float(spec.get("hop_delay", 0.0))
+	if delay > 0.0:
+		a.actor.get_tree().create_timer(delay).timeout.connect(_chain_hit.bind(a, spec, next, here, hit, left - 1, power))
+	else:
+		_chain_hit(a, spec, next, here, hit, left - 1, power)
 
 ## Stuns the nearest foe in front that can be stunned and holds it while a field on it digests it, once a second (Engulf).
 static func _engulf(a: Ability, spec: Dictionary) -> void:
 	var seconds := float(spec.get("seconds", ENGULF_SECONDS))
 	for t in a.targets_in_front(float(spec.get("range", ENGULF_RANGE)), ENGULF_HALF_WIDTH):
-		if not (t is Enemy) or not t.def.predatable:
-			continue
+		if not (t is Enemy) or not t.def.predatable or int(t.def.stats.get("max_hp", 1)) > int(spec.get("small", ENGULF_SMALL)):
+			continue  # only a small one can be swallowed
 		t.status.stun(seconds)
+		var hold := VerbHold.new()
+		a.actor.get_parent().add_child(hold)
+		hold.launch(a.actor, t, seconds)
 		var digest := a.power() if a.value() > 0 else 0
 		var field := VerbField.new()
 		a.actor.get_parent().add_child(field)
@@ -578,18 +631,23 @@ static func _dissolve(a: Ability, spec: Dictionary) -> void:
 	var half := float(spec.get("half_width", DISSOLVE_HALF_WIDTH))
 	var dir: Vector2 = a.aim_dir()
 	var from: Vector2 = a.actor.global_position
-	_strike(a, a.targets_in_front(reach, half), spec, true, false)
+	var targets := a.targets_in_front(reach, half)
+	_strike(a, targets, spec, true, false)
+	var ate := targets.any(func(t) -> bool: return t is Enemy and t.def.armored_charger)
 	for n in a.actor.get_tree().get_nodes_in_group("dissolvable"):
 		var d: Vector2 = n.global_position - from
 		if d.dot(dir) >= -4.0 and d.dot(dir) <= reach and absf(d.cross(dir)) <= half and n.has_method("dissolve"):
 			n.dissolve()
+			ate = true
 			_deed(a, Deeds.BARRIER_BROKEN, _id_tag(n))
+	if ate and spec.has("corrode") and a.actor.has_method("corrode_parts"):
+		a.actor.corrode_parts(int(spec["corrode"]))  # it eats the caster's own too
 	Vfx.line(a.actor, from, from + dir * reach, _color(spec), 6.0, 0.2)
 
 ## A falling body falls slowly for a while (Ride).
 static func _glide(a: Ability, spec: Dictionary) -> void:
 	if a.actor.has_method("glide"):
-		a.actor.glide(float(spec.get("seconds", GLIDE_SECONDS)), float(spec.get("fall", GLIDE_FALL)))
+		a.actor.glide(float(spec.get("seconds", GLIDE_SECONDS)), float(spec.get("fall", GLIDE_FALL)), float(spec.get("drift", 0.0)))
 
 ## The first cast lays a mark where the caster stands; a cast before it expires puts the caster back on it (Recall).
 static func _anchor(a: Ability, spec: Dictionary) -> void:
@@ -711,9 +769,13 @@ static func _call_allies(actor, power: int, count: int, seconds: float, spec: Di
 static func _vine(a: Ability, spec: Dictionary) -> void:
 	var from: Vector2 = a.actor.global_position
 	var floor_point = a.terrain_hit(from, from + Vector2(0.0, VINE_FLOOR_PROBE))
+	for old in a.actor.get_tree().get_nodes_in_group("verb_vines"):
+		if old.get("caster") == a.actor:
+			old.free()  # one at a time
 	var vine := VerbVine.new()
 	a.actor.get_parent().add_child(vine)
-	vine.launch(floor_point if floor_point != null else from, float(spec.get("height", VINE_HEIGHT)), float(spec.get("seconds", VINE_SECONDS)))
+	vine.launch(floor_point if floor_point != null else from, float(spec.get("height", VINE_HEIGHT)), float(spec.get("seconds", VINE_SECONDS)),
+		float(spec.get("grow", 0.0)), a.actor, bool(spec.get("climb", false)))
 
 ## Whatever is in the group `hidden` within `radius` shows itself (`reveal()`): a hidden exit, a weak floor, a shortcut.
 static func _reveal(a: Ability, spec: Dictionary) -> void:
@@ -727,7 +789,8 @@ static func _reveal(a: Ability, spec: Dictionary) -> void:
 		spots.append(a.actor.global_position + Vector2.from_angle(TAU * float(i) / 12.0) * radius * 0.6)
 	Vfx.puffs(a.actor, Art.texture("spit_glob"), spots, Color(1.0, 0.95, 0.6, 0.8), 0.4)
 
-## A one-way plank at the caster's feet, `length` long, starting just ahead of it, the way it faces (Span). A second cast replaces it.
+## A one-way plank at the caster's feet, `length` long, starting just ahead of it, the way it faces (Span). A second cast replaces it. A permanent one stays for the
+## room, and both its ends need an anchor: ground under the caster and ground where it ends.
 static func _bridge(a: Ability, spec: Dictionary) -> void:
 	for old in a.actor.get_tree().get_nodes_in_group("verb_bridges"):
 		if old.caster == a.actor:
@@ -735,9 +798,17 @@ static func _bridge(a: Ability, spec: Dictionary) -> void:
 	var length := float(spec.get("length", BRIDGE_LENGTH))
 	var way := 1.0 if float(a.aim_dir().x) >= 0.0 else -1.0
 	var from: Vector2 = a.actor.global_position
+	var y := from.y + BodyConfig.BOTTOM
+	if bool(spec.get("anchors", false)):
+		var far_x := from.x + way * (BRIDGE_REACH + length)
+		var here = a.terrain_hit(Vector2(from.x, y - 4.0), Vector2(from.x, y + ANCHOR_PROBE))
+		var there = a.terrain_hit(Vector2(far_x, y - 4.0), Vector2(far_x, y + ANCHOR_PROBE))
+		if here == null or there == null:
+			Vfx.puffs(a.actor, Art.texture("spit_glob"), [from + Vector2(way * 20.0, -6.0)], Color(1.0, 0.5, 0.5, 0.6), 0.5)
+			return  # no anchor at one end: nothing holds the web
 	var bridge := VerbBridge.new()
 	a.actor.get_parent().add_child(bridge)
-	bridge.launch(a.actor, Vector2(from.x + way * (BRIDGE_REACH + length / 2.0), from.y + BodyConfig.BOTTOM), length, float(spec.get("seconds", BRIDGE_SECONDS)))
+	bridge.launch(a.actor, Vector2(from.x + way * (BRIDGE_REACH + length / 2.0), y), length, 1.0e9 if bool(spec.get("permanent", false)) else float(spec.get("seconds", BRIDGE_SECONDS)))
 
 ## A trap at the caster's feet that the first awake enemy to step on it springs for the skill's damage and a stun (Rig). A fourth
 ## standing trap of the caster's takes the place of the oldest.
@@ -784,9 +855,24 @@ static func can_run(a: Ability, spec: Dictionary) -> bool:
 				return false  # needs the blood to dye it
 		if bool(spec.get("loose", false)) and _nearest_loose(a.actor) == null:
 			return false  # needs loose objects
-	if spec.get("kind", "") == "forge":
+		if spec.has("needs_kill") and a.actor.kill_age() > float(spec["needs_kill"]):
+			return false  # only after a kill
+	var kind := str(spec.get("kind", ""))
+	if kind == "drink" and VerbWorld.drinkable(a, float(spec.get("range", VerbWorld.DRINK_RANGE))) == null:
+		return false  # no lamp or pool to eat
+	if kind == "spin" and a.actor.has_method("collect_part") and a.actor.inventory.carried_parts().size() < 2:
+		return false  # two for one
+	if kind == "forge":
+		if bool(spec.get("needs_forge", false)) and not _forge_near(a):
+			return false  # needs a forge
 		return a.actor.has_method("parts_carried") and a.actor.parts_carried() >= int(spec.get("parts", FORGE_PARTS))
 	return true
+
+static func _forge_near(a: Ability) -> bool:
+	for f in a.actor.get_tree().get_nodes_in_group("forges"):
+		if f.global_position.distance_to(a.actor.global_position) <= FORGE_REACH:
+			return true
+	return false
 
 ## Whether the caster is a body that pays for a cast (a player), not an enemy.
 static func _pays(actor) -> bool:
@@ -797,6 +883,8 @@ static func _forge(a: Ability, spec: Dictionary) -> void:
 	if a.actor.forge(str(spec.get("stat", FORGE_STAT)), int(spec.get("amount", FORGE_AMOUNT)), int(spec.get("parts", FORGE_PARTS))):
 		for stat in spec.get("also", {}):  # a second slot forged with it
 			a.actor.lasting_bonus(str(stat), int(spec["also"][stat]))
+		if bool(spec.get("named", false)) and a.actor.has_method("name_weapon"):
+			a.actor.name_weapon()
 	Vfx.puffs(a.actor, Art.texture("spit_glob"), [a.actor.global_position + Vector2(0, -8)], Color(1.0, 0.7, 0.3, 0.9), 0.4)
 
 ## The skill's damage to each target, then the spec's status. `ignore_def` skips an Enemy's DEF.
@@ -915,7 +1003,7 @@ static func validate(spec: Dictionary) -> PackedStringArray:
 static func _schema(kind: String) -> Dictionary:
 	if SCHEMA.has(kind):
 		return SCHEMA[kind]
-	return VerbMind.SCHEMA.get(kind, VerbBody.SCHEMA.get(kind, VerbBond.SCHEMA.get(kind, {})))
+	return VerbMind.SCHEMA.get(kind, VerbBody.SCHEMA.get(kind, VerbBond.SCHEMA.get(kind, VerbWorld.SCHEMA.get(kind, {}))))
 
 static func _is_number(v) -> bool:
 	return typeof(v) == TYPE_INT or typeof(v) == TYPE_FLOAT

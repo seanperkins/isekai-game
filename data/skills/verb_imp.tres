@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_imp"
+display_name = "Curse"
+description = "A dark bolt from where it stands that slows what it hits."
+announce = "New verb. Acquired [Curse]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [3], "spec": {"kind": "bolt", "range": 150, "half_width": 14, "pierce": false, "damage_type": "dark", "status": {"slow": 3.0}, "cooldown": 2.0}}]
+mp_cost = 3

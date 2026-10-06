@@ -16,6 +16,7 @@ stats = {
 "max_hp": 22,
 "max_mp": 10
 }
+traits = ["loud"]
 grants = ["verb_goblin_ironboot"]
 verb = "verb_goblin_ironboot"
 tint = Color(0.85, 0.74, 0.775, 1)

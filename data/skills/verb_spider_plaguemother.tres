@@ -6,7 +6,7 @@
 script = ExtResource("1_rpc81")
 id = "verb_spider_plaguemother"
 display_name = "Miasma"
-description = "A poison cloud that spreads on death."
+description = "Miasma: a poison cloud for eight seconds, and another spreads where you die. Slow."
 announce = "New verb. Acquired [Miasma]."
 source = "form_verb"
 effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [2], "spec": {"kind": "zone", "radius": 90, "seconds": 8.0, "slow": false, "damage": true, "cooldown": 12.0}}]

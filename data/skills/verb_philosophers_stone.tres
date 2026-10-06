@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_philosophers_stone"
 display_name = "Transmute"
-description = "Convert held essence of one element into another at a loss."
+description = "Transmute: convert held essence of the element you hold most into the one you aim at (right water, then round: earth, air, light, dark, fire, mind, blood), three for two. With no aim it makes the one held least. You digest parts faster."
 announce = "New verb. Acquired [Transmute]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "transmute", "from_units": 3, "to_units": 2, "cooldown": 4.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "transmute", "from_units": 3, "to_units": 2, "choose": true, "cooldown": 4.0}}]
 mp_cost = 4

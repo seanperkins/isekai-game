@@ -7,7 +7,7 @@ extends RefCounted
 
 const OPPOSITE := {"left": "right", "right": "left", "top": "bottom", "bottom": "top"}
 
-const FEATURE_KINDS := ["glow_pool", "altar", "tablet", "switch", "barrier", "hidden", "gap", "lamp", "vigil", "talisman"]
+const FEATURE_KINDS := ["glow_pool", "altar", "tablet", "switch", "barrier", "hidden", "gap", "lamp", "vigil", "talisman", "forge", "weak_floor", "snare", "glyph"]
 
 ## The labels an exit's `gate` may carry (a label for the validator and lint, not an obstacle in play); P4 gives them teeth.
 const GATES := ["wall_cling", "swim"]

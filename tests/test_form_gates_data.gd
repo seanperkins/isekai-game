@@ -254,12 +254,13 @@ func _skill(id: String) -> SkillDef:
 			return d
 	return null
 
-func _cast(p: Player, verb_id: String) -> void:
+func _cast(p: Player, verb_id: String, aim := Vector2.ZERO) -> void:
 	var d := _skill(verb_id)
 	var a: VerbAbility = load(SkillEffects.active_scene(d)).instantiate()
 	p.add_child(a)
 	a.spec = SkillEffects.active_spec(d)
 	a.setup(p, SkillEffects.active_values(d), 1)
+	a.aim = aim
 	VerbKinds.run(a, a.spec)
 
 func test_a_goblin_smith_that_forges_meets_the_mastersmiths_atom() -> void:
@@ -273,6 +274,9 @@ func test_a_goblin_smith_that_forges_meets_the_mastersmiths_atom() -> void:
 	assert_eq(_count(rules, "weapon_forged"), 0, "no parts, no forge")
 	p.collect_part("claw")
 	p.collect_part("skull")
+	var forge := RoomForge.new()  # the Smith's verb needs a forge beside it
+	forge.setup({"id": "T_forge", "pos": p.global_position + Vector2(20, 0)}, {})
+	add_child_autofree(forge)
 	var atk := p.stats.get_stat("atk")
 	p.use_active(slot)
 	assert_eq(_count(rules, "weapon_forged"), 1)
@@ -302,10 +306,7 @@ func test_a_goblin_tinker_whose_traps_are_sprung_three_times_meets_the_gremlins_
 	assert_gte(slot, 0)
 	for i in 3:
 		p.global_position = Vector2(200.0 * i, 0)
-		if i == 0:
-			p.use_active(slot)
-		else:
-			_cast(p, "verb_goblin_tinker")
+		_cast(p, "verb_goblin_tinker", Vector2(0, 1))  # the Rig crafts by aim: down is a trap
 	var traps := get_tree().get_nodes_in_group("verb_traps")
 	assert_eq(traps.size(), 3)
 	for t in traps:

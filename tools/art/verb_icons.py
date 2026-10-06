@@ -246,6 +246,46 @@ def g_bark(d, fg):
     d.polygon([(3, 12), (11, 8), (11, 24), (3, 20)], fill=fg)
 
 
+def g_flood(d, fg):
+    for y in (10, 17, 24):
+        d.arc([2, y - 4, 16, y + 4], 180, 360, fill=fg, width=2)
+        d.arc([16, y - 4, 30, y + 4], 180, 360, fill=fg, width=2)
+
+
+def g_trail(d, fg):
+    d.line([(4, 24), (10, 16), (16, 22), (22, 12), (28, 8)], fill=fg, width=2)
+    d.ellipse([2, 22, 8, 28], fill=fg)
+
+
+def g_network(d, fg):
+    for a, b in (((6, 8), (16, 16)), ((16, 16), (26, 8)), ((16, 16), (16, 27)), ((16, 16), (5, 24))):
+        d.line([a, b], fill=fg, width=2)
+    d.ellipse([12, 12, 20, 20], fill=fg)
+
+
+def g_drink(d, fg):
+    d.polygon([(8, 6), (24, 6), (20, 22), (12, 22)], outline=fg, width=2)
+    d.line([(16, 22), (16, 28)], fill=fg, width=2)
+    d.line([(10, 28), (22, 28)], fill=fg, width=2)
+
+
+def g_rig(d, fg):
+    d.line([(6, 26), (20, 8)], fill=fg, width=3)
+    d.ellipse([16, 4, 26, 14], outline=fg, width=3)
+    d.rectangle([4, 22, 12, 28], fill=fg)
+
+
+def g_spin(d, fg):
+    d.arc([5, 5, 27, 27], 30, 300, fill=fg, width=3)
+    d.polygon([(22, 4), (28, 12), (18, 12)], fill=fg)
+
+
+def g_steal(d, fg):
+    d.ellipse([4, 8, 18, 22], outline=fg, width=2)
+    arrow(d, (14, 15), (28, 15), fg, 2, 5)
+    d.ellipse([22, 20, 28, 26], fill=fg)
+
+
 def g_rage(d, fg):
     d.polygon([(16, 3), (22, 13), (30, 11), (23, 20), (26, 29), (16, 24), (6, 29), (9, 20), (2, 11), (10, 13)], fill=fg)
 
@@ -309,11 +349,11 @@ GLYPHS = {"bolt": g_bolt, "burst": g_burst, "ring": g_ring, "dash": g_dash, "zon
           "ward": g_ward, "buff": g_buff, "pull": g_pull, "aura": g_aura, "chain": g_chain, "engulf": g_engulf,
           "dissolve": g_dissolve, "glide": g_glide, "anchor": g_anchor, "decoy": g_decoy, "summon": g_summon, "vine": g_vine,
           "transmute": g_transmute, "copy": g_copy, "reveal": g_reveal, "bridge": g_bridge, "trap": g_trap, "forge": g_forge,
-          "rage": g_rage, "hunt": g_hunt, "bark": g_bark, "raise": g_raise, "soul": g_soul, "companion": g_companion, "offer": g_offer, "suckle": g_suckle, "roar": g_roar, "mount": g_mount, "stone": g_stone, "weigh": g_weigh, "devour": g_devour, "veil": g_veil, "stalk": g_stalk, "swap": g_swap, "blink": g_blink, "light": g_light, "omen": g_omen, "fate": g_fate,
+          "rage": g_rage, "drink": g_drink, "rig": g_rig, "spin": g_spin, "steal": g_steal, "flood": g_flood, "trail": g_trail, "network": g_network, "hunt": g_hunt, "bark": g_bark, "raise": g_raise, "soul": g_soul, "companion": g_companion, "offer": g_offer, "suckle": g_suckle, "roar": g_roar, "mount": g_mount, "stone": g_stone, "weigh": g_weigh, "devour": g_devour, "veil": g_veil, "stalk": g_stalk, "swap": g_swap, "blink": g_blink, "light": g_light, "omen": g_omen, "fate": g_fate,
           "sabotage": g_sabotage, "chase": g_chase, "disperse": g_disperse}
 
 
-BASE_TINTS = {"goblin": (112, 158, 74), "undead": (205, 196, 170)}   # a species' own verb has no form file: the colour of its body
+BASE_TINTS = {"goblin": (112, 158, 74), "undead": (205, 196, 170), "imp": (205, 80, 70), "caller": (185, 70, 100), "blinker": (130, 100, 175), "chapel_priest": (240, 230, 150)}   # a species' own verb has no form file: the colour of its body
 
 
 def form_tint(form):

@@ -11,7 +11,7 @@ stage = 3
 lineage = "stalker"
 parents = ["spider_stalker"]
 stats = {
-"atk": 2,
+"atk": 1,
 "max_hp": 12,
 "max_mp": 6,
 "mp_regen": 40

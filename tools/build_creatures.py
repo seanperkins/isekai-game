@@ -46,8 +46,12 @@ SUPPORT_WEARS = {
 # The three support monsters that are a species' base creature: eating one counts as eating that species.
 SUPPORT_SPECIES = {"wild_slime": "slime", "skeleton": "undead", "village_goblin": "goblin"}
 SUPPORT_FLAGS = {"shield_guard": {"armored_charger": True}, "ghost": {"drifter": True}, "bone_hound": {"pack": True, "charges": True},
-                 "demon_hound": {"charges": True}}
-FLAG_ORDER = ["armored_charger", "drifter", "pack", "charges"]
+                 "demon_hound": {"charges": True}, "imp": {"holds": True}, "chapel_priest": {"holds": True, "emitter": True}, "ward_bearer": {"ward_side": True},
+                 "rider": {"possesses": True}, "caller": {"needs_glyph": True}}
+FLAG_ORDER = ["armored_charger", "drifter", "pack", "charges", "holds", "ward_side", "possesses", "needs_glyph", "emitter"]
+# The skills a support monster has (a gargoyle hangs from the ceiling and drops, as the spider does) and the verb tables' creatures (tools/monster_verbs.json).
+SUPPORT_SKILLS = {"gargoyle": [("ceiling_walk", 1)]}
+MONSTER_VERBS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "monster_verbs.json")
 # What the creatures leave (design doc, the parts table). The two shipped creatures that leave claws are edited by hand in their files.
 SUPPORT_DROPS = {"skeleton": [("ribs", 0.25), ("skull", 0.4)], "village_goblin": [("bow_arm", 0.25)], "shield_guard": [("weapon_arm", 0.3)],
                  "goblin_shaman": [("focus", 0.3)], "chapel_priest": [("focus", 0.3)], "moon_hare": [("moonstone", 0.15)]}
@@ -94,6 +98,12 @@ def twin_rows(data):
     return rows
 
 
+def monster_verbs():
+    """The creature ids that have a verb in tools/monster_verbs.json."""
+    with open(MONSTER_VERBS, encoding="utf-8") as fh:
+        return {r["creature"] for r in json.load(fh)}
+
+
 def support_rows(data):
     rows = []
     for c in data["creatures"]:
@@ -101,10 +111,10 @@ def support_rows(data):
             continue
         role = c["role"] if c["role"] in ROLE_STATS else "common"
         dominant = max(c["essence"], key=lambda e: c["essence"][e])
-        row = {"id": c["id"], "name": c["name"], "origin": "support", "species": SUPPORT_SPECIES.get(c["id"], ""), "stage": 0, "role": c["role"], "form": "", "verb": "",
+        row = {"id": c["id"], "name": c["name"], "origin": "support", "species": SUPPORT_SPECIES.get(c["id"], ""), "stage": 0, "role": c["role"], "form": "", "verb": "verb_" + c["id"] if c["id"] in monster_verbs() else "",
                "stats": dict(ROLE_STATS[role]), "essences": dict(c["essence"]), "xp": c["xp"], "flags": dict(SUPPORT_FLAGS.get(c["id"], {})),
                "areas": c["areas"], "drops": SUPPORT_DROPS.get(c["id"], []), "bonds": list(SUPPORT_BONDS.get(c["id"], [])),
-               "sprite_set": "", "sprite_frame": "", "wears": "", "sprite_size": 1.0, "sprite_tint": [1.0, 1.0, 1.0]}
+               "sprite_set": "", "sprite_frame": "", "wears": "", "sprite_size": 1.0, "sprite_tint": [1.0, 1.0, 1.0], "skills": SUPPORT_SKILLS.get(c["id"], [])}
         if c["id"] in SUPPORT_SET:
             row["sprite_set"], row["sprite_frame"] = SUPPORT_SET[c["id"]]
         else:
@@ -141,6 +151,8 @@ def tres(row):
     for flag in FLAG_ORDER:
         if row["flags"].get(flag):
             lines.append("%s = true" % flag)
+    if row.get("skills"):
+        lines.append("skills = [%s]" % ", ".join('{\n"id": %s,\n"level": %d\n}' % (q(i), lv) for i, lv in row["skills"]))
     if row["drops"]:
         lines.append("drops = [%s]" % ", ".join('{"part": %s, "chance": %s}' % (q(p), num(c)) for p, c in row["drops"]))
     if row["bonds"]:

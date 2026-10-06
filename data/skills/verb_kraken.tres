@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_kraken"
 display_name = "Maelstrom"
-description = "A whirlpool that pulls enemies in."
+description = "Maelstrom: a whirlpool that pulls enemies in and hurts them. It pulls loose parts on the floor in too."
 announce = "New verb. Acquired [Maelstrom]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [2], "spec": {"kind": "pull", "radius": 96, "seconds": 3.0, "strength": 90, "damage": true, "damage_type": "water", "cooldown": 6.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [2], "spec": {"kind": "pull", "radius": 96, "seconds": 3.0, "strength": 90.0, "damage": true, "damage_type": "water", "pickups": true, "cooldown": 6.0}}]
 mp_cost = 8

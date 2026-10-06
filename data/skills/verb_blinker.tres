@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_blinker"
+display_name = "Blink"
+description = "A short teleport toward you; every other one is a fake-out that goes nowhere."
+announce = "New verb. Acquired [Blink]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "blink", "distance": 70, "fake": true, "cooldown": 3.0}}]
+mp_cost = 3

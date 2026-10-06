@@ -15,8 +15,10 @@ stats = {
 "def": 1,
 "max_hp": 22,
 "max_mp": 10,
-"mp_regen": 40
+"mp_regen": 40,
+"spd": -10
 }
+traits = ["miasma_death"]
 grants = ["verb_spider_plaguemother"]
 verb = "verb_spider_plaguemother"
 tint = Color(0.675, 0.75, 0.975, 1)

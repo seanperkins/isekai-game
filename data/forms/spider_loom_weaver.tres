@@ -15,7 +15,7 @@ stats = {
 "jump_height": 15,
 "max_hp": 12,
 "max_mp": 6,
-"spd": 12
+"spd": 7
 }
 grants = ["verb_spider_loom_weaver"]
 verb = "verb_spider_loom_weaver"

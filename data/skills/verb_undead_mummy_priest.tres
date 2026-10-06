@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_undead_mummy_priest"
 display_name = "Wrap"
-description = "Bandages bind enemies; a sand gust."
+description = "Wrap: bandages bind an enemy fast; every second cast is a gust of sand that blinds and slows what is in front. Fire hurts."
 announce = "New verb. Acquired [Wrap]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [3], "spec": {"kind": "bolt", "range": 160, "pierce": false, "status": {"root": 3.0}, "cooldown": 9.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [3], "spec": {"kind": "bolt", "range": 160, "pierce": false, "status": {"root": 3.0}, "alt": {"kind": "burst", "range": 90, "half_width": 60, "status": {"confuse": 2.0, "slow": 3.0}}, "cooldown": 9.0}}]
 mp_cost = 6

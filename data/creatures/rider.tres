@@ -17,6 +17,7 @@ essences = {
 "dark": 4
 }
 xp = 10
+possesses = true
 origin = "support"
 role = "elite"
 wears = "bog_lizardman"

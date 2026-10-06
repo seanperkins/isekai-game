@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_cloud_rider"
 display_name = "Ride"
-description = "A short glide on a cloud."
+description = "Ride: a short glide on a cloud that carries you sideways. The cloud is brief."
 announce = "New verb. Acquired [Ride]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "glide", "seconds": 1.5, "fall": 40, "cooldown": 3.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "glide", "seconds": 1.5, "fall": 40, "drift": 90, "cooldown": 3.0}}]
 mp_cost = 3

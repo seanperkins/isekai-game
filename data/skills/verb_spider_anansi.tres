@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_spider_anansi"
 display_name = "Steal"
-description = "Take a power or essence from a living enemy without killing it."
+description = "Steal: take an essence and a power from a living creature without killing it. A creature gives once. Weak direct damage."
 announce = "New verb. Acquired [Steal]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "copy", "seconds": 10.0, "cooldown": 12.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "steal", "range": 50, "cooldown": 12.0}}]
 mp_cost = 6

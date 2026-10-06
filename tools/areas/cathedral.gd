@@ -37,7 +37,7 @@ func _nave() -> RoomDef:
 	AreaKit.spawn(r, "candle_wisp", 1300.0, 170.0)
 	AreaKit.spawn(r, "stained_glass_moth", 960.0, 120.0)
 	AreaKit.spawn(r, "shield_guard", 1500.0, 320.0)
-	AreaKit.spawn(r, "gargoyle", 800.0, 320.0)
+	AreaKit.spawn(r, "gargoyle", 800.0, 32.0)
 	AreaKit.decor(r, "crystal_rose", 700.0, 268.0)
 	AreaKit.decor(r, "crystal_gold", 1360.0, 268.0)
 	AreaKit.decor(r, "crystal_prism", 1030.0, 268.0)
@@ -53,7 +53,7 @@ func _transept() -> RoomDef:
 	var r := AreaKit.room("CA2", "sacred", Vector2i(22, 3))
 	AreaKit.climb(r, 240.0, 400.0)
 	AreaKit.spawn(r, "chapel_priest", 520.0, 320.0)
-	AreaKit.spawn(r, "gargoyle", 130.0, 320.0)
+	AreaKit.spawn(r, "gargoyle", 130.0, 32.0)
 	AreaKit.decor(r, "crystal_prism", 580.0, 320.0)
 	AreaKit.decor(r, "stalagmite", 80.0, 320.0)
 	return r

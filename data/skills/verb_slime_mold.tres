@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_slime_mold"
 display_name = "Network"
-description = "A growth spreads along the floor and slows enemies on it."
+description = "Network: a growth that creeps slowly outward along the floor, slows enemies it reaches, and shows the way to a mark."
 announce = "New verb. Acquired [Network]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "zone", "radius": 140, "seconds": 8.0, "slow": true, "cooldown": 10.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "network", "radius": 140, "seconds": 8.0, "grow": 20.0, "cooldown": 10.0}}]
 mp_cost = 5

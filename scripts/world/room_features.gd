@@ -67,4 +67,20 @@ static func _make(f: Dictionary, ctx: Dictionary) -> Node2D:
 			var talisman := RoomTalisman.new()
 			talisman.setup(f, ctx)
 			return talisman
+		"glyph":
+			var glyph := RoomGlyph.new()
+			glyph.setup(f, ctx)
+			return glyph
+		"forge":
+			var forge := RoomForge.new()
+			forge.setup(f, ctx)
+			return forge
+		"weak_floor":
+			var weak := RoomWeakFloor.new()
+			weak.setup(f, ctx)
+			return weak
+		"snare":
+			var snare := RoomSnare.new()
+			snare.setup(f, ctx)
+			return snare
 	return null

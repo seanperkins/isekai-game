@@ -7,7 +7,7 @@ const KINDS := ["stalk", "swap", "blink", "light", "omen", "fate", "sabotage", "
 const SCHEMA := {
 	"stalk": {"seconds": "number", "opener": "number", "speed": "number", "hit_range": "number", "hit_half_width": "number", "crowd": "number", "crowd_range": "number"},
 	"swap": {"seconds": "number", "beat": "number", "lure": "number"},
-	"blink": {"distance": "number", "rob": "bool"},
+	"blink": {"distance": "number", "rob": "bool", "fake": "bool"},
 	"light": {"seconds": "number", "speed": "number", "radius": "number", "reveal": "number"},
 	"omen": {"range": "number", "seconds": "number"},
 	"fate": {"range": "number", "seconds": "number"},
@@ -29,6 +29,7 @@ const SWAP_LURE := 180.0
 const BLINK_DISTANCE := 90.0
 const BLINK_ROB_REACH := 40.0
 const BLINK_WALL_GAP := 10.0
+const FAKE_KEY := "verb_blink_n"
 const LIGHT_SECONDS := 8.0
 const LIGHT_SPEED := 40.0
 const LIGHT_RADIUS := 120.0
@@ -167,6 +168,11 @@ static func blink(a: Ability, spec: Dictionary) -> void:
 	if rock != null:
 		to = from + dir * maxf(0.0, from.distance_to(rock) - BLINK_WALL_GAP)
 	Vfx.puffs(actor, Art.texture("spit_glob"), [from + Vector2(0, -6), to + Vector2(0, -6)], Color(0.6, 1.0, 0.6, 0.7), 0.3)
+	if bool(spec.get("fake", false)):  # every other one is a fake-out: the flash is there and the body is not
+		var n := int(actor.get_meta(FAKE_KEY, 0))
+		actor.set_meta(FAKE_KEY, n + 1)
+		if n % 2 == 0:
+			return
 	actor.global_position = to
 	if "velocity" in actor:
 		actor.velocity = Vector2.ZERO

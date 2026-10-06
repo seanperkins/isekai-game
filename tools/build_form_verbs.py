@@ -13,6 +13,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 TABLE = os.path.join(HERE, "form_verbs.json")
+MONSTER_TABLE = os.path.join(HERE, "monster_verbs.json")   # a support monster's verb: one row per creature, `creature` where a form's has `form`
 SPECIES_TABLE = os.path.join(HERE, "species_verbs.json")   # a species' own blow (data/species/<id>.tres names it): one row per species, `species` where a form's has `form`
 OUT = "data/skills"
 SCENE = "res://scenes/abilities/verb.tscn"
@@ -31,9 +32,15 @@ def load_species_rows(path=SPECIES_TABLE):
         return [dict(r, form=r["species"], fidelity="full", note="") for r in json.load(fh)]
 
 
+def load_monster_rows(path=MONSTER_TABLE):
+    """The support monsters' verbs as rows of the same shape as a form's (named by the creature, always `full`)."""
+    with open(path, encoding="utf-8") as fh:
+        return [dict(r, form=r["creature"], fidelity="full", note="") for r in json.load(fh)]
+
+
 def all_rows():
-    """Every verb the generator writes: the forms' and the species'."""
-    return load_rows() + load_species_rows()
+    """Every verb the generator writes: the forms', the species' and the support monsters'."""
+    return load_rows() + load_species_rows() + load_monster_rows()
 
 
 def skill_id(form):

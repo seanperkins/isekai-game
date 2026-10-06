@@ -16,6 +16,7 @@ stats = {
 "max_hp": 12,
 "max_mp": 6
 }
+traits = ["fire_frail"]
 grants = ["verb_undead_mummy_priest"]
 verb = "verb_undead_mummy_priest"
 tint = Color(0.8, 0.69, 0.725, 1)

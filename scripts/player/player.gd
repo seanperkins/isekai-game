@@ -218,6 +218,22 @@ var _still_t := 0.0
 var _blow_lock_t := 0.0
 var _swarm_t := 0.0
 var _jam_t := 0.0
+var _alone_t := 0.0
+var weapons: Array = []
+var copy_def: CreatureDef = null
+var _copy_t := 0.0
+var _copy_total := 0.0
+const WEAPON_NAMES := ["Ashbrand", "Bitterfang", "Cinderedge", "Dawnsplitter", "Emberjaw", "Frostmourn", "Gallowsong", "Hollowbell"]
+var _path := PackedVector2Array()
+var _path_speed := 0.0
+var _climbing := false
+var _nail_t := 0.0
+var _nail_drain := 0
+const CLIMB_SPEED := 90.0
+const MIASMA_RADIUS := 120.0
+const MIASMA_SECONDS := 8.0
+var _glide_drift := 0.0
+var _last_kill_t := -1.0e9
 var _soul_used := false
 var _mount: Companion = null
 var _mount_t := 0.0
@@ -283,6 +299,9 @@ func _physics_process(delta: float) -> void:
 	if _evolve_time > 0.0:
 		_evolve_step(delta)
 		return
+	if not _path.is_empty():
+		_path_step(delta)
+		return
 	if species_body != null:
 		_species_physics(delta)
 		return
@@ -307,6 +326,9 @@ func _physics_process(delta: float) -> void:
 		velocity.y += GRAVITY * delta
 		if _glide > 0.0 and velocity.y > _glide_fall:
 			velocity.y = _glide_fall
+		if _glide > 0.0 and _glide_drift != 0.0 and is_zero_approx(dir):
+			velocity.x = float(facing) * _glide_drift  # a cloud carries it on
+	velocity = _climb_adjust(velocity)
 	if rope != null:
 		_swing(dir, delta)
 	if _water.in_water:
@@ -427,7 +449,9 @@ func _species_adjust(v: Vector2, wet: Dictionary, delta: float) -> Vector2:
 			sqrt(stats.get_stat("jump_height") / 100.0), _dash > 0.0, wet["entered"], delta)
 	if _glide > 0.0 and v.y > _glide_fall:
 		v.y = _glide_fall
-	return v
+	if _glide > 0.0 and _glide_drift != 0.0 and is_zero_approx(Input.get_axis("move_left", "move_right")):
+		v.x = float(facing) * _glide_drift  # a cloud carries it on
+	return _climb_adjust(v)
 
 ## A pounce that has touched a hostile hits it once, as the slime's Tackle does; a burst that starts says so for the sound.
 func _species_combat() -> void:
@@ -901,8 +925,8 @@ func use_active(i: int) -> void:
 		return
 	if not ability.ready():
 		return  # on cooldown: costs nothing
-	if rage.forbids(str(ability.spec.get("kind", ""))):
-		return  # a frenzy has no guard
+	if rage.forbids(str(ability.spec.get("kind", ""))) or refuses_to_stand(str(ability.spec.get("kind", ""))):
+		return  # a frenzy has no guard, and neither has a body with no stand-and-fight tools
 	if _veil_no_web and is_unseen() and (FormEffects.THREAD_SKILLS.has(id) or bool(ability.spec.get("web", false))):
 		return  # a veil that passes as someone else does not web
 	var cost := FormEffects.mp_cost(skillset.capabilities, id, _rules.get_def(id).mp_cost)
@@ -1214,6 +1238,7 @@ func learn_from(enemy) -> void:
 func note_defeat(enemy) -> void:
 	if health.is_dead():
 		return
+	_last_kill_t = float(Engine.get_physics_frames()) / float(Engine.physics_ticks_per_second)
 	rage.on_kill(enemy)
 	_emit.call(Deeds.DEFEATED, DeedTags.for_defeat(enemy.def, enemy.last_blow, {"ceiling": _ceiling_t > 0.0, "dark": in_dark,
 		"moonlit": in_moonlight, "avenged": enemy.def.id == avenge_target}))
@@ -1496,6 +1521,8 @@ func can_cast() -> bool:
 func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, cause: String = "") -> void:
 	if cause == "spear" and skillset.has("trait_hazard_proof"):
 		return  # it walks through hazards
+	if damage_type == "fire" and skillset.has("trait_fire_frail"):
+		raw = ceili(float(raw) * FormEffects.FIRE_FRAIL)  # fire hurts it
 	if damage_type == "holy" and skillset.has("trait_light_frail"):
 		raw = ceili(float(raw) * FormEffects.LIGHT_FRAIL)  # frail to light
 	if _invuln > 0.0 or _ward > 0.0 or _in_roll_iframes() or health.is_dead():
@@ -1519,6 +1546,8 @@ func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, cau
 			_invuln = INVULN_SECONDS
 			return
 	health.take_hit(dealt, damage_type)
+	if _nail_t > 0.0 and from != Vector2.INF and signf(from.x - global_position.x) == -float(facing):
+		health.take_tick(_nail_drain)  # the nail on its back was hit
 	_invuln = INVULN_SECONDS
 	if not health.is_dead() and float(dealt) >= health.max_hp * SHED_FRACTION:
 		_shed_graft(from)
@@ -1584,11 +1613,17 @@ func receive_poison(application: int, tick_amount: int, seconds: float) -> void:
 
 ## Turns `from_units` of the first-pass element held most into `to_units` of the one held least (Transmute). False, and nothing
 ## spent, when no element is held enough or all are held evenly. The gained essence is announced like any absorbed essence.
-func transmute_essence(from_units: int, to_units: int) -> bool:
+func transmute_essence(from_units: int, to_units: int, to_element := "") -> bool:
 	var held := {}
 	for e in Essences.FIRST_PASS:
 		held[e] = _rules.held(e)
 	var pair := Essences.transmute_pair(held, from_units)
+	if to_element != "":  # a chosen element: from the one held most (and not the chosen one)
+		var from := ""
+		for e in Essences.FIRST_PASS:
+			if e != to_element and int(held[e]) >= from_units and (from == "" or int(held[e]) > int(held[from])):
+				from = e
+		pair = [from, to_element] if from != "" else []
 	if pair.is_empty() or not _rules.spend_essence(pair[0], from_units):
 		return false
 	for i in to_units:
@@ -1596,9 +1631,10 @@ func transmute_essence(from_units: int, to_units: int) -> bool:
 	return true
 
 ## Falls no faster than `fall` px/s for `seconds`.
-func glide(seconds: float, fall := GLIDE_FALL) -> void:
+func glide(seconds: float, fall := GLIDE_FALL, drift := 0.0) -> void:
 	_glide = maxf(_glide, seconds)
 	_glide_fall = fall
+	_glide_drift = drift
 
 ## A species body inside a burst's window of invulnerability: the biped's roll and slide.
 func _in_roll_iframes() -> bool:
@@ -1619,6 +1655,8 @@ func ward(seconds: float) -> void:
 ## Unseen for `seconds`: no enemy notices the player (Enemy._sense asks). A `disguise` ("goblin") fools only creatures whose id has it; `no_web` forbids
 ## thread and web verbs while it lasts.
 func veil_for(seconds: float, disguise := "", no_web := false) -> void:
+	if skillset.has("trait_loud"):
+		seconds *= 0.5  # loud steps
 	_veil_t = maxf(_veil_t, seconds)
 	_veil_disguise = disguise
 	_veil_no_web = no_web
@@ -1730,6 +1768,126 @@ func essence_held(element: String) -> int:
 func spend_essence_of(element: String, n: int) -> bool:
 	return _rules.spend_essence(element, n)
 
+## Walks back along `points` at `speed`, untouchable, ending at the last of them (Recall).
+func follow_path(points: PackedVector2Array, speed: float) -> void:
+	_path = points
+	_path_speed = speed
+	velocity = Vector2.ZERO
+
+func _path_step(delta: float) -> void:
+	_ward = maxf(_ward, 0.2)
+	var left := _path_speed * delta
+	while left > 0.0 and not _path.is_empty():
+		var to: Vector2 = _path[0] - global_position
+		if to.length() <= left:
+			global_position = _path[0]
+			left -= to.length()
+			_path.remove_at(0)
+		else:
+			global_position += to.normalized() * left
+			left = 0.0
+	velocity = Vector2.ZERO
+
+## A nail shows on the keeper's back for `seconds`: a blow from behind drains `drain` more HP (Guardian).
+func nail_for(seconds: float, drain: int) -> void:
+	_nail_t = maxf(_nail_t, seconds)
+	_nail_drain = drain
+
+## True where a vine can be held and climbed.
+func _climbable_here() -> bool:
+	for z in get_tree().get_nodes_in_group("climbables"):
+		if z.zone_rect().has_point(global_position):
+			return true
+	return false
+
+## A body in a climbable column climbs it on up, holds on with nothing pressed, and lets go on a jump.
+func _climb_adjust(v: Vector2) -> Vector2:
+	if not _climbable_here():
+		_climbing = false
+		return v
+	if Input.is_action_just_pressed("jump"):
+		_climbing = false
+	elif Input.get_action_strength("aim_up") > 0.5:
+		_climbing = true
+		v.y = -CLIMB_SPEED
+	elif _climbing:
+		v.y = CLIMB_SPEED if Input.get_action_strength("aim_down") > 0.5 else 0.0
+	return v
+
+## A named weapon forged at a forge (Forge): kept for the life.
+func name_weapon() -> String:
+	var n: String = WEAPON_NAMES[weapons.size() % WEAPON_NAMES.size()]
+	weapons.append(n)
+	return n
+
+## One unit of an element taken from a creature (a steal), as any absorbed essence is.
+func absorb_essence(element: String, source: String) -> void:
+	_emit.call(Events.ABSORBED, {"essence": element, "source": source})
+
+## A power taken from a creature (a steal): granted for the life. False when it is not a power, or already had.
+func steal_power(skill_id: String) -> bool:
+	return skill_id != "" and _rules.grant(skill_id)
+
+## Wears the shape of `def` for `seconds`: a look over its own that fades as the time runs out (Copy).
+func copy_creature(def: CreatureDef, seconds: float) -> void:
+	end_copy()
+	copy_def = def
+	_copy_t = seconds
+	_copy_total = seconds
+	var look := Companion.make_look(def)
+	look.name = "CopyLook"
+	add_child(look)
+	if _sprite != null:
+		_sprite.visible = false
+
+func is_copying() -> bool:
+	return copy_def != null and _copy_t > 0.0
+
+func end_copy() -> void:
+	var look := get_node_or_null("CopyLook")
+	if look != null:
+		remove_child(look)
+		look.queue_free()
+	if _sprite != null:
+		_sprite.visible = true
+	copy_def = null
+	_copy_t = 0.0
+
+## The creature's own move, as a verb spec the caster can cast, or {} when it has none a body can cast.
+func copy_move() -> Dictionary:
+	if copy_def == null or copy_def.verb == "":
+		return {}
+	var d := _rules.get_def(copy_def.verb)
+	return SkillEffects.active_spec(d) if d != null else {}
+
+## Whether a body with no stand-and-fight tools will not cast a verb of this kind.
+func refuses_to_stand(kind: String) -> bool:
+	return skillset.has("trait_no_stand") and FormEffects.NO_STAND_KINDS.has(kind)
+
+## A body that is weak alone is, with no packmate, companion or ally beside it (checked twice a second).
+func _alone_check(delta: float) -> void:
+	_alone_t -= delta
+	if _alone_t > 0.0:
+		return
+	_alone_t = 0.5
+	var weak := skillset.has("trait_weak_alone")
+	var company := not companions.is_empty()
+	if not company:
+		for a in get_tree().get_nodes_in_group("verb_allies"):
+			if a.caster == self:
+				company = true
+				break
+	stats.set_timed_modifiers("trait_weak_alone", [{"stat": "atk", "op": "add", "value": FormEffects.WEAK_ALONE}] if weak and not company else [])
+
+## Seconds since the last kill (a huge number when there was none this life).
+func kill_age() -> float:
+	return float(Engine.get_physics_frames()) / float(Engine.physics_ticks_per_second) - _last_kill_t
+
+## Loses `n` of the parts it carries (a dissolve that eats its own).
+func corrode_parts(n: int) -> void:
+	for i in n:
+		inventory.take_carried()
+
 ## Ties a thread to `enemy`: the next blow it lands on the player is sent back to it (Fate thread). One thread at a time.
 func fate_tie(enemy: Enemy, seconds: float) -> void:
 	_fated = enemy
@@ -1783,6 +1941,15 @@ func tick(delta: float) -> void:
 	_still_t = maxf(0.0, _still_t - delta)
 	_blow_lock_t = maxf(0.0, _blow_lock_t - delta)
 	_jam_t = maxf(0.0, _jam_t - delta)
+	_alone_check(delta)
+	if copy_def != null:
+		_copy_t -= delta
+		var look := get_node_or_null("CopyLook") as Sprite2D
+		if look != null:
+			look.modulate.a = lerpf(0.15, 0.9, clampf(_copy_t / maxf(_copy_total, 0.01), 0.0, 1.0))
+		if _copy_t <= 0.0:
+			end_copy()  # the copy fades
+	_nail_t = maxf(0.0, _nail_t - delta)
 	rage.update(delta)
 	if _mount != null:
 		_mount_t -= delta
@@ -2049,6 +2216,7 @@ func rest_refresh() -> void:
 
 func _on_run_started() -> void:
 	_soul_used = false
+	_last_kill_t = -1.0e9
 	rest_refresh()
 	rage.reset()
 	progression = Progression.new()  # levels are per run
@@ -2079,6 +2247,10 @@ func _grant_species_verb() -> void:
 		_rules.grant(verb)
 
 func _on_health_died() -> void:
+	if skillset.has("trait_miasma_death") and get_parent() != null:
+		var cloud := SporeCloudArea.new()  # a miasma spreads where it fell
+		get_parent().add_child(cloud)
+		cloud.launch(global_position, MIASMA_RADIUS, MIASMA_SECONDS, self, {"damage": 3, "damage_type": "poison", "slow": true, "color": Color(0.5, 0.8, 0.3, 0.3)})
 	_release_companions()
 	_release_traps()
 	audio_events.reset()

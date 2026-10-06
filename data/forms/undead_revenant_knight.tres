@@ -14,7 +14,8 @@ stats = {
 "atk": 2,
 "def": 2,
 "max_hp": 12,
-"max_mp": 6
+"max_mp": 6,
+"spd": -8
 }
 grants = ["verb_undead_revenant_knight"]
 verb = "verb_undead_revenant_knight"

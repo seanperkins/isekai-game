@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_goblin_tinker"
 display_name = "Rig"
-description = "Rig a trap that hurts and stuns the first enemy to step on it."
+description = "Rig: craft by your aim: forward a throwable from a carried part, down a rigged trap, up a smoke bomb from a part. Weak in melee."
 announce = "New verb. Acquired [Rig]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [5], "spec": {"kind": "trap", "seconds": 30.0, "stun": 2.0, "cooldown": 2.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [5], "spec": {"kind": "rig", "range": 200, "cooldown": 2.0}}]
 mp_cost = 3

@@ -11,7 +11,7 @@ stage = 4
 lineage = "weavermaid"
 parents = ["spider_loom_weaver"]
 stats = {
-"atk": 3,
+"atk": 2,
 "def": 1,
 "jump_height": 15,
 "max_hp": 22,

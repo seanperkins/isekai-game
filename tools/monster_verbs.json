@@ -1,0 +1,34 @@
+[
+  {
+    "creature": "imp",
+    "name": "Curse",
+    "mp": 3,
+    "value": 3,
+    "text": "A dark bolt from where it stands that slows what it hits.",
+    "spec": {"kind": "bolt", "range": 150, "half_width": 14, "pierce": false, "damage_type": "dark", "status": {"slow": 3.0}, "cooldown": 2.0}
+  },
+  {
+    "creature": "caller",
+    "name": "Summon imps",
+    "mp": 5,
+    "value": 0,
+    "text": "Emits two imps for ten seconds, but only while its glyph is lit.",
+    "spec": {"kind": "summon", "count": 2, "seconds": 10.0, "look": "imp", "cooldown": 6.0}
+  },
+  {
+    "creature": "blinker",
+    "name": "Blink",
+    "mp": 3,
+    "value": 0,
+    "text": "A short teleport toward you; every other one is a fake-out that goes nowhere.",
+    "spec": {"kind": "blink", "distance": 70, "fake": true, "cooldown": 3.0}
+  },
+  {
+    "creature": "chapel_priest",
+    "name": "Holy light",
+    "mp": 4,
+    "value": 4,
+    "text": "Spits holy light from where it stands.",
+    "spec": {"kind": "bolt", "range": 160, "half_width": 16, "pierce": false, "damage_type": "holy", "cooldown": 3.0}
+  }
+]

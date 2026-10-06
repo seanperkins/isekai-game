@@ -23,6 +23,11 @@ const TRAITS := {
 	"no_drain": "Your blows do not drain life.",
 	"dark_weak": "Dark powers hit half as hard.",
 	"needs_hands": "Items and tools can only be used with your hands up.",
+	"miasma_death": "A poison cloud spreads where you die.",
+	"fire_frail": "Take half again as much from fire.",
+	"weak_alone": "Weaker with no packmate, companion or ally beside you.",
+	"no_stand": "No stand-and-fight tools: you cannot guard, ward or set a trap.",
+	"loud": "Loud steps: a veil lasts half as long.",
 }
 const THREAD_SKILLS := ["sticky_thread", "swing_thread", "binding_web"]
 const WATER_SKILLS := ["hydraulic_propulsion", "water_blade", "jet_dash"]
@@ -32,6 +37,11 @@ const SHELL_FLAT := 1
 const RANGED_PERCENT := 60
 const HOARD_MAX := 4
 const LIGHT_FRAIL := 1.5
+const FIRE_FRAIL := 1.5
+const WEAK_ALONE := -2
+const NO_STAND_KINDS := ["ward", "stone", "trap"]
+## The ring a transmute's aim picks an element from, going round from the right.
+const ELEMENT_WHEEL := ["water", "earth", "air", "light", "dark", "fire", "mind", "blood"]
 const STENCH_RANGE := 48.0
 const STENCH_SLOW := 0.6
 const EXTRA_GRAFTS := 2

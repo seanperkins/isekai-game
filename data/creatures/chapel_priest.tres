@@ -17,8 +17,11 @@ essences = {
 "mind": 4
 }
 xp = 10
+holds = true
+emitter = true
 drops = [{"part": "focus", "chance": 0.3}]
 origin = "support"
 role = "elite"
+verb = "verb_chapel_priest"
 wears = "bog_lizardman"
 sprite_tint = Color(1, 0.95, 0.6, 1)

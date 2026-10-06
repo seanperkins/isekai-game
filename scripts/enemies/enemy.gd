@@ -151,10 +151,17 @@ var _lure_reckless := false
 var _reverse_t := 0.0
 var _disarm_t := 0.0
 var _bleed_t := 0.0
+var possessed := false
+var _blink_fakes := 0
 var _curse_t := 0.0
 var _curse_mult := 1.0
 var _turned_t := 0.0
 var _turn_strike_in := 0.0
+const GLYPH_REACH := 90.0
+const POSSESS_RANGE := 360.0
+const POSSESS_REACH := 22.0
+const POSSESS_HP := 0.5
+const POSSESSED_TINT := Color(0.85, 0.55, 0.65)
 const TURN_RANGE := 420.0
 const TURN_REACH := Vector2(26.0, 30.0)
 const TURN_STRIKE_SECONDS := 0.8
@@ -241,6 +248,7 @@ func setup(p_def: CreatureDef, skill_defs_by_id: Dictionary) -> void:
 	add_to_group("predatable")
 	add_to_group("inspectable")
 
+
 ## The verb as an ability this enemy casts, or null when the creature has none or its kind is not one an enemy casts.
 func _build_verb(sd: SkillDef) -> Ability:
 	if sd == null:
@@ -292,6 +300,10 @@ func _ready() -> void:
 		_build_body()
 	if _verb != null:
 		add_child(_verb)  # after the body: a node here would make _build_body think the scene gave it one
+	if def.emitter:  # a priest carries the emitter: a light, after the body too
+		var light := Art.light(Color(1.0, 0.95, 0.6), 0.7, 1.0)
+		light.name = "EmitterLight"
+		add_child(light)
 
 static func cause_for(damage_type: String) -> String:
 	return "poison" if damage_type == "poison" else "other"
@@ -305,6 +317,8 @@ func _untouchable() -> bool:
 func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, cause: String = "", ignore_def := false) -> void:
 	if _untouchable():
 		return
+	if def.ward_side and from != Vector2.INF and signf(from.x - global_position.x) == float(facing):
+		return  # a ward-bearer nullifies a blow from the side it faces
 	_calm_t = 0.0  # a blow ends the calm
 	if _curse_t > 0.0:
 		raw = ceili(float(raw) * _curse_mult)
@@ -983,6 +997,8 @@ func _act(player: Node2D, delta: float) -> void:
 	var to_player: Vector2 = player.global_position - global_position
 	if _mind_act(to_player, delta):
 		return
+	if def.possesses and _possess_act(delta):
+		return
 	if _verb_act(to_player, delta):
 		return
 	match kind:
@@ -1010,6 +1026,44 @@ func _act(player: Node2D, delta: float) -> void:
 				_walk(to_player)
 		_:
 			_walk(to_player)
+
+## Whether a lit glyph lies under it.
+func _glyph_lit() -> bool:
+	for g in get_tree().get_nodes_in_group("glyphs"):
+		if g.is_lit() and g.global_position.distance_to(global_position) <= GLYPH_REACH:
+			return true
+	return false
+
+## A rider: it goes to the nearest downed creature and possesses it: the body stands up, hurt, with the rider inside, and the rider is gone. True while it is
+## on its way.
+func _possess_act(_delta: float) -> bool:
+	var body: Enemy = null
+	var best := POSSESS_RANGE
+	for n in get_tree().get_nodes_in_group("actors"):
+		if n is Enemy and n != self and n.status.state == EnemyStatus.DOWNED and not n.def.possesses:
+			var d: float = n.global_position.distance_to(global_position)
+			if d < best:
+				body = n
+				best = d
+	if body == null:
+		return false
+	var gap := body.global_position.x - global_position.x
+	if absf(gap) <= POSSESS_REACH:
+		body.revive(POSSESS_HP)
+		queue_free()
+		return true
+	facing = 1 if gap > 0.0 else -1
+	velocity.x = 0.0 if _blocked_ahead() else facing * _speed()
+	return true
+
+## Stands up again: a possessed body, at `hp_fraction` of its health, awake and hostile.
+func revive(hp_fraction: float) -> void:
+	health = Health.new(int(stats.get_stat("max_hp")))
+	health.died.connect(_on_died)
+	health.hp = maxi(1, ceili(float(health.max_hp) * hp_fraction))
+	status.state = EnemyStatus.ACTIVE
+	possessed = true
+	modulate = POSSESSED_TINT
 
 ## Fright, stagger and lure own the body while they last: they drop whatever was winding up and walk (a flier keeps its height). True while one does.
 func _mind_act(to_player: Vector2, delta: float) -> bool:
@@ -1068,6 +1122,8 @@ func _verb_act(to_player: Vector2, delta: float) -> bool:
 		return true
 	if _state != "" or not is_alert() or not _verb.ready() or to_player.length() > VERB_RANGE:
 		return false
+	if def.needs_glyph and not _glyph_lit():
+		return false  # a caller emits only while its glyph is lit
 	if _verb_kind == "heal" and health.hp * 2 >= health.max_hp:
 		return false
 	facing = 1 if to_player.x > 0.0 else -1
@@ -1116,7 +1172,7 @@ func ward(seconds: float) -> void:
 ## Chase while alert (holding at a ledge or wall rather than walking off it), else patrol home.
 func _walk(to_player: Vector2) -> void:
 	var speed := _speed()
-	if def.projectile != "" and is_alert() and _disarm_t <= 0.0:
+	if (def.projectile != "" or def.holds) and is_alert() and _disarm_t <= 0.0:
 		velocity.x = 0.0  # a thrower holds its post, facing you
 		if absf(to_player.x) > TURN_LOCK_RANGE:
 			facing = 1 if to_player.x > 0.0 else -1

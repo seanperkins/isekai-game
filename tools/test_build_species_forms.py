@@ -50,7 +50,7 @@ class FormsTest(unittest.TestCase):
     def test_stats_follow_the_stage_base_and_the_reads_flavour(self):
         self.assertEqual(self.by_id["wolf_moonbound"]["stats"], {"atk": 1, "max_hp": 5, "max_mp": 3})
         self.assertEqual(self.by_id["wolf_loup_garou"]["stats"], {"atk": 3, "max_hp": 12, "max_mp": 6})
-        self.assertEqual(self.by_id["wolf_dire_wolf"]["stats"], {"atk": 1, "def": 2, "max_hp": 12, "max_mp": 6})
+        self.assertEqual(self.by_id["wolf_dire_wolf"]["stats"], {"atk": 1, "def": 2, "max_hp": 12, "max_mp": 6, "spd": -12})  # the elements give the rest; tools/form_body.json makes it slow
 
     def test_size_and_tint_follow_the_stage(self):
         self.assertEqual(self.by_id["wolf_moonbound"]["size"], 1.12)

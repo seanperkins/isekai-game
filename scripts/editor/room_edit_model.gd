@@ -5,7 +5,7 @@ extends RefCounted
 
 const GRID := 4.0
 const UNDO_CAP := 200
-const FEATURE_KINDS := ["glow_pool", "tablet", "switch", "altar", "barrier", "hidden", "gap", "lamp", "vigil", "talisman"]
+const FEATURE_KINDS := ["glow_pool", "tablet", "switch", "altar", "barrier", "hidden", "gap", "lamp", "vigil", "talisman", "forge", "weak_floor", "snare", "glyph"]
 const MIN_SOLID := 4.0
 ## The smallest water rect either way (RoomLint.WATER_MIN: the largest swimmer's body fits).
 const MIN_WATER := 32.0

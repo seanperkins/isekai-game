@@ -18,6 +18,7 @@ essences = {
 "fire": 2
 }
 xp = 10
+ward_side = true
 origin = "support"
 role = "elite"
 wears = "stone_drake"

@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_shoggoth"
 display_name = "Pseudopod"
-description = "Extrudes long limbs for reach."
+description = "Pseudopod: extrude long limbs for reach, a reach that is never quite the same twice: shapeless."
 announce = "New verb. Acquired [Pseudopod]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [5], "spec": {"kind": "bolt", "range": 150, "half_width": 12}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [5], "spec": {"kind": "bolt", "range": 150, "half_width": 12, "jitter": 0.3}}]
 mp_cost = 3

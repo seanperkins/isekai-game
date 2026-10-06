@@ -47,7 +47,7 @@ spawns = [{
 "pos": Vector2(1500, 314)
 }, {
 "id": "gargoyle",
-"pos": Vector2(800, 314)
+"pos": Vector2(800, 26)
 }, {
 "by": "PL",
 "id": "twin_radiant",
@@ -55,7 +55,7 @@ spawns = [{
 }, {
 "by": "PL",
 "id": "shield_guard",
-"pos": Vector2(1138, 314)
+"pos": Vector2(826, 314)
 }, {
 "by": "PL",
 "id": "gargoyle",
@@ -67,7 +67,7 @@ spawns = [{
 }, {
 "by": "PL",
 "id": "twin_goblin_hob",
-"pos": Vector2(498.56, 314)
+"pos": Vector2(1170.56, 314)
 }]
 exits = [{
 "edge": "bottom",

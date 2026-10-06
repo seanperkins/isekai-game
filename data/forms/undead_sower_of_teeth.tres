@@ -16,6 +16,7 @@ stats = {
 "max_hp": 22,
 "max_mp": 10
 }
+traits = ["weak_alone"]
 grants = ["verb_undead_sower_of_teeth"]
 verb = "verb_undead_sower_of_teeth"
 tint = Color(0.85, 0.74, 0.775, 1)

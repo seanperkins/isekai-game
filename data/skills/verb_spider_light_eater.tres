@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_spider_light_eater"
 display_name = "Drink"
-description = "Eat lamps and glow pools to darken a room and heal."
+description = "Drink: eat the nearest lamp or glow pool to darken it and heal. With none in reach it will not cast. You are hurt by sacred light."
 announce = "New verb. Acquired [Drink]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "heal", "hp": 6, "mp": 4, "cooldown": 10.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "drink", "range": 50, "hp": 6, "mp": 4, "cooldown": 10.0}}]
 mp_cost = 2

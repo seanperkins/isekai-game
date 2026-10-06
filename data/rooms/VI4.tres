@@ -41,3 +41,8 @@ exits = [{
 "room": "VI3",
 "to": 320.0
 }]
+features = [{
+"id": "VI4_snare",
+"kind": "snare",
+"pos": Vector2(260, 320)
+}]

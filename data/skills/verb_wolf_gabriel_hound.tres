@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_wolf_gabriel_hound"
 display_name = "Hunt's passage"
-description = "The pack carries you over one gap (a short glide)."
+description = "Hunt's passage: the pack carries you forward in a long glide over a gap, but only within eight seconds of a kill."
 announce = "New verb. Acquired [Hunt's passage]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "glide", "seconds": 2.5, "fall": 25, "cooldown": 6.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "glide", "seconds": 2.5, "fall": 25, "drift": 110, "needs_kill": 8.0, "cooldown": 6.0}}]
 mp_cost = 4

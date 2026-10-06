@@ -17,7 +17,9 @@ essences = {
 "fire": 1
 }
 xp = 4
+holds = true
 origin = "support"
 role = "common"
+verb = "verb_imp"
 wears = "bat"
 sprite_tint = Color(0.55, 0.45, 0.65, 1)

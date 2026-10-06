@@ -99,6 +99,7 @@ func _throne() -> RoomDef:
 	for i in 4:
 		AreaKit.ledge(r, 60.0 + 140.0 * i, 628.0 - 52.0 * i, 100.0)
 	AreaKit.spawn(r, "caller", 330.0, 680.0)
+	AreaKit.feature(r, "glyph", "%s_glyph" % r.id, 330.0, 680.0)  # the caller emits imps while it is lit; stand on it to put it out
 	AreaKit.spawn(r, "imp", 540.0, 680.0)
 	AreaKit.spawn(r, "imp", 590.0, 680.0)
 	AreaKit.decor(r, "deep_bones", 450.0, 680.0)

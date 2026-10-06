@@ -11,7 +11,7 @@ stage = 2
 lineage = "skulker"
 parents = ["goblin"]
 stats = {
-"atk": 1,
+"atk": 0,
 "jump_height": 10,
 "max_hp": 5,
 "max_mp": 3,

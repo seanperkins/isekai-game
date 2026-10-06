@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_alkahest"
 display_name = "Dissolve"
-description = "Eats through a weak gate, grate or armour plate."
+description = "Dissolve: eat through a weak gate, grate or armour plate. Each time it eats something it corrodes one of your own carried parts."
 announce = "New verb. Acquired [Dissolve]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [6], "spec": {"kind": "dissolve", "range": 60, "half_width": 40}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [6], "spec": {"kind": "dissolve", "range": 60, "half_width": 40, "corrode": 1}}]
 mp_cost = 5

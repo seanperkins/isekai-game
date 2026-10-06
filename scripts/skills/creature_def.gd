@@ -52,6 +52,13 @@ extends Resource
 ## The species of the form it twins ("" for a creature that is not one), and its place in the world ("common", "elite", "rare", ...).
 @export var species: String = ""
 @export var role: String = ""
+## Kit flags of the support monsters: it holds its post and casts from there (an imp, a priest), it nullifies blows from the side it faces (a ward-bearer), it
+## possesses a downed creature (a rider), it casts only while a glyph is lit (a caller), it carries a light (a priest).
+@export var holds: bool = false
+@export var ward_side: bool = false
+@export var possesses: bool = false
+@export var needs_glyph: bool = false
+@export var emitter: bool = false
 ## The skill id of the verb it casts at the player ("verb_wolf_fenrir"); "" for none. Enemy only casts the kinds in VerbKinds.ENEMY_KINDS.
 @export var verb: String = ""
 ## Its art: a still in a sheet (the form art track's sets), or the frames of a shipped creature it `wears`. Both empty: a plain placeholder.

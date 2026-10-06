@@ -50,6 +50,11 @@ func launch(at: Vector2, p_radius: float, seconds: float, actor: Node2D, opts :=
 	haze.position = -haze.size / 2.0
 	add_child(haze)
 
+## Another web's poison has reached it (a venom web): it poisons from now on.
+func poison_up(amount: int) -> void:
+	damage = maxi(damage, amount)
+	damage_type = "poison"
+
 func _physics_process(delta: float) -> void:
 	if not is_instance_valid(_actor):
 		queue_free()

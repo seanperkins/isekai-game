@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_spider_venomspinner"
 display_name = "Venom web"
-description = "Webs apply poison that spreads through trap webs."
+description = "Venom web: a web that slows and poisons, and whose poison runs through the other webs you have spun nearby."
 announce = "New verb. Acquired [Venom web]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [1], "spec": {"kind": "zone", "radius": 70, "seconds": 8.0, "slow": true, "damage": true, "damage_type": "poison", "cooldown": 10.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [1], "spec": {"kind": "zone", "radius": 70, "seconds": 8.0, "slow": true, "web": true, "damage": true, "damage_type": "poison", "spreads": true, "cooldown": 10.0}}]
 mp_cost = 6

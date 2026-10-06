@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_tiamat"
 display_name = "Flood"
-description = "Floods the low ground for a while."
+description = "Flood: fill the low ground round you with real, swimmable water for six seconds. It slows you too unless you swim, and everything else that cannot swim."
 announce = "New verb. Acquired [Flood]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "zone", "radius": 120, "seconds": 6.0, "slow": true, "cooldown": 8.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "flood", "width": 320, "depth": 96, "seconds": 6.0, "cooldown": 8.0}}]
 mp_cost = 7

@@ -3,12 +3,13 @@ extends RefCounted
 ## Verbs about what the body does to a creature's flesh: weighing its essence against the caster's, devouring a corpse. VerbKinds.run hands every kind in
 ## KINDS here.
 
-const KINDS := ["weigh", "devour", "raise", "soul"]
+const KINDS := ["weigh", "devour", "raise", "soul", "steal"]
 const SCHEMA := {
 	"weigh": {"range": "number", "half_width": "number"},
 	"devour": {"range": "number", "half_width": "number", "hp": "number"},
 	"raise": {"range": "number", "seconds": "number"},
 	"soul": {"range": "number", "hp": "number"},
+	"steal": {"range": "number"},
 }
 const TYPED := ["weigh", "devour"]
 const WEIGH_RANGE := 50.0
@@ -16,6 +17,7 @@ const WEIGH_HALF_WIDTH := 30.0
 const DEVOUR_RANGE := 40.0
 const DEVOUR_HEAL := 8
 const BOSS_FRACTION := 0.25
+const STEAL_RANGE := 50.0
 const SOUL_HP := 6
 const SOUL_RANGE := 240.0
 const RAISE_RANGE := 120.0
@@ -31,6 +33,8 @@ static func run(kind: String, a: Ability, spec: Dictionary) -> void:
 			raise(a, spec)
 		"soul":
 			soul(a, spec)
+		"steal":
+			steal(a, spec)
 
 ## If the creature in front has less essence than the caster holds, it is drained at once (a boss loses a quarter instead); if it has as much or more
 ## the scales tip against the caster and nothing happens (Weigh).
@@ -97,3 +101,19 @@ static func soul(a: Ability, spec: Dictionary) -> void:
 	var anchor := VerbSoul.new()
 	a.actor.get_parent().add_child(anchor)
 	anchor.launch(a.actor, a.actor.global_position, int(spec.get("hp", SOUL_HP)), float(spec.get("range", SOUL_RANGE)))
+
+## Takes an essence and a power from the nearest living creature without killing it; a creature gives once (Steal).
+static func steal(a: Ability, spec: Dictionary) -> void:
+	var foes := a.targets_in_front(float(spec.get("range", STEAL_RANGE)), 40.0).filter(func(n): return n is Enemy and not n.has_meta("verb_stolen"))
+	if foes.is_empty() or not a.actor.has_method("absorb_essence"):
+		return
+	var t: Enemy = foes[0]
+	t.set_meta("verb_stolen", true)
+	for e in Essences.ALL:
+		if int(t.def.essences.get(e, 0)) > 0:
+			a.actor.absorb_essence(e, t.def.id)
+			break
+	for s in t.def.skills:
+		if a.actor.has_method("steal_power") and a.actor.steal_power(str(s.get("id", ""))):
+			break
+	Vfx.puffs(a.actor, Art.texture("spit_glob"), [t.global_position + Vector2(0, -10)], Color(0.8, 0.6, 1.0, 0.7), 0.5)

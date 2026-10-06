@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_goblin_smith"
 display_name = "Forge"
-description = "Forge a named weapon from two carried parts: a lasting +2 ATK."
+description = "Forge: at a forge, spend two carried parts to craft a named weapon (+2 ATK for the life). It takes time, and it needs a forge."
 announce = "New verb. Acquired [Forge]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "forge", "stat": "atk", "amount": 2, "parts": 2, "deed": "weapon_forged", "cooldown": 10.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "forge", "stat": "atk", "amount": 2, "parts": 2, "needs_forge": true, "named": true, "still": 1.5, "deed": "weapon_forged", "cooldown": 10.0}}]
 mp_cost = 6

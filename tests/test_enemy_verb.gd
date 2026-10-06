@@ -200,9 +200,14 @@ func _real_player(at: Vector2) -> Player:
 	return p
 
 func test_a_slow_only_zone_slows_a_real_player_standing_in_it() -> void:
-	var spec := _spec("twin_spider_loom_weaver")
-	assert_true(bool(spec.get("slow", true)) and not bool(spec.get("damage", false)), "this twin's verb is a slow and nothing else")
-	var e := _enemy("twin_spider_loom_weaver")
+	# no shipped twin casts a slow-only zone now (the loom weaver's is a lasting trap), so the verb is made here
+	skills_by_id["verb_test_slow_zone"] = TestDefs.skill("verb_test_slow_zone", {"source": "form_verb", "mp_cost": 2, "max_level": 1,
+		"effects": [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "zone", "radius": 70.0, "seconds": 8.0, "slow": true, "cooldown": 10.0}}]})
+	var c: CreatureDef = creatures["twin_undead_dullahan"].duplicate()
+	c.verb = "verb_test_slow_zone"
+	var e := Enemy.new()
+	e.setup(c, skills_by_id)
+	add_child_autofree(e)
 	var p := _real_player(Vector2(60, 0))
 	await wait_physics_frames(90)
 	assert_gte(e.verb_casts, 1)
