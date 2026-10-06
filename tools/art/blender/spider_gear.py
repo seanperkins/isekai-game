@@ -26,12 +26,12 @@ def _rng(seed):
 
 # ---- markings and eyes ------------------------------------------------------------------------------------------------------------
 def hourglass(g, color=None, dim=False, cracks=False, slim=False, woven=False, runes=False, **_):
-    """The red markings on the abdomen's side: two or three swept slashes (as on the plain spider), or thin glowing cracks, a woven diamond band,
-    gold runes."""
+    """The red markings on the abdomen's side: the hourglass of a widow (two triangles meeting point to point, as on the plain spider), or thin
+    glowing cracks, a woven diamond band, gold runes."""
     color = color or g.mark
     if runes:
         color = GOLD
-    glow = False
+    glow = True
     if cracks:
         for i, (u, v, du, dv) in enumerate(((-0.3, 0.2, 0.35, -0.25), (0.1, -0.1, 0.3, 0.2), (0.35, 0.35, 0.25, -0.15), (-0.05, 0.55, 0.25, 0.05))):
             g.mark_line("crack%d" % i, (u, v), (u + du, v + dv), 0.035, color, glow=True)
@@ -42,22 +42,22 @@ def hourglass(g, color=None, dim=False, cracks=False, slim=False, woven=False, r
             g.mark_line("diaA%d" % i, (u, 0.05), (u + 0.13, 0.30), 0.04, color, glow=True)
             g.mark_line("diaB%d" % i, (u + 0.13, 0.30), (u + 0.26, 0.05), 0.04, color, glow=True)
         return
-    w = 0.12 if not slim else 0.08
-    g.mark_line("slash0", (-0.55, 0.30), (0.10, -0.05), w, color, glow=glow)
-    g.mark_line("slash1", (-0.05, 0.62), (0.60, 0.18), w, color, glow=glow)
-    g.mark_line("slash2", (0.55, -0.30), (0.80, -0.45), w * 0.7, color, glow=False)
+    # the hourglass itself: two triangles meeting point to point, high on the abdomen's side, tilted with it
+    k = 0.8 if slim else 1.0
+    g.painted("glass_top", ((-0.30 * k, 0.50), (0.30 * k, 0.50), (0.02, 0.06), (-0.02, 0.06)), color, glow=glow)
+    g.painted("glass_low", ((-0.02, -0.06), (0.02, -0.06), (0.30 * k, -0.50), (-0.30 * k, -0.50)), color, glow=glow)
 
 
 def eyes(g, color=None, small=False, big=False, **_):
-    """A cluster of eyes on the front of the carapace: two large forward ones and smaller ones above them."""
+    """A cluster of eyes on the front of the carapace: two large forward ones, and a row of smaller ones behind and to the sides, on both sides."""
     color = color or g.eye
-    r = 0.036 if not big else 0.05
+    r = 0.032 if not big else 0.044
     if small:
-        r = 0.024
-    pts = ((0.92, 1.05, -0.45), (0.78, 1.22, -0.40), (0.60, 1.30, -0.30), (1.02, 0.85, -0.40))
-    for i, (u, v, y) in enumerate(pts):
-        rr = r * (1.0 if i < 2 else 0.75)
-        g.e("eye%d" % i, g.thorax_point(u, v, y), (rr, rr, rr), "body", color, glow=True, seg=6, rings=4)
+        r = 0.021
+    pts = ((1.00, 1.22, 0.18, 1.0), (0.92, 1.24, 0.45, 0.7), (0.74, 1.42, 0.22, 0.75), (0.68, 1.34, 0.46, 0.6))
+    for i, (u, v, y, k) in enumerate(pts):
+        for sg, sign in (("n", -1.0), ("f", 1.0)):
+            g.e("eye%d%s" % (i, sg), g.thorax_point(u, v, sign * y), (r * k, r * k, r * k), "body", color, far=sg == "f", glow=True, seg=6, rings=4)
 
 
 def spider_eyes(g, color=EYE, **_):

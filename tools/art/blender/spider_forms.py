@@ -26,7 +26,7 @@ def G(name, **kw):
 
 
 FORMS = {
-    "spider": dict(stage=1, parent=None, width=36, span=0.92, abdomen=1.15, gear=[G("hourglass"), G("eyes")]),
+    "spider": dict(stage=1, parent=None, width=36, span=0.84, abdomen=1.15, gear=[G("hourglass"), G("eyes")]),
 
     # ---- the weavermaid line: driders. jorogumo (seven spider spirits, tsuchigumo), loom-weaver (norn, anansi) ----
     "weavermaid": dict(stage=2, parent="spider", width=34, span=0.9, abdomen=0.95, drider=dict(tall=1.35), skin=(200, 188, 212), hair=DARK, robe=(66, 52, 86),

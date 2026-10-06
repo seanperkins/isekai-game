@@ -60,6 +60,15 @@ Crouched, wiry, angular; thin tapering limbs with round joints; flat wedge feet;
 between the arm and the body in side view. Keep high values (near white) to small areas; use darker dominant planes and small bright accents. Colours: a dark
 creature is lifted (`wolf_kit.room`) so the shading ramps have room. Do not draw anything below the ground line.
 
+### A creature that is an animal looks like that animal
+
+Build an animal from photographs, not from the goblin's style: find a few (Wikimedia Commons, with their licences; keep them out of git, in `.tmp/refs/`),
+lay the model beside them from the side, the three quarters and the front, and fix what differs. The sprites are 30 to 60 px, so what must read is the silhouette:
+the wolf's thick neck carried level with its back, an upright triangular ear, a long deep muzzle, a ruff, a deep chest, pale socks, a tail that hangs; the spider's
+eight legs that rise to knees above its carapace, the eyes on a mound at its front, the hourglass on a round abdomen. The tests pin the proportions that took a
+photograph to find (`test_quad_motion` head carriage, `test_spider_motion` knee height and reach, `test_spider_gear` hourglass); the size ladder
+(`tests/test_creature_scale.gd`) still decides how big the sprite is, so a leggier model is drawn smaller in the same box.
+
 ## Looking at it
 
 ```

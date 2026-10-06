@@ -12,7 +12,7 @@ NEAR, FAR = -0.11, 0.11   # the y of the legs the camera sees, and of the others
 BASE_SCALE = 1.0
 
 
-TAIL_DROOPING = ((-0.22, -0.06), (-0.20, -0.10), (-0.16, -0.12))
+TAIL_DROOPING = ((-0.18, -0.08), (-0.16, -0.13), (-0.12, -0.14))
 TAIL_RAISED = ((-0.20, 0.04), (-0.18, 0.08), (-0.12, 0.12))      # carried high, over the haunches
 TAIL_CURLED = ((-0.12, 0.14), (-0.02, 0.20), (0.10, 0.10))       # curled forward over the back
 
@@ -27,8 +27,8 @@ def core(leg=1.0, neck=1.0, tail=1.0, head=1.0, tail_shape=TAIL_DROOPING):
     def L(x, z):   # a point on a leg: its height scales with the leg
         return (x, z * leg)
 
-    neck_end = T(0.30 + 0.22 * neck, 0.62 + 0.16 * neck)
-    head_end = (neck_end[0] + 0.34 * head, neck_end[1] - 0.06 * head)
+    neck_end = T(0.30 + 0.22 * neck, 0.62 + 0.10 * neck)
+    head_end = (neck_end[0] + 0.34 * head, neck_end[1] - 0.04 * head)
     bones = [
         ("hips", T(-0.30, 0.55), T(-0.10, 0.58), None),
         ("spine", T(-0.10, 0.58), T(0.30, 0.62), "hips"),

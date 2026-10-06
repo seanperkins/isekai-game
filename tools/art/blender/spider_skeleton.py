@@ -25,7 +25,7 @@ HIP_AT = (0.80, 0.30, -0.15, -0.55)
 FOOT_AT = (0.60, 0.36, -0.42, -0.80)
 FEMUR = 0.86      # the femur's length against the tibia's, in side view
 TARSUS_DIR = (34.0, 16.0, -14.0, -30.0)
-KNEE_UP = (0.24, 0.28, 0.30, 0.28)
+KNEE_UP = (0.32, 0.35, 0.37, 0.34)
 BEND = (1, 1, -1, -1)  # the knee is above the hip-to-ankle line: the IK bends a forward leg one way and a backward one the other
 LEGS = ["%s%d" % (s, i) for i in range(PAIRS) for s, _ in SIDES]
 
@@ -51,8 +51,8 @@ def shape(span=1.0, ride=1.0, thorax=1.0, abdomen=1.0, abd_len=1.0, abd_lift=20.
     """The sizes the meshes are built to, in standard coordinates: the thorax's centre and half sizes, the pedicel, the abdomen's axis (from the pedicel,
     its direction), its half length, half width and half height, and the height the body rides at (raised when a big abdomen would drag)."""
     th = thorax
-    xc, T = 0.10, 0.145 * th
-    ax, ay, az = 0.33 * abdomen * abd_len, 0.27 * abdomen, 0.29 * abdomen * abd_h
+    xc, T = 0.10, 0.165 * th
+    ax, ay, az = 0.30 * abdomen * abd_len, 0.245 * abdomen, 0.265 * abdomen * abd_h
     a_dir = -(90.0 + abd_lift)
     # the abdomen's lowest point is to clear the ground by a margin when the body rides at its usual height
     hc = 0.30 * ride
@@ -61,11 +61,15 @@ def shape(span=1.0, ride=1.0, thorax=1.0, abdomen=1.0, abd_len=1.0, abd_lift=20.
     hc += max(0.0, 0.14 * ride - low)
     pedicel = (xc - 0.95 * T, hc + 0.02)
     centre = (pedicel[0] + 0.95 * ax * ux, pedicel[1] + 0.95 * ax * uz)
-    return dict(xc=xc, T=T, th_h=0.11 * th, th_w=0.12 * th, hc=hc, pedicel=pedicel, a_dir=a_dir, a_centre=centre, ax=ax, ay=ay, az=az)
+    return dict(xc=xc, T=T, th_h=0.12 * th, th_w=0.14 * th, hc=hc, pedicel=pedicel, a_dir=a_dir, a_centre=centre, ax=ax, ay=ay, az=az)
+
+
+LEG_SCALE = 1.14   # a spider's legs are long: the span a form names is of a body this much leggier
 
 
 def leg_points(i, s, span, tars, sh):
     """(hip, knee, ankle, tip) of leg pair `i` on side sign `s`, as (x, y, z)."""
+    span = span * LEG_SCALE
     xc, T, hc = sh["xc"], sh["T"], sh["hc"]
     hip = (xc + HIP_AT[i] * T * 1.1, s * 0.09 * sh["th_w"] / 0.12, hc - 0.03)
     spread = (0.07 if i < 2 else -0.07) * span if s > 0 else 0.0       # the far legs splay a little wider, so eight legs do not draw as four

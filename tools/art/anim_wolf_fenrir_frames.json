@@ -93,6 +93,16 @@
    "native": true
   },
   {
+   "name": "walk_10",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "walk_11",
+   "width": 0,
+   "native": true
+  },
+  {
    "name": "run_0",
    "width": 0,
    "native": true

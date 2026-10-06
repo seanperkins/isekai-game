@@ -1,6 +1,7 @@
 """The spider kit: one skeleton (spider_skeleton.py) for the whole spider family, a body built from it and gear (spider_gear.py) added from a table
 (spider_forms.py). Runs inside Blender. The body is glossy and faceted: a domed carapace with the eyes at its front, a big round abdomen carried up
-behind (a tilted, flat-shaded egg whose facets catch the light), thin tapering legs that arc up to high knees with a ring of colour at each joint, and
+behind (a tilted, flat-shaded egg whose facets catch the light) with an hourglass painted on its side, eight eyes on a low mound at the front of the carapace,
+stout tapering legs that arc up to high knees (well above the carapace, as a real spider's do) with a ring of colour at each joint, and
 for a drider a person's upper body rising from the front: a slim torso, a small head with hair that hangs on its own bones, thin arms, and clothes
 that are thin sheets skinned to the body and the cloth bones.
 
@@ -148,6 +149,19 @@ class Spider:
             taper = 1.0 - 0.5 * abs(i - (n - 1) / 2.0) / n
             self.l("%s_%d" % (name, i), pts[i], pts[i + 1], width * 0.5 * taper * self.ab, width * 0.5 * taper * self.ab, "abdomen", rgb, glow=glow, sides=5)
 
+    def painted(self, name, outline, rgb, glow=False, sub=4):
+        """A flat shape painted on the abdomen's near side: `outline` is the (u, v) corners of its outline, in order, as `mark_line` takes them. It is
+        cut up and laid on the abdomen's curve, so it hugs it."""
+        edge = []
+        for i, (a, b) in enumerate(zip(outline, outline[1:] + outline[:1])):
+            edge += [(a[0] + (b[0] - a[0]) * j / sub, a[1] + (b[1] - a[1]) * j / sub) for j in range(sub)]
+        cu = sum(u for u, _ in outline) / len(outline)
+        cv = sum(v for _, v in outline) / len(outline)
+        rings = [[self.P(*self.painted_point(cu + (u - cu) * f, cv + (v - cv) * f, out=1.02)) for u, v in edge] for f in (1.0, 0.66, 0.33)]
+        rings.append([self.P(*self.painted_point(cu, cv, out=1.02))])
+        under = [self.P(*self.painted_point(u, v, out=0.95)) for u, v in edge]
+        return self.rig.part(k.patch(self.pre + name, rings, under), self.pre + "abdomen", rgb, False, glow)
+
     def band(self, name, u, width, rgb):
         """A band wound round the abdomen at `u` along it: a thin disc a little bigger than the abdomen's section there."""
         sh = self.sh
@@ -219,6 +233,8 @@ class Spider:
         self.loft("carapace", [((xc - T * 1.0, 0, hc + 0.00), (H * 0.45, W * 0.55)), ((xc - T * 0.55, 0, hc + 0.02), (H * 1.0, W * 0.95)),
                                ((xc + T * 0.05, 0, hc + 0.03), (H * 1.15, W * 1.0)), ((xc + T * 0.6, 0, hc + 0.04), (H * 1.1, W * 0.85)),
                                ((xc + T * 1.0, 0, hc + 0.03), (H * 0.75, W * 0.6)), ((xc + T * 1.15, 0, hc + 0.02), (H * 0.4, W * 0.4))], "body", ch, "x", 8)
+        # the eyes ride a low mound at the front of the carapace
+        self.e("turret", (xc + T * 0.82, 0.0, hc + 0.03 + H * 0.95), (T * 0.46, W * 0.62, H * 0.62), "body", ch, seg=8, rings=6)
         self.e("sternum", (xc, 0.0, hc - H * 0.45), (T * 0.75, W * 0.7, H * 0.5), "body", dark, seg=8, rings=5)
         self.e("pedicel", sh["pedicel"][:1] + (0.0,) + sh["pedicel"][1:], (0.05 * self.th, 0.05 * self.th, 0.045 * self.th), "body", dark, seg=6, rings=4)
         # the abdomen: an egg carried up behind, its facets catching the light
@@ -227,21 +243,21 @@ class Spider:
         # a glossy highlight high on the near side, toward the light
         if self.form.get("gloss", True):
             g = self.painted_point(0.25, 0.62, out=1.03)
-            self.e("gloss", (g[0], g[1] - 0.004, g[2]), (0.09 * self.ab, 0.012, 0.045 * self.ab), "abdomen", self.form.get("gloss_c", GLOSS), seg=8, rings=5)
+            self.e("gloss", (g[0], g[1] - 0.004, g[2]), (0.06 * self.ab, 0.010, 0.032 * self.ab), "abdomen", self.form.get("gloss_c", GLOSS), seg=8, rings=5)
         tip = self.abdomen_point(1.0, -0.05, 0.0, out=1.0)
         self.e("spinneret", tip, (0.035 * self.ab, 0.03 * self.ab, 0.03 * self.ab), "abdomen", dark, seg=6, rings=4)
         # the chelicerae and the palps
         fh, ft, _ = self.bones["fang"]
         if not self.proportions["drider"]:
             for s, y in (("n", -0.045), ("f", 0.045)):
-                self.l("chel_" + s, (fh[0], y * self.th, fh[2] + 0.01), (ft[0], y * self.th, ft[2] + 0.02), 0.048 * self.th, 0.03 * self.th, "fang", ch, far=s == "f")
+                self.l("chel_" + s, (fh[0], y * self.th, fh[2] + 0.01), (ft[0], y * self.th, ft[2] + 0.02), 0.058 * self.th, 0.036 * self.th, "fang", ch, far=s == "f")
                 self.blade("fang_" + s, (ft[0], y * self.th, ft[2] + 0.03), (ft[0] - 0.03 * self.th, y * self.th, ft[2] - 0.035 * self.th), 0.03 * self.th, 0.02, "fang", self.fang_c,
                            far=s == "f")
             for s in "nf":
                 h, t, _ = self.bones["palp_" + s]
-                self.l("palp_" + s, h, t, 0.022 * self.th, 0.016 * self.th, "palp_" + s, self.leg_c, far=s == "f")
-                self.e("palp_tip_" + s, t, (0.022 * self.th,) * 3, "palp_" + s, self.leg_c, far=s == "f", seg=6, rings=4)
-        # the legs: thin and tapering, arcing up to high knees, a ring of colour at each joint, the claw a fine point
+                self.l("palp_" + s, h, t, 0.028 * self.th, 0.020 * self.th, "palp_" + s, self.leg_c, far=s == "f")
+                self.e("palp_tip_" + s, t, (0.030 * self.th,) * 3, "palp_" + s, self.leg_c, far=s == "f", seg=6, rings=4)
+        # the legs: stout at the body and tapering to a fine claw, a short knee, a long shin, a ring of colour at each joint
         lw = self.lw
         for key in self.leg_keys:
             far = key[0] == "f"
@@ -250,12 +266,12 @@ class Spider:
             ht, tt, _ = self.bones["tib_" + key]
             ha, ta, _ = self.bones["tar_" + key]
             col = self.leg_c
-            self.e("coxa_" + key, hf, (0.04 * lw, 0.04 * lw, 0.035 * lw), "fem_" + key, col, far, seg=6, rings=4)
-            self.l("fem_" + key, hf, tf, 0.040 * lw, 0.032 * lw, "fem_" + key, col, far)
-            self.e("knee_" + key, tf, (0.036 * lw,) * 3, "fem_" + key, self.joint, far, seg=6, rings=5)
-            self.l("tib_" + key, ht, tt, 0.031 * lw, 0.022 * lw, "tib_" + key, col, far)
+            self.e("coxa_" + key, hf, (0.052 * lw, 0.052 * lw, 0.044 * lw), "fem_" + key, col, far, seg=7, rings=5)
+            self.l("fem_" + key, hf, tf, 0.050 * lw, 0.034 * lw, "fem_" + key, col, far, sides=7)
+            self.e("knee_" + key, tf, (0.037 * lw, 0.033 * lw, 0.037 * lw), "fem_" + key, self.joint, far, seg=7, rings=5)
+            self.l("tib_" + key, ht, tt, 0.032 * lw, 0.020 * lw, "tib_" + key, col, far, sides=7)
             self.e("ankle_" + key, tt, (0.021 * lw,) * 3, "tib_" + key, self.joint if i < 2 else col, far, seg=6, rings=4)
-            self.l("tar_" + key, ha, ta, 0.017 * lw, 0.005, "tar_" + key, self.leg_low or col, far, sides=5)
+            self.l("tar_" + key, ha, ta, 0.017 * lw, 0.004, "tar_" + key, self.leg_low or col, far, sides=5)
         if self.proportions["drider"]:
             self.upper_body()
 

@@ -5,7 +5,7 @@
  "frames": [
   {
    "name": "idle_1",
-   "width": 58,
+   "width": 56,
    "native": true
   },
   {
@@ -30,32 +30,32 @@
   },
   {
    "name": "idle_6",
-   "width": 58,
+   "width": 56,
    "native": true
   },
   {
    "name": "idle_7",
-   "width": 58,
+   "width": 56,
    "native": true
   },
   {
    "name": "idle_8",
-   "width": 58,
+   "width": 56,
    "native": true
   },
   {
    "name": "walk_1",
-   "width": 60,
+   "width": 62,
    "native": true
   },
   {
    "name": "walk_2",
-   "width": 60,
+   "width": 62,
    "native": true
   },
   {
    "name": "walk_3",
-   "width": 60,
+   "width": 62,
    "native": true
   },
   {
@@ -95,54 +95,54 @@
   },
   {
    "name": "windup_1",
-   "width": 60,
+   "width": 58,
    "native": true
   },
   {
    "name": "charge_1",
-   "width": 60,
+   "width": 62,
    "native": true,
    "attack_from": 0.55
   },
   {
    "name": "charge_2",
-   "width": 58,
+   "width": 62,
    "native": true,
    "attack_from": 0.55
   },
   {
    "name": "charge_3",
-   "width": 60,
+   "width": 62,
    "native": true,
    "attack_from": 0.55
   },
   {
    "name": "charge_4",
-   "width": 60,
+   "width": 62,
    "native": true,
    "attack_from": 0.55
   },
   {
    "name": "charge_5",
-   "width": 60,
+   "width": 62,
    "native": true,
    "attack_from": 0.55
   },
   {
    "name": "charge_6",
-   "width": 60,
+   "width": 62,
    "native": true,
    "attack_from": 0.55
   },
   {
    "name": "charge_7",
-   "width": 60,
+   "width": 62,
    "native": true,
    "attack_from": 0.55
   },
   {
    "name": "charge_8",
-   "width": 60,
+   "width": 62,
    "native": true,
    "attack_from": 0.55
   },
@@ -166,13 +166,13 @@
   },
   {
    "name": "charge_12",
-   "width": 60,
+   "width": 58,
    "native": true,
    "attack_from": 0.55
   },
   {
    "name": "charge_13",
-   "width": 58,
+   "width": 60,
    "native": true,
    "attack_from": 0.55
   },
@@ -184,13 +184,13 @@
   },
   {
    "name": "charge_15",
-   "width": 60,
+   "width": 62,
    "native": true,
    "attack_from": 0.55
   },
   {
    "name": "charge_16",
-   "width": 60,
+   "width": 62,
    "native": true,
    "attack_from": 0.55
   },
@@ -201,17 +201,17 @@
   },
   {
    "name": "stunned_1",
-   "width": 60,
+   "width": 58,
    "native": true
   },
   {
    "name": "hurt_1",
-   "width": 60,
+   "width": 58,
    "native": true
   },
   {
    "name": "downed_1",
-   "width": 62,
+   "width": 64,
    "native": true
   }
  ]

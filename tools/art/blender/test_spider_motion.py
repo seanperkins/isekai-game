@@ -60,6 +60,22 @@ class SkeletonTest(unittest.TestCase):
                 # the knee rises well above the hip: a spider's legs arc up and over
                 self.assertGreater(s.rest["tib_" + key][0][1], s.rest["fem_" + key][0][1] + 0.12, "%s %s" % (name, key))
 
+    def test_every_knee_rises_well_above_the_carapace_so_the_legs_arch_the_way_a_spiders_do(self):
+        for name, form in sf.FORMS.items():
+            pr = ss.proportions_of(form)
+            sh = ss.shape(**pr)
+            top = sh["hc"] + 0.03 + 1.15 * sh["th_h"]           # the highest point of the carapace
+            for i in range(ss.PAIRS):
+                _, knee, _, _ = ss.leg_points(i, -1.0, pr["span"], pr["tars"], sh)
+                self.assertGreater(knee[2], top + 0.08, "%s pair %d: the knee stands above the back of the carapace" % (name, i))
+
+    def test_the_legs_sprawl_out_far_beyond_the_length_of_the_cephalothorax(self):
+        for name, form in sf.FORMS.items():
+            pr = ss.proportions_of(form)
+            sh = ss.shape(**pr)
+            reach = max(abs(ss.leg_points(i, -1.0, pr["span"], pr["tars"], sh)[3][1]) for i in range(ss.PAIRS))
+            self.assertGreater(reach, 2.5 * sh["T"], "%s: the legs sprawl to at least two and a half times the carapace's half length" % name)
+
     def test_a_drider_has_a_torso_a_head_hair_cloth_and_two_arms_holding_things(self):
         for name, form in sf.FORMS.items():
             s = ss.skeleton_for(form)

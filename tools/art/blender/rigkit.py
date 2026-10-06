@@ -118,6 +118,30 @@ def blade(name, root, tip, width, thick, smooth=False):
     return _object(name, bm, smooth)
 
 
+def patch(name, rings, back):
+    """A thin solid lying on a curved surface: a marking painted on a body. `rings` are loops of points from the outline inward (the last may be a
+    single point, the centre), each loop in order round and the same length except the last; `back` is a loop of points under the outline, one for
+    each point of the first ring, which closes the solid underneath."""
+    bm = bmesh.new()
+    rows = [[bm.verts.new(p) for p in ring] for ring in rings]
+    under = [bm.verts.new(p) for p in back]
+    for r0, r1 in zip(rows, rows[1:]):
+        n = len(r0)
+        for i in range(n):
+            j = (i + 1) % n
+            if len(r1) == 1:
+                bm.faces.new((r0[i], r0[j], r1[0]))
+            else:
+                bm.faces.new((r0[i], r0[j], r1[j], r1[i]))
+    n = len(rows[0])
+    for i in range(n):
+        j = (i + 1) % n
+        bm.faces.new((rows[0][i], rows[0][j], under[j], under[i]))
+    bm.faces.new(under[::-1])
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
+    return _object(name, bm, False)
+
+
 def sheet(name, columns, smooth=False):
     """A thin sheet of cloth. `columns` is [(top point, bottom point)] across it (a ragged hem is bottoms at different heights); the sheet is
     the quads between neighbouring columns. Cloth has no thickness: it is seen from both sides."""

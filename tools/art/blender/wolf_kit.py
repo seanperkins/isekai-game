@@ -1,6 +1,7 @@
 """The wolf kit: one skeleton (quad_skeleton.py) for the whole wolf family, a body built from it and gear (wolf_gear.py) added from a table
-(wolf_forms.py). Runs inside Blender. The body is angular and lean like the goblin's (goblin_kit.py): a deep wedge of a chest tucked up to the
-waist, a long neck, a wedge of a head with a pointed muzzle and a hinged jaw, flat swept ears, thin tapering legs with flat paws, a bushy tail.
+(wolf_forms.py). Runs inside Blender. Built from photographs of wolves (the head is one loft from the back of the skull to the nose: a broad brow, a
+stop, a long deep muzzle; the ears are short upright triangles; a ruff sweeps back from the cheeks), faceted like the goblin's (goblin_kit.py): a deep chest tucked
+up to the waist, a thick short neck carried level with the back, tapering legs in paler socks with domed paws, a bushy tail that hangs.
 
 Parts are placed relative to the bones of the form's own skeleton, so a long-legged hound, a stocky war wolf and a thick-necked beast share the
 code. Standard coordinates are those of quad_skeleton.py (about 1.8 units, nose to tail tip).
@@ -34,6 +35,9 @@ class Wolf:
         self.bulk = form.get("bulk", 1.0)          # how thick every part of the body is
         self.fur, self.belly = room(form.get("fur", FUR)), room(form.get("belly", BELLY), 104)
         self.dark = room(form.get("dark", tuple(int(c * 0.82) for c in self.fur)), 60)
+        mix = lambda a, b, t: tuple(int(round(a[i] + (b[i] - a[i]) * t)) for i in range(3))
+        self.socks = room(form.get("socks", mix(self.fur, self.belly, 0.55)), 84)     # the lower legs and the cheeks are paler than the back, as a wolf's are
+        self.socks_far = tuple(int(c * 0.82) for c in self.socks)
         self.proportions = dict(leg=self.leg, neck=self.neck_f, tail=self.tail_f, head=self.head_f, tail_shape=form.get("tail_shape", skeleton.TAIL_DROOPING))
         self.bones = {n: (h, t, p) for n, h, t, p in skeleton.core(**self.proportions)}
 
@@ -83,14 +87,13 @@ class Wolf:
         self.rig.skin(ob, lambda v: {self.pre + b: w for b, w in weights(v.z).items()}, rgb, far, glow)
 
     def paw(self, name, side, bone, rgb, hind, far=False):
-        """A flat paw: from the wrist or hock to the toe, a wedge with its sole on the ground."""
+        """A paw: from the wrist or hock to the toes, a low dome with its sole on the ground."""
         y = skeleton.NEAR if side == "n" else skeleton.FAR
         h, t, _ = self.bones[bone]
-        x0 = h[0]
-        top = h[2]
-        rings = [((x0 - 0.03, y, 0.0), (min(0.075, 0.5 * top + 0.02) * self.bulk, 0.050 * self.bulk), 1.0), ((x0 + 0.05, y, 0.0), (0.050 * self.bulk, 0.052 * self.bulk), 1.0),
-                 ((x0 + 0.16, y, 0.0), (0.034 * self.bulk, 0.050 * self.bulk), 1.0), ((x0 + 0.23, y, 0.0), (0.020 * self.bulk, 0.040 * self.bulk), 1.0)]
-        self.loft(name, rings, bone, rgb, "x", 6, far)
+        x0, bk = h[0], self.bulk
+        rings = [((x0 - 0.03, y, 0.0), (0.040 * bk, 0.040 * bk), 1.0), ((x0 + 0.04, y, 0.0), (0.050 * bk, 0.048 * bk), 1.0),
+                 ((x0 + 0.11, y, 0.0), (0.042 * bk, 0.050 * bk), 1.0), ((x0 + 0.16, y, 0.0), (0.020 * bk, 0.036 * bk), 1.0)]
+        self.loft(name, rings, bone, rgb, "x", 8, far)
 
     # ---- the body ----
     def build(self):
@@ -108,31 +111,47 @@ class Wolf:
         self.loft("pelvis", [((-0.06, 0, zc(-0.06) - 0.025), (0.158 * b, 0.112 * b)), ((-0.16, 0, zc(-0.16) - 0.02), (0.152 * b, 0.110 * b)),
                              ((-0.26, 0, zc(-0.26) - 0.01), (0.160 * b, 0.118 * b)), ((-0.38, 0, zc(-0.38) - 0.02), (0.135 * b, 0.100 * b))], "hips", fur)
         self.loft("belly", [((0.14, 0, zc(0.14) - 0.12), (0.060 * b, 0.075 * b)), ((-0.04, 0, zc(-0.04) - 0.10), (0.045 * b, 0.065 * b))], "spine", belly)
-        # the neck: a thick wedge from the shoulders to the skull
-        self.l("neck", self.at("neck", 0.0), self.at("neck", 1.0), 0.140 * b, 0.100 * b, "neck", fur, sides=7)
-        # the head: a dome with a brow, a long pointed muzzle, a hinged jaw
+        # the neck: thick as the head is deep, carried forward from the withers
+        n0, n1 = self.at("neck", -0.05), self.at("neck", 1.0)
+        self.l("neck", n0, n1, 0.138 * b, 0.102 * b, "neck", fur, sides=8)
+        self.e("neck_base", n0, (0.150 * b, 0.140 * b, 0.140 * b), "neck", fur, seg=9, rings=7)
+        self.e("neck_top", n1, (0.100 * b, 0.100 * b, 0.100 * b), "neck", fur, seg=8, rings=6)
+        # the head, one loft from the back of the skull to the nose: a broad brow, a stop, then a long deep muzzle
         hp = self.head_point
         hs = self.head_f
-        self.e("skull", hp(0.28, 0.01), (0.105 * hs, 0.092 * hs, 0.098 * hs), "head", fur, seg=10, rings=7)
-        self.loft("brow", [(hp(0.48, 0.045), (0.022 * hs, 0.090 * hs)), (hp(0.62, 0.04), (0.018 * hs, 0.070 * hs))], "head", dark, sides=6)
-        self.loft("muzzle", [(hp(0.45, -0.010), (0.056 * hs, 0.062 * hs)), (hp(0.75, -0.030), (0.040 * hs, 0.044 * hs)), (hp(0.98, -0.038), (0.028 * hs, 0.030 * hs))], "head", belly, sides=6)
-        self.e("nose", hp(1.02, -0.034), (0.026 * hs, 0.030 * hs, 0.026 * hs), "head", NOSE, seg=6, rings=4)
+        profile = ((-0.07, 0.000, 0.040, 0.040), (0.04, 0.000, 0.084, 0.080), (0.22, 0.012, 0.100, 0.096), (0.40, 0.010, 0.094, 0.088), (0.51, -0.012, 0.070, 0.066),
+                   (0.70, -0.030, 0.056, 0.054), (0.90, -0.036, 0.046, 0.044), (0.99, -0.036, 0.038, 0.036))
+        self.loft("head", [(hp(u, v), (a * hs, w * hs)) for u, v, a, w in profile], "head", fur, sides=10)
+        self.loft("muzzle_top", [(hp(0.60, -0.004), (0.020 * hs, 0.034 * hs)), (hp(0.97, -0.014), (0.016 * hs, 0.026 * hs))], "head", belly, sides=6)
+        for sg, y in (("n", -1), ("f", 1)):   # the cheek ruff: tufts that sweep back and down from the jaw
+            col = self.socks_far if sg == "f" else self.socks
+            self.blade("ruff_" + sg, hp(0.44, -0.030, y * 0.060 * hs), hp(0.10, -0.115, y * 0.100 * hs), 0.085 * hs, 0.030, "head", col, far=sg == "f")
+        self.e("nose", hp(1.00, -0.034), (0.028 * hs, 0.030 * hs, 0.024 * hs), "head", NOSE, seg=6, rings=4)
         jaw = self.bones["jaw"]
-        self.loft("jaw", [((jaw[0][0] + 0.02, 0, jaw[0][2] - 0.00), (0.030 * hs, 0.050 * hs)), ((jaw[0][0] + 0.12 * hs, 0, jaw[0][2] - 0.05 * (hs) * 0.4), (0.026 * hs, 0.040 * hs)),
-                           ((jaw[1][0] - 0.02, 0, jaw[1][2] + 0.01), (0.020 * hs, 0.028 * hs))], "jaw", belly, sides=6)
+        self.loft("jaw", [((jaw[0][0] + 0.02, 0, jaw[0][2] - 0.01), (0.036 * hs, 0.054 * hs)), ((jaw[0][0] + 0.12 * hs, 0, jaw[0][2] - 0.05 * hs * 0.4), (0.028 * hs, 0.042 * hs)),
+                           ((jaw[1][0] - 0.02, 0, jaw[1][2] + 0.01), (0.022 * hs, 0.030 * hs))], "jaw", belly, sides=6)
         for s, y in (("n", -1), ("f", 1)):
-            h, t, _ = self.bones["ear_" + s]
-            self.blade("ear_" + s, h, t, 0.13 * hs * f.get("ears", 1.0), 0.024, "ear_" + s, f.get("ear", self.dark), far=s == "f")
-            self.e("eye_" + s, hp(0.55, 0.035, y * 0.078 * hs), (0.028, 0.026, 0.028), "head", f.get("eye", EYE), far=s == "f", glow=True, seg=8, rings=6)
+            # an ear is a short rounded triangle: wide at the base, set at the back corner of the skull, leaning out a little
+            base, tip = hp(0.14, 0.090, y * 0.062 * hs), hp(0.05, 0.250, y * 0.095 * hs)
+            rings = []
+            for t, ax, ay in ((0.0, 0.060, 0.017), (0.30, 0.048, 0.014), (0.65, 0.031, 0.010), (0.90, 0.013, 0.006), (1.0, 0.004, 0.003)):
+                rings.append((tuple(base[i] + (tip[i] - base[i]) * t for i in range(3)), (ax * f.get("ears", 1.0) * hs, ay * hs)))
+            self.loft("ear_" + s, rings, "ear_" + s, f.get("ear", self.dark), axis="z", sides=6, far=s == "f")
+            self.e("eye_" + s, hp(0.50, 0.026, y * 0.066 * hs), (0.020, 0.015, 0.017), "head", f.get("eye", EYE), far=s == "f", glow=True, seg=8, rings=6)
         self.blade("fang_u", hp(0.82, -0.050), hp(0.82, -0.098), 0.020, 0.016, "head", FANG)
         self.blade("fang_l", hp(0.82, -0.080), hp(0.84, -0.040), 0.020, 0.016, "jaw", FANG)
         if f.get("star", True):
-            self.e("star", hp(0.40, 0.085), (0.024, 0.014, 0.034), "head", f.get("star_colour", STAR), glow=True, seg=6, rings=4)
-        # the tail: three bushy tapering segments
+            self.e("star", hp(0.34, 0.100), (0.020, 0.012, 0.030), "head", f.get("star_colour", STAR), glow=True, seg=6, rings=4)
+        # the tail: a thick brush, fullest past the middle and rounded at the tip, hanging from the rump
         tr = f.get("tail_r", 1.0)
-        for i, (a, c) in enumerate(((0.075 * tr, 0.100 * tr), (0.100 * tr, 0.105 * tr), (0.105 * tr, 0.0)), 1):
+        tcol = room(f.get("tail_colour", TAIL), 80)
+        for i, (a, c) in enumerate(((0.052 * tr, 0.086 * tr), (0.086 * tr, 0.100 * tr), (0.100 * tr, 0.042 * tr)), 1):
             h, t, _ = self.bones["tail%d" % i]
-            self.l("tail%d" % i, h, t, a * b, c * b, "tail%d" % i, room(f.get("tail_colour", TAIL), 80), sides=6)
+            self.l("tail%d" % i, h, t, a * b, c * b, "tail%d" % i, tcol, sides=8)
+            if i < 3:
+                self.e("tail_joint%d" % i, t, (c * b,) * 3, "tail%d" % i, tcol, seg=8, rings=6)
+        t3 = self.bones["tail3"][1]
+        self.e("tail_tip", t3, (0.044 * tr * b, 0.046 * tr * b, 0.044 * tr * b), "tail3", f.get("tail_tip", tcol), seg=8, rings=6)
         # the legs: thin tapering limbs with round joints and flat paws; the hind ones are digitigrade
         for s, y in (("n", skeleton.NEAR), ("f", skeleton.FAR)):
             far = s == "f"
@@ -141,11 +160,12 @@ class Wolf:
                 hl, tl, _ = self.bones[lower + s]
                 hf, tf, _ = self.bones[foot + s]
                 c = dark if far else fur
+                pale = self.socks_far if far else self.socks
                 self.l(upper + s, hu, tu, r[0] * b, r[1] * b * 1.05, upper + s, c, far)
-                self.e("joint_" + upper + s, tu, (r[1] * b * 1.1,) * 3, upper + s, c, far, seg=8, rings=6)
-                self.l(lower + s, hl, tl, r[1] * b, r[2] * b * 1.2, lower + s, c, far)
-                self.e("joint_" + lower + s, tl, (r[2] * b * 1.3,) * 3, lower + s, c, far, seg=8, rings=6)
-                self.l(foot + s, hf, tf, r[2] * b * 1.1, r[2] * b * 0.9, foot + s, c, far)
-                self.paw("pad_" + foot + s, s, foot + s, c, upper == "thigh_", far)
+                self.e("joint_" + upper + s, tu, (r[1] * b * 1.02,) * 3, upper + s, c, far, seg=8, rings=6)
+                self.l(lower + s, hl, tl, r[1] * b, r[2] * b * 1.2, lower + s, pale, far)
+                self.e("joint_" + lower + s, tl, (r[2] * b * 1.12,) * 3, lower + s, pale, far, seg=8, rings=6)
+                self.l(foot + s, hf, tf, r[2] * b * 1.1, r[2] * b * 0.9, foot + s, pale, far)
+                self.paw("pad_" + foot + s, s, foot + s, pale, upper == "thigh_", far)
             hh = self.bones["thigh_" + s]
             self.e("haunch_" + s, (hh[0][0] + 0.03, y, hh[0][2] - 0.07), (0.115 * b, 0.075 * b, 0.145 * b), "thigh_" + s, dark if far else fur, far, seg=8, rings=6)

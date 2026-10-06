@@ -38,6 +38,12 @@ class SkeletonTest(unittest.TestCase):
             for b in ("sho_", "fore_", "paw_", "thigh_", "shin_", "meta_"):
                 self.assertIn(b + side, s.rest)
 
+    def test_the_head_is_carried_close_to_the_level_of_the_back_on_a_thick_short_neck(self):
+        s = qs.skeleton()
+        withers = s.rest["spine"][1][1]
+        self.assertLess(s.rest["head"][0][1] - withers, 0.13, "a wolf's head hangs about level with its back; it is not raised on a long neck")
+        self.assertLess(s.rest["head"][1][1], s.rest["head"][0][1], "and the muzzle points a little down")
+
     def test_a_longer_legged_hound_stands_taller_and_a_stocky_wolf_lower(self):
         tall, plain, stocky = (qs.skeleton(leg=k).rest["hips"][0][1] for k in (1.3, 1.0, 0.85))
         self.assertGreater(tall, plain + 0.1)
