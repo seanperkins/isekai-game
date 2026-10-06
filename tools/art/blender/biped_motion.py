@@ -34,6 +34,24 @@ ARMS = {
     "lantern": (20, 30, 70, 30, 0.2),         # a lantern low, the other hand beckoning
     "shield": (40, 70, 36, 50, 0.15),
     "sword": (60, 50, 8, 24, 0.2),            # a blade over the shoulder
+    # the undead's (undead_forms.py)
+    "zombie": (22, 18, 16, 14, 0.45),         # heavy arms hanging low and a little forward
+    "claws": (14, 8, 8, 6, 0.5),              # long arms hanging close in front of the thighs
+    "stiff": (86, -10, 84, -10, 0.0),         # both arms held straight out in front (a jiangshi)
+    "bow": (10, 34, 34, 34, 0.25),            # the bow held upright in the far hand ahead of the body, the near hand at the hip
+    "shield_spear": (40, 76, 12, 62, 0.12),   # a shield held forward on the near arm, a spear upright in the far hand
+    "palm_up": (12, 30, 22, 74, 0.2),         # a staff in the near hand, the far hand held open in front
+    "beckon": (14, 30, 64, 60, 0.15),         # a staff in the near hand, the far hand raised palm out
+    "goblet": (30, 74, 6, 16, 0.15),          # a cup held at the chest, the other hand at the side
+    "lantern_up": (44, 40, 4, 64, 0.2),       # a lantern held up and out, the other hand in a pocket
+    "crossed": (30, 96, 34, 92, 0.05),        # crook and flail crossed on the chest
+    "bless": (16, 34, 58, 84, 0.1),           # a tall staff in the near hand, the far hand raised in blessing
+    "flourish": (-28, 96, 150, 70, 0.1),      # the near hand on the hip, the far arm curled up beside the head
+    "sow": (26, 84, 8, 20, 0.35),             # a handful held against the chest
+    "head_whip": (8, 16, 22, 80, 0.15),       # a whip hanging from the near hand, a head tucked under the far arm
+    "hilt": (-6, 64, 18, 52, 0.1),            # the near hand on a sword hilt at the hip, the far hand at the chest
+    "scale": (26, 88, 2, 4, 0.1),             # something small held at the chest, the other arm straight down
+    "cleaver_up": (52, 70, 18, 30, 0.2),      # a cleaver held up at the shoulder
 }
 # how a form stands: "lean" and "head" are extra degrees on the chest and head, "pelvis" moves the hips (dx, dz, fractions of L), "feet" moves a
 # foot's contact point (dx, dz, extra pitch): a raised foot has dz above 0
