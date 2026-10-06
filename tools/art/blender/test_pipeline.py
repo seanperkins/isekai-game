@@ -263,8 +263,60 @@ class PipelineTest(unittest.TestCase):
             with self.subTest(variant=variant), tempfile.TemporaryDirectory() as tmp:
                 self._same_as_armature(tmp, variant, "spider", ss.skeleton_for(spider_forms.FORMS[variant]))
 
+    def test_a_rig_calls_its_post_pose_hook_after_the_bones_and_poses_the_same_without_one(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "hook.json")
+            done = blender("-P", os.path.join(HERE, "probe_slime.py"), "--", path, "--hook")
+            self.assertTrue(os.path.exists(path), done.stdout[-1500:] + done.stderr[-1500:])
+            with open(path) as fh:
+                probe = json.load(fh)
+            self.assertEqual(len(probe["seen"]), 1, "called once per pose")
+            self.assertEqual(probe["seen"][0]["rot"], {"arm": [0, -30, 0]})
+            self.assertEqual(probe["seen"][0]["root"], [0.5, 0, 0])
+            self.assertTrue(probe["seen"][0]["same_rig"])
+            self.assertEqual(probe["seen"][0]["bones"], probe["plain"]["bones"], "the hook sees the bones already solved")
+            self.assertNotEqual(probe["seen"][0]["bones"], probe["unposed"], "(which differ from the unposed rig)")
+            self.assertEqual(probe["plain"]["bones"], probe["hooked"]["bones"], "the bones are solved as before")
+            moved = [b[2] - a[2] for a, b in zip(probe["plain"]["verts"], probe["hooked"]["verts"])]
+            self.assertGreater(max(moved), 0.1, "what the hook does to a mesh shows in the pose")
+
+    def test_the_slimes_real_jelly_and_bones_are_where_the_pure_soft_body_puts_them(self):
+        sys.path.insert(0, HERE)
+        import slime_forms
+        import slime_motion as sm
+        for form in ("slime", "kraken", "poltergeist", "mimic"):
+            with self.subTest(form=form), tempfile.TemporaryDirectory() as tmp:
+                path = os.path.join(tmp, "probe.json")
+                done = blender("-P", os.path.join(HERE, "probe_slime.py"), "--", path, form)
+                self.assertTrue(os.path.exists(path), done.stdout[-1500:] + done.stderr[-1500:])
+                with open(path) as fh:
+                    probe = json.load(fh)
+                body = sm.SlimeBody(slime_forms.FORMS[form])
+                self.assertEqual({f["clip"] for f in probe["frames"]}, {"idle", "walk", "run", "attack", "hurt", "die"})
+                rest = [tuple(v) for v in probe["rest"]]
+                ours = body.shape.mesh()[0]
+                self.assertEqual(len(rest), len(ours))
+                for f in probe["frames"]:
+                    rot = {k: (tuple(v) if isinstance(v, list) else v) for k, v in f["rot"].items()}
+                    root = tuple(f["root"])
+                    soft = sm.soft_of(rot)
+                    for v, got in list(zip(rest, f["jelly"]))[::5]:
+                        want = sm.deform(v, soft, body.shape)
+                        for g, w in zip(got, (want[0] + root[0], want[1] + root[1], want[2] + root[2])):
+                            self.assertAlmostEqual(g, w, delta=1e-4, msg="%s %s %d" % (form, f["clip"], f["frame"]))
+                    posed = sm.pose_bones(body, rot, root)
+                    for ch in body.chains:     # a chain's root is carried in depth too, so it stays on the surface as the body spreads
+                        want = sm.deform(ch["anchor"], soft, body.shape)[1] + root[1]
+                        self.assertAlmostEqual(f["depth"][ch["name"]], want, delta=1e-4, msg="%s %s %d %s depth" % (form, f["clip"], f["frame"], ch["name"]))
+                    for bone, (head, tail, _) in posed.items():
+                        want_head, want_tail = f["bones"][bone]
+                        for got, want in ((head, want_head), (tail, want_tail)):
+                            self.assertAlmostEqual(got[0], want[0], delta=1e-4, msg="%s %s %d %s" % (form, f["clip"], f["frame"], bone))
+                            self.assertAlmostEqual(got[1], want[1], delta=1e-4, msg="%s %s %d %s" % (form, f["clip"], f["frame"], bone))
+
     def _frames_inside_canvas(self, creature, variants, on_ground=None, floats=()):
-        """Render each variant and check every frame of every clip: drawn, inside the canvas, never below the ground; `on_ground(anim, i, count)` says which frames stand on it."""
+        """Render each variant and check every frame of every clip: drawn, inside the canvas, never below the ground, timed as the engine plays it;
+        `on_ground(variant, anim, i, count)` says which frames must stand on it; a variant in `floats` must hover off it (except the last frame of its death)."""
         sys.path.insert(0, HERE)
         import export_forms
         for variant in variants:
@@ -285,19 +337,24 @@ class PipelineTest(unittest.TestCase):
                         self.assertLessEqual(box[3], ground + 1, "%s %d is not below the ground" % (anim, i))
                         if variant in floats and anim != "die":
                             self.assertLess(box[3], ground - 1, "%s %d floats off the ground" % (anim, i))
-                        if on_ground is not None and variant not in floats and on_ground(anim, i, count):
-                            self.assertGreaterEqual(box[3], ground - 1, "%s %d stands on the ground" % (anim, i))
                         if variant in floats and anim == "die" and i == count - 1:
+                            self.assertGreaterEqual(box[3], ground - 1, "%s %d stands on the ground" % (anim, i))
+                        if on_ground is not None and variant not in floats and on_ground(variant, anim, i, count):
                             self.assertGreaterEqual(box[3], ground - 1, "%s %d stands on the ground" % (anim, i))
                 export_forms.check_timing(meta, export_forms.engine_constants())
 
     def test_every_frame_of_every_undead_clip_is_drawn_inside_its_canvas_and_never_below_the_ground(self):
         self._frames_inside_canvas("undead", ("skeleton", "jiangshi", "banshee", "bone_colossus"),
-                                   on_ground=lambda anim, i, count: anim == "idle" or anim == "die" and i == count - 1, floats=("banshee",))
+                                   on_ground=lambda v, anim, i, count: anim == "idle" or anim == "die" and i == count - 1, floats=("banshee",))
 
     def test_every_frame_of_every_spider_clip_is_drawn_inside_its_canvas_and_never_below_the_ground(self):
         self._frames_inside_canvas("spider", ("norn", "tarantella", "plaguemother", "nightstalker"),
-                                   on_ground=lambda anim, i, count: anim in ("idle", "walk", "attack", "hurt"))
+                                   on_ground=lambda v, anim, i, count: anim in ("idle", "walk", "attack", "hurt"))
+
+    def test_every_frame_of_every_slime_clip_is_drawn_inside_its_canvas_and_never_below_the_ground(self):
+        # tentacles, a hover form (the cloud rider does not stand), a stiff one, drips
+        self._frames_inside_canvas("slime", ("kraken", "cloud_rider", "cube", "alkahest"),
+                                   on_ground=lambda v, anim, i, count: v != "cloud_rider" and anim == "idle")
 
     def test_a_variant_changes_colours_and_parts_but_not_the_animation(self):
         with tempfile.TemporaryDirectory() as plain, tempfile.TemporaryDirectory() as red:
