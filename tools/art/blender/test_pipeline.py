@@ -173,6 +173,44 @@ class PipelineTest(unittest.TestCase):
                             self.assertAlmostEqual(got[0], want[0], delta=1e-4, msg="%s %d %s" % (probe["clip"], probe["frame"], bone))
                             self.assertAlmostEqual(got[1], want[1], delta=1e-4, msg="%s %d %s" % (probe["clip"], probe["frame"], bone))
 
+    def test_the_flat_wolf_man_skeleton_matches_the_real_armature_in_every_clip(self):
+        sys.path.insert(0, HERE)
+        import werewolf_skeleton as ws
+        import wolf_forms
+        for variant in ("moonbound", "beast_of_gevaudan"):
+            with self.subTest(variant=variant), tempfile.TemporaryDirectory() as tmp:
+                path = os.path.join(tmp, "pose.json")
+                done = blender("-P", os.path.join(HERE, "probe_pose.py"), "--", path, variant, "werewolf")
+                self.assertTrue(os.path.exists(path), done.stdout[-1500:] + done.stderr[-1500:])
+                with open(path) as fh:
+                    probes = json.load(fh)
+                form = wolf_forms.FORMS[variant]
+                skel = ws.skeleton(tall=form.get("tall", 1.0), arm=form.get("arm", 1.0))
+                self.assertEqual({p["clip"] for p in probes}, {"idle", "walk", "run", "attack", "hurt", "die"})
+                for probe in probes:
+                    posed = skel.pose({k: tuple(v) for k, v in probe["rot"].items()}, tuple(probe["root"]))
+                    for bone, (head, tail, _) in posed.items():
+                        want_head, want_tail = probe["bones"][bone]
+                        for got, want in ((head, want_head), (tail, want_tail)):
+                            self.assertAlmostEqual(got[0], want[0], delta=1e-4, msg="%s %d %s" % (probe["clip"], probe["frame"], bone))
+                            self.assertAlmostEqual(got[1], want[1], delta=1e-4, msg="%s %d %s" % (probe["clip"], probe["frame"], bone))
+
+    def test_every_frame_of_every_wolf_man_clip_is_drawn_inside_its_canvas_and_never_below_the_ground(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            done = blender("-P", os.path.join(HERE, "render_set.py"), "--", "--creature", "werewolf", "--variant", "wolfskin_champion", "--out", tmp, "--ss", "1")
+            self.assertEqual(done.returncode, 0, done.stdout[-1500:] + done.stderr[-1500:])
+            with open(os.path.join(tmp, "meta.json")) as fh:
+                meta = json.load(fh)
+            size, ground = meta["canvas"], meta["canvas"] - meta["margin"]
+            self.assertEqual(set(meta["anims"]), {"idle", "walk", "run", "attack", "hurt", "die"})
+            for anim, count in meta["anims"].items():
+                for i in range(count):
+                    with Image.open(os.path.join(tmp, "%s_%d_albedo.png" % (anim, i))) as a:
+                        box = a.convert("RGBA").split()[3].point(lambda v: 255 if v > 127 else 0).getbbox()
+                    self.assertIsNotNone(box, "%s %d is drawn" % (anim, i))
+                    self.assertTrue(box[0] > 0 and box[1] > 0 and box[2] < size, "%s %d is inside the canvas: %s" % (anim, i, box))
+                    self.assertLessEqual(box[3], ground + 1, "%s %d is not below the ground" % (anim, i))
+
     def test_every_frame_of_every_wolf_clip_is_drawn_inside_its_canvas_and_never_below_the_ground(self):
         with tempfile.TemporaryDirectory() as tmp:
             done = blender("-P", os.path.join(HERE, "render_set.py"), "--", "--creature", "wolf", "--variant", "warg", "--out", tmp, "--ss", "1")

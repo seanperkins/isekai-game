@@ -93,8 +93,8 @@ def paint(g, color=TAN, **_):
 def shield(g, color=(160, 124, 82), rim=IRON, **_):
     """A round wooden shield held out in front in both hands."""
     c = (0.50, 0.0, 1.0 * g.tall)
-    g.e("shield", c, (0.04, 0.22, 0.24), "item_n", color)
-    g.e("shield_boss", (c[0] + 0.045, c[1], c[2]), (0.03, 0.07, 0.07), "item_n", rim)
+    g.e("shield", c, (0.07, 0.22, 0.25), "item_n", color)
+    g.e("shield_boss", (c[0] + 0.065, c[1], c[2]), (0.04, 0.07, 0.07), "item_n", rim)
     g.loft("shield_rim", [((c[0], 0.0, c[2] - 0.24), (0.045, 0.2), 0.0), ((c[0], 0.0, c[2] + 0.24), (0.045, 0.2), 0.0)], "item_n", rim, axis="z", sides=8)
 
 

@@ -373,3 +373,62 @@ class ClipTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+# ---- the wolf-men: the same motion with another skeleton, a digitigrade foot (its sole is a toe pad ahead of the ankle) and the werewolf posture ----
+def werewolf(**overrides):
+    import werewolf_skeleton as ws
+    form = dict(forms.FORMS["goblin"], **overrides)
+    skel = ws.skeleton()
+    return gm.Body(skel, {"n": (0.27, -0.18, 0.17), "f": (0.27, -0.18, 0.17)}, form, present=set(skel.rest), posture="werewolf")
+
+
+class WerewolfTest(unittest.TestCase):
+    def test_it_hunches_far_forward_and_stands_on_its_toes(self):
+        body = werewolf()
+        rot, root = gm.idle_pose(body, 0.0)
+        posed = body.skel.pose(rot, root)
+        self.assertTrue(30.0 < 180.0 - posed["spine"][2] < 46.0)
+        for s in "nf":
+            heel, toe = body.legs[s].sole(posed)
+            self.assertAlmostEqual(heel[1], 0.0, places=6)
+            self.assertAlmostEqual(toe[1], 0.0, places=6)
+            self.assertGreater(body.legs[s].ankle_of(posed)[1], 0.2, "the ankle is high above the ground")
+
+    def test_its_planted_foot_does_not_slide_in_a_walk_and_a_run_and_it_reaches_at_every_speed(self):
+        body = werewolf()
+        a, b = anim.ROLL
+        worst = 0.0
+        for gait in ("walk", "run"):
+            g = body.gaits[gait]
+            for speed in (15.0, 54.0, 110.0, 220.0):
+                s = speed * (1.9 if gait == "run" else 1.0)
+                cycle, stride = gm.plan_gait(body, gait, s, 26.0)
+                heels = []
+                for k in range(120):
+                    t = k / 120.0
+                    rot, root = gm.gait_pose(body, gait, t, stride)
+                    posed = body.skel.pose(rot, root)
+                    leg = body.legs["n"]
+                    x, z, _, _ = anim.foot_pose(t, stride, g["duty"], g["lift"] * body.L, leg.heel, leg.toe, leg.ankle_h)
+                    ankle = leg.ankle_of(posed)
+                    worst = max(worst, math.hypot(ankle[0] - (body.hip[0] + x), ankle[1] - z))
+                    if (a + 0.05) * g["duty"] < t < (b - 0.05) * g["duty"]:
+                        heels.append((t, leg.sole(posed)[0][0]))
+                slopes = [(q[1] - p[1]) / (q[0] - p[0]) for p, q in zip(heels, heels[1:])]
+                self.assertAlmostEqual(sum(slopes) / len(slopes), -stride / g["duty"], delta=0.03 * stride / g["duty"], msg="%s %s" % (gait, speed))
+        self.assertLess(worst, 0.004)
+
+    def test_its_jaw_opens_for_a_blow_and_a_death_and_its_tail_follows_the_body(self):
+        body = werewolf()
+        self.assertGreater(max(gm.attack_pose(body, t)[0]["jaw"][1] for t, _ in gm.attack_frames(body)[0]), 15.0)
+        self.assertEqual(gm.attack_pose(body, gm.attack_frames(body)[0][-1][0])[0]["jaw"][1], 0.0, "closed again")
+        self.assertGreater(gm.hurt_pose(body, 0.10)[0]["jaw"][1], 15.0)
+        self.assertGreater(gm.die_pose(body, 0.3)[0]["jaw"][1], 10.0)
+        clip = gm.gait_clip(body, "walk", 0.8, 0.7)
+        tail = [rot["tail2"][1] for rot, _ in clip.frames]
+        self.assertGreater(max(tail) - min(tail), 1.5)
+
+    def test_a_goblin_has_no_jaw_to_open(self):
+        body = body_of("redcap")
+        self.assertNotIn("jaw", gm.attack_pose(body, 0.35)[0])

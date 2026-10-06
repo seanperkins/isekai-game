@@ -236,12 +236,12 @@ class Rig:
                 zs.append(w.z)
         return min(xs), max(xs), min(zs), max(zs)
 
-    def bounds_of(self, bone):
-        """(min x, max x, min z, max z) of the parts bound to `bone` in the current pose, or None."""
+    def bounds_of(self, bone, named=None):
+        """(min x, max x, min z, max z) of the parts bound to `bone` in the current pose, or None. With `named`, only the parts whose name starts so."""
         deps = bpy.context.evaluated_depsgraph_get()
         xs, zs = [], []
         for ob, _, _ in self.parts:
-            if self.owner[ob] != bone:
+            if self.owner[ob] != bone or (named and not ob.name.startswith(named)):
                 continue
             ev = ob.evaluated_get(deps)
             for c in ev.bound_box:

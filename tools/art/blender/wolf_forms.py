@@ -58,12 +58,17 @@ FORMS = {
                    gear=[G("ruff", size=1.2, color=(82, 90, 112)), G("frost")]),
 
     # ---- the werewolf line: stands upright (the werewolf kit) ----
-    "moonbound": dict(stage=2, parent="gloom_wolf", width=45, body="biped", gear=[]),
-    "loup_garou": dict(stage=3, parent="moonbound", width=50, body="biped", gear=[]),
-    "ulfhedinn": dict(stage=3, parent="moonbound", width=50, body="biped", gear=[]),
-    "beast_of_gevaudan": dict(stage=4, parent="loup_garou", width=56, body="biped", gear=[]),
-    "lycaon": dict(stage=4, parent="loup_garou", width=56, body="biped", gear=[]),
-    "wolfskin_champion": dict(stage=4, parent="ulfhedinn", width=56, body="biped", gear=[]),
+    "moonbound": dict(stage=2, parent="gloom_wolf", width=45, body="biped", creature="werewolf", arms="free", gear=[]),
+    "loup_garou": dict(stage=3, parent="moonbound", width=50, body="biped", creature="werewolf", tall=1.05, bulk=1.1, stance="hunch", eye=(236, 120, 150), arms="free",
+                       gear=[G("breeches"), G("blood")]),
+    "ulfhedinn": dict(stage=3, parent="moonbound", width=50, body="biped", creature="werewolf", tall=1.05, bulk=1.15, arms="guard", eye=(220, 214, 255),
+                      gear=[G("pelt"), G("straps"), G("bracers"), G("paint")]),
+    "beast_of_gevaudan": dict(stage=4, parent="loup_garou", width=56, body="biped", creature="werewolf", tall=1.1, arm=1.15, bulk=0.95, head=1.1, stance="hunch", arms="offer",
+                              eye=(200, 210, 230), gear=[G("mane"), G("stripe"), G("blood")]),
+    "lycaon": dict(stage=4, parent="loup_garou", width=56, body="biped", creature="werewolf", tall=1.1, bulk=0.9, attack="cast", arms="raise_n", eye=(220, 210, 255),
+                   tail_colour=(60, 52, 80), gear=[G("cloak"), G("crown")]),
+    "wolfskin_champion": dict(stage=4, parent="ulfhedinn", width=56, body="biped", creature="werewolf", tall=1.12, bulk=1.25, arms="shield", eye=(220, 214, 255),
+                              gear=[G("pelt"), G("straps"), G("bracers"), G("trophies"), G("paint"), G("shield")]),
     # skoll is a galloping four-legged wolf, a child of the ulfhedinn
     "skoll": dict(stage=4, parent="ulfhedinn", width=76, leg=1.1, bulk=0.9, tail=1.3, fur=(46, 42, 56), eye=(170, 236, 246), star_colour=(170, 236, 246),
                   gear=[G("ruff", size=1.0), G("wisps", color=CYAN)]),
@@ -71,3 +76,4 @@ FORMS = {
 
 ORDER = list(FORMS)
 QUADS = [n for n, f in FORMS.items() if f.get("body", "quad") == "quad" and n != "gloom_wolf"]
+BIPEDS = [n for n, f in FORMS.items() if f.get("body") == "biped"]

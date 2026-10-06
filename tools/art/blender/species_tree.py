@@ -51,6 +51,7 @@ def rows_of(forms, base):
 
 def render_form(species, name, out, ss=4):
     creature, _, base = SPECIES[species]
+    creature = forms_of(species)[name].get("creature", creature)   # some forms of a species are built with another kit (the werewolves)
     raw = os.path.join(out, name, "raw")
     os.makedirs(raw, exist_ok=True)
     spike.render(creature, raw, None if name == base else name, None, ss)
@@ -140,12 +141,12 @@ def main(argv=None):
     ap.add_argument("forms", nargs="*")
     ap.add_argument("--out")
     ap.add_argument("--skip-render", action="store_true", help="reuse the frames already in --out")
-    ap.add_argument("--only-quads", action="store_true", help="skip the forms a species builds with a different kit (wolf: the werewolves)")
+    ap.add_argument("--only", choices=("quads", "bipeds"), help="wolf: only the four-legged forms, or only the werewolves")
     args = ap.parse_args(argv)
     forms = forms_of(args.species)
     base = SPECIES[args.species][2]
     out = args.out or os.path.join(ROOT, ".tmp", "%s-tree" % args.species)
-    names = args.forms or [n for n in forms if not (args.only_quads and forms[n].get("body", "quad") != "quad")]
+    names = args.forms or [n for n in forms if not args.only or forms[n].get("body", "quad") == ("biped" if args.only == "bipeds" else "quad")]
     os.makedirs(os.path.join(out, "stills"), exist_ok=True)
     for n in names:
         if not args.skip_render:

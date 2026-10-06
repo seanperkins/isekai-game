@@ -36,7 +36,7 @@ def core(tall=1.0, arm=1.0):
         bones.append(("tail%d" % i, prev, end, parent))
         prev, parent = end, "tail%d" % i
     for s, sign in (("n", -1), ("f", 1)):
-        bones.append(("ear_" + s, (0.16, sign * 0.10, 1.76 * t), (0.04, sign * 0.15, 2.00 * t), "head"))
+        bones.append(("ear_" + s, (0.16, sign * 0.10, 1.76 * t), (0.06, sign * 0.14, 1.97 * t), "head"))
     return bones
 
 

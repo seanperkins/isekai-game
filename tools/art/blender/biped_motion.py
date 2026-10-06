@@ -54,7 +54,7 @@ POSTURES = {
     "goblin": dict(crouch=0.82, stance_half=0.31, lean=28.0, head_lean=12.0, recoil=1.0, gaits={}),
     # a wolf-man: tall, hunched far forward over long digitigrade legs, a long stride
     "werewolf": dict(crouch=0.84, stance_half=0.30, lean=38.0, head_lean=16.0, recoil=0.9,
-                     gaits={"walk": dict(lean=40.0, head=16.0, stride_legs=1.0, max_stride=1.1), "run": dict(lean=52.0, head=22.0, stride_legs=1.3, max_stride=1.35)}),
+                     gaits={"walk": dict(lean=40.0, head=16.0, stride_legs=1.0, max_stride=1.1), "run": dict(lean=52.0, head=22.0, stride_legs=1.15, max_stride=1.2)}),
 }
 
 GAITS = {
@@ -109,6 +109,9 @@ class Body:
         self.legs = {s: Leg(skel, s, *feet[s]) for s in "nf"}
         self.L = self.legs["n"].reach
         self.hip = self.legs["n"].hip
+        # a foot that stands on a pad ahead of its ankle (a wolf-man's toes) puts the ankle behind where a flat foot's would be: the stance moves forward by half
+        # of that so both ankles stay within reach of the hips
+        self.stance_shift = max(0.0, -min(f[1] for f in feet.values())) * 0.5
         self.stance = STANCES.get(form.get("stance"), {})
 
     def hip_z(self, crouch=None):
@@ -180,7 +183,7 @@ def _foot_base(body, side):
     """(contact x, lift, pitch) of a foot standing in the form's stance."""
     L = body.L
     dx, dz, dpitch = body.stance.get("feet", {}).get(side, (0.0, 0.0, 0.0))
-    return body.hip[0] + ((body.posture["stance_half"] if side == "n" else -body.posture["stance_half"]) + dx) * L, dz * L, dpitch
+    return body.hip[0] + body.stance_shift + ((body.posture["stance_half"] if side == "n" else -body.posture["stance_half"]) + dx) * L, dz * L, dpitch
 
 
 def _stand_feet(body, rot, hip, shift=0.0):
@@ -188,7 +191,7 @@ def _stand_feet(body, rot, hip, shift=0.0):
     L = body.L
     for side, half in (("n", body.posture["stance_half"]), ("f", -body.posture["stance_half"])):
         dx, dz, dpitch = body.stance.get("feet", {}).get(side, (0.0, 0.0, 0.0))
-        _plant(body, rot, side, hip, body.hip[0] + (half + dx + shift) * L, dpitch, dz * L)
+        _plant(body, rot, side, hip, body.hip[0] + body.stance_shift + (half + dx + shift) * L, dpitch, dz * L)
 
 
 # ---- idle -----------------------------------------------------------------------------------------------------------------------
