@@ -44,6 +44,14 @@
    ],
    "fps": 1.0,
    "loop": false
+  },
+  "run": {
+   "frames": [
+    "walk_0",
+    "walk_1"
+   ],
+   "fps": 12.0,
+   "loop": true
   }
  }
 }

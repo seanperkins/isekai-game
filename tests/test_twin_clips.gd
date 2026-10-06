@@ -56,6 +56,15 @@ func test_it_walks_when_it_moves() -> void:
 	_step(e)
 	assert_eq(e._anim_state, "walk")
 
+func test_it_runs_when_it_charges_and_a_form_without_a_run_clip_walks_instead() -> void:
+	var e := _enemy(_fixture_def())
+	e.velocity.x = 400.0
+	_step(e)
+	assert_eq(e._anim_state, "run")
+	var walker := {"idle": {}, "walk": {}}
+	assert_eq(EnemyState.pick_form(walker, EnemyStatus.ACTIVE, "", true, false, true), "walk")
+	assert_eq(EnemyState.pick_form(walker, EnemyStatus.ACTIVE, "", false, false, true), "idle")
+
 func test_the_clip_advances_with_time() -> void:
 	var e := _enemy(_fixture_def())
 	_step(e, 0.0)

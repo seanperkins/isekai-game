@@ -12,12 +12,12 @@ describes it. A form names its proportions, colours, gear (goblin_gear.py), the 
 """
 
 TAN, LEATHER, DKLEATHER, RED = (176, 132, 86), (134, 92, 58), (88, 62, 42), (180, 56, 48)
-CREAM, GOLD, CYAN, ROSE = (236, 224, 190), (236, 190, 70), (150, 226, 236), (238, 150, 172)
+CREAM, GOLD, CYAN, ROSE = (200, 186, 152), (222, 176, 66), (120, 190, 204), (214, 126, 150)
 VIOLET, DKVIOLET, CHAR = (104, 74, 142), (62, 44, 92), (58, 58, 68)
-IRON, DKIRON, STEEL, BRASS = (124, 130, 142), (84, 90, 102), (190, 198, 210), (204, 158, 72)
-CRIMSON, BLOOD, GREY, WHITE = (172, 30, 46), (140, 22, 36), (122, 120, 128), (240, 240, 236)
+IRON, DKIRON, STEEL, BRASS = (112, 118, 130), (74, 80, 92), (166, 176, 190), (190, 146, 66)
+CRIMSON, BLOOD, GREY, WHITE = (160, 32, 48), (128, 24, 38), (114, 112, 120), (212, 212, 204)
 LEAF, DKGREEN, WOOL, WOOLGREY = (98, 150, 72), (46, 96, 60), (134, 118, 102), (196, 192, 184)
-BONE, WRAP = (232, 226, 206), (206, 192, 150)
+BONE, WRAP = (214, 206, 182), (168, 150, 112)
 
 
 def G(name, **kw):

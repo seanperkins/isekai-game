@@ -15,7 +15,7 @@ from PIL import Image
 
 LIGHT = (-0.45, 0.70, 0.55)   # the key light: upper left, in front
 RIM = (0.85, 0.35, -0.2)      # a back light: upper right, behind, catching edges turned from the camera
-BANDS = (-0.30, 0.10, 0.48, 0.80)   # N.L between ramp steps 0..4
+BANDS = (-0.30, 0.15, 0.55, 0.88)   # N.L between ramp steps 0..4: the broad middle steps hold most of a form, the palest only a small cluster
 HYST = 0.07                   # a pixel only changes shading step when it is this far past the boundary: the shimmer-killer
 COVER_HYST = 24               # and only appears or vanishes when its coverage is this far (of 255) past one half
 CREASE = 0.64                 # neighbours whose normals agree less than this (cos 50 degrees) have a crease between them

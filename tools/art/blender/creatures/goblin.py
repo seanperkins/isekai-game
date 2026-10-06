@@ -205,12 +205,12 @@ def setup(rig, variant):
             (rig.stand if c.grounded else rig.pose)(rot, root)
             a, b, _, top = rig.extent()
             lo_x, hi_x, hi_z = min(lo_x, a), max(hi_x, b), max(hi_z, top)
-    need = max((hi_x - lo_x) * ppu + 2 * PAD, hi_z * ppu + MARGIN + PAD)
+    need = max(2.0 * max(abs(lo_x), abs(hi_x)) * ppu + 2 * PAD, hi_z * ppu + MARGIN + PAD)  # about the creature's own centre, so a frame mirrors in place
     canvas = int(math.ceil(need / 8.0) * 8)
     info = {"durations": {name: c.durations for name, c in clips.items()}, "loops": {name: c.loop for name, c in clips.items()},
             "fps": {name: len(c.frames) / sum(c.durations) for name, c in clips.items()}}
     if not form.get("ride"):
         spec, windup = motion_.attack_frames(motion_.Body(skeleton2d.Skeleton2D.from_rig(rig), measure_feet(rig), form, present=set(rig.rest)))
         info["windup"] = windup
-    return {"canvas": canvas, "ppu": ppu, "margin": MARGIN, "center_x": (lo_x + hi_x) / 2.0, "anims": anims,
+    return {"canvas": canvas, "ppu": ppu, "margin": MARGIN, "center_x": 0.0, "anims": anims,
             "still": form.get("still", "idle_0"), "extra": info}

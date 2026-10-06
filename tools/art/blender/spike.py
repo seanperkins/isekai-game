@@ -49,6 +49,7 @@ def render(creature, out, variant=None, anims=None, ss=4):
         raise RuntimeError("Blender failed:\n" + done.stdout[-2500:] + done.stderr[-2500:])
 
 
+RIM, CREASES, LIT_OUTLINE = False, False, 0.62   # no automatic rim light or crease lines (form comes from the broad steps), and an outline that is lighter where it touches light
 BAKE = 1.0   # how much of the lighting is painted into the sprite (1: a five-step ramp per material; 0.5: three steps, leaving more to the room's lights)
 
 
@@ -84,14 +85,16 @@ def process(raw, out, colours=24, outline=True, bake=BAKE):
             for a, n in passes:
                 small_a, small_n = shade.reduce_passes(a, n, (canvas, canvas), materials, previous=prev_a)
                 steps = {}
-                lit = shade.shade(small_a, small_n, bake=bake, previous=prev_steps, record=steps)
+                lit = shade.shade(small_a, small_n, bake=bake, rim=RIM, creases=CREASES, previous=prev_steps, record=steps)
                 prev_a, prev_steps = small_a, steps
                 done.append((lit, small_n))
         result[anim] = keys
         for key, (lit, small_n) in zip(keys, done):
             if outline:
-                lit = toon.outline(lit)
+                lit = toon.outline(lit, shade.DARK, LIT_OUTLINE)
             lit = toon.apply_palette(lit, pal)
+            if lit.getbbox() is None:
+                raise RuntimeError("frame %s is empty: the creature is outside its canvas" % key)
             lit.save(os.path.join(out, "frames", key + ".png"))
             _flat_outline_normals(lit, small_n).save(os.path.join(out, "frames", key + "_n.png"))
     return result

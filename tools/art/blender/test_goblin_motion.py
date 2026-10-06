@@ -17,7 +17,7 @@ PX = 0.04     # about a game pixel in the units of the model (a goblin is drawn 
 
 def body_of(name="goblin", **overrides):
     form = dict(forms.FORMS[name], **overrides)
-    skel = gs.skeleton(1.12 * form.get("bx", 1.0), 0.9 * form.get("tall", 1.0), extra=gs.ears(form.get("ears", 1.0)))
+    skel = gs.skeleton(gs.BASE_BX * form.get("bx", 1.0), gs.BASE_TALL * form.get("tall", 1.0), extra=gs.ears(form.get("ears", 1.0)))
     return gm.Body(skel, FEET, form)
 
 

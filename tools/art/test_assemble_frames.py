@@ -20,6 +20,26 @@ def frame(w, h, box, color=BLUE):
     return im
 
 
+class SharedBoxTest(unittest.TestCase):
+    def test_it_holds_every_box(self):
+        self.assertEqual(a.shared_box([(4, 6, 10, 30), (2, 10, 12, 32)]), (2, 6, 12, 32))
+
+    def test_about_a_centre_it_is_even_so_the_creature_stays_centred(self):
+        box = a.shared_box([(4, 6, 10, 30), (14, 10, 22, 32)], centre=16)
+        self.assertEqual(box[0] + box[2], 32)
+        self.assertLessEqual(box[0], 4)
+        self.assertGreaterEqual(box[2], 22)
+
+    def test_frames_cut_to_it_are_the_same_size_and_keep_their_place(self):
+        small = frame(40, 40, (18, 20, 22, 36))
+        wide = frame(40, 40, (6, 12, 34, 36))
+        box = a.shared_box([a.native_box(small), a.native_box(wide)], centre=20)
+        cut_small, cut_wide = a.native_frame(small, box), a.native_frame(wide, box)
+        self.assertEqual(cut_small.size, cut_wide.size)
+        self.assertEqual(cut_small.getpixel((cut_small.width // 2, cut_small.height - 2))[3], 255, "the small one is still at the centre, on the ground")
+        self.assertEqual(cut_small.getpixel((0, 0))[3], 0)
+
+
 class AssembleFramesTest(unittest.TestCase):
     def test_fit_scales_to_the_width_and_keeps_the_aspect(self):
         out = a.fit_frame(frame(100, 50, (20, 10, 80, 40)), 30)  # the subject is 60x30

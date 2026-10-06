@@ -1,0 +1,186 @@
+{
+ "set": "anim_goblin_lord_of_beasts",
+ "common_box": true,
+ "frames": [
+  {
+   "name": "idle_0",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "idle_1",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "idle_2",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "idle_3",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "idle_4",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "idle_5",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "idle_6",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "idle_7",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "idle_8",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "idle_9",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "idle_10",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "idle_11",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "walk_0",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "walk_1",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "walk_2",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "walk_3",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "walk_4",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "walk_5",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "walk_6",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "walk_7",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "walk_8",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "walk_9",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "walk_10",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "walk_11",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "attack_0",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "attack_1",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "attack_2",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "attack_3",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "attack_4",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "attack_5",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "attack_6",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "attack_7",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "attack_8",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "attack_9",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "attack_10",
+   "width": 0,
+   "native": true
+  },
+  {
+   "name": "attack_11",
+   "width": 0,
+   "native": true
+  }
+ ]
+}

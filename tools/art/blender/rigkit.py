@@ -58,6 +58,75 @@ def limb(name, a, b, r0, r1, sides=7, smooth=True, caps=True):
     return _object(name, bm, smooth)
 
 
+def loft(name, rings, axis="z", sides=8, smooth=False, caps=True):
+    """A solid through cross-sections, one ring per entry of `rings`: [(center (x, y, z), (a, b))] or [(center, (a, b), flat)]. `a` and `b` are
+    the half-sizes of the elliptical section across the path: for a path along z, a is its x half-size and b its y; for a path along x (a foot,
+    a snout), a is its z half-size and b its y. `flat` (0 to 1) cuts the section's low side off, so a foot has a flat sole: 1 leaves nothing
+    below the centre, 0.5 half of it. Flat shaded by default: the facets are the shape."""
+    bm = bmesh.new()
+    rows = []
+    for ring in rings:
+        c, (a, b) = ring[0], ring[1]
+        flat = ring[2] if len(ring) > 2 else 0.0
+        row = []
+        for i in range(sides):
+            t = 2.0 * math.pi * i / sides
+            u, v = math.cos(t) * a, math.sin(t) * b
+            if flat and u < -a * (1.0 - flat):
+                u = -a * (1.0 - flat)
+            p = (c[0] + u, c[1] + v, c[2]) if axis == "z" else (c[0], c[1] + v, c[2] + u)
+            row.append(bm.verts.new(p))
+        rows.append(row)
+    for r0, r1 in zip(rows, rows[1:]):
+        for i in range(sides):
+            j = (i + 1) % sides
+            try:
+                bm.faces.new((r0[i], r0[j], r1[j], r1[i]))
+            except ValueError:
+                pass
+    if caps:
+        for row in (rows[0], rows[-1]):
+            try:
+                bm.faces.new(row)
+            except ValueError:
+                pass
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
+    return _object(name, bm, smooth)
+
+
+def blade(name, root, tip, width, thick, smooth=False):
+    """A flat triangular slab (an ear, a horn, a spike, a hem point): `width` across the root, `thick` through it, narrowing to the tip.
+    The flat face is the one seen from the side, so for a slab pointing along x its width runs along z."""
+    r, t = Vector(root), Vector(tip)
+    axis = (t - r).normalized()
+    side = axis.cross(Vector((0, 1, 0)))
+    if side.length < 1e-6:
+        side = Vector((1, 0, 0))
+    side.normalize()
+    through = axis.cross(side).normalized()
+    bm = bmesh.new()
+    pts = [r + side * width / 2 + through * thick / 2, r - side * width / 2 + through * thick / 2,
+           r - side * width / 2 - through * thick / 2, r + side * width / 2 - through * thick / 2]
+    base = [bm.verts.new(p) for p in pts]
+    top = bm.verts.new(t)
+    bm.faces.new(base[::-1])
+    for i in range(4):
+        bm.faces.new((base[i], base[(i + 1) % 4], top))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
+    return _object(name, bm, smooth)
+
+
+def sheet(name, columns, smooth=False):
+    """A thin sheet of cloth. `columns` is [(top point, bottom point)] across it (a ragged hem is bottoms at different heights); the sheet is
+    the quads between neighbouring columns. Cloth has no thickness: it is seen from both sides."""
+    bm = bmesh.new()
+    cols = [(bm.verts.new(a), bm.verts.new(b)) for a, b in columns]
+    for (a0, b0), (a1, b1) in zip(cols, cols[1:]):
+        bm.faces.new((a0, a1, b1, b0))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
+    return _object(name, bm, smooth)
+
+
 def box(name, center, size, smooth=False):
     bm = bmesh.new()
     bmesh.ops.create_cube(bm, size=1.0)
@@ -104,6 +173,24 @@ class Rig:
         ob.parent = self.obj
         self.parts.append((ob, rgb, far))
         self.owner[ob] = bone
+        if glow:
+            self.glowing.add(ob)
+        return ob
+
+    def skin(self, ob, weights, rgb, far=False, glow=False):
+        """Bind a mesh to several bones with smooth weights: `weights(vertex position) -> {bone: weight}`. The armature bends the mesh where the
+        bones turn, which is how cloth hangs from two or three bones without a crack between them."""
+        for v in ob.data.vertices:
+            for bone, w in weights(v.co).items():
+                if w <= 0.0:
+                    continue
+                group = ob.vertex_groups.get(bone) or ob.vertex_groups.new(name=bone)
+                group.add([v.index], w, "REPLACE")
+        mod = ob.modifiers.new("Armature", "ARMATURE")
+        mod.object = self.obj
+        ob.parent = self.obj
+        self.parts.append((ob, rgb, far))
+        self.owner[ob] = max(ob.vertex_groups, key=lambda g: sum(1 for v in ob.data.vertices if any(vg.group == g.index and vg.weight > 0.5 for vg in v.groups))).name
         if glow:
             self.glowing.add(ob)
         return ob

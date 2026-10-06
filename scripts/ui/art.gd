@@ -29,9 +29,14 @@ static func light_texture() -> Texture2D:
 		_light = t
 	return _light
 
+## How far above the picture a point light hangs: with none (0) a normal-mapped sprite is lit only along its own plane and its normals do
+## nothing; this lights the faces turned toward the light, which is what gives a creature depth near a torch.
+const LIGHT_HEIGHT := 48.0
+
 ## A point light of the given color, for crystals, torches and the slime's glow.
 static func light(color: Color, energy: float = 1.0, scale: float = 1.5) -> PointLight2D:
 	var l := PointLight2D.new()
+	l.height = LIGHT_HEIGHT
 	l.texture = light_texture()
 	l.color = color
 	l.energy = energy

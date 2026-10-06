@@ -110,6 +110,25 @@ class PipelineTest(unittest.TestCase):
                 rect = before[form]["rect"]
                 self.assertTrue(0.6 < (w * h) / (rect[2] * rect[3]) < 1.7, "%s covers %.0f px against %d before" % (form, w * h, rect[2] * rect[3]))
 
+    def test_every_frame_of_every_goblin_clip_is_drawn_inside_its_canvas_and_never_below_the_ground(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            done = blender("-P", os.path.join(HERE, "render_set.py"), "--", "--creature", "goblin", "--variant", "hob", "--out", tmp, "--ss", "1")
+            self.assertEqual(done.returncode, 0, done.stdout[-1500:] + done.stderr[-1500:])
+            with open(os.path.join(tmp, "meta.json")) as fh:
+                meta = json.load(fh)
+            size, ground = meta["canvas"], meta["canvas"] - meta["margin"]
+            self.assertEqual(set(meta["anims"]), {"idle", "walk", "run", "attack", "hurt", "die"})
+            for anim, count in meta["anims"].items():
+                self.assertEqual(len(meta["durations"][anim]), count, anim)
+                for i in range(count):
+                    with Image.open(os.path.join(tmp, "%s_%d_albedo.png" % (anim, i))) as a:
+                        box = a.convert("RGBA").split()[3].point(lambda v: 255 if v > 127 else 0).getbbox()
+                    self.assertIsNotNone(box, "%s %d is drawn" % (anim, i))
+                    self.assertTrue(box[0] > 0 and box[1] > 0 and box[2] < size, "%s %d is inside the canvas: %s" % (anim, i, box))
+                    self.assertLessEqual(box[3], ground + 1, "%s %d is not below the ground" % (anim, i))
+                    if anim in ("idle", "die") and i == count - 1 or anim == "idle":
+                        self.assertGreaterEqual(box[3], ground - 1, "%s %d stands on the ground" % (anim, i))
+
     def test_the_flat_skeleton_the_motion_is_tested_on_matches_the_real_armature_in_every_clip(self):
         sys.path.insert(0, HERE)
         import goblin_forms as forms
@@ -122,7 +141,7 @@ class PipelineTest(unittest.TestCase):
                 with open(path) as fh:
                     probes = json.load(fh)
                 form = forms.FORMS[variant]
-                skel = gs.skeleton(1.12 * form.get("bx", 1.0), 0.9 * form.get("tall", 1.0), extra=gs.ears(form.get("ears", 1.0)))
+                skel = gs.skeleton(gs.BASE_BX * form.get("bx", 1.0), gs.BASE_TALL * form.get("tall", 1.0), extra=gs.ears(form.get("ears", 1.0)))
                 self.assertEqual({p["clip"] for p in probes}, {"idle", "walk", "run", "attack", "hurt", "die"})
                 for probe in probes:
                     posed = skel.pose({k: tuple(v) for k, v in probe["rot"].items()}, tuple(probe["root"]))

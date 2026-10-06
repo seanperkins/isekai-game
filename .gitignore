@@ -24,3 +24,6 @@ docs/**/*.import
 
 # Frames that tools/art/handdraw.py import replaced, kept so a hand-drawn frame can be undone
 art_source/.replaced/
+
+# the animated goblin forms are rendered by tools/art/blender (export_forms.py writes them), like forms_*
+art_source/frames/anim_*/

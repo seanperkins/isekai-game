@@ -60,3 +60,9 @@ func test_a_sheet_without_normals_has_no_lit_texture() -> void:
 func test_a_plain_sheet_still_draws_as_an_atlas() -> void:
 	var sheet := SpriteSheet.load_set("fixture_plain")
 	assert_true(sheet.frame_texture("a") is AtlasTexture)
+
+func test_a_point_light_hangs_above_the_picture_so_normals_matter() -> void:
+	var l := Art.light(Color.WHITE)
+	assert_eq(l.height, Art.LIGHT_HEIGHT)
+	assert_gt(l.height, 0.0)
+	l.free()

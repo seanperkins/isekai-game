@@ -71,6 +71,8 @@ const CLIPS := "res://data/enemy_clips.json"
 ## The clips of the twins' animated forms: {form id: {state: {frames, fps, loop}}} (tools/art/blender/goblin_tree.py writes it). A test points
 ## it at a fixture.
 static var form_clips_path := "res://data/form_clips.json"
+## An animated twin runs (plays its run clip) when it is charging or moving faster than its walking speed by this much.
+const RUN_RATIO := 1.35
 static var _form_clip_cache := {}  # path -> parsed file
 ## The Bog Lizardman's spear: how far, how level and how often it throws (the toad's are SPIT_*; Spear.SPEED is its speed).
 const SPEAR_RANGE := 140.0
@@ -653,7 +655,7 @@ func _draw_form_frame(delta: float) -> void:
 	if not dormant:
 		_animator.advance(delta)  # first, so a one-shot that has just finished no longer holds the creature
 	var state := EnemyState.pick_form(_animator.clips, EnemyStatus.ACTIVE if dormant else status.state, "" if dormant else _verb_state,
-		absf(velocity.x) > 1.0 and not dormant, _hurt_t > 0.0 and not dormant)
+		absf(velocity.x) > 1.0 and not dormant, _hurt_t > 0.0 and not dormant, charge_state() == "charge" or absf(velocity.x) > _speed() * RUN_RATIO)
 	if _animator.locked() and EnemyState.is_locomotion(state) and not dormant:
 		state = _animator.state()
 	_anim_state = state

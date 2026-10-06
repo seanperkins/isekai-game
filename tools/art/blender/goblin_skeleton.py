@@ -4,6 +4,7 @@
 import skeleton2d
 
 NEAR, FAR = -0.20, 0.20   # the y of the arm the camera sees, and of the other
+BASE_BX, BASE_TALL = 1.04, 0.90  # every goblin is built a little shorter than the standard one, and this much broader
 LEG_NEAR, LEG_FAR = -0.11, 0.11
 
 
@@ -30,10 +31,10 @@ def core():
 
 
 def ears(ears=1.0):
-    """The two ear bones: they sweep back from the crown, longer for a goblin with `ears` above 1."""
+    """The two ear bones: flat blades swept back from the crown, nearly level, longer for a goblin with `ears` above 1."""
     out = []
     for s, y in (("n", -1), ("f", 1)):
-        out.append(("ear_" + s, (0.10, y * 0.16, 1.62), (-0.20 * ears, y * 0.46 * ears, 1.62 + 0.22 * ears), "head"))
+        out.append(("ear_" + s, (0.08, y * 0.13, 1.60), (-0.14 * ears, y * 0.30 * ears, 1.63 + 0.05 * ears), "head"))
     return out
 
 

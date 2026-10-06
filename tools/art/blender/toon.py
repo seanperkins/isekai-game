@@ -80,8 +80,10 @@ def downscale(im, size):
     return small
 
 
-def outline(im, dark=0.35):
-    """A one pixel outline outside the sprite (4-neighbours), each pixel the average colour of what it touches, darkened."""
+def outline(im, dark=0.35, lit_dark=None):
+    """A one pixel outline outside the sprite (4-neighbours), each pixel the average colour of what it touches, darkened. With `lit_dark` the
+    outline is selective: it is as dark as `dark` where it touches shadow (undersides, backs) and only as dark as `lit_dark` where it touches
+    light (upper contours), so the figure keeps its edge without a uniform black ring."""
     out = im.copy()
     src, dst = im.load(), out.load()
     for y in range(im.height):
@@ -91,7 +93,13 @@ def outline(im, dark=0.35):
             near = [src[nx, ny] for nx, ny in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1))
                     if 0 <= nx < im.width and 0 <= ny < im.height and src[nx, ny][3]]
             if near:
-                dst[x, y] = tuple(int(sum(p[i] for p in near) / len(near) * dark) for i in range(3)) + (255,)
+                avg = [sum(p[i] for p in near) / len(near) for i in range(3)]
+                k = dark
+                if lit_dark is not None:
+                    lum = (0.30 * avg[0] + 0.59 * avg[1] + 0.11 * avg[2]) / 255.0
+                    t = max(0.0, min(1.0, (lum - 0.22) / 0.40))
+                    k = dark + (lit_dark - dark) * t
+                dst[x, y] = tuple(int(c * k) for c in avg) + (255,)
     return out
 
 

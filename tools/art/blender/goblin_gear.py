@@ -3,8 +3,9 @@ its gear by name in goblin_forms.py. Held things hang on the `item_n` / `item_f`
 whatever the arm does, so an upright pick stays upright through a walk.
 """
 from goblin_kit import FAR, NEAR
+from goblin_skeleton import LEG_FAR, LEG_NEAR
 
-BONE, STEEL, IRON, GOLD, WOOD = (232, 226, 206), (188, 196, 208), (120, 126, 138), (236, 190, 70), (122, 84, 50)
+BONE, STEEL, IRON, GOLD, WOOD = (214, 206, 182), (170, 180, 194), (112, 118, 130), (222, 176, 66), (112, 78, 48)
 EMBER, CYAN, STRAW, PINK = (255, 120, 40), (150, 226, 236), (224, 196, 96), (238, 150, 172)
 Y = {"n": NEAR, "f": FAR}
 
@@ -98,7 +99,7 @@ def candle(g, **_):
 
 # ---- torso ----
 def jerkin(g, color, skirt=0.0, collar=None, **_):
-    g.e("jerkin", (0.04, 0, 1.13), (0.215, 0.185, 0.255), "spine", color)
+    g.torso("jerkin", "spine", color, grow=1.14)
     if skirt:
         g.l("skirt", (0.03, 0, 1.0), (0.04, 0, 1.0 - skirt), 0.20, 0.28, "hips", color, sides=9)
     if collar:
@@ -113,12 +114,26 @@ def apron(g, color, trim=None, **_):
 
 
 def cloak(g, color, length=0.80, spread=0.18, **_):
-    top, end = (-0.08, 0, 1.36), (-0.20 - spread, 0, 1.36 - length)
-    mid = tuple((a + b) / 2.0 for a, b in zip(top, end))
-    g.bone("cloak1", top, mid, "spine")
-    g.bone("cloak2", mid, end, "cloak1")
-    g.l("cloak_top", top, mid, 0.11, 0.165, "cloak1", color, sides=7)
-    g.l("cloak_low", mid, end, 0.165, 0.22, "cloak2", color, sides=7)
+    """A thin sheet hung from the shoulders and wrapped round the back, flaring to a ragged hem; two bones bend it halfway down."""
+    import math
+    top, end = 1.36, 1.36 - length
+    mid = (top + end) / 2.0
+    g.bone("cloak1", (-0.08, 0, top), (-0.14 - spread * 0.4, 0, mid), "spine", raw=True)
+    g.bone("cloak2", (-0.14 - spread * 0.4, 0, mid), (-0.20 - spread, 0, end), "cloak1", raw=True)
+    hem = [0.04, -0.03, 0.09, 0.0, 0.07, -0.02, 0.06, 0.01, 0.05]  # uneven points along the bottom edge
+    columns = []
+    n = len(hem)
+    for i in range(n):
+        a = math.radians(-105.0 + 210.0 * i / (n - 1))
+        c, sn = math.cos(a), math.sin(a)
+        columns.append(((-0.095 * c + 0.0, 0.17 * sn, top), (-0.10 * c - (0.12 + spread) * abs(c), (0.17 + 0.10 + spread * 0.6) * sn, end + hem[i] * length)))
+
+    def weights(z):
+        t = max(0.0, min(1.0, (top - z) / max(1e-6, top - end)))
+        blend = max(0.0, min(1.0, (t - 0.30) / 0.35))
+        blend = blend * blend * (3.0 - 2.0 * blend)
+        return {"cloak1": 1.0 - blend, "cloak2": blend}
+    g.sheet("cloak", columns, weights, color)
 
 
 def belt(g, color, buckle=None, **_):
@@ -183,29 +198,29 @@ def hawk(g, side="n", **_):
 
 # ---- legs and hands ----
 def boots(g, color, height=0.34, big=1.0, plate=None, spike=False, **_):
-    for s, y in (("n", -0.11), ("f", 0.11)):
+    for s, y in (("n", LEG_NEAR), ("f", LEG_FAR)):
         far = s == "f"
-        g.l("boot_" + s, (0.03, y, 0.11 + height), (0.0, y, 0.11), 0.078 * big, 0.072 * big, "shin_" + s, color, far, sides=8)
-        g.e("bootfoot_" + s, (0.10, y, 0.075), (0.175, 0.078 * big, 0.078 * big), "foot_" + s, plate or color, far)
+        g.l("boot_" + s, (0.03, y, 0.11 + height), (0.0, y, 0.11), 0.054 * big, 0.050 * big, "shin_" + s, color, far, sides=7, raw=True)
+        g.foot("bootfoot_" + s, s, "foot_" + s, plate or color, big=1.12 * big, length=1.1, far=far)
         if spike:
-            g.l("toespike_" + s, (0.26, y, 0.07), (0.38, y, 0.08), 0.045, 0.0, "foot_" + s, STEEL, far, sides=5)
+            g.blade("toespike_" + s, (0.24, y, 0.04), (0.36, y, 0.05), 0.05, 0.03, "foot_" + s, STEEL, far, raw=True)
 
 
 def curled_shoes(g, color, **_):
-    for s, y in (("n", -0.11), ("f", 0.11)):
+    for s, y in (("n", LEG_NEAR), ("f", LEG_FAR)):
         far = s == "f"
-        g.e("shoe_" + s, (0.10, y, 0.07), (0.17, 0.075, 0.075), "foot_" + s, color, far)
-        g.l("curl_" + s, (0.24, y, 0.07), (0.34, y, 0.20), 0.05, 0.0, "foot_" + s, color, far, sides=5)
+        g.foot("shoe_" + s, s, "foot_" + s, color, big=1.05, length=1.05, far=far)
+        g.blade("curl_" + s, (0.19, y, 0.03), (0.30, y, 0.17), 0.05, 0.05, "foot_" + s, color, far, raw=True)
 
 
 def clogs(g, color, **_):
-    for s, y in (("n", -0.11), ("f", 0.11)):
-        g.e("clog_" + s, (0.10, y, 0.075), (0.18, 0.085, 0.085), "foot_" + s, color, s == "f")
+    for s, y in (("n", LEG_NEAR), ("f", LEG_FAR)):
+        g.foot("clog_" + s, s, "foot_" + s, color, big=1.25, length=1.0, far=s == "f")
 
 
 def wraps(g, color, **_):
     for s in "nf":
-        g.e("wrap_" + s, (0.20, Y[s], 0.90), (0.075, 0.07, 0.10), "fore_" + s, color, far=s == "f")
+        g.e("wrap_" + s, (0.17, Y[s], 0.90), (0.042, 0.040, 0.075), "fore_" + s, color, far=s == "f", raw=True, seg=8, rings=6)
 
 
 # ---- held things (on the item bones) ----

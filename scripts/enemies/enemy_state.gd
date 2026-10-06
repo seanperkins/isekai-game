@@ -72,12 +72,12 @@ static func pick(creature: String, status: int, charge: String, swoop: String, s
 
 ## What an animated twin (a form with its own clips) plays when it has no clip for a state: a stun or a downing shows the hit, anything else
 ## the idle loop.
-const FORM_FALLBACK := {"stunned": "hurt", "downed": "hurt", "hurt": "idle", "windup": "idle", "recover": "idle", "walk": "idle"}
-const LOCOMOTION := ["idle", "walk"]
+const FORM_FALLBACK := {"stunned": "hurt", "downed": "hurt", "hurt": "idle", "windup": "idle", "recover": "idle", "run": "walk", "walk": "idle"}
+const LOCOMOTION := ["idle", "walk", "run"]
 
-## The clip an animated twin plays: its status first, then a hit, then the state of its verb, then whether it is walking. `clips` is its
-## {state: clip} table; a state it has no clip for takes the fallback.
-static func pick_form(clips: Dictionary, status: int, verb_state: String, moving: bool, hurt: bool) -> String:
+## The clip an animated twin plays: its status first, then a hit, then the state of its verb, then whether it is walking (or running, when it
+## moves fast). `clips` is its {state: clip} table; a state it has no clip for takes the fallback.
+static func pick_form(clips: Dictionary, status: int, verb_state: String, moving: bool, hurt: bool, running := false) -> String:
 	var want := "idle"
 	if status == EnemyStatus.DOWNED:
 		want = "downed"
@@ -88,7 +88,7 @@ static func pick_form(clips: Dictionary, status: int, verb_state: String, moving
 	elif verb_state == "windup" or verb_state == "recover":
 		want = verb_state
 	elif moving:
-		want = "walk"
+		want = "run" if running else "walk"
 	while not clips.has(want) and FORM_FALLBACK.has(want):
 		want = FORM_FALLBACK[want]
 	return want

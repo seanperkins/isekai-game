@@ -69,10 +69,23 @@ def native_box(im):
     return (box[0] + solid[0], box[1] + solid[1], box[0] + solid[2], box[1] + solid[3])
 
 
-def native_frame(im):
+def native_frame(im, box=None):
     """A frame drawn at its final pixel size (an Aseprite or Procreate export at 1:1, or a render): key, crop to the drawn pixels and crisp the
-    alpha, with no resize, so the artist's pixels are never blended. The width in the frame's spec is ignored."""
-    return crisp_alpha(keyed(im.convert("RGBA")).crop(native_box(im)))
+    alpha, with no resize, so the artist's pixels are never blended. The width in the frame's spec is ignored. With `box`, cut that box instead
+    (see shared_box): every frame of an animation is then the same size, so the creature does not jump about between them."""
+    return crisp_alpha(keyed(im.convert("RGBA")).crop(box or native_box(im)))
+
+
+def shared_box(boxes, centre=None):
+    """One box that holds every box in `boxes` (left, top, right, bottom): the frames of an animation cut to it keep their places relative to
+    one another. With `centre` (a column) the box is widened to be even about it, so a creature drawn about that column stays centred, and
+    mirrors in place."""
+    left, top = min(b[0] for b in boxes), min(b[1] for b in boxes)
+    right, bottom = max(b[2] for b in boxes), max(b[3] for b in boxes)
+    if centre is not None:
+        half = max(centre - left, right - centre)
+        left, right = int(math.floor(centre - half)), int(math.ceil(centre + half))
+    return (left, top, right, bottom)
 
 
 def pack_like(size, rects, images):
@@ -265,16 +278,20 @@ def main():
     if "anchor" in data:  # one shared scale, so a stretched or wing-raised frame is not blown up to a fixed width
         by_name = {f["name"]: f for f in data["frames"]}
         scale = anchor_scale(Image.open(os.path.join(SRC, src_set, data["anchor"] + ".png")), by_name[data["anchor"]]["width"])
+    shared = None
+    if data.get("common_box"):  # an animation: one box for all its frames, even about the column the creature is drawn about
+        sources = [Image.open(os.path.join(SRC, src_set, f["name"] + ".png")) for f in data["frames"]]
+        shared = shared_box([native_box(im) for im in sources], sources[0].width / 2.0 if data.get("centred", True) else None)
     for f in data["frames"]:
         src = os.path.join(SRC, src_set, f["name"] + ".png")
         if not os.path.exists(src):
             raise SystemExit("missing %s (generate it first)" % src)
         if is_native(data, f):
             source = Image.open(src)
-            fitted[f["name"]] = native_frame(source)
+            fitted[f["name"]] = native_frame(source, shared)
             normal_src = os.path.join(SRC, src_set, f["name"] + "_n.png")
             if os.path.exists(normal_src):  # the normal map beside it, cut the same way, drawn only where the frame is
-                cut = Image.open(normal_src).convert("RGBA").crop(native_box(source))
+                cut = Image.open(normal_src).convert("RGBA").crop(shared or native_box(source))
                 cut.putalpha(fitted[f["name"]].split()[3])
                 normals[f["name"]] = cut
         else:

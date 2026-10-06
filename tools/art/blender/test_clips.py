@@ -46,5 +46,25 @@ class TableTest(unittest.TestCase):
         self.assertEqual(sorted(table["twin_goblin_hob"]), ["idle", "walk"])
 
 
+class OnGridTest(unittest.TestCase):
+    def test_each_frame_is_held_for_its_duration_rounded_to_the_tick(self):
+        c = clips.on_grid(["a", "b", "c"], [0.06, 0.03, 0.12], False, 0.03)
+        self.assertEqual(c["frames"], ["a", "a", "b", "c", "c", "c", "c"])
+        self.assertAlmostEqual(c["fps"], 1.0 / 0.03, places=3)
+        self.assertFalse(c["loop"])
+
+    def test_a_frame_shorter_than_a_tick_still_shows_for_one(self):
+        self.assertEqual(clips.on_grid(["a", "b"], [0.001, 0.06], True, 0.02)["frames"], ["a", "b", "b", "b"])
+
+    def test_the_total_stays_within_half_a_tick_per_frame_of_what_was_asked(self):
+        durations = [0.07, 0.13, 0.05, 0.09]
+        c = clips.on_grid(list("abcd"), durations, True, 0.02)
+        self.assertAlmostEqual(len(c["frames"]) / c["fps"], sum(durations), delta=0.5 * 0.02 * len(durations))
+
+    def test_lengths_must_match(self):
+        with self.assertRaises(ValueError):
+            clips.on_grid(["a"], [0.1, 0.1], True)
+
+
 if __name__ == "__main__":
     unittest.main()
