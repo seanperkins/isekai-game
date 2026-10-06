@@ -5,7 +5,9 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import attack_kinds as ak  # noqa: E402
+import anim  # noqa: E402
 import biped_motion as gm  # noqa: E402
+import quad_motion as qm  # noqa: E402
 import test_biped_motion as T  # noqa: E402
 import test_undead_motion as TU  # noqa: E402
 import undead_motion as um  # noqa: E402
@@ -135,6 +137,30 @@ class GestureTest(unittest.TestCase):
     def test_a_gesture_is_not_a_weapon_blow_so_a_form_that_casts_one_keeps_both_hands_free(self):
         for kind in ("summon", "pulse", "craft", "drink"):
             self.assertNotIn(kind, ak.WEAPON)
+
+
+class QuadGestureTest(unittest.TestCase):
+    """The same gestures on the four-legged bodies (the generic tests in test_quad_motion.py cover their timing, hind paws and return to rest for every preset)."""
+
+    def test_the_quad_attacks_have_a_preset_for_every_gesture_but_the_claw_which_is_the_bite(self):
+        self.assertEqual([a for a in verb_anims.ARCHETYPES if a != "claw" and a not in qm.ATTACKS], [])
+        self.assertIn("bite", qm.ATTACKS)
+
+    def test_no_two_gestures_are_the_same_motion_under_two_names(self):
+        channels = ("hips", "spine", "neck", "head", "jaw", "fn_lift", "ff_lift", "fn_x")
+
+        def key_poses(kind):
+            out = []
+            for t in (qm.T_HOLD, qm.T_HIT):
+                out.append([anim.sample(qm.ATTACKS[kind][c], t) * (60.0 if c in ("fn_lift", "ff_lift", "fn_x") else 1.0) for c in channels]
+                           + [100.0 * anim.sample(qm.ATTACKS[kind][c], t) for c in ("root_z", "root_x")])
+            return out
+        kinds = [a for a in verb_anims.ARCHETYPES if a != "claw"]   # the claw is the bite, the wolf's tearing blow
+        poses = {k: key_poses(k) for k in kinds}
+        for i, a in enumerate(kinds):
+            for b in kinds[i + 1:]:
+                apart = max(sum(abs(x - y) for x, y in zip(pa, pb)) for pa, pb in zip(poses[a], poses[b]))
+                self.assertGreater(apart, 50.0, "%s and %s read as the same gesture" % (a, b))
 
 
 if __name__ == "__main__":

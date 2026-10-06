@@ -19,6 +19,7 @@ import sizing  # noqa: E402
 import skeleton2d  # noqa: E402
 import wolf_forms as forms  # noqa: E402
 import wolf_gear as gear  # noqa: E402
+import verb_anims  # noqa: E402
 import wolf_kit as kit  # noqa: E402
 
 NAME = "wolf"
@@ -157,7 +158,8 @@ def setup(rig, variant):
 
 # ---- gestures ---------------------------------------------------------------------------------------------------------------------
 # the preset of quad_motion.ATTACKS that plays each gesture (verb_anims.ARCHETYPES); a gesture not listed is one the wolves cannot play yet
-GESTURES = {"slam": "slam", "roar": "roar", "lunge": "lunge", "guard": "guard", "claw": "bite"}
+GESTURES = {name: name for name in verb_anims.ARCHETYPES if name != "claw"}   # quad_motion.ATTACKS has a preset for each but the claw, which is the bite
+GESTURES["claw"] = "bite"
 
 
 def gesture_clip(rig, variant, archetype):

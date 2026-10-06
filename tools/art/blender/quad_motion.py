@@ -249,6 +249,9 @@ ATTACKS = {
 }
 BITES = ATTACKS["bite"]
 
+import quad_gestures  # noqa: E402  (the verb gestures beyond these: cast, point, throw, summon, drink, craft, sneak, pulse)
+quad_gestures.register(ATTACKS, _swing)
+
 
 def attack_kind(form):
     return form.get("attack", "bite") if form.get("attack") in ATTACKS else "bite"
