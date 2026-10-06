@@ -124,6 +124,7 @@ const BUFF_GENERATION := "verb_buff_generation"
 const BOLT_RANGE := 260.0
 const BOLT_HALF_WIDTH := 20.0
 const BOLT_RETURN := 0.35
+const RIDE_REACH := 60.0
 const COPY_RECAST := 0.6
 const COPY_MOVE_LIFE := 2.0
 const FORGE_REACH := 60.0
@@ -318,17 +319,17 @@ static func _bolt(a: Ability, spec: Dictionary) -> void:
 	if bool(spec.get("returns", false)):  # a throw that returns, along the line it went
 		actor.get_tree().create_timer(BOLT_RETURN).timeout.connect(_bolt_returns.bind(a, spec, reach, half, mult, from, dir))
 
-static func _bolt_strike(a: Ability, spec: Dictionary, reach: float, half: float, from: Vector2, dir: Vector2) -> void:
+static func _bolt_strike(a: Ability, spec: Dictionary, reach: float, half: float, from: Vector2, dir: Vector2, coming_back := false) -> void:
 	var targets := a.targets_from(from, dir, reach, half)
 	if not bool(spec.get("pierce", true)):
 		targets = targets.slice(0, 1)
-	_strike(a, targets, spec)
+	_strike(a, targets, spec, false, true, from + dir * reach if coming_back else Vector2.INF)
 
 static func _bolt_returns(a, spec: Dictionary, reach: float, half: float, mult: float, from: Vector2, dir: Vector2) -> void:  # untyped: the ability may be gone
 	if not is_instance_valid(a) or not is_instance_valid(a.actor) or not a.actor.is_inside_tree():
 		return
 	a.power_mult *= mult
-	_bolt_strike(a, spec, reach, half, from, dir)
+	_bolt_strike(a, spec, reach, half, from, dir, true)
 	a.power_mult /= mult
 	Vfx.line(a.actor, from + dir * reach, from, _color(spec), 2.0, 0.25)
 
@@ -410,7 +411,12 @@ static func _dash(a: Ability, spec: Dictionary) -> void:
 		mult *= float(spec["opener"])  # a strike out of hiding hits harder
 	if spec.has("ride"):  # a charge that is strong mounted and weak on foot
 		var pals = actor.get("companions")
-		mult *= float(spec["ride"].get("mounted", 1.0)) if pals != null and not pals.is_empty() else float(spec["ride"].get("foot", 1.0))
+		var ridden := false
+		if pals != null:
+			for pal in pals:  # a steed is a companion beside the rider
+				if is_instance_valid(pal) and pal.global_position.distance_to(actor.global_position) <= RIDE_REACH:
+					ridden = true
+		mult *= float(spec["ride"].get("mounted", 1.0)) if ridden else float(spec["ride"].get("foot", 1.0))
 	a.power_mult *= mult
 	_hop(a, spec, dir, hops > 1)
 	a.power_mult /= mult
@@ -897,10 +903,11 @@ static func _forge(a: Ability, spec: Dictionary) -> void:
 	Vfx.puffs(a.actor, Art.texture("spit_glob"), [a.actor.global_position + Vector2(0, -8)], Color(1.0, 0.7, 0.3, 0.9), 0.4)
 
 ## The skill's damage to each target, then the spec's status. `ignore_def` skips an Enemy's DEF.
-static func _strike(a: Ability, targets: Array, spec: Dictionary, ignore_def := false, counts := true) -> void:
+static func _strike(a: Ability, targets: Array, spec: Dictionary, ignore_def := false, counts := true, origin := Vector2.INF) -> void:
 	var power := a.power()
+	var source: Vector2 = a.actor.global_position if origin == Vector2.INF else origin  # a returning throw comes from the far end
 	for t in targets:
-		_hit(t, power, spec, a.actor.global_position, ignore_def, a.actor)
+		_hit(t, power, spec, source, ignore_def, a.actor)
 	if counts and a.skill_id != "":  # a strike that found something is a hit, one that found nothing is a miss
 		_deed(a, Deeds.SKILL_HIT if not targets.is_empty() else Deeds.SKILL_MISSED, {"id": a.skill_id})
 

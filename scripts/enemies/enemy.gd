@@ -161,6 +161,7 @@ const LIVE_LAYER := 1
 const GLYPH_REACH := 90.0
 const POSSESS_RANGE := 360.0
 const POSSESS_REACH := 22.0
+const POSSESS_FLOOR := 40.0  # a body on another floor is not one it can walk to
 const POSSESS_HP := 0.5
 const POSSESSED_TINT := Color(0.85, 0.55, 0.65)
 const TURN_RANGE := 420.0
@@ -1041,7 +1042,7 @@ func _possess_act(_delta: float) -> bool:
 	var body: Enemy = null
 	var best := POSSESS_RANGE
 	for n in get_tree().get_nodes_in_group("actors"):
-		if n is Enemy and n != self and n.status.state == EnemyStatus.DOWNED and not n.def.possesses:
+		if n is Enemy and n != self and n.status.state == EnemyStatus.DOWNED and not n.def.possesses and absf(n.global_position.y - global_position.y) <= POSSESS_FLOOR:
 			var d: float = n.global_position.distance_to(global_position)
 			if d < best:
 				body = n

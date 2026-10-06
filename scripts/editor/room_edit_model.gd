@@ -485,8 +485,8 @@ func _feature_base(room_id: String, p: Vector2, kind: String) -> Variant:
 	var q := Vector2(snap(p.x), p.y)
 	if not bounds(r).has_point(q):
 		return "outside the room"
-	if kind == "weak_floor":
-		return q  # it spans a hole in the floor: where it is put is the surface it makes, and there is nothing under it to stand on
+	if kind == "weak_floor":  # it spans a hole in the floor: where it is put is the surface it makes, and there is nothing under it to stand on
+		return "stuck in rock or a wall" if RoomLint.embedded(r, q, kind) else q
 	var y = surface_below(room_id, q - Vector2(0.0, 1.0))
 	if y == null:
 		return "nothing to stand on there: click open space above a floor or a ledge"

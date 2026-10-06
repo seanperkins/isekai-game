@@ -239,3 +239,62 @@ func test_the_editor_takes_a_weak_floor_with_a_width() -> void:
 	var model := RoomEditModel.new({"TW1": r}, [])
 	var errors := model.apply_content("TW1", parsed["content"])
 	assert_eq(errors, [], str(errors))
+
+# --- the second pass of the review ---
+
+func test_a_lamp_drunk_earlier_this_life_is_dry_in_a_room_built_again() -> void:
+	var rules := SkillRulesEngine.new()
+	rules.setup(DefLoader.load_dir("res://data/skills"))
+	add_child_autofree(rules)
+	rules.start_run()
+	rules.handle_event(Deeds.LAMP_DRUNK, {"id": "L"})
+	var lamp := RoomLamp.new()
+	lamp.ledger = rules
+	lamp.setup({"id": "L", "pos": Vector2(20, 16)}, {})
+	add_child_autofree(lamp)
+	assert_true(lamp.is_dry(), "the ledger says it was drunk: a new node knows it")
+	var a := _verb({"kind": "drink", "range": 60.0, "hp": 6, "mp": 4})
+	assert_false(a.ready())
+
+func test_a_rider_ignores_a_corpse_on_another_floor_and_goes_on_with_its_own_ai() -> void:
+	var corpse := _enemy("skeleton", Vector2(0, -100))
+	corpse.status.down()
+	var rider := _enemy("rider", Vector2(0, 0))
+	player.global_position = Vector2(150, 0)
+	await wait_seconds(0.8)
+	assert_gt(rider.global_position.x, 10.0, "it came for the player rather than stalling under the corpse")
+
+func test_a_returning_throw_comes_from_the_far_end_to_a_ward_bearer() -> void:
+	for f in arena.foes:
+		f.global_position = Vector2(900, 0)
+	lizard.global_position = Vector2(900, 0)
+	var bearer := _enemy("ward_bearer", Vector2(60, 0))
+	bearer.facing = -1  # it faces the caster: the outbound throw is nullified
+	bearer.health.max_hp = 1000
+	bearer.health.hp = 1000
+	_verb({"kind": "bolt", "range": 100.0, "pierce": false, "returns": true}).activate()
+	assert_eq(bearer.health.hp, 1000, "out: from the front, nullified")
+	await wait_seconds(0.6)
+	assert_lt(bearer.health.hp, 1000, "back: it arrives from the far side, behind the bearer")
+
+func test_a_weak_floor_cannot_be_placed_inside_rock() -> void:
+	var r := AreaKit.room("TW2", "forest", Vector2i(40, 40))
+	var model := RoomEditModel.new({"TW2": r}, [])
+	assert_ne(model.add_feature("TW2", "weak_floor", Vector2(8, 500)), "", "outside or in the wall it is refused")
+
+func test_a_spear_charge_counts_a_companion_as_a_mount_only_when_it_is_beside_the_rider() -> void:
+	for f in arena.foes:
+		f.global_position = Vector2(900, 0)
+	lizard.global_position = Vector2(70, 0)
+	lizard.health.hp = 1000
+	var spec := {"kind": "dash", "hit_range": 90.0, "hit_half_width": 40.0, "ride": {"mounted": 3.0, "foot": 0.4}}
+	var pal := player.add_companion(VerbAlly._creature("gloom_wolf"), Vector2(-400, 0), {})  # far away
+	pal.global_position = Vector2(-400, 0)
+	_verb(spec).activate()
+	var far := 1000 - lizard.health.hp
+	lizard.health.hp = 1000
+	lizard._ward_t = 0.0
+	pal.global_position = player.global_position + Vector2(-20, 0)  # beside it
+	var a := _verb(spec)
+	a.activate()
+	assert_gt(1000 - lizard.health.hp, far * 3, "beside the rider it is a mount")

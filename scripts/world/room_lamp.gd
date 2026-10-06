@@ -29,7 +29,12 @@ func prompt() -> String:
 
 ## True once the lamp has been drunk (here or earlier in this life): it has nothing more to give.
 func is_dry() -> bool:
-	return _dry
+	return _dry or _drunk_earlier()
+
+## The ledger says this lamp was drunk earlier in this life (a room built again does not forget).
+func _drunk_earlier() -> bool:
+	var l = ledger if ledger != null else get_node_or_null("/root/SkillRules")
+	return l != null and l.count(Deeds.LAMP_DRUNK, {"id": id}) > 0
 
 ## Drinks the lamp. True when there was oil in it, false when it was dry already.
 func interact(player: Node) -> bool:
