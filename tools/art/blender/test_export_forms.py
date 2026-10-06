@@ -47,6 +47,13 @@ class ClipsOfTest(unittest.TestCase):
         self.assertTrue(all(f["native"] for f in spec["frames"]))
 
 
+class IdsTest(unittest.TestCase):
+    def test_a_twins_form_id_is_its_species_and_form_except_for_the_slime_which_is_bare(self):
+        self.assertEqual(ex.form_id("goblin", "redcap"), "goblin_redcap")
+        self.assertEqual(ex.form_id("wolf", "warg"), "wolf_warg")
+        self.assertEqual(ex.form_id("slime", "kraken"), "kraken")
+
+
 class TimingTest(unittest.TestCase):
     CONSTANTS = {"windup": 0.35, "recover": 0.30, "hurt": 0.25, "run_speed": 1.9}
 

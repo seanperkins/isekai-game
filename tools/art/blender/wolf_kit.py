@@ -13,7 +13,7 @@ import rigkit as k
 FUR, FUR_DARK, BELLY, EAR = (62, 56, 70), (48, 43, 56), (96, 88, 106), (40, 36, 48)
 
 
-def room(rgb, floor=96):
+def room(rgb, floor=76):
     """A dark colour lifted so its shadows have somewhere to go: the shading ramps darken a colour in steps, and from near black there is nothing below.
     A colour already as light as `floor` is left alone."""
     lum = 0.30 * rgb[0] + 0.59 * rgb[1] + 0.11 * rgb[2]
@@ -32,8 +32,8 @@ class Wolf:
         self.tail_f = form.get("tail", 1.0)
         self.head_f = form.get("head", 1.0)
         self.bulk = form.get("bulk", 1.0)          # how thick every part of the body is
-        self.fur, self.belly = room(form.get("fur", FUR)), room(form.get("belly", BELLY), 128)
-        self.dark = room(form.get("dark", tuple(int(c * 0.82) for c in self.fur)), 80)
+        self.fur, self.belly = room(form.get("fur", FUR)), room(form.get("belly", BELLY), 104)
+        self.dark = room(form.get("dark", tuple(int(c * 0.82) for c in self.fur)), 60)
         self.proportions = dict(leg=self.leg, neck=self.neck_f, tail=self.tail_f, head=self.head_f, tail_shape=form.get("tail_shape", skeleton.TAIL_DROOPING))
         self.bones = {n: (h, t, p) for n, h, t, p in skeleton.core(**self.proportions)}
 
@@ -132,7 +132,7 @@ class Wolf:
         tr = f.get("tail_r", 1.0)
         for i, (a, c) in enumerate(((0.075 * tr, 0.100 * tr), (0.100 * tr, 0.105 * tr), (0.105 * tr, 0.0)), 1):
             h, t, _ = self.bones["tail%d" % i]
-            self.l("tail%d" % i, h, t, a * b, c * b, "tail%d" % i, room(f.get("tail_colour", TAIL), 100), sides=6)
+            self.l("tail%d" % i, h, t, a * b, c * b, "tail%d" % i, room(f.get("tail_colour", TAIL), 80), sides=6)
         # the legs: thin tapering limbs with round joints and flat paws; the hind ones are digitigrade
         for s, y in (("n", skeleton.NEAR), ("f", skeleton.FAR)):
             far = s == "f"

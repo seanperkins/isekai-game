@@ -371,8 +371,6 @@ class ClipTest(unittest.TestCase):
         self.assertFalse(gm.attack_clip(body).grounded)
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 # ---- the wolf-men: the same motion with another skeleton, a digitigrade foot (its sole is a toe pad ahead of the ankle) and the werewolf posture ----
@@ -380,7 +378,7 @@ def werewolf(**overrides):
     import werewolf_skeleton as ws
     form = dict(forms.FORMS["goblin"], **overrides)
     skel = ws.skeleton()
-    return gm.Body(skel, {"n": (0.27, -0.18, 0.17), "f": (0.27, -0.18, 0.17)}, form, present=set(skel.rest), posture="werewolf")
+    return gm.Body(skel, {"n": (0.27, -0.18, 0.40), "f": (0.27, -0.18, 0.40)}, form, present=set(skel.rest), posture="werewolf")   # a pad from 0.18 to 0.40 ahead of the ankle: the claws included
 
 
 class WerewolfTest(unittest.TestCase):
@@ -432,3 +430,17 @@ class WerewolfTest(unittest.TestCase):
     def test_a_goblin_has_no_jaw_to_open(self):
         body = body_of("redcap")
         self.assertNotIn("jaw", gm.attack_pose(body, 0.35)[0])
+
+
+class KeysTest(unittest.TestCase):
+    def test_every_key_table_is_in_time_order_with_no_repeated_time(self):
+        tables = [("attack %s %s" % (kind, ch), keys) for kind, spec in gm.ATTACKS.items() for ch, keys in spec["keys"].items()]
+        tables += [("hurt " + ch, keys) for ch, keys in gm.HURT["keys"].items()] + [("die " + ch, keys) for ch, keys in gm.DIE["keys"].items()]
+        for name, keys in tables:
+            times = [t for t, _, _ in keys]
+            self.assertEqual(times, sorted(times), name)
+            self.assertEqual(len(set(times)), len(times), name)
+
+
+if __name__ == "__main__":
+    unittest.main()

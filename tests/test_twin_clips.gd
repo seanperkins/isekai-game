@@ -131,6 +131,17 @@ func test_a_walk_plays_as_fast_as_the_creature_really_goes() -> void:
 	assert_eq(half._animator.frame(), "walk_0")
 	assert_eq(full._animator.frame(), "walk_1")
 
+func test_a_buff_to_its_speed_quickens_its_step_instead_of_cancelling_it() -> void:
+	var e := _enemy(_fixture_def())
+	var walking := e._walk_speed()
+	e.stats.set_modifiers("haste", [{"stat": "spd", "op": "add", "value": 45}])
+	assert_gt(e.stats.get_stat("spd"), 90, "it is faster now")
+	assert_almost_eq(e._walk_speed(), walking, 0.001, "the clip's speed is the one it was built for, not the buffed one")
+	e.velocity.x = e._speed()
+	_step(e)
+	_step(e, 0.2)
+	assert_eq(e._animator.frame(), "walk_1", "at 1.5 times the speed 0.2 s is 0.3 s of walk: the second frame (0.125 s each) has begun")
+
 func test_a_new_blow_starts_the_flinch_again_even_in_the_middle_of_one() -> void:
 	var e := _enemy(_fixture_def())
 	e._hurt_t = 0.25

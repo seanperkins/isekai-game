@@ -15,6 +15,9 @@ def register(attacks, attack):
         # a crouch and a spring forward with the whole body behind the arms: a dash (the engine moves the body as well, so little travel here)
         "lunge": attack(lean=(18, 44, 58, 56), head=(8, 26, 36, 36), px=(-0.12, 0.06, 0.18, 0.16), pz=(-0.12, -0.10, -0.14, -0.08),
                         arm_n=(-30, 60, 100, 90), fore_n=(-10, 70, 100, 95), item=(-10, 50, 80, 70), arm_f=(-40, 50, 95, 90), fore_f=(-20, 60, 95, 90), step=0.30, lift=0.15, heel=-30.0, jaw=(10, 28, 6, 0)),
+        # a clawed hand raised and cut down across the body: the wolf-men's blow
+        "claw": attack(lean=(16, 36, 52, 56), head=(8, 18, 30, 32), px=(-0.08, 0.06, 0.16, 0.15), pz=(-0.08, -0.09, -0.12, -0.08),
+                       arm_n=(125, 85, 65, 25), fore_n=(150, 100, 80, 40), item=(0, 20, 40, 40), arm_f=(40, 30, 20, 10), fore_f=(70, 50, 40, 30), step=0.24, jaw=(20, 34, 14, 0)),
         # braced low behind the forearms: a ward, a zone, an aura
         "guard": attack(lean=(34, 38, 36, 32), head=(14, 16, 16, 14), px=(-0.04, -0.05, -0.05, -0.03), pz=(-0.10, -0.12, -0.12, -0.08),
                         arm_n=(60, 80, 90, 80), fore_n=(120, 130, 135, 120), item=(-10, 10, 20, 10), arm_f=(60, 80, 90, 80), fore_f=(120, 130, 135, 120), step=0.0, lift=0.0, jaw=(8, 18, 18, 6)),

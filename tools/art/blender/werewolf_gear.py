@@ -36,7 +36,7 @@ def bracers(g, color=IRON, trim=BONE_C, **_):
 def breeches(g, color=(70, 52, 52), **_):
     """Ragged dark breeches hanging from the waist."""
     top = 0.96 * g.tall
-    cols = [((0.0 + 0.06 * math.cos(math.radians(a)), 0.17 * math.sin(math.radians(a)), top), (0.0 + 0.10 * math.cos(math.radians(a)), 0.22 * math.sin(math.radians(a)), top - 0.30 - 0.06 * (i % 2)))
+    cols = [((0.0 + 0.06 * math.cos(math.radians(a)), 0.17 * math.sin(math.radians(a)), top), (0.0 + 0.10 * math.cos(math.radians(a)), 0.22 * math.sin(math.radians(a)), top - 0.42 - 0.10 * (i % 2)))
             for i, a in enumerate(range(-100, 101, 25))]
     g.sheet("breeches", cols, lambda z: {"hips": 1.0}, color)
 
@@ -63,9 +63,9 @@ def cloak(g, color=(70, 50, 100), **_):
 
 def crown(g, color=(120, 120, 130), **_):
     h = g.at("head", 0.55)
-    for i in range(5):
-        a = math.radians(-70 + 35 * i)
-        g.blade("crown%d" % i, (h[0] + 0.06 * math.cos(a) * 0.4, 0.12 * math.sin(a), h[2] + 0.09), (h[0] + 0.06 * math.cos(a) * 0.4, 0.12 * math.sin(a), h[2] + 0.17 - 0.03 * (i % 2)), 0.035, 0.02, "head", color)
+    for i in range(3):
+        a = math.radians(-50 + 50 * i)
+        g.blade("crown%d" % i, (h[0] + 0.03 * math.cos(a), 0.10 * math.sin(a), h[2] + 0.09), (h[0] + 0.03 * math.cos(a), 0.10 * math.sin(a), h[2] + 0.22 - 0.03 * (i % 2)), 0.07, 0.025, "head", color)
 
 
 def mane(g, color=None, size=1.0, **_):

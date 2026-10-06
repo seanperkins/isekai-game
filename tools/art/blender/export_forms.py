@@ -26,7 +26,7 @@ ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 sys.path.insert(0, HERE)
 import clips  # noqa: E402
 
-BASES = {"goblin": "goblin", "wolf": "gloom_wolf", "spider": "spider", "undead": "skeleton"}   # a family's base creature is not a twin: it has its own sheet
+BASES = {"goblin": "goblin", "wolf": "gloom_wolf", "spider": "spider", "undead": "skeleton", "slime": "slime"}   # a family's base creature is not a twin: it has its own sheet
 ANIM_ORDER = ("idle", "walk", "run", "attack", "hurt", "die")
 ENEMY_GD = os.path.join(ROOT, "scripts", "enemies", "enemy.gd")
 
@@ -80,13 +80,18 @@ def clips_of(meta, tick=0.02):
     return out
 
 
+def form_id(creature, form):
+    """The id a twin's `form` field holds: the species and the form (goblin_redcap), except the slime forms, which are named bare (kraken)."""
+    return form if creature == "slime" else "%s_%s" % (creature, form)
+
+
 def spec_of(set_name, names):
     return {"set": set_name, "common_box": True, "frames": [{"name": n, "width": 0, "native": True} for n in names]}
 
 
 def install(creature, form, folder, root=ROOT, assemble=True, check=True):
     """Put one rendered form in the game. Returns (form id, its clips)."""
-    set_name = "anim_%s_%s" % (creature, form)
+    set_name = "anim_" + form_id(creature, form)
     with open(os.path.join(folder, "raw", "meta.json")) as fh:
         meta = json.load(fh)
     if check:
@@ -107,7 +112,7 @@ def install(creature, form, folder, root=ROOT, assemble=True, check=True):
         done = subprocess.run([sys.executable, os.path.join("tools", "art", "assemble_frames.py"), set_name], cwd=root, capture_output=True, text=True)
         if done.returncode != 0:
             raise RuntimeError("assemble_frames failed for %s:\n%s%s" % (set_name, done.stdout[-1500:], done.stderr[-1500:]))
-    return "%s_%s" % (creature, form), clips_of(meta)
+    return form_id(creature, form), clips_of(meta)
 
 
 def write_clips(table, root=ROOT):

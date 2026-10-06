@@ -13,7 +13,9 @@ BASE_SPEED = 60.0      # px/s at spd 100, as in scripts/enemies/enemy.gd
 
 
 def twin_path(species, variant):
-    return os.path.join(ROOT, "data", "creatures", "twin_%s_%s.tres" % (species, variant))
+    """The twin's resource. The slime forms are named bare (twin_kraken); the other species' by species (twin_wolf_fenrir)."""
+    name = "twin_%s" % variant if species == "slime" else "twin_%s_%s" % (species, variant)
+    return os.path.join(ROOT, "data", "creatures", name + ".tres")
 
 
 def speed_of(species, variant):

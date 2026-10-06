@@ -253,6 +253,76 @@ class TimingTest(unittest.TestCase):
                 self.assertAlmostEqual(rot[bone][1], idle[bone][1], delta=1.5, msg=bone)
 
 
+class GallopTest(unittest.TestCase):
+    def poses(self, body, n=160):
+        return [(k / float(n), qm.gait_pose(body, "gallop", k / float(n), 0.5)) for k in range(n)]
+
+    def test_the_body_rises_in_the_suspension_and_a_paw_that_is_down_is_never_lifted_with_it(self):
+        body = body_of()
+        g = qm.GAITS["gallop"]
+        standing = qm.idle_pose(body, 0.0)[1][2]
+        airborne = 0
+        for t, (rot, root) in self.poses(body):
+            down = [k for k in body.legs if low(body, k, rot, root) < 1e-6]
+            planted = [k for k in body.legs if ((t - g["phase"][k]) % 1.0) < g["duty"] - 0.04]   # well inside its stance
+            for k in planted:
+                self.assertAlmostEqual(low(body, k, rot, root), 0.0, places=6, msg="%s is planted at t=%.3f" % (k, t))
+            if not down:
+                airborne += 1
+                self.assertGreater(root[2], standing - 0.02, "the body is not sunk while it flies")
+        self.assertGreater(airborne, 8, "there is a real suspension")
+        flying = [root[2] for t, (rot, root) in self.poses(body) if not [k for k in body.legs if low(body, k, rot, root) < 1e-6]]
+        grounded = [root[2] for t, (rot, root) in self.poses(body) if [k for k in body.legs if low(body, k, rot, root) < 1e-6]]
+        self.assertGreater(max(flying), max(grounded) + 0.01, "it is higher in the air than with a paw down")
+
+
+class GlideTest(unittest.TestCase):
+    def test_a_flier_is_off_the_ground_in_every_frame_with_its_forelegs_ahead_and_its_hind_legs_and_tail_trailing(self):
+        body = body_of()
+        rest = body.skel.pose(*qm.idle_pose(body, 0.0))
+        for kind in qm.GLIDE:
+            clip = qm.glide_clip(body, kind)
+            self.assertTrue(clip.loop and not clip.grounded)
+            self.assertEqual(len(clip.frames), qm.GLIDE[kind]["frames"])
+            for rot, root in clip.frames:
+                posed = body.skel.pose(rot, root)
+                self.assertGreater(min(low(body, k, rot, root) for k in body.legs), 0.03 * body.H, "%s: every paw is off the ground" % kind)
+                self.assertGreater(posed["paw_n"][1][0], posed["sho_n"][0][0], "the forepaw is ahead of the shoulder")
+                self.assertLess(posed["meta_n"][1][0], posed["thigh_n"][0][0], "the hind paw trails behind the hip")
+
+    def test_flying_is_higher_than_hovering_and_the_loop_closes(self):
+        body = body_of()
+        height = lambda kind: sum(qm.glide_pose(body, kind, k / 10.0)[1][2] for k in range(10)) / 10.0
+        self.assertGreater(height("fly"), height("hover") + 0.03)
+        a, b = qm.glide_pose(body, "fly", 0.0), qm.glide_pose(body, "fly", 1.0 - 1e-9)
+        for bone in a[0]:
+            self.assertAlmostEqual(a[0][bone][1], b[0][bone][1], delta=0.01, msg=bone)
+
+
+class JawTest(unittest.TestCase):
+    def test_an_open_jaw_points_further_down_than_a_closed_one_in_the_bite_the_flinch_and_the_death(self):
+        body = body_of()
+        closed = body.skel.pose(*qm.idle_pose(body, 0.0))
+        gap = lambda posed: posed["head"][2] - posed["jaw"][2]
+        self.assertAlmostEqual(gap(closed), 12.0, delta=0.5)
+        self.assertGreater(gap(body.skel.pose(*qm.attack_pose(body, qm.T_MID))), 12.0 + 15.0, "wide open as it springs")
+        self.assertLess(gap(body.skel.pose(*qm.attack_pose(body, qm.T_HIT))), 12.0 + 10.0, "snapped shut on the impact")
+        self.assertGreater(gap(body.skel.pose(*qm.hurt_pose(body, 0.10))), 12.0 + 15.0, "a yelp")
+        self.assertAlmostEqual(gap(body.skel.pose(*qm.die_pose(body, 0.0))), 12.0, delta=1.0, msg="the death starts closed")
+
+
+class KeysTest(unittest.TestCase):
+    def test_every_key_table_is_in_time_order_and_never_jumps_between_neighbouring_keys(self):
+        tables = [("bite " + k, v) for kind in qm.ATTACKS for k, v in qm.ATTACKS[kind].items()] + [("hurt " + k, v) for k, v in qm.HURT.items()]
+        for name, keys in tables:
+            times = [t for t, _, _ in keys]
+            self.assertEqual(times, sorted(times), name)
+            self.assertEqual(len(set(times)), len(times), name)
+        times = [t for t, _ in qm.DIE_FRAMES]
+        for channel, values in qm.DIE_KEYS.items():
+            self.assertEqual(len(values), len(times), channel)
+
+
 class TailTest(unittest.TestCase):
     def test_the_tail_never_hangs_below_the_floor_in_any_frame_of_any_clip(self):
         body = body_of()

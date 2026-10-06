@@ -19,8 +19,8 @@ class Werewolf(KitBase):
         self.tall, self.arm = form.get("tall", 1.0), form.get("arm", 1.0)
         self.bulk = form.get("bulk", 1.0)
         self.head_f = form.get("head", 1.0)
-        self.fur, self.belly = room(form.get("fur", FUR)), room(form.get("belly", BELLY), 128)
-        self.dark = room(form.get("dark", tuple(int(c * 0.82) for c in self.fur)), 80)
+        self.fur, self.belly = room(form.get("fur", FUR)), room(form.get("belly", BELLY), 104)
+        self.dark = room(form.get("dark", tuple(int(c * 0.82) for c in self.fur)), 60)
         self.bones = {n: (h, t, p) for n, h, t, p in skeleton.core(self.tall, self.arm)}
 
     def at(self, bone, t):
@@ -34,17 +34,17 @@ class Werewolf(KitBase):
             self.bone(name, head, tail, parent)
         # trunk: a deep chest tapering to a lean waist, a broad pelvis
         self.loft("pelvis", [((0.0, 0, 0.86 * t), (0.10 * b, 0.13 * b)), ((0.01, 0, 0.96 * t), (0.12 * b, 0.16 * b)), ((0.02, 0, 1.06 * t), (0.10 * b, 0.14 * b))], "hips", fur, axis="z")
-        self.loft("torso", [((0.02, 0, 1.04 * t), (0.10 * b, 0.14 * b)), ((0.05, 0, 1.20 * t), (0.15 * b, 0.19 * b)), ((0.08, 0, 1.38 * t), (0.19 * b, 0.23 * b)),
-                            ((0.08, 0, 1.52 * t), (0.14 * b, 0.19 * b))], "spine", fur, axis="z")
+        self.loft("torso", [((0.02, 0, 1.04 * t), (0.10 * b, 0.14 * b)), ((0.05, 0, 1.20 * t), (0.15 * b, 0.19 * b)), ((0.08, 0, 1.38 * t), (0.22 * b, 0.26 * b)),
+                            ((0.08, 0, 1.52 * t), (0.17 * b, 0.22 * b))], "spine", fur, axis="z")
         self.loft("belly", [((0.12, 0, 1.12 * t), (0.05 * b, 0.10 * b)), ((0.14, 0, 1.28 * t), (0.05 * b, 0.12 * b))], "spine", belly, axis="z")
         self.l("neck", (0.08, 0, 1.46 * t), (0.17, 0, 1.64 * t), 0.115 * b, 0.09 * b, "head", fur, sides=7)
         # the head: a dome, a brow, a long muzzle, a hinged jaw, ears, eyes and the star
         h0 = (0.19, 0, 1.72 * t)
         self.e("skull", h0, (0.12 * hs, 0.105 * hs, 0.115 * hs), "head", fur)
         self.loft("brow", [((h0[0] + 0.07, 0, h0[2] + 0.05), (0.025 * hs, 0.10 * hs)), ((h0[0] + 0.15, 0, h0[2] + 0.045), (0.02 * hs, 0.075 * hs))], "head", dark, sides=6)
-        self.loft("muzzle", [((h0[0] + 0.08, 0, h0[2] - 0.02), (0.065 * hs, 0.07 * hs)), ((h0[0] + 0.22, 0, h0[2] - 0.04), (0.045 * hs, 0.05 * hs)),
-                             ((h0[0] + 0.33, 0, h0[2] - 0.05), (0.03 * hs, 0.033 * hs))], "head", belly, sides=6)
-        self.e("nose", (h0[0] + 0.36, 0, h0[2] - 0.045), (0.028 * hs, 0.03 * hs, 0.027 * hs), "head", NOSE, seg=6, rings=4)
+        self.loft("muzzle", [((h0[0] + 0.08, 0, h0[2] - 0.02), (0.065 * hs, 0.07 * hs)), ((h0[0] + 0.19, 0, h0[2] - 0.04), (0.045 * hs, 0.05 * hs)),
+                             ((h0[0] + 0.28, 0, h0[2] - 0.05), (0.03 * hs, 0.033 * hs))], "head", belly, sides=6)
+        self.e("nose", (h0[0] + 0.31, 0, h0[2] - 0.045), (0.028 * hs, 0.03 * hs, 0.027 * hs), "head", NOSE, seg=6, rings=4)
         jh, jt, _ = self.bones["jaw"]
         self.loft("jaw", [((jh[0] + 0.02, 0, jh[2]), (0.032 * hs, 0.055 * hs)), ((jh[0] + 0.14, 0, jh[2] - 0.02), (0.028 * hs, 0.045 * hs)), ((jt[0] - 0.04, 0, jt[2] + 0.01), (0.02 * hs, 0.03 * hs))],
                   "jaw", belly, sides=6)
@@ -52,7 +52,7 @@ class Werewolf(KitBase):
         self.blade("fang_l", (h0[0] + 0.22, 0, h0[2] - 0.11), (h0[0] + 0.23, 0, h0[2] - 0.06), 0.022, 0.018, "jaw", FANG)
         for s, y in (("n", -1), ("f", 1)):
             h, tl, _ = self.bones["ear_" + s]
-            self.blade("ear_" + s, h, tl, 0.12 * hs * f.get("ears", 1.0), 0.026, "head", f.get("ear", dark), far=s == "f")
+            self.blade("ear_" + s, h, tl, 0.12 * hs * f.get("ears", 1.0), 0.026, "ear_" + s, f.get("ear", dark), far=s == "f")
             self.e("eye_" + s, (h0[0] + 0.13, y * 0.085 * hs, h0[2] + 0.02), (0.028, 0.026, 0.028), "head", f.get("eye", EYE), far=s == "f", glow=True, seg=8, rings=6)
         if f.get("star", True):
             self.e("star", (h0[0] + 0.08, 0, h0[2] + 0.095 * hs), (0.024, 0.014, 0.034), "head", f.get("star_colour", STAR), glow=True, seg=6, rings=4)
@@ -62,7 +62,7 @@ class Werewolf(KitBase):
             c = dark if far else fur
             ah, at, _ = self.bones["arm_" + s]
             fh, ft, _ = self.bones["fore_" + s]
-            self.e("shoulder_" + s, ah, (0.105 * b, 0.10 * b, 0.105 * b), "arm_" + s, c, far)
+            self.e("shoulder_" + s, ah, (0.13 * b, 0.12 * b, 0.13 * b), "arm_" + s, c, far)
             self.l("arm_" + s, ah, at, 0.085 * b, 0.065 * b, "arm_" + s, c, far)
             self.e("elbow_" + s, at, (0.06 * b,) * 3, "arm_" + s, c, far, seg=8, rings=6)
             self.l("fore_" + s, fh, ft, 0.07 * b, 0.048 * b, "fore_" + s, c, far)
@@ -90,4 +90,4 @@ class Werewolf(KitBase):
         # the tail: three bushy segments
         for i, (a, c) in enumerate(((0.08, 0.10), (0.10, 0.105), (0.105, 0.0)), 1):
             h, tl, _ = self.bones["tail%d" % i]
-            self.l("tail%d" % i, h, tl, a * b, c * b, "tail%d" % i, room(f.get("tail_colour", fur), 100), sides=6)
+            self.l("tail%d" % i, h, tl, a * b, c * b, "tail%d" % i, room(f.get("tail_colour", fur), 80), sides=6)

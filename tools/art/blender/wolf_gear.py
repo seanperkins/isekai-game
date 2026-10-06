@@ -28,7 +28,7 @@ def collar(g, color=IRON, spikes=False, chain=False, stone=None, **_):
             g.blade("cspike%d" % i, (n[0] + 0.15 * b * math.sin(a) * 0.3, -0.12 * b * math.cos(a), n[2] + 0.15 * b * math.cos(a)),
                     (n[0] + 0.19 * b * math.sin(a) * 0.3, -0.18 * b * math.cos(a), n[2] + 0.21 * b * math.cos(a)), 0.03, 0.03, "neck", color)
     if stone:
-        g.e("tag", (n[0] + 0.01, -0.125 * b, n[2] - 0.12), (0.06, 0.02, 0.07), "neck", stone, seg=6, rings=4)
+        g.e("tag", (n[0] + 0.01, -0.125 * b, n[2] - 0.14), (0.09, 0.025, 0.11), "neck", stone, seg=6, rings=4)
     if chain:
         for i in range(4):
             g.e("link%d" % i, (n[0] + 0.02 + 0.015 * i, -0.13 * b, n[2] - 0.16 - 0.055 * i), (0.022, 0.014, 0.03), "neck", chain, seg=6, rings=4)
@@ -86,11 +86,14 @@ def cracks(g, color=EMBER, **_):
 
 
 def chains(g, color=IRON, **_):
-    """Snapped chains hanging from the neck, the forelegs and the tail."""
+    """Snapped chains hanging from the neck, the forelegs and the tail: heavy links, and one broken length swinging clear of the chest so it shows in outline."""
     for bone, count in (("neck", 4), ("sho_n", 3), ("tail1", 3)):
         h, t, _ = g.bones[bone]
         for i in range(count):
-            g.e("%s_link%d" % (bone, i), (t[0] + 0.01 * i, h[1] - 0.12 * g.bulk if bone != "tail1" else -0.03, t[2] - 0.05 * i), (0.026, 0.016, 0.034), bone, color, seg=6, rings=4)
+            g.e("%s_link%d" % (bone, i), (t[0] + 0.01 * i, h[1] - 0.12 * g.bulk if bone != "tail1" else -0.03, t[2] - 0.05 * i), (0.045, 0.025, 0.055), bone, color, seg=6, rings=4)
+    h, t, _ = g.bones["neck"]
+    for i in range(4):
+        g.e("free_link%d" % i, (t[0] + 0.12 + 0.05 * i, -0.13 * g.bulk, t[2] - 0.22 - 0.07 * i), (0.04, 0.022, 0.05), "neck", color, seg=6, rings=4)
 
 
 def frost(g, color=(150, 190, 220), ice=(190, 226, 240), **_):
@@ -119,6 +122,12 @@ def sash(g, color=CYAN, **_):
     n = g.at("neck", 0.1)
     cols = [((n[0] - 0.02 * i, 0.02 * (i % 2) - 0.02, n[2] + 0.04), (n[0] - 0.22 - 0.16 * i, 0.02 * (i % 2) - 0.02, n[2] - 0.02 - 0.05 * i + 0.04 * (i % 3))) for i in range(5)]
     g.sheet("sash", cols, lambda z: {"spine": 1.0}, color)
+
+
+def belly_panel(g, color=(150, 112, 88), **_):
+    """A broad warm panel along the belly and the chest, so a warm underside reads from the side."""
+    g.loft("belly_panel", [((0.30, 0, g.at("spine", 0.9)[2] - 0.10 * g.bulk), (0.04 * g.bulk, 0.09 * g.bulk)), ((0.10, 0, g.at("spine", 0.5)[2] - 0.14 * g.bulk), (0.05 * g.bulk, 0.11 * g.bulk)),
+                           ((-0.12, 0, g.at("spine", 0.1)[2] - 0.12 * g.bulk), (0.05 * g.bulk, 0.10 * g.bulk))], "spine", color)
 
 
 def teats(g, color=(190, 140, 150), **_):

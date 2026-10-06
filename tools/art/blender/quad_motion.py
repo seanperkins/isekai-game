@@ -20,19 +20,19 @@ REST = "rest"
 # the usual bounds on how long a cycle lasts, in seconds
 GAITS = {
     "walk": dict(duty=0.72, phase=dict(hn=0.00, fn=0.25, hf=0.50, ff=0.75), lift=0.20, bob=0.020, pitch=1.5, nod=5.0, flex=2.0, stride_legs=0.8, max_stride=0.9, cycle=(0.55, 1.2)),
-    "trot": dict(duty=0.52, phase=dict(hn=0.00, ff=0.00, hf=0.50, fn=0.50), lift=0.26, bob=0.045, pitch=2.5, nod=3.0, flex=2.0, stride_legs=1.0, max_stride=1.1, cycle=(0.3, 0.7)),
-    "gallop": dict(duty=0.30, phase=dict(hn=0.00, hf=0.10, fn=0.52, ff=0.62), lift=0.40, bob=0.10, pitch=7.0, nod=8.0, flex=9.0, air=0.30, stride_legs=0.9, max_stride=1.0, cycle=(0.22, 0.5)),
+    "trot": dict(duty=0.52, phase=dict(hn=0.00, ff=0.00, hf=0.50, fn=0.50), lift=0.18, bob=0.045, pitch=1.5, nod=2.0, flex=2.0, stride_legs=0.9, max_stride=1.1, cycle=(0.3, 0.7)),
+    "gallop": dict(duty=0.30, phase=dict(hn=0.00, hf=0.10, fn=0.52, ff=0.62), lift=0.28, bob=0.06, pitch=4.0, nod=3.0, flex=12.0, air=0.22, stride_legs=0.9, max_stride=1.0, cycle=(0.22, 0.5)),
 }
 IDLE_FRAMES, IDLE_SECONDS = 8, 1.6
-GAIT_FRAMES = {"walk": 12, "trot": 10, "gallop": 10}
+GAIT_FRAMES = {"walk": 12, "trot": 10, "gallop": 16}
 SLACK = 0.04      # the trunk stands this much (of the foreleg) lower than the rest pose, so the straight foreleg can reach as the paw swings
 
 SECONDARY = {
     "ear_n": dict(parents=["hips", "spine", "neck", "head"], bob=500.0, wind=-5.0, freq=4.5, zeta=0.45),
     "ear_f": dict(parents=["hips", "spine", "neck", "head"], bob=500.0, wind=-5.0, freq=4.5, zeta=0.45),
-    "tail1": dict(parents=["hips", "wag"], bob=700.0, wind=-6.0, freq=3.2, zeta=0.5),
-    "tail2": dict(after="tail1", bob=700.0, wind=-9.0, freq=2.0, zeta=0.4),
-    "tail3": dict(after="tail2", bob=700.0, wind=-12.0, freq=1.3, zeta=0.35),
+    "tail1": dict(parents=["hips", "wag"], bob=300.0, wind=-6.0, freq=3.2, zeta=0.5),
+    "tail2": dict(after="tail1", bob=300.0, wind=-9.0, freq=2.0, zeta=0.4),
+    "tail3": dict(after="tail2", bob=300.0, wind=-12.0, freq=1.3, zeta=0.35),
 }
 
 
@@ -67,7 +67,7 @@ def _trunk(body, rot, hips, spine, neck, head, jaw=0.0):
     aim(sk, rot, "spine", spine)
     aim(sk, rot, "neck", neck)
     aim(sk, rot, "head", head)
-    aim(sk, rot, "jaw", head - 12.0 + jaw)
+    aim(sk, rot, "jaw", head - 12.0 - jaw)   # an open jaw points further down
 
 
 def _legs(body, rot, root, targets):
@@ -108,8 +108,8 @@ def idle_pose(body, t):
     d = _dirs(body)
     s = math.sin(2.0 * math.pi * t)
     c = math.cos(2.0 * math.pi * t)
-    rot = {"wag": down(6.0 * math.sin(2.0 * math.pi * t + 0.5))}
-    _trunk(body, rot, d["hips"] + 0.5 * c, d["spine"] + 0.8 * s, d["neck"] - 1.2 * s - 3.0, d["head"] + 2.0 * math.sin(2.0 * math.pi * t - 0.9) - 4.0)
+    rot = {"wag": down(3.0 * math.sin(2.0 * math.pi * t + 0.5))}
+    _trunk(body, rot, d["hips"] + 0.5 * c, d["spine"] + 1.4 * s, d["neck"] - 1.2 * s - 3.0, d["head"] + 2.0 * math.sin(2.0 * math.pi * t - 0.9) - 4.0)
     root = (0.0, 0.0, -SLACK * body.L["f"] - 0.004 * (0.5 - 0.5 * c))
     root = _legs(body, rot, root, _stand_targets(body))
     return rot, root
@@ -136,7 +136,7 @@ def gait_pose(body, gait, t, stride):
     nod = g["nod"] * math.sin(turn - 0.6)
     rot = {"wag": down({"walk": 9.0, "trot": 8.0, "gallop": 12.0}[gait] * math.sin(turn + 0.8))}
     _trunk(body, rot, d["hips"] + pitch - flex * 0.5, d["spine"] + pitch + flex * 0.5, d["neck"] - 2.0 + 0.5 * nod, d["head"] - 4.0 + nod + 2.0 * math.sin(2.0 * turn))
-    targets, air = gait_targets(body, gait, t, stride)
+    targets, air, planted = gait_targets(body, gait, t, stride, with_planted=True)
     root = (0.0, 0.0, -SLACK * L + bob + air)
     root = (0.0, 0.0, root[2] - _sag(body, rot, root, targets))
     posed = body.skel.pose(rot, root)
@@ -146,21 +146,23 @@ def gait_pose(body, gait, t, stride):
     return rot, root
 
 
-def gait_targets(body, gait, t, stride):
-    """({paw: (ankle x, ankle z, pitch)}, how far the body is lifted in the air) for a gait at cycle position t: where each ankle is to be, in the world."""
+def gait_targets(body, gait, t, stride, with_planted=False):
+    """({paw: (ankle x, ankle z, pitch)}, how far the body is lifted in the air) for a gait at cycle position t: where each ankle is to be, in the world. With
+    `with_planted` also the set of paws that are on the ground."""
     g = GAITS[gait]
     L = body.L["f"]
-    targets, support = {}, 0.0
+    targets, planted, support = {}, {}, 0.0
     for key, leg in body.legs.items():
         u = (t - g["phase"][key]) % 1.0
-        x, z, pitch_f, _ = anim.foot_pose(u, stride, g["duty"], g["lift"] * L, leg.heel, leg.toe, leg.ankle_h)
+        x, z, pitch_f, down_ = anim.foot_pose(u, stride, g["duty"], g["lift"] * L, leg.heel, leg.toe, leg.ankle_h)
         # x is the ankle's from a hip that stays put, the middle of the flat part of the stance under it: put that where the paw stands at rest
         targets[key] = (body.anchor[key] + body.rest_ankle[key] + x, z, pitch_f)
+        planted[key] = down_
         support += _load(u, g["duty"])
     air = g.get("air", 0.0) * body.H * anim.clamp(1.0 - support)        # a gallop leaves the ground: the body rises, the legs gather under it
-    if air:
-        targets = {k: (cx, z + air * 0.7 if z > 1e-9 else z, p) for k, (cx, z, p) in targets.items()}
-    return targets, air
+    if air:   # a paw that is on the ground stays there; the ones in the swing rise with the body (so the suspension does not stretch them)
+        targets = {k: ((cx, z, p) if planted[k] else (cx, z + air, p)) for k, (cx, z, p) in targets.items()}
+    return (targets, air, {k for k, v in planted.items() if v}) if with_planted else (targets, air)
 
 
 def _load(u, duty, ramp=0.04):
@@ -175,12 +177,14 @@ def _load(u, duty, ramp=0.04):
     return 1.0
 
 
-def _sag(body, rot, root, targets, extension=0.985):
+def _sag(body, rot, root, targets, extension=0.985, only=None):
     """How far the trunk has to drop for every paw to reach its target: a leg reaching far ahead or behind is straightened and cannot also hold the
     trunk at its usual height, so the animal sinks as its legs spread (and rises as they come under it), the bob of a real gait."""
     posed = body.skel.pose(rot, root)
     sag = 0.0
     for key, (ax, z, _) in targets.items():
+        if only is not None and key not in only:
+            continue   # a paw in the swing does not hold the trunk up, so it does not set how low the trunk sinks
         leg = body.legs[key]
         joint = posed[leg.names[0]][0]
         reach = extension * leg.reach
@@ -250,6 +254,18 @@ def attack_kind(form):
     return form.get("attack", "bite") if form.get("attack") in ATTACKS else "bite"
 
 
+def _reach(mid, hit, lift_mid, lift=0.10):
+    """A forepaw's keys for a blow: it reaches (x and a lift on the way), plants where it lands and holds there, then comes home lifted and lands at rest: it is never dragged."""
+    x = [(0.0, 0.0, "out"), (T_HOLD, 0.0, "in"), (T_MID, mid, "linear"), (T_HIT, hit, "out"), (T_FOLLOW, hit, "smooth"), (T_END, 0.0, "smooth")]
+    z = [(0.0, 0.0, "out"), (T_HOLD, 0.0, "in"), (T_MID, lift_mid, "linear"), (T_HIT, 0.0, "out"), (T_FOLLOW, 0.0, "smooth"), (0.535, lift * (1.0 if hit else 0.0), "smooth"), (T_END, 0.0, "smooth")]
+    return x, z
+
+
+for _kind, _fn, _ff in (("bite", (0.10, 0.34, 0.10), (0.0, 0.18, 0.0)), ("lunge", (0.18, 0.50, 0.14), (0.08, 0.30, 0.06))):
+    ATTACKS[_kind]["fn_x"], ATTACKS[_kind]["fn_lift"] = _reach(*_fn)
+    ATTACKS[_kind]["ff_x"], ATTACKS[_kind]["ff_lift"] = _reach(*_ff)
+
+
 def attack_frames(body):
     return FRAMES, WINDUP
 
@@ -272,12 +288,12 @@ def attack_pose(body, time):
 # ---- hurt -----------------------------------------------------------------------------------------------------------------------
 HURT_FRAMES = [(0.00, 0.04), (0.04, 0.06), (0.10, 0.06), (0.16, 0.05), (0.21, 0.04)]   # a quarter of a second, the engine's flinch; the last frame is the rest pose
 HURT = {
-    "root_x": [(0.0, 0.0, "out"), (0.04, -0.06, "out"), (0.10, -0.10, "smooth"), (0.16, -0.04, "smooth"), (0.21, 0.0, "smooth")],
+    "root_x": [(0.0, 0.0, "out"), (0.04, -0.07, "out"), (0.10, -0.14, "smooth"), (0.16, -0.05, "smooth"), (0.21, 0.0, "smooth")],
     "root_z": [(0.0, 0.0, "out"), (0.04, -0.03, "out"), (0.10, -0.06, "smooth"), (0.16, -0.02, "smooth"), (0.21, 0.0, "smooth")],
     "hips": [(0.0, 0.0, "out"), (0.04, 6.0, "out"), (0.10, 8.0, "smooth"), (0.16, 3.0, "smooth"), (0.21, 0.0, "smooth")],
-    "spine": [(0.0, 0.0, "out"), (0.04, 8.0, "out"), (0.10, 12.0, "smooth"), (0.16, 4.0, "smooth"), (0.21, 0.0, "smooth")],
-    "neck": [(0.0, 0.0, "out"), (0.04, 20.0, "out"), (0.10, 30.0, "smooth"), (0.16, 10.0, "smooth"), (0.21, 0.0, "smooth")],
-    "head": [(0.0, 0.0, "out"), (0.04, 14.0, "out"), (0.10, 22.0, "smooth"), (0.16, 8.0, "smooth"), (0.21, 0.0, "smooth")],
+    "spine": [(0.0, 0.0, "out"), (0.04, 5.0, "out"), (0.10, 7.0, "smooth"), (0.16, 3.0, "smooth"), (0.21, 0.0, "smooth")],
+    "neck": [(0.0, 0.0, "out"), (0.04, 12.0, "out"), (0.10, 18.0, "smooth"), (0.16, 8.0, "smooth"), (0.21, 0.0, "smooth")],
+    "head": [(0.0, 0.0, "out"), (0.04, 8.0, "out"), (0.10, 12.0, "smooth"), (0.16, 5.0, "smooth"), (0.21, 0.0, "smooth")],
     "jaw": [(0.0, 0.0, "out"), (0.04, 22.0, "out"), (0.10, 26.0, "smooth"), (0.16, 8.0, "smooth"), (0.21, 0.0, "smooth")],
 }
 
@@ -305,15 +321,15 @@ DIE_KEYS = {
     #            rest      yelp     buckle    drop      roll      flop      settle   lie
     "hips":    [REST, 104.0, 100.0, 96.0, 92.0, 90.0, 90.0, 90.0],
     "spine":   [REST, 100.0, 96.0, 92.0, 90.0, 90.0, 90.0, 90.0],
-    "neck":    [REST, 150.0, 130.0, 108.0, 92.0, 84.0, 82.0, 82.0],
-    "head":    [REST, 120.0, 100.0, 84.0, 76.0, 70.0, 70.0, 70.0],
-    "jaw":     [REST, 26.0, 20.0, 12.0, 8.0, 6.0, 6.0, 6.0],
+    "neck":    [REST, 132.0, 116.0, 104.0, 92.0, 84.0, 82.0, 82.0],
+    "head":    [REST, 104.0, 94.0, 82.0, 76.0, 70.0, 70.0, 70.0],
+    "jaw":     [0.0, 26.0, 20.0, 12.0, 8.0, 6.0, 6.0, 6.0],
     "sho_n":   [REST, 20.0, 40.0, 60.0, 74.0, 84.0, 88.0, 88.0],
     "fore_n":  [REST, 10.0, 56.0, 76.0, 86.0, 92.0, 94.0, 94.0],
     "paw_n":   [REST, 30.0, 70.0, 84.0, 90.0, 92.0, 92.0, 92.0],
     "sho_f":   [REST, 24.0, 30.0, 40.0, 56.0, 70.0, 74.0, 74.0],
-    "fore_f":  [REST, 14.0, 40.0, 60.0, 74.0, 82.0, 86.0, 86.0],
-    "paw_f":   [REST, 34.0, 60.0, 76.0, 84.0, 88.0, 88.0, 88.0],
+    "fore_f":  [REST, 14.0, 40.0, 56.0, 64.0, 66.0, 66.0, 65.0],
+    "paw_f":   [REST, 34.0, 60.0, 72.0, 70.0, 62.0, 60.0, 60.0],
     "thigh_n": [REST, 36.0, 60.0, 40.0, 0.0, -44.0, -62.0, -64.0],
     "shin_n":  [REST, -40.0, -64.0, -76.0, -84.0, -88.0, -90.0, -90.0],
     "meta_n":  [REST, 34.0, 20.0, 0.0, -44.0, -78.0, -88.0, -90.0],
@@ -340,7 +356,7 @@ def die_pose(body, time):
     rot = {}
     for bone in ("hips", "spine", "neck", "head"):
         aim(sk, rot, bone, ch[bone])
-    aim(sk, rot, "jaw", ch["head"] - 12.0 + ch["jaw"])
+    aim(sk, rot, "jaw", ch["head"] - 12.0 - ch["jaw"])
     for side in "nf":
         for bone in ("sho_", "fore_", "paw_", "thigh_", "shin_", "meta_"):
             aim(sk, rot, bone + side, ch[bone + side])
@@ -384,6 +400,40 @@ def idle_clip(body):
     n = IDLE_FRAMES
     dur = [IDLE_SECONDS / n] * n
     return Clip(_with_secondary(body, [idle_pose(body, i / n) for i in range(n)], dur, 0.1, True), dur, True)
+
+
+# ---- glide ---------------------------------------------------------------------------------------------------------------------
+GLIDE = {"hover": dict(height=0.10, wave=0.5, cycle=1.8, frames=8), "fly": dict(height=0.22, wave=1.0, cycle=0.9, frames=10), "fast": dict(height=0.26, wave=1.4, cycle=0.6, frames=10)}
+
+
+def glide_pose(body, kind, t):
+    """A creature that flies (a ghost hound): the body held off the ground and undulating, the forelegs reaching ahead, the hind legs and the tail trailing, and it
+    never lands. `kind` is a key of GLIDE: hovering when it stands, flying when it goes. Free limbs, so every leg is aimed by FK (limbs.aim)."""
+    g = GLIDE[kind]
+    d, z0 = _carriage(body)
+    sk = body.skel
+    turn = 2.0 * math.pi * t
+    w = g["wave"]
+    rot = {"wag": down(10.0 * w * math.sin(turn + 0.8))}
+    _trunk(body, rot, d["hips"] - 4.0 * w * math.sin(turn), d["spine"] + 4.0 * w * math.sin(turn - 0.6), d["neck"] + 6.0 + 3.0 * w * math.sin(turn - 1.2),
+           d["head"] + 8.0 + 4.0 * w * math.sin(turn - 1.6), 6.0 + 4.0 * w * (0.5 + 0.5 * math.sin(turn)))
+    for s in "nf":
+        phase = 0.0 if s == "n" else 0.6
+        sway = 8.0 * w * math.sin(turn + phase)
+        aim(sk, rot, "sho_" + s, 62.0 + sway)
+        aim(sk, rot, "fore_" + s, 38.0 + 0.8 * sway)
+        aim(sk, rot, "paw_" + s, 20.0 + 0.5 * sway)
+        aim(sk, rot, "thigh_" + s, -36.0 - sway)
+        aim(sk, rot, "shin_" + s, -66.0 - 0.8 * sway)
+        aim(sk, rot, "meta_" + s, -80.0 - 0.5 * sway)
+    return rot, (0.0, 0.0, body.H * g["height"] + 0.02 * body.H * math.sin(turn))
+
+
+def glide_clip(body, kind):
+    g = GLIDE[kind]
+    n = g["frames"]
+    dur = [g["cycle"] / n] * n
+    return Clip(_with_secondary(body, [glide_pose(body, kind, i / n) for i in range(n)], dur, 1.2, True), dur, True)
 
 
 def plan_gait(body, gait, speed, ppu):

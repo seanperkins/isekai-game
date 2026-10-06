@@ -53,8 +53,9 @@ STANCES = {
 POSTURES = {
     "goblin": dict(crouch=0.82, stance_half=0.31, lean=28.0, head_lean=12.0, recoil=1.0, gaits={}),
     # a wolf-man: tall, hunched far forward over long digitigrade legs, a long stride
-    "werewolf": dict(crouch=0.84, stance_half=0.30, lean=38.0, head_lean=16.0, recoil=0.9,
-                     gaits={"walk": dict(lean=40.0, head=16.0, stride_legs=1.0, max_stride=1.1), "run": dict(lean=52.0, head=22.0, stride_legs=1.15, max_stride=1.2)}),
+    "werewolf": dict(crouch=0.80, stance_half=0.26, lean=46.0, head_lean=22.0, recoil=0.55,
+                     gaits={"walk": dict(crouch=0.72, duty=0.64, lift=0.10, bob=0.022, lean=46.0, head=22.0, swing=12.0, stride_legs=0.9, max_stride=1.0),
+                            "run": dict(crouch=0.70, lift=0.20, lean=54.0, head=24.0, swing=24.0, stride_legs=1.05, max_stride=1.10)}),
 }
 
 GAITS = {
@@ -109,9 +110,10 @@ class Body:
         self.legs = {s: Leg(skel, s, *feet[s]) for s in "nf"}
         self.L = self.legs["n"].reach
         self.hip = self.legs["n"].hip
-        # a foot that stands on a pad ahead of its ankle (a wolf-man's toes) puts the ankle behind where a flat foot's would be: the stance moves forward by half
-        # of that so both ankles stay within reach of the hips
-        self.stance_shift = max(0.0, -min(f[1] for f in feet.values())) * 0.5
+        # a foot that stands on a pad ahead of its ankle (a wolf-man's toes) puts the ankle behind where a flat foot's would be: move the stance forward by the pad's
+        # middle so the two ankles are as far either side of the hips as a flat-footed creature's, and in reach
+        heels = [f[1] for f in feet.values()]
+        self.stance_shift = sum((f[2] - f[1]) / 2.0 for f in feet.values()) / len(feet) if min(heels) < 0.0 else 0.0
         self.stance = STANCES.get(form.get("stance"), {})
 
     def hip_z(self, crouch=None):
@@ -374,9 +376,9 @@ def hurt_pose(body, time):
     _jaw(body, rot, ch["jaw"])
     sk = body.skel
     for bone in ("arm_n", "fore_n", "arm_f", "fore_f"):
-        aim(sk, rot, bone, rest[bone] + ch["d_" + bone])
+        aim(sk, rot, bone, rest[bone] + r * ch["d_" + bone])
     _hold_items(body, rot)
-    aim(sk, rot, "item_n", 180.0 - (rest["item_n"] + ch["d_item_n"]))
+    aim(sk, rot, "item_n", 180.0 - (rest["item_n"] + r * ch["d_item_n"]))
     return rot, (r * ch["pelvis_x"] * L, 0.0, hip[1] - body.hip[1])
 
 
@@ -391,7 +393,7 @@ DIE = dict(
         "hips": [(0.0, 0.0, "out"), (0.14, 8.0, "smooth"), (0.22, 22.0, "smooth"), (0.32, 46.0, "smooth"), (0.44, 78.0, "out"), (0.9, 84.0, "smooth")],
         "lean": [(0.0, REST, "out"), (0.06, 8.0, "out"), (0.14, 22.0, "smooth"), (0.22, 52.0, "in"), (0.32, 76.0, "in"), (0.44, 92.0, "out"), (0.60, 96.0, "smooth"), (0.9, 96.0, "smooth")],
         "head": [(0.0, REST, "out"), (0.06, -4.0, "out"), (0.14, 18.0, "smooth"), (0.22, 40.0, "smooth"), (0.44, 100.0, "out"), (0.60, 104.0, "smooth"), (0.9, 104.0, "smooth")],
-        "thigh_n": [(0.0, REST, "out"), (0.14, 62.0, "smooth"), (0.22, 40.0, "smooth"), (0.21, 0.0, "smooth"), (0.44, -70.0, "out"), (0.9, -80.0, "smooth")],
+        "thigh_n": [(0.0, REST, "out"), (0.14, 62.0, "smooth"), (0.22, 40.0, "smooth"), (0.32, 0.0, "smooth"), (0.44, -70.0, "out"), (0.9, -80.0, "smooth")],
         "shin_n": [(0.0, REST, "out"), (0.14, -40.0, "smooth"), (0.22, -60.0, "smooth"), (0.32, -80.0, "smooth"), (0.44, -96.0, "out"), (0.9, -100.0, "smooth")],
         "foot_n": [(0.0, REST, "out"), (0.14, 100.0, "smooth"), (0.32, 60.0, "smooth"), (0.44, -70.0, "out"), (0.9, -76.0, "smooth")],
         "thigh_f": [(0.0, REST, "out"), (0.14, 50.0, "smooth"), (0.22, 20.0, "smooth"), (0.32, -20.0, "smooth"), (0.44, -86.0, "out"), (0.9, -96.0, "smooth")],

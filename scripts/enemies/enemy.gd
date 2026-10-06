@@ -76,7 +76,7 @@ const RUN_RATIO := 1.35
 ## A run clip is built for this many times the walk's speed (tools/art/blender: the goblin's WALK_SPEED_RUN), and a walk or a run plays at
 ## the creature's real speed relative to that, within these limits.
 const RUN_SPEED := 1.9
-const FORM_RATE_RANGE := Vector2(0.3, 3.0)
+const FORM_RATE_RANGE := Vector2(0.3, 4.0)
 static var _form_clip_cache := {}  # path -> parsed file
 ## The Bog Lizardman's spear: how far, how level and how often it throws (the toad's are SPIT_*; Spear.SPEED is its speed).
 const SPEAR_RANGE := 140.0
@@ -163,6 +163,7 @@ var _sheet: SpriteSheet
 var _still: SpriteSheet  # the sheet of a creature that is one still (a twin), null for the rest
 var _form_sheet: SpriteSheet  # the animated sheet of a twin's form (assets/sheets/anim_<form>), null when it has none
 var _form_hurt_seen := 0.0    # the last flinch timer it drew, so a fresh blow can restart the flinch
+var _authored_speed := 0.0    # the walking speed its clips were built for
 var _animator: SlimeAnimator
 var _shapes: SlimeShapes
 var _hurt_t := 0.0
@@ -670,9 +671,10 @@ func _draw_form_frame(delta: float) -> void:
 	_animator.play(state)
 	_show_form_frame(_animator.frame())
 
-## The speed its walk clip was built for: the creature's own, whatever slows it now.
+## The speed its walk clip was built for: the creature's own at the start (tools/art/blender sizing.speed_of), not what buffs and slows make of it now, so a
+## faster creature plays its walk faster instead of cancelling it out.
 func _walk_speed() -> float:
-	return BASE_SPEED * stats.get_stat("spd") / 100.0
+	return _authored_speed if _authored_speed > 0.0 else BASE_SPEED * stats.get_stat("spd") / 100.0
 
 ## How fast to play the clip: a walk or a run plays as fast as the creature is really going (so a planted foot stays planted when it patrols at half
 ## speed, is slowed, or charges), everything else at its own pace.
@@ -1088,6 +1090,7 @@ func _load_form() -> void:
 		return
 	_animator = SlimeAnimator.new(all[def.form])
 	_animator.play("idle")
+	_authored_speed = BASE_SPEED * float(def.stats.get("spd", 100)) / 100.0
 
 ## The creature's own frames, when its sheet and clips exist; otherwise the old single sprites stay.
 func _load_sheet() -> void:

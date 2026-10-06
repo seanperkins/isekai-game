@@ -49,7 +49,7 @@ def measure_feet(rig):
     for side in "nf":
         bone = "foot_" + side
         ankle = rig.rest[bone][0]
-        x0, x1, z0, _ = rig.bounds_of(bone, named="pad_")
+        x0, x1, z0, _ = rig.bounds_of(bone, named=("pad_", "toe_claw_"))   # the toe claws are part of what stands on the ground
         out[side] = (ankle.z - z0, ankle.x - x0, x1 - ankle.x)
     return out
 
