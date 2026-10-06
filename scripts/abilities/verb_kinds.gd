@@ -5,14 +5,14 @@ extends RefCounted
 
 ## The scene every data-defined verb uses.
 const SCENE := "res://scenes/abilities/verb.tscn"
-const KINDS := ["bolt", "burst", "ring", "dash", "zone", "mark", "heal", "ward", "buff", "pull", "aura", "chain", "engulf", "dissolve", "glide", "anchor", "decoy", "summon", "vine", "transmute", "copy", "reveal", "bridge", "trap", "forge"]
+const KINDS := ["bolt", "burst", "ring", "dash", "zone", "mark", "heal", "ward", "buff", "pull", "aura", "chain", "engulf", "dissolve", "glide", "anchor", "decoy", "summon", "vine", "transmute", "copy", "reveal", "bridge", "trap", "forge", "veil", "stalk", "swap", "blink", "light", "omen", "fate", "sabotage", "chase", "disperse"]
 ## Each kind's keys and what they hold (validate() checks them). Every kind also takes `cooldown` (seconds, in place of the default);
 ## the kinds in TYPED also take damage_type, and those in STRIKES a status and `drain` (the fraction of the damage the caster heals).
 const SCHEMA := {
 	"bolt": {"range": "number", "half_width": "number", "pierce": "bool"},
 	"burst": {"range": "number", "half_width": "number"},
 	"ring": {"radius": "number"},
-	"dash": {"speed": "number", "vertical": "number", "hit_range": "number", "hit_half_width": "number"},
+	"dash": {"speed": "number", "vertical": "number", "hit_range": "number", "hit_half_width": "number", "opener": "number", "smoke": "number"},
 	"zone": {"radius": "number", "seconds": "number", "slow": "bool", "heals": "number", "damage": "bool"},
 	"mark": {"range": "number", "delay": "number"},
 	"heal": {"hp": "number", "mp": "number"},
@@ -25,21 +25,25 @@ const SCHEMA := {
 	"dissolve": {"range": "number", "half_width": "number"},
 	"glide": {"seconds": "number", "fall": "number"},
 	"anchor": {"seconds": "number"},
-	"decoy": {"seconds": "number", "speed": "number", "ward": "number"},
+	"decoy": {"seconds": "number", "speed": "number", "ward": "number", "lure": "number", "reverse": "number"},
 	"summon": {"count": "number", "seconds": "number"},
 	"vine": {"height": "number", "seconds": "number"},
 	"transmute": {"from_units": "number", "to_units": "number"},
 	"copy": {"seconds": "number"},
 	"reveal": {"radius": "number"},
 	"bridge": {"length": "number", "seconds": "number"},
-	"trap": {"seconds": "number", "stun": "number"},
+	"trap": {"seconds": "number", "stun": "number", "lure": "number", "root": "number", "damage": "bool"},
 	"forge": {"stat": "stat", "amount": "number", "parts": "number"},
+	"veil": {"seconds": "number", "lit_seconds": "number", "radius": "number", "disguise": "text", "no_web": "bool"},
 }
 ## The kinds that hurt, which take a `damage_type`; STRIKES are the instant ones, which also take a `status`.
 ## The kinds an enemy casts (at the player, or on itself). The rest need a player's hands: a summon, a bridge, a vine, a reveal, a copy.
 const ENEMY_KINDS := ["bolt", "burst", "ring", "dash", "zone", "mark", "pull", "aura", "chain", "heal", "ward", "buff"]
 const TYPED := ["bolt", "burst", "ring", "dash", "mark", "zone", "pull", "aura", "chain", "engulf", "dissolve"]
 const STRIKES := ["bolt", "burst", "ring", "dash", "mark", "chain", "dissolve"]
+## Keys any kind may carry: its cooldown and deed, how long it holds the caster still or locks its blow, the radius it wakes enemies in, whether it is a web
+## (a veil that stops webbing refuses it) and whether it can be cast once between rests.
+const COMMON := {"cooldown": "number", "deed": "deed", "lock": "number", "still": "number", "alerts": "number", "web": "bool", "once_per_rest": "bool"}
 const STATUSES := ["slow", "stun", "root", "flee", "calm", "confuse"]
 const DASH_SPEED := 500.0
 const DASH_VERTICAL := 0.6
@@ -74,6 +78,7 @@ const ANCHOR_META := "verb_anchor"
 const DECOY_SECONDS := 1.2
 const DECOY_SPEED := 360.0
 const DECOY_WARD := 0.6
+const DECOY_LURE := 160.0
 const SUMMON_COUNT := 3
 const SUMMON_SECONDS := 10.0
 const SUMMON_SPACING := 14.0
@@ -93,6 +98,8 @@ const TRAP_SECONDS := 30.0
 const TRAP_STUN := 2.0
 ## How many of one caster's traps stand at once: a cast beyond it takes the place of the oldest.
 const TRAP_MAX := 3
+const VEIL_SECONDS := 4.0
+const VEIL_RADIUS := 60.0
 const FORGE_STAT := "atk"
 const FORGE_AMOUNT := 2
 const FORGE_PARTS := 2
@@ -158,8 +165,40 @@ static func run(ability: Ability, spec: Dictionary) -> void:
 			_trap(ability, spec)
 		"forge":
 			_forge(ability, spec)
+		"veil":
+			_veil(ability, spec)
+		_:
+			if VerbMind.KINDS.has(str(spec.get("kind", ""))):
+				VerbMind.run(str(spec["kind"]), ability, spec)
+	_price(ability, spec)
 	if spec.has("deed"):
 		_deed(ability, str(spec["deed"]))
+
+## What a cast costs the caster besides MP, from the keys any kind may carry: it holds still, its own blow is locked, enemies around it wake, and a verb
+## cast once between rests is spent.
+static func _price(a: Ability, spec: Dictionary) -> void:
+	if spec.has("lock") and a.actor.has_method("lock_blow"):
+		a.actor.lock_blow(float(spec["lock"]))
+	if spec.has("still") and a.actor.has_method("hold_still"):
+		a.actor.hold_still(float(spec["still"]))
+	if spec.has("alerts"):
+		for e in a.actor.get_tree().get_nodes_in_group("actors"):
+			if e is Enemy and e.global_position.distance_to(a.actor.global_position) <= float(spec["alerts"]):
+				e.wake()
+	if bool(spec.get("once_per_rest", false)):
+		a.actor.set_meta(_spent_key(a), true)
+
+## A true/false property of an actor that may not have it (a stub, an enemy).
+static func _flag(actor, name: String) -> bool:
+	var v = actor.get(name)
+	return v != null and bool(v)
+
+static func _spent_key(a: Ability) -> String:
+	return "verb_spent_%s" % a.skill_id
+
+## A verb that can be cast once between rests and has been.
+static func spent(a: Ability, spec: Dictionary) -> bool:
+	return bool(spec.get("once_per_rest", false)) and a.actor != null and a.actor.has_meta(_spent_key(a))
 
 static func _bolt(a: Ability, spec: Dictionary) -> void:
 	var dir := a.aim_dir()
@@ -193,9 +232,14 @@ static func _dash(a: Ability, spec: Dictionary) -> void:
 	var speed := float(spec.get("speed", DASH_SPEED))
 	a.actor.apply_impulse(Vector2(dir.x * speed, dir.y * speed * float(spec.get("vertical", DASH_VERTICAL))))
 	var reach := float(spec.get("hit_range", DASH_HIT_RANGE))
+	if spec.has("opener") and _flag(a.actor, "cast_unseen"):
+		a.power_mult = float(spec["opener"])  # a strike out of hiding hits harder
 	_strike(a, a.targets_in_front(reach, float(spec.get("hit_half_width", DASH_HIT_HALF_WIDTH))), spec)
+	a.power_mult = 1.0
 	var from := a.actor.global_position
 	Vfx.line(a.actor, from, from + dir * reach, _color(spec), 4.0, 0.2)
+	if spec.has("smoke") and a.actor.has_method("veil_for"):
+		a.actor.veil_for(float(spec["smoke"]))  # a smoke bomb left behind hides the way out
 
 ## A lingering cloud at the caster's feet. It slows by default; `damage` makes it hurt (the skill's power) and `heals` mends the caster.
 static func _zone(a: Ability, spec: Dictionary) -> void:
@@ -385,6 +429,12 @@ static func _decoy(a: Ability, spec: Dictionary) -> void:
 	if sprite is Sprite2D:
 		husk.get_child(0).position = sprite.position
 		husk.get_child(0).scale = sprite.scale
+	if spec.has("lure"):
+		VerbMind.lure_enemies(a, float(spec["lure"]), husk, float(spec.get("seconds", DECOY_SECONDS)))
+	if spec.has("reverse"):
+		for e in a.actor.get_tree().get_nodes_in_group("actors"):
+			if e is Enemy and e.global_position.distance_to(a.actor.global_position) <= float(spec.get("lure", DECOY_LURE)):
+				e.reverse_for(float(spec["reverse"]))
 	if a.actor.has_method("ward"):
 		a.actor.ward(float(spec.get("ward", DECOY_WARD)))
 	if a.actor.has_method("apply_impulse"):
@@ -443,7 +493,25 @@ static func _trap(a: Ability, spec: Dictionary) -> void:
 		mine[0].free()
 	var trap := VerbTrap.new()
 	a.actor.get_parent().add_child(trap)
-	trap.launch(a.actor, a.actor.global_position, a.power(), float(spec.get("seconds", TRAP_SECONDS)), float(spec.get("stun", TRAP_STUN)))
+	var hurts := bool(spec.get("damage", true))
+	trap.launch(a.actor, a.actor.global_position, a.power() if hurts else 0, float(spec.get("seconds", TRAP_SECONDS)), float(spec.get("stun", TRAP_STUN if hurts else 0.0)),
+		float(spec.get("lure", 0.0)), float(spec.get("root", 0.0)))
+
+## Hides the caster from every enemy for `seconds`, or for `lit_seconds` in a lit room (Slink). With a `radius` it spins a web there instead, which hides
+## whoever of the caster's stands in it (Veil). An attack, a cast or a blow that lands ends either.
+static func _veil(a: Ability, spec: Dictionary) -> void:
+	if not a.actor.has_method("veil_for"):
+		return
+	var seconds := float(spec.get("seconds", VEIL_SECONDS))
+	if not _flag(a.actor, "in_dark"):
+		seconds = float(spec.get("lit_seconds", seconds))
+	if spec.has("radius"):
+		var web := VerbVeil.new()
+		a.actor.get_parent().add_child(web)
+		web.launch(a.actor, a.actor.global_position, float(spec["radius"]), seconds)
+	else:
+		a.actor.veil_for(seconds, str(spec.get("disguise", "")), bool(spec.get("no_web", false)))
+	Vfx.puffs(a.actor, Art.texture("spit_glob"), [a.actor.global_position + Vector2(0, -6)], Color(0.8, 0.8, 0.95, 0.6), 0.5)
 
 ## Whether the caster can pay for the cast. Only a forge asks for anything: carried parts. A cast that cannot be paid for is not ready, so it
 ## costs nothing.
@@ -481,7 +549,11 @@ static func _hit(t, power: int, spec: Dictionary, from: Vector2, ignore_def := f
 		t.receive_hit(power, type, from, "", true)
 	else:
 		t.receive_hit(power, type, from, "")
-	_apply_status(t, spec.get("status", {}))
+	var delay := float(spec.get("status_delay", 0.0))
+	if delay > 0.0 and is_instance_valid(t) and t.is_inside_tree():
+		t.get_tree().create_timer(delay).timeout.connect(_apply_status.bind(t, spec.get("status", {})))  # slow to take hold
+	else:
+		_apply_status(t, spec.get("status", {}))
 	var drain := float(spec.get("drain", 0.0))
 	if drain > 0.0 and caster != null and is_instance_valid(caster):
 		var dealt := power if before < 0 else maxi(0, before - _hp(t))  # what the target actually lost; a target with no HP of its own takes the power
@@ -497,6 +569,8 @@ static func _hp(t) -> int:
 ## slow: any actor that can be slowed. stun: an Enemy that can be eaten (the serpent cannot be stunned). root: any Enemy, a boss included.
 ## flee, calm, confuse: an Enemy that is not a hunting boss (the mind conditions, Enemy.flee_for and its kin).
 static func _apply_status(t, status: Dictionary) -> void:
+	if not is_instance_valid(t):
+		return
 	if status.has("slow") and t.has_method("slow_for"):
 		t.slow_for(float(status["slow"]))
 	if status.has("root") and t.has_method("root_for"):
@@ -519,16 +593,16 @@ static func _color(spec: Dictionary, alpha := 1.0) -> Color:
 static func validate(spec: Dictionary) -> PackedStringArray:
 	var out := PackedStringArray()
 	var kind := str(spec.get("kind", ""))
-	if not SCHEMA.has(kind):
+	if _schema(kind).is_empty():
 		out.append("unknown verb kind '%s'" % kind)
 		return out
-	var keys: Dictionary = SCHEMA[kind].duplicate()
-	keys["cooldown"] = "number"
-	keys["deed"] = "deed"  # any verb may say a deed (Deeds) when the player casts it
-	if kind in TYPED:
+	var keys: Dictionary = _schema(kind).duplicate()
+	keys.merge(COMMON)  # any verb may say a deed (Deeds) when the player casts it
+	if kind in TYPED or kind in VerbMind.TYPED:
 		keys["damage_type"] = "text"
 	if kind in STRIKES:
 		keys["status"] = "status"
+		keys["status_delay"] = "number"
 		keys["drain"] = "number"
 	for key in spec:
 		if key == "kind":
@@ -544,6 +618,10 @@ static func validate(spec: Dictionary) -> PackedStringArray:
 	if kind == "buff" and not spec.has("stats"):
 		out.append("buff: stats must be a dictionary of stat id to number")
 	return out
+
+## The keys of a kind: the ones here, or a pack's.
+static func _schema(kind: String) -> Dictionary:
+	return SCHEMA[kind] if SCHEMA.has(kind) else VerbMind.SCHEMA.get(kind, {})
 
 static func _is_number(v) -> bool:
 	return typeof(v) == TYPE_INT or typeof(v) == TYPE_FLOAT

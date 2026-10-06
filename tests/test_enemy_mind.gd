@@ -133,3 +133,67 @@ func test_a_hunting_boss_sees_through_a_veil() -> void:
 	player.unseen = true
 	await wait_physics_frames(6)
 	assert_true(e.is_alert(), "a boss in its arena always knows where you are")
+
+# --- misled, woken, disarmed, and lured to ruin ---
+
+func test_a_misled_enemy_walks_the_wrong_way_but_is_not_afraid() -> void:
+	var e := _enemy()
+	player.global_position = Vector2(100, 0)
+	assert_true(e.reverse_for(1.0))
+	await wait_physics_frames(10)
+	assert_lt(e.velocity.x, -10.0, "away from the player, who is to its right")
+	assert_false(e.is_fleeing(), "it is not frightened: touching it still hurts")
+
+func test_a_wake_alerts_an_enemy_that_has_not_noticed_the_player_and_ends_a_calm() -> void:
+	var e := _enemy()
+	player.global_position = Vector2(400, 0)  # far beyond its sight
+	await wait_physics_frames(3)
+	assert_false(e.is_alert())
+	e.calm_for(10.0)
+	e.wake()
+	assert_true(e.is_alert(), "a loud noise: it is up, and no longer calm")
+	assert_false(e.is_calm())
+
+func test_a_dormant_enemy_is_not_woken_by_a_wake() -> void:
+	var e := _enemy()
+	e.dormant = true
+	e.wake()
+	assert_false(e.is_alert())
+
+func test_a_disarmed_enemy_does_not_cast_its_verb() -> void:
+	var control := _enemy("twin_gleipnir")
+	player.global_position = Vector2(60, 0)
+	await wait_physics_frames(80)
+	assert_gt(control.verb_casts, 0, "undisarmed it casts (else this test proves nothing)")
+	control.queue_free()
+	var e := _enemy("twin_gleipnir")
+	e.disarm_for(3.0)
+	await wait_physics_frames(80)
+	assert_eq(e.verb_casts, 0)
+	assert_true(e.is_disarmed())
+
+func test_a_lured_enemy_walks_off_a_ledge_a_careful_one_would_stop_at_when_reckless() -> void:
+	var e := _enemy("cave_rat", Vector2(0, 0))
+	# the ground ends at x = 40: nothing beyond it
+	for n in get_children():
+		if n is StaticBody2D:
+			n.queue_free()
+	await wait_physics_frames(2)
+	var ledge := StaticBody2D.new()
+	var shape := CollisionShape2D.new()
+	var rect := RectangleShape2D.new()
+	rect.size = Vector2(80, 20)
+	shape.shape = rect
+	ledge.add_child(shape)
+	ledge.position = Vector2(0, 16)
+	add_child_autofree(ledge)
+	var lure := Node2D.new()
+	add_child_autofree(lure)
+	lure.global_position = Vector2(200, 0)
+	player.global_position = Vector2(-300, 0)
+	e.lure_to(lure, 5.0, false)
+	await wait_seconds(1.5)
+	assert_lt(e.global_position.x, 60.0, "a careful one stops at the edge (at %.0f)" % e.global_position.x)
+	e.lure_to(lure, 5.0, true)
+	await wait_seconds(1.5)
+	assert_gt(e.global_position.x, 60.0, "a reckless one walks on over it (at %.0f)" % e.global_position.x)

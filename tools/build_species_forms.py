@@ -117,6 +117,7 @@ def species_forms():
         check_row(f)
     check_unique(forms)
     attach_verbs(forms)
+    attach_traits(forms)
     attach_gates(forms)
     return forms
 
@@ -158,7 +159,22 @@ def slime_forms():
         check_row(f)
     check_unique(out)
     attach_verbs(out)
+    attach_traits(out)
     return out
+
+
+TRAITS_TABLE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "form_traits.json")
+
+
+def attach_traits(forms, table=None):
+    """A form named in tools/form_traits.json gets those traits (FormEffects.TRAITS) on top of any it inherits."""
+    if table is None:
+        with open(TRAITS_TABLE, encoding="utf-8") as fh:
+            table = json.load(fh)
+    for f in forms:
+        extra = [t for t in table.get(f["dataId"], []) if t not in f.get("traits", [])]
+        if extra:
+            f["traits"] = list(f.get("traits", [])) + extra
 
 
 def attach_gates(forms, rows=None):

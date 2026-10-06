@@ -55,7 +55,7 @@ func has(flag: String) -> bool:
 func level(flag: String) -> int:
 	return int(capabilities.get(flag, 0))
 
-func incoming(damage_type: String, hp: int, max_hp: int) -> Dictionary:
+func incoming(damage_type: String, hp: int, max_hp: int, distance := 0.0) -> Dictionary:
 	var pairs: Array = []
 	for id in rules.owned():
 		pairs.append([rules.get_def(id), rules.level_of(id)])
@@ -64,6 +64,8 @@ func incoming(damage_type: String, hp: int, max_hp: int) -> Dictionary:
 		out["percent_off"] = mini(100, int(out["percent_off"]) + FormEffects.VENOM_PERCENT)
 	if has("trait_hard_shell"):
 		out["flat_off"] = int(out["flat_off"]) + FormEffects.SHELL_FLAT
+	if distance > FormEffects.RANGED_FROM and has("trait_ranged_proof"):
+		out["percent_off"] = mini(100, int(out["percent_off"]) + FormEffects.RANGED_PERCENT)
 	return out
 
 ## The multiplier on the knockback a hit gives the player (1.0 with no Hardened Shell).

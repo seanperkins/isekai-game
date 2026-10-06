@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_spider_veil_spinner"
 display_name = "Veil"
-description = "Spin a web over a doorway that hides you and allies."
+description = "Spin a web over a doorway: whoever stands in it is unseen. Any attack tears it."
 announce = "New verb. Acquired [Veil]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "ward", "seconds": 3.0, "cooldown": 12.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "veil", "seconds": 8.0, "radius": 70, "web": true, "cooldown": 12.0}}]
 mp_cost = 5

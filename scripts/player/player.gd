@@ -206,6 +206,24 @@ var _form_walk_speed := 60.0
 var _cast_pose_t := 0.0
 var _cast_pose_new := false
 var _base_clips := {}   # the species' own clips, to go back to when a body has none of its own
+## A veil hides the player from every enemy's eyes until it runs out, the player is hurt, or the player attacks or casts. `cast_unseen` says the
+## veil was up as the last cast began (a stalker's opener reads it).
+var _veil_t := 0.0
+const FATE_NEAR := 48.0
+var _veil_disguise := ""
+var _veil_no_web := false
+var cast_unseen := false
+## What a verb can do to its caster as its price: held still, its own blow locked, or turned to a swarm that cannot fight.
+var _still_t := 0.0
+var _blow_lock_t := 0.0
+var _swarm_t := 0.0
+var _jam_t := 0.0
+var _slow_immune_t := 0.0
+var _fated: Enemy = null
+var _fated_t := 0.0
+var _chased: Enemy = null
+var _chased_t := 0.0
+var _swarm_passed: Array = []
 ## The creature last appraised (Inspect on it), for Copy; null until one is.
 var last_inspected: CreatureDef = null
 ## The thread the slime is swinging from, or null.
@@ -262,7 +280,7 @@ func _physics_process(delta: float) -> void:
 		return
 	var wet := _step_water(delta)
 	var dir := Input.get_axis("move_left", "move_right")
-	if predation.active():
+	if predation.active() or _still_t > 0.0:
 		dir = 0.0
 	set_spread(wants_spread(is_on_floor(), aim_vector(), raw_aim().y, spreading))
 	_tackle_time = maxf(0.0, _tackle_time - delta)
@@ -288,7 +306,7 @@ func _physics_process(delta: float) -> void:
 			sqrt(stats.get_stat("jump_height") / 100.0), _dash > 0.0, wet["entered"], delta)
 	if skillset.has("wall_cling") and is_on_wall() and not is_on_floor() and velocity.y > 0.0 and not _water.in_water:
 		velocity.y = minf(velocity.y, WALL_SLIDE_SPEED * stats.get_stat("slide_speed") / 100.0)
-	if Input.is_action_just_pressed("jump"):
+	if Input.is_action_just_pressed("jump") and _still_t <= 0.0:
 		do_jump()
 	if Input.is_action_just_pressed("tackle"):
 		do_tackle()
@@ -335,13 +353,14 @@ func _species_physics(delta: float) -> void:
 	_dash = maxf(0.0, _dash - delta)
 	var eating := predation.active()
 	var i := MoveInput.new()
-	i.dir = 0.0 if eating else Input.get_axis("move_left", "move_right")
-	i.jump_pressed = not eating and Input.is_action_just_pressed("jump")
+	var held := eating or _still_t > 0.0
+	i.dir = 0.0 if held else Input.get_axis("move_left", "move_right")
+	i.jump_pressed = not held and Input.is_action_just_pressed("jump")
 	i.jump_held = Input.is_action_pressed("jump")
 	i.down = Input.get_action_strength("aim_down")
 	i.up = Input.get_action_strength("aim_up")
 	i.aim = cast_aim()
-	i.signature_pressed = not eating and Input.is_action_just_pressed("tackle")
+	i.signature_pressed = not held and not is_blow_locked() and Input.is_action_just_pressed("tackle")
 	var st := species_body.state
 	st.velocity = velocity  # whatever wrote the body's velocity since last tick (a room slide, an ability) is the truth
 	if rope != null and i.jump_pressed:  # as do_jump does: on the ground drop the rope and jump, in the air let go and swing on
@@ -402,6 +421,7 @@ func _species_adjust(v: Vector2, wet: Dictionary, delta: float) -> Vector2:
 func _species_combat() -> void:
 	var st := species_body.state
 	if st.verb != "" and _last_verb == "":
+		break_veil()
 		EventBus.world_event.emit("tackled", {})
 	_last_verb = st.verb
 	if st.verb == "pounce" and st.pounce_hit and not _pounce_applied:
@@ -411,6 +431,9 @@ func _species_combat() -> void:
 			var from_behind: bool = target.facing == facing
 			if target.receive_tackle(stats.get_stat("atk"), from_behind, global_position):
 				_emit.call(Events.STUNNED_ENEMY, {"source": target.def.id})
+			if target is Enemy and is_chasing(target):
+				species_body.state.cooldowns.clear()  # the chase is paid for: the next pounce is free
+				_chased = null
 	elif st.verb != "pounce":
 		_pounce_applied = false
 
@@ -765,7 +788,7 @@ func do_jump() -> void:
 		sensors.jumped("wall")
 
 func do_tackle() -> void:
-	if health.is_dead() or predation.active() or _dash > 0.0:
+	if health.is_dead() or predation.active() or _dash > 0.0 or is_blow_locked() or _still_t > 0.0:
 		return
 	velocity.x = facing * TACKLE_SPEED
 	_dash = TACKLE_SECONDS
@@ -850,7 +873,7 @@ func do_inspect() -> void:
 	inspect_report.emit(StatusText.creature_lines(_compendium.creature_report(c.id, _rules.level_of("appraisal"))))
 
 func use_active(i: int) -> void:
-	if not can_cast():
+	if not can_cast() or _swarm_t > 0.0 or _jam_t > 0.0:
 		return
 	var id := skillset.slots.use(i)
 	if id == "":
@@ -860,6 +883,8 @@ func use_active(i: int) -> void:
 		return
 	if not ability.ready():
 		return  # on cooldown: costs nothing
+	if _veil_no_web and is_unseen() and (FormEffects.THREAD_SKILLS.has(id) or bool(ability.spec.get("web", false))):
+		return  # a veil that passes as someone else does not web
 	var cost := FormEffects.mp_cost(skillset.capabilities, id, _rules.get_def(id).mp_cost)
 	ability.level = _rules.level_of(id)
 	# Nothing held: zero, so each ability uses its own default (forward, or up-forward for Swing). Held includes the pointer.
@@ -868,6 +893,8 @@ func use_active(i: int) -> void:
 	if not mana.spend(cost):
 		not_enough_mp.emit(id)
 		return
+	cast_unseen = is_unseen()
+	break_veil()  # an attack from hiding ends it; a verb that hides the caster again does so after this
 	if channels:
 		ability.begin_channel()
 		_channel = ability
@@ -1034,9 +1061,15 @@ func try_bond() -> bool:
 ## The goblin picks the pocket of the nearest living creature with something to leave: it rolls the creature's drops once, takes the first
 ## part found (no fight, the creature stays), and the creature is not tried again. True whenever a creature was tried, empty pocket or not.
 func try_pickpocket() -> bool:
-	if species != "goblin" or health.is_dead():
+	if species != "goblin":
 		return false
-	var target = _nearest_in_group("predatable", PREDATE_RANGE, func(n) -> bool: return n.has_method("can_be_robbed") and n.can_be_robbed())
+	return pickpocket(PREDATE_RANGE)
+
+## The same, for any body that has the knack (a verb's blink), within `reach`.
+func pickpocket(reach: float) -> bool:
+	if health.is_dead():
+		return false
+	var target = _nearest_in_group("predatable", reach, func(n) -> bool: return n.has_method("can_be_robbed") and n.can_be_robbed())
 	if target == null:
 		return false
 	target.robbed = true
@@ -1402,9 +1435,12 @@ func can_cast() -> bool:
 func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, cause: String = "") -> void:
 	if _invuln > 0.0 or _ward > 0.0 or _in_roll_iframes() or health.is_dead():
 		return
+	if _fate_sends_back(raw, damage_type, from, cause):
+		return
 	last_hit_cause = cause if cause != "" else damage_type  # before take_hit: a lethal hit fires `died`
+	break_veil()
 	end_channel()  # a hit ends any channel, including a poison hit that carries no `from`
-	var m := skillset.incoming(damage_type, health.hp, health.max_hp)
+	var m := skillset.incoming(damage_type, health.hp, health.max_hp, global_position.distance_to(from) if from != Vector2.INF else 0.0)
 	var dealt := Damage.hit(raw, damage_type, stats.get_stat("def"), m["percent_off"], m["flat_off"])
 	health.take_hit(dealt, damage_type)
 	_invuln = INVULN_SECONDS
@@ -1420,6 +1456,18 @@ func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, cau
 			species_body.state.surface_lock = SURFACE_LET_GO
 	if damage_type == "shock" and not health.is_dead():
 		_dash = maxf(_dash, SHOCK_STUN)  # after the knockback block, which assigns 0.2
+
+## A blow from the enemy a thread is tied to goes back to it, and the thread is spent.
+func _fate_sends_back(raw: int, damage_type: String, from: Vector2, cause: String) -> bool:
+	if _fated == null or _fated_t <= 0.0 or not is_instance_valid(_fated):
+		return false
+	if cause != str(_fated.def.id) and not (from != Vector2.INF and _fated.global_position.distance_to(from) < FATE_NEAR):
+		return false
+	var e := _fated
+	_fated = null
+	_fated_t = 0.0
+	e.receive_hit(raw, damage_type, global_position, "fate")
+	return true
 
 ## Steps the water model and emits what it saw: the audio edges and one `submerged` per second.
 func _step_water(delta: float) -> Dictionary:
@@ -1466,13 +1514,115 @@ func _in_roll_iframes() -> bool:
 ## A slow from an enemy's verb (a bolt's slow status, a web zone): the speed stat drops by SLOW_SPD until the longest slow so far has
 ## run out. Slows do not stack.
 func slow_for(seconds: float) -> void:
+	if _slow_immune_t > 0.0:
+		return  # a gallop nothing slows
 	_slow = maxf(_slow, seconds)
 	stats.set_timed_modifiers(SLOW_SOURCE, [{"stat": "spd", "op": "add", "value": SLOW_SPD}])
 
 func ward(seconds: float) -> void:
 	_ward = maxf(_ward, seconds)
 
+## Unseen for `seconds`: no enemy notices the player (Enemy._sense asks). A `disguise` ("goblin") fools only creatures whose id has it; `no_web` forbids
+## thread and web verbs while it lasts.
+func veil_for(seconds: float, disguise := "", no_web := false) -> void:
+	_veil_t = maxf(_veil_t, seconds)
+	_veil_disguise = disguise
+	_veil_no_web = no_web
+
+## True while a veil is on the player or the player stands in a web it has spun.
+func is_unseen() -> bool:
+	if _veil_t > 0.0:
+		return true
+	for v in get_tree().get_nodes_in_group("verb_veils"):
+		if v.caster == self and v.covers(self):
+			return true
+	return false
+
+## Whether `enemy` is fooled: a disguise fools only its own kind, a plain veil or a web everyone.
+func unseen_by(enemy: Node) -> bool:
+	if _veil_t > 0.0 and (_veil_disguise == "" or ("def" in enemy and str(enemy.def.id).contains(_veil_disguise))):
+		return true
+	for v in get_tree().get_nodes_in_group("verb_veils"):
+		if v.caster == self and v.covers(self):
+			return true
+	return false
+
+func break_veil() -> void:
+	_veil_t = 0.0
+	_veil_disguise = ""
+	_veil_no_web = false
+	for v in get_tree().get_nodes_in_group("verb_veils"):
+		if v.caster == self:
+			v.tear()
+
+## Its own verbs are jammed for `seconds` (a sabotage that went off in its hands).
+func jam(seconds: float) -> void:
+	_jam_t = maxf(_jam_t, seconds)
+
+func is_jammed() -> bool:
+	return _jam_t > 0.0
+
+## Ties a thread to `enemy`: the next blow it lands on the player is sent back to it (Fate thread). One thread at a time.
+func fate_tie(enemy: Enemy, seconds: float) -> void:
+	_fated = enemy
+	_fated_t = seconds
+
+func is_fated(enemy: Enemy) -> bool:
+	return _fated == enemy and _fated_t > 0.0
+
+## A gallop nothing slows for `seconds`, and `prey` (an enemy that is running away, or null) marked: the pounce that catches it costs nothing (Chaser).
+func chase_for(prey: Enemy, seconds: float) -> void:
+	_slow_immune_t = maxf(_slow_immune_t, seconds)
+	_chased = prey
+	_chased_t = seconds if prey != null else 0.0
+
+func is_chasing(enemy: Enemy) -> bool:
+	return _chased == enemy and _chased_t > 0.0
+
+## Held still by its own verb for `seconds`: no walking, jumping or blow.
+func hold_still(seconds: float) -> void:
+	_still_t = maxf(_still_t, seconds)
+
+func is_held_still() -> bool:
+	return _still_t > 0.0
+
+## Its own blow (the pounce, the tackle) cannot be used for `seconds`.
+func lock_blow(seconds: float) -> void:
+	_blow_lock_t = maxf(_blow_lock_t, seconds)
+
+func is_blow_locked() -> bool:
+	return _blow_lock_t > 0.0 or _swarm_t > 0.0
+
+## A swarm: it can neither cast nor strike until it reforms.
+func swarm_for(seconds: float) -> void:
+	_swarm_t = maxf(_swarm_t, seconds)
+	for b in get_tree().get_nodes_in_group("dissolvable"):  # it squeezes through every grate it can see
+		var body = b.get("_body")
+		if body is CollisionObject2D and not _swarm_passed.has(body):
+			add_collision_exception_with(body)
+			_swarm_passed.append(body)
+
+func _reform() -> void:
+	for body in _swarm_passed:
+		if is_instance_valid(body):
+			remove_collision_exception_with(body)
+	_swarm_passed.clear()
+
+func is_swarm() -> bool:
+	return _swarm_t > 0.0
+
 func tick(delta: float) -> void:
+	_still_t = maxf(0.0, _still_t - delta)
+	_blow_lock_t = maxf(0.0, _blow_lock_t - delta)
+	_jam_t = maxf(0.0, _jam_t - delta)
+	_slow_immune_t = maxf(0.0, _slow_immune_t - delta)
+	_fated_t = maxf(0.0, _fated_t - delta)
+	_chased_t = maxf(0.0, _chased_t - delta)
+	if _swarm_t > 0.0:
+		_swarm_t = maxf(0.0, _swarm_t - delta)
+		if _swarm_t <= 0.0:
+			_reform()
+	_veil_t = maxf(0.0, _veil_t - delta)
 	_invuln = maxf(0.0, _invuln - delta)
 	_ward = maxf(0.0, _ward - delta)
 	if _slow > 0.0:
@@ -1710,7 +1860,14 @@ func _on_skill_leveled(_id: String, _level: int) -> void:
 	skillset.refresh()
 	_sync_max_hp()
 
+## A rest (a glow pool, a new life): the verbs that can be cast once between rests can be cast again.
+func rest_refresh() -> void:
+	for key in get_meta_list():
+		if str(key).begins_with("verb_spent_"):
+			remove_meta(key)
+
 func _on_run_started() -> void:
+	rest_refresh()
 	progression = Progression.new()  # levels are per run
 	progression.leveled_up.connect(_on_leveled_up)
 	form.reset()

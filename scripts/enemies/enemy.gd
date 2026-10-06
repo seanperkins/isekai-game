@@ -147,6 +147,9 @@ var _confuse_turn_t := 0.0
 var _confuse_dir := 1
 var _lure: Node2D
 var _lure_t := 0.0
+var _lure_reckless := false
+var _reverse_t := 0.0
+var _disarm_t := 0.0
 var _slow := 0.0
 ## A verb's root (Bind): no AI, no contact hit, no eat, for this long. Not a stun, so it works on an enemy that cannot be stunned.
 var _root := 0.0
@@ -291,6 +294,8 @@ func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, cau
 	if _untouchable():
 		return
 	_calm_t = 0.0  # a blow ends the calm
+	if damage_type == "holy" and has_meta("verb_omen"):
+		set_meta("verb_omen_cleansed", true)  # holy light cleanses an omen
 	EventBus.world_event.emit("enemy_hit", {"pos": global_position})
 	_record_blow(damage_type, from, cause)
 	_cause = cause if cause != "" else cause_for(damage_type)
@@ -301,11 +306,11 @@ func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, cau
 
 func _record_blow(damage_type: String, from: Vector2, cause: String) -> void:
 	last_blow = {"from_behind": _blow_from_behind, "distance": global_position.distance_to(from) if from != Vector2.INF else 0.0,
-		"damage_type": damage_type, "cause": cause, "marked": has_meta("verb_marked") or appraised, "alert": is_alert(), "fleeing": is_fleeing() or _running_away()}
+		"damage_type": damage_type, "cause": cause, "marked": has_meta("verb_marked") or appraised, "alert": is_alert(), "fleeing": is_fleeing() or is_running_away()}
 	_blow_from_behind = false
 
 ## Moving away from the player faster than DeedTags.FLEE_SPEED.
-func _running_away() -> bool:
+func is_running_away() -> bool:
 	var player := get_tree().get_first_node_in_group("player") as Node2D if is_inside_tree() else null
 	if player == null or absf(velocity.x) <= DeedTags.FLEE_SPEED:
 		return false
@@ -378,13 +383,40 @@ func calm_for(seconds: float) -> bool:
 	_alert = 0.0
 	return true
 
-## Lured: it goes after `target` (a decoy, a scent) instead of the player until the time is up or the target is gone.
-func lure_to(target: Node2D, seconds: float) -> bool:
+## Lured: it goes after `target` (a decoy, a light) instead of the player until the time is up or the target is gone. A reckless one does not stop at
+## a ledge or a wall.
+func lure_to(target: Node2D, seconds: float, reckless := false) -> bool:
 	if not _minded() or target == null:
 		return false
 	_lure = target
 	_lure_t = seconds
+	_lure_reckless = reckless
 	return true
+
+## Misled: it turns about and walks away from the player (not afraid: touching it still hurts).
+func reverse_for(seconds: float) -> bool:
+	if not _minded():
+		return false
+	_reverse_t = maxf(_reverse_t, seconds)
+	return true
+
+## A loud noise: up and alert at once, whatever it was doing, even calm. A sleeper (dormant) does not wake.
+func wake() -> void:
+	if dormant:
+		return
+	_calm_t = 0.0
+	_alert = ALERT_MEMORY
+
+## Its verb and its throwing are jammed (Sabotage).
+func disarm_for(seconds: float) -> bool:
+	if dormant:
+		return false
+	_disarm_t = maxf(_disarm_t, seconds)
+	_verb_state = ""  # a cast that was winding up is dropped
+	return true
+
+func is_disarmed() -> bool:
+	return _disarm_t > 0.0
 
 ## Confused: it staggers about, first one way and then the other, and cannot make for the player.
 func confuse_for(seconds: float) -> bool:
@@ -424,9 +456,9 @@ func can_be_robbed() -> bool:
 	return not dormant and not robbed and def.predatable and not Drops.for_def(def).is_empty() \
 		and (status.state == EnemyStatus.ACTIVE or status.state == EnemyStatus.STUNNED)
 
-## Whether a wolf or a goblin can bond with it now: alive, awake and stunned, and it accepts a bond at all (CreatureDef.bonds).
+## Whether a wolf or a goblin can bond with it now: alive, awake and stunned or calmed, and it accepts a bond at all (CreatureDef.bonds).
 func can_be_bonded() -> bool:
-	return not dormant and not def.bonds.is_empty() and status.state == EnemyStatus.STUNNED
+	return not dormant and not def.bonds.is_empty() and (status.state == EnemyStatus.STUNNED or (is_calm() and status.state == EnemyStatus.ACTIVE))
 
 func set_held(v: bool) -> void:
 	status.held = v
@@ -490,6 +522,8 @@ func _physics_process(delta: float) -> void:
 	_calm_t = maxf(0.0, _calm_t - delta)
 	_confuse_t = maxf(0.0, _confuse_t - delta)
 	_lure_t = maxf(0.0, _lure_t - delta)
+	_reverse_t = maxf(0.0, _reverse_t - delta)
+	_disarm_t = maxf(0.0, _disarm_t - delta)
 	var player: Node2D = get_tree().get_first_node_in_group("player")
 	var active := status.state == EnemyStatus.ACTIVE and _root <= 0.0
 	if def.swimmer and not _water_resolved:
@@ -596,7 +630,7 @@ func _sense(player: Node2D, delta: float) -> void:
 	if _calm_t > 0.0:
 		_alert = 0.0
 		return
-	var hidden: bool = player.has_method("is_unseen") and player.is_unseen()
+	var hidden: bool = player.unseen_by(self) if player.has_method("unseen_by") else (player.has_method("is_unseen") and player.is_unseen())
 	var sees := hunting or (not hidden and global_position.distance_to(player.global_position) < CHASE_RANGE and can_see(player))
 	if sees and def.swimmer and _home_water != null and not _home_water.world_rect().has_point(player.global_position):
 		sees = false  # an eel is stirred only by a player in its own water
@@ -889,18 +923,23 @@ func _act(player: Node2D, delta: float) -> void:
 func _mind_act(to_player: Vector2, delta: float) -> bool:
 	var dir := 0
 	var speed := _speed()
+	var reckless := false
 	if _flee_t > 0.0:
 		dir = -1 if to_player.x > 0.0 else 1
 		speed *= FLEE_MULT
+	elif _reverse_t > 0.0:
+		dir = -1 if to_player.x > 0.0 else 1
 	elif _confuse_t > 0.0:
 		_confuse_turn_t -= delta
 		if _confuse_turn_t <= 0.0:
 			_confuse_dir = -_confuse_dir
 			_confuse_turn_t = CONFUSE_TURN
 		dir = _confuse_dir
+		reckless = true  # it does not look where it is going
 	elif _lure_t > 0.0 and is_instance_valid(_lure):
 		var gap := _lure.global_position.x - global_position.x
 		dir = 0 if absf(gap) <= LURE_STOP else int(signf(gap))
+		reckless = _lure_reckless
 	else:
 		return false
 	_verb_state = ""
@@ -908,7 +947,7 @@ func _mind_act(to_player: Vector2, delta: float) -> bool:
 		_state = ""
 	if dir != 0:
 		facing = dir
-	velocity.x = 0.0 if dir == 0 or _blocked_ahead() else dir * speed
+	velocity.x = 0.0 if dir == 0 or (not reckless and _blocked_ahead()) else dir * speed
 	if kind == Kind.SWOOPER or kind == Kind.DRIFTER:
 		velocity.y = move_toward(velocity.y, 0.0, GRAVITY * delta)
 	return true
@@ -916,7 +955,7 @@ func _mind_act(to_player: Vector2, delta: float) -> bool:
 ## The verb: alert and in range with the ability ready, wind up (telegraphed), cast at the player, hold still a moment. True while it owns the
 ## body. A heal waits until the enemy is under half its health.
 func _verb_act(to_player: Vector2, delta: float) -> bool:
-	if _verb == null:
+	if _verb == null or _disarm_t > 0.0:
 		return false
 	if _verb_state == "windup":
 		velocity.x = 0.0
@@ -959,7 +998,7 @@ func ward(seconds: float) -> void:
 ## Chase while alert (holding at a ledge or wall rather than walking off it), else patrol home.
 func _walk(to_player: Vector2) -> void:
 	var speed := _speed()
-	if def.projectile != "" and is_alert():
+	if def.projectile != "" and is_alert() and _disarm_t <= 0.0:
 		velocity.x = 0.0  # a thrower holds its post, facing you
 		if absf(to_player.x) > TURN_LOCK_RANGE:
 			facing = 1 if to_player.x > 0.0 else -1
@@ -1105,6 +1144,9 @@ func _snake_act(player: Node2D, to_player: Vector2, delta: float) -> void:
 
 ## Puff up, then lob a glob at where the player stands. Returns true while winding up.
 func _spitter_act(player: Node2D, to_player: Vector2, delta: float) -> bool:
+	if _disarm_t > 0.0:
+		_state = ""
+		return false
 	if _state == "puff":
 		velocity.x = 0.0
 		_state_t -= delta

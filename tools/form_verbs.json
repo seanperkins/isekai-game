@@ -192,14 +192,16 @@
     "name": "Shed",
     "mp": 6,
     "value": 0,
-    "fidelity": "approx",
-    "note": "A husk is left and you slip away untouchable for a moment; enemies are not drawn to the husk, and it is not gone until you rest.",
-    "text": "Leave a husk decoy and slip away.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Leave a husk that draws the enemies near it and slip away. The husk is gone until you rest.",
     "spec": {
       "kind": "decoy",
       "seconds": 1.2,
       "speed": 360,
       "ward": 0.6,
+      "lure": 200,
+      "once_per_rest": true,
       "cooldown": 10.0
     }
   },
@@ -302,12 +304,15 @@
     "form": "wolf_beast_of_gevaudan",
     "name": "Stalk-kill",
     "mp": 8,
-    "value": 14,
-    "fidelity": "approx",
-    "note": "A heavy lunge; it is not a stealth opener and does not shrug off ranged hits.",
-    "text": "A stealth opener that deals huge damage to the first target.",
+    "value": 6,
+    "fidelity": "full",
+    "note": "",
+    "text": "Stalk, then kill: the first cast hides you; the next lunges for four times the damage. A crowd of three or more sees you and spoils it. You shrug off hits from afar.",
     "spec": {
-      "kind": "dash",
+      "kind": "stalk",
+      "seconds": 6.0,
+      "opener": 4.0,
+      "crowd": 3,
       "speed": 420,
       "hit_range": 60,
       "hit_half_width": 24,
@@ -367,15 +372,14 @@
     "name": "Chaser",
     "mp": 4,
     "value": 0,
-    "fidelity": "approx",
-    "note": "A speed window; marking a fleeing enemy and the free pounce are not modeled.",
-    "text": "Gallop never slows; mark a fleeing enemy and the pounce is free when you catch it.",
+    "fidelity": "full",
+    "note": "",
+    "text": "A gallop nothing slows. Mark an enemy running away: the pounce that catches it is free.",
     "spec": {
-      "kind": "buff",
-      "stats": {
-        "spd": 60
-      },
+      "kind": "chase",
+      "range": 260,
       "seconds": 6.0,
+      "spd": 60,
       "cooldown": 10.0
     }
   },
@@ -384,12 +388,13 @@
     "name": "Slink",
     "mp": 3,
     "value": 0,
-    "fidelity": "approx",
-    "note": "Untouchable for three seconds, standing in for unseen; enemies do not lose track of you.",
-    "text": "A silent gait in dark rooms; unseen until the pounce.",
+    "fidelity": "full",
+    "note": "",
+    "text": "A silent gait: unseen until you strike or are struck. A lit room shows you almost at once.",
     "spec": {
-      "kind": "ward",
-      "seconds": 3.0,
+      "kind": "veil",
+      "seconds": 7.0,
+      "lit_seconds": 1.2,
       "cooldown": 10.0
     }
   },
@@ -398,15 +403,16 @@
     "name": "Fear howl",
     "mp": 5,
     "value": 1,
-    "fidelity": "approx",
-    "note": "A ring that slows what it reaches; enemies do not turn and flee.",
-    "text": "Enemies falter and flee.",
+    "fidelity": "full",
+    "note": "",
+    "text": "A howl that sends the enemies around you running; you cannot pounce while you howl.",
     "spec": {
       "kind": "ring",
       "radius": 100,
       "status": {
-        "slow": 3.0
+        "flee": 4.0
       },
+      "lock": 1.2,
       "cooldown": 10.0
     }
   },
@@ -430,14 +436,14 @@
     "form": "wolf_black_shuck",
     "name": "Omen",
     "mp": 7,
-    "value": 16,
-    "fidelity": "approx",
-    "note": "Marks the nearest enemy; it takes the blow after ten seconds whether or not it cleanses.",
-    "text": "Mark one enemy; it dies in ten seconds unless it cleanses.",
+    "value": 3,
+    "fidelity": "full",
+    "note": "",
+    "text": "Mark one enemy to die in ten seconds unless it cleanses (deep water, holy light). One mark at a time; a boss is only wounded.",
     "spec": {
-      "kind": "mark",
+      "kind": "omen",
       "range": 240,
-      "delay": 10.0,
+      "seconds": 10.0,
       "damage_type": "dark",
       "cooldown": 14.0
     }
@@ -884,14 +890,15 @@
     "name": "Lure-light",
     "mp": 5,
     "value": 0,
-    "fidelity": "approx",
-    "note": "A lingering light that slows what enters; enemies do not follow it into hazards.",
-    "text": "Enemies follow a drifting light into hazards.",
+    "fidelity": "full",
+    "note": "",
+    "text": "A drifting light that enemies follow, off ledges and into anything underfoot. It shows where you are.",
     "spec": {
-      "kind": "zone",
-      "radius": 80,
+      "kind": "light",
       "seconds": 8.0,
-      "slow": true,
+      "speed": 40,
+      "radius": 120,
+      "reveal": 120,
       "cooldown": 12.0
     }
   },
@@ -900,16 +907,15 @@
     "name": "Trick",
     "mp": 6,
     "value": 3,
-    "fidelity": "approx",
-    "note": "Holds one enemy for three seconds; no lure must be placed first.",
-    "text": "An enemy that touches your lure is held fast.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Place a lure: enemies near it come to it, and the first to touch it is held fast.",
     "spec": {
-      "kind": "bolt",
-      "range": 160,
-      "pierce": false,
-      "status": {
-        "root": 3.0
-      },
+      "kind": "trap",
+      "seconds": 20.0,
+      "lure": 140,
+      "root": 3.0,
+      "damage": false,
       "cooldown": 10.0
     }
   },
@@ -920,14 +926,16 @@
     "value": 4,
     "fidelity": "full",
     "note": "",
-    "text": "A cone that stuns and frightens.",
+    "text": "A wail that stuns and frightens everything in front; it also wakes every sleeper within earshot.",
     "spec": {
       "kind": "burst",
       "range": 90,
       "half_width": 60,
       "status": {
-        "stun": 1.2
+        "stun": 1.2,
+        "flee": 3.0
       },
+      "alerts": 260,
       "cooldown": 8.0
     }
   },
@@ -1085,12 +1093,14 @@
     "name": "Veil",
     "mp": 5,
     "value": 0,
-    "fidelity": "approx",
-    "note": "Untouchable for three seconds, standing in for passing as a goblin; village standing is not modeled.",
-    "text": "Pass as a goblin or villager; revealing it bursts the veil.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Pass as a goblin: goblins do not see you, others do. Being hit or attacking bursts the veil, and you cannot web while it lasts.",
     "spec": {
-      "kind": "ward",
-      "seconds": 3.0,
+      "kind": "veil",
+      "seconds": 10.0,
+      "disguise": "goblin",
+      "no_web": true,
       "cooldown": 14.0
     }
   },
@@ -1148,13 +1158,13 @@
     "name": "Fate thread",
     "mp": 7,
     "value": 8,
-    "fidelity": "approx",
-    "note": "Marks an enemy and strikes it after two seconds; the next hit it lands on you is not sent back.",
-    "text": "Tie a thread to an enemy; the next hit it lands on you is sent back.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Tie a thread to an enemy: the next hit it lands on you goes back to it.",
     "spec": {
-      "kind": "mark",
+      "kind": "fate",
       "range": 220,
-      "delay": 2.0,
+      "seconds": 10.0,
       "cooldown": 12.0
     }
   },
@@ -1222,14 +1232,12 @@
     "name": "Disperse",
     "mp": 6,
     "value": 0,
-    "fidelity": "approx",
-    "note": "Leaves a husk and slips away untouchable; it does not squeeze through grates and it can fight.",
-    "text": "The body breaks into a swarm that squeezes through grates and reforms.",
+    "fidelity": "full",
+    "note": "",
+    "text": "The body breaks into a swarm that squeezes through grates and reforms. A swarm cannot fight.",
     "spec": {
-      "kind": "decoy",
-      "seconds": 1.5,
-      "speed": 300,
-      "ward": 0.8,
+      "kind": "disperse",
+      "seconds": 3.0,
       "cooldown": 12.0
     }
   },
@@ -1330,12 +1338,14 @@
     "name": "Veil",
     "mp": 5,
     "value": 0,
-    "fidelity": "approx",
-    "note": "Untouchable for three seconds; it hides no one else and no doorway is covered.",
-    "text": "Spin a web over a doorway that hides you and allies.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Spin a web over a doorway: whoever stands in it is unseen. Any attack tears it.",
     "spec": {
-      "kind": "ward",
-      "seconds": 3.0,
+      "kind": "veil",
+      "seconds": 8.0,
+      "radius": 70,
+      "web": true,
       "cooldown": 12.0
     }
   },
@@ -1379,15 +1389,19 @@
     "name": "Dance-venom",
     "mp": 6,
     "value": 3,
-    "fidelity": "approx",
-    "note": "A poisonous bite that jumps to a second enemy; bitten enemies do not stagger into hazards.",
-    "text": "A bitten enemy staggers erratically into hazards.",
+    "fidelity": "full",
+    "note": "",
+    "text": "A poisonous bite that jumps to a second enemy; each bitten enemy staggers about, erratically and off ledges, once the venom takes hold.",
     "spec": {
       "kind": "chain",
       "range": 140,
       "jump": 80,
       "hops": 2,
       "damage_type": "poison",
+      "status": {
+        "confuse": 3.0
+      },
+      "status_delay": 1.2,
       "cooldown": 7.0
     }
   },
@@ -1441,14 +1455,14 @@
     "name": "Lull",
     "mp": 7,
     "value": 1,
-    "fidelity": "approx",
-    "note": "A ring that holds enemies for three seconds with a token hit; they are not calmed or tamed, and bosses can be held too.",
-    "text": "Calm a hostile creature so it stops attacking and can be tamed.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Calms the hostile creatures around you so they stop attacking and can be tamed; a boss ignores it.",
     "spec": {
       "kind": "ring",
       "radius": 100,
       "status": {
-        "root": 3.0
+        "calm": 8.0
       },
       "cooldown": 12.0
     }
@@ -1534,17 +1548,16 @@
     "form": "goblin_gremlin",
     "name": "Sabotage",
     "mp": 5,
-    "value": 2,
-    "fidelity": "approx",
-    "note": "Holds one enemy for three seconds; turning a trap on its owner is not modeled.",
-    "text": "Disable an enemy device or turn a trap against its owner.",
+    "value": 3,
+    "fidelity": "full",
+    "note": "",
+    "text": "Jam the nearest enemy's verb and throwing, and turn its spears, globs and puffs against it. Sometimes it backfires and jams you.",
     "spec": {
-      "kind": "bolt",
+      "kind": "sabotage",
       "range": 160,
-      "pierce": false,
-      "status": {
-        "root": 3.0
-      },
+      "seconds": 6.0,
+      "backfire": 0.25,
+      "damage_type": "physical",
       "cooldown": 8.0
     }
   },
@@ -1621,13 +1634,15 @@
     "name": "Sneak strike",
     "mp": 4,
     "value": 8,
-    "fidelity": "approx",
-    "note": "A short lunge; the smoke bomb is not modeled.",
-    "text": "A sneak strike, a smoke bomb.",
+    "fidelity": "full",
+    "note": "",
+    "text": "A sneak strike that hits harder out of hiding, then a smoke bomb that hides you.",
     "spec": {
       "kind": "dash",
       "speed": 300,
       "hit_range": 50,
+      "opener": 2.5,
+      "smoke": 2.5,
       "cooldown": 5.0
     }
   },
@@ -1686,14 +1701,16 @@
     "name": "Mislead",
     "mp": 5,
     "value": 0,
-    "fidelity": "approx",
-    "note": "Leaves a husk and slips away; enemies are not drawn to it and facings are not reversed.",
-    "text": "Illusions and decoys; reverse an enemy's facing.",
+    "fidelity": "full",
+    "note": "",
+    "text": "Leave a decoy that draws the enemies near it and turns them about, and slip away.",
     "spec": {
       "kind": "decoy",
-      "seconds": 1.2,
+      "seconds": 1.5,
       "speed": 200,
       "ward": 0.6,
+      "lure": 200,
+      "reverse": 2.0,
       "cooldown": 8.0
     }
   },
@@ -1702,14 +1719,14 @@
     "name": "Swap",
     "mp": 5,
     "value": 0,
-    "fidelity": "approx",
-    "note": "Leaves a husk and slips away untouchable; it does not trade places or look like a creature.",
-    "text": "Trade places with a decoy; look like a creature to scout.",
+    "fidelity": "full",
+    "note": "",
+    "text": "The first cast leaves a decoy that looks like the nearest creature and draws enemies; the second trades places with it after a beat.",
     "spec": {
-      "kind": "decoy",
-      "seconds": 2.0,
-      "speed": 120,
-      "ward": 1.0,
+      "kind": "swap",
+      "seconds": 10.0,
+      "beat": 0.4,
+      "lure": 180,
       "cooldown": 8.0
     }
   },
@@ -1718,13 +1735,13 @@
     "name": "Pocket",
     "mp": 5,
     "value": 3,
-    "fidelity": "approx",
-    "note": "A fast lunge; pickpocketing and the teleport are not modeled.",
-    "text": "Pickpocket items from a living creature without killing it; a short teleport.",
+    "fidelity": "full",
+    "note": "",
+    "text": "A short teleport ahead that picks the pocket of the living creature you land beside.",
     "spec": {
-      "kind": "dash",
-      "speed": 450,
-      "hit_range": 40,
+      "kind": "blink",
+      "distance": 100,
+      "rob": true,
       "cooldown": 8.0
     }
   },

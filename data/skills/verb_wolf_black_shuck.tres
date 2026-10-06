@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_wolf_black_shuck"
 display_name = "Omen"
-description = "Mark one enemy; it dies in ten seconds unless it cleanses."
+description = "Mark one enemy to die in ten seconds unless it cleanses (deep water, holy light). One mark at a time; a boss is only wounded."
 announce = "New verb. Acquired [Omen]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [16], "spec": {"kind": "mark", "range": 240, "delay": 10.0, "damage_type": "dark", "cooldown": 14.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [3], "spec": {"kind": "omen", "range": 240, "seconds": 10.0, "damage_type": "dark", "cooldown": 14.0}}]
 mp_cost = 7

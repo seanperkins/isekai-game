@@ -15,6 +15,10 @@ var spec := {}
 ## Cast direction (unit vector). Zero means "forward", i.e. the actor's facing.
 var aim := Vector2.ZERO
 var _cooldown := 0.0
+## A multiplier on this cast's damage (a stalker's opener); 1 for an ordinary cast. And a cooldown the cast chose for itself (a verb whose next cast
+## is the second half of it), -1 to keep the spec's.
+var power_mult := 1.0
+var cooldown_after := -1.0
 
 func setup(p_actor: Node2D, p_values: Array, p_level: int) -> void:
 	actor = p_actor
@@ -65,6 +69,8 @@ var power_cap := 0
 ## The damage of a cast: the skill's table value amplified by the caster's ATK, held to `power_cap` when one is set.
 func power() -> int:
 	var p := Damage.skill_power(value(), actor_atk())
+	if power_mult != 1.0:
+		p = maxi(1, roundi(float(p) * power_mult))
 	return mini(p, power_cap) if power_cap > 0 else p
 
 ## The caster's ATK, 1 for an actor without stats (test stubs). Read with get() so a stub needs no property.

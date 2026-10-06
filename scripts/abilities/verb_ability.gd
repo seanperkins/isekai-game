@@ -4,11 +4,14 @@ extends Ability
 
 ## Not ready when it cannot be paid for (a forge without the parts), so the player spends nothing on it.
 func ready() -> bool:
-	return super.ready() and VerbKinds.can_run(self, spec)
+	return super.ready() and VerbKinds.can_run(self, spec) and not VerbKinds.spent(self, spec)
 
 func _perform() -> void:
 	if not VerbKinds.can_run(self, spec):
 		return
+	cooldown_after = -1.0
 	VerbKinds.run(self, spec)
-	if spec.has("cooldown"):
+	if cooldown_after >= 0.0:
+		_cooldown = cooldown_after
+	elif spec.has("cooldown"):
 		_cooldown = float(spec["cooldown"])

@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_undead_stingy_jack"
 display_name = "Trick"
-description = "An enemy that touches your lure is held fast."
+description = "Place a lure: enemies near it come to it, and the first to touch it is held fast."
 announce = "New verb. Acquired [Trick]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [3], "spec": {"kind": "bolt", "range": 160, "pierce": false, "status": {"root": 3.0}, "cooldown": 10.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [3], "spec": {"kind": "trap", "seconds": 20.0, "lure": 140, "root": 3.0, "damage": false, "cooldown": 10.0}}]
 mp_cost = 6

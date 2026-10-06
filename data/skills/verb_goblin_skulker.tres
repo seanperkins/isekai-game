@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_goblin_skulker"
 display_name = "Sneak strike"
-description = "A sneak strike, a smoke bomb."
+description = "A sneak strike that hits harder out of hiding, then a smoke bomb that hides you."
 announce = "New verb. Acquired [Sneak strike]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [8], "spec": {"kind": "dash", "speed": 300, "hit_range": 50, "cooldown": 5.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [8], "spec": {"kind": "dash", "speed": 300, "hit_range": 50, "opener": 2.5, "smoke": 2.5, "cooldown": 5.0}}]
 mp_cost = 4

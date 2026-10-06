@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_selkie"
 display_name = "Shed"
-description = "Leave a husk decoy and slip away."
+description = "Leave a husk that draws the enemies near it and slip away. The husk is gone until you rest."
 announce = "New verb. Acquired [Shed]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "decoy", "seconds": 1.2, "speed": 360, "ward": 0.6, "cooldown": 10.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "decoy", "seconds": 1.2, "speed": 360, "ward": 0.6, "lure": 200, "once_per_rest": true, "cooldown": 10.0}}]
 mp_cost = 6

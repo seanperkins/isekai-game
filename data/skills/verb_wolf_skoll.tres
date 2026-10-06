@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_wolf_skoll"
 display_name = "Chaser"
-description = "Gallop never slows; mark a fleeing enemy and the pounce is free when you catch it."
+description = "A gallop nothing slows. Mark an enemy running away: the pounce that catches it is free."
 announce = "New verb. Acquired [Chaser]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "buff", "stats": {"spd": 60}, "seconds": 6.0, "cooldown": 10.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "chase", "range": 260, "seconds": 6.0, "spd": 60, "cooldown": 10.0}}]
 mp_cost = 4

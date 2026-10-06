@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_wolf_black_dog"
 display_name = "Slink"
-description = "A silent gait in dark rooms; unseen until the pounce."
+description = "A silent gait: unseen until you strike or are struck. A lit room shows you almost at once."
 announce = "New verb. Acquired [Slink]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "ward", "seconds": 3.0, "cooldown": 10.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "veil", "seconds": 7.0, "lit_seconds": 1.2, "cooldown": 10.0}}]
 mp_cost = 3

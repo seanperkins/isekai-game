@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_undead_banshee"
 display_name = "Wail"
-description = "A cone that stuns and frightens."
+description = "A wail that stuns and frightens everything in front; it also wakes every sleeper within earshot."
 announce = "New verb. Acquired [Wail]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [4], "spec": {"kind": "burst", "range": 90, "half_width": 60, "status": {"stun": 1.2}, "cooldown": 8.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [4], "spec": {"kind": "burst", "range": 90, "half_width": 60, "status": {"stun": 1.2, "flee": 3.0}, "alerts": 260, "cooldown": 8.0}}]
 mp_cost = 6

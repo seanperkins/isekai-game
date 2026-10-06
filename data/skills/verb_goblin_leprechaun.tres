@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_goblin_leprechaun"
 display_name = "Pocket"
-description = "Pickpocket items from a living creature without killing it; a short teleport."
+description = "A short teleport ahead that picks the pocket of the living creature you land beside."
 announce = "New verb. Acquired [Pocket]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [3], "spec": {"kind": "dash", "speed": 450, "hit_range": 40, "cooldown": 8.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [3], "spec": {"kind": "blink", "distance": 100, "rob": true, "cooldown": 8.0}}]
 mp_cost = 5

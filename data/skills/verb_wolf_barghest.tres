@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_wolf_barghest"
 display_name = "Fear howl"
-description = "Enemies falter and flee."
+description = "A howl that sends the enemies around you running; you cannot pounce while you howl."
 announce = "New verb. Acquired [Fear howl]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [1], "spec": {"kind": "ring", "radius": 100, "status": {"slow": 3.0}, "cooldown": 10.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [1], "spec": {"kind": "ring", "radius": 100, "status": {"flee": 4.0}, "lock": 1.2, "cooldown": 10.0}}]
 mp_cost = 5

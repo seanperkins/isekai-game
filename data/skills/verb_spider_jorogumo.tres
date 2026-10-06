@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_spider_jorogumo"
 display_name = "Veil"
-description = "Pass as a goblin or villager; revealing it bursts the veil."
+description = "Pass as a goblin: goblins do not see you, others do. Being hit or attacking bursts the veil, and you cannot web while it lasts."
 announce = "New verb. Acquired [Veil]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "ward", "seconds": 3.0, "cooldown": 14.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "veil", "seconds": 10.0, "disguise": "goblin", "no_web": true, "cooldown": 14.0}}]
 mp_cost = 5

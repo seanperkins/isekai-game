@@ -12,12 +12,16 @@ const TRAITS := {
 	"hard_shell": "Take 1 less damage from every hit.",
 	"sonar": "Echolocation reads one level stronger.",
 	"adaptable": "Eat and recover faster.",
+	"ranged_proof": "Take 60% less damage from hits that come from afar.",
 }
 const THREAD_SKILLS := ["sticky_thread", "swing_thread", "binding_web"]
 const WATER_SKILLS := ["hydraulic_propulsion", "water_blade", "jet_dash"]
 const ADAPTABLE_HEAL := 2  # extra HP from every creature eaten
 const VENOM_PERCENT := 30
 const SHELL_FLAT := 1
+const RANGED_PERCENT := 60
+## A hit from farther than this counts as a ranged one.
+const RANGED_FROM := 64.0
 
 ## The `form` modifier list for a form: its stat changes as additive modifiers.
 static func modifiers(def: FormDef) -> Array:

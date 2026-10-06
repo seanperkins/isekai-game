@@ -40,6 +40,10 @@ func test_the_hierophant_is_a_third_child_of_the_lich() -> void:
 	var ids: Array = FormLoader.children_of(forms, "undead_lich").map(func(f: FormDef) -> String: return f.id)
 	assert_eq(ids, ["undead_deathless", "undead_demilich", "undead_hierophant"])
 
+func _table_traits(id: String) -> Array:
+	var table: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://tools/form_traits.json"))
+	return table.get(id, [])
+
 func test_every_new_form_says_what_it_reads_where_it_is_found_and_what_it_does() -> void:
 	for f: FormDef in _others():
 		assert_false(f.reads.is_empty(), "%s reads nothing" % f.id)
@@ -47,7 +51,7 @@ func test_every_new_form_says_what_it_reads_where_it_is_found_and_what_it_does()
 		for s in [f.source, f.verb_text, f.gives_up, f.opened_by, f.blurb]:
 			assert_ne(s, "", f.id)
 		assert_eq(f.grants, ["verb_" + f.id], "%s: its verb and nothing else" % f.id)
-		assert_eq(f.traits, [], f.id)
+		assert_eq(f.traits, _table_traits(f.id), "%s: its traits are the ones tools/form_traits.json gives it, no others" % f.id)
 
 func test_later_elements_are_read_by_twenty_forms_and_never_by_a_stage_two_form() -> void:
 	var n := 0

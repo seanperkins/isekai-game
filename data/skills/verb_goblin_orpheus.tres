@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_goblin_orpheus"
 display_name = "Lull"
-description = "Calm a hostile creature so it stops attacking and can be tamed."
+description = "Calms the hostile creatures around you so they stop attacking and can be tamed; a boss ignores it."
 announce = "New verb. Acquired [Lull]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [1], "spec": {"kind": "ring", "radius": 100, "status": {"root": 3.0}, "cooldown": 12.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [1], "spec": {"kind": "ring", "radius": 100, "status": {"calm": 8.0}, "cooldown": 12.0}}]
 mp_cost = 7

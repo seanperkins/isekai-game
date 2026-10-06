@@ -1,7 +1,7 @@
 extends GutTest
 ## A verb for every form of the four non-slime species, each cast for real in a fresh arena.
 
-const DAMAGING := ["bolt", "burst", "ring", "dash", "mark", "chain", "dissolve", "engulf"]
+const DAMAGING := ["bolt", "burst", "ring", "dash", "mark", "chain", "dissolve", "engulf", "stalk", "omen", "sabotage"]
 
 func _rows() -> Array:
 	return JSON.parse_string(FileAccess.get_file_as_string("res://tools/form_verbs.json"))

@@ -105,14 +105,21 @@ func test_a_dash_verb_throws_the_enemy_toward_the_player() -> void:
 	assert_gt(e.global_position.x, start + 20.0, "the dash carried it forward")
 
 func test_a_ward_makes_the_enemy_refuse_blows_for_its_seconds() -> void:
-	var e := _enemy("twin_wolf_black_dog")
+	# no shipped twin casts a plain ward now (the black dog's is a veil, which only a player can use), so the verb is made here
+	skills_by_id["verb_test_ward"] = TestDefs.skill("verb_test_ward", {"source": "form_verb", "mp_cost": 2, "max_level": 1,
+		"effects": [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "ward", "seconds": 2.0, "cooldown": 10.0}}]})
+	var c: CreatureDef = creatures["twin_wolf_black_dog"].duplicate()
+	c.verb = "verb_test_ward"
+	var e := Enemy.new()
+	e.setup(c, skills_by_id)
+	add_child_autofree(e)
 	player.global_position = Vector2(100, 0)
 	await wait_physics_frames(45)
 	assert_eq(e.verb_casts, 1)
 	var hp := e.health.hp
 	e.receive_hit(5, "physical")
 	assert_eq(e.health.hp, hp, "warded")
-	await wait_physics_frames(int(float(_spec("twin_wolf_black_dog")["seconds"]) * 60.0) + 10)
+	await wait_physics_frames(int(2.0 * 60.0) + 10)
 	e.receive_hit(1, "physical")
 	assert_lt(e.health.hp, hp, "the ward ran out")
 

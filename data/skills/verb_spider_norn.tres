@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_spider_norn"
 display_name = "Fate thread"
-description = "Tie a thread to an enemy; the next hit it lands on you is sent back."
+description = "Tie a thread to an enemy: the next hit it lands on you goes back to it."
 announce = "New verb. Acquired [Fate thread]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [8], "spec": {"kind": "mark", "range": 220, "delay": 2.0, "cooldown": 12.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [8], "spec": {"kind": "fate", "range": 220, "seconds": 10.0, "cooldown": 12.0}}]
 mp_cost = 7

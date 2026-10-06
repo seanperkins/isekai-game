@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_goblin_puck"
 display_name = "Mislead"
-description = "Illusions and decoys; reverse an enemy's facing."
+description = "Leave a decoy that draws the enemies near it and turns them about, and slip away."
 announce = "New verb. Acquired [Mislead]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "decoy", "seconds": 1.2, "speed": 200, "ward": 0.6, "cooldown": 8.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "decoy", "seconds": 1.5, "speed": 200, "ward": 0.6, "lure": 200, "reverse": 2.0, "cooldown": 8.0}}]
 mp_cost = 5

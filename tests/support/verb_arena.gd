@@ -15,7 +15,7 @@ class Hidden extends Node2D:
 	func reveal() -> void:
 		revealed += 1
 
-const GROUPS := ["verb_fields", "verb_allies", "verb_vines", "verb_husks", "verb_bridges", "verb_traps", "player_clouds", "verb_marks"]
+const GROUPS := ["verb_fields", "verb_allies", "verb_vines", "verb_husks", "verb_bridges", "verb_traps", "player_clouds", "verb_marks", "verb_veils", "verb_lights", "verb_omens"]
 const STATS := ["atk", "def", "spd", "max_hp", "max_mp"]
 
 var test: GutTest
@@ -87,7 +87,10 @@ func snapshot() -> Dictionary:
 		hits += f.hits.size()
 	var out := {"hits": hits, "hp": lizard.health.hp, "rooted": lizard.is_rooted(), "state": lizard.status.state, "mark": player.has_meta(VerbKinds.ANCHOR_META),
 		"water": rules.held("water"), "glide": player._glide, "ward": player._ward, "my_hp": player.health.hp, "my_mp": player.mana.mp,
-		"revealed": hidden.revealed}
+		"revealed": hidden.revealed, "x": snappedf(player.global_position.x, 0.5),
+		"unseen": player.is_unseen(), "jammed": player.is_jammed(), "swarm": player.is_swarm(), "held": player.is_held_still(), "locked": player.is_blow_locked(),
+		"fated": player.is_fated(lizard), "chased": player.is_chasing(lizard),
+		"mind": [lizard.is_fleeing(), lizard.is_calm(), lizard.is_confused(), lizard.is_lured(), lizard._reverse_t > 0.0, lizard.is_disarmed(), lizard.is_alert(), lizard.robbed]}
 	for g in GROUPS:
 		out[g] = test.get_tree().get_nodes_in_group(g).size()
 	for s in STATS:

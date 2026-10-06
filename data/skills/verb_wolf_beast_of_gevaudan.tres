@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_wolf_beast_of_gevaudan"
 display_name = "Stalk-kill"
-description = "A stealth opener that deals huge damage to the first target."
+description = "Stalk, then kill: the first cast hides you; the next lunges for four times the damage. A crowd of three or more sees you and spoils it. You shrug off hits from afar."
 announce = "New verb. Acquired [Stalk-kill]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [14], "spec": {"kind": "dash", "speed": 420, "hit_range": 60, "hit_half_width": 24, "cooldown": 12.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [6], "spec": {"kind": "stalk", "seconds": 6.0, "opener": 4.0, "crowd": 3, "speed": 420, "hit_range": 60, "hit_half_width": 24, "cooldown": 12.0}}]
 mp_cost = 8

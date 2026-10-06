@@ -177,10 +177,67 @@ def g_forge(d, fg):
     d.line([(3, 14), (6, 14)], fill=fg, width=2)
 
 
+def g_veil(d, fg):
+    d.polygon([(16, 5), (26, 27), (6, 27)], outline=fg, width=3)
+    d.line([(10, 20), (22, 20)], fill=fg, width=2)
+
+
+def g_stalk(d, fg):
+    d.ellipse([5, 11, 15, 21], outline=fg, width=2)
+    arrow(d, (11, 16), (27, 16), fg, 3, 6)
+
+
+def g_swap(d, fg):
+    arrow(d, (6, 11), (26, 11), fg, 2, 5)
+    arrow(d, (26, 21), (6, 21), fg, 2, 5)
+
+
+def g_blink(d, fg):
+    d.ellipse([4, 12, 10, 18], outline=fg, width=2)
+    d.ellipse([22, 12, 28, 18], fill=fg)
+    for x in (13, 17, 21):
+        d.line([(x, 15), (x + 1, 17)], fill=fg, width=2)
+
+
+def g_light(d, fg):
+    d.ellipse([12, 12, 20, 20], fill=fg)
+    for x, y in ring_points(16, 16, 11, 8):
+        d.line([(16 + (x - 16) * 0.7, 16 + (y - 16) * 0.7), (x, y)], fill=fg, width=1)
+
+
+def g_omen(d, fg):
+    d.ellipse([7, 6, 25, 24], outline=fg, width=3)
+    d.line([(10, 10), (22, 22)], fill=fg, width=3)
+    d.line([(22, 10), (10, 22)], fill=fg, width=3)
+
+
+def g_fate(d, fg):
+    d.line([(5, 8), (12, 24), (20, 8), (27, 24)], fill=fg, width=2)
+    d.ellipse([3, 6, 8, 11], fill=fg)
+    d.ellipse([24, 21, 29, 26], fill=fg)
+
+
+def g_sabotage(d, fg):
+    d.polygon([(16, 4), (21, 12), (30, 13), (23, 19), (25, 28), (16, 23), (7, 28), (9, 19), (2, 13), (11, 12)], outline=fg, width=2)
+
+
+def g_chase(d, fg):
+    arrow(d, (4, 10), (20, 10), fg, 2, 5)
+    arrow(d, (4, 22), (20, 22), fg, 2, 5)
+    d.ellipse([22, 13, 30, 19], fill=fg)
+
+
+def g_disperse(d, fg):
+    for x, y in ((8, 9), (20, 7), (14, 15), (25, 17), (7, 22), (18, 25), (27, 26)):
+        d.ellipse([x - 2, y - 2, x + 2, y + 2], fill=fg)
+
+
 GLYPHS = {"bolt": g_bolt, "burst": g_burst, "ring": g_ring, "dash": g_dash, "zone": g_zone, "mark": g_mark, "heal": g_heal,
           "ward": g_ward, "buff": g_buff, "pull": g_pull, "aura": g_aura, "chain": g_chain, "engulf": g_engulf,
           "dissolve": g_dissolve, "glide": g_glide, "anchor": g_anchor, "decoy": g_decoy, "summon": g_summon, "vine": g_vine,
-          "transmute": g_transmute, "copy": g_copy, "reveal": g_reveal, "bridge": g_bridge, "trap": g_trap, "forge": g_forge}
+          "transmute": g_transmute, "copy": g_copy, "reveal": g_reveal, "bridge": g_bridge, "trap": g_trap, "forge": g_forge,
+          "veil": g_veil, "stalk": g_stalk, "swap": g_swap, "blink": g_blink, "light": g_light, "omen": g_omen, "fate": g_fate,
+          "sabotage": g_sabotage, "chase": g_chase, "disperse": g_disperse}
 
 
 BASE_TINTS = {"goblin": (112, 158, 74), "undead": (205, 196, 170)}   # a species' own verb has no form file: the colour of its body
