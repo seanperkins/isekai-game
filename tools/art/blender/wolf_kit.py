@@ -132,9 +132,9 @@ class Wolf:
                            ((jaw[1][0] - 0.02, 0, jaw[1][2] + 0.01), (0.022 * hs, 0.030 * hs))], "jaw", belly, sides=6)
         for s, y in (("n", -1), ("f", 1)):
             # an ear is a short rounded triangle: wide at the base, set at the back corner of the skull, leaning out a little
-            base, tip = hp(0.14, 0.090, y * 0.062 * hs), hp(0.05, 0.250, y * 0.095 * hs)
+            base, tip = hp(0.14, 0.090, y * 0.062 * hs), hp(0.05, 0.250, y * 0.112 * hs)
             rings = []
-            for t, ax, ay in ((0.0, 0.060, 0.017), (0.30, 0.048, 0.014), (0.65, 0.031, 0.010), (0.90, 0.013, 0.006), (1.0, 0.004, 0.003)):
+            for t, ax, ay in skeleton.EAR_SECTIONS:
                 rings.append((tuple(base[i] + (tip[i] - base[i]) * t for i in range(3)), (ax * f.get("ears", 1.0) * hs, ay * hs)))
             self.loft("ear_" + s, rings, "ear_" + s, f.get("ear", self.dark), axis="z", sides=6, far=s == "f")
             self.e("eye_" + s, hp(0.50, 0.026, y * 0.066 * hs), (0.020, 0.015, 0.017), "head", f.get("eye", EYE), far=s == "f", glow=True, seg=8, rings=6)

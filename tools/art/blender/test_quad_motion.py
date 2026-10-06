@@ -44,6 +44,12 @@ class SkeletonTest(unittest.TestCase):
         self.assertLess(s.rest["head"][0][1] - withers, 0.13, "a wolf's head hangs about level with its back; it is not raised on a long neck")
         self.assertLess(s.rest["head"][1][1], s.rest["head"][0][1], "and the muzzle points a little down")
 
+    def test_an_ear_is_a_broad_plate_facing_forward_wide_across_the_head_and_thin_front_to_back(self):
+        for t, half_x, half_y in qs.EAR_SECTIONS:
+            if t < 0.9:
+                self.assertGreaterEqual(half_y, 1.5 * half_x, "at %.2f of its length the ear is wider across the head than it is thick" % t)
+        self.assertGreater(qs.EAR_SECTIONS[0][2], 0.04, "and a wolf's ear is broad at the base")
+
     def test_a_longer_legged_hound_stands_taller_and_a_stocky_wolf_lower(self):
         tall, plain, stocky = (qs.skeleton(leg=k).rest["hips"][0][1] for k in (1.3, 1.0, 0.85))
         self.assertGreater(tall, plain + 0.1)

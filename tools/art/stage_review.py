@@ -1,6 +1,7 @@
 """Review a species' movement on the 3D photo stage before anything is baked to 2D:
 
     python3 tools/art/stage_review.py goblin --script jump_ledges [--variant redcap] [--every 3] [--out DIR] [--reuse]
+    python3 tools/art/stage_review.py wolf --script walk_run --view-px 110 --size 960x540 --out .tmp/x   (a close look: the view is 110 game pixels wide)
     python3 tools/art/stage_review.py goblin            (every script the species can run)      python3 tools/art/stage_review.py all     (every species)
     python3 tools/art/stage_review.py goblin --gesture slam   (or `all`: every gesture of tools/verb_anims.json, cast in place; no recording)
 
@@ -44,8 +45,12 @@ def record(species, script, path):
         sys.exit("recording failed:\n" + (done.stdout + done.stderr)[-2000:])
 
 
-def render(creature, variant, recordings, out, every):
+def render(creature, variant, recordings, out, every, view_px=None, size=None):
     cmd = [BLENDER, "-b", "--factory-startup", "-P", os.path.join(HERE, "blender", "stage_review.py"), "--", "--creature", creature, "--recording", *recordings, "--out", out, "--every", str(every)]
+    if view_px:
+        cmd += ["--view-px", str(view_px)]
+    if size:
+        cmd += ["--size", size]
     if variant:
         cmd += ["--variant", variant]
     done = subprocess.run(cmd, capture_output=True, text=True)
@@ -80,7 +85,7 @@ def states(meta):
     return "  ".join("%s x%d" % (s, n) for s, n in runs)
 
 
-def review(creature, variant, scripts, every, out=None, reuse=False):
+def review(creature, variant, scripts, every, out=None, reuse=False, view_px=None, size=None):
     """Render every script of one creature in one Blender run and put each together; the report lines name the states it has no pose for (and flag one KNOWN_MISSING does not list)."""
     species = species_of(creature)
     recordings = []
@@ -92,7 +97,7 @@ def review(creature, variant, scripts, every, out=None, reuse=False):
     base = out or os.path.join(STAGE, creature + ("_" + variant if variant else ""))
     if len(scripts) == 1 and not out:
         base = os.path.join(base, scripts[0])  # one script has its own folder, so two reviews of one creature do not overwrite each other
-    render(creature, variant, recordings, base, every)
+    render(creature, variant, recordings, base, every, view_px, size)
     lines = []
     for script in scripts:
         folder = base if len(recordings) == 1 else os.path.join(base, script)
@@ -139,6 +144,8 @@ def main():
     ap.add_argument("--out")
     ap.add_argument("--every", type=positive_int, default=3, help="pose every Nth recorded tick (60 ticks a second)")
     ap.add_argument("--reuse", action="store_true", help="take a recording that is already there instead of recording the run again")
+    ap.add_argument("--view-px", type=float, help="how many game pixels wide the view is (default 360: the whole course; 100 to 150 is a close look at the creature)")
+    ap.add_argument("--size", help="the render's WxH (default 640x360; 960x540 with a close view)")
     a = ap.parse_args()
     everything = a.creature == "all"
     if a.gesture:
@@ -148,7 +155,7 @@ def main():
         return
     for creature in SPECIES if everything else [a.creature]:
         scripts = [a.script] if a.script and a.script != "all" and not everything else RUNS[species_of(creature)]
-        for line in review(creature, a.variant, scripts, a.every, None if everything else a.out, a.reuse):
+        for line in review(creature, a.variant, scripts, a.every, None if everything else a.out, a.reuse, a.view_px, a.size):
             print(line)
 
 
