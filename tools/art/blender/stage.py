@@ -28,3 +28,12 @@ def camera_params(canvas, ppu, margin, supersample, center_x=0.0):
         "rotation_deg": (90.0, 0.0, 0.0),
         "resolution": canvas * supersample,
     }
+
+
+def tracking_camera_params(view_w_px, ppu, center_x, center_z):
+    """A camera that follows a body for the movement review: the same side-on ortho camera, `view_w_px` game pixels wide, centred on (center_x, center_z) in units."""
+    return {
+        "ortho_scale": view_w_px / ppu,
+        "location": (center_x, -CAMERA["y_distance"], center_z),
+        "rotation_deg": (90.0, 0.0, 0.0),
+    }

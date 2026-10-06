@@ -24,6 +24,14 @@ class CameraTests(unittest.TestCase):
         self.assertEqual(stage.camera_params(128, 40.0, 12, 4)["resolution"], 512)
 
 
+class TrackingCameraTests(unittest.TestCase):
+    def test_a_tracking_view_is_as_wide_as_asked_and_centred_where_told(self):
+        p = stage.tracking_camera_params(360.0, 40.0, 7.5, 2.0)
+        self.assertEqual(p["ortho_scale"], 9.0)
+        self.assertEqual(p["location"], (7.5, -stage.CAMERA["y_distance"], 2.0))
+        self.assertEqual(p["rotation_deg"], (90.0, 0.0, 0.0))
+
+
 class UnitTests(unittest.TestCase):
     def test_a_grid_step_is_sixteen_game_pixels(self):
         self.assertEqual(stage.GRID_PX, 16)
