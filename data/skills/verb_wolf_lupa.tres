@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_wolf_lupa"
 display_name = "Suckle"
-description = "Heals packmates and grows a pup into a second packmate."
+description = "Suckle: mend your packmates; the third time, a pup grows into a second packmate."
 announce = "New verb. Acquired [Suckle]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "zone", "radius": 50, "seconds": 5.0, "heals": 3, "slow": false, "cooldown": 12.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "suckle", "radius": 80, "hp": 3, "grow": 3, "cooldown": 10.0}}]
 mp_cost = 6

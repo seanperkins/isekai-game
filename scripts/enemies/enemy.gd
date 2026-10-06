@@ -151,6 +151,14 @@ var _lure_reckless := false
 var _reverse_t := 0.0
 var _disarm_t := 0.0
 var _bleed_t := 0.0
+var _curse_t := 0.0
+var _curse_mult := 1.0
+var _turned_t := 0.0
+var _turn_strike_in := 0.0
+const TURN_RANGE := 420.0
+const TURN_REACH := Vector2(26.0, 30.0)
+const TURN_STRIKE_SECONDS := 0.8
+const TURN_FOLLOW_GAP := 40.0
 var _rage_generation := 0
 const RAGE_SECONDS := 8.0
 var _bleed_acc := 0.0
@@ -298,6 +306,8 @@ func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, cau
 	if _untouchable():
 		return
 	_calm_t = 0.0  # a blow ends the calm
+	if _curse_t > 0.0:
+		raw = ceili(float(raw) * _curse_mult)
 	if damage_type == "holy" and has_meta("verb_omen"):
 		set_meta("verb_omen_cleansed", true)  # holy light cleanses an omen
 	EventBus.world_event.emit("enemy_hit", {"pos": global_position})
@@ -417,6 +427,55 @@ func knock_down(seconds: float) -> bool:
 		return false
 	status.stun(seconds)
 	return true
+
+## Turned: for `seconds` it fights for the player (a roar, a pipe): it goes after the nearest enemy that is not turned and strikes it, does not hurt the
+## player, and cannot be hurt by the player's blows (it is on the player's team). A boss that hunts is not turned.
+func turn_for(seconds: float) -> bool:
+	if hunting or dormant or status.state != EnemyStatus.ACTIVE:
+		return false
+	_turned_t = maxf(_turned_t, seconds)
+	team = "player"
+	return true
+
+func is_turned() -> bool:
+	return _turned_t > 0.0
+
+## One tick of a turned creature: after the nearest foe, or by the player's side when there is none.
+func _turned_act(player: Node2D, delta: float) -> void:
+	_verb_state = ""
+	_turn_strike_in = maxf(0.0, _turn_strike_in - delta)
+	var foe: Enemy = null
+	var best := TURN_RANGE
+	for n in get_tree().get_nodes_in_group("actors"):
+		if n is Enemy and n != self and not n.is_turned() and n.can_be_hit() and n.status.state == EnemyStatus.ACTIVE and not n.dormant:
+			var d: float = n.global_position.distance_to(global_position)
+			if d < best:
+				foe = n
+				best = d
+	var goal: Vector2 = foe.global_position if foe != null else player.global_position
+	var gap := goal.x - global_position.x
+	if foe != null and absf(gap) <= TURN_REACH.x and absf(foe.global_position.y - global_position.y) <= TURN_REACH.y:
+		velocity.x = 0.0
+		facing = 1 if gap > 0.0 else -1
+		if _turn_strike_in <= 0.0:
+			foe.receive_hit(stats.get_stat("atk"), def.contact_type, global_position, "turned")
+			_turn_strike_in = TURN_STRIKE_SECONDS
+		return
+	if foe == null and absf(gap) <= TURN_FOLLOW_GAP:
+		velocity.x = 0.0
+		return
+	facing = 1 if gap > 0.0 else -1
+	velocity.x = 0.0 if _blocked_ahead() else facing * _speed()
+
+## Cursed: every blow it takes is `mult` times as hard for `seconds` (a decree).
+func curse_for(seconds: float, mult: float) -> void:
+	if dormant:
+		return
+	_curse_t = maxf(_curse_t, seconds)
+	_curse_mult = mult
+
+func is_cursed() -> bool:
+	return _curse_t > 0.0
 
 ## Bleeding: one point of damage a second, through its DEF, for `seconds` (a bleeding bite).
 func bleed_for(seconds: float) -> void:
@@ -544,6 +603,11 @@ func _physics_process(delta: float) -> void:
 	_lure_t = maxf(0.0, _lure_t - delta)
 	_reverse_t = maxf(0.0, _reverse_t - delta)
 	_disarm_t = maxf(0.0, _disarm_t - delta)
+	_curse_t = maxf(0.0, _curse_t - delta)
+	if _turned_t > 0.0:
+		_turned_t = maxf(0.0, _turned_t - delta)
+		if _turned_t <= 0.0:
+			team = "enemy"
 	if _bleed_t > 0.0 and status.state != EnemyStatus.DYING:
 		_bleed_t = maxf(0.0, _bleed_t - delta)
 		_bleed_acc += delta
@@ -555,7 +619,9 @@ func _physics_process(delta: float) -> void:
 	if def.swimmer and not _water_resolved:
 		_home_water = DeepWater.at(get_tree(), global_position)
 		_water_resolved = true
-	if active and player != null:
+	if active and player != null and _turned_t > 0.0:
+		_turned_act(player, delta)
+	elif active and player != null:
 		_sense(player, delta)
 		if def.swimmer and _home_water == null:
 			velocity = Vector2.ZERO  # no water: nothing to swim in (lint's swimmer_dry reports it)
@@ -586,7 +652,7 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	if def.swimmer and _home_water != null:
 		_confine()
-	if active and player != null and _flee_t <= 0.0 and _calm_t <= 0.0 and is_touching(player):
+	if active and player != null and _flee_t <= 0.0 and _calm_t <= 0.0 and _turned_t <= 0.0 and is_touching(player):
 		player.receive_hit(stats.get_stat("atk"), def.contact_type, global_position, def.id)
 	_hurt_t = maxf(0.0, _hurt_t - delta)
 	_update_visual(delta)

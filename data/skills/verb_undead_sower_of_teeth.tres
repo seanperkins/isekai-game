@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_undead_sower_of_teeth"
 display_name = "Squad"
-description = "A squad of four sown soldiers."
+description = "A squad of four sown soldiers for ten seconds. Each dies to a touch."
 announce = "New verb. Acquired [Squad]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [3], "spec": {"kind": "summon", "count": 4, "seconds": 10.0, "cooldown": 16.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [3], "spec": {"kind": "summon", "count": 4, "seconds": 10.0, "mortal": true, "look": "skeleton", "cooldown": 16.0}}]
 mp_cost = 9

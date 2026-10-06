@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_undead_pharaoh"
 display_name = "Decree"
-description = "A curse ring marks everything in the room; tomb guards rise."
+description = "Decree: a curse marks everything in the room (half again as much damage for ten seconds) and two tomb guards rise."
 announce = "New verb. Acquired [Decree]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [2], "spec": {"kind": "aura", "radius": 120, "seconds": 8.0, "damage": true, "damage_type": "dark", "cooldown": 16.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [2], "spec": {"kind": "ring", "radius": 60, "damage_type": "dark", "curse": {"seconds": 10.0, "mult": 1.5, "range": 900}, "summon": {"count": 2, "seconds": 12.0, "mortal": true, "look": "skeleton", "hp": 2}, "cooldown": 16.0}}]
 mp_cost = 9

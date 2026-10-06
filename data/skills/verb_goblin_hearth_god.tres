@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_goblin_hearth_god"
 display_name = "Lar"
-description = "Ward-stones link into one wider aura."
+description = "Lar: ward-stones close together link into one wider, stronger aura. Planting one holds you still a moment."
 announce = "New verb. Acquired [Lar]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "zone", "radius": 110, "seconds": 12.0, "slow": true, "heals": 3, "cooldown": 16.0, "deed": "ward_stone_placed"}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "stone", "radius": 70, "max": 4, "slow": true, "heals": 2, "link": 160, "still": 1.2, "deed": "ward_stone_placed", "cooldown": 6.0}}]
 mp_cost = 8

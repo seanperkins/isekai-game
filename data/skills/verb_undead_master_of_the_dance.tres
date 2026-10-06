@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_undead_master_of_the_dance"
 display_name = "Rise"
-description = "Downed enemies stand up as dancers for ten seconds."
+description = "Rise: downed enemies stand up as dancers for ten seconds. Only works near bodies."
 announce = "New verb. Acquired [Rise]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [2], "spec": {"kind": "summon", "count": 3, "seconds": 10.0, "cooldown": 18.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [2], "spec": {"kind": "raise", "range": 140, "seconds": 10.0, "cooldown": 18.0}}]
 mp_cost = 8

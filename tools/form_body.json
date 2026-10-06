@@ -48,5 +48,11 @@
       "max_hp": -17,
       "atk": 3
     }
+  },
+  "undead_hierophant": {
+    "traits": [
+      "no_drain",
+      "dark_weak"
+    ]
   }
 }

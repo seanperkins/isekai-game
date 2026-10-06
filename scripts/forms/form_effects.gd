@@ -20,6 +20,8 @@ const TRAITS := {
 	"stench": "Enemies close to you are slowed.",
 	"no_bond": "You cannot bond or tame.",
 	"light_frail": "Take half again as much from holy light.",
+	"no_drain": "Your blows do not drain life.",
+	"dark_weak": "Dark powers hit half as hard.",
 }
 const THREAD_SKILLS := ["sticky_thread", "swing_thread", "binding_web"]
 const WATER_SKILLS := ["hydraulic_propulsion", "water_blade", "jet_dash"]

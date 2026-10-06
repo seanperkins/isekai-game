@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_undead_adept"
 display_name = "Minions"
-description = "A few bone minions; a focus."
+description = "Minions: two bone minions, a third and harder-hitting with a focus carried or worn. Frail."
 announce = "New verb. Acquired [Minions]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [3], "spec": {"kind": "summon", "count": 2, "seconds": 10.0, "cooldown": 14.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [3], "spec": {"kind": "summon", "count": 2, "seconds": 10.0, "mortal": true, "look": "skeleton", "focus": {"part": "focus", "count": 1, "power_mult": 1.3}, "cooldown": 14.0}}]
 mp_cost = 6

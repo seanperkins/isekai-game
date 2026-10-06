@@ -218,6 +218,11 @@ var _still_t := 0.0
 var _blow_lock_t := 0.0
 var _swarm_t := 0.0
 var _jam_t := 0.0
+var _soul_used := false
+var _mount: Companion = null
+var _mount_t := 0.0
+## The enemy the player's last blow was on: allies that follow a lead go for it.
+var last_target: Node2D = null
 var _stench_t := 0.0
 ## The window a verb has open (Rage): a bonus with a price.
 var rage := Rage.new()
@@ -429,6 +434,8 @@ func _species_combat() -> void:
 	var st := species_body.state
 	if st.verb != "" and _last_verb == "":
 		break_veil()
+		if st.verb == "pounce":
+			echo_pounce()
 		EventBus.world_event.emit("tackled", {})
 	_last_verb = st.verb
 	if st.verb == "pounce" and st.pounce_hit and not _pounce_applied:
@@ -436,9 +443,12 @@ func _species_combat() -> void:
 		var target = _tackle_target()
 		if target != null and target.has_method("receive_tackle"):
 			var from_behind: bool = target.facing == facing
-			if target.receive_tackle(stats.get_stat("atk"), from_behind, global_position):
+			if rage.blow_knockback() > 0.0 and target.has_method("apply_impulse"):
+				target.apply_impulse(Vector2(signf(target.global_position.x - global_position.x) * rage.blow_knockback(), 0.0))  # a heavier pounce shoves
+			if target.receive_tackle(roundi(float(stats.get_stat("atk")) * rage.blow_mult()), from_behind, global_position):
 				_emit.call(Events.STUNNED_ENEMY, {"source": target.def.id})
 			rage.on_hit(target)
+			note_target(target)
 			if target is Enemy and is_chasing(target):
 				species_body.state.cooldowns.clear()  # the chase is paid for: the next pounce is free
 				_chased = null
@@ -1036,11 +1046,11 @@ func forge(stat: String, amount: int, parts: int) -> bool:
 	refresh_stats()
 	return true
 
-## How many companions the body keeps: the Lord of Beasts two, everyone else one.
+## How many companions the body keeps: the Lord of Beasts and Lupa two, everyone else one.
 func companion_cap() -> int:
 	if skillset.has("trait_no_bond"):
 		return 0
-	return 2 if form.form_id == "goblin_lord_of_beasts" else 1
+	return 2 if form.form_id == "goblin_lord_of_beasts" or form.form_id == "wolf_lupa" else 1
 
 ## The species action on the inspect button. A wolf bonds with a stunned creature that joins a pack; a goblin tames a stunned creature
 ## that can be tamed by offering it one carried part (and learns it). The creature leaves the room and follows as a Companion. True when
@@ -1063,12 +1073,50 @@ func try_bond() -> bool:
 	_emit.call(Deeds.BOND_FORMED, {"kind": kind, "creature": def.id})
 	if def.bonds.has("large"):
 		_emit.call(Deeds.BOND_FORMED, {"kind": "large", "creature": def.id})
+	add_companion(def, target.global_position)
+	return true
+
+## Bonds `def` as a companion at `at`: null at the cap or with no bond to give. `opts`: hp and swarm (Companion.launch).
+func add_companion(def: CreatureDef, at: Vector2, opts := {}) -> Companion:
+	if companions.size() >= companion_cap() or get_parent() == null:
+		return null
 	var pal := Companion.new()
 	get_parent().add_child(pal)
-	pal.launch(self, def, target.global_position)
+	pal.launch(self, def, at, opts)
 	pal.died.connect(_on_companion_died)
 	companions.append(pal)
+	return pal
+
+## Offers a carried part to the nearest weakened creature that can be tamed (hurt to `weak` of its health, or stunned): it follows (Offer). True when one took it.
+func try_offer(reach: float, weak := 0.5) -> bool:
+	if rage.forbids("items") or health.is_dead() or companions.size() >= companion_cap() or get_parent() == null or inventory.carried_parts().is_empty():
+		return false
+	var target = _nearest_in_group("predatable", reach, func(n) -> bool:
+		return n is Enemy and not n.dormant and not n.hunting and n.def.bonds.has("tame") and n.status.state != EnemyStatus.GONE \
+			and (n.status.state == EnemyStatus.STUNNED or float(n.health.hp) <= float(n.health.max_hp) * weak))
+	if target == null:
+		return false
+	inventory.take_carried()
+	learn_from(target)
+	var def: CreatureDef = target.consume()
+	_emit.call(Deeds.BOND_FORMED, {"kind": "tame", "creature": def.id})
+	add_companion(def, target.global_position)
 	return true
+
+## Fused with `pal` for `seconds`: it takes what is dealt to the rider, and is out of sight meanwhile.
+func mount_with(pal: Companion, seconds: float) -> void:
+	_mount = pal
+	_mount_t = seconds
+	pal.visible = false
+
+func is_mounted() -> bool:
+	return _mount != null and is_instance_valid(_mount) and _mount_t > 0.0
+
+func unmount() -> void:
+	if _mount != null and is_instance_valid(_mount):
+		_mount.visible = true
+	_mount = null
+	_mount_t = 0.0
 
 ## The goblin picks the pocket of the nearest living creature with something to leave: it rolls the creature's drops once, takes the first
 ## part found (no fight, the creature stays), and the creature is not tried again. True whenever a creature was tried, empty pocket or not.
@@ -1459,6 +1507,17 @@ func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, cau
 	end_channel()  # a hit ends any channel, including a poison hit that carries no `from`
 	var m := skillset.incoming(damage_type, health.hp, health.max_hp, global_position.distance_to(from) if from != Vector2.INF else 0.0, parts_carried())
 	var dealt := Damage.hit(raw, damage_type, stats.get_stat("def"), mini(100, int(m["percent_off"]) + rage.percent_off(damage_type)), m["flat_off"])
+	if dealt >= health.hp and _soul_rises():
+		return
+	if is_mounted():  # the mount is in the way
+		var taken := mini(dealt, _mount.hp)
+		var lost: bool = _mount.hurt(taken)
+		dealt -= taken
+		if lost:
+			unmount()
+		if dealt <= 0:
+			_invuln = INVULN_SECONDS
+			return
 	health.take_hit(dealt, damage_type)
 	_invuln = INVULN_SECONDS
 	if not health.is_dead() and float(dealt) >= health.max_hp * SHED_FRACTION:
@@ -1473,6 +1532,22 @@ func receive_hit(raw: int, damage_type: String, from: Vector2 = Vector2.INF, cau
 			species_body.state.surface_lock = SURFACE_LET_GO
 	if damage_type == "shock" and not health.is_dead():
 		_dash = maxf(_dash, SHOCK_STUN)  # after the knockback block, which assigns 0.2
+
+## A death within reach of a hidden soul's anchor is cheated: the caster rises there at full health, once per life, and the anchor is spent. True when it did.
+func _soul_rises() -> bool:
+	if _soul_used:
+		return false
+	for s in get_tree().get_nodes_in_group("verb_souls"):
+		if s.caster == self and s.covers(self):
+			_soul_used = true
+			global_position = s.global_position
+			velocity = Vector2.ZERO
+			health.hp = health.max_hp
+			_invuln = INVULN_SECONDS * 2.0
+			s.remove_from_group("verb_souls")
+			s.queue_free()
+			return true
+	return false
 
 ## A blow from the enemy a thread is tied to goes back to it, and the thread is spent.
 func _fate_sends_back(raw: int, damage_type: String, from: Vector2, cause: String) -> bool:
@@ -1635,6 +1710,15 @@ func essence_weight() -> int:
 		n += _rules.held(e)
 	return n
 
+func note_target(enemy: Node2D) -> void:
+	last_target = enemy
+
+## The caller's pounce, echoed: every echo ally of the player's strikes with it.
+func echo_pounce() -> void:
+	for a in get_tree().get_nodes_in_group("verb_allies"):
+		if a.caster == self and a.echo:
+			a.pounce()
+
 ## Ties a thread to `enemy`: the next blow it lands on the player is sent back to it (Fate thread). One thread at a time.
 func fate_tie(enemy: Enemy, seconds: float) -> void:
 	_fated = enemy
@@ -1689,6 +1773,10 @@ func tick(delta: float) -> void:
 	_blow_lock_t = maxf(0.0, _blow_lock_t - delta)
 	_jam_t = maxf(0.0, _jam_t - delta)
 	rage.update(delta)
+	if _mount != null:
+		_mount_t -= delta
+		if _mount_t <= 0.0 or not is_instance_valid(_mount):
+			unmount()
 	if skillset.has("trait_stench"):
 		_stench_t -= delta
 		if _stench_t <= 0.0:
@@ -1949,6 +2037,7 @@ func rest_refresh() -> void:
 			remove_meta(key)
 
 func _on_run_started() -> void:
+	_soul_used = false
 	rest_refresh()
 	rage.reset()
 	progression = Progression.new()  # levels are per run

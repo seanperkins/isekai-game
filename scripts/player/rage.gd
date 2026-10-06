@@ -13,6 +13,7 @@ extends RefCounted
 ##   alone {stats, isolated}         a bonus only with no packmate, and a multiplier on prey with no company
 ##   lasting {stat: amount}          paid when it ends, kept for the life (a curse)
 ##   swell {stat, per_kill, max}     each kill adds to a lasting stat, and to the body's size
+##   blow {mult, knockback}          the pounce hits harder and shoves what it hits
 ##   toggle, beat, lock_blow         a stance: no clock, cast again to drop it; a beat of stillness to take it; no pounce while it is up
 
 const SOURCE := "verb_rage"
@@ -54,6 +55,12 @@ func stop() -> void:
 	left = 0.0
 	meter = 0.0
 	_end()
+
+func blow_mult() -> float:
+	return float(spec.get("blow", {}).get("mult", 1.0)) if active() else 1.0
+
+func blow_knockback() -> float:
+	return float(spec.get("blow", {}).get("knockback", 0.0)) if active() else 0.0
 
 func locks_blow() -> bool:
 	return active() and bool(spec.get("lock_blow", false))

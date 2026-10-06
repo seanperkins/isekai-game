@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_wolf_warg"
 display_name = "Bond"
-description = "A heavier pounce, knockback, one bonded packmate."
+description = "Bond: a packmate that lasts, and for twelve seconds a heavier pounce that shoves what it hits."
 announce = "New verb. Acquired [Bond]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [3], "spec": {"kind": "summon", "count": 1, "seconds": 20.0, "cooldown": 25.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [3], "spec": {"kind": "companion", "creature": "gloom_wolf", "rage": {"seconds": 12.0, "blow": {"mult": 1.5, "knockback": 160.0}}, "cooldown": 25.0}}]
 mp_cost = 6

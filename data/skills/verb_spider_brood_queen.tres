@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_spider_brood_queen"
 display_name = "Command"
-description = "Spiderlings follow your lead."
+description = "Command: four spiderlings that follow your lead: they go for whatever you struck last."
 announce = "New verb. Acquired [Command]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [2], "spec": {"kind": "summon", "count": 4, "seconds": 12.0, "cooldown": 14.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [2], "spec": {"kind": "summon", "count": 4, "seconds": 12.0, "command": true, "look": "spider", "mortal": true, "cooldown": 14.0}}]
 mp_cost = 8

@@ -5,19 +5,23 @@ extends RefCounted
 
 ## The scene every data-defined verb uses.
 const SCENE := "res://scenes/abilities/verb.tscn"
-const KINDS := ["bolt", "burst", "ring", "dash", "zone", "mark", "heal", "ward", "buff", "pull", "aura", "chain", "engulf", "dissolve", "glide", "anchor", "decoy", "summon", "vine", "transmute", "copy", "reveal", "bridge", "trap", "forge", "rage", "weigh", "devour", "veil", "stalk", "swap", "blink", "light", "omen", "fate", "sabotage", "chase", "disperse"]
+const KINDS := ["bolt", "burst", "ring", "dash", "zone", "mark", "heal", "ward", "buff", "pull", "aura", "chain", "engulf", "dissolve", "glide", "anchor", "decoy", "summon", "vine", "transmute", "copy", "reveal", "bridge", "trap", "forge", "rage", "weigh", "devour", "raise", "soul", "companion", "offer", "suckle", "roar", "mount", "stone", "veil", "stalk", "swap", "blink", "light", "omen", "fate", "sabotage", "chase", "disperse"]
 ## Each kind's keys and what they hold (validate() checks them). Every kind also takes `cooldown` (seconds, in place of the default);
 ## the kinds in TYPED also take damage_type, and those in STRIKES a status and `drain` (the fraction of the damage the caster heals).
 ## The keys of a window (Rage), as a verb's own spec (kind rage) or inside any verb's `rage`.
 const RAGE_KEYS := {"seconds": "number", "stats": "dict", "kill_refill": "number", "max_seconds": "number", "meter": "dict", "crash": "dict", "dry_lock": "number",
 	"forbids": "list", "resist": "dict", "no_flinch": "bool", "bleed": "number", "kill_resets": "list", "unseen_in_dark": "bool", "alone": "dict", "lasting": "dict",
-	"swell": "dict", "toggle": "bool", "beat": "number", "lock_blow": "bool"}
+	"swell": "dict", "blow": "dict", "toggle": "bool", "beat": "number", "lock_blow": "bool"}
+## What a summon can be told (also inside any verb's `summon`): how many and for how long, whether they are mortal, what they look like, whether they web,
+## pounce with the caller, follow its lead or carry parts, how late they come, whom they draw, what they turn, and what they hatch from.
+const SUMMON_KEYS := {"count": "number", "seconds": "number", "mortal": "bool", "hp": "number", "look": "text", "web": "bool", "echo": "bool", "command": "bool",
+	"carry": "bool", "delay": "number", "lure": "number", "turn": "dict", "from_cocoons": "number", "power_mult": "number", "focus": "dict"}
 const SCHEMA := {
 	"bolt": {"range": "number", "half_width": "number", "pierce": "bool"},
 	"burst": {"range": "number", "half_width": "number"},
 	"ring": {"radius": "number"},
-	"dash": {"speed": "number", "vertical": "number", "hit_range": "number", "hit_half_width": "number", "opener": "number", "smoke": "number", "drop": "number", "dim": "number", "lit_mult": "number", "hops": "number", "hop_gap": "number", "hop_lift": "number"},
-	"zone": {"radius": "number", "seconds": "number", "slow": "bool", "heals": "number", "damage": "bool"},
+	"dash": {"speed": "number", "vertical": "number", "hit_range": "number", "hit_half_width": "number", "opener": "number", "smoke": "number", "ride": "dict", "drop": "number", "dim": "number", "lit_mult": "number", "hops": "number", "hop_gap": "number", "hop_lift": "number"},
+	"zone": {"radius": "number", "seconds": "number", "slow": "bool", "heals": "number", "damage": "bool", "living_only": "bool", "ally_heals": "bool"},
 	"mark": {"range": "number", "delay": "number"},
 	"heal": {"hp": "number", "mp": "number"},
 	"ward": {"seconds": "number"},
@@ -30,7 +34,7 @@ const SCHEMA := {
 	"glide": {"seconds": "number", "fall": "number"},
 	"anchor": {"seconds": "number"},
 	"decoy": {"seconds": "number", "speed": "number", "ward": "number", "lure": "number", "reverse": "number"},
-	"summon": {"count": "number", "seconds": "number"},
+	"summon": SUMMON_KEYS,
 	"vine": {"height": "number", "seconds": "number"},
 	"transmute": {"from_units": "number", "to_units": "number"},
 	"copy": {"seconds": "number"},
@@ -43,12 +47,12 @@ const SCHEMA := {
 }
 ## The kinds that hurt, which take a `damage_type`; STRIKES are the instant ones, which also take a `status`.
 ## The kinds an enemy casts (at the player, or on itself). The rest need a player's hands: a summon, a bridge, a vine, a reveal, a copy.
-const ENEMY_KINDS := ["bolt", "burst", "ring", "dash", "zone", "mark", "pull", "aura", "chain", "heal", "ward", "buff", "rage", "blink", "devour"]
+const ENEMY_KINDS := ["bolt", "burst", "ring", "dash", "zone", "mark", "pull", "aura", "chain", "heal", "ward", "buff", "rage", "blink", "devour", "summon"]
 const TYPED := ["bolt", "burst", "ring", "dash", "mark", "zone", "pull", "aura", "chain", "engulf", "dissolve"]
 const STRIKES := ["bolt", "burst", "ring", "dash", "mark", "chain", "dissolve"]
 ## Keys any kind may carry: its cooldown and deed, how long it holds the caster still or locks its blow, the radius it wakes enemies in, whether it is a web
 ## (a veil that stops webbing refuses it) and whether it can be cast once between rests.
-const COMMON := {"cooldown": "number", "deed": "deed", "lock": "number", "still": "number", "alerts": "number", "web": "bool", "once_per_rest": "bool", "rage": "rage", "heft": "number"}
+const COMMON := {"cooldown": "number", "deed": "deed", "lock": "number", "still": "number", "alerts": "number", "web": "bool", "once_per_rest": "bool", "rage": "rage", "heft": "number", "summon": "dict", "rally": "dict", "curse": "dict", "blink": "dict"}
 const STATUSES := ["slow", "stun", "root", "flee", "calm", "confuse"]
 const DASH_SPEED := 500.0
 const DASH_VERTICAL := 0.6
@@ -195,6 +199,8 @@ static func _run_kind(ability: Ability, spec: Dictionary) -> void:
 				VerbMind.run(kind, ability, spec)
 			elif VerbBody.KINDS.has(kind):
 				VerbBody.run(kind, ability, spec)
+			elif VerbBond.KINDS.has(kind):
+				VerbBond.run(kind, ability, spec)
 
 ## What a cast costs the caster besides MP, from the keys any kind may carry: it holds still, its own blow is locked, enemies around it wake, and a verb
 ## cast once between rests is spent.
@@ -207,6 +213,34 @@ static func _price(a: Ability, spec: Dictionary) -> void:
 		for e in a.actor.get_tree().get_nodes_in_group("actors"):
 			if e is Enemy and e.global_position.distance_to(a.actor.global_position) <= float(spec["alerts"]):
 				e.wake()
+	if spec.has("summon"):
+		var call_: Dictionary = {}
+		call_.merge(spec["summon"], true)
+		_summon(a, call_)
+	if spec.has("rally"):  # a horn rallies the caster's allies and companions
+		var r: Dictionary = spec["rally"]
+		for ally in a.actor.get_tree().get_nodes_in_group("verb_allies"):
+			if ally.caster == a.actor:
+				ally.rally(float(r.get("seconds", 6.0)), int(r.get("power", 2)))
+		for pal in a.actor.get_tree().get_nodes_in_group("companions"):
+			if pal.caster == a.actor:
+				pal.rally(float(r.get("seconds", 6.0)), int(r.get("power", 2)))
+	if spec.has("curse"):  # a decree marks everything in the room
+		var c: Dictionary = spec["curse"]
+		for e in a.actor.get_tree().get_nodes_in_group("actors"):
+			if e is Enemy and e.global_position.distance_to(a.actor.global_position) <= float(c.get("range", 900.0)):
+				e.curse_for(float(c.get("seconds", 10.0)), float(c.get("mult", 1.5)))
+	if spec.has("blink"):  # and a blink, away from what is in front
+		var b: Dictionary = spec["blink"]
+		var dir: Vector2 = a.aim_dir() * (-1.0 if bool(b.get("away", false)) else 1.0)
+		var from: Vector2 = a.actor.global_position
+		var to := from + dir * float(b.get("distance", 70.0))
+		var rock = a.terrain_hit(from, to)
+		if rock != null:
+			to = from + dir * maxf(0.0, from.distance_to(rock) - 10.0)
+		a.actor.global_position = to
+		if "velocity" in a.actor:
+			a.actor.velocity = Vector2.ZERO
 	if spec.has("cloud"):
 		var cloud: Dictionary = {"radius": 50.0, "seconds": 4.0, "slow": true, "damage": true, "damage_type": "poison"}
 		cloud.merge(spec["cloud"], true)
@@ -276,6 +310,9 @@ static func _dash(a: Ability, spec: Dictionary) -> void:
 		mult *= float(spec["lit_mult"])
 	if spec.has("opener") and _flag(actor, "cast_unseen"):
 		mult *= float(spec["opener"])  # a strike out of hiding hits harder
+	if spec.has("ride"):  # a charge that is strong mounted and weak on foot
+		var pals = actor.get("companions")
+		mult *= float(spec["ride"].get("mounted", 1.0)) if pals != null and not pals.is_empty() else float(spec["ride"].get("foot", 1.0))
 	a.power_mult *= mult
 	_hop(a, spec, dir, hops > 1)
 	a.power_mult /= mult
@@ -314,7 +351,7 @@ static func _zone(a: Ability, spec: Dictionary) -> void:
 	var power := a.power() if bool(spec.get("damage", false)) else 0
 	cloud.launch(a.actor.global_position, float(spec.get("radius", ZONE_RADIUS)), float(spec.get("seconds", ZONE_SECONDS)), a.actor,
 		{"damage": power, "slow": bool(spec.get("slow", true)), "heals": int(spec.get("heals", 0)), "color": _color(spec, 0.3),
-		"damage_type": str(spec.get("damage_type", "poison"))})
+		"damage_type": str(spec.get("damage_type", "poison")), "living_only": bool(spec.get("living_only", false)), "ally_heals": bool(spec.get("ally_heals", false))})
 
 ## Brands the nearest foe in range; the hit lands `delay` seconds later if it is still there. The power is fixed at the cast.
 static func _mark(a: Ability, spec: Dictionary) -> void:
@@ -506,18 +543,81 @@ static func _decoy(a: Ability, spec: Dictionary) -> void:
 	if a.actor.has_method("apply_impulse"):
 		a.actor.apply_impulse(Vector2(-float(a.actor.get("facing") if a.actor.get("facing") != null else 1) * float(spec.get("speed", DECOY_SPEED)), 0.0))
 
-## Calls `count` small allies that fight for a while; a second call replaces the first (Court).
+## Calls `count` small allies that fight for a while; a second call replaces the first (Court). See SUMMON_KEYS for what they can be told.
 static func _summon(a: Ability, spec: Dictionary) -> void:
+	if a.actor is Enemy:
+		_summon_minions(a, spec)
+		return
 	for old in a.actor.get_tree().get_nodes_in_group("verb_allies"):
 		if old.caster == a.actor:
 			old.free()
 	var count := maxi(1, int(spec.get("count", SUMMON_COUNT)))
-	var power := a.power()
+	if spec.has("from_cocoons"):  # young hatch from the cocoons it carries, and none hatch without one
+		var carried = a.actor.get("inventory")
+		if carried == null or carried.cocoons().is_empty():
+			return
+		count = 0
+		while not carried.cocoons().is_empty():
+			carried.take_cocoon()
+			count += int(spec["from_cocoons"])
+	var power_mult := float(spec.get("power_mult", 1.0))
+	if spec.has("focus"):  # a focus carried or worn is a minion more, and they hit harder
+		var gear = a.actor.get("inventory")
+		if gear != null and gear.count(str(spec["focus"].get("part", "focus"))) > 0:
+			count += int(spec["focus"].get("count", 1))
+			power_mult *= float(spec["focus"].get("power_mult", 1.0))
+	var power := maxi(1, roundi(float(a.power()) * power_mult))
+	var seconds := float(spec.get("seconds", SUMMON_SECONDS))
+	var delay := float(spec.get("delay", 0.0))
+	if delay > 0.0:
+		a.actor.get_tree().create_timer(delay).timeout.connect(_call_allies.bind(a.actor, power, count, seconds, spec))
+	else:
+		_call_allies(a.actor, power, count, seconds, spec)
+	if spec.has("turn"):
+		var t: Dictionary = spec["turn"]
+		for e in a.actor.get_tree().get_nodes_in_group("actors"):
+			if e is Enemy and (t.get("ids", []) as Array).has(e.def.id) and e.global_position.distance_to(a.actor.global_position) <= float(t.get("radius", 300.0)):
+				e.turn_for(float(t.get("seconds", seconds)))
+
+## An enemy's summon: hostile minions of the creature it `look`s like (a wild slime without one), up to `count` alive at once, gone after `seconds`.
+static func _summon_minions(a: Ability, spec: Dictionary) -> void:
+	var caster: Enemy = a.actor
+	var count := maxi(1, int(spec.get("count", SUMMON_COUNT)))
+	var alive := 0
+	for n in caster.get_tree().get_nodes_in_group("minions"):
+		if n.get_meta("minion_of", null) == caster:
+			alive += 1
+	var def := VerbAlly._creature(str(spec.get("look", "wild_slime")))
+	for i in maxi(0, count - alive):
+		var minion := Enemy.new()
+		minion.setup(def, {})
+		caster.get_parent().add_child(minion)
+		minion.global_position = caster.global_position + Vector2((float(i) - float(count - 1) / 2.0) * SUMMON_SPACING * 1.5, -4.0)
+		minion.add_to_group("minions")
+		minion.set_meta("minion_of", caster)
+		caster.get_tree().create_timer(float(spec.get("seconds", SUMMON_SECONDS))).timeout.connect(_minion_goes.bind(minion))
+
+static func _minion_goes(minion) -> void:  # untyped: it may be gone already
+	if is_instance_valid(minion):
+		minion.queue_free()
+
+## The allies themselves (a timer may call this after the verb is gone, so its arguments are plain).
+static func _call_allies(actor, power: int, count: int, seconds: float, spec: Dictionary) -> void:
+	if not is_instance_valid(actor) or not actor.is_inside_tree():
+		return
+	var opts := {"mortal": bool(spec.get("mortal", false)), "hp": int(spec.get("hp", 1)), "look": str(spec.get("look", "")), "web": bool(spec.get("web", false)),
+		"echo": bool(spec.get("echo", false)), "command": bool(spec.get("command", false)), "carry": bool(spec.get("carry", false))}
+	var first: VerbAlly = null
 	for i in count:
 		var ally := VerbAlly.new()
-		a.actor.get_parent().add_child(ally)
-		ally.launch(a.actor, a.actor.global_position + Vector2((float(i) - float(count - 1) / 2.0) * SUMMON_SPACING, 0.0), power,
-			float(spec.get("seconds", SUMMON_SECONDS)), Color(0.8, 1.0, 0.8, 0.9))
+		actor.get_parent().add_child(ally)
+		ally.launch(actor, actor.global_position + Vector2((float(i) - float(count - 1) / 2.0) * SUMMON_SPACING, 0.0), power, seconds, Color(0.8, 1.0, 0.8, 0.9), opts)
+		if first == null:
+			first = ally
+	if first != null and spec.has("lure"):
+		for e in actor.get_tree().get_nodes_in_group("actors"):
+			if e is Enemy and e.global_position.distance_to(actor.global_position) <= float(spec["lure"]):
+				e.lure_to(first, seconds)
 
 ## One-way steps stacked up from the floor under the caster (Stalk).
 static func _vine(a: Ability, spec: Dictionary) -> void:
@@ -614,6 +714,8 @@ static func _hit(t, power: int, spec: Dictionary, from: Vector2, ignore_def := f
 	var type := str(spec.get("damage_type", "physical"))
 	if caster != null and is_instance_valid(caster) and t is Enemy and caster.get("rage") != null:
 		power = maxi(1, roundi(float(power) * caster.rage.power_mult_vs(t)))  # a lone hunter's prey with no company
+	if type == "dark" and caster != null and is_instance_valid(caster) and caster.get("skillset") != null and caster.skillset.has("trait_dark_weak"):
+		power = maxi(1, power / 2)  # weak dark powers
 	if spec.has("size_scale") and t is Enemy:
 		power = maxi(1, roundi(float(power) * clampf(float(t.def.stats.get("max_hp", 1)) / float(spec["size_scale"]), 0.4, 3.0)))  # the bigger the foe, the harder it falls
 	if spec.has("vs_killer") and caster != null and is_instance_valid(caster) and t is Enemy and str(caster.get("avenge_target")) == str(t.def.id):
@@ -625,6 +727,8 @@ static func _hit(t, power: int, spec: Dictionary, from: Vector2, ignore_def := f
 		t.receive_hit(power, type, from, "")
 	if caster != null and is_instance_valid(caster) and caster.get("rage") != null:
 		caster.rage.on_hit(t)
+	if caster != null and is_instance_valid(caster) and t is Enemy and caster.has_method("note_target"):
+		caster.note_target(t)
 	if spec.has("knockdown") and t is Enemy and int(t.def.stats.get("max_hp", 0)) >= DeedTags.HEAVY_HP:
 		t.knock_down(float(spec["knockdown"]))  # a heavy one goes down too
 	var delay := float(spec.get("status_delay", 0.0))
@@ -633,7 +737,7 @@ static func _hit(t, power: int, spec: Dictionary, from: Vector2, ignore_def := f
 	else:
 		_apply_status(t, spec.get("status", {}))
 	var drain := float(spec.get("drain", 0.0))
-	if drain > 0.0 and caster != null and is_instance_valid(caster):
+	if drain > 0.0 and caster != null and is_instance_valid(caster) and not (caster.get("skillset") != null and caster.skillset.has("trait_no_drain")):
 		var dealt := power if before < 0 else maxi(0, before - _hp(t))  # what the target actually lost; a target with no HP of its own takes the power
 		var health = caster.get("health")
 		if health != null and dealt > 0:
@@ -705,7 +809,7 @@ static func validate(spec: Dictionary) -> PackedStringArray:
 static func _schema(kind: String) -> Dictionary:
 	if SCHEMA.has(kind):
 		return SCHEMA[kind]
-	return VerbMind.SCHEMA.get(kind, VerbBody.SCHEMA.get(kind, {}))
+	return VerbMind.SCHEMA.get(kind, VerbBody.SCHEMA.get(kind, VerbBond.SCHEMA.get(kind, {})))
 
 static func _is_number(v) -> bool:
 	return typeof(v) == TYPE_INT or typeof(v) == TYPE_FLOAT

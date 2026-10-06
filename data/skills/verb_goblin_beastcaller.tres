@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_goblin_beastcaller"
 display_name = "Offer"
-description = "An item to a weakened creature, which follows you (taming)."
+description = "Offer: give a carried part to a weakened creature (or a stunned one) and it follows you."
 announce = "New verb. Acquired [Offer]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [2], "spec": {"kind": "summon", "count": 1, "seconds": 20.0, "cooldown": 25.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [2], "spec": {"kind": "offer", "range": 60, "weak": 0.5, "cooldown": 10.0}}]
 mp_cost = 5

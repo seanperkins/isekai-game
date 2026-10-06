@@ -10,6 +10,8 @@ const DEFAULT_ALTAR := "C1"
 const DEFAULT_SPECIES := "slime"
 ## Deaths after the one that left them that remains outlast, unrecovered.
 const REMAINS_DEATHS := 3
+## The part that anchors the remains it lies in.
+const PHYLACTERY := "phylactery_shard"
 
 var profile  # Profile, or null
 var visited: Array = []
@@ -146,6 +148,8 @@ func keep_remains(parts: Array) -> void:
 
 ## A death passed with the remains still out there: they go after REMAINS_DEATHS of them.
 func note_death_unrecovered() -> void:
+	if not remains.is_empty() and (remains["parts"] as Array).has(PHYLACTERY):
+		return  # a phylactery shard in the pile anchors it: it does not wear away
 	if remains.is_empty():
 		return
 	remains["deaths_left"] = int(remains["deaths_left"]) - 1

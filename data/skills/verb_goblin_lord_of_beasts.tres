@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_goblin_lord_of_beasts"
 display_name = "Two companions"
-description = "Two companions at once."
+description = "Two companions at once, the capstone's exception to one at a time. They are fragile."
 announce = "New verb. Acquired [Two companions]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [4], "spec": {"kind": "summon", "count": 2, "seconds": 20.0, "cooldown": 25.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [4], "spec": {"kind": "companion", "creature": "cave_rat", "count": 2, "hp": 3, "cooldown": 25.0}}]
 mp_cost = 9

@@ -15,7 +15,7 @@ class Hidden extends Node2D:
 	func reveal() -> void:
 		revealed += 1
 
-const GROUPS := ["verb_fields", "verb_allies", "verb_vines", "verb_husks", "verb_bridges", "verb_traps", "player_clouds", "verb_marks", "verb_veils", "verb_lights", "verb_omens"]
+const GROUPS := ["verb_fields", "verb_allies", "verb_vines", "verb_husks", "verb_bridges", "verb_traps", "player_clouds", "verb_marks", "verb_veils", "verb_lights", "verb_omens", "verb_souls", "ward_stones", "companions"]
 const STATS := ["atk", "def", "spd", "max_hp", "max_mp"]
 
 var test: GutTest

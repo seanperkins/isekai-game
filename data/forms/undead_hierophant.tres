@@ -16,6 +16,7 @@ stats = {
 "max_hp": 22,
 "max_mp": 15
 }
+traits = ["no_drain", "dark_weak"]
 grants = ["verb_undead_hierophant"]
 verb = "verb_undead_hierophant"
 tint = Color(0.933, 0.8, 0.883, 1)

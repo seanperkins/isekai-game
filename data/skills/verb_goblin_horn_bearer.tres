@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_goblin_horn_bearer"
 display_name = "Horn"
-description = "A blast that stuns and rallies allies."
+description = "Horn: a blast that stuns and rallies your allies and companions to strike faster and harder. It is loud: it wakes everything near."
 announce = "New verb. Acquired [Horn]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [4], "spec": {"kind": "burst", "range": 90, "half_width": 60, "status": {"stun": 1.5}, "cooldown": 9.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [4], "spec": {"kind": "burst", "range": 90, "half_width": 60, "status": {"stun": 1.5}, "alerts": 300, "rally": {"seconds": 8.0, "power": 2}, "cooldown": 9.0}}]
 mp_cost = 6

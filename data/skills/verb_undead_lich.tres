@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_undead_lich"
 display_name = "Bone beams"
-description = "Bouncing bone beams, a blink; a phylactery anchors remains."
+description = "Bone beams that bounce between enemies, and a blink back from what is in front. A phylactery shard in your remains keeps them from wearing away."
 announce = "New verb. Acquired [Bone beams]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [8], "spec": {"kind": "chain", "range": 200, "jump": 100, "hops": 3, "damage_type": "dark", "cooldown": 6.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [8], "spec": {"kind": "chain", "range": 160, "jump": 80, "hops": 3, "damage_type": "dark", "blink": {"distance": 70, "away": true}, "cooldown": 6.0}}]
 mp_cost = 7

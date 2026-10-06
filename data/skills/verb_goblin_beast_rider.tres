@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_goblin_beast_rider"
 display_name = "Mount"
-description = "Fuse with the companion for a ride."
+description = "Mount: fuse with your companion for a ride, faster and harder. The companion takes the blows meant for you, and is lost if it falls."
 announce = "New verb. Acquired [Mount]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "buff", "stats": {"spd": 40, "atk": 2}, "seconds": 12.0, "cooldown": 20.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "mount", "seconds": 12.0, "stats": {"spd": 40, "atk": 2}, "cooldown": 20.0}}]
 mp_cost = 6

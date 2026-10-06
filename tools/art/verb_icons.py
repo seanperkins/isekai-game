@@ -190,6 +190,49 @@ def g_devour(d, fg):
     d.polygon([(16, 16), (27, 10), (27, 22)], fill=BACK)
 
 
+def g_raise(d, fg):
+    d.rectangle([5, 22, 27, 26], fill=fg)
+    d.line([(16, 22), (16, 8)], fill=fg, width=3)
+    d.ellipse([11, 4, 21, 12], outline=fg, width=2)
+
+
+def g_soul(d, fg):
+    d.polygon([(16, 4), (24, 14), (21, 27), (11, 27), (8, 14)], outline=fg, width=2)
+    d.ellipse([13, 11, 19, 17], fill=fg)
+
+
+def g_companion(d, fg):
+    d.ellipse([4, 12, 15, 24], fill=fg)
+    d.ellipse([17, 8, 28, 20], outline=fg, width=3)
+
+
+def g_offer(d, fg):
+    d.polygon([(6, 20), (26, 20), (16, 8)], outline=fg, width=2)
+    d.ellipse([13, 16, 19, 22], fill=fg)
+
+
+def g_suckle(d, fg):
+    d.ellipse([5, 10, 20, 26], fill=fg)
+    d.ellipse([19, 14, 28, 24], outline=fg, width=2)
+
+
+def g_roar(d, fg):
+    for r in (5, 9, 13):
+        d.arc([16 - r, 16 - r, 16 + r, 16 + r], -50, 50, fill=fg, width=2)
+    d.ellipse([4, 12, 10, 20], fill=fg)
+
+
+def g_mount(d, fg):
+    d.line([(5, 24), (27, 24)], fill=fg, width=3)
+    d.ellipse([6, 14, 22, 26], outline=fg, width=3)
+    d.ellipse([18, 5, 26, 13], fill=fg)
+
+
+def g_stone(d, fg):
+    d.polygon([(8, 27), (11, 10), (21, 10), (24, 27)], fill=fg)
+    d.arc([3, 3, 29, 29], 200, 340, fill=fg, width=2)
+
+
 def g_rage(d, fg):
     d.polygon([(16, 3), (22, 13), (30, 11), (23, 20), (26, 29), (16, 24), (6, 29), (9, 20), (2, 11), (10, 13)], fill=fg)
 
@@ -253,7 +296,7 @@ GLYPHS = {"bolt": g_bolt, "burst": g_burst, "ring": g_ring, "dash": g_dash, "zon
           "ward": g_ward, "buff": g_buff, "pull": g_pull, "aura": g_aura, "chain": g_chain, "engulf": g_engulf,
           "dissolve": g_dissolve, "glide": g_glide, "anchor": g_anchor, "decoy": g_decoy, "summon": g_summon, "vine": g_vine,
           "transmute": g_transmute, "copy": g_copy, "reveal": g_reveal, "bridge": g_bridge, "trap": g_trap, "forge": g_forge,
-          "rage": g_rage, "weigh": g_weigh, "devour": g_devour, "veil": g_veil, "stalk": g_stalk, "swap": g_swap, "blink": g_blink, "light": g_light, "omen": g_omen, "fate": g_fate,
+          "rage": g_rage, "raise": g_raise, "soul": g_soul, "companion": g_companion, "offer": g_offer, "suckle": g_suckle, "roar": g_roar, "mount": g_mount, "stone": g_stone, "weigh": g_weigh, "devour": g_devour, "veil": g_veil, "stalk": g_stalk, "swap": g_swap, "blink": g_blink, "light": g_light, "omen": g_omen, "fate": g_fate,
           "sabotage": g_sabotage, "chase": g_chase, "disperse": g_disperse}
 
 

@@ -14,6 +14,9 @@ var damage := 1
 var slow := true
 var heals := 0
 var damage_type := "poison"
+## Hurts only the living (not the undead); mends the caster's allies and companions too.
+var living_only := false
+var ally_heals := false
 var _seconds := 0.0
 var _elapsed := 0.0
 var _ticks := 0
@@ -30,6 +33,8 @@ func launch(at: Vector2, p_radius: float, seconds: float, actor: Node2D, opts :=
 	slow = bool(opts.get("slow", true))
 	heals = int(opts.get("heals", 0))
 	damage_type = str(opts.get("damage_type", "poison"))
+	living_only = bool(opts.get("living_only", false))
+	ally_heals = bool(opts.get("ally_heals", false))
 	add_to_group("player_clouds")
 	for c in get_children():
 		c.queue_free()
@@ -64,7 +69,16 @@ func _physics_process(delta: float) -> void:
 func _pulse() -> void:
 	if damage > 0:
 		for n in _enemies_inside():
+			if living_only and n is Enemy and n.def.species == "undead":
+				continue
 			n.receive_hit(damage, damage_type, global_position, "poison" if damage_type == "poison" else "")
+	if ally_heals and heals > 0:
+		for pal in get_tree().get_nodes_in_group("companions"):
+			if pal.caster == _actor and pal.global_position.distance_to(global_position) <= radius:
+				pal.heal(heals)
+		for ally in get_tree().get_nodes_in_group("verb_allies"):
+			if ally.caster == _actor and ally.global_position.distance_to(global_position) <= radius:
+				ally.mend(heals)
 	if heals > 0 and _actor.global_position.distance_to(global_position) <= radius:
 		var h = _actor.get("health")
 		if h != null:

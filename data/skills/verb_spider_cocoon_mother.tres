@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_spider_cocoon_mother"
 display_name = "Hatch"
-description = "Prey cocooned alive hatch into stronger young."
+description = "Hatch: the prey you cocooned hatches into stronger young, after a time (two for each cocoon, hitting half again as hard)."
 announce = "New verb. Acquired [Hatch]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [5], "spec": {"kind": "summon", "count": 2, "seconds": 15.0, "cooldown": 18.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [5], "spec": {"kind": "summon", "from_cocoons": 2, "power_mult": 1.5, "delay": 2.5, "seconds": 15.0, "look": "spider", "mortal": true, "cooldown": 18.0}}]
 mp_cost = 9

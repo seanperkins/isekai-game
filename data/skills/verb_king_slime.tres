@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_king_slime"
 display_name = "Court"
-description = "Spawns a few lesser slimes that fight for you."
+description = "Court: three lesser slimes fight for you for ten seconds. Each dies to a single touch."
 announce = "New verb. Acquired [Court]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [2], "spec": {"kind": "summon", "count": 3, "seconds": 10.0, "cooldown": 12.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [2], "spec": {"kind": "summon", "count": 3, "seconds": 10.0, "mortal": true, "cooldown": 12.0}}]
 mp_cost = 8

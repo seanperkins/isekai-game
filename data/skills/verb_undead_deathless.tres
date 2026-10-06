@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_undead_deathless"
 display_name = "Hidden soul"
-description = "Place an anchor; if you die in range you rise there once per life."
+description = "Hidden soul: place an anchor; if you would die within reach of it you rise there at full health, once per life. An enemy that stays at the anchor destroys it."
 announce = "New verb. Acquired [Hidden soul]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "anchor", "seconds": 60.0, "cooldown": 4.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "soul", "range": 240, "hp": 6, "cooldown": 4.0}}]
 mp_cost = 6

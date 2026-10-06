@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_wolf_lycaon"
 display_name = "First Wolf's roar"
-description = "Wild wolves in the room join you briefly."
+description = "First Wolf's roar: every wild wolf in the room fights for you for eight seconds. A boss is not turned."
 announce = "New verb. Acquired [First Wolf's roar]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [3], "spec": {"kind": "summon", "count": 3, "seconds": 8.0, "cooldown": 20.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [3], "spec": {"kind": "roar", "radius": 400, "seconds": 8.0, "cooldown": 20.0}}]
 mp_cost = 8

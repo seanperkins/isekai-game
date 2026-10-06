@@ -24,22 +24,74 @@ const GROWTH_MAX := 3
 ## The frame each shipped creature rests on, when it is drawn from single sprites.
 const IDLE_FRAMES := {"bat": "bat_1", "toad": "toad_idle", "lizard": "lizard_1", "spider": "spider_crawl"}
 
+const SWARM_REACH := Vector2(30.0, 34.0)
+
 var def: CreatureDef
 var caster: Node2D
 var hp := 1
+var max_hp := 1
+## One big companion that is a swarm: its blow lands on every foe in reach at once.
+var swarm := false
+var _ward_t := 0.0
+var _afraid_t := 0.0
+var _rally_t := 0.0
+var _rally_power := 0
 var _age := 0.0
 var _long_said := false
 var _strike_in := 0.0
 var _hurt_in := 0.0
 var _dead := false
 
-func launch(p_caster: Node2D, p_def: CreatureDef, at: Vector2) -> void:
+func launch(p_caster: Node2D, p_def: CreatureDef, at: Vector2, opts := {}) -> void:
 	add_to_group("companions")
 	caster = p_caster
 	def = p_def
 	global_position = at
-	hp = int(def.stats.get("max_hp", 1))
+	hp = int(opts.get("hp", def.stats.get("max_hp", 1)))
+	max_hp = maxi(hp, int(opts.get("max_hp", hp)))
+	swarm = bool(opts.get("swarm", false))
 	_build_look()
+	if swarm:
+		for dx in [-9.0, 9.0]:  # a few more of it, for a swarm
+			var extra := make_look(def)
+			extra.position.x += dx
+			extra.scale *= 0.8
+			add_child(extra)
+
+## Mended by `n`, up to what it had.
+func heal(n: int) -> void:
+	hp = mini(max_hp, hp + n)
+
+## Untouchable for `seconds` (holy ground).
+func ward_for(seconds: float) -> void:
+	_ward_t = maxf(_ward_t, seconds)
+
+func is_warded() -> bool:
+	return _ward_t > 0.0
+
+## Rallied: for `seconds` it strikes faster and `power` harder (a horn).
+func rally(seconds: float, power: int) -> void:
+	_rally_t = maxf(_rally_t, seconds)
+	_rally_power = power
+
+## Afraid of its owner for `seconds` (a fear stone): it keeps away and does not fight.
+func fear_for(seconds: float) -> void:
+	_afraid_t = maxf(_afraid_t, seconds)
+
+func is_afraid() -> bool:
+	return _afraid_t > 0.0
+
+## Hurt by `n` (a rider's mount takes what was meant for its rider). True when it is lost.
+func hurt(n: int) -> bool:
+	if _dead:
+		return true
+	hp -= n
+	if hp <= 0:
+		_dead = true
+		died.emit(self)
+		queue_free()
+		return true
+	return false
 
 ## What it strikes for: its own, and a goblin's grows with the lessons of its type.
 func atk() -> int:
@@ -63,11 +115,19 @@ func _physics_process(delta: float) -> void:
 		caster.emit_deed(Deeds.BOND_FORMED, {"kind": "long", "creature": def.id})
 	_strike_in = maxf(0.0, _strike_in - delta)
 	_hurt_in = maxf(0.0, _hurt_in - delta)
+	_ward_t = maxf(0.0, _ward_t - delta)
+	_afraid_t = maxf(0.0, _afraid_t - delta)
+	_rally_t = maxf(0.0, _rally_t - delta)
 	_take_contact_hit()
 	if _dead:
 		return
 	if global_position.distance_to(caster.global_position) > TELEPORT_DISTANCE:
 		global_position = caster.global_position + Vector2(-FOLLOW_GAP, 0.0)
+	if _afraid_t > 0.0:
+		var away: Vector2 = global_position - caster.global_position
+		if away.length() < 120.0:
+			global_position += (away.normalized() if away.length() > 0.01 else Vector2.RIGHT) * 130.0 * delta
+		return
 	var foe := _nearest_foe()
 	if foe == null:
 		_follow(delta)
@@ -75,10 +135,24 @@ func _physics_process(delta: float) -> void:
 	var d: Vector2 = foe.global_position - global_position
 	if absf(d.x) <= STRIKE_REACH.x and absf(d.y) <= STRIKE_REACH.y:
 		if _strike_in <= 0.0:
-			foe.receive_hit(atk(), "physical", global_position, "")
-			_strike_in = STRIKE_SECONDS
+			if swarm:
+				_strike_everything()
+			else:
+				foe.receive_hit(atk() + (_rally_power if _rally_t > 0.0 else 0), "physical", global_position, "")
+			_strike_in = STRIKE_SECONDS / (2.0 if _rally_t > 0.0 else 1.0)
 	else:
 		global_position = global_position.move_toward(foe.global_position, SPEED * delta)
+
+## A swarm's blow: every foe in its reach.
+func _strike_everything() -> void:
+	for n in get_tree().get_nodes_in_group("actors"):
+		if n == caster or not n.has_method("receive_hit") or n.get("team") != "enemy":
+			continue
+		if n.has_method("can_be_hit") and not n.can_be_hit():
+			continue
+		var d: Vector2 = n.global_position - global_position
+		if absf(d.x) <= SWARM_REACH.x and absf(d.y) <= SWARM_REACH.y:
+			n.receive_hit(atk(), "physical", global_position, "")
 
 func _follow(delta: float) -> void:
 	var to: Vector2 = caster.global_position - global_position
@@ -106,7 +180,7 @@ func _nearest_foe() -> Node2D:
 
 ## An awake enemy in contact hits it, once per HURT_SECONDS whoever it is.
 func _take_contact_hit() -> void:
-	if _hurt_in > 0.0:
+	if _hurt_in > 0.0 or _ward_t > 0.0:
 		return
 	for n in get_tree().get_nodes_in_group("actors"):
 		if not (n is Enemy) or n.dormant or n.is_rooted() or n.status.state != EnemyStatus.ACTIVE:
@@ -121,8 +195,8 @@ func _take_contact_hit() -> void:
 				queue_free()
 			return
 
-## Its still when it has one, else the frame it rests on, else the placeholder every creature without art stands in as.
-func _build_look() -> void:
+## The sprite a creature is drawn as: its still when it has one, else the frame it rests on, else the placeholder every creature without art stands in as.
+static func make_look(def: CreatureDef) -> Sprite2D:
 	var sprite := Sprite2D.new()
 	sprite.name = "Sprite"
 	var sheet: SpriteSheet = null
@@ -145,4 +219,7 @@ func _build_look() -> void:
 		sprite.texture = tex
 		sprite.position.y = Enemy.BODY_BOTTOM - tex.get_height() / 2.0
 	sprite.modulate = def.sprite_tint
-	add_child(sprite)
+	return sprite
+
+func _build_look() -> void:
+	add_child(make_look(def))

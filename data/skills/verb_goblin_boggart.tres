@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_goblin_boggart"
 display_name = "Fear aura"
-description = "Curse-stone and a fear aura."
+description = "Curse-stone: enemies near it flee. Your own allies fear you there too."
 announce = "New verb. Acquired [Fear aura]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [2], "spec": {"kind": "aura", "radius": 90, "seconds": 8.0, "damage": true, "damage_type": "dark", "cooldown": 14.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [2], "spec": {"kind": "stone", "radius": 90, "max": 2, "status": {"flee": 2.5}, "afraid_allies": true, "cooldown": 14.0}}]
 mp_cost = 7

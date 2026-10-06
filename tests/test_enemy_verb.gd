@@ -251,3 +251,39 @@ func test_a_blink_verb_carries_the_enemy_toward_the_player() -> void:
 	await wait_physics_frames(45)
 	assert_eq(e.verb_casts, 1)
 	assert_gt(e.global_position.x, x0 + 40.0, "it jumped ahead")
+
+func _summoner(seconds: float, cooldown: float) -> Enemy:
+	skills_by_id["verb_test_summon"] = TestDefs.skill("verb_test_summon", {"source": "form_verb", "mp_cost": 2, "max_level": 1,
+		"effects": [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0],
+		"spec": {"kind": "summon", "count": 2, "seconds": seconds, "look": "skeleton", "cooldown": cooldown}}]})
+	var c: CreatureDef = creatures["twin_undead_dullahan"].duplicate()
+	c.verb = "verb_test_summon"
+	var e := Enemy.new()
+	e.setup(c, skills_by_id)
+	add_child_autofree(e)
+	player.global_position = Vector2(100, 0)
+	return e
+
+func _minions_of(e: Enemy) -> Array:
+	return get_tree().get_nodes_in_group("minions").filter(func(n): return is_instance_valid(n) and n.get_meta("minion_of", null) == e)
+
+func after_each() -> void:
+	for m in get_tree().get_nodes_in_group("minions"):
+		m.free()
+
+func test_an_enemys_summon_calls_hostile_minions_up_to_its_count() -> void:
+	var e := _summoner(5.0, 0.5)
+	await wait_physics_frames(150)
+	var minions := _minions_of(e)
+	assert_gt(e.verb_casts, 1, "it keeps calling")
+	assert_eq(minions.size(), 2, "never more than its count")
+	assert_eq(minions[0].def.id, "skeleton")
+	assert_eq(minions[0].team, "enemy", "hostile")
+
+func test_an_enemys_minions_go_when_their_time_is_up() -> void:
+	var e := _summoner(0.6, 30.0)
+	await wait_physics_frames(45)
+	assert_eq(e.verb_casts, 1)
+	assert_gt(_minions_of(e).size(), 0)
+	await wait_seconds(1.0)
+	assert_eq(_minions_of(e).size(), 0, "gone")

@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_undead_spartoi_hoplite"
 display_name = "Sow"
-description = "Shield wall: block and spear thrust; sow two bone soldiers."
+description = "Shield wall: a spear thrust, a raised shield (seven tenths of physical damage blocked for three seconds) and two bone soldiers sown. You are rooted while you sow."
 announce = "New verb. Acquired [Sow]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [3], "spec": {"kind": "summon", "count": 2, "seconds": 10.0, "cooldown": 14.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [3], "spec": {"kind": "burst", "range": 70, "half_width": 16, "summon": {"count": 2, "seconds": 10.0, "mortal": true, "look": "skeleton", "hp": 2}, "rage": {"seconds": 3.0, "resist": {"physical": 70}}, "still": 1.0, "cooldown": 14.0}}]
 mp_cost = 7
