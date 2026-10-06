@@ -1,6 +1,6 @@
 """The werewolf kit: the upright wolf-men on one skeleton (werewolf_skeleton.py), a body built from it and gear (werewolf_gear.py) added from the table of
 forms (wolf_forms.py). Runs inside Blender. A hunched, broad-chested, long-armed beast with a full wolf head (a hinged jaw, swept ears), clawed hands, digitigrade
-legs standing on the toe pad, and a bushy tail. Angular and lean like the rest of the family (wolf_kit.py, goblin_kit.py).
+legs standing on the toe pad, and a bushy tail. Faceted like the rest of the family (wolf_kit.py, goblin_kit.py).
 """
 import math
 

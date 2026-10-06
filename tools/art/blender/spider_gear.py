@@ -34,13 +34,13 @@ def hourglass(g, color=None, dim=False, cracks=False, slim=False, woven=False, r
     glow = not dim      # a dim one is lit like the body it is on
     if cracks:
         for i, (u, v, du, dv) in enumerate(((-0.3, 0.2, 0.35, -0.25), (0.1, -0.1, 0.3, 0.2), (0.35, 0.35, 0.25, -0.15), (-0.05, 0.55, 0.25, 0.05))):
-            g.mark_line("crack%d" % i, (u, v), (u + du, v + dv), 0.035, color, glow=True)
+            g.mark_line("crack%d" % i, (u, v), (u + du, v + dv), 0.035, color, glow=glow)
         return
     if woven or runes:
         for i in range(5):
             u = -0.55 + 0.27 * i
-            g.mark_line("diaA%d" % i, (u, 0.05), (u + 0.13, 0.30), 0.04, color, glow=True)
-            g.mark_line("diaB%d" % i, (u + 0.13, 0.30), (u + 0.26, 0.05), 0.04, color, glow=True)
+            g.mark_line("diaA%d" % i, (u, 0.05), (u + 0.13, 0.30), 0.04, color, glow=glow)
+            g.mark_line("diaB%d" % i, (u + 0.13, 0.30), (u + 0.26, 0.05), 0.04, color, glow=glow)
         return
     # the hourglass itself: two triangles meeting point to point, high on the abdomen's side, tilted with it
     k = 0.8 if slim else 1.0

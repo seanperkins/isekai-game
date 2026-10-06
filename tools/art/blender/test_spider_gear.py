@@ -44,6 +44,14 @@ class HourglassTest(unittest.TestCase):
         self.assertTrue(g.shapes)
         self.assertFalse(any(glow for *_, glow in g.shapes))
 
+    def test_a_dim_cracked_or_woven_one_does_not_glow_either_and_a_plain_one_of_them_does(self):
+        for kw in ({"cracks": True}, {"woven": True}, {"runes": True}):
+            lit, dim = FakeKit(), FakeKit()
+            sg.hourglass(lit, **kw)
+            sg.hourglass(dim, dim=True, **kw)
+            self.assertTrue(all(glow for *_, glow in lit.shapes), kw)
+            self.assertFalse(any(glow for *_, glow in dim.shapes), kw)
+
     def test_a_slim_one_is_narrower(self):
         plain, slim = FakeKit(), FakeKit()
         sg.hourglass(plain)
@@ -78,8 +86,6 @@ class EyeKit:
 class EyeTest(unittest.TestCase):
     def test_every_near_eye_stands_out_of_the_mound_it_sits_on_so_the_side_view_shows_it(self):
         for name, form in sf.FORMS.items():
-            if form.get("drider"):
-                continue
             for opts in ({}, {"small": True}, {"big": True}):
                 g = EyeKit(form)
                 sg.eyes(g, **opts)
