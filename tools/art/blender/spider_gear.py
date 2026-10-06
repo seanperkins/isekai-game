@@ -5,6 +5,8 @@ import (no bpy): the kit it is given does the building.
 """
 import math
 
+from spider_skeleton import SCYTHE
+
 RED, BLOOD, EMBER = (206, 40, 52), (170, 30, 44), (255, 110, 50)
 WATER, AIR, GOLD, PEACH, DARK = (86, 170, 236), (150, 222, 236), (232, 186, 80), (240, 186, 160), (58, 46, 82)
 TAN, CLAY, SILK = (196, 170, 124), (150, 124, 90), (226, 222, 210)
@@ -144,10 +146,13 @@ def wrapping(g, color=TAN, **_):
 
 def cocoons(g, color=(214, 196, 150), core=(120, 100, 84), **_):
     """Lumpy pale cocoons strapped over the abdomen, each a rounded oval with a faint dark shape inside."""
-    for i, (u, v, y) in enumerate(((-0.45, 0.6, -0.6), (0.25, 0.75, -0.55), (0.75, 0.15, -0.6), (0.0, -0.1, -1.0), (-0.1, 0.95, 0.2))):
+    spots = ((-0.55, 0.55, -0.6), (0.0, 0.8, -0.5), (0.55, 0.5, -0.6), (0.85, -0.05, -0.5), (-0.35, -0.05, -1.0), (0.3, -0.05, -1.0),
+             (-0.6, 0.95, 0.1), (0.15, 1.0, 0.1), (0.75, 0.75, 0.1), (-0.1, -0.6, -0.8))
+    for i, (u, v, y) in enumerate(spots):
         p = g.abdomen_point(u, v, y, out=1.0)
-        g.e("cocoon%d" % i, p, (0.11, 0.08, 0.08), "abdomen", color, seg=8, rings=6)
-        g.e("cocoon%d_c" % i, (p[0], p[1] - 0.07, p[2]), (0.05, 0.02, 0.03), "abdomen", core, seg=6, rings=4)
+        r = 0.12 * g.ab * (0.85 + 0.15 * (i % 3))
+        g.e("cocoon%d" % i, p, (r, 0.75 * r, 0.72 * r), "abdomen", color, seg=8, rings=6)
+        g.e("cocoon%d_c" % i, (p[0], p[1] - 0.68 * r, p[2]), (0.45 * r, 0.12 * r, 0.3 * r), "abdomen", core, seg=6, rings=4)
 
 
 def held_cocoon(g, color=(214, 196, 150), core=(120, 100, 84), **_):
@@ -163,12 +168,12 @@ def swarmlings(g, **_):
     rnd = _rng(7)
     for j in range(1, 5):
         h, t, _ = g.bones["swarm%d" % j]
-        for i in range(7):
-            at = (h[0] + (rnd() - 0.5) * 0.16, -g.sh["ay"] * (0.2 + 0.8 * rnd()), h[2] + (rnd() - 0.5) * 0.16)
-            if i < 3:
-                spiderling(g, "sw%d_%d" % (j, i), at, 0.028 + 0.012 * rnd(), "swarm%d" % j, glint=AIR if i == 0 else None)
+        for i in range(10):
+            at = (h[0] + (rnd() - 0.5) * 0.24, -g.sh["ay"] * (0.1 + 0.9 * rnd()), h[2] + (rnd() - 0.5) * 0.22)
+            if i < 5:
+                spiderling(g, "sw%d_%d" % (j, i), at, 0.032 + 0.014 * rnd(), "swarm%d" % j, glint=AIR if i % 2 == 0 else None)
             else:
-                g.e("speck%d_%d" % (j, i), at, (0.014, 0.012, 0.014), "swarm%d" % j, g.chitin, seg=4, rings=3)
+                g.e("speck%d_%d" % (j, i), at, (0.018, 0.016, 0.018), "swarm%d" % j, LING, seg=4, rings=3)
 
 
 # ---- hide -------------------------------------------------------------------------------------------------------------------------
@@ -193,12 +198,13 @@ def dust(g, color=TAN, **_):
     g.leg_low = color
 
 
-def clay_crust(g, color=CLAY, **_):
-    """Clay and stone crusted over the abdomen and the carapace."""
+def clay_crust(g, color=(176, 148, 104), **_):
+    """Clay and stone crusted thick over the abdomen, its red markings still showing through, and caked on the legs."""
     rnd = _rng(11)
-    for i in range(9):
-        p = g.abdomen_point(-0.8 + 1.6 * rnd(), 0.1 + 0.8 * rnd(), -0.6, out=1.0)
-        g.e("clay%d" % i, p, (0.07, 0.05, 0.045), "abdomen", color, seg=5, rings=4)
+    for i in range(18):
+        p = g.abdomen_point(-0.95 + 1.9 * rnd(), -0.2 + 1.2 * rnd(), -1.0 + 1.0 * rnd(), out=1.0)
+        r = 0.06 + 0.04 * rnd()
+        g.e("clay%d" % i, p, (r, 0.8 * r, 0.7 * r), "abdomen", color if i % 3 else CLAY, seg=5, rings=4)
     g.leg_low = color
 
 
@@ -208,12 +214,12 @@ def hair(g, **_):
         a = math.radians(30 + 300 * i / 11.0)
         p = g.abdomen_point(math.cos(a), math.sin(a), -0.1, out=1.0)
         q = g.abdomen_point(math.cos(a) * 1.25, math.sin(a) * 1.25, -0.1, out=1.0)
-        g.blade("tuft%d" % i, p, q, 0.05, 0.03, "abdomen", g.dark)
+        g.blade("tuft%d" % i, p, q, 0.06, 0.03, "abdomen", (112, 96, 112))
     for key in g.leg_keys:
         for bone in ("fem_", "tib_"):
             h, t, _ = g.bones[bone + key]
             m = tuple(h[i] + 0.5 * (t[i] - h[i]) for i in range(3))
-            g.blade("bristle_%s%s" % (bone, key), m, (m[0] + 0.03, m[1], m[2] + 0.06), 0.06, 0.02, bone + key, g.leg_c, far=key[0] == "f")
+            g.blade("bristle_%s%s" % (bone, key), m, (m[0] + 0.03, m[1], m[2] + 0.07), 0.07, 0.02, bone + key, (96, 84, 100), far=key[0] == "f")
 
 
 def ribbons(g, color=RED, **_):
@@ -222,7 +228,7 @@ def ribbons(g, color=RED, **_):
         if int(key[1]) > 1:
             continue
         h, t, _ = g.bones["tib_" + key]
-        g.blade("ribbon_" + key, (h[0], h[1], h[2] - 0.02), (h[0] - 0.12, h[1], h[2] - 0.08), 0.05, 0.012, "tib_" + key, color, far=key[0] == "f")
+        g.blade("ribbon_" + key, (h[0], h[1] - 0.02, h[2] - 0.02), (h[0] - 0.16, h[1] - 0.02, h[2] - 0.10), 0.08, 0.012, "tib_" + key, color, far=key[0] == "f")
 
 
 def venom_sheen(g, color=WATER, **_):
@@ -237,10 +243,10 @@ def venom_sheen(g, color=WATER, **_):
 def blisters(g, color=WATER, **_):
     """Swollen blister-sacs glowing blue over the abdomen."""
     rnd = _rng(5)
-    for i in range(9):
-        p = g.abdomen_point(-0.75 + 1.5 * rnd(), -0.3 + 1.1 * rnd(), -0.55, out=1.0)
-        r = 0.035 + 0.03 * rnd()
-        g.e("blister%d" % i, p, (r, r * 0.8, r), "abdomen", color, glow=i % 2 == 0, seg=6, rings=4)
+    for i in range(16):
+        p = g.abdomen_point(-0.9 + 1.8 * rnd(), -0.4 + 1.4 * rnd(), -1.0 + 0.9 * rnd(), out=1.0)
+        r = (0.045 + 0.04 * rnd()) * g.ab
+        g.e("blister%d" % i, p, (r, r * 0.8, r), "abdomen", color if i % 3 else (150, 210, 246), glow=i % 3 != 1, seg=6, rings=4)
 
 
 def vapour(g, color=(150, 160, 190), **_):
@@ -286,7 +292,7 @@ def scythes(g, color=None, edge=(120, 112, 136), **_):
         h, t, _ = g.bones["tar_" + key]
         d = (t[0] - h[0], t[1] - h[1], t[2] - h[2])
         g.blade("scythe_a_" + key, th, (tt[0] + 0.3 * (tt[0] - th[0]), tt[1], tt[2] + 0.3 * (tt[2] - th[2])), 0.12, 0.03, "tib_" + key, color, far=far)
-        tip = (h[0] + 2.8 * d[0], h[1], h[2] + 2.8 * d[2])
+        tip = (h[0] + SCYTHE * d[0], h[1], h[2] + SCYTHE * d[2])
         g.blade("scythe_b_" + key, h, tip, 0.15, 0.03, "tar_" + key, color, far=far)
         g.blade("scythe_e_" + key, (h[0] + 0.5 * d[0], h[1] - 0.012, h[2] + 0.5 * d[2] + 0.02), tip, 0.025, 0.01, "tar_" + key, edge, far=far)
 

@@ -22,7 +22,7 @@ TIP_Z = 0.012     # the claw's bone end stands this high at rest; the mesh's own
 # per pair, front to back: where the hip sits along the cephalothorax (of its half length), where the foot stands (from the thorax's middle, of
 # `span`), the tarsus's direction (degrees from straight down, forward positive), how high the knee rises above the hip (of `span`)
 HIP_AT = (0.80, 0.30, -0.15, -0.55)
-FOOT_AT = (0.58, 0.36, -0.30, -0.58)
+FOOT_AT = (0.60, 0.36, -0.42, -0.80)
 FEMUR = 0.86      # the femur's length against the tibia's, in side view
 TARSUS_DIR = (34.0, 16.0, -14.0, -30.0)
 KNEE_UP = (0.24, 0.28, 0.30, 0.28)
@@ -190,5 +190,15 @@ def skeleton_for(form):
     return skeleton(**proportions_of(form))
 
 
+SCYTHE = 2.8   # a scythe blade reaches this many tarsus lengths past the ankle (spider_gear.scythes)
+
+
 def hull_for(form):
-    return hull(**proportions_of(form))
+    """The hull of a form: its body's, and the points of gear that reach out past the bones (the tips of a pair of scythes)."""
+    pts = hull(**proportions_of(form))
+    if any(name == "scythes" for name, _ in form.get("gear", [])):
+        bones = {n: (h, t) for n, h, t, _ in core(**proportions_of(form))}
+        for s in "nf":
+            h, t = bones["tar_%s0" % s]
+            pts.append(("tar_%s0" % s, (h[0] + SCYTHE * (t[0] - h[0]), h[2] + SCYTHE * (t[2] - h[2]))))
+    return pts

@@ -303,7 +303,8 @@ class ActionTest(unittest.TestCase):
             b = body(name)
             rest = tip(b, "n0", b.skel.pose(*sm.idle_pose(b, 0.0)))
             wound = tip(b, "n0", b.skel.pose(*sm.attack_pose(b, sm.T_HOLD - 0.01)))
-            self.assertGreater(wound[1], rest[1] + 0.1 * b.U, name)
+            # up, or (scythes already held high) drawn back over the body
+            self.assertTrue(wound[1] > rest[1] + 0.1 * b.U or wound[0] < rest[0] - 0.3 * b.U, "%s: %s from %s" % (name, wound, rest))
 
     def test_a_drider_gestures_with_its_arms(self):
         for name in ("weavermaid", "jorogumo", "loom_weaver", "seven_spider_spirits", "tsuchigumo", "norn", "anansi"):

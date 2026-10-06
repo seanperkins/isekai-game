@@ -239,9 +239,14 @@ def _dance(body, t):
         if i >= 2:
             tips[key] = planted(body, key, (0.04 if i == 2 else 0.0) * U)
             continue
+        # the front pair flung up and forward, the second up and back over the body, each waving on its own beat
         ph = 2.0 * math.pi * t + (0.0 if i == 0 else 1.6) + (math.pi if far else 0.0)
-        x0 = body.rest_tip[key][0]
-        tips[key] = (x0 - (0.30 if i == 0 else 0.55) * U + 0.18 * U * math.sin(ph), (1.75 if i == 0 else 1.15) * U + 0.25 * U * math.cos(ph), 90.0 + 20.0 * math.sin(ph))
+        leg = body.legs[key]
+        aim_deg = (140.0 if i == 0 else -150.0) + (14.0 if far else 0.0) * (1 if i == 0 else -1) + 12.0 * math.sin(ph)
+        a = math.radians(aim_deg)
+        d = 0.80 * leg.reach + 0.9 * body.tl[key]
+        hip = (leg.hip[0], leg.hip[1] + body.z0 + 0.14 * U)
+        tips[key] = (hip[0] + d * math.sin(a), hip[1] - d * math.cos(a), aim_deg + 10.0 - body.rest_tar[key])
     solve_legs(body, rot, root, tips)
     _jitter(body, rot, t)
     return rot, root
@@ -517,7 +522,20 @@ def _pose_offsets(body, c, ch, t=0.0, gesture=None, time=0.0, front_placed=False
             x, z = x + ch.get("f1x", 0.0) * U, z + ch.get("f1z", 0.0) * U
         tips[key] = (x, max(body.pad[key], z), curl)
     solve_legs(body, rot, root, tips)
+    _keep_gear_up(body, rot, root, tips)
     return rot, root
+
+
+def _keep_gear_up(body, rot, root, tips, clearance=0.01):
+    """A claw that carries gear reaching past it (a scythe's blade) is lifted until the gear clears the floor."""
+    for key in ("n0", "f0"):
+        for _ in range(3):
+            low = [p[1] for b, p in hull_points(body, rot, root) if b == "tar_" + key]
+            if not low or min(low) >= clearance:
+                break
+            x, z, curl = tips[key]
+            tips[key] = (x, z + clearance - min(low), curl)
+            solve_legs(body, rot, root, {key: tips[key]})
 
 
 def attack_pose(body, time):

@@ -53,12 +53,12 @@ FORMS = {
 
     # ---- the broodmother line: heavy biters. brood queen (cocoon mother, swarm sovereign), cave matriarch (light-eater, chasm-weaver) ----
     "broodmother": dict(stage=2, parent="spider", width=37, span=0.92, ride=0.85, thorax=1.12, abdomen=1.3, leg_w=1.2,
-                        gear=[G("hourglass"), G("eyes"), G("brood", count=26), G("egg_sac")]),
+                        gear=[G("hourglass"), G("eyes"), G("brood", count=40), G("egg_sac")]),
     "brood_queen": dict(stage=3, parent="broodmother", width=41, span=1.0, ride=0.95, thorax=1.2, abdomen=1.38, leg_w=1.25, idle="ready",
                         gear=[G("hourglass"), G("eyes"), G("plates"), G("crown", gem=PEACH), G("brood", count=7)]),
     "cocoon_mother": dict(stage=4, parent="brood_queen", width=46, span=0.95, ride=0.9, thorax=1.2, abdomen=1.62, abd_len=1.1, leg_w=1.3, raised=[0], raised_pose="hold",
                           gear=[G("hourglass"), G("eyes"), G("wrapping"), G("cocoons"), G("held_cocoon")]),
-    "swarm_sovereign": dict(stage=4, parent="brood_queen", width=45, span=1.0, thorax=1.2, abdomen=1.15, abd_len=0.85, leg_w=1.2, swarm=True,
+    "swarm_sovereign": dict(stage=4, parent="brood_queen", width=45, span=1.0, thorax=1.2, abdomen=1.1, abd_len=0.75, leg_w=1.2, swarm=True,
                             gear=[G("hourglass"), G("eyes"), G("crown"), G("swarmlings")]),
     "cave_matriarch": dict(stage=3, parent="broodmother", width=41, span=0.95, ride=0.85, thorax=1.35, abdomen=1.45, leg_w=1.6, mark=(150, 50, 44),
                            gear=[G("hourglass", cracks=True), G("eyes", big=True, color=(236, 226, 196)), G("leg_spikes", color=TAN), G("knobs"), G("fangs", size=1.5), G("dust")]),
