@@ -6,6 +6,8 @@ extends RoomBlock
 
 ## The blows that break it.
 const HITS := 3
+## How many loose pieces a broken wall leaves.
+const RUBBLE_PIECES := 3
 
 var team := "terrain"
 var facing := 1
@@ -19,7 +21,18 @@ func setup(f: Dictionary, ctx: Dictionary) -> void:
 ## The verb says the deed, with this node's id.
 func dissolve() -> void:
 	remove_from_group("dissolvable")
+	_leave_rubble()
 	queue_free()
+
+## A broken wall leaves loose rubble where it stood.
+func _leave_rubble() -> void:
+	var host := get_parent()
+	if host == null:
+		return
+	for i in RUBBLE_PIECES:
+		var rock := Rubble.new()
+		host.add_child(rock)
+		rock.global_position = global_position + Vector2((float(i) - 1.0) * 10.0, size.y / 2.0)
 
 func receive_tackle(_atk: int, _from_behind: bool, _from: Vector2 = Vector2.INF) -> bool:
 	_struck()
@@ -34,4 +47,5 @@ func _struck() -> void:
 		report(Deeds.BARRIER_BROKEN)
 		remove_from_group("dissolvable")
 		remove_from_group("actors")
+		_leave_rubble()
 		queue_free()

@@ -130,7 +130,13 @@ func test_a_ward_makes_the_enemy_refuse_blows_for_its_seconds() -> void:
 	assert_lt(e.health.hp, hp, "the ward ran out")
 
 func test_an_enemys_verb_hits_for_no_more_than_twice_its_attack() -> void:
-	var e := _enemy("twin_wolf_cu_sith")  # value 9, so an uncapped hit would be well above twice its ATK
+	skills_by_id["verb_test_big"] = TestDefs.skill("verb_test_big", {"source": "form_verb", "mp_cost": 2, "max_level": 1,
+		"effects": [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [9], "spec": {"kind": "bolt", "range": 200.0, "cooldown": 3.0}}]})
+	var c: CreatureDef = creatures["twin_undead_dullahan"].duplicate()
+	c.verb = "verb_test_big"
+	var e := Enemy.new()
+	e.setup(c, skills_by_id)
+	add_child_autofree(e)  # value 9, so an uncapped hit would be well above twice its ATK
 	var atk := int(e.stats.get_stat("atk"))
 	assert_gt(Damage.skill_power(9, atk), 2 * atk, "the cap bites on this twin")
 	assert_eq(e._verb.power(), 2 * atk)

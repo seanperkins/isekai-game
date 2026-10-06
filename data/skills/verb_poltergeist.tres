@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_poltergeist"
 display_name = "Hurl"
-description = "Throws loose rubble in the room at enemies."
+description = "Hurl: throw a loose object from the room (the rubble a broken wall leaves) at an enemy. Needs loose objects, and uses one up."
 announce = "New verb. Acquired [Hurl]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [6], "spec": {"kind": "bolt", "range": 220, "half_width": 14, "pierce": false}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [6], "spec": {"kind": "bolt", "range": 220, "half_width": 14, "pierce": false, "loose": true}}]
 mp_cost = 4

@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_undead_dullahan"
 display_name = "Herald"
-description = "A long whip, a thrown head."
+description = "Herald: a long whip, and every second cast a thrown head that flies out and comes back. No shield."
 announce = "New verb. Acquired [Herald]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [8], "spec": {"kind": "bolt", "range": 200, "half_width": 12, "cooldown": 3.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [8], "spec": {"kind": "bolt", "range": 200, "half_width": 12, "pierce": false, "alt": {"range": 140, "half_width": 22, "returns": true}, "cooldown": 3.0}}]
 mp_cost = 5

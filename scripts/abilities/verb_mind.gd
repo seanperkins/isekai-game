@@ -3,7 +3,7 @@ extends RefCounted
 ## Verbs that work on what enemies see and where they go: a stalker's opener, a husk that is swapped for, a short blink, a drifting light, an omen,
 ## a thread of fate, sabotage, a chase and a swarm. VerbKinds.run hands every kind in KINDS here.
 
-const KINDS := ["stalk", "swap", "blink", "light", "omen", "fate", "sabotage", "chase", "disperse"]
+const KINDS := ["stalk", "swap", "blink", "light", "omen", "fate", "sabotage", "chase", "disperse", "hunt", "bark"]
 const SCHEMA := {
 	"stalk": {"seconds": "number", "opener": "number", "speed": "number", "hit_range": "number", "hit_half_width": "number", "crowd": "number", "crowd_range": "number"},
 	"swap": {"seconds": "number", "beat": "number", "lure": "number"},
@@ -14,8 +14,10 @@ const SCHEMA := {
 	"sabotage": {"range": "number", "seconds": "number", "backfire": "number"},
 	"chase": {"range": "number", "seconds": "number", "spd": "number"},
 	"disperse": {"seconds": "number"},
+	"hunt": {"range": "number"},
+	"bark": {"range": "number", "lunge": "number"},
 }
-const TYPED := ["stalk", "omen", "sabotage"]
+const TYPED := ["stalk", "omen", "sabotage", "hunt", "bark"]
 const STALK_SECONDS := 6.0
 const STALK_OPENER := 4.0
 const STALK_CROWD := 3
@@ -43,6 +45,15 @@ const CHASE_RANGE := 260.0
 const CHASE_SECONDS := 6.0
 const CHASE_SPD := 60
 const DISPERSE_SECONDS := 3.0
+const HUNT_RANGE := 260.0
+const PREY_KEY := "verb_prey"
+const BARK_RANGE := 240.0
+const BARK_STILL := 0.5
+const BARK_LUNGE := 3.0
+const BARK_GAP := 14.0
+const BARK_STALE := 8.0
+const BARK_KEY := "verb_barks"
+const BARK_TIME := "verb_bark_time"
 ## The luck of a sabotage; a test can seed it.
 static var rng := RandomNumberGenerator.new()
 
@@ -66,6 +77,10 @@ static func run(kind: String, a: Ability, spec: Dictionary) -> void:
 			chase(a, spec)
 		"disperse":
 			disperse(a, spec)
+		"hunt":
+			hunt(a, spec)
+		"bark":
+			bark(a, spec)
 
 ## From plain sight it lays a veil (unless a crowd is watching); from under one it lunges and strikes for `opener` times the damage (Stalk-kill).
 static func stalk(a: Ability, spec: Dictionary) -> void:
@@ -237,3 +252,56 @@ static func disperse(a: Ability, spec: Dictionary) -> void:
 	if a.actor.has_method("swarm_for"):
 		a.actor.swarm_for(float(spec.get("seconds", DISPERSE_SECONDS)))
 		Vfx.puffs(a.actor, Art.texture("spit_glob"), [a.actor.global_position + Vector2(-6, -6), a.actor.global_position + Vector2(6, -2), a.actor.global_position + Vector2(0, -10)], Color(0.3, 0.3, 0.3, 0.8), 0.5)
+
+## The first cast marks the nearest prey; the casts after it send an arrow that homes on the mark from twice as far as the mark reaches, whichever way the
+## caster faces. A new mark takes the old one's place (Mark).
+static func hunt(a: Ability, spec: Dictionary) -> void:
+	var actor = a.actor
+	var reach := float(spec.get("range", HUNT_RANGE))
+	var prey = actor.get_meta(PREY_KEY) if actor.has_meta(PREY_KEY) else null
+	if prey != null and is_instance_valid(prey) and prey.has_meta("verb_hunted") and prey.has_method("can_be_hit") and prey.can_be_hit() \
+			and prey.global_position.distance_to(actor.global_position) <= reach * 2.0:
+		VerbKinds._strike(a, [prey], spec)
+		Vfx.line(actor, actor.global_position, prey.global_position, VerbKinds._color(spec), 2.0, 0.3)
+		return
+	if prey != null and is_instance_valid(prey):
+		prey.remove_meta("verb_hunted")
+	var foes := a.targets_around(reach).filter(func(n): return n is Enemy)
+	if foes.is_empty():
+		return
+	foes[0].set_meta("verb_hunted", true)
+	actor.set_meta(PREY_KEY, foes[0])
+	Vfx.puffs(actor, Art.texture("spit_glob"), [foes[0].global_position + Vector2(0, -10)], Color(0.9, 0.7, 0.3, 0.8), 1.0)
+
+## Two barks warn (they wake what is in earshot and hold the caster still), and the third is a lunge that cannot be dodged: it lands from anywhere in range and
+## leaves the caster beside its prey. The count begins again after it, and after a pause (Three barks).
+static func bark(a: Ability, spec: Dictionary) -> void:
+	var actor = a.actor
+	var now := float(Engine.get_physics_frames()) / float(Engine.physics_ticks_per_second)
+	var n := int(actor.get_meta(BARK_KEY, 0))
+	if now - float(actor.get_meta(BARK_TIME, -1.0e9)) > BARK_STALE:
+		n = 0
+	n += 1
+	actor.set_meta(BARK_TIME, now)
+	var reach := float(spec.get("range", BARK_RANGE))
+	if n < 3:
+		actor.set_meta(BARK_KEY, n)
+		for e in actor.get_tree().get_nodes_in_group("actors"):
+			if e is Enemy and e.global_position.distance_to(actor.global_position) <= reach:
+				e.wake()
+		if actor.has_method("hold_still"):
+			actor.hold_still(float(spec.get("still", BARK_STILL)))
+		Vfx.puffs(actor, Art.texture("spit_glob"), [actor.global_position + Vector2(8, -10)], Color(0.7, 1.0, 0.7, 0.6), 0.4)
+		return
+	actor.set_meta(BARK_KEY, 0)
+	var foes := a.targets_around(reach).filter(func(x): return x is Enemy)
+	if foes.is_empty():
+		return
+	var prey: Enemy = foes[0]
+	var side := signf(prey.global_position.x - actor.global_position.x)
+	actor.global_position = prey.global_position + Vector2(-side * BARK_GAP, 0.0)
+	if "velocity" in actor:
+		actor.velocity = Vector2.ZERO
+	a.power_mult *= float(spec.get("lunge", BARK_LUNGE))
+	VerbKinds._strike(a, [prey], spec)
+	a.power_mult /= float(spec.get("lunge", BARK_LUNGE))

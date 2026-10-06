@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_undead_deadeye"
 display_name = "Sure shot"
-description = "Six sure shots, then a cursed seventh."
+description = "Six sure shots, then a cursed seventh that hits three times as hard and costs you 4 HP."
 announce = "New verb. Acquired [Sure shot]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [10], "spec": {"kind": "bolt", "range": 260, "pierce": false, "cooldown": 3.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [10], "spec": {"kind": "bolt", "range": 260, "pierce": false, "cursed": {"every": 7, "mult": 3.0, "hp": 4}, "cooldown": 2.0}}]
 mp_cost = 5

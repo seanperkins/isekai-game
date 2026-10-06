@@ -253,3 +253,30 @@ func test_float_hangs_in_the_air_and_the_body_is_very_frail_and_very_strong() ->
 	var f := _form("undead_demilich")
 	assert_lt(int(f.stats["max_hp"]), 10, "the frailest form")
 	assert_gte(int(f.stats["atk"]), 5, "very strong")
+
+# --- the spiders' hands, the true form and the web wall ---
+
+func test_hands_use_items_and_shoot_a_bow_and_slow_the_crawl() -> void:
+	var f := _form("spider_weavermaid")
+	assert_true(f.traits.has("needs_hands"))
+	assert_lt(int(f.stats.get("spd", 0)), 0, "a slower wall crawl")
+	player.skillset.capabilities["trait_needs_hands"] = 1
+	assert_false(player.can_use_items())
+	_cast("spider_weavermaid")
+	assert_true(player.can_use_items())
+
+func test_the_true_form_burrows_rises_a_giant_and_calls_the_young() -> void:
+	var scale := player.body_scale()
+	_cast("spider_tsuchigumo")
+	assert_gt(player.body_scale(), scale)
+	assert_true(player.is_unseen(), "burrowed")
+	assert_eq(get_tree().get_nodes_in_group("verb_allies").size(), 2)
+	for n in get_tree().get_nodes_in_group("verb_allies"):
+		n.free()
+
+func test_the_matriarchs_bite_is_heavy_and_spins_a_wall() -> void:
+	_cast("spider_cave_matriarch")
+	assert_true(player.is_held_still(), "slow")
+	assert_eq(get_tree().get_nodes_in_group("verb_walls").size(), 1)
+	for n in get_tree().get_nodes_in_group("verb_walls"):
+		n.free()

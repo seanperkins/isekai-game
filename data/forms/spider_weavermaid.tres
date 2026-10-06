@@ -15,8 +15,9 @@ stats = {
 "jump_height": 10,
 "max_hp": 5,
 "max_mp": 3,
-"spd": 8
+"spd": -2
 }
+traits = ["needs_hands"]
 grants = ["verb_spider_weavermaid"]
 verb = "verb_spider_weavermaid"
 tint = Color(0.75, 0.775, 0.925, 1)

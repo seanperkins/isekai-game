@@ -14,7 +14,8 @@ stats = {
 "atk": 2,
 "def": 2,
 "max_hp": 12,
-"max_mp": 6
+"max_mp": 6,
+"spd": -15
 }
 grants = ["verb_spider_cave_matriarch"]
 verb = "verb_spider_cave_matriarch"

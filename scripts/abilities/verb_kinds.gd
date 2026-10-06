@@ -5,19 +5,20 @@ extends RefCounted
 
 ## The scene every data-defined verb uses.
 const SCENE := "res://scenes/abilities/verb.tscn"
-const KINDS := ["bolt", "burst", "ring", "dash", "zone", "mark", "heal", "ward", "buff", "pull", "aura", "chain", "engulf", "dissolve", "glide", "anchor", "decoy", "summon", "vine", "transmute", "copy", "reveal", "bridge", "trap", "forge", "rage", "weigh", "devour", "raise", "soul", "companion", "offer", "suckle", "roar", "mount", "stone", "veil", "stalk", "swap", "blink", "light", "omen", "fate", "sabotage", "chase", "disperse"]
+const KINDS := ["bolt", "burst", "ring", "dash", "zone", "mark", "heal", "ward", "buff", "pull", "aura", "chain", "engulf", "dissolve", "glide", "anchor", "decoy", "summon", "vine", "transmute", "copy", "reveal", "bridge", "trap", "forge", "rage", "weigh", "devour", "raise", "soul", "hunt", "bark", "companion", "offer", "suckle", "roar", "mount", "stone", "veil", "stalk", "swap", "blink", "light", "omen", "fate", "sabotage", "chase", "disperse"]
 ## Each kind's keys and what they hold (validate() checks them). Every kind also takes `cooldown` (seconds, in place of the default);
 ## the kinds in TYPED also take damage_type, and those in STRIKES a status and `drain` (the fraction of the damage the caster heals).
 ## The keys of a window (Rage), as a verb's own spec (kind rage) or inside any verb's `rage`.
 const RAGE_KEYS := {"seconds": "number", "stats": "dict", "kill_refill": "number", "max_seconds": "number", "meter": "dict", "crash": "dict", "dry_lock": "number",
 	"forbids": "list", "resist": "dict", "no_flinch": "bool", "bleed": "number", "kill_resets": "list", "unseen_in_dark": "bool", "alone": "dict", "lasting": "dict",
-	"swell": "dict", "blow": "dict", "toggle": "bool", "beat": "number", "lock_blow": "bool"}
+	"swell": "dict", "blow": "dict", "hands": "bool", "size": "number", "burrow": "number", "recast": "dict", "toggle": "bool", "beat": "number", "lock_blow": "bool"}
 ## What a summon can be told (also inside any verb's `summon`): how many and for how long, whether they are mortal, what they look like, whether they web,
 ## pounce with the caller, follow its lead or carry parts, how late they come, whom they draw, what they turn, and what they hatch from.
 const SUMMON_KEYS := {"count": "number", "seconds": "number", "mortal": "bool", "hp": "number", "look": "text", "web": "bool", "echo": "bool", "command": "bool",
 	"carry": "bool", "delay": "number", "lure": "number", "turn": "dict", "from_cocoons": "number", "power_mult": "number", "focus": "dict"}
 const SCHEMA := {
-	"bolt": {"range": "number", "half_width": "number", "pierce": "bool"},
+	"bolt": {"range": "number", "half_width": "number", "pierce": "bool", "returns": "bool", "cursed": "dict", "spend_hp": "bool", "hp_scale": "number", "loose": "bool",
+		"reach_with": "dict", "spend_essence": "dict"},
 	"burst": {"range": "number", "half_width": "number"},
 	"ring": {"radius": "number"},
 	"dash": {"speed": "number", "vertical": "number", "hit_range": "number", "hit_half_width": "number", "opener": "number", "smoke": "number", "ride": "dict", "drop": "number", "dim": "number", "lit_mult": "number", "hops": "number", "hop_gap": "number", "hop_lift": "number"},
@@ -52,7 +53,7 @@ const TYPED := ["bolt", "burst", "ring", "dash", "mark", "zone", "pull", "aura",
 const STRIKES := ["bolt", "burst", "ring", "dash", "mark", "chain", "dissolve"]
 ## Keys any kind may carry: its cooldown and deed, how long it holds the caster still or locks its blow, the radius it wakes enemies in, whether it is a web
 ## (a veil that stops webbing refuses it) and whether it can be cast once between rests.
-const COMMON := {"cooldown": "number", "deed": "deed", "lock": "number", "still": "number", "alerts": "number", "web": "bool", "once_per_rest": "bool", "rage": "rage", "heft": "number", "summon": "dict", "rally": "dict", "curse": "dict", "blink": "dict"}
+const COMMON := {"cooldown": "number", "deed": "deed", "lock": "number", "still": "number", "alerts": "number", "web": "bool", "once_per_rest": "bool", "rage": "rage", "heft": "number", "summon": "dict", "rally": "dict", "curse": "dict", "blink": "dict", "alt": "dict", "wall": "dict", "needs_headroom": "number"}
 const STATUSES := ["slow", "stun", "root", "flee", "calm", "confuse"]
 const DASH_SPEED := 500.0
 const DASH_VERTICAL := 0.6
@@ -119,13 +120,28 @@ const BUFF_SOURCE := "verb_buff"
 const BUFF_GENERATION := "verb_buff_generation"
 const BOLT_RANGE := 260.0
 const BOLT_HALF_WIDTH := 20.0
+const BOLT_RETURN := 0.35
+const DYED_MULT := 1.5
+const LOOSE_RANGE := 220.0
 const BURST_RANGE := 60.0
 const BURST_HALF_WIDTH := 40.0
 const RING_RADIUS := 72.0
 const TYPE_COLOR := {"physical": Color(0.92, 0.92, 0.96), "poison": Color(0.55, 0.95, 0.3), "fire": Color(1.0, 0.55, 0.25),
 	"water": Color(0.45, 0.75, 1.0), "holy": Color(1.0, 0.92, 0.5), "dark": Color(0.65, 0.45, 0.9)}
 
-static func run(ability: Ability, spec: Dictionary) -> void:
+static func run(ability: Ability, spec_in: Dictionary) -> void:
+	var spec := spec_in
+	var actor_rage = ability.actor.get("rage")
+	if spec_in.has("recast") and actor_rage != null and actor_rage.active() and actor_rage.skill_id == ability.skill_id:
+		spec = spec_in["recast"]  # cast again with hands up: the other form of the verb
+	if spec.has("alt"):  # every second cast is the other form
+		var key := "verb_alt_%s" % ability.skill_id
+		var n := int(ability.actor.get_meta(key, 0))
+		ability.actor.set_meta(key, n + 1)
+		if n % 2 == 1:
+			spec = spec.duplicate()
+			spec.merge(spec["alt"], true)
+			spec.erase("alt")
 	var heft := float(spec.get("heft", 1.0))
 	ability.power_mult *= heft  # a heavy swing
 	ability.no_swing = false
@@ -217,6 +233,12 @@ static func _price(a: Ability, spec: Dictionary) -> void:
 		var call_: Dictionary = {}
 		call_.merge(spec["summon"], true)
 		_summon(a, call_)
+	if spec.has("wall"):  # a wall of web ahead
+		var w: Dictionary = spec["wall"]
+		var way := 1.0 if float(a.aim_dir().x) >= 0.0 else -1.0
+		var wall := VerbWall.new()
+		a.actor.get_parent().add_child(wall)
+		wall.launch(a.actor, a.actor.global_position + Vector2(way * float(w.get("ahead", 30.0)), BodyConfig.BOTTOM), float(w.get("height", 60.0)), float(w.get("seconds", 8.0)), float(w.get("root", 1.5)))
 	if spec.has("rally"):  # a horn rallies the caster's allies and companions
 		var r: Dictionary = spec["rally"]
 		for ally in a.actor.get_tree().get_nodes_in_group("verb_allies"):
@@ -266,17 +288,83 @@ static func spent(a: Ability, spec: Dictionary) -> bool:
 	return bool(spec.get("once_per_rest", false)) and a.actor != null and a.actor.has_meta(_spent_key(a))
 
 static func _bolt(a: Ability, spec: Dictionary) -> void:
+	var actor = a.actor
 	var dir := a.aim_dir()
-	var from := a.actor.global_position
+	var from: Vector2 = actor.global_position
 	var reach := float(spec.get("range", BOLT_RANGE))
+	if spec.has("reach_with"):  # a bow arm stretches it
+		var gear = actor.get("inventory")
+		if gear != null and gear.count(str(spec["reach_with"].get("part", ""))) > 0:
+			reach *= float(spec["reach_with"].get("mult", 1.0))
+	var mult := _shot_cost(a, spec)
 	var rock = a.terrain_hit(from, from + dir * reach)
 	if rock != null:
 		reach = from.distance_to(rock)
-	var targets := a.targets_in_front(reach, float(spec.get("half_width", BOLT_HALF_WIDTH)))
+	var half := float(spec.get("half_width", BOLT_HALF_WIDTH))
+	a.power_mult *= mult
+	_bolt_strike(a, spec, reach, half)
+	a.power_mult /= mult
+	Vfx.line(actor, from, from + dir * reach, _color(spec), 2.0, 0.25)
+	if bool(spec.get("returns", false)):  # a throw that returns
+		actor.get_tree().create_timer(BOLT_RETURN).timeout.connect(_bolt_returns.bind(a, spec, reach, half, mult))
+
+static func _bolt_strike(a: Ability, spec: Dictionary, reach: float, half: float) -> void:
+	var targets := a.targets_in_front(reach, half)
 	if not bool(spec.get("pierce", true)):
 		targets = targets.slice(0, 1)
 	_strike(a, targets, spec)
-	Vfx.line(a.actor, from, from + dir * reach, _color(spec), 2.0, 0.25)
+
+static func _bolt_returns(a, spec: Dictionary, reach: float, half: float, mult: float) -> void:  # untyped: the ability may be gone
+	if not is_instance_valid(a) or not is_instance_valid(a.actor) or not a.actor.is_inside_tree():
+		return
+	a.power_mult *= mult
+	_bolt_strike(a, spec, reach, half)
+	a.power_mult /= mult
+	Vfx.line(a.actor, a.actor.global_position + a.aim_dir() * reach, a.actor.global_position, _color(spec), 2.0, 0.25)
+
+## What a shot costs the caster and what it is worth: a cursed Nth shot (it hits harder and costs HP), HP spent on it (all but one, and each is worth `hp_scale`
+## damage), a loose object thrown, an essence that dyes it. The damage multiplier.
+static func _shot_cost(a: Ability, spec: Dictionary) -> float:
+	var actor = a.actor
+	var mult := 1.0
+	if spec.has("cursed"):
+		var key := "verb_shots_%s" % a.skill_id
+		var n := int(actor.get_meta(key, 0)) + 1
+		var c: Dictionary = spec["cursed"]
+		if n >= int(c.get("every", 7)):
+			n = 0
+			mult *= float(c.get("mult", 3.0))
+			var health = actor.get("health")
+			if health != null:
+				health.take_tick(int(c.get("hp", 4)))  # the seventh is the Devil's: it takes its due, but never the last HP
+		actor.set_meta(key, n)
+	if bool(spec.get("spend_hp", false)) and _pays(actor):
+		var health = actor.get("health")
+		if health != null:
+			var spent: int = maxi(0, health.hp - 1)
+			health.take_tick(spent)
+			var base := maxi(1, a.power())
+			mult *= float(base + roundi(float(spent) * float(spec.get("hp_scale", 1.0)))) / float(base)
+	if bool(spec.get("loose", false)) and _pays(actor):
+		var rock = _nearest_loose(actor)
+		if rock != null:
+			rock.remove_from_group("loose")
+			rock.queue_free()
+	if spec.has("spend_essence") and _pays(actor):
+		for e in spec["spend_essence"]:
+			actor.spend_essence_of(str(e), int(spec["spend_essence"][e]))
+		mult *= DYED_MULT
+	return mult
+
+static func _nearest_loose(actor) -> Node2D:
+	var best: Node2D = null
+	var best_d := LOOSE_RANGE
+	for n in actor.get_tree().get_nodes_in_group("loose"):
+		var d: float = n.global_position.distance_to(actor.global_position)
+		if d <= best_d:
+			best = n
+			best_d = d
+	return best
 
 static func _burst(a: Ability, spec: Dictionary) -> void:
 	var reach := float(spec.get("range", BURST_RANGE))
@@ -682,9 +770,27 @@ static func _veil(a: Ability, spec: Dictionary) -> void:
 ## Whether the caster can pay for the cast. Only a forge asks for anything: carried parts. A cast that cannot be paid for is not ready, so it
 ## costs nothing.
 static func can_run(a: Ability, spec: Dictionary) -> bool:
+	if spec.has("needs_headroom"):  # too big for a small gap
+		var from: Vector2 = a.actor.global_position
+		if a.terrain_hit(from, from + Vector2(0.0, -float(spec["needs_headroom"]))) != null:
+			return false
+	if _pays(a.actor):  # what a cast costs is a player's to pay: an enemy's verb is free
+		if bool(spec.get("spend_hp", false)):
+			var health = a.actor.get("health")
+			if health == null or health.hp <= 1:
+				return false  # nothing to spend
+		for e in spec.get("spend_essence", {}):
+			if a.actor.essence_held(str(e)) < int(spec["spend_essence"][e]):
+				return false  # needs the blood to dye it
+		if bool(spec.get("loose", false)) and _nearest_loose(a.actor) == null:
+			return false  # needs loose objects
 	if spec.get("kind", "") == "forge":
 		return a.actor.has_method("parts_carried") and a.actor.parts_carried() >= int(spec.get("parts", FORGE_PARTS))
 	return true
+
+## Whether the caster is a body that pays for a cast (a player), not an enemy.
+static func _pays(actor) -> bool:
+	return actor.has_method("essence_held")
 
 ## Spends carried parts on a lasting bonus to a stat for the life (Forge).
 static func _forge(a: Ability, spec: Dictionary) -> void:

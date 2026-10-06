@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_undead_skeletal_archer"
 display_name = "Bone throw"
-description = "Returning bone throws, bow arm."
+description = "Bone throw: a bone that flies out and returns to your hand, hitting twice. A bow-arm graft stretches its reach."
 announce = "New verb. Acquired [Bone throw]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [6], "spec": {"kind": "bolt", "range": 220, "pierce": false, "cooldown": 1.5}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [6], "spec": {"kind": "bolt", "range": 160, "half_width": 14, "pierce": false, "returns": true, "reach_with": {"part": "bow_arm", "mult": 1.5}, "cooldown": 3.0}}]
 mp_cost = 3

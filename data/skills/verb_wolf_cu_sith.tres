@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_wolf_cu_sith"
 display_name = "Three barks"
-description = "Two warnings, then a lunge you cannot dodge from range."
+description = "Three barks: two warnings that wake what is near and hold you still, then a lunge that cannot be dodged from range and hits three times as hard."
 announce = "New verb. Acquired [Three barks]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [9], "spec": {"kind": "bolt", "range": 240, "pierce": false, "cooldown": 5.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [9], "spec": {"kind": "bark", "range": 240, "still": 0.5, "lunge": 3.0, "cooldown": 1.5}}]
 mp_cost = 6

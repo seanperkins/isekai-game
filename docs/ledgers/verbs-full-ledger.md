@@ -10,7 +10,7 @@ Status: `todo`, `done` (full, tested), `kept approx` (needs a system that does n
 |---|---|---|---|---|---|---|---|
 | gleipnir | Bind | full | audit | **Bind**: roots one big enemy or boss for a few seconds | long cooldown | | todo |
 | shoggoth | Pseudopod | full | audit | **Pseudopod**: extrude long limbs for reach | shapeless: no steady form | | todo |
-| poltergeist | Hurl | approx | D | **Hurl**: throw loose rubble in the room at enemies | needs loose objects | | todo |
+| poltergeist | Hurl | approx | D | **Hurl**: throw loose rubble in the room at enemies | needs loose objects | tests/test_pack_d_forms.gd + test_pack_d_mechanics.gd | done |
 | kraken | Maelstrom | approx | E | **Maelstrom**: a whirlpool that pulls enemies in | pulls loose parts too | | todo |
 | tiamat | Flood | approx | E | **Flood**: fills the room's low ground with water for a while | it slows you too unless you swim | | todo |
 | alkahest | Dissolve | approx | E | **Dissolve**: eat through a weak gate, grate or armour plate | corrodes your own held parts | | todo |
@@ -38,7 +38,7 @@ Status: `todo`, `done` (full, tested), `kept approx` (needs a system that does n
 | wolf_black_shuck | Omen | approx | A | **Omen**: mark one enemy; it dies in ten seconds unless it cleanses | one mark at a time | tests/test_pack_a_forms.gd + test_verb_mind.gd | done |
 | wolf_cwn_annwn | Spectral pack | approx | C | **Spectral pack**: two echoes of you pounce with you | the echoes fade after eight seconds | tests/test_pack_c_forms.gd + test_verb_allies/companions/stones + test_pack_c_mechanics | done |
 | wolf_gabriel_hound | Hunt's passage | approx | E | **Hunt's passage**: the pack carries you over one gap (a short glide) | glide only after a kill | | todo |
-| wolf_cu_sith | Three barks | approx | D | **Three barks**: two warnings, then a lunge you cannot dodge from range | stand still to bark | | todo |
+| wolf_cu_sith | Three barks | approx | D | **Three barks**: two warnings, then a lunge you cannot dodge from range | stand still to bark | tests/test_pack_d_forms.gd + test_pack_d_mechanics.gd | done |
 | wolf_warg | Bond | approx | C | **Bond**: a heavier pounce, knockback, one bonded packmate | slow gallop | tests/test_pack_c_forms.gd + test_verb_allies/companions/stones + test_pack_c_mechanics | done |
 | wolf_dire_wolf | Tank | approx | B | **Tank**: the pounce knocks down heavy targets; knockback-proof | slow | tests/test_pack_b_forms.gd + test_rage.gd + test_pack_b_mechanics.gd | done |
 | wolf_fenrir | Unbound | approx | E | **Unbound**: breaks barriers and grates (a gate-breaking verb) | too big for small gaps | | todo |
@@ -55,15 +55,15 @@ Status: `todo`, `done` (full, tested), `kept approx` (needs a system that does n
 | undead_abomination | Cleaver | approx | B | **Heft** cleaver; extra graft slots (a stitched body) | stench; slow | tests/test_pack_b_forms.gd + test_rage.gd + test_pack_b_mechanics.gd | done |
 | undead_bone_warrior | Overhead cleave | approx | B | **Heft**: a slow overhead cleave and a shield | slow | tests/test_pack_b_forms.gd + test_rage.gd + test_pack_b_mechanics.gd | done |
 | undead_revenant_knight | Vengeance | approx | B | **Vengeance**: hits harder against the creature that killed your last life; heavy swings | slow turning; no ranged | tests/test_pack_b_forms.gd + test_rage.gd + test_pack_b_mechanics.gd | done |
-| undead_dullahan | Herald | approx | D | **Herald**: a long whip, a thrown head | no shield | | todo |
+| undead_dullahan | Herald | approx | D | **Herald**: a long whip, a thrown head | no shield | tests/test_pack_d_forms.gd + test_pack_d_mechanics.gd | done |
 | undead_bone_colossus | Juggernaut | approx | B | **Juggernaut**: double size, stomp and heft cleave; walks through hazards | too big for narrow gaps | tests/test_pack_b_forms.gd + test_rage.gd + test_pack_b_mechanics.gd | done |
 | undead_spartoi_hoplite | Sow | approx | C | **Shield wall**: block and spear thrust; sow two bone soldiers | rooted while sowing | tests/test_pack_c_forms.gd + test_verb_allies/companions/stones + test_pack_c_mechanics | done |
 | undead_sower_of_teeth | Squad | approx | C | a squad of four sown soldiers | weak alone | tests/test_pack_c_forms.gd + test_verb_allies/companions/stones + test_pack_c_mechanics | done |
 | undead_master_of_the_dance | Rise | approx | C | **Rise**: downed enemies stand up as dancers for ten seconds | only works near bodies | tests/test_pack_c_forms.gd + test_verb_allies/companions/stones + test_pack_c_mechanics | done |
-| undead_skeletal_archer | Bone throw | approx | D | Returning bone throws, bow arm. |  | | todo |
-| undead_deadeye | Sure shot | approx | D | six sure shots, then a cursed seventh | the seventh costs HP | | todo |
-| undead_arash | Life-arrow | approx | D | **Life-arrow**: spend most of your HP on one arrow that crosses the room and pierces | leaves you at 1 HP | | todo |
-| undead_wild_huntsman | Mark | approx | D | **Mark**: arrows home on one marked prey | one mark at a time | | todo |
+| undead_skeletal_archer | Bone throw | approx | D | Returning bone throws, bow arm. |  | tests/test_pack_d_forms.gd + test_pack_d_mechanics.gd | done |
+| undead_deadeye | Sure shot | approx | D | six sure shots, then a cursed seventh | the seventh costs HP | tests/test_pack_d_forms.gd + test_pack_d_mechanics.gd | done |
+| undead_arash | Life-arrow | approx | D | **Life-arrow**: spend most of your HP on one arrow that crosses the room and pierces | leaves you at 1 HP | tests/test_pack_d_forms.gd + test_pack_d_mechanics.gd | done |
+| undead_wild_huntsman | Mark | approx | D | **Mark**: arrows home on one marked prey | one mark at a time | tests/test_pack_d_forms.gd + test_pack_d_mechanics.gd | done |
 | undead_corpse_candle | Lure-light | approx | A | **Lure-light**: enemies follow a drifting light into hazards | the light shows where you are | tests/test_pack_a_forms.gd + test_verb_mind.gd | done |
 | undead_stingy_jack | Trick | approx | A | **Trick**: an enemy that touches your lure is held fast | needs the lure placed first | tests/test_pack_a_forms.gd + test_verb_mind.gd | done |
 | undead_banshee | Wail | full | A | **Wail**: a cone that stuns and frightens | wakes sleeping enemies | tests/test_pack_a_forms.gd + test_verb_mind.gd | done |
@@ -75,10 +75,10 @@ Status: `todo`, `done` (full, tested), `kept approx` (needs a system that does n
 | undead_mummy_priest | Wrap | full | audit | **Wrap**: bandages bind enemies; a sand gust | fire hurts | | todo |
 | undead_pharaoh | Decree | approx | C | **Decree**: a curse ring marks everything in the room; tomb guards rise | slow | tests/test_pack_c_forms.gd + test_verb_allies/companions/stones + test_pack_c_mechanics | done |
 | undead_heart_weigher | Weigh | approx | B | **Weigh**: if a creature's essence is lower than yours, drain it at once | useless against stronger foes | tests/test_pack_b_forms.gd + test_rage.gd + test_pack_b_mechanics.gd | done |
-| spider_weavermaid | Hands | approx | B | **Hands**: a person's torso on a spider body; uses items, tools and bows | a slower wall crawl | | todo |
+| spider_weavermaid | Hands | approx | B | **Hands**: a person's torso on a spider body; uses items, tools and bows | a slower wall crawl | tests/test_pack_b_forms.gd + test_pack_b3.gd | done |
 | spider_jorogumo | Veil | approx | A | **Veil**: pass as a goblin or villager (village standing reads you as welcome); revealing it bursts the veil | the veil drops when hit; no webbing while veiled | tests/test_pack_a_forms.gd + test_verb_mind.gd | done |
 | spider_seven_spider_spirits | Sisters | approx | C | **Sisters**: split into seven decoys that web | each decoy dies in one hit | tests/test_pack_c_forms.gd + test_verb_allies/companions/stones + test_pack_c_mechanics | done |
-| spider_tsuchigumo | True form | approx | B | **True form**: drop the veil into a giant; burrow a lair; call lesser spiders | too big for small gaps | | todo |
+| spider_tsuchigumo | True form | approx | B | **True form**: drop the veil into a giant; burrow a lair; call lesser spiders | too big for small gaps | tests/test_pack_b_forms.gd + test_pack_b3.gd | done |
 | spider_loom_weaver | Tapestry | approx | E | **Tapestry**: weave a patterned web that stays as a trap and a snare | slow to weave | | todo |
 | spider_norn | Fate thread | approx | A | **Fate thread**: tie a thread to an enemy; the next hit it lands on you is sent back | fragile | tests/test_pack_a_forms.gd + test_verb_mind.gd | done |
 | spider_anansi | Steal | needs | F | **Steal**: take a power or essence from a living enemy without killing it (the decided future method) | weak direct damage | | todo |
@@ -86,7 +86,7 @@ Status: `todo`, `done` (full, tested), `kept approx` (needs a system that does n
 | spider_brood_queen | Command | approx | C | **Command**: spiderlings follow your lead | fewer solo kills | tests/test_pack_c_forms.gd + test_verb_allies/companions/stones + test_pack_c_mechanics | done |
 | spider_cocoon_mother | Hatch | approx | C | prey cocooned alive hatch into stronger young | takes time | tests/test_pack_c_forms.gd + test_verb_allies/companions/stones + test_pack_c_mechanics | done |
 | spider_swarm_sovereign | Disperse | approx | A | **Disperse**: the body breaks into a swarm that squeezes through grates and reforms (a traversal gate) | cannot fight while dispersed | tests/test_pack_a_forms.gd + test_verb_mind.gd | done |
-| spider_cave_matriarch | Heavy bite | approx | B | a huge lone hunter: heavy bite, a web wall | slow; no small gaps | | todo |
+| spider_cave_matriarch | Heavy bite | approx | B | a huge lone hunter: heavy bite, a web wall | slow; no small gaps | tests/test_pack_b_forms.gd + test_pack_b3.gd | done |
 | spider_light_eater | Drink | approx | E | **Drink**: eat lamps and glow pools to darken a room and heal | hurt by sacred light | | todo |
 | spider_chasm_weaver | Span | approx | E | **Span**: spin a permanent web bridge across a gap (a traversal gate) | slow; both ends need anchors | | todo |
 | spider_stalker | Ambush | approx | B | **Ambush**: a ceiling drop and a web zip | weak in lit rooms | tests/test_pack_b_forms.gd + test_rage.gd + test_pack_b_mechanics.gd | done |
@@ -113,7 +113,7 @@ Status: `todo`, `done` (full, tested), `kept approx` (needs a system that does n
 | goblin_skulker | Sneak strike | approx | A | sneak strike, smoke bomb | weak in melee | tests/test_pack_a_forms.gd + test_verb_mind.gd | done |
 | goblin_redcap | Dye | approx | B | **Dye**: each kill refreshes a blood-cap timer for speed and damage; if it dries you lose it | idle play wastes it; holy words repel | tests/test_pack_b_forms.gd + test_rage.gd + test_pack_b_mechanics.gd | done |
 | goblin_ironboot | Stomp | approx | B | **Stomp**: a heavy kick with heft | slow to sneak | tests/test_pack_b_forms.gd + test_rage.gd + test_pack_b_mechanics.gd | done |
-| goblin_bloodcap | Cap-throw | approx | D | **Cap-throw**: a boomerang cap that returns, dyed | needs blood to dye it | | todo |
+| goblin_bloodcap | Cap-throw | approx | D | **Cap-throw**: a boomerang cap that returns, dyed | needs blood to dye it | tests/test_pack_d_forms.gd + test_pack_d_mechanics.gd | done |
 | goblin_puck | Mislead | approx | A | **Mislead**: illusions and decoys; reverse an enemy's facing | low damage | tests/test_pack_a_forms.gd + test_verb_mind.gd | done |
 | goblin_changeling | Swap | approx | A | **Swap**: trade places with a decoy; look like a creature to scout | the swap takes a beat | tests/test_pack_a_forms.gd + test_verb_mind.gd | done |
 | goblin_leprechaun | Pocket | approx | A | **Pocket**: pickpocket items from a living creature without killing it; a short teleport | low damage | tests/test_pack_a_forms.gd + test_verb_mind.gd | done |
@@ -121,7 +121,7 @@ Status: `todo`, `done` (full, tested), `kept approx` (needs a system that does n
 | goblin_tomte | Hearth | approx | C | **Hearth**: plant a ward-stone; creatures near it are slowed and you heal | static | tests/test_pack_c_forms.gd + test_verb_allies/companions/stones + test_pack_c_mechanics | done |
 | goblin_hearth_god | Lar | approx | C | **Lar**: ward-stones link into one wider aura | immobile when it counts | tests/test_pack_c_forms.gd + test_verb_allies/companions/stones + test_pack_c_mechanics | done |
 | goblin_boggart | Fear aura | approx | A | **Curse-stone** and a fear aura (a corrupted Tomte) | allies fear you too | tests/test_pack_c_forms.gd + test_verb_allies/companions/stones + test_pack_c_mechanics | done |
-| goblin_paladin | Blessed throw | approx | D | blessed throwables and a shield | slow | | todo |
+| goblin_paladin | Blessed throw | approx | D | blessed throwables and a shield | slow | tests/test_pack_d_forms.gd + test_pack_d_mechanics.gd | done |
 | goblin_horn_bearer | Horn | approx | B | **Horn**: a blast that stuns and rallies allies | loud | tests/test_pack_c_forms.gd + test_verb_allies/companions/stones + test_pack_c_mechanics | done |
 | goblin_giant_killer | Giant-slayer | approx | B | damage scales with the target's size | weak against small foes | tests/test_pack_b_forms.gd + test_rage.gd + test_pack_b_mechanics.gd | done |
 

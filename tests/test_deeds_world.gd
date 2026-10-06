@@ -124,19 +124,19 @@ func test_a_bolt_that_finds_a_foe_is_a_hit_and_one_that_finds_none_is_a_miss() -
 	add_child_autofree(foe)
 	foe.add_to_group("actors")
 	foe.global_position = Vector2(60, 0)
-	_cast("verb_wolf_cu_sith")
+	_cast("verb_undead_dullahan")
 	assert_eq(_named(Deeds.SKILL_HIT).size(), 1)
-	assert_eq(_named(Deeds.SKILL_HIT)[0][1], {"id": "verb_wolf_cu_sith"})
+	assert_eq(_named(Deeds.SKILL_HIT)[0][1], {"id": "verb_undead_dullahan"})
 	assert_eq(_named(Deeds.SKILL_MISSED).size(), 0)
 
 func test_a_bolt_into_empty_air_is_a_miss() -> void:
-	_cast("verb_wolf_cu_sith")
+	_cast("verb_undead_dullahan")
 	assert_eq(_named(Deeds.SKILL_MISSED).size(), 1)
-	assert_eq(_named(Deeds.SKILL_MISSED)[0][1], {"id": "verb_wolf_cu_sith"})
+	assert_eq(_named(Deeds.SKILL_MISSED)[0][1], {"id": "verb_undead_dullahan"})
 	assert_eq(_named(Deeds.SKILL_HIT).size(), 0)
 
 func test_a_non_striking_verb_is_neither() -> void:
-	_cast("verb_wolf_black_dog")  # a ward
+	_cast("verb_wolf_black_dog")  # a veil
 	assert_eq(_named(Deeds.SKILL_HIT).size() + _named(Deeds.SKILL_MISSED).size(), 0)
 
 # --- a switch struck from far away ---

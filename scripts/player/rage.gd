@@ -14,6 +14,7 @@ extends RefCounted
 ##   lasting {stat: amount}          paid when it ends, kept for the life (a curse)
 ##   swell {stat, per_kill, max}     each kill adds to a lasting stat, and to the body's size
 ##   blow {mult, knockback}          the pounce hits harder and shoves what it hits
+##   hands, size, burrow, recast     hands up (items usable), a bigger body, a burrow before it, another form of the verb when cast again
 ##   toggle, beat, lock_blow         a stance: no clock, cast again to drop it; a beat of stillness to take it; no pounce while it is up
 
 const SOURCE := "verb_rage"
@@ -34,8 +35,8 @@ var _hold := 0.0
 var _crash_left := 0.0
 var _mods: Array = []
 
-func start(owner, p_spec: Dictionary, p_skill_id: String) -> void:
-	_owner = owner
+func start(p_owner, p_spec: Dictionary, p_skill_id: String) -> void:
+	_owner = p_owner
 	spec = p_spec
 	skill_id = p_skill_id
 	_fed = false
@@ -46,6 +47,11 @@ func start(owner, p_spec: Dictionary, p_skill_id: String) -> void:
 	else:
 		meter = 0.0
 		left = 1.0e9 if bool(spec.get("toggle", false)) else float(spec.get("seconds", 5.0))
+	if spec.has("burrow"):  # under the ground first: untouchable, unseen and still
+		var b := float(spec["burrow"])
+		_owner.ward(b)
+		_owner.veil_for(b)
+		_owner.hold_still(b)
 	_apply()
 
 ## Ends it now, paying what it ends with.
@@ -61,6 +67,14 @@ func blow_mult() -> float:
 
 func blow_knockback() -> float:
 	return float(spec.get("blow", {}).get("knockback", 0.0)) if active() else 0.0
+
+## Hands up: the body can use items and tools (and its bow).
+func hands() -> bool:
+	return active() and bool(spec.get("hands", false))
+
+## The body's size while the window lasts (a giant), and as it has swollen.
+func size_mult() -> float:
+	return swell_size() * (float(spec.get("size", 1.0)) if active() else 1.0)
 
 func locks_blow() -> bool:
 	return active() and bool(spec.get("lock_blow", false))

@@ -54,5 +54,18 @@
       "no_drain",
       "dark_weak"
     ]
+  },
+  "spider_weavermaid": {
+    "traits": [
+      "needs_hands"
+    ],
+    "stats": {
+      "spd": -10
+    }
+  },
+  "spider_cave_matriarch": {
+    "stats": {
+      "spd": -15
+    }
   }
 }

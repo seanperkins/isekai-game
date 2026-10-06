@@ -233,6 +233,19 @@ def g_stone(d, fg):
     d.arc([3, 3, 29, 29], 200, 340, fill=fg, width=2)
 
 
+def g_hunt(d, fg):
+    d.ellipse([6, 6, 26, 26], outline=fg, width=2)
+    d.line([(16, 2), (16, 30)], fill=fg, width=1)
+    d.line([(2, 16), (30, 16)], fill=fg, width=1)
+    d.ellipse([13, 13, 19, 19], fill=fg)
+
+
+def g_bark(d, fg):
+    for r in (6, 10, 14):
+        d.arc([4 - r // 2, 16 - r, 4 + r * 2, 16 + r], -35, 35, fill=fg, width=2)
+    d.polygon([(3, 12), (11, 8), (11, 24), (3, 20)], fill=fg)
+
+
 def g_rage(d, fg):
     d.polygon([(16, 3), (22, 13), (30, 11), (23, 20), (26, 29), (16, 24), (6, 29), (9, 20), (2, 11), (10, 13)], fill=fg)
 
@@ -296,7 +309,7 @@ GLYPHS = {"bolt": g_bolt, "burst": g_burst, "ring": g_ring, "dash": g_dash, "zon
           "ward": g_ward, "buff": g_buff, "pull": g_pull, "aura": g_aura, "chain": g_chain, "engulf": g_engulf,
           "dissolve": g_dissolve, "glide": g_glide, "anchor": g_anchor, "decoy": g_decoy, "summon": g_summon, "vine": g_vine,
           "transmute": g_transmute, "copy": g_copy, "reveal": g_reveal, "bridge": g_bridge, "trap": g_trap, "forge": g_forge,
-          "rage": g_rage, "raise": g_raise, "soul": g_soul, "companion": g_companion, "offer": g_offer, "suckle": g_suckle, "roar": g_roar, "mount": g_mount, "stone": g_stone, "weigh": g_weigh, "devour": g_devour, "veil": g_veil, "stalk": g_stalk, "swap": g_swap, "blink": g_blink, "light": g_light, "omen": g_omen, "fate": g_fate,
+          "rage": g_rage, "hunt": g_hunt, "bark": g_bark, "raise": g_raise, "soul": g_soul, "companion": g_companion, "offer": g_offer, "suckle": g_suckle, "roar": g_roar, "mount": g_mount, "stone": g_stone, "weigh": g_weigh, "devour": g_devour, "veil": g_veil, "stalk": g_stalk, "swap": g_swap, "blink": g_blink, "light": g_light, "omen": g_omen, "fate": g_fate,
           "sabotage": g_sabotage, "chase": g_chase, "disperse": g_disperse}
 
 

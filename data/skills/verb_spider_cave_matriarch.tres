@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_spider_cave_matriarch"
 display_name = "Heavy bite"
-description = "A huge lone hunter: heavy bite, a web wall."
+description = "A slow, heavy bite, and a wall of web spun ahead that holds each enemy crossing it."
 announce = "New verb. Acquired [Heavy bite]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [12], "spec": {"kind": "burst", "range": 55, "half_width": 40, "cooldown": 5.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [12], "spec": {"kind": "burst", "range": 55, "half_width": 40, "heft": 2.0, "wall": {"ahead": 40, "height": 60, "seconds": 8.0, "root": 1.5}, "cooldown": 5.0}}]
 mp_cost = 6

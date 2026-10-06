@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_spider_weavermaid"
 display_name = "Hands"
-description = "A person's torso on a spider body; uses items, tools and bows."
+description = "Hands: raise a person's torso to use items and tools (+2 ATK); cast again with them up to shoot a bow. Without hands up you cannot use items."
 announce = "New verb. Acquired [Hands]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "buff", "stats": {"atk": 2}, "seconds": 8.0, "cooldown": 12.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [3], "spec": {"kind": "rage", "toggle": true, "hands": true, "beat": 0.3, "stats": {"atk": 2}, "recast": {"kind": "bolt", "range": 220, "half_width": 10, "pierce": false}, "cooldown": 1.0}}]
 mp_cost = 4

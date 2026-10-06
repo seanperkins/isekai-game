@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_undead_wild_huntsman"
 display_name = "Mark"
-description = "Arrows home on one marked prey."
+description = "Mark: the first cast marks the nearest prey; the next arrows home on it from twice as far, whichever way you face. One mark at a time."
 announce = "New verb. Acquired [Mark]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [12], "spec": {"kind": "mark", "range": 260, "delay": 3.0, "cooldown": 8.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [12], "spec": {"kind": "hunt", "range": 260, "cooldown": 2.0}}]
 mp_cost = 6

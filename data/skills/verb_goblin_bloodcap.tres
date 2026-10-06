@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_goblin_bloodcap"
 display_name = "Cap-throw"
-description = "A boomerang cap that returns, dyed."
+description = "Cap-throw: a boomerang cap, dyed with a blood essence you spend, that returns through everything it hit and hits half again as hard."
 announce = "New verb. Acquired [Cap-throw]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [8], "spec": {"kind": "bolt", "range": 200, "pierce": true, "cooldown": 3.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [8], "spec": {"kind": "bolt", "range": 200, "pierce": true, "returns": true, "spend_essence": {"blood": 1}, "cooldown": 3.0}}]
 mp_cost = 5

@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_undead_arash"
 display_name = "Life-arrow"
-description = "Spend most of your HP on one arrow that crosses the room and pierces."
+description = "Life-arrow: spend all but one of your HP on one arrow that crosses the room and pierces, worth two damage for each HP spent."
 announce = "New verb. Acquired [Life-arrow]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [20], "spec": {"kind": "bolt", "range": 400, "pierce": true, "cooldown": 20.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [20], "spec": {"kind": "bolt", "range": 400, "pierce": true, "spend_hp": true, "hp_scale": 2.0, "cooldown": 20.0}}]
 mp_cost = 6

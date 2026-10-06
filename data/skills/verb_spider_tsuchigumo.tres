@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_spider_tsuchigumo"
 display_name = "True form"
-description = "Drop the veil into a giant; burrow a lair; call lesser spiders."
+description = "True form: burrow a lair (a moment underground, untouchable and unseen), then rise as a giant and call two lesser spiders. Needs room to grow."
 announce = "New verb. Acquired [True form]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "buff", "stats": {"max_hp": 10, "atk": 3}, "seconds": 10.0, "cooldown": 25.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [0], "spec": {"kind": "rage", "seconds": 10.0, "stats": {"max_hp": 10, "atk": 3}, "size": 1.5, "burrow": 1.0, "summon": {"count": 2, "seconds": 10.0, "mortal": true, "look": "spider", "hp": 2}, "needs_headroom": 48, "cooldown": 25.0}}]
 mp_cost = 8

@@ -22,6 +22,7 @@ const TRAITS := {
 	"light_frail": "Take half again as much from holy light.",
 	"no_drain": "Your blows do not drain life.",
 	"dark_weak": "Dark powers hit half as hard.",
+	"needs_hands": "Items and tools can only be used with your hands up.",
 }
 const THREAD_SKILLS := ["sticky_thread", "swing_thread", "binding_web"]
 const WATER_SKILLS := ["hydraulic_propulsion", "water_blade", "jet_dash"]

@@ -6,8 +6,8 @@
 script = ExtResource("1_rpc81")
 id = "verb_goblin_paladin"
 display_name = "Blessed throw"
-description = "Blessed throwables and a shield."
+description = "Blessed throw: a holy throw, and your shield goes up behind it: two fifths of all damage blocked for a moment."
 announce = "New verb. Acquired [Blessed throw]."
 source = "form_verb"
-effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [7], "spec": {"kind": "bolt", "range": 180, "pierce": false, "damage_type": "holy", "cooldown": 2.0}}]
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [7], "spec": {"kind": "bolt", "range": 180, "pierce": false, "damage_type": "holy", "rage": {"seconds": 1.5, "resist": {"*": 40}}, "cooldown": 2.0}}]
 mp_cost = 4

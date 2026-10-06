@@ -1034,7 +1034,7 @@ func parts_carried() -> int:
 ## Spends `parts` carried parts (never a worn graft) on `amount` more of `stat` for the rest of the life; forges stack. False, and nothing
 ## spent, when too few are carried.
 func forge(stat: String, amount: int, parts: int) -> bool:
-	if rage.forbids("items") or parts_carried() < parts:
+	if not can_use_items() or parts_carried() < parts:
 		return false
 	for i in parts:
 		inventory.take_carried()
@@ -1056,7 +1056,7 @@ func companion_cap() -> int:
 ## that can be tamed by offering it one carried part (and learns it). The creature leaves the room and follows as a Companion. True when
 ## a bond was made; a refused bond (no one in reach, the cap, nothing to offer, the wrong species) costs nothing.
 func try_bond() -> bool:
-	if rage.forbids("items") or health.is_dead() or companions.size() >= companion_cap() or get_parent() == null:
+	if not can_use_items() or health.is_dead() or companions.size() >= companion_cap() or get_parent() == null:
 		return false
 	var kind := "pack" if species == "wolf" else ("tame" if species == "goblin" else "")
 	if kind == "":
@@ -1089,7 +1089,7 @@ func add_companion(def: CreatureDef, at: Vector2, opts := {}) -> Companion:
 
 ## Offers a carried part to the nearest weakened creature that can be tamed (hurt to `weak` of its health, or stunned): it follows (Offer). True when one took it.
 func try_offer(reach: float, weak := 0.5) -> bool:
-	if rage.forbids("items") or health.is_dead() or companions.size() >= companion_cap() or get_parent() == null or inventory.carried_parts().is_empty():
+	if not can_use_items() or health.is_dead() or companions.size() >= companion_cap() or get_parent() == null or inventory.carried_parts().is_empty():
 		return false
 	var target = _nearest_in_group("predatable", reach, func(n) -> bool:
 		return n is Enemy and not n.dormant and not n.hunting and n.def.bonds.has("tame") and n.status.state != EnemyStatus.GONE \
@@ -1127,7 +1127,7 @@ func try_pickpocket() -> bool:
 
 ## The same, for any body that has the knack (a verb's blink), within `reach`.
 func pickpocket(reach: float) -> bool:
-	if rage.forbids("items") or health.is_dead():
+	if not can_use_items() or health.is_dead():
 		return false
 	var target = _nearest_in_group("predatable", reach, func(n) -> bool: return n.has_method("can_be_robbed") and n.can_be_robbed())
 	if target == null:
@@ -1266,7 +1266,7 @@ func form_size() -> float:
 
 func body_scale() -> float:
 	var d := form_def()
-	return d.size if d != null and _form_sheet == null else 1.0
+	return (d.size if d != null and _form_sheet == null else 1.0) * rage.size_mult()
 
 ## Evolves the body into `id`: a legal next form, and (unless `force`, for tests and debugging) the level
 ## cap reached. Resets the level (keeping the level bonuses), raises the skill cap and re-checks
@@ -1651,6 +1651,10 @@ func break_veil() -> void:
 		if v.caster == self:
 			v.tear()
 
+## Whether the body can use items and tools now: not in a frenzy, and a body that needs hands (a half-spider) only with them up.
+func can_use_items() -> bool:
+	return not rage.forbids("items") and (not skillset.has("trait_needs_hands") or rage.hands())
+
 ## Opens a window (Rage) for the verb `skill_id`.
 func rage_start(spec: Dictionary, skill_id: String) -> void:
 	if bool(spec.get("toggle", false)) and rage.active() and rage.skill_id == skill_id:
@@ -1718,6 +1722,13 @@ func echo_pounce() -> void:
 	for a in get_tree().get_nodes_in_group("verb_allies"):
 		if a.caster == self and a.echo:
 			a.pounce()
+
+## How much of an element is held, and spending some of it (a dyed shot).
+func essence_held(element: String) -> int:
+	return _rules.held(element)
+
+func spend_essence_of(element: String, n: int) -> bool:
+	return _rules.spend_essence(element, n)
 
 ## Ties a thread to `enemy`: the next blow it lands on the player is sent back to it (Fate thread). One thread at a time.
 func fate_tie(enemy: Enemy, seconds: float) -> void:
