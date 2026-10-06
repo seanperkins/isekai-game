@@ -7,6 +7,7 @@ script = ExtResource("1_q4dwy")
 id = "goblin"
 display_name = "Goblin"
 movement_profile = "biped"
+verb = "verb_goblin"
 unlock = {
 "creature": "armed_ant",
 "kind": "count",

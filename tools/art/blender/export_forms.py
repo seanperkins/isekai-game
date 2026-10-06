@@ -116,14 +116,26 @@ def install(creature, form, folder, root=ROOT, assemble=True, check=True):
     return form_id(creature, form), clips_of(meta)
 
 
-def write_clips(table, root=ROOT):
-    """Merge {form id: clips} into data/form_clips.json, in form-id order."""
+SPECIES = ("goblin", "wolf", "undead", "spider")   # the families whose forms are named <species>_<form>; the slime's are bare
+
+
+def split_id(fid):
+    """(species, form) of an id `form_id` made: wolf_fenrir is ("wolf", "fenrir"), kraken ("slime", "kraken")."""
+    head, _, rest = fid.partition("_")
+    return (head, rest) if head in SPECIES and rest else ("slime", fid)
+
+
+def write_clips(table, root=ROOT, speeds=None):
+    """Merge {form id: clips} into data/form_clips.json, in form-id order. `speeds` ({form id: px/s}) are the walking speeds the clips were built
+    for, kept under "_walk_speeds": a body that is not the enemy (the player as that form) plays a walk at the speed it really goes against it."""
     path = os.path.join(root, CLIPS_PATH)
     current = {}
     if os.path.exists(path):
         with open(path) as fh:
             current = json.load(fh)
     current.update(table)
+    if speeds:
+        current["_walk_speeds"] = dict(sorted(dict(current.get("_walk_speeds", {}), **speeds).items()))
     with open(path, "w") as fh:
         json.dump({k: current[k] for k in sorted(current)}, fh, indent=1)
         fh.write("\n")
@@ -147,12 +159,13 @@ def main(argv=None):
         forms, left_out = wearable(a.creature, forms)
         for form in left_out:
             print("left out %s: no twin wears it" % form, flush=True)
-    table = {}
+    table, speeds = {}, {}
     for form in forms:
         fid, c = install(a.creature, form, os.path.join(source, form))
         table[fid] = c
+        speeds[fid] = round(sizing.speed_of(a.creature, form), 3)
         print("installed", fid, flush=True)
-    write_clips(table)
+    write_clips(table, ROOT, speeds)
     print("wrote", CLIPS_PATH)
     return 0
 

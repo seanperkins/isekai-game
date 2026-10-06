@@ -37,7 +37,7 @@ func _init() -> void:
 	var failures := 0
 	failures += _save(_slime(), "res://data/species/slime.tres")
 	failures += _save(_species("wolf", "Wolf", "wolf", {"kind": "defeat", "creature": "gloom_wolf"}), "res://data/species/wolf.tres")
-	failures += _save(_species("goblin", "Goblin", "biped", {"kind": "count", "creature": "armed_ant", "n": 3}), "res://data/species/goblin.tres")
+	failures += _save(_species("goblin", "Goblin", "biped", {"kind": "count", "creature": "armed_ant", "n": 3}, "verb_goblin"), "res://data/species/goblin.tres")
 	failures += _save(_species("undead", "Undead", "biped", {"kind": "count", "creature": "bog_lizardman", "n": 3}), "res://data/species/undead.tres")
 	failures += _save(_species("spider", "Spider", "spider", {"kind": "count", "creature": "spider", "n": 5}), "res://data/species/spider.tres")
 	failures += _save(_stats_perk(), "res://data/perks/stats.tres")
@@ -47,11 +47,12 @@ func _init() -> void:
 
 ## The goblin's and the undead's unlocks name stand-in creatures (an armed ant, a bog lizardman) until the goblin and the skeleton exist
 ## as creatures (F1); the wolf and the spider use the ones that are in the game.
-func _species(id: String, display_name: String, profile: String, unlock: Dictionary) -> SpeciesDef:
+func _species(id: String, display_name: String, profile: String, unlock: Dictionary, verb := "") -> SpeciesDef:
 	var d := SpeciesDef.new()
 	d.id = id
 	d.display_name = display_name
 	d.movement_profile = profile
+	d.verb = verb
 	d.unlock = unlock
 	return d
 

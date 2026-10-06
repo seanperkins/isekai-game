@@ -90,6 +90,30 @@ class TimingTest(unittest.TestCase):
             ex.check_timing(self.meta([0.2, 0.15, 0.1, 0.2], hurt=(0.4,)), self.CONSTANTS)
 
 
+class SpeedsTest(unittest.TestCase):
+    def test_a_form_id_is_split_back_into_its_species_and_form(self):
+        self.assertEqual(ex.split_id("wolf_fenrir"), ("wolf", "fenrir"))
+        self.assertEqual(ex.split_id("goblin_giant_killer"), ("goblin", "giant_killer"))
+        self.assertEqual(ex.split_id("undead_bone_colossus"), ("undead", "bone_colossus"))
+        self.assertEqual(ex.split_id("kraken"), ("slime", "kraken"), "the slime's forms are named bare")
+
+    def test_the_clip_file_carries_each_forms_walk_speed_beside_its_clips(self):
+        import json
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            os.makedirs(os.path.join(tmp, "data"))
+            ex.write_clips({"wolf_fenrir": {"idle": {"frames": ["a"], "fps": 1.0, "loop": True}}}, tmp, {"wolf_fenrir": 41.5})
+            with open(os.path.join(tmp, ex.CLIPS_PATH)) as fh:
+                data = json.load(fh)
+            self.assertEqual(data["_walk_speeds"], {"wolf_fenrir": 41.5})
+            self.assertIn("idle", data["wolf_fenrir"])
+            ex.write_clips({"wolf_warg": {"idle": {"frames": ["b"], "fps": 1.0, "loop": True}}}, tmp, {"wolf_warg": 50.0})
+            with open(os.path.join(tmp, ex.CLIPS_PATH)) as fh:
+                data = json.load(fh)
+            self.assertEqual(data["_walk_speeds"], {"wolf_fenrir": 41.5, "wolf_warg": 50.0}, "a later export keeps the others' speeds")
+            self.assertEqual(sorted(k for k in data if not k.startswith("_")), ["wolf_fenrir", "wolf_warg"])
+
+
 class WearableTest(unittest.TestCase):
     def test_a_form_with_no_twin_to_wear_its_clips_is_left_out(self):
         have = {"twin_spider_norn.tres", "twin_kraken.tres"}

@@ -53,11 +53,11 @@ spawns = [{
 }, {
 "by": "PL",
 "id": "twin_brook",
-"pos": Vector2(60.75, 314)
+"pos": Vector2(57, 314)
 }, {
 "by": "PL",
 "id": "twin_tide",
-"pos": Vector2(201.76, 314)
+"pos": Vector2(198.4, 314)
 }]
 exits = [{
 "edge": "bottom",

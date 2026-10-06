@@ -50,7 +50,7 @@ spawns = [{
 "pos": Vector2(800, 314)
 }, {
 "by": "PL",
-"id": "chapel_priest",
+"id": "twin_radiant",
 "pos": Vector2(57, 314)
 }, {
 "by": "PL",

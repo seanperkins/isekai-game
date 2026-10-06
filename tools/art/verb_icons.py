@@ -183,8 +183,13 @@ GLYPHS = {"bolt": g_bolt, "burst": g_burst, "ring": g_ring, "dash": g_dash, "zon
           "transmute": g_transmute, "copy": g_copy, "reveal": g_reveal, "bridge": g_bridge, "trap": g_trap, "forge": g_forge}
 
 
+BASE_TINTS = {"goblin": (112, 158, 74)}   # a species' own verb has no form file: the colour of its body
+
+
 def form_tint(form):
-    """The (r, g, b) bytes of a form's tint, read from its data file."""
+    """The (r, g, b) bytes of a form's tint, read from its data file (a species' own verb: its body's colour)."""
+    if form in BASE_TINTS:
+        return BASE_TINTS[form]
     with open("data/forms/%s.tres" % form, encoding="utf-8") as fh:
         m = re.search(r"^tint = Color\(([^)]*)\)", fh.read(), re.M)
     return tuple(int(round(float(c) * 255)) for c in m.group(1).split(",")[:3])
@@ -201,7 +206,7 @@ def icon(kind, tint):
 
 
 def build(rows=None, out_dir=OUT):
-    rows = bfv.load_rows() if rows is None else rows
+    rows = bfv.all_rows() if rows is None else rows
     os.makedirs(out_dir, exist_ok=True)
     names = []
     for r in rows:

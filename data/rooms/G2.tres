@@ -134,7 +134,7 @@ spawns = [{
 }, {
 "by": "PL",
 "id": "twin_toxic",
-"pos": Vector2(537.76, 674)
+"pos": Vector2(534.4, 674)
 }, {
 "by": "PL",
 "id": "twin_weaver",
@@ -142,7 +142,7 @@ spawns = [{
 }, {
 "by": "PL",
 "id": "wild_slime",
-"pos": Vector2(199, 674)
+"pos": Vector2(196, 674)
 }]
 exits = [{
 "edge": "left",

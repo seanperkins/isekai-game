@@ -11,6 +11,15 @@ static func load_all(dir := DIR) -> Dictionary:
 		out[d.id] = d
 	return out
 
+static var _verbs := {}
+
+## The form_verb skill a species starts a life with, "" for none or an unknown species (the data is read once).
+static func verb_of(species: String) -> String:
+	if _verbs.is_empty():
+		for id in load_all():
+			_verbs[id] = load_all()[id].verb
+	return str(_verbs.get(species, ""))
+
 ## The unlocked species for the Bestiary `records`: the default kind first, then by id.
 static func unlocked(catalog: Dictionary, records: Dictionary) -> Array:
 	var out: Array = catalog.values().filter(func(d: SpeciesDef) -> bool: return SpeciesUnlocks.is_unlocked(d, records))

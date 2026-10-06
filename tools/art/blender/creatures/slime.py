@@ -44,9 +44,13 @@ def motion(variant):
     return forms.speed_of(variant)
 
 
+BASE_SHRINK = 0.88   # the player's slime is drawn this much smaller than the drawing it replaced (Sean, 2026-10-06: a little smaller)
+
+
 def today(variant):
     base = (os.path.join(HERE, "before", "slime_base.json"), "idle_1") if variant in (None, "slime") else None   # the sheet it replaced, saved before the render took its place
-    return sizing.today("slime", variant, _form(variant)["width"], base)
+    w, h = sizing.today("slime", variant, _form(variant)["width"], base)
+    return (w * BASE_SHRINK, h * BASE_SHRINK if h else h) if base is not None else (w, h)
 
 
 def clips_of(rig, variant):

@@ -19,6 +19,7 @@ SKIN = (104, 124, 66)
 AMBER = (232, 184, 84)
 NEAR, FAR = skeleton.NEAR, skeleton.FAR
 BASE_BX, BASE_TALL = skeleton.BASE_BX, skeleton.BASE_TALL
+BASE_LIMB = 1.3   # the limbs are this much thicker than the reference sheet's wire-thin ones, so an arm or a leg is two pixels wide at sprite size, not one
 HEAD_FIT = dict(anchor=(0.12, 0.0, 1.38), scale=0.80)
 TORSO_FIT = dict(axis=0.03, sx=0.58, sy=0.80)
 
@@ -36,6 +37,7 @@ class Goblin:
         self.rig, self.form, self.pre, self.s, self.o = rig, form, pre, scale, origin
         self.bx = form.get("bx", 1.0) * BASE_BX        # build: widens every part
         self.tall = form.get("tall", 1.0) * BASE_TALL    # stretches every height
+        self.limb = form.get("limb", 1.0) * BASE_LIMB    # thickens every arm and leg (and a little their joints, hands and feet)
         self.skin = form.get("skin", SKIN)
         self.root_parent = None  # the bone this goblin's hips hang from (a mount's spine)
         self.zones = {}          # bone -> "head", "torso" or "" (what fit its gear is drawn through)
@@ -169,20 +171,21 @@ class Goblin:
             self.blade("ear_" + s, root, tip, 0.095, 0.022, "ear_" + s, sk, far=s == "f", raw=True)
             self.e("eye_" + s, (0.255 * hd, y * 0.088, 1.572), (0.034, 0.034, 0.034), "head", AMBER, far=s == "f", glow=True, seg=8, rings=6, raw=True)
         self.e("tooth", (0.255 * hd, -0.045, 1.425), (0.016, 0.014, 0.034), "head", (232, 228, 200), seg=6, rings=4, raw=True)
-        # arms: thin, tapering, with a round elbow and a mitten of a hand
+        # arms: tapering, with a round elbow and a mitten of a hand
+        t, j = self.limb, 1.0 + 0.6 * (self.limb - 1.0)   # limbs scale by `limb`, the joints and hands by a little less
         for s, y in (("n", NEAR), ("f", FAR)):
             far = s == "f"
-            self.e("shoulder_" + s, (0.06, y, 1.27), (0.074, 0.070, 0.074), "arm_" + s, sk, far, raw=True, seg=8, rings=6)
-            self.l("arm_" + s, (0.06, y, 1.27), (0.10, y, 1.02), 0.052, 0.040, "arm_" + s, sk, far, sides=6, raw=True)
-            self.e("elbow_" + s, (0.10, y, 1.02), (0.044, 0.044, 0.044), "arm_" + s, sk, far, raw=True, seg=8, rings=6)
-            self.l("fore_" + s, (0.10, y, 1.02), (0.24, y, 0.79), 0.040, 0.030, "fore_" + s, sk, far, sides=6, raw=True)
-            self.e("hand_" + s, (0.25, y, 0.76), (0.050, 0.042, 0.052), "fore_" + s, sk, far, raw=True, seg=8, rings=6)
-        # legs: a thigh tapering to a round knee, a thin shin, a flat foot
+            self.e("shoulder_" + s, (0.06, y, 1.27), (0.074 * j, 0.070 * j, 0.074 * j), "arm_" + s, sk, far, raw=True, seg=8, rings=6)
+            self.l("arm_" + s, (0.06, y, 1.27), (0.10, y, 1.02), 0.052 * t, 0.040 * t, "arm_" + s, sk, far, sides=6, raw=True)
+            self.e("elbow_" + s, (0.10, y, 1.02), (0.044 * j, 0.044 * j, 0.044 * j), "arm_" + s, sk, far, raw=True, seg=8, rings=6)
+            self.l("fore_" + s, (0.10, y, 1.02), (0.24, y, 0.79), 0.040 * t, 0.030 * t, "fore_" + s, sk, far, sides=6, raw=True)
+            self.e("hand_" + s, (0.25, y, 0.76), (0.050 * j, 0.042 * j, 0.052 * j), "fore_" + s, sk, far, raw=True, seg=8, rings=6)
+        # legs: a thigh tapering to a round knee, a shin, a flat foot
         for s, y in (("n", skeleton.LEG_NEAR), ("f", skeleton.LEG_FAR)):
             far = s == "f"
-            self.l("thigh_" + s, (0.0, y, 0.80), (0.03, y, 0.48), 0.066, 0.046, "thigh_" + s, sk, far, sides=6, raw=True)
-            self.e("knee_" + s, (0.03, y, 0.48), (0.048, 0.048, 0.048), "thigh_" + s, sk, far, raw=True, seg=8, rings=6)
-            self.l("shin_" + s, (0.03, y, 0.48), (0.0, y, 0.11), 0.040, 0.026, "shin_" + s, sk, far, sides=6, raw=True)
+            self.l("thigh_" + s, (0.0, y, 0.80), (0.03, y, 0.48), 0.066 * t, 0.046 * t, "thigh_" + s, sk, far, sides=6, raw=True)
+            self.e("knee_" + s, (0.03, y, 0.48), (0.048 * j, 0.048 * j, 0.048 * j), "thigh_" + s, sk, far, raw=True, seg=8, rings=6)
+            self.l("shin_" + s, (0.03, y, 0.48), (0.0, y, 0.11), 0.040 * t, 0.026 * t, "shin_" + s, sk, far, sides=6, raw=True)
             self.foot("foot_" + s, s, "foot_" + s, sk, far=far)
 
     def neck(self, rgb):

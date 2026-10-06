@@ -57,9 +57,9 @@ def pose(body, name, k=0):
         else:
             _set(body, rot, 44.0, 28.0, {"arm_n": 112, "fore_n": 68, "arm_f": 108, "fore_f": 60},
                  {"thigh_n": 88, "shin_n": -4, "foot_n": 18, "thigh_f": 36, "shin_f": -24, "foot_f": 10})
-    elif name == "wall":    # clinging face to the wall: hands up on it, the near foot braced against it, the other lower
-        _set(body, rot, -4.0, 6.0, {"arm_n": 136, "fore_n": 158, "arm_f": 128, "fore_f": 150},
-             {"thigh_n": 76, "shin_n": 18, "foot_n": 70, "thigh_f": 38, "shin_f": -8, "foot_f": 10})
+    elif name == "wall":    # clinging face to the wall: leaning into it, one hand high on it and the other lower, the near knee up and its foot flat against it
+        _set(body, rot, 16.0, 4.0, {"arm_n": 128, "fore_n": 150, "arm_f": 100, "fore_f": 118},
+             {"thigh_n": 100, "shin_n": 24, "foot_n": 92, "thigh_f": 58, "shin_f": 8, "foot_f": 70})
     elif name == "land":    # the weight comes down: a deep crouch, the arms forward
         hip = (body.hip[0], body.hip_z(0.60))
         _set_planted(body, rot, hip, lean0 + 14, head0 + 6, {"arm_n": 78, "fore_n": 100, "arm_f": 70, "fore_f": 94})

@@ -5,108 +5,108 @@
  "frames": [
   {
    "name": "idle_1",
-   "width": 46,
+   "width": 40,
    "native": true
   },
   {
    "name": "idle_2",
-   "width": 47,
+   "width": 41,
    "native": true
   },
   {
    "name": "run_1",
-   "width": 59,
+   "width": 52,
    "native": true
   },
   {
    "name": "run_2",
-   "width": 45,
+   "width": 40,
    "native": true
   },
   {
    "name": "run_3",
-   "width": 49,
+   "width": 43,
    "native": true
   },
   {
    "name": "run_4",
-   "width": 46,
+   "width": 40,
    "native": true
   },
   {
    "name": "rise",
-   "width": 43,
+   "width": 38,
    "native": true
   },
   {
    "name": "fall",
-   "width": 46,
+   "width": 40,
    "native": true
   },
   {
    "name": "land",
-   "width": 59,
+   "width": 52,
    "native": true
   },
   {
    "name": "wall_1",
-   "width": 45,
+   "width": 40,
    "native": true
   },
   {
    "name": "wall_2",
-   "width": 43,
+   "width": 38,
    "native": true
   },
   {
    "name": "tackle",
-   "width": 57,
+   "width": 50,
    "native": true,
    "attack_from": 0.62
   },
   {
    "name": "spread_1",
-   "width": 61,
-   "native": true
-  },
-  {
-   "name": "spread_2",
-   "width": 68,
-   "native": true
-  },
-  {
-   "name": "hurt",
    "width": 53,
    "native": true
   },
   {
+   "name": "spread_2",
+   "width": 60,
+   "native": true
+  },
+  {
+   "name": "hurt",
+   "width": 47,
+   "native": true
+  },
+  {
    "name": "rope",
-   "width": 45,
+   "width": 40,
    "native": true
   },
   {
    "name": "cover_1",
-   "width": 46,
+   "width": 40,
    "native": true
   },
   {
    "name": "cover_2",
-   "width": 52,
+   "width": 45,
    "native": true
   },
   {
    "name": "cover_3",
-   "width": 61,
+   "width": 53,
    "native": true
   },
   {
    "name": "cover_4",
-   "width": 68,
+   "width": 60,
    "native": true
   },
   {
    "name": "cover_5",
-   "width": 46,
+   "width": 40,
    "native": true
   }
  ]

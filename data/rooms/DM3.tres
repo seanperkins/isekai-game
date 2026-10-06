@@ -35,7 +35,7 @@ spawns = [{
 }, {
 "by": "PL",
 "id": "twin_goblin_ring_maker",
-"pos": Vector2(49.5, 314)
+"pos": Vector2(50.199997, 314)
 }, {
 "by": "PL",
 "id": "twin_wolf_hellhound",

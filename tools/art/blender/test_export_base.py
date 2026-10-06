@@ -39,8 +39,17 @@ class PlanTest(unittest.TestCase):
         self.assertEqual(opts["charge_1"], {"attack_from": 0.55})
         self.assertEqual(opts["idle_1"], {})
 
+    def test_the_goblin_has_the_follow_through_of_its_blow_for_when_the_player_casts(self):
+        meta = dict(META, anims=dict(META["anims"], rise=1, fall=1, roll=4, slide=1, mantle=2, wall=1, land=1), windup=4,
+                    durations=dict(META["durations"], rise=[0.1], fall=[0.1], roll=[0.1] * 4, slide=[0.1], mantle=[0.1, 0.1], wall=[0.1], land=[0.1]))
+        frames, table = eb.plan(eb.SPECS["goblin"], meta)
+        by = {new: src for new, src, _ in frames}
+        self.assertEqual([by["recover_%d" % i] for i in range(1, 7)], ["attack_%d" % i for i in range(4, 10)], "the frames from the blow on, not the windup")
+        self.assertFalse(table["recover"]["loop"])
+        self.assertAlmostEqual(len(table["recover"]["frames"]) * 0.02, 6 * 0.06, delta=0.03)
+
     def test_the_goblins_states_are_the_ones_the_player_asks_for(self):
-        _, table = eb.plan(eb.SPECS["goblin"], dict(META, anims=dict(META["anims"], rise=1, fall=1, roll=4, slide=1, mantle=2, wall=1, land=1),
+        _, table = eb.plan(eb.SPECS["goblin"], dict(META, windup=4, anims=dict(META["anims"], rise=1, fall=1, roll=4, slide=1, mantle=2, wall=1, land=1),
                                                    durations=dict(META["durations"], rise=[0.1], fall=[0.1], roll=[0.1] * 4, slide=[0.1], mantle=[0.1, 0.1], wall=[0.1], land=[0.1])))
         for state in ("idle", "run", "rise", "fall", "roll", "slide", "mantle", "wall"):
             self.assertIn(state, table)

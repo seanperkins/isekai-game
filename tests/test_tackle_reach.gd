@@ -42,7 +42,7 @@ func _enemy(id: String, dx: float) -> Enemy:
 
 func test_a_toad_whose_body_touches_the_slime_can_be_tackled() -> void:
 	await wait_physics_frames(14)
-	var e := _enemy("toad", 43.0)
+	var e := _enemy("toad", 40.0)  # touching: the slime is a little smaller than it was (half a width of 20)
 	assert_true(e.is_touching(player), "the setup: the shapes touch")
 	player.do_tackle()
 	assert_eq(e.status.state, EnemyStatus.STUNNED, "it was tackled, not bitten first")
@@ -62,7 +62,7 @@ func test_a_creature_well_out_of_reach_is_not_tackled() -> void:
 
 func test_a_lizard_touching_the_slime_can_be_tackled_from_behind() -> void:
 	await wait_physics_frames(14)
-	var e := _enemy("lizard", 50.0)
+	var e := _enemy("lizard", 46.0)
 	e.facing = 1  # facing away: the tackle comes from behind
 	assert_true(e.is_touching(player))
 	player.do_tackle()
@@ -70,7 +70,7 @@ func test_a_lizard_touching_the_slime_can_be_tackled_from_behind() -> void:
 
 func test_the_armored_front_still_is_not_stunned() -> void:
 	await wait_physics_frames(14)
-	var e := _enemy("lizard", 50.0)
+	var e := _enemy("lizard", 46.0)
 	player.do_tackle()
 	assert_eq(e.status.state, EnemyStatus.ACTIVE, "unchanged: only a hit from behind stuns a lizard")
 

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_def.gd" id="1_rpc81"]
+
+[resource]
+script = ExtResource("1_rpc81")
+id = "verb_goblin"
+display_name = "Stab"
+description = "A quick jab with a rusty blade, close in front of you."
+announce = "New verb. Acquired [Stab]."
+source = "form_verb"
+effects = [{"kind": "active", "scene": "res://scenes/abilities/verb.tscn", "values": [3], "spec": {"kind": "burst", "range": 30, "half_width": 16, "damage_type": "physical", "cooldown": 0.55}}]
+mp_cost = 1

@@ -96,19 +96,13 @@ func after_each() -> void:
 	SkillRules.reset_run()
 	Announcer.queue.clear()
 
-func test_a_wolf_form_is_drawn_as_its_still_and_mirrored_when_it_faces_left() -> void:
+func test_a_wolf_form_is_drawn_from_its_animated_sheet_not_its_still() -> void:
 	await _spawn("wolf")
 	assert_true(player.advance_form("wolf_warg", true))
 	await _settle()
-	var sprite: Sprite2D = player.get_node("Sprite")
-	var still := SpriteSheet.load_set("forms_wolf")
-	assert_eq(player.still_frame(), "warg")
-	assert_eq(_tex_region(sprite), (still.frame_texture("warg") as AtlasTexture).region)
-	assert_false(sprite.flip_h)
-	Input.action_press("move_left")
-	await wait_physics_frames(8)
-	assert_true(sprite.flip_h, "facing left")
-	assert_eq(_tex_region(sprite), (still.frame_texture("warg") as AtlasTexture).region, "still the same frame, mirrored")
+	assert_eq(player.still_frame(), "", "its still is the picture of the form (the skill screen), not its body")
+	assert_true(player.form_animates())
+	assert_true(player.body_sheet().has_normals(), "lit")
 	assert_gte(player.hurt_polygon().size(), 3)
 	assert_eq(player.body_scale(), 1.0, "drawn at the sheet's own size")
 
@@ -179,6 +173,7 @@ func test_evolving_from_a_still_form_to_an_animated_one_swaps_the_look_back() ->
 func test_a_species_body_does_not_take_an_animated_form_sheet_with_no_still() -> void:
 	await _spawn("wolf")
 	var odd: FormDef = player.forms["wolf_warg"].duplicate()
+	odd.id = "wolf_odd"  # a form with no clips of its own
 	odd.sprite_set = "form_weaver"  # the slime's animated sheet: its clips are not the wolf's
 	odd.sprite_frame = ""
 	player.forms["wolf_warg"] = odd

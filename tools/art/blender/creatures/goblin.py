@@ -153,10 +153,14 @@ def motion(variant):
     return sizing.speed_of("goblin", variant)
 
 
+BASE_GROWTH = 1.15   # the player's goblin is drawn this much bigger than the drawing it replaced (Sean, 2026-10-06: a bit taller)
+
+
 def today(variant):
-    """The base goblin is sized by the sheet it replaced (before/goblin_base.json, saved before the render took its place)."""
+    """The base goblin is sized by the sheet it replaced (before/goblin_base.json, saved before the render took its place), grown by BASE_GROWTH."""
     base = (os.path.join(HERE, "before", "goblin_base.json"), "idle_1") if not variant or variant == "goblin" else None
-    return sizing.today("goblin", variant, _form(variant)["width"], base)
+    w, h = sizing.today("goblin", variant, _form(variant)["width"], base)
+    return (w * BASE_GROWTH, h * BASE_GROWTH if h else h) if base is not None else (w, h)
 
 
 def clips_of(rig, variant):

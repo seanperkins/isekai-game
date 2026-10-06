@@ -200,7 +200,7 @@ def hawk(g, side="n", **_):
 def boots(g, color, height=0.34, big=1.0, plate=None, spike=False, **_):
     for s, y in (("n", LEG_NEAR), ("f", LEG_FAR)):
         far = s == "f"
-        g.l("boot_" + s, (0.03, y, 0.11 + height), (0.0, y, 0.11), 0.054 * big, 0.050 * big, "shin_" + s, color, far, sides=7, raw=True)
+        g.l("boot_" + s, (0.03, y, 0.11 + height), (0.0, y, 0.11), 0.054 * big * g.limb, 0.050 * big * g.limb, "shin_" + s, color, far, sides=7, raw=True)
         g.foot("bootfoot_" + s, s, "foot_" + s, plate or color, big=1.12 * big, length=1.1, far=far)
         if spike:
             g.blade("toespike_" + s, (0.24, y, 0.04), (0.36, y, 0.05), 0.05, 0.03, "foot_" + s, STEEL, far, raw=True)
@@ -220,7 +220,7 @@ def clogs(g, color, **_):
 
 def wraps(g, color, **_):
     for s in "nf":
-        g.e("wrap_" + s, (0.17, Y[s], 0.90), (0.042, 0.040, 0.075), "fore_" + s, color, far=s == "f", raw=True, seg=8, rings=6)
+        g.e("wrap_" + s, (0.17, Y[s], 0.90), (0.042 * g.limb, 0.040 * g.limb, 0.075), "fore_" + s, color, far=s == "f", raw=True, seg=8, rings=6)
 
 
 # ---- held things (on the item bones) ----

@@ -107,7 +107,7 @@ spawns = [{
 }, {
 "by": "PL",
 "id": "twin_acid",
-"pos": Vector2(1212.75, 674)
+"pos": Vector2(1209, 674)
 }]
 exits = [{
 "edge": "top",

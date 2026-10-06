@@ -19,7 +19,7 @@ func test_the_hurt_shape_is_the_frames_traced_shape() -> void:
 	shapes.refresh(sheet, "idle_1", false)
 	assert_eq(shapes.hurt_poly.polygon, sheet.hurt("idle_1"))
 	var b := _bounds(shapes.hurt_poly.polygon)
-	assert_almost_eq(b.size.x, 44.0, 2.0)
+	assert_almost_eq(b.size.x, 40.0, 2.0)
 
 func test_spread_is_flat_and_wide() -> void:
 	shapes.refresh(sheet, "idle_1", false)

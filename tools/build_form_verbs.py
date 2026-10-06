@@ -13,6 +13,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 TABLE = os.path.join(HERE, "form_verbs.json")
+SPECIES_TABLE = os.path.join(HERE, "species_verbs.json")   # a species' own blow (data/species/<id>.tres names it): one row per species, `species` where a form's has `form`
 OUT = "data/skills"
 SCENE = "res://scenes/abilities/verb.tscn"
 FIDELITY = ("full", "approx", "needs")
@@ -22,6 +23,17 @@ PREFIX = "verb_"
 def load_rows(path=TABLE):
     with open(path, encoding="utf-8") as fh:
         return json.load(fh)
+
+
+def load_species_rows(path=SPECIES_TABLE):
+    """The species' verbs as rows of the same shape as a form's (named by the species, always `full`)."""
+    with open(path, encoding="utf-8") as fh:
+        return [dict(r, form=r["species"], fidelity="full", note="") for r in json.load(fh)]
+
+
+def all_rows():
+    """Every verb the generator writes: the forms' and the species'."""
+    return load_rows() + load_species_rows()
 
 
 def skill_id(form):
@@ -48,7 +60,7 @@ def skill_tres(row):
 
 def build(out_dir=OUT, rows=None):
     """Writes every verb's file and removes the verb files the table no longer has. Returns the skill ids."""
-    rows = load_rows() if rows is None else rows
+    rows = all_rows() if rows is None else rows
     os.makedirs(out_dir, exist_ok=True)
     ids = []
     for row in rows:

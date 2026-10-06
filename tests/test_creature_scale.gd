@@ -2,6 +2,7 @@ extends GutTest
 ## The creature size ladder: every creature's first frame (px, as drawn in game), pinned so a change of art is a decision and
 ## not a drift. Sean, 2026-10-04: every monster must feel the right size next to the others; the player's body boxes and reach
 ## are tuned to fit that, not the other way round. Sizes within 2 px (the anchored sheets round).
+## 2026-10-06 (later): Sean asked for a slime a little smaller (12%: 40 x 31) and a goblin a bit taller with thicker limbs (15%: 47 tall).
 ## 2026-10-06: the goblin (also the player's two-legged body) and the gloom wolf are Blender renders now (tools/art/blender/export_base.py): the goblin crouches
 ## with its feet apart and its arms forward, so it is as wide as it is tall (its height is within 2 px of the old drawing); the wolf is longer and lower, the spider (its legs spread, no longer tucked under it) longer and flatter.
 
@@ -11,7 +12,7 @@ const LADDER := {
 	"spider": ["hang_1", 36, 18],
 	"toad": ["idle_1", 40, 25],
 	"bat": ["fly_1", 29, 29],
-	"slime": ["idle_1", 44, 33],
+	"slime": ["idle_1", 40, 31],
 	"spore_moth": ["fly_1", 30, 33],
 	"drift_jelly": ["drift_1", 34, 34],
 	"gloom_wolf": ["idle_1", 58, 31],
@@ -19,7 +20,7 @@ const LADDER := {
 	"mushroom_crab": ["idle_1", 44, 37],
 	"armed_ant": ["idle_1", 31, 38],
 	"pale_moth": ["fly_1", 34, 38],
-	"goblin": ["idle_1", 34, 41],
+	"goblin": ["idle_1", 38, 47],
 	"bog_lizardman": ["idle_1", 40, 48],
 	"stone_drake": ["idle_1", 108, 50],
 	"taratect": ["hang_1", 90, 62],

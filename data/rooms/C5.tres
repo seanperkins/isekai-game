@@ -116,23 +116,23 @@ spawns = [{
 }, {
 "by": "PL",
 "id": "twin_sky",
-"pos": Vector2(60.75, 1034)
+"pos": Vector2(57, 1034)
 }, {
 "by": "PL",
 "id": "twin_golem",
-"pos": Vector2(156.75, 1034)
+"pos": Vector2(177, 1034)
 }, {
 "by": "PL",
 "id": "twin_echo",
-"pos": Vector2(137.76, 878)
+"pos": Vector2(414.4, 1034)
 }, {
 "by": "PL",
 "id": "twin_greater_slime",
-"pos": Vector2(277.76, 826)
+"pos": Vector2(134.4, 878)
 }, {
 "by": "PL",
 "id": "twin_undead_bone_warrior",
-"pos": Vector2(406.56, 1034)
+"pos": Vector2(118.56, 1034)
 }]
 exits = [{
 "edge": "left",

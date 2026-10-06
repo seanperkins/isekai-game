@@ -36,6 +36,8 @@ static func _species_errors(species: Array, creature_ids: Array, movement_dir: S
 				out.append("species '%s': unlock names unknown creature '%s'" % [d.id, str(creature)])
 			if kind == "count" and int(d.unlock.get("n", 0)) <= 0:
 				out.append("species '%s': a count unlock needs a positive n" % d.id)
+		if d.verb != "" and not FileAccess.file_exists("res://data/skills/%s.tres" % d.verb):
+			out.append("species '%s': verb '%s' is not a skill" % [d.id, d.verb])
 		if d.movement_profile != "" and not FileAccess.file_exists(movement_dir.path_join(d.movement_profile + ".tres")):
 			out.append("species '%s': movement profile '%s' has no file in %s" % [d.id, d.movement_profile, movement_dir])
 	if not has_default:

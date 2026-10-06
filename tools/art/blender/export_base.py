@@ -19,7 +19,8 @@ ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 sys.path.insert(0, HERE)
 import clips  # noqa: E402
 
-# set -> where its render is and which state comes from which render clip: (state, render clip, frames or None for all, loops, options)
+# set -> where its render is and which state comes from which render clip: (state, render clip, frames (None for all, "recover" for an attack's frames from
+# the blow on), loops, options)
 # Two options name how the state is cut and never reach the sheet's spec: "name" (a one-frame state is called that, not `<state>_1`, for the code that asks the sheet
 # for a frame by name), and "even" (the picked frames are sampled around the whole clip: each lasts the clip's length divided by their number). A spec with `tight` cuts each frame to its own drawn pixels (a blob has no centre line to keep; a walker's frames are cut about its centre).
 # A spec writes its clips to its `file` (default data/enemy_clips.json) under its `key`; with a `file` of None it writes none.
@@ -27,7 +28,7 @@ SPECS = {
     "goblin": dict(render=("goblin", "goblin"), key="goblin", states=[
         ("idle", "idle", None, True, {}), ("run", "run", None, True, {}), ("rise", "rise", [0], False, {}), ("fall", "fall", [0], False, {}),
         ("roll", "roll", None, True, {}), ("slide", "slide", [0], False, {}), ("mantle", "mantle", None, False, {}), ("wall", "wall", [0], True, {}),
-        ("land", "land", [0], False, {})]),
+        ("land", "land", [0], False, {}), ("recover", "attack", "recover", False, {})]),   # the player's blow: the frames from the impact on
     "gloom_wolf": dict(render=("wolf", "gloom_wolf"), key="gloom_wolf", states=[
         ("idle", "idle", None, True, {}), ("walk", "walk", None, True, {}), ("windup", "attack", [2], False, {}),
         ("charge", "run", None, True, {"attack_from": 0.55}), ("rest", "attack", [9], True, {}), ("stunned", "hurt", [2], False, {}),
@@ -54,7 +55,10 @@ def plan(spec, meta):
         options = dict(options)
         called, even = options.pop("name", None), options.pop("even", False)
         count = meta["anims"][source]
-        indices = list(range(count)) if picks is None else [i % count for i in picks]
+        if picks == "recover":    # the attack's frames from the blow on (the render's `windup` is how many come before it)
+            indices = list(range(meta["windup"], count))
+        else:
+            indices = list(range(count)) if picks is None else [i % count for i in picks]
         names = []
         for n, i in enumerate(indices, 1):
             new = called if called and len(indices) == 1 else "%s_%d" % (state, n)

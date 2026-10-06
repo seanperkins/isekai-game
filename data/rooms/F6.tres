@@ -35,7 +35,7 @@ spawns = [{
 }, {
 "by": "PL",
 "id": "twin_tidal",
-"pos": Vector2(214.2, 206)
+"pos": Vector2(396, 314)
 }]
 exits = [{
 "edge": "bottom",

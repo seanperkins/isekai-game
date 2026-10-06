@@ -63,6 +63,13 @@ func test_species_errors() -> void:
 	assert_true(_has(_check([_species("wolf", {"kind": "defeat", "creature": "bat"}, "")]), "default unlock"))
 	assert_true(_has(_check([_species("slime", {"kind": "default"}, "ghost")]), "movement profile"))
 
+func test_a_species_verb_that_is_no_skill_is_reported() -> void:
+	var odd := _species("goblin", {"kind": "count", "creature": "bat", "n": 3}, "")
+	odd.verb = "verb_goblin"
+	assert_eq(_check([_species(), odd]), PackedStringArray(), "a real skill")
+	odd.verb = "verb_no_such_blow"
+	assert_true(_has(_check([_species(), odd]), "verb 'verb_no_such_blow'"))
+
 func test_perk_errors() -> void:
 	assert_true(_has(_check(null, [_perk(), _perk()]), "duplicate perk"))
 	var free := _perk()

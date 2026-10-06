@@ -6,6 +6,8 @@ extends Resource
 @export var display_name: String = ""
 ## An id under res://data/movement/, or "" for none.
 @export var movement_profile: String = ""
+## The form_verb skill this body starts a life with (and keeps until an evolved form's verb takes its slot), or "" for none: the default goblin's weak blow.
+@export var verb: String = ""
 ## {"kind": "default"}, {"kind": "count", "creature": id, "n": int} (eaten or defeated n of it) or
 ## {"kind": "defeat", "creature": id} (one defeat of a rare creature or boss).
 @export var unlock: Dictionary = {}

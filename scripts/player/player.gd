@@ -75,6 +75,8 @@ const BODY_BOTTOM := BodyConfig.BOTTOM  # collision box bottom, where the body s
 const SPREAD_STICK_Y := 0.6
 const SPREAD_SPEED := 0.5
 const HURT_FLASH := 0.25
+## How long a form plays the follow-through of its blow after casting its verb (the enemy's recover clip is built to fit in it).
+const CAST_POSE_SECONDS := 0.3
 const EVOLVE_SECONDS := 1.2
 const EVOLVE_SWELL := 0.35
 
@@ -197,6 +199,13 @@ var eat_prompt := Label.new()
 var _creatures_eaten := 0
 ## The most recent cast, for the input debug overlay: {"id", "aim"}.
 var last_cast := {}
+## An evolved body of a species with clips (data/form_clips.json) animates: `_anim_form` says so, `_form_walk_speed` is the speed its walk was built for,
+## `_cast_pose_t` the time left on the strike it plays after a cast, `_cast_pose_new` that a cast has just begun it again.
+var _anim_form := false
+var _form_walk_speed := 60.0
+var _cast_pose_t := 0.0
+var _cast_pose_new := false
+var _base_clips := {}   # the species' own clips, to go back to when a body has none of its own
 ## The creature last appraised (Inspect on it), for Copy; null until one is.
 var last_inspected: CreatureDef = null
 ## The thread the slime is swinging from, or null.
@@ -465,7 +474,9 @@ func _build_species_body() -> void:
 	_sheet = sheet
 	_base_sheet = sheet
 	_form_sheet = null
-	_animator = SlimeAnimator.new(SpeciesLook.clips_for(look))
+	_base_clips = SpeciesLook.clips_for(look)
+	_anim_form = false
+	_animator = SlimeAnimator.new(_base_clips)
 	_animator.play(SpeciesLook.clip_for(look, true, 0.0, 0.0, 0.0))
 	var first := _animator.frame()
 	_sprite.texture = _sheet.frame_texture(first)
@@ -475,6 +486,7 @@ func _build_species_body() -> void:
 
 ## The species' clip for what the body is doing, drawn at the sheet's own size; the facing mirrors it.
 func _update_visual_species(delta: float) -> void:
+	_cast_pose_t = maxf(0.0, _cast_pose_t - delta)
 	var on_floor := is_on_floor()
 	if on_floor and not _was_on_floor:
 		_land_timer = LAND_SQUASH_SECONDS
@@ -491,10 +503,18 @@ func _update_visual_species(delta: float) -> void:
 	if look == "spider":
 		_draw_spider(delta)
 		return
+	if _anim_form:
+		_draw_anim_form(delta)
+		return
 	if _still != "":
 		_draw_still()
 		return
 	var clip := SpeciesLook.clip_for(look, on_floor, velocity.y, velocity.x, _land_timer, st.verb, VerbRunner.is_flat(st, species_body.profile), st.clinging)
+	if _cast_pose_t > 0.0 and _animator.clips.has("recover"):
+		clip = "recover"  # the base body's blow (the goblin's jab): the follow-through of the strike
+		if _cast_pose_new:
+			_animator.restart()
+	_cast_pose_new = false
 	if clip == "" or not _sheet.has_frame(_animator_first_frame(clip)):
 		clip = "idle"
 	_animator.play(clip)
@@ -511,6 +531,36 @@ func _update_visual_species(delta: float) -> void:
 		tint = tint.lerp(Color(1.0, 0.45, 0.45), 0.6)
 	_sprite.modulate = tint
 	_shapes.refresh(_sheet, frame, mirrored)
+
+## An animated form (its clips from tools/art/blender): idle, walk or run as fast as the body goes, its running pose in the air, the follow-through of
+## a blow after a cast, the flinch when hit; lit, and turned round in its texture when it faces left. The hurt shape is the idle frame's.
+func _draw_anim_form(delta: float) -> void:
+	var speed := absf(velocity.x)
+	var airborne := not is_on_floor()
+	var hurt := _invuln > INVULN_SECONDS - HURT_FLASH and not evolving()
+	var state := EnemyState.pick_form(_animator.clips, EnemyStatus.ACTIVE, "recover" if _cast_pose_t > 0.0 else "", speed > SpeciesLook.MOVING_SPEED or airborne,
+		hurt, airborne or FormPose.running(speed, _form_walk_speed))
+	if _cast_pose_new:
+		_cast_pose_new = false
+		_animator.restart()  # a second cast while the first still plays begins the blow again
+	_animator.play(state)
+	_animator.advance(delta * FormPose.rate(state, speed, _form_walk_speed))
+	var frame := _animator.frame()
+	var mirrored := facing < 0
+	var scale := _form_scale()
+	_sheet.draw_on(_sprite, frame, mirrored)
+	_sprite.position.y = BODY_BOTTOM - _sheet.frame_size(frame).y * scale / 2.0
+	_sprite.scale = Vector2.ONE * scale
+	_sprite.rotation = 0.0
+	_sprite.flip_v = false
+	_sprite.modulate = _form_tint()
+	if _shapes != null:
+		var rest: Array = _animator.clips.get("idle", {}).get("frames", [frame])
+		_shapes.refresh(_sheet, str(rest[0]), mirrored)
+
+## Whether this body plays a form's animated clips (an evolved wolf, goblin or undead) rather than standing as its picture.
+func form_animates() -> bool:
+	return _anim_form
 
 ## A form with a still: that frame at the sheet's own size, mirrored when it faces left, swelling and glowing through the evolution
 ## moment, red for a moment when hurt. The hurt shape is the frame's traced one.
@@ -812,6 +862,8 @@ func use_active(i: int) -> void:
 	else:
 		ability.activate()
 	last_cast = {"id": id, "aim": ability.aim_dir()}
+	_cast_pose_t = CAST_POSE_SECONDS
+	_cast_pose_new = true
 	_emit.call(Events.SKILL_USED, {"id": id})
 	for _point in cost:
 		_emit.call(Events.MANA_SPENT, {})
@@ -1115,7 +1167,7 @@ func advance_form(id: String, force := false) -> bool:
 	if health.is_dead() or (not force and not progression.can_evolve()):
 		return false
 	var from_def := form_def()
-	var old_verb := from_def.verb if from_def != null else ""
+	var old_verb := from_def.verb if from_def != null else SpeciesCatalog.verb_of(species)  # a species' own blow gives its slot to the first form's verb
 	if not form.advance(id, forms):
 		return false
 	progression.evolve_stage()
@@ -1210,6 +1262,9 @@ func debug_grant_xp(amount: int) -> void:
 func _use_form_sheet(def: FormDef) -> void:
 	if _animator == null:
 		return  # no sheet drawing at all (use_sheet false): there is nothing to swap
+	if _use_form_clips(def):
+		return
+	_use_base_clips()
 	var sheet: SpriteSheet = null
 	if def.sprite_set != "" and SpriteSheet.available(def.sprite_set):
 		sheet = SpriteSheet.load_set(def.sprite_set)
@@ -1227,6 +1282,30 @@ func _use_form_sheet(def: FormDef) -> void:
 		_still = ""
 		if _base_sheet != null:
 			_sheet = _base_sheet
+
+## An evolved wolf, goblin or undead plays its form's clips: `anim_<form id>` is its sheet (a spider's forms and the slime's keep their pictures: the
+## spider turns to the surface it walks and the slime has its own poses). Whether the form animates now.
+func _use_form_clips(def: FormDef) -> bool:
+	if species_body == null or species_body.profile.id == "spider" or not FormClips.has_form(def.id):
+		return false
+	var sheet: SpriteSheet = SpriteSheet.load_set(FormClips.sheet_of(def.id)) if SpriteSheet.available(FormClips.sheet_of(def.id)) else null
+	if sheet == null:
+		return false
+	_form_sheet = sheet
+	_sheet = sheet
+	_still = ""
+	_animator = SlimeAnimator.new(FormClips.clips_of(def.id))
+	_animator.play("idle")
+	_anim_form = true
+	_form_walk_speed = FormClips.walk_speed_of(def.id)
+	return true
+
+## Back to the species' own clips, when the body that animated is gone (a form with only a picture, a new life).
+func _use_base_clips() -> void:
+	if not _anim_form:
+		return
+	_anim_form = false
+	_animator = SlimeAnimator.new(_base_clips)
 
 ## The frame of the form's sheet drawn as its body, "" when the form animates.
 func still_frame() -> String:
@@ -1622,6 +1701,7 @@ func _on_run_started() -> void:
 	form.reset()
 	_form_sheet = null
 	_still = ""
+	_use_base_clips()
 	if _base_sheet != null:
 		_sheet = _base_sheet
 	skillset.reset()
@@ -1635,6 +1715,13 @@ func _on_run_started() -> void:
 	_release_traps()
 	stats.reset_run()
 	_sync_max_hp()
+	_grant_species_verb()
+
+## A species with a blow of its own (the default goblin's weak jab) starts a life holding it.
+func _grant_species_verb() -> void:
+	var verb := SpeciesCatalog.verb_of(species)
+	if verb != "" and species_body != null:
+		_rules.grant(verb)
 
 func _on_health_died() -> void:
 	_release_companions()
