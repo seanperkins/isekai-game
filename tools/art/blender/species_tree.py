@@ -28,7 +28,7 @@ import spike  # noqa: E402
 SPECIES = {
     "goblin": ("goblin", "goblin_forms", "goblin"),
     "wolf": ("wolf", "wolf_forms", "gloom_wolf"),
-    "spider": ("spider", "spider_forms", "weavermaid_base"),
+    "spider": ("spider", "spider_forms", "spider"),
     "undead": ("undead", "undead_forms", "skeleton"),
     "slime": ("slime", "slime_forms", "slime"),
 }
