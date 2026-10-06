@@ -93,6 +93,17 @@ var last_stick := Vector2.ZERO
 var last_pad_name := ""
 var last_device := -1
 
+## Forgets which device was last used: no pad, no mouse aim, no stick reading, as at startup. A session never needs it; a test that sent mouse or pad events through the real
+## input path calls it, or the aim of the next test file in the same process is the mouse's (a burst aimed at a pointer nobody moved).
+func forget_device() -> void:
+	using_joypad = false
+	mouse_aim = false
+	_mouse_travel = 0.0
+	aim_device = -1
+	last_stick = Vector2.ZERO
+	last_pad_name = ""
+	last_device = -1
+
 ## Emitted when the slot labels change (the scheme changed): the skill screen caches them and refreshes on this.
 signal scheme_changed
 

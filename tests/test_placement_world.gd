@@ -130,6 +130,3 @@ func test_every_placed_creature_builds_as_a_live_enemy_in_its_room() -> void:
 		built += enemies.size()
 	RoomBuilder.simple_layers = was
 	assert_gte(built, 169)
-
-func test_a_second_build_changes_nothing() -> void:
-	assert_eq(AreaBuilder.stale(AreaBuilder.build()), [])

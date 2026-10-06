@@ -205,6 +205,3 @@ func test_no_tablet_in_the_new_areas_promises_a_seal_or_a_gate_that_is_not_built
 			if f["kind"] == "tablet":
 				var text := str(f.get("text", "")).to_lower()
 				assert_false(text.contains("seal") or text.contains("break "), "%s: '%s' sends the player after something that cannot be done yet" % [id, f["text"]])
-
-func test_the_checked_in_rooms_are_what_the_builder_writes() -> void:
-	assert_eq(AreaBuilder.stale(AreaBuilder.build()), [])

@@ -497,6 +497,7 @@ func _end_game_scene() -> void:
 		get_tree().current_scene = null
 
 func after_each() -> void:
+	Controls.forget_device()  # its mouse events reach Controls: the next test file would aim at the pointer
 	_gut_ui(true)
 	Game.play_request = {}
 	Game.editor_resume = null

@@ -45,7 +45,7 @@ def record(species, script, path):
 
 
 def render(creature, variant, recordings, out, every):
-    cmd = [BLENDER, "-b", "-P", os.path.join(HERE, "blender", "stage_review.py"), "--", "--creature", creature, "--recording", *recordings, "--out", out, "--every", str(every)]
+    cmd = [BLENDER, "-b", "--factory-startup", "-P", os.path.join(HERE, "blender", "stage_review.py"), "--", "--creature", creature, "--recording", *recordings, "--out", out, "--every", str(every)]
     if variant:
         cmd += ["--variant", variant]
     done = subprocess.run(cmd, capture_output=True, text=True)
@@ -109,7 +109,7 @@ def review(creature, variant, scripts, every, out=None, reuse=False):
 def gesture_review(creature, variant, name, every, out=None):
     """Cast `name` (or every gesture) on the stage for one creature, and put each together; the lines name the gestures the creature has no preset for (and flag one KNOWN_ARCHETYPES does not list)."""
     base = out or os.path.join(STAGE, creature + ("_" + variant if variant else ""), "gestures")
-    cmd = [BLENDER, "-b", "-P", os.path.join(HERE, "blender", "stage_review.py"), "--", "--creature", creature, "--gesture", name, "--out", base, "--every", str(every),
+    cmd = [BLENDER, "-b", "--factory-startup", "-P", os.path.join(HERE, "blender", "stage_review.py"), "--", "--creature", creature, "--gesture", name, "--out", base, "--every", str(every),
            "--view-px", str(GESTURE_VIEW_PX)]
     if variant:
         cmd += ["--variant", variant]

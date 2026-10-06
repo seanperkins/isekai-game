@@ -39,7 +39,7 @@ class RealCreatureTests(unittest.TestCase):
         cls.reports = {}
         for species in sr.SPECIES:
             recordings = [os.path.join(STAGE, "%s_%s.json" % (species, script)) for script in sr.RUNS[species]]
-            out = subprocess.run([BLENDER, "-b", "-P", os.path.join(os.path.dirname(os.path.abspath(__file__)), "stage_review.py"), "--", "--creature", species, "--gaps", "--recording", *recordings],
+            out = subprocess.run([BLENDER, "-b", "--factory-startup", "-P", os.path.join(os.path.dirname(os.path.abspath(__file__)), "stage_review.py"), "--", "--creature", species, "--gaps", "--recording", *recordings],
                                  capture_output=True, text=True)
             lines = [line for line in out.stdout.splitlines() if line.startswith("GAPS ")]
             assert lines, "%s: %s" % (species, (out.stdout + out.stderr)[-1500:])
@@ -48,7 +48,7 @@ class RealCreatureTests(unittest.TestCase):
     def test_a_creature_lacks_only_the_gestures_listed_as_missing(self):
         script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "stage_review.py")
         for species in sr.SPECIES:
-            out = subprocess.run([BLENDER, "-b", "-P", script, "--", "--creature", species, "--gesture-gaps"], capture_output=True, text=True)
+            out = subprocess.run([BLENDER, "-b", "--factory-startup", "-P", script, "--", "--creature", species, "--gesture-gaps"], capture_output=True, text=True)
             line = [x for x in out.stdout.splitlines() if x.startswith("GESTURES ")]
             self.assertTrue(line, "%s: %s" % (species, (out.stdout + out.stderr)[-800:]))
             self.assertEqual(sorted(json.loads(line[-1][9:])["missing"]), sr.KNOWN_ARCHETYPES[species], "%s: the gestures with no preset changed" % species)
@@ -73,7 +73,7 @@ class RealCreatureTests(unittest.TestCase):
                 self.assertLess(slid, MAX_SLIDE_PX, "%s: a planted foot moves over the ground from one pose to the next" % species)
 
     def test_the_measure_notices_feet_that_do_not_move(self):
-        out = subprocess.run([BLENDER, "-b", "-P", os.path.join(os.path.dirname(os.path.abspath(__file__)), "stage_review.py"), "--", "--creature", "goblin", "--gaps", "--frozen-feet",
+        out = subprocess.run([BLENDER, "-b", "--factory-startup", "-P", os.path.join(os.path.dirname(os.path.abspath(__file__)), "stage_review.py"), "--", "--creature", "goblin", "--gaps", "--frozen-feet",
                               "--recording", os.path.join(STAGE, "goblin_walk_run.json")], capture_output=True, text=True)
         line = [x for x in out.stdout.splitlines() if x.startswith("GAPS ")][-1]
         self.assertGreater(json.loads(line[5:])["walk_run"]["foot_slide_px"], MAX_SLIDE_PX, "a goblin walking on one frozen pose is dragging its feet")
@@ -87,7 +87,7 @@ class RealCreatureTests(unittest.TestCase):
             json.dump({"species": "undead", "script": "walk_run", "fps": 60, "start": [100.0, 0.0], "ticks": ticks}, fh)
         slid = {}
         for flag in ([], ["--frozen-feet"]):
-            out = subprocess.run([BLENDER, "-b", "-P", os.path.join(os.path.dirname(os.path.abspath(__file__)), "stage_review.py"), "--", "--creature", "undead", "--gaps", *flag, "--recording", path],
+            out = subprocess.run([BLENDER, "-b", "--factory-startup", "-P", os.path.join(os.path.dirname(os.path.abspath(__file__)), "stage_review.py"), "--", "--creature", "undead", "--gaps", *flag, "--recording", path],
                                  capture_output=True, text=True)
             slid[bool(flag)] = json.loads([x for x in out.stdout.splitlines() if x.startswith("GAPS ")][-1][5:])["walk_run"]["foot_slide_px"]
         self.assertLess(slid[False], MAX_SLIDE_PX)

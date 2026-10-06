@@ -37,7 +37,7 @@ CURRENT = {
 
 
 def render(creature, out, variant=None, anims=None, ss=4):
-    cmd = [BLENDER, "-b", "-P", os.path.join(HERE, "render_set.py"), "--", "--creature", creature, "--out", out, "--ss", str(ss)]
+    cmd = [BLENDER, "-b", "--factory-startup", "-P", os.path.join(HERE, "render_set.py"), "--", "--creature", creature, "--out", out, "--ss", str(ss)]
     if variant:
         cmd += ["--variant", variant]
     if anims:

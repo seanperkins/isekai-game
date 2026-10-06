@@ -5,6 +5,21 @@ func after_each() -> void:
 	_axis(JOY_AXIS_LEFT_X, 0.0)
 	Controls.using_joypad = false
 
+func test_forgetting_the_device_is_a_fresh_start() -> void:
+	var click := InputEventMouseButton.new()
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = true
+	Controls._input(click)
+	assert_true(Controls.mouse_aim)
+	Controls.last_stick = Vector2(1.0, 0.0)
+	Controls.aim_device = 2
+	Controls.forget_device()
+	assert_false(Controls.mouse_aim)
+	assert_false(Controls.using_joypad)
+	assert_eq(Controls.last_stick, Vector2.ZERO)
+	assert_eq(Controls.aim_device, -1)
+	assert_eq(Controls.last_device, -1)
+
 func _axis(axis: JoyAxis, value: float) -> void:
 	var ev := InputEventJoypadMotion.new()
 	ev.axis = axis

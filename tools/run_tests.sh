@@ -5,7 +5,7 @@
 # function it happens in, and GUT can print "Nothing was run" and still exit 0.
 # So this reads the log and the JUnit XML, not just the exit code.
 #
-# Usage: tools/run_tests.sh [file-substring]   e.g. tools/run_tests.sh ledger
+# Usage: tools/run_tests.sh [file-substring]   e.g. tools/run_tests.sh ledger      (JOBS=n sets how many processes a full run uses)
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
@@ -17,7 +17,8 @@ log=.tmp/test-logs/gut.log
 xml=.tmp/test-logs/results.xml
 rm -f "$xml"
 
-args=(-s addons/gut/gut_cmdln.gd -gdir=res://tests -gprefix=test_ -gexit "-gjunit_xml_file=res://$xml")
+pre=(-gpre_run_script=res://tests/support/gut_isolation.gd)   # every test script starts from the game's own input state: the order files run in must not matter
+args=(-s addons/gut/gut_cmdln.gd -gdir=res://tests -gprefix=test_ -gexit "${pre[@]}" "-gjunit_xml_file=res://$xml")
 if [ "$#" -gt 0 ]; then args+=("-gselect=$1"); fi
 
 # --fixed-fps runs every physics frame as fast as the machine can instead of waiting 1/60 s of real time for each, so the
@@ -25,8 +26,51 @@ if [ "$#" -gt 0 ]; then args+=("-gselect=$1"); fi
 fps_args=()
 if [ "${FIXED_FPS:-60}" != "0" ]; then fps_args=(--fixed-fps "${FIXED_FPS:-60}"); fi
 
-gtimeout -k 5 "${TEST_TIMEOUT:-480}" env HOME="$PWD/.tmp/gdhome" godot --headless "${fps_args[@]}" "${args[@]}" >"$log" 2>&1
-code=$?
+# A full run is dealt out to several Godot processes at once (each with a profile of its own, the files balanced by what they took last time: tools/shard_tests.py), so it takes about
+# the time of its slowest test file instead of the sum of them all. JOBS=1 runs it in one process; a run of one file or of a few (a substring) is one process anyway.
+jobs="${JOBS:-}"
+if [ -z "$jobs" ]; then
+  cpus=$(sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 2)
+  jobs=$(( cpus > 4 ? cpus - 2 : 2 ))
+fi
+
+code=0
+if [ "$#" -eq 0 ] && [ "$jobs" -gt 1 ]; then
+  rm -rf .tmp/gdhome-* ; rm -f .tmp/test-logs/gut-*.log .tmp/test-logs/results-*.xml
+  plans=()
+  while IFS= read -r line; do plans+=("$line"); done < <(python3 tools/shard_tests.py plan "$jobs")
+  pids=()
+  i=0
+  for files in "${plans[@]}"; do
+    mkdir -p ".tmp/gdhome-$i"
+    gtimeout -k 5 "${TEST_TIMEOUT:-480}" env HOME="$PWD/.tmp/gdhome-$i" godot --headless "${fps_args[@]}" -s addons/gut/gut_cmdln.gd -gtest="$files" -gexit "${pre[@]}" \
+      "-gjunit_xml_file=res://.tmp/test-logs/results-$i.xml" >".tmp/test-logs/gut-$i.log" 2>&1 &
+    pids+=($!)
+    i=$((i + 1))
+    sleep 0.3
+  done
+  for pid in "${pids[@]}"; do
+    wait "$pid" || code=1
+  done
+  cat .tmp/test-logs/gut-*.log >"$log"
+  # one results file for what reads it: the processes' counts added up (a process that wrote none is a failure of its own)
+  tests=0; failures=0
+  for ((k = 0; k < i; k++)); do
+    part=".tmp/test-logs/results-$k.xml"
+    if [ ! -f "$part" ]; then
+      echo "FAIL: process $k wrote no results (see .tmp/test-logs/gut-$k.log)"
+      tail -20 ".tmp/test-logs/gut-$k.log"
+      exit 1
+    fi
+    t=$(grep -oE 'tests="[0-9]+"' "$part" | head -1 | grep -oE '[0-9]+'); f=$(grep -oE 'failures="[0-9]+"' "$part" | head -1 | grep -oE '[0-9]+')
+    tests=$((tests + ${t:-0})); failures=$((failures + ${f:-0}))
+  done
+  python3 tools/shard_tests.py record .tmp/test-logs/results-*.xml
+  echo '<?xml version="1.0"?><testsuites tests="'"$tests"'" failures="'"$failures"'"></testsuites>' >"$xml"
+else
+  gtimeout -k 5 "${TEST_TIMEOUT:-480}" env HOME="$PWD/.tmp/gdhome" godot --headless "${fps_args[@]}" "${args[@]}" >"$log" 2>&1
+  code=$?
+fi
 
 if grep -qE 'SCRIPT ERROR|Parse Error|Nothing was run' "$log"; then
   echo "FAIL: engine error or empty run (see $log)"

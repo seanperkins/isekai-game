@@ -150,6 +150,3 @@ func test_every_climb_in_the_village_ends_in_its_opening() -> void:
 		for h: Dictionary in holes:
 			var in_hole := r.solids.filter(func(l: Rect2) -> bool: return l.position.y == 14.0 and l.position.x >= float(h["from"]) and l.end.x <= float(h["to"]))
 			assert_eq(in_hole.size(), 1, "%s: a ledge stands in the opening %s..%s" % [id, h["from"], h["to"]])
-
-func test_the_checked_in_rooms_are_what_the_builder_writes() -> void:
-	assert_eq(AreaBuilder.stale(AreaBuilder.build()), [])

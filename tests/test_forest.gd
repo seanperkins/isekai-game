@@ -26,9 +26,6 @@ func test_the_forest_is_nine_rooms_at_their_cells_and_sizes() -> void:
 func test_the_whole_world_has_no_problems() -> void:
 	assert_eq(Array(AreaBuilder.problems(world)), [])
 
-func test_the_checked_in_rooms_are_what_the_builder_writes() -> void:
-	assert_eq(AreaBuilder.stale(AreaBuilder.build()), [])
-
 func test_every_forest_room_is_reachable_from_the_start() -> void:
 	var reached := WorldValidator.reachable(world)
 	for id in CELLS:

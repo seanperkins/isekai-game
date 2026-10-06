@@ -222,6 +222,3 @@ func test_the_lych_gate_gains_one_exit_to_the_stair() -> void:
 	var now := crypt["CM3"] as RoomDef
 	assert_eq(now.exits.size(), was.exits.size() + 1)
 	assert_eq(now.exits.filter(func(x: Dictionary) -> bool: return x["room"] == "CR1")[0]["edge"], "right")
-
-func test_the_checked_in_rooms_are_what_the_builder_writes() -> void:
-	assert_eq(AreaBuilder.stale(AreaBuilder.build()), [])

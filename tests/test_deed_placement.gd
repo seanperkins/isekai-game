@@ -88,6 +88,3 @@ func test_the_built_rooms_hold_the_nodes_that_earn_the_deeds() -> void:
 		var node := RoomBuilder.build_room(world[room], {})
 		add_child_autofree(node)
 		assert_eq(node.get_children().filter(func(n: Node) -> bool: return n is RoomHold).size(), 1, room)
-
-func test_the_checked_in_rooms_are_what_the_builder_writes() -> void:
-	assert_eq(AreaBuilder.stale(AreaBuilder.build()), [])

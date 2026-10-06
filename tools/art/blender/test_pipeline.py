@@ -15,7 +15,7 @@ BLENDER = os.environ.get("BLENDER", "/Applications/Blender.app/Contents/MacOS/Bl
 
 
 def blender(*args):
-    done = subprocess.run([BLENDER, "-b", *args], capture_output=True, text=True)
+    done = subprocess.run([BLENDER, "-b", "--factory-startup", *args], capture_output=True, text=True)
     return done
 
 

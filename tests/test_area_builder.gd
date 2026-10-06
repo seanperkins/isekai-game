@@ -285,3 +285,7 @@ func test_problems_name_an_overlap_an_unmatched_exit_and_an_unreachable_ledge() 
 	assert_string_contains(text, "overlaps")
 	assert_string_contains(text, "ZZ2")
 	assert_string_contains(text, "ledge_reach")
+
+## The whole world is built and compared with its files once, here: every area's test file used to do it again (six copies of one check, each a build of everything, the longest tests of the suite).
+func test_the_checked_in_rooms_are_what_the_builder_writes() -> void:
+	assert_eq(AreaBuilder.stale(AreaBuilder.build()), [])
