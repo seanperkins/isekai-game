@@ -64,3 +64,6 @@ canvas.lineup { display: block; image-rendering: pixelated; background: #181a22;
 .tools { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
 .viewer-host canvas { display: block; border-radius: 6px; max-width: 100%; image-rendering: auto; }
 .tile canvas.replay { cursor: pointer; }
+
+.pick { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; color: var(--muted, inherit); }
+.pick select { font: inherit; }

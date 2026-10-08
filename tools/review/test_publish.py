@@ -49,6 +49,55 @@ class ListingTest(unittest.TestCase):
         self.assertIn("run", listing["clips"])
         self.assertEqual(publish.sheet_media("goblin")["sheet.png"], publish.ROOT / "assets" / "sheets" / "goblin.png")
 
+    def test_sheet_listing_carries_hands_and_the_held_defaults_and_scale(self):
+        listing = publish.sheet_listing("goblin_smith")
+        for clip in listing["clips"].values():
+            for frame in clip["frames"]:
+                self.assertEqual(set(frame["hands"]), {"n", "f"}, frame)
+                self.assertEqual(set(frame["hands"]["n"]), {"x", "y", "a"})
+        table = read_json(publish.ROOT / "data" / "held_items.json")
+        held = listing["held"]
+        self.assertEqual(held["form"], {"n": "hammer", "f": "tongs", "scale": table["forms"]["goblin_smith"]["scale"]})
+        self.assertEqual(set(held["items"]), set(table["items"]), "every item can be tried")
+        axe = held["items"]["axe"]
+        self.assertEqual((axe["image"], axe["grip"]), ("items/axe.png", table["items"]["axe"]["grip"]))
+        sheet = read_json(publish.ROOT / "assets" / "sheets" / "held_axe.json")["frames"]["item"]["rect"]
+        self.assertEqual((axe["w"], axe["h"]), (sheet[2], sheet[3]))
+
+    def test_the_base_goblin_lists_its_empty_hands_and_a_scale(self):
+        held = publish.sheet_listing("goblin")["held"]
+        self.assertEqual((held["form"]["n"], held["form"]["f"]), ("", ""))
+        self.assertGreater(held["form"]["scale"], 0)
+
+    def test_sheet_media_publishes_the_item_sheets_it_names(self):
+        media = publish.sheet_media("goblin_smith")
+        held = publish.sheet_listing("goblin_smith")["held"]
+        self.assertEqual(media["items/axe.png"], publish.ROOT / "assets" / "sheets" / "held_axe.png")
+        for item in held["items"].values():
+            self.assertTrue(media[item["image"]].is_file(), item["image"])
+
+    def test_a_creature_with_no_held_entry_lists_no_held_block_and_no_item_media(self):
+        listing = publish.sheet_listing("gloom_wolf")
+        self.assertNotIn("held", listing)
+        self.assertFalse([k for k in publish.sheet_media("gloom_wolf") if k.startswith("items/")])
+
+    def test_the_repo_option_reads_the_held_table_of_that_checkout(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for rel in ("assets/sheets", "data/creatures"):
+                (root / rel).mkdir(parents=True)
+            sheet = {"image": "anim_goblin_x.png", "frames": {"a": {"rect": [0, 0, 10, 12], "hurt": [], "attack": [], "hands": {"n": {"x": 1, "y": -5, "a": 0}, "f": {"x": -1, "y": -5, "a": 0}}}}}
+            (root / "assets/sheets/anim_goblin_x.json").write_text(json.dumps(sheet))
+            (root / "assets/sheets/anim_goblin_x.png").write_bytes(b"png")
+            (root / "assets/sheets/held_axe.json").write_text(json.dumps({"frames": {"item": {"rect": [0, 0, 7, 9]}}}))
+            (root / "assets/sheets/held_axe.png").write_bytes(b"png")
+            (root / "data/form_clips.json").write_text(json.dumps({"goblin_x": {"idle": {"frames": ["a"], "fps": 5, "loop": True}}}))
+            (root / "data/held_items.json").write_text(json.dumps({"items": {"axe": {"set": "held_axe", "frame": "item", "grip": [1.5, -2.0], "ppu": 30.0}}, "forms": {"goblin_x": {"scale": 0.5, "n": "axe"}}}))
+            listing = publish.sheet_listing("goblin_x", root)
+            self.assertEqual(listing["held"], {"form": {"n": "axe", "f": "", "scale": 0.5}, "items": {"axe": {"image": "items/axe.png", "grip": [1.5, -2.0], "w": 7, "h": 9}}})
+            self.assertEqual(listing["clips"]["idle"]["frames"][0]["hands"]["n"], {"x": 1, "y": -5, "a": 0})
+            self.assertEqual(publish.sheet_media("goblin_x", root)["items/axe.png"], root / "assets/sheets/held_axe.png")
+
     def test_frames_listing_from_a_render_folder(self):
         with tempfile.TemporaryDirectory() as tmp:
             folder = Path(tmp)
