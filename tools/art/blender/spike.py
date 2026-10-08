@@ -36,12 +36,14 @@ CURRENT = {
 }
 
 
-def render(creature, out, variant=None, anims=None, ss=4):
+def render(creature, out, variant=None, anims=None, ss=4, empty_hands=False):
     cmd = [BLENDER, "-b", "--factory-startup", "-P", os.path.join(HERE, "render_set.py"), "--", "--creature", creature, "--out", out, "--ss", str(ss)]
     if variant:
         cmd += ["--variant", variant]
     if anims:
         cmd += ["--anims", anims]
+    if empty_hands:
+        cmd.append("--empty-hands")   # the held pieces are left out; the game draws them (render_set.py)
     stale = os.path.join(out, "meta.json")
     if os.path.exists(stale):
         os.remove(stale)  # Blender exits cleanly on a Python error: only a fresh meta.json proves the run finished
@@ -171,13 +173,14 @@ def main(argv=None):
     ap.add_argument("--variant")
     ap.add_argument("--out", default=os.path.join(ROOT, ".tmp", "blender-spike"))
     ap.add_argument("--anims")
+    ap.add_argument("--empty-hands", action="store_true", help="leave out what the hands carry (goblin forms)")
     ap.add_argument("--no-outline", action="store_true")
     args = ap.parse_args(argv)
     name = args.creature + ("_" + args.variant if args.variant else "")
     out = os.path.join(args.out, name)
     raw = os.path.join(out, "raw")
     os.makedirs(raw, exist_ok=True)
-    render(args.creature, raw, args.variant, args.anims)
+    render(args.creature, raw, args.variant, args.anims, empty_hands=args.empty_hands)
     frames = process(raw, out, not args.no_outline)
     meta = json.load(open(os.path.join(raw, "meta.json")))
     gifs(out, frames, meta["margin"])
