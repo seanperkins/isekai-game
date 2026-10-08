@@ -10,3 +10,5 @@ such as `goblin_skulker` to `zz_fix`, with a `sprites` block for `attack` and `i
 | Compare draws each side at its own scale | read the two compare canvases' `style.width` | the widths are in the ratio of the listings' `scale` (1.12 against 1.0) |
 | A typed note survives a live update | type in a clip's note box, rewrite that creature's `sprites.json` on disk | the box still holds the text |
 | An index failure does not replace the open page | make `fetch` reject for `/api/creatures`, rewrite a file under `creatures/` | the creature's heading is still there |
+| The index shows a thumbnail, name and stage on every tile | open `#/`; for each `.creature-tile` read its `.title`, its `.meta` and whether its `canvas.thumb` has drawn pixels | every tile has a name and a stage line (and `from <parent>`), none is empty (it was 0 of 32 with a thumbnail), and each sprite fills at least about half of the 112 x 96 box (a sheet cell's transparent padding is cropped away) |
+| `fitScale` scales to whole pixels | `import('/app/thumbs.js')`, call `fitScale(32, 47)`, `fitScale(10, 10)`, `fitScale(200, 50)` | `2`, `4` (the cap), `0.56` (a sprite wider than the box is reduced) |

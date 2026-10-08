@@ -11,6 +11,7 @@ import "./blocks/figure.js";
 import "./blocks/lineup.js";
 import "./blocks/model.js";
 import { flagBar, retryPending } from "./blocks/feedback.js";
+import { BOX, thumbnail, invalidate, paintThumb } from "./thumbs.js";
 
 window.__loaded = Date.now();   // a marker the browser check uses to tell a reload from an in-place update
 
@@ -90,12 +91,19 @@ function renderIndex() {
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(c);
   }
+  const titleOf = (id) => (creatures.find((c) => c.id === id) || {}).title || id;
+  const tile = (c) => {
+    const thumb = h("canvas", { class: "thumb", width: String(BOX.w), height: String(BOX.h) });
+    thumbnail(c.id).then((result) => paintThumb(thumb, result));
+    const meta = [c.stage != null ? "stage " + c.stage : null, c.parent ? "from " + titleOf(c.parent) : null].filter(Boolean).join(" . ");
+    return h("a", { class: "creature-tile" + (c.error ? " broken" : ""), href: "#/creature/" + c.id, title: c.id },
+      thumb,
+      h("span", { class: "tile-name" }, h("span", { class: "dot flag-" + (c.flag || "none"), title: c.flag ? "latest flag: " + c.flag : "no flag yet" }), h("span", { class: "title" }, c.title || c.id)),
+      h("span", { class: "meta" }, meta),
+      c.error ? notice(c.error, "error") : null);
+  };
   const sections = [...groups.keys()].sort().map((species) => h("section", { class: "species" }, h("h2", {}, species),
-    orderTree(groups.get(species)).map(([c, depth]) => h("a", { class: "card" + (c.error ? " broken" : ""), href: "#/creature/" + c.id, style: `margin-left:${depth * 22}px` },
-      h("span", { class: "dot flag-" + (c.flag || "none"), title: c.flag ? "latest flag: " + c.flag : "no flag yet" }),
-      h("span", { class: "title" }, c.title || c.id),
-      h("span", { class: "meta" }, c.stage != null ? "stage " + c.stage : ""),
-      c.error ? notice(c.error, "error") : null))));
+    h("div", { class: "tiles" }, orderTree(groups.get(species)).map(([c]) => tile(c)))));
   view.replaceChildren(h("h1", {}, "Creatures"),
     ...(creatures.length ? sections : [notice("Nothing published yet. Run tools/review/publish.py sheet <form_id> to put a creature here.")]));
 }
@@ -250,6 +258,8 @@ function route() {
 // ---- live updates ------------------------------------------------------------------------------------------------------------------
 let indexTimer = 0;
 function onContent(path) {
+  const parts = path.split("/");
+  if (parts[0] === "creatures" && parts.length > 2 && parts[2] !== "page.json") invalidate(parts[1]);   // its sprites changed: its thumbnail is drawn again
   if (path.startsWith("creatures/") || path.startsWith("feedback")) {
     clearTimeout(indexTimer);
     indexTimer = setTimeout(refreshIndex, 100);
