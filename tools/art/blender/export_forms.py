@@ -25,6 +25,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 sys.path.insert(0, HERE)
 import clips  # noqa: E402
+import held  # noqa: E402
 import sizing  # noqa: E402
 
 BASES = {"goblin": "goblin", "wolf": "gloom_wolf", "spider": "spider", "undead": "skeleton", "slime": "slime"}   # a family's base creature is not a twin: it has its own sheet
@@ -86,8 +87,13 @@ def form_id(creature, form):
     return form if creature == "slime" else "%s_%s" % (creature, form)
 
 
-def spec_of(set_name, names):
-    return {"set": set_name, "common_box": True, "frames": [{"name": n, "width": 0, "native": True} for n in names]}
+def spec_of(set_name, names, hands=None):
+    """The assembler's spec for a set: every frame native and cut to one box. `hands` ({frame: {side: [px, py, degrees]}}) are placed with each frame."""
+    frames = [{"name": n, "width": 0, "native": True} for n in names]
+    for entry in frames:
+        if hands and entry["name"] in hands:
+            entry["hands"] = hands[entry["name"]]
+    return {"set": set_name, "common_box": True, "frames": frames}
 
 
 def install(creature, form, folder, root=ROOT, assemble=True, check=True):
@@ -95,6 +101,7 @@ def install(creature, form, folder, root=ROOT, assemble=True, check=True):
     set_name = "anim_" + form_id(creature, form)
     with open(os.path.join(folder, "raw", "meta.json")) as fh:
         meta = json.load(fh)
+    held.check_empty_handed(meta)   # an armed goblin render would draw every weapon twice beside the held-item layer
     if check:
         check_timing(meta, engine_constants())
     dest = os.path.join(root, "art_source", "frames", set_name)
@@ -108,11 +115,13 @@ def install(creature, form, folder, root=ROOT, assemble=True, check=True):
             shutil.copy(os.path.join(folder, "frames", n + "_n.png"), os.path.join(dest, n + "_n.png"))
             names.append(n)
     with open(os.path.join(root, "tools", "art", set_name + "_frames.json"), "w") as fh:
-        json.dump(spec_of(set_name, names), fh, indent=1)
+        json.dump(spec_of(set_name, names, meta.get("hands")), fh, indent=1)
     if assemble:
         done = subprocess.run([sys.executable, os.path.join("tools", "art", "assemble_frames.py"), set_name], cwd=root, capture_output=True, text=True)
         if done.returncode != 0:
             raise RuntimeError("assemble_frames failed for %s:\n%s%s" % (set_name, done.stdout[-1500:], done.stderr[-1500:]))
+    if creature == "goblin":
+        held.update_table(os.path.join(root, "data", "held_items.json"), forms={form_id(creature, form): held.form_entry(form, meta["ppu"])})
     return form_id(creature, form), clips_of(meta)
 
 

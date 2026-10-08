@@ -1,10 +1,16 @@
 """Turning a render's meta into the engine's clips (export_forms.py): pure Python."""
+import json
 import os
 import sys
+import tempfile
 import unittest
+
+from PIL import Image
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import export_forms as ex  # noqa: E402
+import goblin_forms  # noqa: E402
+import held  # noqa: E402
 
 META = {
     "anims": {"idle": 2, "walk": 3, "attack": 4, "hurt": 2, "die": 3},
@@ -124,3 +130,60 @@ class WearableTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def fake_render(tmp, meta):
+    """A render folder in `tmp`: raw/meta.json and one tiny frame with a normal map for every frame the meta names, and the folders an install writes into."""
+    folder = os.path.join(tmp, "render")
+    os.makedirs(os.path.join(folder, "raw"))
+    os.makedirs(os.path.join(folder, "frames"))
+    with open(os.path.join(folder, "raw", "meta.json"), "w") as fh:
+        json.dump(meta, fh)
+    for anim, count in meta["anims"].items():
+        for i in range(count):
+            for suffix in ("", "_n"):
+                Image.new("RGBA", (4, 4), (10, 20, 30, 255)).save(os.path.join(folder, "frames", "%s_%d%s.png" % (anim, i, suffix)))
+    os.makedirs(os.path.join(tmp, "tools", "art"))
+    return folder
+
+
+def hands_for(meta):
+    return {"%s_%d" % (anim, i): {"n": [10.0 + i, 20.0, 5.0], "f": [8.0, 21.0, -3.0]} for anim, count in meta["anims"].items() for i in range(count)}
+
+
+class HeldTest(unittest.TestCase):
+    META = {"anims": {"idle": 2, "die": 2}, "durations": {"idle": [0.2, 0.2], "die": [0.1, 0.3]}, "loops": {"idle": True, "die": False}, "ppu": 40.0}
+
+    def meta(self, creature, **more):
+        return dict(self.META, creature=creature, **more)
+
+    def test_spec_of_carries_each_frames_hands(self):
+        spec = ex.spec_of("anim_x", ["idle_0", "idle_1"], hands={"idle_0": {"n": [1.0, 2.0, 3.0]}})
+        self.assertEqual(spec["frames"][0]["hands"], {"n": [1.0, 2.0, 3.0]})
+        self.assertNotIn("hands", spec["frames"][1])
+
+    def test_install_writes_the_hands_into_the_spec_and_the_form_entry_into_the_table(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            meta = self.meta("goblin", hold=False)
+            meta["hands"] = hands_for(meta)
+            ex.install("goblin", "smith", fake_render(tmp, meta), root=tmp, assemble=False, check=False)
+            with open(os.path.join(tmp, "tools", "art", "anim_goblin_smith_frames.json")) as fh:
+                frames = {f["name"]: f for f in json.load(fh)["frames"]}
+            with open(os.path.join(tmp, "data", "held_items.json")) as fh:
+                table = json.load(fh)
+        self.assertEqual(frames["idle_1"]["hands"], meta["hands"]["idle_1"])
+        self.assertEqual(table["forms"]["goblin_smith"], {"scale": round(held.form_scale(goblin_forms.FORMS["smith"], 40.0), 4), "n": "hammer", "f": "tongs"})
+
+    def test_install_refuses_an_armed_goblin_render_and_does_not_check_a_wolf(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(ValueError) as caught:
+                ex.install("goblin", "smith", fake_render(tmp, self.meta("goblin")), root=tmp, assemble=False, check=False)
+            self.assertIn("hold", str(caught.exception))
+            self.assertFalse(os.path.exists(os.path.join(tmp, "art_source")), "nothing was written")
+        with tempfile.TemporaryDirectory() as tmp:
+            ex.install("wolf", "warg", fake_render(tmp, self.meta("wolf")), root=tmp, assemble=False, check=False)
+
+    def test_a_wolf_install_leaves_held_items_json_alone(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ex.install("wolf", "warg", fake_render(tmp, self.meta("wolf")), root=tmp, assemble=False, check=False)
+            self.assertFalse(os.path.exists(os.path.join(tmp, "data", "held_items.json")))

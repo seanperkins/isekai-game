@@ -67,6 +67,15 @@ def form_scale(form, ppu):
     return ppu / ITEM_PPU * kit
 
 
+def form_entry(form_name, ppu):
+    """The form's row of data/held_items.json: the scale of its items at the pixels per unit it was rendered at, and what each hand holds by default
+    (a hand that holds nothing has no key). Every goblin form has one, empty-handed or not: any hand can be given an item."""
+    row = goblin_forms.FORMS[form_name]
+    entry = {"scale": round(form_scale(row, ppu), 4)}
+    entry.update({side: item for side, item in held_of(row["gear"]).items() if item})
+    return entry
+
+
 def project(canvas, ppu, margin, center_x, x, z):
     """The pixel (px, py) in a render's canvas of the world point (x, z): the side-on camera of stage.camera_params, which puts the ground `margin` pixels
     above the bottom and `center_x` on the middle column."""

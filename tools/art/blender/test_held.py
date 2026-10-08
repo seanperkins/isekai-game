@@ -63,6 +63,10 @@ class HeldPiecesTest(unittest.TestCase):
         leprechaun = held.held_of(forms.FORMS["leprechaun"]["gear"])
         self.assertEqual((leprechaun["n"], leprechaun["f"]), ("hammer_small", "coin"))
 
+    def test_form_entry_has_the_scale_and_what_each_hand_holds_and_an_empty_handed_form_has_the_scale_only(self):
+        self.assertEqual(held.form_entry("smith", 45.0), {"scale": round(held.form_scale(forms.FORMS["smith"], 45.0), 4), "n": "hammer", "f": "tongs"})
+        self.assertEqual(held.form_entry("goblin", 30.0), {"scale": 1.0})
+
     def test_a_piece_with_no_side_goes_to_its_default_hand(self):
         self.assertEqual(held.held_of([("tongs", {})]), {"n": "", "f": "tongs"})
         self.assertEqual(held.held_of([("shield", {"color": (1, 2, 3)})])["n"][:7], "shield_")

@@ -1,11 +1,17 @@
+import json
 import os
 import sys
+import tempfile
 import unittest
+from unittest import mock
 
 from PIL import Image
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import assemble_frames as a  # noqa: E402
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "blender"))
+import held  # noqa: E402
 
 MAGENTA = (255, 0, 255, 255)
 BLUE = (40, 120, 255, 255)
@@ -252,6 +258,56 @@ class DeriveTests(unittest.TestCase):
         self.assertEqual(sheet.getpixel((1, 1)), (128, 128, 255, 255))
         self.assertEqual(sheet.getpixel((5, 2)), (200, 100, 150, 255))
         self.assertEqual(sheet.getpixel((3, 0))[3], 0, "nothing where there is no frame")
+
+
+class HandsTest(unittest.TestCase):
+    def test_local_hands_matches_held_local_of(self):
+        box = (10, 8, 30, 32)
+        got = a.local_hands({"n": [15.0, 20.0, 30.0], "f": [28.5, 9.0, -12.0]}, box)
+        for side, (px, py) in (("n", (15.0, 20.0)), ("f", (28.5, 9.0))):
+            self.assertEqual((got[side]["x"], got[side]["y"]), held.local_of(px, py, box))
+        self.assertEqual(got["n"], {"x": -5.0, "y": -12.0, "a": 30.0})
+
+    def test_a_hand_moves_with_its_frames_box_and_is_in_the_sheet_json(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            os.makedirs(os.path.join(tmp, "art_source", "frames", "demo"))
+            os.makedirs(os.path.join(tmp, "tools", "art"))
+            frame(40, 40, (10, 10, 20, 30)).save(os.path.join(tmp, "art_source", "frames", "demo", "a.png"))
+            frame(40, 40, (14, 8, 30, 32)).save(os.path.join(tmp, "art_source", "frames", "demo", "b.png"))
+            spec = {"set": "demo", "common_box": True, "frames": [
+                {"name": "a", "width": 0, "native": True, "hands": {"n": [15.0, 20.0, 30.0], "f": [12.0, 22.0, 0.0]}},
+                {"name": "b", "width": 0, "native": True}]}
+            with open(os.path.join(tmp, "tools", "art", "demo_frames.json"), "w") as fh:
+                json.dump(spec, fh)
+            here = os.getcwd()
+            os.chdir(tmp)
+            try:
+                with mock.patch.object(sys, "argv", ["assemble_frames.py", "demo"]):
+                    a.main()
+            finally:
+                os.chdir(here)
+            with open(os.path.join(tmp, "assets", "sheets", "demo.json")) as fh:
+                frames = json.load(fh)["frames"]
+        self.assertEqual(frames["a"]["rect"][2:], frames["b"]["rect"][2:], "one shared box")
+        self.assertEqual(frames["a"]["hands"]["n"], {"x": -5.0, "y": -12.0, "a": 30.0})
+        self.assertEqual(frames["a"]["hands"]["f"], {"x": -8.0, "y": -10.0, "a": 0.0})
+        self.assertNotIn("hands", frames["b"])
+
+    def test_hands_on_a_frame_that_is_not_native_are_refused(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            os.makedirs(os.path.join(tmp, "art_source", "frames", "demo"))
+            os.makedirs(os.path.join(tmp, "tools", "art"))
+            frame(40, 40, (10, 10, 20, 30)).save(os.path.join(tmp, "art_source", "frames", "demo", "a.png"))
+            with open(os.path.join(tmp, "tools", "art", "demo_frames.json"), "w") as fh:
+                json.dump({"set": "demo", "frames": [{"name": "a", "width": 12, "hands": {"n": [1.0, 2.0, 3.0]}}]}, fh)
+            here = os.getcwd()
+            os.chdir(tmp)
+            try:
+                with mock.patch.object(sys, "argv", ["assemble_frames.py", "demo"]), self.assertRaises(SystemExit) as caught:
+                    a.main()
+            finally:
+                os.chdir(here)
+        self.assertIn("hands", str(caught.exception))
 
 
 if __name__ == "__main__":

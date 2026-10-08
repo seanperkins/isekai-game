@@ -254,6 +254,13 @@ def trace(im, attack_from, eps=0.35):
     return hurt, attack
 
 
+def local_hands(hands, box):
+    """Where a frame's hands are in its own cell: {"n": [px, py, degrees]} in the pixels of the render the cell was cut from (as the frame's `box` =
+    (left, top, right, bottom)) becomes {"n": {"x", "y", "a"}} in the space of the hit shapes: origin at the cell's bottom centre, x right, y down."""
+    left, _, right, bottom = box
+    return {side: {"x": round(px - left - (right - left) / 2.0, 2), "y": round(py - bottom, 2), "a": a} for side, (px, py, a) in hands.items()}
+
+
 def pack(frames):
     """Shelf-pack the frames in order. Returns (sheet, {name: (x, y, w, h)})."""
     x = y = row_h = 0
@@ -277,7 +284,7 @@ def main():
         raise SystemExit("usage: assemble_frames.py <set>")
     rig_set = sys.argv[1]
     data = json.load(open("tools/art/%s_frames.json" % rig_set))
-    fitted, shapes, normals = {}, {}, {}
+    fitted, shapes, normals, hands = {}, {}, {}, {}
     scale = None
     # a derived set (e.g. the Pale Moth) reads another set's source frames and lightens/tints the keyed crop
     src_set = data.get("derive_from", rig_set)
@@ -298,18 +305,24 @@ def main():
             source = Image.open(src)
             box = shared or (centred_box(native_box(source), source.width / 2.0) if centre_each else None)
             fitted[f["name"]] = native_frame(source, box)
+            if f.get("hands"):  # where the hands are in the render, moved into the cell the frame was cut to
+                hands[f["name"]] = local_hands(f["hands"], box or native_box(source))
             normal_src = os.path.join(SRC, src_set, f["name"] + "_n.png")
             if os.path.exists(normal_src):  # the normal map beside it, cut the same way, drawn only where the frame is
                 cut = Image.open(normal_src).convert("RGBA").crop(box or native_box(source))
                 cut.putalpha(fitted[f["name"]].split()[3])
                 normals[f["name"]] = cut
         else:
+            if f.get("hands"):
+                raise SystemExit("frame %s has hands but is not native: they are placed in the render's own pixels" % f["name"])
             fitted[f["name"]] = fit_scaled(Image.open(src), scale, look) if scale else fit_frame(Image.open(src), f["width"])
         shapes[f["name"]] = trace(fitted[f["name"]], f.get("attack_from"), f.get("outline_eps", 0.35))
     sheet, rects = pack(fitted)
     os.makedirs(OUT, exist_ok=True)
     sheet.save(os.path.join(OUT, rig_set + ".png"))
     frames = {n: {"rect": list(rects[n]), "hurt": shapes[n][0], "attack": shapes[n][1]} for n in fitted}
+    for n, h in hands.items():
+        frames[n]["hands"] = h
     meta = {"set": rig_set, "image": rig_set + ".png", "frames": frames}
     if normals:  # a sheet with normal maps: every frame has one, laid out exactly as the colour sheet
         if set(normals) != set(fitted):
