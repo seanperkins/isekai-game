@@ -116,8 +116,8 @@ Risk and how it is handled: the rig's materials are emission-only (it is made to
 
 ## Build order
 
-1. **Shell:** server, events, page shell, index, `sprites` and `note` blocks, flags and notes, `publish.py sheet` and `frames`. First content: the goblin walk review (the mocap measures as `numbers`, the lineup of the heavy goblins, the sprites).
-2. **More blocks:** `compare`, `lineup`, `figure`; the wolf and spider as the second and third content.
+1. **Shell:** server, events, page shell, index, `sprites`, `note` and `numbers` blocks, flags and notes, `publish.py sheet` and `frames`. First content: the goblin walk review (the sprites, the mocap measures as `numbers`, the agent's notes).
+2. **More blocks:** `compare`, `lineup`, `figure`; the heavy goblins' size lineup and the mocap stick figure join the goblin review, and the wolf and spider are the second and third content.
 3. **3D:** the glTF spike on the base goblin, then `export_gltf.py`, `viewer.js` and the `model` block, then every form.
 
 Each step ends with the page open and the agent's own content on it.
