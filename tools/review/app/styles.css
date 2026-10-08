@@ -1,0 +1,38 @@
+:root {
+  color-scheme: dark;
+  --bg: #14151b; --panel: #1d1f28; --ink: #e6e6ee; --faint: #8b8da0; --line: #2c2f3b; --accent: #7aa2ff;
+  --ok: #5ec27f; --wrong: #ef6a6a; --change: #f0b252; --warn-bg: #3a3320; --err-bg: #3e2024;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 -apple-system, "Segoe UI", system-ui, sans-serif; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+canvas, img { image-rendering: pixelated; }
+
+#bar { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 14px; padding: 8px 16px; background: var(--panel); border-bottom: 1px solid var(--line); }
+#bar .brand { font-weight: 600; color: var(--ink); }
+#bar .spacer { flex: 1; }
+#bar label { color: var(--faint); font-size: 13px; }
+select, button, textarea, input { background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; font: inherit; }
+button { cursor: pointer; }
+button:hover { border-color: var(--accent); }
+.live { font-size: 12px; color: var(--ok); }
+.live.off { color: var(--change); }
+
+main { max-width: 1200px; margin: 0 auto; padding: 16px; }
+h1 { margin: 8px 0 4px; font-size: 24px; }
+h2 { margin: 24px 0 8px; font-size: 14px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+.meta { color: var(--faint); font-size: 13px; margin: 0; }
+.back { font-size: 13px; }
+
+.card { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; padding: 8px 12px; margin: 4px 0; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; color: var(--ink); }
+.card:hover { border-color: var(--accent); text-decoration: none; }
+.card .title { font-weight: 500; }
+.card.broken { border-color: var(--wrong); }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--line); flex: none; }
+.flag-ok { background: var(--ok); } .flag-wrong { background: var(--wrong); } .flag-change { background: var(--change); }
+
+.blocks { display: grid; gap: 14px; margin-top: 14px; }
+.block { padding: 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow-x: auto; }
+.notice { padding: 8px 12px; border-radius: 8px; background: var(--warn-bg); border: 1px solid var(--change); font-size: 13px; white-space: pre-wrap; }
+.notice.error { background: var(--err-bg); border-color: var(--wrong); }
