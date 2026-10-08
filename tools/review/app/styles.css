@@ -61,10 +61,16 @@ canvas.lineup { display: block; image-rendering: pixelated; background: #181a22;
 .viewer-host canvas { display: block; border-radius: 6px; max-width: 100%; image-rendering: auto; }
 .tile canvas.replay { cursor: pointer; }
 
-.tiles { display: flex; flex-wrap: wrap; gap: 10px; }
-.creature-tile { width: 136px; display: flex; flex-direction: column; gap: 4px; padding: 8px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; color: var(--ink); }
-.creature-tile:hover { border-color: var(--accent); text-decoration: none; }
-.creature-tile.broken { border-color: var(--wrong); width: 280px; }
-.creature-tile .thumb { align-self: center; border-radius: 4px; background: repeating-conic-gradient(#222532 0% 25%, #1b1d27 0% 50%) 0 0 / 16px 16px; }
-.creature-tile .tile-name { display: flex; align-items: center; gap: 6px; font-weight: 500; line-height: 1.2; }
+.chart { overflow-x: auto; padding-bottom: 6px; }
+.chart-inner { position: relative; }
+.chart .links { position: absolute; left: 0; top: 0; pointer-events: none; }
+.chart .links path { fill: none; stroke: var(--line); stroke-width: 2; }
+.stage-head { position: absolute; top: 0; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+.creature-tile { position: absolute; display: flex; align-items: center; gap: 10px; padding: 4px 10px 4px 4px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; color: var(--ink); overflow: hidden; }
+.creature-tile:hover { border-color: var(--accent); text-decoration: none; z-index: 1; }
+.creature-tile.broken { border-color: var(--wrong); }
+.creature-tile.broken .notice { max-height: 2.6em; overflow: hidden; padding: 2px 6px; font-size: 11px; }
+.creature-tile .thumb { flex: none; border-radius: 4px; background: repeating-conic-gradient(#222532 0% 25%, #1b1d27 0% 50%) 0 0 / 16px 16px; }
+.creature-tile .tile-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.creature-tile .tile-name { display: flex; align-items: center; gap: 6px; font-weight: 500; font-size: 13px; line-height: 1.2; }
 .creature-tile .meta { font-size: 12px; line-height: 1.2; }

@@ -2,7 +2,7 @@
 // fits in whole pixels so it stays crisp. Read from the creature's sprites listing; the result is kept until one of the creature's files changes.
 import { loadSet, prepareClip } from "./blocks/sprite-set.js";
 
-export const BOX = { w: 112, h: 96 };   // CSS px
+export const BOX = { w: 72, h: 64 };   // CSS px
 
 // How much to magnify a w x h sprite to fill the box: the largest whole number up to `max` that fits, or less than 1 for a sprite bigger than the box.
 export function fitScale(w, h, box = BOX, max = 4) {
@@ -70,7 +70,7 @@ export function paintThumb(target, result) {
   const g = target.getContext("2d");
   g.clearRect(0, 0, target.width, target.height);
   if (!result) return;
-  const k = fitScale(result.w, result.h);
+  const k = fitScale(result.w, result.h, { w: target.width, h: target.height });
   const w = Math.round(result.w * k);
   const h = Math.round(result.h * k);
   g.imageSmoothingEnabled = false;

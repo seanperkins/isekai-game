@@ -12,6 +12,7 @@ import "./blocks/lineup.js";
 import "./blocks/model.js";
 import { flagBar, retryPending } from "./blocks/feedback.js";
 import { BOX, thumbnail, invalidate, paintThumb } from "./thumbs.js";
+import { layoutTree } from "./chart.js";
 
 window.__loaded = Date.now();   // a marker the browser check uses to tell a reload from an in-place update
 
@@ -60,28 +61,44 @@ function setLive(on) {
 }
 
 // ---- the index ---------------------------------------------------------------------------------------------------------------------
-function orderTree(list) {
-  const ids = new Set(list.map((c) => c.id));
-  const kids = new Map();
-  for (const c of list) {
-    const parent = c.parent && ids.has(c.parent) && c.parent !== c.id ? c.parent : null;
-    if (!kids.has(parent)) kids.set(parent, []);
-    kids.get(parent).push(c);
+const CARD = { w: 208, h: 72, gapX: 56, gapY: 10, head: 24 };   // CSS px
+const SVG = "http://www.w3.org/2000/svg";
+
+function chart(list) {
+  const { nodes, edges, cols, rows } = layoutTree(list);
+  const x = (col) => col * (CARD.w + CARD.gapX);
+  const y = (row) => CARD.head + row * (CARD.h + CARD.gapY);
+  const byId = new Map(nodes.map((n) => [n.c.id, n]));
+  const links = document.createElementNS(SVG, "svg");
+  links.setAttribute("class", "links");
+  for (const [from, to] of edges) {   // a smooth line from the parent's right edge to the child's left
+    const a = byId.get(from), b = byId.get(to);
+    const x1 = x(a.col) + CARD.w, y1 = y(a.row) + CARD.h / 2, x2 = x(b.col), y2 = y(b.row) + CARD.h / 2, mid = (x1 + x2) / 2;
+    const path = document.createElementNS(SVG, "path");
+    path.setAttribute("d", `M${x1} ${y1} C${mid} ${y1} ${mid} ${y2} ${x2} ${y2}`);
+    links.append(path);
   }
-  const order = (a, b) => (a.stage ?? 99) - (b.stage ?? 99) || a.id.localeCompare(b.id);
-  const out = [];
-  const seen = new Set();
-  const walk = (parent, depth) => {
-    for (const c of (kids.get(parent) || []).sort(order)) {
-      if (seen.has(c.id)) continue;
-      seen.add(c.id);
-      out.push([c, depth]);
-      walk(c.id, depth + 1);
-    }
-  };
-  walk(null, 0);
-  for (const c of list.filter((c) => !seen.has(c.id)).sort(order)) out.push([c, 0]);   // a parent loop, however it came about, still shows
-  return out;
+  const stages = new Map();
+  for (const n of nodes) if (!stages.has(n.col)) stages.set(n.col, n.c.stage);
+  const width = cols ? x(cols - 1) + CARD.w : 0;
+  const height = CARD.head + (rows ? rows * (CARD.h + CARD.gapY) - CARD.gapY : 0);
+  links.setAttribute("width", String(width));
+  links.setAttribute("height", String(height));
+  const inner = h("div", { class: "chart-inner", style: `width:${width}px;height:${height}px` }, links,
+    [...stages].sort((a, b) => a[0] - b[0]).map(([col, stage]) => h("span", { class: "stage-head", style: `left:${x(col)}px` }, stage != null ? "stage " + stage : "")),
+    nodes.map((n) => tile(n.c, x(n.col), y(n.row))));
+  return h("div", { class: "chart" }, inner);
+}
+
+function tile(c, left, top) {
+  const thumb = h("canvas", { class: "thumb", width: String(BOX.w), height: String(BOX.h) });
+  thumbnail(c.id).then((result) => paintThumb(thumb, result));
+  return h("a", { class: "creature-tile" + (c.error ? " broken" : ""), href: "#/creature/" + c.id, title: c.parent ? `${c.id}, from ${c.parent}` : c.id, style: `left:${left}px;top:${top}px;width:${CARD.w}px;height:${CARD.h}px` },
+    thumb,
+    h("span", { class: "tile-text" },
+      h("span", { class: "tile-name" }, h("span", { class: "dot flag-" + (c.flag || "none"), title: c.flag ? "latest flag: " + c.flag : "no flag yet" }), h("span", { class: "title" }, c.title || c.id)),
+      h("span", { class: "meta" }, c.stage != null ? "stage " + c.stage : ""),
+      c.error ? notice(c.error, "error") : null));
 }
 
 function renderIndex() {
@@ -91,19 +108,7 @@ function renderIndex() {
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(c);
   }
-  const titleOf = (id) => (creatures.find((c) => c.id === id) || {}).title || id;
-  const tile = (c) => {
-    const thumb = h("canvas", { class: "thumb", width: String(BOX.w), height: String(BOX.h) });
-    thumbnail(c.id).then((result) => paintThumb(thumb, result));
-    const meta = [c.stage != null ? "stage " + c.stage : null, c.parent ? "from " + titleOf(c.parent) : null].filter(Boolean).join(" . ");
-    return h("a", { class: "creature-tile" + (c.error ? " broken" : ""), href: "#/creature/" + c.id, title: c.id },
-      thumb,
-      h("span", { class: "tile-name" }, h("span", { class: "dot flag-" + (c.flag || "none"), title: c.flag ? "latest flag: " + c.flag : "no flag yet" }), h("span", { class: "title" }, c.title || c.id)),
-      h("span", { class: "meta" }, meta),
-      c.error ? notice(c.error, "error") : null);
-  };
-  const sections = [...groups.keys()].sort().map((species) => h("section", { class: "species" }, h("h2", {}, species),
-    h("div", { class: "tiles" }, orderTree(groups.get(species)).map(([c]) => tile(c)))));
+  const sections = [...groups.keys()].sort().map((species) => h("section", { class: "species" }, h("h2", {}, species), chart(groups.get(species))));
   view.replaceChildren(h("h1", {}, "Creatures"),
     ...(creatures.length ? sections : [notice("Nothing published yet. Run tools/review/publish.py sheet <form_id> to put a creature here.")]));
 }
