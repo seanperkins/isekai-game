@@ -131,23 +131,39 @@ def frames_media(folder):
     return {"frames/%s_%d.png" % (clip, i): folder / "frames" / ("%s_%d.png" % (clip, i)) for clip in meta["anims"] for i in range(meta["anims"][clip])}
 
 
-def tree_meta(creature):
+def split_id(creature):
+    """(species, form) of a form id: wolf_fenrir is ("wolf", "fenrir"), kraken ("slime", "kraken"); as export_forms.split_id."""
+    head, _, rest = creature.partition("_")
+    return (head, rest) if head in BASE_OF and rest else ("slime", creature)
+
+
+def form_id(species, form):
+    return form if species == "slime" else "%s_%s" % (species, form)
+
+
+def _forms_of(species, repo):
+    """The species' form table from the checkout's tools/art/blender (this checkout's when it has none). A process reads one checkout's: Python caches the module."""
+    folder = Path(repo) / "tools" / "art" / "blender"
+    folder = folder if folder.is_dir() else BLENDER_DIR
+    if str(folder) not in sys.path:
+        sys.path.insert(0, str(folder))
+    try:
+        return importlib.import_module("%s_forms" % species).FORMS
+    except ImportError:
+        return {}
+
+
+def tree_meta(creature, repo=ROOT):
     """{title, species, stage, parent} from the species' form table; {} for something not in a tree."""
     title = creature.replace("_", " ").title()
     if creature in BASE_CREATURES:
         return {"title": title, "species": BASE_CREATURES[creature], "stage": 1, "parent": None}
-    if str(BLENDER_DIR) not in sys.path:
-        sys.path.insert(0, str(BLENDER_DIR))
-    import export_forms
-    species, form = export_forms.split_id(creature)
-    try:
-        forms = importlib.import_module("%s_forms" % species).FORMS
-    except ImportError:
-        return {}
+    species, form = split_id(creature)
+    forms = _forms_of(species, repo)
     if form not in forms:
         return {}
     parent = forms[form].get("parent")
-    parent_id = None if parent is None else (BASE_OF[species] if parent == BASE_OF[species] else export_forms.form_id(species, parent))
+    parent_id = None if parent is None else (BASE_OF[species] if parent == BASE_OF[species] else form_id(species, parent))
     return {"title": form.replace("_", " ").title(), "species": species, "stage": forms[form].get("stage"), "parent": parent_id}
 
 
@@ -216,18 +232,16 @@ def species_form(creature):
     """(species, form) for the exporter: a base creature is its species' base form, anything else comes from its id."""
     if creature in BASE_CREATURES:
         return BASE_CREATURES[creature], creature
-    if str(BLENDER_DIR) not in sys.path:
-        sys.path.insert(0, str(BLENDER_DIR))
-    import export_forms
-    return export_forms.split_id(creature)
+    return split_id(creature)
 
 
-def publish_model(content, creature):
-    """Export the creature's rig and clips to a glTF (tools/review/export_gltf.py runs Blender), put it in the creature's folder and set its `model` block."""
+def publish_model(content, creature, repo=ROOT):
+    """Export the creature's rig and clips to a glTF (tools/review/export_gltf.py runs Blender, on the checkout `repo`'s art code), put it in the creature's folder
+    and set its `model` block."""
     folder = _page_path(content, creature).parent
     species, form = species_form(creature)
     with tempfile.TemporaryDirectory() as tmp:
-        done = subprocess.run([sys.executable, str(Path(__file__).resolve().parent / "export_gltf.py"), species, form, "--out", tmp], capture_output=True, text=True)
+        done = subprocess.run([sys.executable, str(Path(__file__).resolve().parent / "export_gltf.py"), species, form, "--out", tmp, "--art", str(repo)], capture_output=True, text=True)
         if done.returncode != 0:
             raise RuntimeError("the glTF export failed:\n" + (done.stdout + done.stderr)[-1500:])
         folder.mkdir(parents=True, exist_ok=True)
@@ -236,6 +250,32 @@ def publish_model(content, creature):
             shutil.copyfile(Path(tmp) / name, tmp_dest)
             os.replace(tmp_dest, folder / name)
     set_block(content, creature, {"type": "model", "gltf": "model.glb"}, key="model")
+
+
+def tree_ids(species, repo=ROOT):
+    """The creature ids of a species' whole tree, its base creature first."""
+    return [form if form == BASE_OF[species] else form_id(species, form) for form in _forms_of(species, repo)]
+
+
+def publish_tree(content, species, models=False, missing_only=False, repo=ROOT):
+    """Publish every form of a species that has a sheet (with `models`, its 3D model too). {"published", "skipped" (no sheet or clips), "no_model" (export failed)}."""
+    out = {"published": [], "skipped": [], "no_model": []}
+    for creature in tree_ids(species, repo):
+        if missing_only and _page_path(content, creature).is_file():
+            continue
+        try:
+            listing, media = sheet_listing(creature, repo), sheet_media(creature, repo)
+        except ValueError:
+            out["skipped"].append(creature)
+            continue
+        write_creature(content, creature, listing, media, **tree_meta(creature, repo))
+        out["published"].append(creature)
+        if models:
+            try:
+                publish_model(content, creature, repo)
+            except RuntimeError:
+                out["no_model"].append(creature)
+    return out
 
 
 def add_figure(content, creature, source, caption, key=None, name=None):
@@ -257,6 +297,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--content", type=Path, default=feedback.DEFAULT_CONTENT)
+    common.add_argument("--repo", type=Path, default=ROOT, help="the checkout whose sheets, data and art code to read (default: this one)")
     sub = ap.add_subparsers(dest="command", required=True)
     sheet = sub.add_parser("sheet", parents=[common], help="publish what the game plays for a form")
     sheet.add_argument("form_id")
@@ -264,6 +305,10 @@ def main(argv=None):
     frames.add_argument("creature")
     frames.add_argument("folder", type=Path)
     frames.add_argument("--scale", type=float, help="the game's draw scale for it (default: the twin's sprite_size, else 1)")
+    tree = sub.add_parser("tree", parents=[common], help="publish a whole species")
+    tree.add_argument("species", choices=sorted(BASE_OF))
+    tree.add_argument("--models", action="store_true", help="export each form's 3D model too")
+    tree.add_argument("--missing-only", action="store_true", help="leave a creature that already has a page alone")
     model = sub.add_parser("model", parents=[common], help="export the creature's 3D model and clips")
     model.add_argument("creature")
     figure = sub.add_parser("figure", parents=[common], help="put an image on a creature's page")
@@ -272,17 +317,21 @@ def main(argv=None):
     figure.add_argument("--caption", default="")
     figure.add_argument("--key")
     args = ap.parse_args(argv)
+    if args.command == "tree":
+        result = publish_tree(args.content, args.species, args.models, args.missing_only, args.repo)
+        print("published %d; no sheet or clips: %s; no model: %s" % (len(result["published"]), ", ".join(result["skipped"]) or "none", ", ".join(result["no_model"]) or "none"))
+        return
     if args.command == "model":
-        publish_model(args.content, args.creature)
+        publish_model(args.content, args.creature, args.repo)
         return
     if args.command == "figure":
         add_figure(args.content, args.creature, args.file, args.caption, key=args.key)
         return
     if args.command == "sheet":
-        path = write_creature(args.content, args.form_id, sheet_listing(args.form_id), sheet_media(args.form_id), **tree_meta(args.form_id))
+        path = write_creature(args.content, args.form_id, sheet_listing(args.form_id, args.repo), sheet_media(args.form_id, args.repo), **tree_meta(args.form_id, args.repo))
     else:
-        scale = args.scale if args.scale is not None else _sprite_size(args.creature, ROOT)
-        path = write_creature(args.content, args.creature, frames_listing(args.folder, scale), frames_media(args.folder), **tree_meta(args.creature))
+        scale = args.scale if args.scale is not None else _sprite_size(args.creature, args.repo)
+        path = write_creature(args.content, args.creature, frames_listing(args.folder, scale), frames_media(args.folder), **tree_meta(args.creature, args.repo))
     print(path)
 
 

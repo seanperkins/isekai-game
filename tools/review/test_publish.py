@@ -14,6 +14,11 @@ import publish  # noqa: E402
 SHOWN = {"idle", "walk", "run", "attack", "hurt", "die"}
 
 
+def read_json(path):
+    with open(path) as fh:
+        return json.load(fh)
+
+
 def png_size(path):
     with open(path, "rb") as fh:
         head = fh.read(24)
@@ -24,7 +29,7 @@ class ListingTest(unittest.TestCase):
     def test_sheet_listing_for_goblin_hob_matches_the_games_clips(self):
         listing = publish.sheet_listing("goblin_hob")
         self.assertEqual(set(listing["clips"]), SHOWN)   # the engine's windup, recover and downed states are not clips to look at
-        ticks = json.load(open(publish.ROOT / "data" / "form_clips.json"))["goblin_hob"]["walk"]
+        ticks = read_json(publish.ROOT / "data" / "form_clips.json")["goblin_hob"]["walk"]
         walk = listing["clips"]["walk"]
         self.assertAlmostEqual(sum(walk["durations"]), len(ticks["frames"]) / ticks["fps"], places=6)
         self.assertEqual(len(walk["frames"]), len(walk["durations"]))
@@ -85,6 +90,53 @@ class ModelTest(unittest.TestCase):
             page = json.loads((folder / "page.json").read_text())
             self.assertEqual([(b["type"], b["gltf"]) for b in page["blocks"]], [("model", "model.glb")])
             self.assertIn("walk", json.loads((folder / "model.json").read_text())["clips"])
+
+
+class TreeTest(unittest.TestCase):
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.content = Path(self._tmp.name)
+
+    def test_tree_publishes_every_goblin_form_with_a_sheet_and_lists_the_rest(self):
+        result = publish.publish_tree(self.content, "goblin")
+        self.assertEqual(len(result["published"]), 29)   # the base goblin and its 28 forms
+        self.assertEqual(result["skipped"], [])
+        page = json.loads((self.content / "creatures" / "goblin_ironboot" / "page.json").read_text())
+        self.assertEqual((page["species"], page["stage"], page["parent"]), ("goblin", 4, "goblin_redcap"))
+        base = json.loads((self.content / "creatures" / "goblin" / "page.json").read_text())
+        self.assertEqual((base["species"], base["stage"], base["parent"]), ("goblin", 1, None))
+
+    def test_tree_lists_a_form_that_has_no_sheet_instead_of_stopping(self):
+        with tempfile.TemporaryDirectory() as repo:
+            for rel in ("assets/sheets/anim_goblin_hob.json", "assets/sheets/anim_goblin_hob.png", "assets/sheets/anim_goblin_hob_n.png", "data/form_clips.json"):
+                (Path(repo) / rel).parent.mkdir(parents=True, exist_ok=True)
+                (Path(repo) / rel).write_bytes((publish.ROOT / rel).read_bytes())
+            result = publish.publish_tree(self.content, "goblin", repo=Path(repo))
+            self.assertEqual(result["published"], ["goblin_hob"])
+            self.assertIn("goblin_paladin", result["skipped"])
+            self.assertEqual(len(result["published"]) + len(result["skipped"]), 29)
+
+    def test_missing_only_leaves_a_page_that_is_already_there(self):
+        publish.set_block(self.content, "goblin_hob", {"type": "note", "markdown": "work in progress"})
+        before = (self.content / "creatures" / "goblin_hob" / "page.json").read_text()
+        result = publish.publish_tree(self.content, "goblin", missing_only=True)
+        self.assertEqual((self.content / "creatures" / "goblin_hob" / "page.json").read_text(), before)
+        self.assertNotIn("goblin_hob", result["published"])
+        self.assertEqual(len(result["published"]), 28)
+
+    def test_the_repo_option_reads_the_sheets_and_scale_of_another_checkout(self):
+        import contextlib
+        import io
+        with tempfile.TemporaryDirectory() as repo:
+            for rel in ("assets/sheets/anim_goblin_hob.json", "assets/sheets/anim_goblin_hob.png", "assets/sheets/anim_goblin_hob_n.png", "data/form_clips.json", "data/creatures/twin_goblin_hob.tres"):
+                (Path(repo) / rel).parent.mkdir(parents=True, exist_ok=True)
+                (Path(repo) / rel).write_bytes((publish.ROOT / rel).read_bytes())
+            twin = Path(repo) / "data" / "creatures" / "twin_goblin_hob.tres"
+            twin.write_text(twin.read_text().replace("sprite_size = 1.12", "sprite_size = 2.5"))
+            with contextlib.redirect_stdout(io.StringIO()):
+                publish.main(["sheet", "goblin_hob", "--repo", repo, "--content", str(self.content)])
+            self.assertEqual(json.loads((self.content / "creatures" / "goblin_hob" / "sprites.json").read_text())["scale"], 2.5)
 
 
 class WriteTest(unittest.TestCase):

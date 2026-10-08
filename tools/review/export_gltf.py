@@ -134,7 +134,11 @@ def main(argv):
     ap.add_argument("species", choices=sorted(BASE_FORMS))
     ap.add_argument("form")
     ap.add_argument("--out", required=True)
+    ap.add_argument("--art", help="the checkout whose tools/art/blender to build the form from (default: this one)")
     args = ap.parse_args(argv)
+    global BLENDER_DIR
+    if args.art:
+        BLENDER_DIR = os.path.join(os.path.abspath(args.art), "tools", "art", "blender")
     sys.path.insert(0, BLENDER_DIR)
     clips = export(args.species, args.form, os.path.abspath(args.out))
     print("EXPORT_COMPLETE %s %s %s" % (args.species, args.form, json.dumps(clips)), flush=True)

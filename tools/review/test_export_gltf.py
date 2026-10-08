@@ -13,8 +13,14 @@ BLENDER = os.environ.get("BLENDER", "/Applications/Blender.app/Contents/MacOS/Bl
 SHOWN = {"idle", "walk", "run", "attack", "hurt", "die"}
 
 
+def read_json(path):
+    with open(path) as fh:
+        return json.load(fh)
+
+
 def read_glb(path):
-    data = open(path, "rb").read()
+    with open(path, "rb") as fh:
+        data = fh.read()
     magic, version, length = struct.unpack("<4sII", data[:12])
     chunk_length, chunk_type = struct.unpack("<II", data[12:20])
     assert magic == b"glTF" and version == 2 and length == len(data), (magic, version, length, len(data))
@@ -29,7 +35,7 @@ class ExportTest(unittest.TestCase):
             done = subprocess.run([sys.executable, os.path.join(HERE, "export_gltf.py"), "goblin", "goblin", "--out", tmp], capture_output=True, text=True)
             self.assertEqual(done.returncode, 0, done.stdout[-1500:] + done.stderr[-1500:])
             gltf = read_glb(os.path.join(tmp, "model.glb"))
-            model = json.load(open(os.path.join(tmp, "model.json")))
+            model = read_json(os.path.join(tmp, "model.json"))
             names = [a["name"] for a in gltf["animations"]]
             self.assertTrue(SHOWN <= set(names), names)
             self.assertEqual(sorted(names), sorted(model["clips"]))
@@ -38,7 +44,7 @@ class ExportTest(unittest.TestCase):
             for material in gltf["materials"]:
                 self.assertIn("baseColorFactor", material["pbrMetallicRoughness"])
             accessors = gltf["accessors"]
-            engine = json.load(open(os.path.join(ROOT, "data", "enemy_clips.json")))["goblin"]   # what the game plays for the base goblin
+            engine = read_json(os.path.join(ROOT, "data", "enemy_clips.json"))["goblin"]   # what the game plays for the base goblin
             for animation in gltf["animations"]:
                 end = max(accessors[s["input"]]["max"][0] for s in animation["samplers"])
                 start = min(accessors[s["input"]]["min"][0] for s in animation["samplers"])
