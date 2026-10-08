@@ -6,6 +6,9 @@ import { h, notice } from "./dom.js";
 import "./blocks/sprites.js";
 import "./blocks/note.js";
 import "./blocks/numbers.js";
+import "./blocks/compare.js";
+import "./blocks/figure.js";
+import "./blocks/lineup.js";
 import { flagBar, retryPending } from "./blocks/feedback.js";
 
 window.__loaded = Date.now();   // a marker the browser check uses to tell a reload from an in-place update
@@ -13,6 +16,7 @@ window.__loaded = Date.now();   // a marker the browser check uses to tell a rel
 const view = document.getElementById("view");
 const bar = document.getElementById("bar");
 let creatures = [];
+const contentVersions = new Map();   // content path -> how many times it has changed since the page loaded
 let open = null;   // the creature page on show: {id, prefix, base, versions, epoch, items, headerEl, blocksEl}
 
 async function fetchJson(url) {
@@ -128,6 +132,10 @@ function makeCtx(o, item, token) {
       item.deps.add(rel);
       return `${o.base}${rel}?v=${o.versions.get(rel) || 0}.${o.epoch}`;
     },
+    contentUrl(path) {   // a file anywhere in the content folder (another creature's sprites, say); this block is drawn again when it changes
+      item.cdeps.add(path);
+      return `/content/${path}?v=${contentVersions.get(path) || 0}.${o.epoch}`;
+    },
     zoom: () => controls.zoom,
     speed: () => controls.speed,
     playing: () => controls.playing,
@@ -140,6 +148,7 @@ function makeCtx(o, item, token) {
 function renderItem(o, item) {
   teardown(item);
   item.deps = new Set();
+  item.cdeps = new Set();
   item.el.replaceChildren();
   item.el.dataset.type = item.block.type;
   const render = getBlock(item.block.type);
@@ -163,7 +172,7 @@ function reconcile(o, blocks, force) {
     const sig = JSON.stringify(block);
     let item = o.items[i];
     if (!item) {
-      item = { el: h("section", { class: "block" }), sig: null, block: null, deps: new Set(), offs: [], token: 0 };
+      item = { el: h("section", { class: "block" }), sig: null, block: null, deps: new Set(), cdeps: new Set(), offs: [], token: 0 };
       o.items[i] = item;
       o.blocksEl.append(item.el);
     }
@@ -242,7 +251,10 @@ function onContent(path) {
     clearTimeout(indexTimer);
     indexTimer = setTimeout(refreshIndex, 100);
   }
-  if (!open || !path.startsWith(open.prefix)) return;
+  contentVersions.set(path, (contentVersions.get(path) || 0) + 1);
+  if (!open) return;
+  for (const item of open.items) if (item.cdeps.has(path)) renderItem(open, item);
+  if (!path.startsWith(open.prefix)) return;
   const rel = path.slice(open.prefix.length);
   open.versions.set(rel, (open.versions.get(rel) || 0) + 1);
   if (rel === "page.json") {

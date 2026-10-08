@@ -57,3 +57,8 @@ table.numbers { border-collapse: collapse; font-size: 13px; }
 table.numbers caption { text-align: left; color: var(--faint); padding-bottom: 6px; }
 table.numbers th, table.numbers td { padding: 4px 12px; border-bottom: 1px solid var(--line); text-align: left; }
 table.numbers td.num, table.numbers th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.compare-row { display: flex; gap: 24px; align-items: flex-end; flex-wrap: wrap; }
+.block[data-type="figure"] img { max-width: 100%; image-rendering: auto; border-radius: 6px; }
+canvas.lineup { display: block; image-rendering: pixelated; background: #181a22; border-radius: 6px; }
+.tools { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }

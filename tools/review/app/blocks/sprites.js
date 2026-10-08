@@ -3,25 +3,8 @@
 import { registerBlock } from "../registry.js";
 import { frameAt, durationsOf } from "../player.js";
 import { h, notice } from "../dom.js";
+import { loadImage, frameSource, trimToUnion, drawFrame } from "./sprite-set.js";
 import { flagBar } from "./feedback.js";
-
-function loadImage(url, retries = 1) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => {
-      if (retries > 0) setTimeout(() => loadImage(url, retries - 1).then(resolve, reject), 400);   // a file may still be arriving
-      else reject(new Error(`could not load ${url.split("?")[0].replace("/content/", "")}`));
-    };
-    img.src = url;
-  });
-}
-
-async function frameSource(frame, sheet, ctx) {
-  if (frame.rect) return { image: sheet, x: frame.rect[0], y: frame.rect[1], w: frame.rect[2], h: frame.rect[3] };
-  const img = await loadImage(ctx.url(frame.src));
-  return { image: img, x: 0, y: 0, w: img.naturalWidth, h: img.naturalHeight };
-}
 
 registerBlock("sprites", async (el, data, ctx) => {
   const res = await fetch(ctx.url(data.sprites), { cache: "no-store" });
@@ -34,10 +17,11 @@ registerBlock("sprites", async (el, data, ctx) => {
     return;
   }
   const sheet = listing.image ? await loadImage(ctx.url(listing.image)) : null;
+  const set = { sheet, url: (rel) => ctx.url(rel) };
   const prepared = [];
   for (const name of names) {
     const clip = clips[name];
-    const frames = await Promise.all((clip.frames || []).map((f) => frameSource(f, sheet, ctx)));
+    const frames = trimToUnion(await Promise.all((clip.frames || []).map((f) => frameSource(f, set))));
     prepared.push({ name, clip, durations: durationsOf(clip), frames });
   }
   if (!ctx.live()) return;   // this block was drawn again while its files were loading: the newer render owns the element
@@ -69,7 +53,7 @@ registerBlock("sprites", async (el, data, ctx) => {
     });
     el.prepend(h("div", { class: "tools" }, toggle));
   }
-  ctx.onFrame((time) => {
+  const paint = (time) => {
     for (const t of tiles) {
       const i = frameAt(t.durations, t.clip.loop, time);
       if (i === t.last) continue;
@@ -78,9 +62,10 @@ registerBlock("sprites", async (el, data, ctx) => {
       if (i < 0) continue;
       const f = t.frames[i];
       const image = showNormals && normals && f.image === sheet ? normals : f.image;
-      t.g.imageSmoothingEnabled = false;
-      t.g.drawImage(image, f.x, f.y, f.w, f.h, Math.floor((t.box.w - f.w) / 2), t.box.h - f.h, f.w, f.h);   // bottom-centre: the sprite stands on one line
+      drawFrame(t.g, t.box, f, image);   // bottom-centre: the sprite stands on one line
       t.canvas.dataset.frame = String(i);
     }
-  });
+  };
+  paint(ctx.time());   // a first frame at once: a hidden tab runs no animation frames
+  ctx.onFrame(paint);
 });

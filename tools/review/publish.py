@@ -210,6 +210,20 @@ def write_creature(content, creature, listing, media, **meta):
     return path
 
 
+def add_figure(content, creature, source, caption, key=None, name=None):
+    """Copy an image (GIF, PNG, SVG) into the creature's folder and put a `figure` block for it on its page."""
+    path = _page_path(content, creature)
+    name = name or Path(source).name
+    if not re.match(r"^[A-Za-z0-9_.-]+$", name) or name.startswith("."):
+        raise ValueError("a figure's file name is letters, digits, _ . -: %r" % name)
+    dest = path.parent / name
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    tmp = dest.with_name(dest.name + ".tmp")
+    shutil.copyfile(source, tmp)
+    os.replace(tmp, dest)
+    set_block(content, creature, {"type": "figure", "src": name, "caption": caption}, key=key)
+
+
 # ---- command line ------------------------------------------------------------------------------------------------------------------
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
@@ -222,7 +236,15 @@ def main(argv=None):
     frames.add_argument("creature")
     frames.add_argument("folder", type=Path)
     frames.add_argument("--scale", type=float, help="the game's draw scale for it (default: the twin's sprite_size, else 1)")
+    figure = sub.add_parser("figure", parents=[common], help="put an image on a creature's page")
+    figure.add_argument("creature")
+    figure.add_argument("file", type=Path)
+    figure.add_argument("--caption", default="")
+    figure.add_argument("--key")
     args = ap.parse_args(argv)
+    if args.command == "figure":
+        add_figure(args.content, args.creature, args.file, args.caption, key=args.key)
+        return
     if args.command == "sheet":
         path = write_creature(args.content, args.form_id, sheet_listing(args.form_id), sheet_media(args.form_id), **tree_meta(args.form_id))
     else:

@@ -133,6 +133,18 @@ class WriteTest(unittest.TestCase):
         scale = lambda c: json.loads((self.content / "creatures" / c / "sprites.json").read_text())["scale"]
         self.assertEqual((scale("goblin_hob"), scale("goblin_paladin")), (1.12, 2.0))
 
+    def test_add_figure_copies_the_file_and_sets_a_figure_block_by_key(self):
+        source = Path(self._tmp.name, "stick.gif")
+        source.write_bytes(b"GIF89a")
+        publish.add_figure(self.content, "goblin", source, "A person and the goblin", key="stick")
+        publish.add_figure(self.content, "goblin", source, "Again", key="stick")
+        self.assertEqual((self.content / "creatures" / "goblin" / "stick.gif").read_bytes(), b"GIF89a")
+        self.assertEqual([(b["type"], b["src"], b["caption"]) for b in self.page("goblin")["blocks"]], [("figure", "stick.gif", "Again")])
+        with self.assertRaises(ValueError):
+            publish.add_figure(self.content, "goblin", source, "x", name="../evil.gif")
+        with self.assertRaises(ValueError):
+            publish.add_figure(self.content, "../x", source, "x")
+
     def test_the_cli_publishes_the_real_goblin_hob(self):
         import contextlib
         import io
