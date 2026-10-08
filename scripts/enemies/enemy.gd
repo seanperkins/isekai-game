@@ -851,6 +851,7 @@ func _draw_still() -> void:
 	_sprite.texture = _still.frame_texture(frame)
 	_sprite.flip_h = facing < 0
 	_sprite.flip_v = status.state == EnemyStatus.DOWNED
+	HeldItemLayer.follow_on(_sprite, _still, frame, facing < 0, false)  # after the flip: a downed goblin's items turn over with it; a still is drawn plain, so are they
 	var scale_y := size
 	var hop := 0.0
 	var lean := 0.0
@@ -1408,6 +1409,8 @@ func _build_body() -> void:
 		add_child(_web)  # after the sprite, so it draws over it
 		_load_sheet()
 		_load_form()
+		if _form_sheet == null and _still != null and def.sprite_set == "goblin":
+			HeldItemLayer.attach(_sprite).bind("")  # the base goblin's sheet is empty-handed too: it holds nothing until something is put in its hand
 		_update_visual()
 
 ## A twin's animated form, when its sheet (assets/sheets/anim_<form>) and its clips exist; otherwise the still stays.
@@ -1428,6 +1431,7 @@ func _load_form() -> void:
 	_animator = SlimeAnimator.new(all[def.form])
 	_animator.play("idle")
 	_authored_speed = BASE_SPEED * float(def.stats.get("spd", 100)) / 100.0
+	HeldItemLayer.attach(_sprite).bind(def.form)  # the form's sheet is drawn empty-handed: what it holds is drawn on its hands
 
 ## The creature's own frames, when its sheet and clips exist; otherwise the old single sprites stay.
 func _load_sheet() -> void:

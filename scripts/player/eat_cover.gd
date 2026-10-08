@@ -51,6 +51,9 @@ func begin(target: Node2D, sheet: SpriteSheet, left: bool = false) -> void:
 		prey_copy.flip_h = _prey_sprite.flip_h
 		prey_copy.flip_v = _prey_sprite.flip_v
 		prey_copy.modulate = _prey_sprite.modulate
+		var prey_items := _prey_sprite.get_node_or_null(HeldItemLayer.NAME) as HeldItemLayer
+		if prey_items != null:
+			prey_items.copy_onto(prey_copy)  # a goblin being eaten keeps what it holds
 		_prey_sprite.visible = false
 	global_position = target.global_position + Vector2(0.0, _bottom)
 	prey_copy.z_index = 0
