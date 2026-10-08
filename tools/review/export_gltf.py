@@ -110,6 +110,9 @@ def export(species, form, out_dir):
     bpy.context.preferences.edit.keyframe_new_interpolation_type = "LINEAR"
     rig = creature.build(variant)
     cfg = creature.setup(rig, variant)
+    if rig.post_pose is not None:
+        raise RuntimeError("%s %s deforms its meshes from the pose (its vertices move, not only its bones), which a glTF of bone animation cannot carry: "
+                           "its model would show no squash, breathing or collapse" % (species, form))
     colour_materials(rig)
     rig.obj.animation_data_create()
     rig.pose({}, (0.0, 0.0, 0.0))

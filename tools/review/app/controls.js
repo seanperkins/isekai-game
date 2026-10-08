@@ -34,9 +34,7 @@ let clock = 0;
 let last = performance.now();
 const frameFns = new Set();
 
-function tick(now) {
-  const dt = Math.min((now - last) / 1000, 0.1);
-  last = now;
+function step(dt) {
   if (controls.playing) clock += dt * controls.speed;
   for (const fn of [...frameFns]) {
     try {
@@ -45,8 +43,18 @@ function tick(now) {
       console.error(err);
     }
   }
+}
+
+function tick(now) {
+  const dt = Math.min((now - last) / 1000, 0.1);
+  last = now;
+  step(dt);
   requestAnimationFrame(tick);
 }
+
+// With ?debug in the URL the clock can be stepped by hand (window.__reviewClock.advance(seconds)): a tab that is hidden runs no animation frames, so this is how a
+// check, or a screenshot at a chosen moment, drives the animation.
+if (new URLSearchParams(location.search).has("debug")) window.__reviewClock = { advance: step, time: () => clock };
 requestAnimationFrame(tick);
 
 export function onFrame(fn) {

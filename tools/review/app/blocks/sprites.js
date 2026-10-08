@@ -33,7 +33,13 @@ registerBlock("sprites", async (el, data, ctx) => {
     const canvas = h("canvas", { width: String(box.w), height: String(box.h), title: name });
     const info = h("span", { class: "meta" }, frames.length ? `${frames.length} frame${frames.length === 1 ? "" : "s"}, ${durations.reduce((a, b) => a + b, 0).toFixed(2)} s${clip.loop ? ", loops" : ""}` : "no frames");
     el.append(h("figure", { class: "tile" }, h("div", { class: "tile-head" }, h("span", { class: "clip-name" }, name), info), canvas, flagBar(ctx.creature, name, { compact: true })));
-    tiles.push({ clip, durations, frames, box, canvas, g: canvas.getContext("2d"), last: -2 });
+    const tile = { clip, durations, frames, box, canvas, g: canvas.getContext("2d"), last: -2, start: ctx.time() };
+    if (!clip.loop) {   // a one-shot plays from when it was drawn, not from when the page loaded, and a click plays it again
+      canvas.title = `${name}: click to play again`;
+      canvas.classList.add("replay");
+      canvas.addEventListener("click", () => { tile.start = ctx.time(); tile.last = -2; paint(ctx.time()); });
+    }
+    tiles.push(tile);
   }
   const size = () => {
     for (const t of tiles) {
@@ -55,7 +61,7 @@ registerBlock("sprites", async (el, data, ctx) => {
   }
   const paint = (time) => {
     for (const t of tiles) {
-      const i = frameAt(t.durations, t.clip.loop, time);
+      const i = frameAt(t.durations, t.clip.loop, t.clip.loop ? time : time - t.start);
       if (i === t.last) continue;
       t.last = i;
       t.g.clearRect(0, 0, t.box.w, t.box.h);

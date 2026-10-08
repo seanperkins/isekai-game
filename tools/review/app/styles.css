@@ -63,3 +63,4 @@ table.numbers td.num, table.numbers th.num { text-align: right; font-variant-num
 canvas.lineup { display: block; image-rendering: pixelated; background: #181a22; border-radius: 6px; }
 .tools { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
 .viewer-host canvas { display: block; border-radius: 6px; max-width: 100%; image-rendering: auto; }
+.tile canvas.replay { cursor: pointer; }

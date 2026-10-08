@@ -19,6 +19,7 @@ registerBlock("compare", async (el, data, ctx) => {
   const box = items.reduce((b, it) => ({ w: Math.max(b.w, it.p.box.w), h: Math.max(b.h, it.p.box.h) }), { w: 1, h: 1 });
   let swapped = false;
   let blink = false;
+  let start = ctx.time();   // a one-shot clip plays from when the block was drawn; a click plays it again
   const mk = () => h("canvas", { width: String(box.w), height: String(box.h) });
   const canvases = [mk(), mk()];
   const labels = [h("span", { class: "clip-name" }), h("span", { class: "clip-name" })];
@@ -29,25 +30,21 @@ registerBlock("compare", async (el, data, ctx) => {
     row.replaceChildren(...(blink ? [h("figure", { class: "tile" }, labels[0], canvases[0])]
       : [0, 1].map((k) => h("figure", { class: "tile" }, labels[k], canvases[k]))));
   };
-  const size = () => {
-    for (const c of canvases) {
-      c.style.width = `${box.w * items[0].set.scale * ctx.zoom()}px`;
-      c.style.height = `${box.h * items[0].set.scale * ctx.zoom()}px`;
-    }
-  };
   swap.addEventListener("click", () => { swapped = !swapped; paint(ctx.time()); });
   blinkBtn.addEventListener("click", () => { blink = !blink; blinkBtn.textContent = `blink: ${blink ? "on" : "off"}`; layout(); paint(ctx.time()); });
   el.append(h("div", { class: "tools" }, swap, blinkBtn, h("span", { class: "meta" }, `clip: ${data.clip}`)), row);
   layout();
-  size();
-  ctx.onControls((name) => { if (name === "zoom") size(); });
+  ctx.onControls((name) => { if (name === "zoom") paint(ctx.time()); });
+  if (!clips[0].clip.loop) for (const c of canvases) c.addEventListener("click", () => { start = ctx.time(); paint(ctx.time()); });
   const paint = (time) => {
     const order = swapped ? [1, 0] : [0, 1];
     const shown = blink ? [order[Math.floor(performance.now() / 400) % 2]] : order;   // blink runs on real time so it still alternates while paused
     shown.forEach((idx, k) => {
       const it = items[idx];
       const g = canvases[k].getContext("2d");
-      const i = frameAt(it.p.durations, it.p.clip.loop, time);
+      const i = frameAt(it.p.durations, it.p.clip.loop, it.p.clip.loop ? time : time - start);
+      canvases[k].style.width = `${box.w * it.set.scale * ctx.zoom()}px`;   // each side at its own game scale, so a larger creature looks larger
+      canvases[k].style.height = `${box.h * it.set.scale * ctx.zoom()}px`;
       labels[k].textContent = it.label;
       g.clearRect(0, 0, box.w, box.h);
       if (i >= 0) drawFrame(g, box, it.p.frames[i]);

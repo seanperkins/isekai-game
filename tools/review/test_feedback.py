@@ -66,6 +66,15 @@ class FeedbackTest(unittest.TestCase):
         self.assertEqual(entry["id"], 2)   # ids count the valid lines
         self.assertEqual([e["note"] for e in feedback.entries(self.content)], ["kept", "after"])
 
+    def test_a_json_line_missing_its_fields_or_with_a_bad_flag_is_skipped_not_fatal(self):
+        with open(self.content / "feedback.jsonl", "a") as fh:
+            fh.write('{"id": 3}\n')
+            fh.write('{"id": 4, "creature": "a", "flag": "bogus", "note": ""}\n')
+            fh.write('{"id": 5, "creature": "a", "flag": "ok", "note": "kept"}\n')
+        self.assertEqual([e["id"] for e in feedback.entries(self.content)], [5])
+        self.assertEqual(feedback.latest_flags(self.content), {"a": "ok"})
+        self.assertEqual([e["note"] for e in feedback.unread(self.content)], ["kept"])
+
     def test_the_cli_prints_unread_entries_once_and_says_when_there_are_none(self):
         import contextlib
         import io

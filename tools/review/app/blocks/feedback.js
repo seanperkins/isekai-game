@@ -4,6 +4,7 @@ import { h } from "../dom.js";
 
 const FLAGS = [["ok", "right"], ["wrong", "wrong"], ["change", "change this"]];
 const pending = [];   // entries that did not go through
+const drafts = new Map();   // "creature/clip" -> the note being typed, kept when the block holding the box is drawn again (a live update must not eat it)
 
 async function post(entry) {
   const res = await fetch("/api/feedback", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(entry) });
@@ -24,6 +25,9 @@ export async function retryPending() {
 
 export function flagBar(creature, clip = null, { compact = false } = {}) {
   const note = h("input", { type: "text", maxlength: "2000", placeholder: clip ? `note on ${clip}` : "note on this creature", "aria-label": "note" });
+  const key = `${creature}/${clip || ""}`;
+  note.value = drafts.get(key) || "";
+  note.addEventListener("input", () => drafts.set(key, note.value));
   const status = h("span", { class: "fb-status" });
   const send = async (flag) => {
     const entry = { creature, flag, note: note.value.trim() };
@@ -31,6 +35,7 @@ export function flagBar(creature, clip = null, { compact = false } = {}) {
     try {
       const saved = await post(entry);
       note.value = "";
+      drafts.delete(key);
       status.textContent = `saved #${saved.id}`;
     } catch (err) {
       if (!err.rejected) pending.push(entry);

@@ -54,6 +54,16 @@ class ExportTest(unittest.TestCase):
                     self.assertAlmostEqual(end, len(engine[animation["name"]]["frames"]) / engine[animation["name"]]["fps"], delta=0.015, msg=animation["name"] + " against the game's clip")
 
 
+@unittest.skipUnless(os.path.exists(BLENDER), "needs Blender")
+class RefusalTest(unittest.TestCase):
+    def test_a_rig_that_deforms_its_meshes_per_pose_is_refused_not_exported_without_its_animation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            done = subprocess.run([sys.executable, os.path.join(HERE, "export_gltf.py"), "slime", "slime", "--out", tmp], capture_output=True, text=True)
+            self.assertNotEqual(done.returncode, 0, "a slime's jelly moves its vertices, which a glTF of bone animation cannot carry")
+            self.assertIn("deforms its meshes", done.stdout + done.stderr)
+            self.assertFalse(os.path.exists(os.path.join(tmp, "model.glb")))
+
+
 class FrameTimesTest(unittest.TestCase):
     def test_frame_times_are_the_running_sum_with_a_one_tick_floor(self):
         sys.path.insert(0, HERE)

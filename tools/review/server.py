@@ -110,7 +110,16 @@ class Handler(BaseHTTPRequestHandler):
         self._send(200, body, ctype)
 
     # ---- routes ----
+    def _from_this_server(self):
+        """A page of ours asks for this server by the name it listens on. A rebound hostname (an attacker's site pointed at 127.0.0.1) arrives with its own Host."""
+        if (self.headers.get("Host") or "").lower() in self.server.allowed_hosts:
+            return True
+        self._error(421, "unexpected Host")
+        return False
+
     def do_GET(self):
+        if not self._from_this_server():
+            return
         path = urlsplit(self.path).path
         if path == "/":
             return self._file(self.server.app, "index.html")
@@ -127,9 +136,14 @@ class Handler(BaseHTTPRequestHandler):
         self._error(404)
 
     def do_POST(self):
+        self.close_connection = True
+        if not self._from_this_server():
+            return
+        origin = self.headers.get("Origin")
+        if origin is not None and origin.lower() not in {"http://" + h for h in self.server.allowed_hosts}:
+            return self._error(403, "a note can only be left from this page")
         if urlsplit(self.path).path != "/api/feedback":
             return self._error(404)
-        self.close_connection = True
         if not (self.headers.get("Content-Type") or "").startswith("application/json"):
             return self._error(415, "send application/json")
         try:
@@ -184,6 +198,7 @@ class ReviewServer(ThreadingHTTPServer):
         super().__init__(("127.0.0.1", port), Handler)
         self.content, self.app = Path(content), Path(app)
         self.content.mkdir(parents=True, exist_ok=True)
+        self.allowed_hosts = {"127.0.0.1:%d" % self.port, "localhost:%d" % self.port}
         self.closing = threading.Event()
         self.watcher = Watcher({"content": self.content, "app": self.app}, settle=settle, interval=interval)
         self._thread = None

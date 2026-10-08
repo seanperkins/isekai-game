@@ -27,8 +27,15 @@ def _check_id(value, what):
         raise ValueError("%s must match %s: %r" % (what, ID_PATTERN.pattern, value))
 
 
+def _well_formed(entry):
+    """What append() writes: an object with an integer id, a creature, a known flag and a text note (and a clip id when it has a clip)."""
+    return (isinstance(entry, dict) and isinstance(entry.get("id"), int) and isinstance(entry.get("creature"), str) and bool(ID_PATTERN.match(entry["creature"]))
+            and entry.get("flag") in FLAGS and isinstance(entry.get("note", ""), str)
+            and (entry.get("clip") is None or (isinstance(entry["clip"], str) and bool(ID_PATTERN.match(entry["clip"])))))
+
+
 def entries(content):
-    """Every valid entry in the file, oldest first; a line that is not a JSON object with an integer id is skipped."""
+    """Every well-formed entry in the file, oldest first; a line that is not one (not JSON, an id but no creature or flag...) is skipped, not fatal."""
     path = Path(content) / "feedback.jsonl"
     out = []
     try:
@@ -38,7 +45,7 @@ def entries(content):
                     entry = json.loads(line)
                 except ValueError:
                     continue
-                if isinstance(entry, dict) and isinstance(entry.get("id"), int):
+                if _well_formed(entry):
                     out.append(entry)
     except FileNotFoundError:
         pass

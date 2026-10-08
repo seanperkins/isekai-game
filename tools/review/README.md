@@ -43,4 +43,6 @@ Write pages with `publish.py` (`sheet`, `frames`, `model`, `tree`) rather than b
 
 ## Tests
 
+`tools/review/BROWSER_CHECKS.md` lists the checks of the page's behaviour in time (with `?debug`, the clock can be stepped by hand).
+
 `python3 -m unittest discover -s tools/review -p "test_*.py"`. The page itself is checked in a real browser (see the plan's smoke steps).

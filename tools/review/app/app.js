@@ -104,6 +104,7 @@ async function refreshIndex() {
   try {
     creatures = await fetchJson("/api/creatures");
   } catch (err) {
+    if (open) return;   // keep the page the reviewer is on; the "reconnecting" light says the server is away, and the next refresh catches up
     creatures = [];
     view.replaceChildren(notice(`The server did not answer: ${err.message}`, "error"));
     return;

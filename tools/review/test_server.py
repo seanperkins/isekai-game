@@ -116,6 +116,33 @@ class ServerTest(unittest.TestCase):
         conn.close()
         self.assertEqual(json.loads(line[5:]), {"type": "content", "path": "creatures/x/page.json"})
 
+    def test_a_feedback_line_missing_its_fields_does_not_take_down_the_index(self):
+        (self.content / "feedback.jsonl").write_text('{"id": 3}\n')
+        self.page("x", json.dumps({"id": "x", "title": "X", "blocks": []}))
+        status, _, data = self.request("GET", "/api/creatures")
+        self.assertEqual((status, [c["id"] for c in json.loads(data)]), (200, ["x"]))
+
+    def test_a_request_whose_host_is_not_this_server_is_refused_so_a_rebound_name_cannot_read_it(self):
+        self.page("x", "{}")
+        for host in ("evil.example", "evil.example:%d" % self.server.port, "127.0.0.1.evil.example:%d" % self.server.port, "127.0.0.1:1", ""):
+            for path in ("/api/creatures", "/api/feedback", "/content/creatures/x/page.json", "/events", "/"):
+                with self.subTest(host=host, path=path):
+                    status, _, data = self.request("GET", path, headers={"Host": host})
+                    self.assertEqual(status, 421)
+                    self.assertNotIn(b"creatures", data.replace(b'"error"', b""))
+        for host in ("127.0.0.1:%d" % self.server.port, "localhost:%d" % self.server.port):
+            self.assertEqual(self.request("GET", "/api/creatures", headers={"Host": host})[0], 200, host)
+
+    def test_a_feedback_post_from_another_origin_is_refused(self):
+        body = json.dumps({"creature": "goblin_hob", "flag": "ok", "note": ""})
+        mine = "http://127.0.0.1:%d" % self.server.port
+        for origin, expected in ((mine, 201), ("http://localhost:%d" % self.server.port, 201), ("http://evil.example", 403), ("null", 403), (None, 201)):
+            headers = {"Content-Type": "application/json"}
+            if origin is not None:
+                headers["Origin"] = origin
+            with self.subTest(origin=origin):
+                self.assertEqual(self.request("POST", "/api/feedback", body, headers)[0], expected)
+
     def test_the_server_binds_only_to_localhost(self):
         self.assertEqual(self.server.server_address[0], "127.0.0.1")
 
