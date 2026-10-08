@@ -12,7 +12,9 @@ import json
 import os
 import re
 import shutil
+import subprocess
 import sys
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -210,6 +212,32 @@ def write_creature(content, creature, listing, media, **meta):
     return path
 
 
+def species_form(creature):
+    """(species, form) for the exporter: a base creature is its species' base form, anything else comes from its id."""
+    if creature in BASE_CREATURES:
+        return BASE_CREATURES[creature], creature
+    if str(BLENDER_DIR) not in sys.path:
+        sys.path.insert(0, str(BLENDER_DIR))
+    import export_forms
+    return export_forms.split_id(creature)
+
+
+def publish_model(content, creature):
+    """Export the creature's rig and clips to a glTF (tools/review/export_gltf.py runs Blender), put it in the creature's folder and set its `model` block."""
+    folder = _page_path(content, creature).parent
+    species, form = species_form(creature)
+    with tempfile.TemporaryDirectory() as tmp:
+        done = subprocess.run([sys.executable, str(Path(__file__).resolve().parent / "export_gltf.py"), species, form, "--out", tmp], capture_output=True, text=True)
+        if done.returncode != 0:
+            raise RuntimeError("the glTF export failed:\n" + (done.stdout + done.stderr)[-1500:])
+        folder.mkdir(parents=True, exist_ok=True)
+        for name in ("model.glb", "model.json"):   # the model first, then the page that shows it
+            tmp_dest = folder / (name + ".tmp")
+            shutil.copyfile(Path(tmp) / name, tmp_dest)
+            os.replace(tmp_dest, folder / name)
+    set_block(content, creature, {"type": "model", "gltf": "model.glb"}, key="model")
+
+
 def add_figure(content, creature, source, caption, key=None, name=None):
     """Copy an image (GIF, PNG, SVG) into the creature's folder and put a `figure` block for it on its page."""
     path = _page_path(content, creature)
@@ -236,12 +264,17 @@ def main(argv=None):
     frames.add_argument("creature")
     frames.add_argument("folder", type=Path)
     frames.add_argument("--scale", type=float, help="the game's draw scale for it (default: the twin's sprite_size, else 1)")
+    model = sub.add_parser("model", parents=[common], help="export the creature's 3D model and clips")
+    model.add_argument("creature")
     figure = sub.add_parser("figure", parents=[common], help="put an image on a creature's page")
     figure.add_argument("creature")
     figure.add_argument("file", type=Path)
     figure.add_argument("--caption", default="")
     figure.add_argument("--key")
     args = ap.parse_args(argv)
+    if args.command == "model":
+        publish_model(args.content, args.creature)
+        return
     if args.command == "figure":
         add_figure(args.content, args.creature, args.file, args.caption, key=args.key)
         return

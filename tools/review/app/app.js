@@ -9,6 +9,7 @@ import "./blocks/numbers.js";
 import "./blocks/compare.js";
 import "./blocks/figure.js";
 import "./blocks/lineup.js";
+import "./blocks/model.js";
 import { flagBar, retryPending } from "./blocks/feedback.js";
 
 window.__loaded = Date.now();   // a marker the browser check uses to tell a reload from an in-place update
@@ -141,6 +142,7 @@ function makeCtx(o, item, token) {
     playing: () => controls.playing,
     time,
     onFrame: register(onFrame),
+    onCleanup: register((fn) => fn),   // fn runs when this block is drawn again or the page is left
     onControls: register(onControls),
   };
 }

@@ -70,6 +70,23 @@ class ListingTest(unittest.TestCase):
                 publish.frames_listing(folder)
 
 
+@unittest.skipUnless(os.path.exists(os.environ.get("BLENDER", "/Applications/Blender.app/Contents/MacOS/Blender")), "needs Blender")
+class ModelTest(unittest.TestCase):
+    def test_the_model_command_exports_the_goblin_and_sets_a_model_block(self):
+        import contextlib
+        import io
+        with tempfile.TemporaryDirectory() as tmp:
+            content = Path(tmp)
+            with contextlib.redirect_stdout(io.StringIO()):
+                publish.main(["model", "goblin", "--content", str(content)])
+                publish.main(["model", "goblin", "--content", str(content)])   # again: one block, the file replaced
+            folder = content / "creatures" / "goblin"
+            self.assertEqual(folder.joinpath("model.glb").read_bytes()[:4], b"glTF")
+            page = json.loads((folder / "page.json").read_text())
+            self.assertEqual([(b["type"], b["gltf"]) for b in page["blocks"]], [("model", "model.glb")])
+            self.assertIn("walk", json.loads((folder / "model.json").read_text())["clips"])
+
+
 class WriteTest(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
