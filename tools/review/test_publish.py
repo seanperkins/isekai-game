@@ -119,6 +119,20 @@ class WriteTest(unittest.TestCase):
                 publish.set_block(self.content, "x", {"type": "note", "markdown": "after"})
         self.assertEqual([b["markdown"] for b in self.page("x")["blocks"]], ["before"])
 
+    def test_the_frames_command_draws_at_the_twins_sprite_size_unless_told_otherwise(self):
+        import contextlib
+        import io
+        folder = Path(self._tmp.name, "render")
+        (folder / "frames").mkdir(parents=True)
+        (folder / "raw").mkdir()
+        (folder / "frames" / "idle_0.png").write_bytes(b"\x89PNG")
+        (folder / "raw" / "meta.json").write_text(json.dumps({"anims": {"idle": 1}, "durations": {"idle": [1.0]}, "loops": {"idle": True}}))
+        with contextlib.redirect_stdout(io.StringIO()):
+            publish.main(["frames", "goblin_hob", str(folder), "--content", str(self.content)])
+            publish.main(["frames", "goblin_paladin", str(folder), "--scale", "2", "--content", str(self.content)])
+        scale = lambda c: json.loads((self.content / "creatures" / c / "sprites.json").read_text())["scale"]
+        self.assertEqual((scale("goblin_hob"), scale("goblin_paladin")), (1.12, 2.0))
+
     def test_the_cli_publishes_the_real_goblin_hob(self):
         import contextlib
         import io

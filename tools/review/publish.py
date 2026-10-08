@@ -221,12 +221,13 @@ def main(argv=None):
     frames = sub.add_parser("frames", parents=[common], help="publish a render folder")
     frames.add_argument("creature")
     frames.add_argument("folder", type=Path)
-    frames.add_argument("--scale", type=float, default=1.0, help="the game's draw scale for it (the twin's sprite_size)")
+    frames.add_argument("--scale", type=float, help="the game's draw scale for it (default: the twin's sprite_size, else 1)")
     args = ap.parse_args(argv)
     if args.command == "sheet":
         path = write_creature(args.content, args.form_id, sheet_listing(args.form_id), sheet_media(args.form_id), **tree_meta(args.form_id))
     else:
-        path = write_creature(args.content, args.creature, frames_listing(args.folder, args.scale), frames_media(args.folder), **tree_meta(args.creature))
+        scale = args.scale if args.scale is not None else _sprite_size(args.creature, ROOT)
+        path = write_creature(args.content, args.creature, frames_listing(args.folder, scale), frames_media(args.folder), **tree_meta(args.creature))
     print(path)
 
 

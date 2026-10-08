@@ -3,6 +3,10 @@
 import { getBlock } from "./registry.js";
 import { controls, setControl, onControls, onFrame, time } from "./controls.js";
 import { h, notice } from "./dom.js";
+import "./blocks/sprites.js";
+import "./blocks/note.js";
+import "./blocks/numbers.js";
+import { flagBar, retryPending } from "./blocks/feedback.js";
 
 window.__loaded = Date.now();   // a marker the browser check uses to tell a reload from an in-place update
 
@@ -119,6 +123,7 @@ function makeCtx(o, item, token) {
   };
   return {
     creature: o.id,
+    live,
     url(rel) {
       item.deps.add(rel);
       return `${o.base}${rel}?v=${o.versions.get(rel) || 0}.${o.epoch}`;
@@ -214,9 +219,9 @@ function closeCreature() {
 function showCreature(id) {
   closeCreature();
   const o = { id, prefix: `creatures/${id}/`, base: `/content/creatures/${id}/`, versions: new Map(), epoch: 0, items: [],
-    headerEl: h("header", { class: "creature-head" }), blocksEl: h("div", { class: "blocks" }) };
+    headerEl: h("header", { class: "creature-head" }), blocksEl: h("div", { class: "blocks" }), errorEl: null };
   open = o;
-  view.replaceChildren(o.headerEl, o.blocksEl);
+  view.replaceChildren(o.headerEl, o.blocksEl, h("section", { class: "block feedback" }, h("h2", {}, "Your note on this creature"), flagBar(id)));
   loadPage(o);
 }
 
@@ -263,6 +268,7 @@ function connect() {
     if (failed) {
       failed = false;
       resync();
+      retryPending();
     }
   };
   source.onerror = () => {
