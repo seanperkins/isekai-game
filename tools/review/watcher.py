@@ -30,6 +30,11 @@ class Watcher:
             self._subs.append(q)
         return q
 
+    def unsubscribe(self, q):
+        with self._lock:
+            if q in self._subs:
+                self._subs.remove(q)
+
     def start(self):
         self._known = self._scan()
         self._stop.clear()
