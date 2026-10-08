@@ -4,23 +4,9 @@ import { registerBlock } from "../registry.js";
 import { frameAt, durationsOf } from "../player.js";
 import { h, notice } from "../dom.js";
 import { loadImage, frameSource, trimToUnion } from "./sprite-set.js";
-import { clipLayout, handAt } from "../hands.js";
+import { clipLayout } from "../hands.js";
+import { drawItem } from "./held-draw.js";
 import { flagBar } from "./feedback.js";
-
-const FAR_BRIGHTNESS = 0.8;   // the far hand's item is drawn a little darker, as the game draws it
-
-// One item in one hand, on the canvas of the tile's layout: its grip on the hand, turned with it.
-function drawItem(g, layout, hand, item, far) {
-  if (!hand || !item) return;
-  const [x, y] = handAt(layout, hand);
-  g.save();
-  g.translate(x, y);
-  g.rotate((hand.a * Math.PI) / 180);
-  g.scale(item.scale, item.scale);
-  if (far) g.filter = `brightness(${FAR_BRIGHTNESS})`;
-  g.drawImage(item.image, -item.w / 2 - item.grip[0], -item.h - item.grip[1], item.w, item.h);
-  g.restore();
-}
 
 registerBlock("sprites", async (el, data, ctx) => {
   const res = await fetch(ctx.url(data.sprites), { cache: "no-store" });

@@ -46,3 +46,13 @@ export function clipLayout(frames, held) {
 export function handAt(layout, hand) {
   return [layout.ax + hand.x, layout.ay + hand.y];
 }
+
+// One canvas for several clip layouts (the two sides of a compare), their origins on the same pixel: the origin is the larger of each side's, and the canvas reaches the
+// farthest edge of any side in every direction. With no items anywhere it is the largest frame's box, as before.
+export function mergeLayouts(layouts) {
+  const ax = Math.max(...layouts.map((l) => l.ax));
+  const ay = Math.max(...layouts.map((l) => l.ay));
+  const right = Math.max(...layouts.map((l) => l.w - l.ax));
+  const below = Math.max(...layouts.map((l) => l.h - l.ay));
+  return { w: Math.ceil(ax + right), h: Math.ceil(ay + below), ax, ay };
+}

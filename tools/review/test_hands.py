@@ -97,5 +97,19 @@ class LayoutTest(unittest.TestCase):
         self.assertEqual(double, {"x0": -9, "y0": -6, "x1": 11, "y1": 2})
 
 
+@unittest.skipUnless(NODE, "needs Node")
+class MergeTest(unittest.TestCase):
+    def test_merged_layouts_share_one_origin_and_hold_every_layout(self):
+        got = run("hands.mergeLayouts(a0)", [{"w": 20, "h": 30, "ax": 10, "ay": 30}, {"w": 40, "h": 45, "ax": 8, "ay": 38}])
+        self.assertEqual(got, {"w": 42, "h": 45, "ax": 10, "ay": 38}, "the origin is the larger of each side's, and the canvas reaches the farthest edge on every side")
+        for l in ({"w": 20, "h": 30, "ax": 10, "ay": 30}, {"w": 40, "h": 45, "ax": 8, "ay": 38}):
+            self.assertTrue(got["ax"] - l["ax"] >= 0 and got["ay"] - l["ay"] >= 0)
+            self.assertTrue(got["ax"] + (l["w"] - l["ax"]) <= got["w"] and got["ay"] + (l["h"] - l["ay"]) <= got["h"])
+
+    def test_layouts_with_no_items_merge_to_the_largest_box_as_before(self):
+        got = run("hands.mergeLayouts(a0)", [{"w": 21, "h": 30, "ax": 10.5, "ay": 30}, {"w": 52, "h": 25, "ax": 26, "ay": 25}])
+        self.assertEqual(got, {"w": 52, "h": 30, "ax": 26, "ay": 30})
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -3,7 +3,9 @@
 import { registerBlock } from "../registry.js";
 import { frameAt } from "../player.js";
 import { h, notice } from "../dom.js";
-import { loadSet, prepareClip, drawFrame } from "./sprite-set.js";
+import { loadSet, prepareClip } from "./sprite-set.js";
+import { clipLayout, mergeLayouts } from "../hands.js";
+import { defaultItems, drawFrameWithItems } from "./held-draw.js";
 
 registerBlock("compare", async (el, data, ctx) => {
   const sides = [data.a, data.b];
@@ -15,8 +17,11 @@ registerBlock("compare", async (el, data, ctx) => {
     el.append(notice(`compare: ${sides[missing].sprites} has no clip "${data.clip}"`));
     return;
   }
-  const items = sides.map((s, i) => ({ label: s.label || s.sprites, set: sets[i], p: clips[i] }));
-  const box = items.reduce((b, it) => ({ w: Math.max(b.w, it.p.box.w), h: Math.max(b.h, it.p.box.h) }), { w: 1, h: 1 });
+  const held = await Promise.all(sets.map((set) => defaultItems(set)));   // a goblin holds what its form holds, in both sides
+  if (!ctx.live()) return;
+  const items = sides.map((s, i) => ({ label: s.label || s.sprites, set: sets[i], p: clips[i], held: held[i], layout: clipLayout(clips[i].frames, held[i]) }));
+  const merged = mergeLayouts(items.map((it) => it.layout));   // both sides on one origin, and wide and tall enough for an item that reaches out
+  const box = { w: merged.w, h: merged.h };
   let swapped = false;
   let blink = false;
   let start = ctx.time();   // a one-shot clip plays from when the block was drawn; a click plays it again
@@ -47,7 +52,7 @@ registerBlock("compare", async (el, data, ctx) => {
       canvases[k].style.height = `${box.h * it.set.scale * ctx.zoom()}px`;
       labels[k].textContent = it.label;
       g.clearRect(0, 0, box.w, box.h);
-      if (i >= 0) drawFrame(g, box, it.p.frames[i]);
+      if (i >= 0) drawFrameWithItems(g, merged, it.p.frames[i], it.p.frames[i].image, it.held);
     });
   };
   paint(ctx.time());   // a first frame at once: a hidden tab runs no animation frames
