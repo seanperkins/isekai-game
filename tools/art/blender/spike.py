@@ -78,7 +78,8 @@ def clear_stale(folder, keys):
 def process(raw, out, outline=True, bake=BAKE):
     """Shrink, light, outline and palette-snap every frame in `raw` (what render() wrote); returns {anim: [frame names]}. Writes each frame
     and its normal map to out/frames."""
-    meta = json.load(open(os.path.join(raw, "meta.json")))
+    with open(os.path.join(raw, "meta.json")) as fh:
+        meta = json.load(fh)
     canvas = meta["canvas"]
     materials = [tuple(m) for m in meta["materials"]]
     os.makedirs(os.path.join(out, "frames"), exist_ok=True)
