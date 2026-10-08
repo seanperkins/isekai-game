@@ -77,26 +77,40 @@ def colour_materials(rig):
 
 
 def bake_clip(rig, name, frames, durations, loop, grounded):
-    """One action on its own NLA track holding every frame of the clip."""
+    """Bake one clip into an action; returns (action, length in seconds). The action is not on a track yet (see push_track).
+
+    The rig has nothing animating it while it is posed: each pose's bone values are recorded first and written as keys afterwards. An animation that is attached
+    while posing is evaluated by every later `rig.pose`, which pulls the bones back toward it: a landing exported after the idle ramped from the idle's pose to its own."""
     anim = rig.obj.animation_data
-    action = bpy.data.actions.new(name)
-    anim.action = action
+    anim.action = None
     starts, total = frame_times(durations, loop)
     pose = rig.stand if grounded else rig.pose
     keys = [(starts[i], frames[i]) for i in range(len(frames))]
     keys.append((total, frames[0] if loop else frames[-1]))   # a loop ends where it began; a one-shot holds its last frame
+    recorded = []
     for t, (rot, root) in keys:
         pose(rot, root)
-        frame = round(t * FPS)   # frame 0 is time 0: the exported animation starts at zero
-        for pb in rig.obj.pose.bones:
+        recorded.append((round(t * FPS), [(pb.name, tuple(pb.location), tuple(pb.rotation_quaternion), tuple(pb.scale)) for pb in rig.obj.pose.bones]))   # frame 0 is time 0
+    action = bpy.data.actions.new(name)
+    anim.action = action
+    for frame, bones in recorded:
+        for bone, location, rotation, scale in bones:
+            pb = rig.obj.pose.bones[bone]
+            pb.location, pb.rotation_quaternion, pb.scale = location, rotation, scale
             pb.keyframe_insert("location", frame=frame)
             pb.keyframe_insert("rotation_quaternion", frame=frame)
             pb.keyframe_insert("scale", frame=frame)
     anim.action = None
-    track = anim.nla_tracks.new()
+    return action, total
+
+
+def push_track(rig, name, action):
+    """Put a baked action on a track of its own, at full strength. Done only after every clip is baked: a track that exists while the next clip is posed is evaluated
+    and corrupts that pose."""
+    track = rig.obj.animation_data.nla_tracks.new()
     track.name = name
-    track.strips.new(name, 0, action)
-    return total
+    strip = track.strips.new(name, 0, action)
+    strip.blend_type, strip.influence, strip.blend_in, strip.blend_out, strip.use_auto_blend = "REPLACE", 1.0, 0.0, 0.0, False
 
 
 def export(species, form, out_dir):
@@ -116,11 +130,15 @@ def export(species, form, out_dir):
     colour_materials(rig)
     rig.obj.animation_data_create()
     rig.pose({}, (0.0, 0.0, 0.0))
-    clips = {}
+    baked = {}
     for name, (count, fn, grounded) in cfg["anims"].items():
         durations = cfg["extra"]["durations"][name]
         loop = cfg["extra"]["loops"].get(name, name in ("idle", "walk", "run"))
-        clips[name] = bake_clip(rig, name, [fn(i, count) for i in range(count)], durations, loop, grounded)
+        baked[name] = bake_clip(rig, name, [fn(i, count) for i in range(count)], durations, loop, grounded)
+    clips = {}
+    for name, (action, length) in baked.items():
+        push_track(rig, name, action)
+        clips[name] = length
     rig.pose({}, (0.0, 0.0, 0.0))
     os.makedirs(out_dir, exist_ok=True)
     bpy.ops.object.select_all(action="DESELECT")

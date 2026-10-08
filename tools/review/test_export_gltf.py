@@ -54,6 +54,58 @@ class ExportTest(unittest.TestCase):
                     self.assertAlmostEqual(end, len(engine[animation["name"]]["frames"]) / engine[animation["name"]]["fps"], delta=0.015, msg=animation["name"] + " against the game's clip")
 
 
+def read_accessor(path, index):
+    """The values of accessor `index` of a .glb as a list of tuples (float components only)."""
+    with open(path, "rb") as fh:
+        data = fh.read()
+    json_length, _ = struct.unpack("<II", data[12:20])
+    gltf = json.loads(data[20:20 + json_length])
+    start = 20 + json_length
+    bin_length, _ = struct.unpack("<II", data[start:start + 8])
+    blob = data[start + 8:start + 8 + bin_length]
+    accessor = gltf["accessors"][index]
+    view = gltf["bufferViews"][accessor["bufferView"]]
+    width = {"SCALAR": 1, "VEC3": 3, "VEC4": 4}[accessor["type"]]
+    base = view.get("byteOffset", 0) + accessor.get("byteOffset", 0)
+    return [struct.unpack_from("<%df" % width, blob, base + k * 4 * width) for k in range(accessor["count"])]
+
+
+@unittest.skipUnless(os.path.exists(BLENDER), "needs Blender")
+class HeldPoseTest(unittest.TestCase):
+    def test_a_clip_that_holds_one_pose_is_that_pose_from_its_first_sample_to_its_last(self):
+        """A landing, a fall, a wall cling are one pose held for a moment: the baked animation must not move the creature (it once bounced the hips 0.13 for a landing)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            done = subprocess.run([sys.executable, os.path.join(HERE, "export_gltf.py"), "goblin", "goblin", "--out", tmp], capture_output=True, text=True)
+            self.assertEqual(done.returncode, 0, done.stdout[-1500:] + done.stderr[-1500:])
+            path = os.path.join(tmp, "model.glb")
+            gltf = read_glb(path)
+            held = [a for a in gltf["animations"] if a["name"] in ("rise", "fall", "slide", "wall", "land")]
+            self.assertEqual(len(held), 5)
+            for animation in held:
+                for channel in animation["channels"]:
+                    values = read_accessor(path, animation["samplers"][channel["sampler"]]["output"])
+                    spread = max(max(v[k] for v in values) - min(v[k] for v in values) for k in range(len(values[0])))
+                    self.assertLess(spread, 1e-4, "%s: node %s %s moves by %.4f in a held pose" % (animation["name"], gltf["nodes"][channel["target"]["node"]].get("name"), channel["target"]["path"], spread))
+
+
+@unittest.skipUnless(os.path.exists(BLENDER), "needs Blender")
+class LoopTest(unittest.TestCase):
+    def test_a_looping_clip_ends_where_it_begins_so_the_loop_closes_without_a_jump(self):
+        """Every clip is baked from its own poses: a clip posed while the one before it was animating the rig began on that clip's pose instead (the walk began on the idle's)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            done = subprocess.run([sys.executable, os.path.join(HERE, "export_gltf.py"), "goblin", "goblin", "--out", tmp], capture_output=True, text=True)
+            self.assertEqual(done.returncode, 0, done.stdout[-1500:] + done.stderr[-1500:])
+            path = os.path.join(tmp, "model.glb")
+            gltf = read_glb(path)
+            looping = [a for a in gltf["animations"] if a["name"] in ("idle", "walk", "run")]
+            self.assertEqual(len(looping), 3)
+            for animation in looping:
+                for channel in animation["channels"]:
+                    values = read_accessor(path, animation["samplers"][channel["sampler"]]["output"])
+                    jump = max(abs(a - b) for a, b in zip(values[0], values[-1]))
+                    self.assertLess(jump, 1e-3, "%s: node %s %s starts and ends %.4f apart" % (animation["name"], gltf["nodes"][channel["target"]["node"]].get("name"), channel["target"]["path"], jump))
+
+
 @unittest.skipUnless(os.path.exists(BLENDER), "needs Blender")
 class RefusalTest(unittest.TestCase):
     def test_a_rig_that_deforms_its_meshes_per_pose_is_refused_not_exported_without_its_animation(self):
