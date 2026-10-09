@@ -32,6 +32,9 @@ func test_every_sheet_is_on_the_page_and_the_copies_are_current() -> void:
 	for file in sheets:
 		if not file.ends_with(".png") or file.ends_with("_n.png") or file.begins_with("anim_"):
 			continue  # normal maps lie beside their sheets, and a twin's animated sheet is not another creature
+		if file.begins_with("held_"):
+			assert_false(data.contains('"id":"%s"' % file.get_basename()), "%s is a held item, not a creature" % file.get_basename())
+			continue
 		var id := file.get_basename()
 		if skipped.has(id):
 			assert_false(data.contains('"id":"%s"' % id), "%s is not a creature, so it is not on the page" % id)

@@ -26,7 +26,7 @@ export async function loadSet(ctx, ref) {
 }
 
 export async function frameSource(frame, set) {
-  if (frame.rect) return { image: set.sheet, x: frame.rect[0], y: frame.rect[1], w: frame.rect[2], h: frame.rect[3] };
+  if (frame.rect) return { image: set.sheet, x: frame.rect[0], y: frame.rect[1], w: frame.rect[2], h: frame.rect[3], hands: frame.hands };   // a sheet's frame says where its hands are
   const img = await loadImage(set.url(frame.src));
   return { image: img, x: 0, y: 0, w: img.naturalWidth, h: img.naturalHeight, whole: true };
 }

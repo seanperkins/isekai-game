@@ -5,267 +5,903 @@
   {
    "name": "idle_0",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     52.49,
+     59.4,
+     12.43
+    ],
+    "f": [
+     53.36,
+     50.37,
+     25.16
+    ]
+   }
   },
   {
    "name": "idle_1",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     52.71,
+     59.55,
+     12.35
+    ],
+    "f": [
+     53.59,
+     50.42,
+     25.24
+    ]
+   }
   },
   {
    "name": "idle_2",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     52.88,
+     59.65,
+     12.39
+    ],
+    "f": [
+     53.75,
+     50.57,
+     25.2
+    ]
+   }
   },
   {
    "name": "idle_3",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     52.89,
+     59.65,
+     12.51
+    ],
+    "f": [
+     53.76,
+     50.72,
+     25.08
+    ]
+   }
   },
   {
    "name": "idle_4",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     52.74,
+     59.55,
+     12.66
+    ],
+    "f": [
+     53.61,
+     50.79,
+     24.93
+    ]
+   }
   },
   {
    "name": "idle_5",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     52.52,
+     59.4,
+     12.74
+    ],
+    "f": [
+     53.38,
+     50.74,
+     24.85
+    ]
+   }
   },
   {
    "name": "idle_6",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     52.35,
+     59.3,
+     12.7
+    ],
+    "f": [
+     53.22,
+     50.6,
+     24.89
+    ]
+   }
   },
   {
    "name": "idle_7",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     52.34,
+     59.3,
+     12.58
+    ],
+    "f": [
+     53.21,
+     50.45,
+     25.01
+    ]
+   }
   },
   {
    "name": "walk_0",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     52.79,
+     61.48,
+     11.71
+    ],
+    "f": [
+     53.61,
+     51.37,
+     26.33
+    ]
+   }
   },
   {
    "name": "walk_1",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     52.74,
+     61.59,
+     11.6
+    ],
+    "f": [
+     53.56,
+     51.35,
+     26.44
+    ]
+   }
   },
   {
    "name": "walk_2",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     52.92,
+     61.15,
+     11.81
+    ],
+    "f": [
+     53.73,
+     51.15,
+     26.23
+    ]
+   }
   },
   {
    "name": "walk_3",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     53.19,
+     60.52,
+     12.27
+    ],
+    "f": [
+     53.99,
+     51.06,
+     25.77
+    ]
+   }
   },
   {
    "name": "walk_4",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     53.38,
+     60.12,
+     12.87
+    ],
+    "f": [
+     54.17,
+     51.38,
+     25.17
+    ]
+   }
   },
   {
    "name": "walk_5",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     53.43,
+     60.1,
+     13.44
+    ],
+    "f": [
+     54.2,
+     52.05,
+     24.6
+    ]
+   }
   },
   {
    "name": "walk_6",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     53.41,
+     60.23,
+     13.83
+    ],
+    "f": [
+     54.17,
+     52.65,
+     24.21
+    ]
+   }
   },
   {
    "name": "walk_7",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     53.42,
+     60.21,
+     13.94
+    ],
+    "f": [
+     54.18,
+     52.76,
+     24.1
+    ]
+   }
   },
   {
    "name": "walk_8",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     53.48,
+     60.01,
+     13.73
+    ],
+    "f": [
+     54.24,
+     52.31,
+     24.31
+    ]
+   }
   },
   {
    "name": "walk_9",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     53.48,
+     59.93,
+     13.27
+    ],
+    "f": [
+     54.26,
+     51.66,
+     24.77
+    ]
+   }
   },
   {
    "name": "walk_10",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     53.32,
+     60.24,
+     12.67
+    ],
+    "f": [
+     54.12,
+     51.26,
+     25.37
+    ]
+   }
   },
   {
    "name": "walk_11",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     53.04,
+     60.89,
+     12.1
+    ],
+    "f": [
+     53.85,
+     51.24,
+     25.94
+    ]
+   }
   },
   {
    "name": "run_0",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     53.2,
+     61.96,
+     10.75
+    ],
+    "f": [
+     53.91,
+     50.45,
+     27.95
+    ]
+   }
   },
   {
    "name": "run_1",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     53.13,
+     63.03,
+     10.55
+    ],
+    "f": [
+     53.83,
+     51.29,
+     28.15
+    ]
+   }
   },
   {
    "name": "run_2",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     53.65,
+     63.43,
+     11.32
+    ],
+    "f": [
+     54.34,
+     52.55,
+     27.38
+    ]
+   }
   },
   {
    "name": "run_3",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     54.26,
+     62.16,
+     12.77
+    ],
+    "f": [
+     54.93,
+     52.95,
+     25.93
+    ]
+   }
   },
   {
    "name": "run_4",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     54.53,
+     60.1,
+     14.35
+    ],
+    "f": [
+     55.19,
+     52.8,
+     24.35
+    ]
+   }
   },
   {
    "name": "run_5",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     54.53,
+     59.18,
+     15.45
+    ],
+    "f": [
+     55.18,
+     53.25,
+     23.25
+    ]
+   }
   },
   {
    "name": "run_6",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     54.57,
+     60.01,
+     15.65
+    ],
+    "f": [
+     55.22,
+     54.33,
+     23.05
+    ]
+   }
   },
   {
    "name": "run_7",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     54.65,
+     61.33,
+     14.88
+    ],
+    "f": [
+     55.31,
+     54.68,
+     23.82
+    ]
+   }
   },
   {
    "name": "run_8",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     54.44,
+     61.77,
+     13.43
+    ],
+    "f": [
+     55.11,
+     53.34,
+     25.27
+    ]
+   }
   },
   {
    "name": "run_9",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     53.83,
+     61.59,
+     11.85
+    ],
+    "f": [
+     54.51,
+     51.3,
+     26.85
+    ]
+   }
   },
   {
    "name": "attack_0",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     52.49,
+     59.4,
+     12.43
+    ],
+    "f": [
+     53.36,
+     50.37,
+     25.16
+    ]
+   }
   },
   {
    "name": "attack_1",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     35.79,
+     43.0,
+     1.55
+    ],
+    "f": [
+     51.78,
+     54.94,
+     15.4
+    ]
+   }
   },
   {
    "name": "attack_2",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     31.77,
+     45.23,
+     0.0
+    ],
+    "f": [
+     51.29,
+     55.71,
+     14.0
+    ]
+   }
   },
   {
    "name": "attack_3",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     31.77,
+     45.23,
+     0.0
+    ],
+    "f": [
+     51.29,
+     55.71,
+     14.0
+    ]
+   }
   },
   {
    "name": "attack_4",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     46.69,
+     43.38,
+     -0.0
+    ],
+    "f": [
+     54.59,
+     55.37,
+     14.0
+    ]
+   }
   },
   {
    "name": "attack_5",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     58.0,
+     58.94,
+     0.0
+    ],
+    "f": [
+     54.97,
+     64.24,
+     4.0
+    ]
+   }
   },
   {
    "name": "attack_6",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     55.15,
+     64.75,
+     0.0
+    ],
+    "f": [
+     52.46,
+     66.58,
+     -0.71
+    ]
+   }
   },
   {
    "name": "attack_7",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     54.88,
+     65.02,
+     0.0
+    ],
+    "f": [
+     52.29,
+     66.69,
+     -1.0
+    ]
+   }
   },
   {
    "name": "attack_8",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     54.22,
+     62.7,
+     5.37
+    ],
+    "f": [
+     55.75,
+     60.49,
+     10.3
+    ]
+   }
   },
   {
    "name": "attack_9",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     52.49,
+     59.4,
+     12.43
+    ],
+    "f": [
+     53.36,
+     50.37,
+     25.16
+    ]
+   }
   },
   {
    "name": "hurt_0",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     52.49,
+     59.4,
+     12.43
+    ],
+    "f": [
+     53.36,
+     50.37,
+     25.16
+    ]
+   }
   },
   {
    "name": "hurt_1",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     44.72,
+     62.78,
+     -7.57
+    ],
+    "f": [
+     50.32,
+     54.71,
+     20.16
+    ]
+   }
   },
   {
    "name": "hurt_2",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     38.25,
+     64.16,
+     -21.57
+    ],
+    "f": [
+     46.26,
+     58.67,
+     15.16
+    ]
+   }
   },
   {
    "name": "hurt_3",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     48.98,
+     61.36,
+     4.43
+    ],
+    "f": [
+     52.17,
+     52.69,
+     22.66
+    ]
+   }
   },
   {
    "name": "hurt_4",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     52.49,
+     59.4,
+     12.43
+    ],
+    "f": [
+     53.36,
+     50.37,
+     25.16
+    ]
+   }
   },
   {
    "name": "die_0",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     52.49,
+     59.4,
+     12.43
+    ],
+    "f": [
+     53.36,
+     50.37,
+     -0.0
+    ]
+   }
   },
   {
    "name": "die_1",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     41.24,
+     42.83,
+     -30.0
+    ],
+    "f": [
+     44.33,
+     43.24,
+     -0.0
+    ]
+   }
   },
   {
    "name": "die_2",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     50.72,
+     48.22,
+     13.75
+    ],
+    "f": [
+     52.79,
+     51.7,
+     -0.0
+    ]
+   }
   },
   {
    "name": "die_3",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     59.26,
+     57.57,
+     20.0
+    ],
+    "f": [
+     58.92,
+     61.66,
+     0.0
+    ]
+   }
   },
   {
    "name": "die_4",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     62.08,
+     69.45,
+     50.24
+    ],
+    "f": [
+     58.93,
+     72.0,
+     0.0
+    ]
+   }
   },
   {
    "name": "die_5",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     69.48,
+     68.92,
+     90.0
+    ],
+    "f": [
+     69.41,
+     72.59,
+     -0.0
+    ]
+   }
   },
   {
    "name": "die_6",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     69.68,
+     67.82,
+     90.0
+    ],
+    "f": [
+     69.96,
+     71.64,
+     -0.0
+    ]
+   }
   },
   {
    "name": "die_7",
    "width": 0,
-   "native": true
+   "native": true,
+   "hands": {
+    "n": [
+     69.57,
+     67.38,
+     90.0
+    ],
+    "f": [
+     70.0,
+     71.25,
+     -0.0
+    ]
+   }
   }
  ]
 }

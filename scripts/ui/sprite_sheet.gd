@@ -10,7 +10,7 @@ static var dir := DIR
 var texture: Texture2D
 ## The normal map laid out exactly as `texture` (tools/art/assemble_frames.py writes <set>_n.png beside the colour sheet), or null.
 var normal_texture: Texture2D
-var _frames := {}   # name -> {"rect": Rect2, "hurt": PackedVector2Array, "attack": PackedVector2Array}
+var _frames := {}   # name -> {"rect": Rect2, "hurt": PackedVector2Array, "attack": PackedVector2Array, "hands": {"n": {"x", "y", "a"}, "f": {...}}}
 var _atlas := {}    # name -> AtlasTexture
 ## Every load of a sheet shares its lit frames and its decoded images (a room of one form loads the sheet once per creature): keyed by the sheet's path, so each
 ## frame is cut once however many creatures wear it.
@@ -38,7 +38,8 @@ static func load_set(set_name: String) -> SpriteSheet:
 		sheet._frames[name] = {
 			"rect": Rect2(float(r[0]), float(r[1]), float(r[2]), float(r[3])),
 			"hurt": _points(f["hurt"]),
-			"attack": _points(f["attack"])}
+			"attack": _points(f["attack"]),
+			"hands": f.get("hands", {})}
 	return sheet
 
 static func _points(raw: Array) -> PackedVector2Array:
@@ -69,6 +70,11 @@ func hurt(name: String) -> PackedVector2Array:
 
 func attack(name: String) -> PackedVector2Array:
 	return _frames[name]["attack"]
+
+## Where each hand is in this frame and how far it is turned (degrees clockwise): {"n": {"x", "y", "a"}, "f": {...}} in the pixels of the hit shapes (origin at the
+## bottom centre, y down), or {} for a frame that was exported without hands. The held-item layer puts what a goblin holds there.
+func hands(name: String) -> Dictionary:
+	return _frames[name]["hands"]
 
 func has_normals() -> bool:
 	return normal_texture != null
@@ -112,6 +118,7 @@ func _sheet_images() -> Array:
 func draw_on(sprite: Sprite2D, name: String, mirrored := false) -> void:
 	sprite.texture = texture_of(name, mirrored)
 	sprite.flip_h = mirrored and not has_normals()
+	HeldItemLayer.follow_on(sprite, self, name, mirrored, has_normals())
 
 ## The texture `draw_on` puts on a sprite for this frame: the lit one for a sheet with normal maps (mirrored in the texture itself), else the plain frame
 ## (a sprite flips it).

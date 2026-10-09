@@ -74,3 +74,5 @@ canvas.lineup { display: block; image-rendering: pixelated; background: #181a22;
 .creature-tile .tile-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .creature-tile .tile-name { display: flex; align-items: center; gap: 6px; font-weight: 500; font-size: 13px; line-height: 1.2; }
 .creature-tile .meta { font-size: 12px; line-height: 1.2; }
+.pick { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; color: var(--muted, inherit); }
+.pick select { font: inherit; }

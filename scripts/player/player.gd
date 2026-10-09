@@ -539,6 +539,7 @@ func _build_species_body() -> void:
 	_sheet = sheet
 	_base_sheet = sheet
 	_form_sheet = null
+	_bind_held_items("")
 	_base_clips = SpeciesLook.clips_for(look)
 	_anim_form = false
 	_animator = SlimeAnimator.new(_base_clips)
@@ -1397,6 +1398,7 @@ func _use_form_sheet(def: FormDef) -> void:
 	if _animator == null:
 		return  # no sheet drawing at all (use_sheet false): there is nothing to swap
 	if _use_form_clips(def):
+		_bind_held_items(def.id)  # its sheet is drawn empty-handed
 		return
 	_use_base_clips()
 	var sheet: SpriteSheet = null
@@ -1416,6 +1418,14 @@ func _use_form_sheet(def: FormDef) -> void:
 		_still = ""
 		if _base_sheet != null:
 			_sheet = _base_sheet
+	if _sprite != null:
+		HeldItemLayer.suspend_on(_sprite)  # a form drawn as its picture holds what the picture holds; what was swapped in waits for the next animated form
+
+## The held-item layer of a goblin body: what the form holds by default in the hands that have nothing swapped in (a new life clears those). "" is the base goblin.
+## Only goblins hold things in a layer.
+func _bind_held_items(form_id: String) -> void:
+	if species == "goblin" and _sprite != null:
+		HeldItemLayer.attach(_sprite).bind(form_id)
 
 ## An evolved wolf, goblin, undead or spider plays its form's clips: `anim_<form id>` is its sheet (the slime's forms keep their pictures: the slime has its
 ## own poses). The spider walks them over whatever surface it is on. Whether the form animates now.
@@ -2231,6 +2241,9 @@ func _on_run_started() -> void:
 	_use_base_clips()
 	if _base_sheet != null:
 		_sheet = _base_sheet
+	if _sprite != null and _sprite.has_node(HeldItemLayer.NAME):
+		HeldItemLayer.attach(_sprite).clear_overrides()  # what was swapped into a hand belongs to the life that did it
+	_bind_held_items("")
 	skillset.reset()
 	_water.reset()
 	drop_rope()

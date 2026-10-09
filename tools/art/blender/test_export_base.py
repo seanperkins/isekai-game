@@ -7,6 +7,8 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import export_base as eb  # noqa: E402
+import goblin_forms  # noqa: E402
+import held  # noqa: E402
 
 META = {"anims": {"idle": 4, "run": 3, "attack": 10, "hurt": 5, "die": 8, "walk": 6},
         "durations": {"idle": [0.15] * 4, "run": [0.05] * 3, "attack": [0.06] * 10, "hurt": [0.05] * 5, "die": [0.1] * 8, "walk": [0.1] * 6}}
@@ -148,6 +150,45 @@ class InstallTest(unittest.TestCase):
                     written = json.load(fh)
                 self.assertIn("crawl", written[key])
                 self.assertEqual(written["wolf"], {"keep": True}, "the others' clips are left alone")
+
+
+class HeldTest(unittest.TestCase):
+    render = InstallTest.render
+
+    def goblin_meta(self, **more):
+        anims = dict(META["anims"], rise=1, fall=1, roll=4, slide=1, mantle=2, wall=1, land=1)
+        durations = dict(META["durations"], rise=[0.1], fall=[0.1], roll=[0.1] * 4, slide=[0.1], mantle=[0.1, 0.1], wall=[0.1], land=[0.1])
+        return dict(META, anims=anims, durations=durations, windup=4, creature="goblin", ppu=40.0, **more)
+
+    def test_the_base_export_keeps_hands_through_its_renamed_and_picked_frames(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            meta = self.goblin_meta(hold=False)
+            meta["hands"] = {"%s_%d" % (anim, i): {"n": [10.0 + i, 20.0, 5.0 + i], "f": [8.0, 21.0, -3.0]} for anim, count in meta["anims"].items() for i in range(count)}
+            folder = self.render(tmp, meta)
+            with open(os.path.join(tmp, "data", "enemy_clips.json"), "w") as fh:
+                json.dump({}, fh)
+            eb.install("goblin", folder, root=tmp, assemble=False)
+            with open(os.path.join(tmp, "tools", "art", "goblin_frames.json")) as fh:
+                frames = {f["name"]: f for f in json.load(fh)["frames"]}
+            with open(os.path.join(tmp, "data", "held_items.json")) as fh:
+                table = json.load(fh)
+        by_source = {new: src for new, src, _ in eb.plan(eb.SPECS["goblin"], meta)[0]}
+        self.assertEqual(by_source["run_2"], "run_1", "the plan renames run_1 to run_2")
+        self.assertEqual(frames["run_2"]["hands"], meta["hands"]["run_1"])
+        self.assertTrue(all("hands" in f for f in frames.values()))
+        self.assertEqual(table["forms"]["goblin"], {"scale": round(held.form_scale(goblin_forms.FORMS["goblin"], 40.0), 4)})
+
+    def test_an_armed_goblin_render_is_refused_and_a_wolf_is_not_checked(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = self.render(tmp, self.goblin_meta())
+            with self.assertRaises(ValueError):
+                eb.install("goblin", folder, root=tmp, assemble=False)
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = self.render(tmp, dict(META, creature="wolf", windup=4))
+            with open(os.path.join(tmp, "data", "enemy_clips.json"), "w") as fh:
+                json.dump({"gloom_wolf": {}}, fh)
+            eb.install("gloom_wolf", folder, root=tmp, assemble=False)
+            self.assertFalse(os.path.exists(os.path.join(tmp, "data", "held_items.json")))
 
 
 class WidthsTest(unittest.TestCase):

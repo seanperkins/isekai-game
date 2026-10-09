@@ -283,6 +283,23 @@ class Rig:
                 zs.append(w.z)
         return min(xs), max(xs), min(zs), max(zs)
 
+    def discard(self):
+        """Take this rig out of the scene: its part meshes and its armature, with their data, so nothing of it can be rendered."""
+        for ob, _, _ in self.parts:
+            mesh = ob.data
+            bpy.data.objects.remove(ob, do_unlink=True)
+            if mesh.users == 0:
+                bpy.data.meshes.remove(mesh)
+        bpy.data.objects.remove(self.obj, do_unlink=True)
+        bpy.data.armatures.remove(self.data)
+        self.parts, self.owner, self.glowing = [], {}, set()
+
+    def bone_world(self, name):
+        """(head, tail) of a bone in the world, in the current pose."""
+        pb = self.obj.pose.bones[name]
+        m = self.obj.matrix_world
+        return m @ pb.head, m @ pb.tail
+
     def bounds_of(self, bone, named=None):
         """(min x, max x, min z, max z) of the parts bound to `bone` in the current pose, or None. With `named` (a prefix or a tuple of them), only the parts whose name starts so."""
         deps = bpy.context.evaluated_depsgraph_get()

@@ -76,6 +76,29 @@ def _sheet_files(form_id, root):
     raise ValueError("no sheet for %s in %s" % (form_id, sheets))
 
 
+def _held(form_id, root):
+    """({"form": {"n", "f", "scale"}, "items": {id: {"image", "grip", "w", "h"}}}, {media name: file}) for a goblin form that has a row in data/held_items.json: what it holds
+    by default, how much its items are scaled, and every item there is, so the page can put another in a hand. (None, {}) for a creature the table does not know."""
+    table_path = Path(root) / "data" / "held_items.json"
+    if not table_path.is_file():
+        return None, {}
+    table = _read(table_path)
+    entry = table.get("forms", {}).get(form_id)
+    if entry is None:
+        return None, {}
+    sheets = Path(root) / "assets" / "sheets"
+    items, media = {}, {}
+    for item_id, item in sorted(table.get("items", {}).items()):
+        sheet_path = sheets / (item["set"] + ".json")
+        if not sheet_path.is_file():
+            continue
+        rect = _read(sheet_path)["frames"][item.get("frame", "item")]["rect"]
+        name = "items/%s.png" % item_id
+        items[item_id] = {"image": name, "grip": list(item["grip"]), "w": rect[2], "h": rect[3]}
+        media[name] = sheets / (item["set"] + ".png")
+    return {"form": {"n": entry.get("n", ""), "f": entry.get("f", ""), "scale": entry["scale"]}, "items": items}, media
+
+
 def sheet_listing(form_id, root=ROOT):
     """The clips the game plays for `form_id`, as a sprites listing over the game's own sheet."""
     sheet_path, table_path, is_form = _sheet_files(form_id, root)
@@ -95,9 +118,21 @@ def sheet_listing(form_id, root=ROOT):
         for name, _ in runs:
             if name not in frames:
                 raise ValueError("%s: clip %s names a frame the sheet does not have: %s" % (form_id, state, name))
-        clips[state] = {"frames": [{"rect": list(frames[name]["rect"])} for name, _ in runs], "durations": [count / fps for _, count in runs], "loop": bool(clip.get("loop"))}
+        clips[state] = {"frames": [_frame_entry(frames[name]) for name, _ in runs], "durations": [count / fps for _, count in runs], "loop": bool(clip.get("loop"))}
     has_normal = bool(sheet.get("normal")) and (sheet_path.parent / sheet["normal"]).is_file()
-    return {"image": "sheet.png", "normal": "sheet_n.png" if has_normal else None, "scale": _sprite_size(form_id, root), "clips": clips}
+    listing = {"image": "sheet.png", "normal": "sheet_n.png" if has_normal else None, "scale": _sprite_size(form_id, root), "clips": clips}
+    held, _ = _held(form_id, root)
+    if held is not None:
+        listing["held"] = held
+    return listing
+
+
+def _frame_entry(frame):
+    """A listing frame: its rect on the sheet, and where its hands are when the sheet says (a goblin drawn empty-handed)."""
+    entry = {"rect": list(frame["rect"])}
+    if frame.get("hands"):
+        entry["hands"] = frame["hands"]
+    return entry
 
 
 def sheet_media(form_id, root=ROOT):
@@ -107,6 +142,7 @@ def sheet_media(form_id, root=ROOT):
     media = {"sheet.png": sheet_path.parent / sheet["image"]}
     if sheet.get("normal") and (sheet_path.parent / sheet["normal"]).is_file():
         media["sheet_n.png"] = sheet_path.parent / sheet["normal"]
+    media.update(_held(form_id, root)[1])
     return media
 
 

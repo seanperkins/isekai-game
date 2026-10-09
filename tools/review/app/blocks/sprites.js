@@ -3,7 +3,9 @@
 import { registerBlock } from "../registry.js";
 import { frameAt, durationsOf } from "../player.js";
 import { h, notice } from "../dom.js";
-import { loadImage, frameSource, trimToUnion, drawFrame } from "./sprite-set.js";
+import { loadImage, frameSource, trimToUnion } from "./sprite-set.js";
+import { clipLayout } from "../hands.js";
+import { drawItem } from "./held-draw.js";
 import { flagBar } from "./feedback.js";
 
 registerBlock("sprites", async (el, data, ctx) => {
@@ -18,6 +20,19 @@ registerBlock("sprites", async (el, data, ctx) => {
   }
   const sheet = listing.image ? await loadImage(ctx.url(listing.image)) : null;
   const set = { sheet, url: (rel) => ctx.url(rel) };
+  const held = listing.held || null;   // a goblin form drawn empty-handed: what it holds, and every item that could be put in a hand
+  const picked = held ? { n: held.form.n, f: held.form.f } : { n: "", f: "" };
+  const loaded = {};   // item id -> its picture, once it has been loaded
+  const ensureItem = async (id) => { if (id && !loaded[id]) loaded[id] = await loadImage(ctx.url(held.items[id].image)); };
+  for (const side of ["n", "f"]) await ensureItem(picked[side]);
+  const chosen = () => {
+    const out = {};
+    for (const side of ["n", "f"]) {
+      const id = picked[side];
+      if (id && loaded[id]) out[side] = { ...held.items[id], scale: held.form.scale, image: loaded[id] };
+    }
+    return out;
+  };
   const prepared = [];
   for (const name of names) {
     const clip = clips[name];
@@ -29,11 +44,12 @@ registerBlock("sprites", async (el, data, ctx) => {
   let showNormals = false;
   const tiles = [];
   for (const { name, clip, durations, frames } of prepared) {
-    const box = frames.reduce((b, f) => ({ w: Math.max(b.w, f.w), h: Math.max(b.h, f.h) }), { w: 1, h: 1 });
-    const canvas = h("canvas", { width: String(box.w), height: String(box.h), title: name });
+    const layout = clipLayout(frames, chosen());
+    const box = { w: layout.w, h: layout.h };
+    const canvas = h("canvas", { width: String(layout.w), height: String(layout.h), title: name });
     const info = h("span", { class: "meta" }, frames.length ? `${frames.length} frame${frames.length === 1 ? "" : "s"}, ${durations.reduce((a, b) => a + b, 0).toFixed(2)} s${clip.loop ? ", loops" : ""}` : "no frames");
     el.append(h("figure", { class: "tile" }, h("div", { class: "tile-head" }, h("span", { class: "clip-name" }, name), info), canvas, flagBar(ctx.creature, name, { compact: true })));
-    const tile = { clip, durations, frames, box, canvas, g: canvas.getContext("2d"), last: -2, start: ctx.time() };
+    const tile = { clip, durations, frames, box, layout, canvas, g: canvas.getContext("2d"), last: -2, start: ctx.time() };
     if (!clip.loop) {   // a one-shot plays from when it was drawn, not from when the page loaded, and a click plays it again
       canvas.title = `${name}: click to play again`;
       canvas.classList.add("replay");
@@ -49,6 +65,30 @@ registerBlock("sprites", async (el, data, ctx) => {
   };
   size();
   ctx.onControls((name) => { if (name === "zoom") size(); });
+  const relayout = () => {   // an item was changed: every clip's canvas is made to hold it wherever it reaches, and drawn again even when the page is paused
+    for (const t of tiles) {
+      t.layout = clipLayout(t.frames, chosen());
+      t.box = { w: t.layout.w, h: t.layout.h };
+      t.canvas.width = t.layout.w;
+      t.canvas.height = t.layout.h;
+      t.last = -2;
+    }
+    size();
+    paint(ctx.time());
+  };
+  if (held) {
+    const picker = (label, side) => {
+      const select = h("select", { title: label, "data-hand": side }, h("option", { value: "" }, "nothing"), Object.keys(held.items).map((id) => h("option", { value: id }, id)));
+      select.value = picked[side];
+      select.addEventListener("change", async () => {
+        picked[side] = select.value;
+        await ensureItem(select.value);
+        relayout();
+      });
+      return h("label", { class: "pick" }, `${label} `, select);
+    };
+    el.prepend(h("div", { class: "tools" }, picker("near hand", "n"), picker("far hand", "f")));
+  }
   if (listing.normal) {
     const toggle = h("button", { type: "button", class: "toggle" }, "normals: off");
     toggle.addEventListener("click", async () => {
@@ -68,7 +108,11 @@ registerBlock("sprites", async (el, data, ctx) => {
       if (i < 0) continue;
       const f = t.frames[i];
       const image = showNormals && normals && f.image === sheet ? normals : f.image;
-      drawFrame(t.g, t.box, f, image);   // bottom-centre: the sprite stands on one line
+      const items = showNormals ? {} : chosen();   // the normal map is the body's
+      t.g.imageSmoothingEnabled = false;
+      drawItem(t.g, t.layout, f.hands && f.hands.f, items.f, true);   // behind the body
+      t.g.drawImage(image, f.x, f.y, f.w, f.h, Math.floor(t.layout.ax - f.w / 2), t.layout.ay - f.h, f.w, f.h);   // bottom-centre: the sprite stands on one line
+      drawItem(t.g, t.layout, f.hands && f.hands.n, items.n, false);   // in front of it
       t.canvas.dataset.frame = String(i);
     }
   };

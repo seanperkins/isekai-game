@@ -1,0 +1,442 @@
+{
+ "items": {
+  "axe": {
+   "set": "held_axe",
+   "frame": "item",
+   "grip": [
+    -2.7,
+    0.48
+   ],
+   "ppu": 30.0
+  },
+  "bowl": {
+   "set": "held_bowl",
+   "frame": "item",
+   "grip": [
+    -2.7,
+    0.48
+   ],
+   "ppu": 30.0
+  },
+  "club": {
+   "set": "held_club",
+   "frame": "item",
+   "grip": [
+    -5.7,
+    0.48
+   ],
+   "ppu": 30.0
+  },
+  "coin": {
+   "set": "held_coin",
+   "frame": "item",
+   "grip": [
+    -2.7,
+    4.48
+   ],
+   "ppu": 30.0
+  },
+  "dagger": {
+   "set": "held_dagger",
+   "frame": "item",
+   "grip": [
+    -0.2,
+    -8.52
+   ],
+   "ppu": 30.0
+  },
+  "doll": {
+   "set": "held_doll",
+   "frame": "item",
+   "grip": [
+    -0.2,
+    -10.52
+   ],
+   "ppu": 30.0
+  },
+  "hammer": {
+   "set": "held_hammer",
+   "frame": "item",
+   "grip": [
+    5.8,
+    1.48
+   ],
+   "ppu": 30.0
+  },
+  "hammer_925ed5": {
+   "set": "held_hammer_925ed5",
+   "frame": "item",
+   "grip": [
+    5.8,
+    1.48
+   ],
+   "ppu": 30.0
+  },
+  "hammer_small": {
+   "set": "held_hammer_small",
+   "frame": "item",
+   "grip": [
+    -0.7,
+    0.48
+   ],
+   "ppu": 30.0
+  },
+  "hawk": {
+   "set": "held_hawk",
+   "frame": "item",
+   "grip": [
+    -1.7,
+    5.48
+   ],
+   "ppu": 30.0
+  },
+  "horn": {
+   "set": "held_horn",
+   "frame": "item",
+   "grip": [
+    -6.7,
+    -7.52
+   ],
+   "ppu": 30.0
+  },
+  "lantern": {
+   "set": "held_lantern",
+   "frame": "item",
+   "grip": [
+    -0.2,
+    -7.52
+   ],
+   "ppu": 30.0
+  },
+  "lantern_3b1f26": {
+   "set": "held_lantern_3b1f26",
+   "frame": "item",
+   "grip": [
+    -0.2,
+    -7.52
+   ],
+   "ppu": 30.0
+  },
+  "lyre": {
+   "set": "held_lyre",
+   "frame": "item",
+   "grip": [
+    -2.2,
+    -2.52
+   ],
+   "ppu": 30.0
+  },
+  "offering": {
+   "set": "held_offering",
+   "frame": "item",
+   "grip": [
+    -1.7,
+    0.48
+   ],
+   "ppu": 30.0
+  },
+  "pick": {
+   "set": "held_pick",
+   "frame": "item",
+   "grip": [
+    -1.2,
+    -2.52
+   ],
+   "ppu": 30.0
+  },
+  "pipe": {
+   "set": "held_pipe",
+   "frame": "item",
+   "grip": [
+    -2.7,
+    0.48
+   ],
+   "ppu": 30.0
+  },
+  "ring": {
+   "set": "held_ring",
+   "frame": "item",
+   "grip": [
+    -1.7,
+    3.48
+   ],
+   "ppu": 30.0
+  },
+  "shield": {
+   "set": "held_shield",
+   "frame": "item",
+   "grip": [
+    1.3,
+    -0.52
+   ],
+   "ppu": 30.0
+  },
+  "sling": {
+   "set": "held_sling",
+   "frame": "item",
+   "grip": [
+    0.8,
+    -12.52
+   ],
+   "ppu": 30.0
+  },
+  "spear": {
+   "set": "held_spear",
+   "frame": "item",
+   "grip": [
+    -0.7,
+    -6.52
+   ],
+   "ppu": 30.0
+  },
+  "spear_26b9ab": {
+   "set": "held_spear_26b9ab",
+   "frame": "item",
+   "grip": [
+    -7.7,
+    -0.52
+   ],
+   "ppu": 30.0
+  },
+  "spiked_cap_held": {
+   "set": "held_spiked_cap_held",
+   "frame": "item",
+   "grip": [
+    -0.2,
+    5.48
+   ],
+   "ppu": 30.0
+  },
+  "spindle": {
+   "set": "held_spindle",
+   "frame": "item",
+   "grip": [
+    -0.2,
+    0.48
+   ],
+   "ppu": 30.0
+  },
+  "staff": {
+   "set": "held_staff",
+   "frame": "item",
+   "grip": [
+    -2.2,
+    -6.52
+   ],
+   "ppu": 30.0
+  },
+  "stone": {
+   "set": "held_stone",
+   "frame": "item",
+   "grip": [
+    -1.7,
+    -0.52
+   ],
+   "ppu": 30.0
+  },
+  "stone_04bc88": {
+   "set": "held_stone_04bc88",
+   "frame": "item",
+   "grip": [
+    -1.7,
+    -0.52
+   ],
+   "ppu": 30.0
+  },
+  "stone_f3d8b8": {
+   "set": "held_stone_f3d8b8",
+   "frame": "item",
+   "grip": [
+    -1.7,
+    -0.52
+   ],
+   "ppu": 30.0
+  },
+  "straw": {
+   "set": "held_straw",
+   "frame": "item",
+   "grip": [
+    3.3,
+    1.48
+   ],
+   "ppu": 30.0
+  },
+  "sword_big": {
+   "set": "held_sword_big",
+   "frame": "item",
+   "grip": [
+    7.3,
+    1.48
+   ],
+   "ppu": 30.0
+  },
+  "sword_big_516c38": {
+   "set": "held_sword_big_516c38",
+   "frame": "item",
+   "grip": [
+    5.8,
+    1.48
+   ],
+   "ppu": 30.0
+  },
+  "sword_big_e6f9b7": {
+   "set": "held_sword_big_e6f9b7",
+   "frame": "item",
+   "grip": [
+    4.3,
+    1.48
+   ],
+   "ppu": 30.0
+  },
+  "tongs": {
+   "set": "held_tongs",
+   "frame": "item",
+   "grip": [
+    -5.2,
+    0.48
+   ],
+   "ppu": 30.0
+  },
+  "trap": {
+   "set": "held_trap",
+   "frame": "item",
+   "grip": [
+    -2.2,
+    2.48
+   ],
+   "ppu": 30.0
+  },
+  "wrench": {
+   "set": "held_wrench",
+   "frame": "item",
+   "grip": [
+    2.8,
+    0.48
+   ],
+   "ppu": 30.0
+  }
+ },
+ "forms": {
+  "goblin": {
+   "scale": 1.0844
+  },
+  "goblin_beast_rider": {
+   "scale": 0.4663,
+   "n": "spear"
+  },
+  "goblin_beastcaller": {
+   "scale": 0.5989,
+   "n": "offering"
+  },
+  "goblin_bloodcap": {
+   "scale": 0.7355,
+   "n": "spiked_cap_held"
+  },
+  "goblin_boggart": {
+   "scale": 0.6843,
+   "n": "stone_04bc88"
+  },
+  "goblin_changeling": {
+   "scale": 0.7292,
+   "n": "doll"
+  },
+  "goblin_giant_killer": {
+   "scale": 0.7395,
+   "n": "sword_big_516c38",
+   "f": "sling"
+  },
+  "goblin_gremlin": {
+   "scale": 0.7876,
+   "n": "wrench"
+  },
+  "goblin_hearth_god": {
+   "scale": 0.7663,
+   "n": "stone_f3d8b8",
+   "f": "horn"
+  },
+  "goblin_hob": {
+   "scale": 0.6902,
+   "n": "bowl"
+  },
+  "goblin_horn_bearer": {
+   "scale": 0.7897,
+   "n": "horn"
+  },
+  "goblin_ironboot": {
+   "scale": 1.2996
+  },
+  "goblin_knocker": {
+   "scale": 0.6881,
+   "n": "pick",
+   "f": "lantern"
+  },
+  "goblin_leprechaun": {
+   "scale": 0.6584,
+   "n": "hammer_small",
+   "f": "coin"
+  },
+  "goblin_lord_of_beasts": {
+   "scale": 0.4965,
+   "n": "hawk"
+  },
+  "goblin_mastersmith": {
+   "scale": 0.9408,
+   "n": "hammer_925ed5",
+   "f": "sword_big_e6f9b7"
+  },
+  "goblin_orpheus": {
+   "scale": 0.7854,
+   "n": "lyre"
+  },
+  "goblin_paladin": {
+   "scale": 0.9134,
+   "n": "shield"
+  },
+  "goblin_pied_piper": {
+   "scale": 0.6999,
+   "n": "pipe"
+  },
+  "goblin_puck": {
+   "scale": 0.7608,
+   "n": "lantern_3b1f26"
+  },
+  "goblin_rat_king": {
+   "scale": 0.8509
+  },
+  "goblin_redcap": {
+   "scale": 0.7332,
+   "n": "axe"
+  },
+  "goblin_ring_maker": {
+   "scale": 0.6688,
+   "n": "ring"
+  },
+  "goblin_rumpelstiltskin": {
+   "scale": 0.6384,
+   "n": "spindle",
+   "f": "straw"
+  },
+  "goblin_skulker": {
+   "scale": 0.787,
+   "n": "dagger"
+  },
+  "goblin_smith": {
+   "scale": 0.673,
+   "n": "hammer",
+   "f": "tongs"
+  },
+  "goblin_tinker": {
+   "scale": 0.5887,
+   "n": "trap"
+  },
+  "goblin_tomte": {
+   "scale": 0.7154,
+   "n": "stone",
+   "f": "lantern"
+  },
+  "goblin_wolf_lord": {
+   "scale": 0.4714,
+   "n": "spear_26b9ab"
+  }
+ }
+}

@@ -18,6 +18,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 sys.path.insert(0, HERE)
 import clips  # noqa: E402
+import held  # noqa: E402
 
 # set -> where its render is and which state comes from which render clip: (state, render clip, frames (None for all, "recover" for an attack's frames from
 # the blow on), loops, options)
@@ -89,6 +90,7 @@ def install(name, folder, root=ROOT, assemble=True):
     spec = SPECS[name]
     with open(os.path.join(folder, "raw", "meta.json")) as fh:
         meta = json.load(fh)
+    held.check_empty_handed(meta)   # an armed goblin render would draw every weapon twice beside the held-item layer
     frames, table = plan(spec, meta)
     dest = os.path.join(root, "art_source", "frames", name)
     if os.path.isdir(dest):
@@ -98,9 +100,11 @@ def install(name, folder, root=ROOT, assemble=True):
         shutil.copy(os.path.join(folder, "frames", source + ".png"), os.path.join(dest, new + ".png"))
         shutil.copy(os.path.join(folder, "frames", source + "_n.png"), os.path.join(dest, new + "_n.png"))
     entries = []
-    for new, _, options in frames:
+    for new, source, options in frames:
         entry = {"name": new, "width": 0, "native": True}
         entry.update(options)
+        if meta.get("hands", {}).get(source):
+            entry["hands"] = meta["hands"][source]
         entries.append(entry)
     with open(os.path.join(root, "tools", "art", name + "_frames.json"), "w") as fh:
         json.dump({"set": name, "centred_frames": not spec.get("tight"), "anchor": frames[0][0], "frames": entries}, fh, indent=1)
@@ -109,6 +113,8 @@ def install(name, folder, root=ROOT, assemble=True):
         if done.returncode != 0:
             raise RuntimeError("assemble_frames failed for %s:\n%s%s" % (name, done.stdout[-1500:], done.stderr[-1500:]))
         write_widths(os.path.join(root, "tools", "art", name + "_frames.json"), os.path.join(root, "assets", "sheets", name + ".json"))
+    if name == "goblin":   # the player's base goblin holds items too
+        held.update_table(os.path.join(root, "data", "held_items.json"), forms={"goblin": held.form_entry("goblin", meta["ppu"])})
     clips_file = spec.get("file", "data/enemy_clips.json")
     if clips_file is not None:
         path = os.path.join(root, clips_file)

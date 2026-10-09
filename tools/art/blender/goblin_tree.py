@@ -44,7 +44,7 @@ def tree_order():
 def render_form(name, out):
     raw = os.path.join(out, name, "raw")
     os.makedirs(raw, exist_ok=True)
-    spike.render("goblin", raw, None if name == "goblin" else name, None, 4)
+    spike.render("goblin", raw, None if name == "goblin" else name, None, 4, empty_hands=True)
     return spike.process(raw, os.path.join(out, name), outline=True)
 
 

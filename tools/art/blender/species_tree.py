@@ -54,7 +54,7 @@ def render_form(species, name, out, ss=4):
     creature = forms_of(species)[name].get("creature", creature)   # some forms of a species are built with another kit (the werewolves)
     raw = os.path.join(out, name, "raw")
     os.makedirs(raw, exist_ok=True)
-    spike.render(creature, raw, None if name == base else name, None, ss)
+    spike.render(creature, raw, None if name == base else name, None, ss, empty_hands=creature == "goblin")
     return spike.process(raw, os.path.join(out, name), outline=True)
 
 

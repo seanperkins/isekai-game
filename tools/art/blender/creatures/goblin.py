@@ -18,6 +18,7 @@ import anim  # noqa: E402
 import attack_kinds  # noqa: E402
 import goblin_forms as forms  # noqa: E402
 import goblin_gear as gear  # noqa: E402
+import held  # noqa: E402
 import goblin_kit as kit  # noqa: E402
 import biped_motion as motion_  # noqa: E402
 import player_poses  # noqa: E402
@@ -46,7 +47,8 @@ def _form(variant):
     return dict(form, attack=attack_kinds.resolve(form, "goblin_" + variant if variant else "goblin", motion_.attack_kind(form)))
 
 
-def build(variant=None):
+def build(variant=None, hold=True):
+    """The form's rig. With `hold` false the pieces its hands carry (held.HELD) are left out: the game draws them in a layer (render_set.py --empty-hands)."""
     form = _form(variant)
     rig = k.Rig("goblin_" + (variant or "goblin"))
     scale, origin, mount = 1.0, (0.0, 0.0, 0.0), form.get("ride") and form["mount"]
@@ -61,7 +63,8 @@ def build(variant=None):
         g.root_parent = "w_spine"
     g.build()
     for name, kw in form["gear"]:
-        gear.GEAR[name](g, **kw)
+        if hold or name not in held.HELD:
+            gear.GEAR[name](g, **kw)
     rig.build()
     return rig
 
