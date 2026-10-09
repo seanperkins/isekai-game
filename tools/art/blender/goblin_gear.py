@@ -355,8 +355,9 @@ def trap(g, side="n", **_):
 
 
 def shield(g, color=STEEL, emblem=GOLD, **_):
-    g.e("shield", (0.20, NEAR - 0.07, 0.96), (0.16, 0.04, 0.17), "item_n", color)
-    g.e("sunburst", (0.20, NEAR - 0.11, 0.96), (0.075, 0.02, 0.075), "item_n", emblem, glow=True, seg=8, rings=6)
+    """Strapped to the forearm: its centre is on the hand (the item bone's head), so the hand is at the middle of it and the forearm runs behind it."""
+    g.e("shield", (0.29, NEAR - 0.07, 0.69), (0.18, 0.04, 0.20), "item_n", color)
+    g.e("sunburst", (0.29, NEAR - 0.11, 0.69), (0.085, 0.02, 0.085), "item_n", emblem, glow=True, seg=8, rings=6)
 
 
 def shield_back(g, color=STEEL, emblem=GOLD, **_):

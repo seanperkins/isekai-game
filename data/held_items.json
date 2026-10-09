@@ -166,8 +166,8 @@
    "set": "held_shield",
    "frame": "item",
    "grip": [
-    1.3,
-    -0.52
+    -1.2,
+    -8.52
    ],
    "ppu": 30.0
   },
@@ -389,7 +389,7 @@
    "n": "lyre"
   },
   "goblin_paladin": {
-   "scale": 0.9134,
+   "scale": 0.9327,
    "n": "shield"
   },
   "goblin_pied_piper": {

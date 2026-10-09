@@ -1,1 +1,1 @@
-{"set": "held_shield", "image": "held_shield.png", "normal": "held_shield_n.png", "frames": {"item": {"rect": [0, 0, 11, 12], "hurt": [], "attack": []}}}
+{"set": "held_shield", "image": "held_shield.png", "normal": "held_shield_n.png", "frames": {"item": {"rect": [0, 0, 12, 13], "hurt": [], "attack": []}}}
