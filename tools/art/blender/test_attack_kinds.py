@@ -123,6 +123,46 @@ class BipedKindsTest(unittest.TestCase):
         self.assertLess(down["item_f"][0][1], up["item_f"][0][1] - 0.5)
 
 
+class PaladinThrowTest(unittest.TestCase):
+    """The Blessed throw: "a holy throw, and your shield goes up behind it". The free hand throws; the arm that carries the shield stays braced in front of the chest."""
+
+    def setUp(self):
+        self.body = T.body_of("paladin")
+
+    def pose(self, t):
+        return self.body.skel.pose(*gm.attack_pose(self.body, t))
+
+    def test_the_paladin_throws_with_the_free_hand_not_the_shield_arm(self):
+        self.assertEqual(self.body.form["attack"], "throw_free")
+        up = self.pose(gm.T_HOLD)
+        self.assertGreater(up["item_f"][0][1], up["head"][1][1] - 0.2, "the free hand is cocked over the head")
+        self.assertLess(up["item_n"][0][1], up["arm_n"][0][1], "the shield hand stays below the shoulder")
+        down = self.pose(gm.T_HIT)
+        self.assertLess(down["item_f"][0][1], up["item_f"][0][1] - 0.5, "and the throw brings it down and forward")
+        self.assertGreater(down["item_f"][0][0], up["item_f"][0][0] + 0.3)
+
+    def test_the_shield_hand_never_goes_above_the_shoulder_or_far_from_the_chest_through_the_blow(self):
+        frames, _ = gm.attack_frames(self.body)
+        for t, _ in frames:
+            p = self.pose(t)
+            self.assertLessEqual(p["item_n"][0][1], p["arm_n"][0][1] + 0.02, "t=%s" % t)
+            self.assertLess(p["item_n"][0][0] - p["spine"][0][0], 0.75, "t=%s: the shield stays near the body" % t)
+
+    def test_it_keeps_the_engines_timing_ends_at_rest_and_never_sinks_a_foot(self):
+        frames, windup = gm.attack_frames(self.body)
+        self.assertAlmostEqual(sum(d for _, d in frames[:windup]), gm.ENGINE_WINDUP, places=9)
+        self.assertAlmostEqual(sum(d for _, d in frames[windup:]), gm.ENGINE_RECOVER, places=9)
+        idle, _ = gm.idle_pose(self.body, 0.0)
+        last = gm.attack_pose(self.body, frames[-1][0])[0]
+        for bone in ("spine", "head", "arm_n", "fore_n", "arm_f", "fore_f", "thigh_n"):
+            self.assertAlmostEqual(last[bone][1], idle[bone][1], delta=0.6, msg=bone)
+        for t, _ in frames:
+            rot, root = gm.attack_pose(self.body, t)
+            heel, toe = T.sole(self.body, "f", rot, root)
+            self.assertGreaterEqual(min(heel[1], toe[1]), -1e-6)
+
+
+
 class GestureTest(unittest.TestCase):
     """The gestures of tools/verb_anims.json on the two-legged bodies: each is there, keeps the engine's timing, comes back to rest, and is a motion of its own."""
 

@@ -29,6 +29,10 @@ SPECS = {
     # an overhand toss: the arm back and up, then over and forward with the step, the free hand forward for balance: a decoy, a stone, a trap
     "throw": dict(lean=(6, 20, 40, 46), head=(0, 10, 22, 26), px=(-0.08, 0.02, 0.14, 0.15), pz=(-0.05, -0.06, -0.08, -0.05),
                   arm_n=(215, 150, 70, 35), fore_n=(230, 170, 80, 45), item=(0, 0, 0, 0), arm_f=(70, 80, 40, 20), fore_f=(90, 90, 50, 30), step=0.28, lift=0.12, heel=-24.0, jaw=(6, 12, 10, 2)),
+    # an overhand toss with the free hand while the arm that carries a shield braces it in front of the chest and lifts it as the hand lets go: a throw with the shield going up behind it
+    "throw_free": dict(lean=(6, 20, 40, 46), head=(0, 10, 22, 26), px=(-0.08, 0.02, 0.14, 0.15), pz=(-0.05, -0.06, -0.08, -0.05),
+                       arm_n=(8, 14, 24, 20), fore_n=(92, 100, 110, 104), item=(0, 4, 10, 6), arm_f=(215, 150, 70, 35), fore_f=(230, 170, 80, 45),
+                       step=0.28, lift=0.12, heel=-24.0, jaw=(6, 12, 10, 2)),
     # both arms raised palms up and the head back: a summons, a raising, an offer
     "summon": dict(lean=(14, 8, 4, 10), head=(0, -14, -22, -10), px=(-0.02, -0.03, -0.03, -0.01), pz=(-0.04, 0.02, 0.04, 0.02),
                    arm_n=(110, 150, 172, 160), fore_n=(120, 165, 190, 175), item=(0, 0, 0, 0), arm_f=(106, 146, 168, 156), fore_f=(116, 160, 186, 170), step=0.0, lift=0.0, heel=-6.0, jaw=(8, 20, 26, 12)),
