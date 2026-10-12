@@ -117,7 +117,7 @@ FORMS = {
     "boggart": dict(stage=4, parent="tomte", line="hob", width=24, arms="guard", stance="hunch", ears=1.2,
                     gear=[G("floppy_cap", color=CHAR, height=0.26), G("cloak", color=DKVIOLET, length=0.7), G("apron", color=GREY),
                           G("stone", side="n", color=(150, 100, 210))]),
-    "paladin": dict(stage=3, parent="hob", line="hob", width=30, arms="shield", bx=1.12, attack="throw_free",   # the Blessed throw: the free hand throws, the shield arm stays up in front
+    "paladin": dict(stage=3, parent="hob", line="hob", width=30, arms="shield_ready", bx=1.12, attack="throw_free",   # the Blessed throw: the free hand throws, the shield arm stays up in front
                     gear=[G("helm", color=STEEL, rim=GOLD), G("jerkin", color=TAN, collar=GREY), G("cloak", color=CREAM, length=0.8),
                           G("bandolier", color=LEATHER, items=[CYAN, ROSE, CYAN]), G("shield")]),
     "horn_bearer": dict(stage=4, parent="paladin", line="hob", width=34, arms="play", tall=1.12,

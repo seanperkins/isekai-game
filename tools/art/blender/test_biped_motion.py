@@ -442,5 +442,15 @@ class KeysTest(unittest.TestCase):
             self.assertEqual(len(set(times)), len(times), name)
 
 
+class ShieldPresetTest(unittest.TestCase):
+    def test_the_shared_shield_pose_is_as_the_wolfskin_champion_is_drawn_in_it_and_the_paladin_has_his_own(self):
+        import goblin_forms
+        import wolf_forms
+        self.assertEqual(gm.ARMS["shield"], (40, 70, 36, 50, 0.15))
+        self.assertEqual(wolf_forms.FORMS["wolfskin_champion"]["arms"], "shield")
+        self.assertEqual(goblin_forms.FORMS["paladin"]["arms"], "shield_ready")
+        self.assertIn("shield_ready", gm.ARMS)
+
+
 if __name__ == "__main__":
     unittest.main()

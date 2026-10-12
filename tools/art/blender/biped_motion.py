@@ -32,7 +32,8 @@ ARMS = {
     "raise_n": (150, 24, 8, 28, 0.2),         # the near arm high
     "raise_f": (22, 40, 150, 24, 0.2),        # the far arm high
     "lantern": (20, 30, 70, 30, 0.2),         # a lantern low, the other hand beckoning
-    "shield": (8, 84, 6, 26, 0.15),          # the shield in front of the chest on the near forearm (held out level, the elbow by the ribs), the other arm easy at the side
+    "shield": (40, 70, 36, 50, 0.15),         # (the wolfskin champion's too: it is a pose he is drawn in, so it stays as it was)
+    "shield_ready": (8, 84, 6, 26, 0.15),     # the paladin's: the shield in front of the chest on the near forearm (held out level, the elbow by the ribs), the other arm easy at the side
     "sword": (60, 50, 8, 24, 0.2),            # a blade over the shoulder
     # the undead's (undead_forms.py)
     "zombie": (22, 18, 16, 14, 0.45),         # heavy arms hanging low and a little forward
