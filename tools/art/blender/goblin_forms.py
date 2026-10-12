@@ -130,3 +130,7 @@ FORMS = {
 }
 
 ORDER = list(FORMS)
+
+
+for _row in FORMS.values():
+    _row.setdefault("handed", "n")   # which arm is the primary hand (held.py, biped_motion.py): the near arm unless a form says otherwise

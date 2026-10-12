@@ -13,6 +13,7 @@ the head are tipped forward from upright. Lengths that scale with the creature a
 import math
 
 import anim
+import held
 import secondary
 from limbs import Leg, aim, down
 
@@ -112,6 +113,8 @@ ATTACK_BY_GEAR = {
 def attack_kind(form):
     if form.get("attack"):
         return form["attack"]
+    if "handed" in form:   # a goblin form strikes with what its primary hand holds, whichever arm that is
+        return ATTACK_BY_GEAR.get(held.primary_piece(form["gear"]), "swipe")
     for name, opts in form["gear"]:
         if name in ATTACK_BY_GEAR and opts.get("side", "n") == "n":
             return ATTACK_BY_GEAR[name]
@@ -123,6 +126,8 @@ class Body:
     the bones its rig really has (gear adds some)."""
     def __init__(self, skel, feet, form, present=None, posture="goblin"):
         self.skel, self.form = skel, form
+        self.handed = form.get("handed")   # the physical arm of the primary hand: only the goblin kit's forms have it; the others keep the near arm first, as authored
+        self.primary, self.secondary = ("f", "n") if self.handed == "f" else ("n", "f")
         self.posture = dict(POSTURES[posture]) if isinstance(posture, str) else dict(POSTURES["goblin"], **posture)
         self.gaits = {name: dict(g, **self.posture.get("gaits", {}).get(name, {})) for name, g in GAITS.items()}
         self.present = set(present) if present is not None else set(skel.rest)
@@ -148,19 +153,79 @@ def _posture(body, rot, lean, head_lean):
     aim(body.skel, rot, "head", 180.0 - head_lean)
 
 
+def two_handed(form):
+    """Whether a goblin form (one with `handed`) holds a two-handed piece in its primary hand: both its hands are on the item."""
+    return "handed" in form and held.primary_piece(form.get("gear", [])) in held.TWO_HANDED
+
+
+def arm_pairs(form):
+    """{"n": (upper, forearm), "f": (upper, forearm)}: the base angles of each physical arm from the form's `ARMS` preset. The preset's first pair is the primary arm's and its second the
+    secondary's, so a far-handed form has them swapped; a two-handed primary gives both arms the primary's pair. A form with no `handed` (the other kits') has the physical arms as authored."""
+    a = ARMS[form.get("arms", "free")]
+    first, second = (a[0], a[1]), (a[2], a[3])
+    handed = form.get("handed")
+    if handed is None:
+        return {"n": first, "f": second}
+    if two_handed(form):
+        second = first
+    return {"n": first, "f": second} if handed == "n" else {"n": second, "f": first}
+
+
+def _swap_hands(body, rot):
+    """A far-handed form is posed as a near-handed one (the acting arm authored first) and then the two arms' rotations, and their items', change places."""
+    if body.handed != "f":
+        return
+    for prefix in ("arm_", "fore_", "item_"):
+        n, f = rot.pop(prefix + "n", None), rot.pop(prefix + "f", None)
+        if f is not None:
+            rot[prefix + "n"] = f
+        if n is not None:
+            rot[prefix + "f"] = n
+
+
+def _two_hand(body, rot):
+    """With a two-handed primary item the secondary arm takes the primary arm's final angles, so both hands stay on it in every pose."""
+    if body.handed is None or not two_handed(body.form):
+        return
+    for prefix in ("arm_", "fore_"):
+        if prefix + body.primary in rot:
+            rot[prefix + body.secondary] = rot[prefix + body.primary]
+
+
 def _arms(body, rot, t, swing, lag=0.07, offsets=None):
     """The arms from the form's preset: they swing against the legs (the near arm back as the near leg is forward), the elbow closes as the hand
     comes forward, and they trail the legs by `lag` of a cycle. `offsets` is {bone: degrees added to its world direction}."""
     a = ARMS[body.form.get("arms", "free")]
+    pairs = arm_pairs(body.form)
     c = math.cos(2.0 * math.pi * (t - lag))
     amp = swing * a[4]
     sk = body.skel
-    for side, up_deg, fore_deg in (("n", a[0] - amp * c, a[1] + 0.6 * amp * (0.5 - 0.5 * c)), ("f", a[2] + amp * c, a[3] + 0.6 * amp * (0.5 + 0.5 * c))):
+    for side, sign in (("n", -1.0), ("f", 1.0)):   # the swing belongs to the physical side (the near arm goes back as the near leg comes forward); the base angles to the role
+        up_deg = pairs[side][0] + sign * amp * c
+        fore_deg = pairs[side][1] + 0.6 * amp * (0.5 + sign * 0.5 * c)
         upper = sk.rest_direction("arm_" + side) + up_deg
         fore = sk.rest_direction("fore_" + side) + up_deg + fore_deg
         off = offsets or {}
         aim(sk, rot, "arm_" + side, upper + off.get("arm_" + side, 0.0))
         aim(sk, rot, "fore_" + side, fore + off.get("fore_" + side, 0.0))
+
+
+def rider_arms(rot, form, t, swing_deg, lag=0.2, slump=0.0, slump_arms=0.85):
+    """A seated rider's arms from the preset, relative to its body (which moves with the mount): they swing a little against the wolf's stride, and a slumping rider's go slack and hang
+    (`slump` 0 to 1, `slump_arms` how much of their lift the slump takes). The bases come from `arm_pairs`; a two-handed primary puts the second hand where the first is."""
+    a = ARMS[form.get("arms", "free")]
+    pairs = arm_pairs(form)
+    c = math.cos(2.0 * math.pi * (t - lag))
+    amp = swing_deg * a[4]
+    slack = 1.0 - slump_arms * slump
+    for side, sign in (("n", -1.0), ("f", 1.0)):
+        rot["arm_" + side] = down(slack * (pairs[side][0] + sign * amp * c))
+        rot["fore_" + side] = down(slack * (pairs[side][1] + 0.6 * amp * (0.5 + sign * 0.5 * c)))
+    if "handed" in form and two_handed(form):
+        primary = "f" if form["handed"] == "f" else "n"
+        secondary = "n" if primary == "f" else "f"
+        for prefix in ("arm_", "fore_"):
+            rot[prefix + secondary] = rot[prefix + primary]
 
 
 def direction_of(body, rot, bone):
@@ -230,6 +295,7 @@ def idle_pose(body, t):
     _posture(body, rot, lean, head)
     _arms(body, rot, t, 3.0, lag=0.15)
     _hold_items(body, rot)
+    _two_hand(body, rot)
     return rot, (px, 0.0, hip[1] - body.hip[1])
 
 
@@ -252,6 +318,7 @@ def gait_pose(body, gait, t, stride):
     _posture(body, rot, lean, head)
     _arms(body, rot, t, g["swing"])
     _hold_items(body, rot)
+    _two_hand(body, rot)
     return rot, (0.0, 0.0, pel_z - body.hip[1])
 
 
@@ -316,10 +383,11 @@ ATTACKS = {
 def _rest_channels(body):
     """The values a form's idle pose has for the channels attacks key from REST."""
     rot, _ = idle_pose(body, 0.0)
+    p, s = body.primary, body.secondary   # the `_n` channels are the acting arm's (primary), the `_f` ones the other's: swapped onto the right arms at the end of each pose
     return {"lean": 180.0 - direction_of(body, rot, "spine"), "head": 180.0 - direction_of(body, rot, "head"),
-            "arm_n": direction_of(body, rot, "arm_n"), "fore_n": direction_of(body, rot, "fore_n"),
-            "arm_f": direction_of(body, rot, "arm_f"), "fore_f": direction_of(body, rot, "fore_f"),
-            "item_n": 180.0 - direction_of(body, rot, "item_n")}
+            "arm_n": direction_of(body, rot, "arm_" + p), "fore_n": direction_of(body, rot, "fore_" + p),
+            "arm_f": direction_of(body, rot, "arm_" + s), "fore_f": direction_of(body, rot, "fore_" + s),
+            "item_n": 180.0 - direction_of(body, rot, "item_" + p)}
 
 
 def attack_frames(body):
@@ -355,6 +423,8 @@ def attack_pose(body, time):
     aim(sk, rot, "fore_f", ch["fore_f"])
     _hold_items(body, rot)
     aim(sk, rot, "item_n", 180.0 - ch["item_n"])
+    _swap_hands(body, rot)
+    _two_hand(body, rot)
     return rot, (ch["pelvis_x"] * L, 0.0, hip[1] - body.hip[1])
 
 
@@ -398,6 +468,8 @@ def hurt_pose(body, time):
         aim(sk, rot, bone, rest[bone] + r * ch["d_" + bone])
     _hold_items(body, rot)
     aim(sk, rot, "item_n", 180.0 - (rest["item_n"] + r * ch["d_item_n"]))
+    _swap_hands(body, rot)
+    _two_hand(body, rot)
     return rot, (r * ch["pelvis_x"] * L, 0.0, hip[1] - body.hip[1])
 
 
@@ -434,9 +506,12 @@ def die_frames():
 def die_pose(body, time):
     sk = body.skel
     rot0, root0 = idle_pose(body, 0.0)
-    rest = {b: direction_of(body, rot0, b) for b in ("thigh_n", "shin_n", "foot_n", "thigh_f", "shin_f", "foot_f", "arm_n", "fore_n", "arm_f", "fore_f")}
+    rest = {b: direction_of(body, rot0, b) for b in ("thigh_n", "shin_n", "foot_n", "thigh_f", "shin_f", "foot_f")}
+    p, s = body.primary, body.secondary   # the arm and item channels are role-keyed here too: `_n` is the primary's
+    rest.update({"arm_n": direction_of(body, rot0, "arm_" + p), "fore_n": direction_of(body, rot0, "fore_" + p),
+                 "arm_f": direction_of(body, rot0, "arm_" + s), "fore_f": direction_of(body, rot0, "fore_" + s)})
     rest["lean"], rest["head"] = 180.0 - direction_of(body, rot0, "spine"), 180.0 - direction_of(body, rot0, "head")
-    rest["item_n"] = 180.0 - direction_of(body, rot0, "item_n")
+    rest["item_n"] = 180.0 - direction_of(body, rot0, "item_" + p)
     ch = {name: anim.sample([(t, rest.get(name, 0.0) if v == REST else v, e) for t, v, e in keys], time) for name, keys in DIE["keys"].items()}
     rot = {}
     aim(sk, rot, "hips", 180.0 - ch["hips"])
@@ -446,6 +521,8 @@ def die_pose(body, time):
     _jaw(body, rot, ch["jaw"])
     aim(sk, rot, "item_f", 180.0 - 0.0)
     aim(sk, rot, "item_n", 180.0 - ch["item_n"])
+    _swap_hands(body, rot)
+    _two_hand(body, rot)
     return rot, (root0[0] + ch["x"] * body.L, 0.0, 0.0)  # the render sets the whole body on the ground, so there is no height to give
 
 

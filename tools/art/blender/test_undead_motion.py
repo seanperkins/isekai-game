@@ -403,5 +403,20 @@ class TimingTest(unittest.TestCase):
                     self.assertTrue(all(math.isfinite(x) for r in rot.values() for x in r) and all(math.isfinite(x) for x in root), name)
 
 
+class HoplitePoseTest(unittest.TestCase):
+    """The spartoi hoplite (a shield on the near arm, a spear on the far arm) is a form of the undead kit: it has no `handed`, so the goblin's role logic never touches it."""
+    GOLDEN = {'idle': [43.79257, 131.618106, 16.215776, 90.168273, 151.041771, 161.404229], 'walk': [44.351036, 132.452111, 15.65731, 89.550268, 150.83327, 161.55873], 'attack': [45.36, 112.64, -87.2, 96.32, 155.786297, 87.84]}
+
+    def test_a_form_without_handed_is_posed_as_before(self):
+        body = body_of("spartoi_hoplite")
+        self.assertNotIn("handed", body.form)
+        bones = ("arm_n", "fore_n", "arm_f", "fore_f", "item_n", "item_f")
+        poses = {"idle": bm.idle_pose(body, 0.3), "walk": bm.gait_pose(body, "walk", 0.4, 0.3), "attack": um.attack_pose(body, bm.T_HOLD)}
+        for label, pose in poses.items():
+            got = [round(bm.direction_of(body, pose[0], b), 6) for b in bones]
+            for g, want in zip(got, self.GOLDEN[label]):
+                self.assertAlmostEqual(g, want, places=5, msg=label)
+
+
 if __name__ == "__main__":
     unittest.main()

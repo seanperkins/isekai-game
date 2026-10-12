@@ -452,5 +452,99 @@ class ShieldPresetTest(unittest.TestCase):
         self.assertIn("shield_ready", gm.ARMS)
 
 
+class HandRolesTest(unittest.TestCase):
+    """Roles on the arms: the primary arm acts, the secondary braces; which physical arm is primary is the form's `handed`."""
+    POSES = ("idle", "walk", "run", "attack", "hurt", "die")
+
+    def poses(self, body):
+        """Every kind of pose a form has, at several times: [(label, rot)]."""
+        out = [("idle %s" % t, gm.idle_pose(body, t)[0]) for t in (0.0, 0.25, 0.5, 0.75)]
+        out += [("%s %s" % (g, t), gm.gait_pose(body, g, t, 0.3)[0]) for g in ("walk", "run") for t in (0.0, 0.2, 0.45, 0.7)]
+        out += [("attack %s" % t, gm.attack_pose(body, t)[0]) for t, _ in gm.attack_frames(body)[0]]
+        out += [("hurt %s" % t, gm.hurt_pose(body, t)[0]) for t, _ in gm.hurt_frames()]
+        out += [("die %s" % t, gm.die_pose(body, t)[0]) for t, _ in gm.die_frames()]
+        return out
+
+    def test_arm_pairs_give_a_near_handed_form_the_presets_order_and_a_far_handed_one_the_swapped(self):
+        self.assertEqual(gm.arm_pairs({"arms": "guard_n", "handed": "n"}), {"n": (24, 82), "f": (4, 24)})
+        self.assertEqual(gm.arm_pairs({"arms": "guard_n", "handed": "f"}), {"n": (4, 24), "f": (24, 82)})
+        self.assertEqual(gm.arm_pairs({"arms": "guard_n", "handed": "n", "gear": [("spear", {})]}), {"n": (24, 82), "f": (24, 82)}, "a two-handed primary: both arms on the item")
+        self.assertEqual(gm.arm_pairs({"arms": "guard_n", "handed": "f", "gear": [("staff", {})]}), {"n": (24, 82), "f": (24, 82)})
+        self.assertEqual(gm.arm_pairs({"arms": "guard_n"}), {"n": (24, 82), "f": (4, 24)}, "a form with no `handed` is the other kits': the physical arms as authored")
+
+    def test_a_far_handed_walk_keeps_each_arms_physical_swing(self):
+        near, far = body_of("goblin", arms="guard_n", handed="n"), body_of("goblin", arms="guard_n", handed="f")
+        diffs = []
+        for i in range(10):
+            t = i / 10.0
+            rn, rf = gm.gait_pose(near, "walk", t, 0.3)[0], gm.gait_pose(far, "walk", t, 0.3)[0]
+            diffs.append(tuple(gm.direction_of(far, rf, b) - gm.direction_of(near, rn, b) for b in ("arm_n", "fore_n", "arm_f", "fore_f")))
+        for d in diffs:
+            for got, want in zip(d, diffs[0]):
+                self.assertAlmostEqual(got, want, places=6, msg="the far-handed arm differs from the near-handed by a constant: the swing is the physical side's")
+        self.assertAlmostEqual(diffs[0][0], 4 - 24, places=6, msg="the near arm has the secondary's base angle")
+        self.assertAlmostEqual(diffs[0][2], 24 - 4, places=6, msg="the far arm has the primary's")
+
+    def test_a_one_handed_forms_arms_keep_opposite_swing_signs(self):
+        body = body_of("goblin", handed="n")
+        a = [gm.direction_of(body, gm.gait_pose(body, "walk", t, 0.3)[0], "arm_n") for t in (0.0, 0.25)]
+        b = [gm.direction_of(body, gm.gait_pose(body, "walk", t, 0.3)[0], "arm_f") for t in (0.0, 0.25)]
+        self.assertLess((a[1] - a[0]) * (b[1] - b[0]), 0.0, "one arm goes back as the other comes forward")
+
+    def test_a_far_handed_attack_is_the_near_handed_one_with_the_arm_and_item_rotations_exchanged(self):
+        near, far = body_of("goblin", attack="chop", handed="n"), body_of("goblin", attack="chop", handed="f")
+        for t in (gm.T_HOLD, gm.T_HIT):
+            rn, rf = gm.attack_pose(near, t)[0], gm.attack_pose(far, t)[0]
+            for prefix in ("arm_", "fore_", "item_"):
+                for got, want in ((rf[prefix + "f"], rn[prefix + "n"]), (rf[prefix + "n"], rn[prefix + "f"])):
+                    for x, y in zip(got, want):
+                        self.assertAlmostEqual(x, y, places=6, msg="%s at %s" % (prefix, t))
+
+    def test_attack_hurt_and_die_start_and_end_at_the_idle_pose_for_both_arms_and_both_items(self):
+        for handed in ("n", "f"):
+            body = body_of("goblin", attack="chop", handed=handed)
+            idle = gm.idle_pose(body, 0.0)[0]
+            frames, _ = gm.attack_frames(body)
+            hurt_last = gm.hurt_frames()[-1][0]
+            checks = (("attack first", gm.attack_pose(body, 0.0)[0], ("arm_n", "fore_n", "arm_f", "fore_f", "item_n", "item_f")),
+                      ("attack last", gm.attack_pose(body, frames[-1][0])[0], ("arm_n", "fore_n", "arm_f", "fore_f", "item_n", "item_f")),
+                      ("hurt last", gm.hurt_pose(body, hurt_last)[0], ("arm_n", "fore_n", "arm_f", "fore_f", "item_n", "item_f")),
+                      ("die first", gm.die_pose(body, 0.0)[0], ("arm_n", "fore_n", "arm_f", "fore_f")))
+            for label, rot, bones in checks:
+                for bone in bones:
+                    self.assertAlmostEqual(rot[bone][1], idle[bone][1], delta=0.6, msg="%s %s (handed %s)" % (label, bone, handed))
+
+    def test_a_two_handed_primary_puts_both_hands_together_in_every_pose(self):
+        for handed, piece in (("n", "spear"), ("f", "spear"), ("f", "staff"), ("n", "staff")):
+            body = body_of("goblin", arms="carry", handed=handed, gear=[(piece, {})])
+            for label, rot in self.poses(body):
+                for prefix in ("arm_", "fore_"):
+                    self.assertEqual(rot[prefix + "n"], rot[prefix + "f"], "%s %s handed %s: %s" % (piece, label, handed, prefix))
+
+    def test_a_one_handed_form_has_its_two_arms_apart(self):
+        body = body_of("goblin", arms="carry", handed="n", gear=[("axe", {})])
+        self.assertTrue(any(rot["arm_n"] != rot["arm_f"] for _, rot in self.poses(body)))
+
+    def test_attack_kind_comes_from_the_primary_item(self):
+        self.assertEqual(gm.attack_kind({"gear": [("axe", {}), ("lantern", {})], "handed": "n"}), "chop")
+        self.assertEqual(gm.attack_kind({"gear": [("lantern", {"hand": "primary"})], "handed": "n"}), "cast")
+        self.assertEqual(gm.attack_kind({"gear": [("axe", {"hand": "secondary"})], "handed": "n"}), "swipe", "an off-hand axe does not decide the blow")
+        self.assertEqual(gm.attack_kind({"gear": [("axe", {"side": "n"})]}), "chop", "a form with no `handed` keeps the near-item rule")
+        self.assertEqual(gm.attack_kind({"gear": [("axe", {"side": "f"})]}), "swipe")
+
+    def test_a_riders_second_hand_is_on_the_spear_in_every_frame(self):
+        for name in ("beast_rider", "wolf_lord"):
+            form = forms.FORMS[name]
+            for i in range(10):
+                for slump in (0.0, 0.5):
+                    rot = {}
+                    gm.rider_arms(rot, form, i / 10.0, 6.0, slump=slump)
+                    self.assertEqual(rot["arm_n"], rot["arm_f"], name)
+                    self.assertEqual(rot["fore_n"], rot["fore_f"], name)
+        rot = {}
+        gm.rider_arms(rot, forms.FORMS["puck"], 0.3, 6.0)
+        self.assertNotEqual(rot["arm_n"], rot["arm_f"], "a rider-less form's one-handed arms stay apart")
+
+
 if __name__ == "__main__":
     unittest.main()

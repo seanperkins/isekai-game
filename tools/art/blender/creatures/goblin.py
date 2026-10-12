@@ -96,12 +96,7 @@ def body_of(rig, form):
 def _rider_arms(rot, form, t, swing_deg, lag=0.2, slump=0.0):
     """A seated rider's arms from the preset, relative to its body (which moves with the mount): they swing a little against the wolf's stride, and a slumping
     rider's go slack and hang (`slump` 0 to 1)."""
-    a = ARMS[form.get("arms", "free")]
-    c = math.cos(2.0 * math.pi * (t - lag))
-    amp = swing_deg * a[4]
-    slack = 1.0 - SLUMP_ARMS * slump
-    rot["arm_n"], rot["fore_n"] = down(slack * (a[0] - amp * c)), down(slack * (a[1] + 0.6 * amp * (0.5 - 0.5 * c)))
-    rot["arm_f"], rot["fore_f"] = down(slack * (a[2] + amp * c)), down(slack * (a[3] + 0.6 * amp * (0.5 + 0.5 * c)))
+    motion_.rider_arms(rot, form, t, swing_deg, lag, slump, SLUMP_ARMS)
 
 
 def _rider_frame(form, mount_rot, root, t, slump=0.0):
