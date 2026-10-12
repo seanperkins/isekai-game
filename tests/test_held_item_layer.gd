@@ -37,17 +37,17 @@ func test_attach_makes_one_layer_that_is_not_a_canvas_item_and_two_pivots_on_the
 	assert_true((_pivot("f") as Node2D).show_behind_parent, "the far hand's item is drawn behind the body")
 
 func test_set_item_loads_clears_and_refuses_an_unknown_id() -> void:
-	assert_true(_layer.set_item("n", "axe"))
-	assert_eq(_layer.item("n"), "axe")
-	assert_false(_layer.set_item("n", "nonesuch"))
-	assert_eq(_layer.item("n"), "axe", "the hand is as it was")
-	assert_true(_layer.set_item("n", ""))
-	assert_eq(_layer.item("n"), "")
+	assert_true(_layer.set_item("primary", "axe"))
+	assert_eq(_layer.item("primary"), "axe")
+	assert_false(_layer.set_item("primary", "nonesuch"))
+	assert_eq(_layer.item("primary"), "axe", "the hand is as it was")
+	assert_true(_layer.set_item("primary", ""))
+	assert_eq(_layer.item("primary"), "")
 
 func test_every_held_piece_can_be_swapped_in() -> void:
 	var table: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/held_items.json"))
 	for id in table["items"]:
-		assert_true(_layer.set_item("n", id), id)
+		assert_true(_layer.set_item("primary", id), id)
 
 func test_follow_puts_the_grip_on_the_hand_using_the_frames_real_height() -> void:
 	_layer.bind(FORM)
@@ -65,7 +65,7 @@ func test_follow_puts_the_grip_on_the_hand_using_the_frames_real_height() -> voi
 func test_facing_left_mirrors_art_normal_position_grip_and_turn() -> void:
 	var frame := _turned_frame(3.0)
 	assert_ne(frame, "", "a frame with the hand turned")
-	_layer.set_item("n", "axe")
+	_layer.set_item("primary", "axe")
 	_sheet.draw_on(_sprite, frame, false)
 	var right_rot := _pivot("n").rotation
 	var right_pos := _pivot("n").position
@@ -121,7 +121,7 @@ func test_a_flipped_sprite_flips_each_pivot() -> void:
 	assert_eq(_pivot("n").scale, Vector2(k, -k))
 
 func test_an_item_is_plain_when_its_body_is_drawn_plain_and_lit_when_it_is_lit() -> void:
-	_layer.set_item("n", "axe")
+	_layer.set_item("primary", "axe")
 	var axe := SpriteSheet.load_set(HeldItems.item("axe")["set"])
 	HeldItemLayer.follow_on(_sprite, _sheet, "idle_1", true, false)
 	var plain := _art("n").texture as AtlasTexture
@@ -136,28 +136,28 @@ func test_an_item_is_plain_when_its_body_is_drawn_plain_and_lit_when_it_is_lit()
 
 func test_bind_gives_defaults_overrides_survive_a_bind_and_clearing_restores_the_defaults() -> void:
 	_layer.bind(FORM)
-	assert_eq(_layer.item("n"), "hammer")
-	assert_eq(_layer.item("f"), "tongs")
-	_layer.set_item("n", "axe")
+	assert_eq(_layer.item("primary"), "hammer")
+	assert_eq(_layer.item("secondary"), "tongs")
+	_layer.set_item("primary", "axe")
 	_layer.bind("goblin_paladin")
-	assert_eq(_layer.item("n"), "axe", "a held item survives an evolution")
-	assert_eq(_layer.item("f"), HeldItems.form("goblin_paladin")["f"])
+	assert_eq(_layer.item("primary"), "axe", "a held item survives an evolution")
+	assert_eq(_layer.item("secondary"), HeldItems.form("goblin_paladin")["secondary"])
 	_layer.clear_overrides()
-	assert_eq(_layer.item("n"), HeldItems.form("goblin_paladin")["n"])
+	assert_eq(_layer.item("primary"), HeldItems.form("goblin_paladin")["primary"])
 	_layer.bind("")
-	assert_eq(_layer.item("n"), "", "the empty id is the base goblin, which holds nothing")
+	assert_eq(_layer.item("primary"), "", "the empty id is the base goblin, which holds nothing")
 
 func test_a_cleared_hand_stays_empty_across_a_bind_until_the_overrides_are_cleared() -> void:
 	_layer.bind(FORM)
-	_layer.set_item("n", "")
+	_layer.set_item("primary", "")
 	_layer.bind(FORM)
-	assert_eq(_layer.item("n"), "")
+	assert_eq(_layer.item("primary"), "")
 	_layer.clear_overrides()
-	assert_eq(_layer.item("n"), "hammer")
+	assert_eq(_layer.item("primary"), "hammer")
 
 func test_suspending_hides_the_items_and_keeps_the_overrides_until_the_next_bind() -> void:
 	_layer.bind(FORM)
-	_layer.set_item("n", "axe")
+	_layer.set_item("primary", "axe")
 	_sheet.draw_on(_sprite, "idle_1", false)
 	HeldItemLayer.suspend_on(_sprite)
 	assert_false(_pivot("n").visible)
@@ -166,17 +166,17 @@ func test_suspending_hides_the_items_and_keeps_the_overrides_until_the_next_bind
 	_layer.bind(FORM)
 	_sheet.draw_on(_sprite, "idle_1", false)
 	assert_true(_pivot("n").visible)
-	assert_eq(_layer.item("n"), "axe")
+	assert_eq(_layer.item("primary"), "axe")
 
 func test_copy_onto_makes_a_layer_with_the_same_items_following_the_last_frame() -> void:
 	_layer.bind(FORM)
-	_layer.set_item("f", "lantern")
+	_layer.set_item("secondary", "lantern")
 	_sheet.draw_on(_sprite, "idle_1", true)
 	var other := Sprite2D.new()
 	add_child_autofree(other)
 	var copy := _layer.copy_onto(other)
-	assert_eq(copy.item("n"), "hammer")
-	assert_eq(copy.item("f"), "lantern")
+	assert_eq(copy.item("primary"), "hammer")
+	assert_eq(copy.item("secondary"), "lantern")
 	assert_eq(other.get_node("HeldItemN").position, _pivot("n").position)
 	assert_true(other.get_node("HeldItemN").visible)
 
@@ -191,3 +191,46 @@ func test_follow_on_does_nothing_for_a_sprite_with_no_layer() -> void:
 	add_child_autofree(bare)
 	HeldItemLayer.follow_on(bare, _sheet, "idle_1", false, true)
 	assert_eq(bare.get_child_count(), 0)
+
+func test_the_roles_are_put_on_the_pivots_by_handed() -> void:
+	var paladin_sheet := SpriteSheet.load_set("anim_goblin_paladin")
+	_layer.bind("goblin_paladin")
+	assert_eq(_layer.hand_of("primary"), "f")
+	assert_eq(_layer.hand_of("secondary"), "n")
+	paladin_sheet.draw_on(_sprite, "idle_1", false)
+	var club := SpriteSheet.load_set(HeldItems.item("club")["set"])
+	var shield := SpriteSheet.load_set(HeldItems.item("shield")["set"])
+	assert_eq(((_art("f").texture as CanvasTexture).diffuse_texture as ImageTexture).get_size(), club.frame_size("item"), "the mace is on the far pivot, behind the body")
+	assert_eq(((_art("n").texture as CanvasTexture).diffuse_texture as ImageTexture).get_size(), shield.frame_size("item"), "the shield on the near pivot, in front")
+	assert_true((_pivot("f") as Node2D).show_behind_parent)
+	_layer.bind(FORM)
+	assert_eq([_layer.hand_of("primary"), _layer.hand_of("secondary")], ["n", "f"])
+
+func test_a_two_handed_item_is_primary_only_and_empties_the_secondary_hand() -> void:
+	_layer.bind(FORM)
+	assert_false(_layer.set_item("secondary", "spear"), "a spear is never held in the off-hand")
+	assert_true(_layer.set_item("primary", "spear"))
+	assert_eq(_layer.item("primary"), "spear")
+	assert_eq(_layer.item("secondary"), "", "the tongs are put away while the spear is held in both hands")
+	assert_false(_layer.set_item("secondary", "lantern"), "nothing can be put in the off-hand beside a two-handed item")
+	_sheet.draw_on(_sprite, "idle_1", false)
+	assert_false(_pivot("f").visible)
+	assert_true(_layer.set_item("primary", "axe"))
+	assert_eq(_layer.item("secondary"), "tongs", "the stored secondary item comes back")
+	assert_true(_layer.set_item("secondary", "lantern"))
+	assert_eq(_layer.item("secondary"), "lantern")
+
+func test_an_override_keeps_its_role_across_an_evolution_between_near_and_far_handed_forms() -> void:
+	_layer.bind(FORM)
+	assert_true(_layer.set_item("primary", "axe"))
+	_layer.bind("goblin_paladin")
+	assert_eq(_layer.item("primary"), "axe", "the axe is still the primary item")
+	assert_eq(_layer.hand_of("primary"), "f", "now in the far hand")
+	SpriteSheet.load_set("anim_goblin_paladin").draw_on(_sprite, "idle_1", false)
+	var axe := SpriteSheet.load_set(HeldItems.item("axe")["set"])
+	assert_eq(((_art("f").texture as CanvasTexture).diffuse_texture as ImageTexture).get_size(), axe.frame_size("item"))
+	assert_eq(_layer.item("secondary"), "shield", "the paladin's own shield is still in the secondary hand")
+
+func test_an_unknown_role_is_refused() -> void:
+	assert_false(_layer.set_item("tertiary", "axe"))
+	assert_false(_layer.set_item("n", "axe"), "near and far are no longer the names of the hands")

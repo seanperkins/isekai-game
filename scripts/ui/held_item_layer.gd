@@ -2,19 +2,22 @@ class_name HeldItemLayer
 extends Node
 ## The two things a goblin holds, drawn on its hands. A goblin's sheet is drawn empty-handed and says, for every frame, where each hand is and how far it is turned
 ## (`hands`, see SpriteSheet.hands); this puts the item in each hand: its grip on the hand, turned with it, in front of the body for the near hand and behind it for the
-## far one. It is a plain Node on the body's Sprite2D that owns two Node2D pivots (HeldItemN and HeldItemF) on that same sprite: a plain Node between two canvas items cuts
+## far one. Items belong to roles, not arms: the primary hand is the arm the form says (`handed`: the near one for most goblins, the far one for the paladin), the secondary
+## is the other, and a two-handed item fills the primary hand and leaves the secondary empty. It is a plain Node on the body's Sprite2D that owns two Node2D pivots (HeldItemN and HeldItemF) on that same sprite: a plain Node between two canvas items cuts
 ## the transform chain, so the pivots are the sprite's own children and ride its place, scale and tint. `SpriteSheet.draw_on` calls `follow_on` after every frame it draws.
 
 const NAME := "HeldItemLayer"
-const SIDES := ["n", "f"]
+const SIDES := ["n", "f"]   # the arms: what the pivots and the sheet's hands are keyed by
+const ROLES := ["primary", "secondary"]   # what items are keyed by
 ## The far hand's item is drawn this much darker, here and nowhere else: the item art is rendered as the near hand's, never shaded for a side.
 const FAR_DIM := 0.8
 
 static var _item_sheets := {}   # sheet directory + set name -> SpriteSheet, or null for one that will not load (warned about once)
 
 var _form := "goblin"
-var _bound := {"n": "", "f": ""}   # what the form holds by default
-var _overrides := {}               # side -> an item id, or "" for a hand held empty on purpose
+var _handed := "n"                 # the arm the primary hand is
+var _bound := {"primary": "", "secondary": ""}   # what the form holds by default
+var _overrides := {}               # role -> an item id, or "" for a hand held empty on purpose
 var _suspended := false
 var _last := {}                    # the arguments of the last follow, so a change of item shows at once and a copy can draw the same frame
 var _pivots := {}
@@ -69,15 +72,20 @@ func bind(form_id: String) -> void:
 	_form = "goblin" if form_id == "" else form_id
 	_suspended = false
 	var entry := HeldItems.form(_form)
-	for side in SIDES:
-		_bound[side] = entry[side]
+	_handed = str(entry["handed"])
+	for role in ROLES:
+		_bound[role] = entry[role]
 	_refresh()
 
-## Put an item in a hand ("" empties it); false, and the hand as it was, for an id the table does not have. It stays through a `bind` until `clear_overrides`.
-func set_item(side: String, id: String) -> bool:
-	if not SIDES.has(side) or (id != "" and HeldItems.item(id).is_empty()):
+## Put an item in a role's hand ("" empties it); false, and the hand as it was, for a role or an id the table does not have, for a two-handed item in the secondary hand, and
+## for anything in the secondary hand while the primary holds a two-handed item. It stays through a `bind` until `clear_overrides`, in its role: it moves to the other arm
+## when the next form is handed the other way.
+func set_item(role: String, id: String) -> bool:
+	if not ROLES.has(role) or (id != "" and HeldItems.item(id).is_empty()):
 		return false
-	_overrides[side] = id
+	if role == "secondary" and (_primary_is_two_handed() or (id != "" and bool(HeldItems.item(id)["two_handed"]))):
+		return false
+	_overrides[role] = id
 	_refresh()
 	return true
 
@@ -85,13 +93,27 @@ func clear_overrides() -> void:
 	_overrides.clear()
 	_refresh()
 
-func item(side: String) -> String:
-	return str(_overrides[side]) if _overrides.has(side) else str(_bound[side])
+## What a role holds; the secondary hand holds nothing while the primary has a two-handed item (what was stored there comes back when the primary changes).
+func item(role: String) -> String:
+	if not ROLES.has(role) or (role == "secondary" and _primary_is_two_handed()):
+		return ""
+	return str(_overrides[role]) if _overrides.has(role) else str(_bound[role])
+
+## The arm ("n" or "f") a role's hand is.
+func hand_of(role: String) -> String:
+	if role == "primary":
+		return _handed
+	return "f" if _handed == "n" else "n"
+
+func _primary_is_two_handed() -> bool:
+	var id := str(_overrides["primary"]) if _overrides.has("primary") else str(_bound["primary"])
+	return id != "" and bool(HeldItems.item(id).get("two_handed", false))
 
 ## A layer on `other` holding the same things, drawing the frame this one drew last: a picture copy (the eating cover's prey) keeps its items.
 func copy_onto(other: Sprite2D) -> HeldItemLayer:
 	var copy := HeldItemLayer.attach(other)
 	copy._form = _form
+	copy._handed = _handed
 	copy._bound = _bound.duplicate()
 	copy._overrides = _overrides.duplicate()
 	copy._suspended = _suspended
@@ -120,7 +142,7 @@ func follow(sheet: SpriteSheet, frame: String, mirrored: bool, lit: bool) -> voi
 	var k := float(HeldItems.form(_form)["scale"])
 	for side in SIDES:
 		var pivot: Node2D = _pivots[side]
-		var id := item(side)
+		var id := item("primary" if side == _handed else "secondary")
 		var item_sheet := _item_sheet(id) if id != "" else null
 		if _suspended or item_sheet == null or not hands.has(side):
 			pivot.visible = false

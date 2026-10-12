@@ -54,8 +54,8 @@ func test_a_twin_with_its_animated_form_gets_a_layer_bound_to_its_form_and_shows
 	var e := _enemy(_twin("goblin_smith"))
 	var layer := _layer(e)
 	assert_not_null(layer)
-	assert_eq(layer.item("n"), "hammer")
-	assert_eq(layer.item("f"), "tongs")
+	assert_eq(layer.item("primary"), "hammer")
+	assert_eq(layer.item("secondary"), "tongs")
 	assert_true(_sprite(e).get_node("HeldItemN").visible, "drawn on the first frame")
 	assert_true(_sprite(e).get_node("HeldItemF").visible)
 
@@ -64,9 +64,9 @@ func test_the_village_goblin_on_the_still_path_gets_a_layer_bound_to_goblin_and_
 	e.facing = 1
 	var layer := _layer(e)
 	assert_not_null(layer, "the base goblin's sheet is empty-handed, so it takes a layer")
-	assert_eq(layer.item("n"), "", "the base goblin holds nothing")
+	assert_eq(layer.item("primary"), "", "the base goblin holds nothing")
 	assert_false(_sprite(e).get_node("HeldItemN").visible)
-	assert_true(layer.set_item("n", "axe"))
+	assert_true(layer.set_item("primary", "axe"))
 	e._update_visual(0.0)
 	var frame := e._still_frame()
 	var hand: Dictionary = e._still.hands(frame)["n"]
@@ -81,7 +81,7 @@ func test_the_village_goblin_on_the_still_path_gets_a_layer_bound_to_goblin_and_
 func test_a_downed_village_goblins_axe_is_flipped_with_its_body() -> void:
 	var e := _enemy(_def("village_goblin"))
 	e.facing = 1
-	_layer(e).set_item("n", "axe")
+	_layer(e).set_item("primary", "axe")
 	e._update_visual(0.0)
 	var up := _sprite(e).get_node("HeldItemN") as Node2D
 	var up_y := up.position.y
@@ -121,26 +121,26 @@ func _evolve(id: String) -> void:
 
 func test_the_player_evolving_into_the_smith_gets_the_hammer_and_tongs_keeps_an_override_across_it_and_a_new_run_clears_it() -> void:
 	await _spawn_player()
-	assert_eq(_layer(player).item("n"), "", "the base goblin holds nothing")
+	assert_eq(_layer(player).item("primary"), "", "the base goblin holds nothing")
 	await _evolve("goblin_tinker")
 	await _evolve("goblin_smith")
-	assert_eq(_layer(player).item("n"), "hammer")
-	assert_eq(_layer(player).item("f"), "tongs")
+	assert_eq(_layer(player).item("primary"), "hammer")
+	assert_eq(_layer(player).item("secondary"), "tongs")
 	assert_true(_sprite(player).get_node("HeldItemN").visible)
-	_layer(player).set_item("n", "axe")
+	_layer(player).set_item("primary", "axe")
 	await _evolve("goblin_mastersmith")
-	assert_eq(_layer(player).item("n"), "axe", "a held item survives an evolution")
-	assert_eq(_layer(player).item("f"), HeldItems.form("goblin_mastersmith")["f"])
+	assert_eq(_layer(player).item("primary"), "axe", "a held item survives an evolution")
+	assert_eq(_layer(player).item("secondary"), HeldItems.form("goblin_mastersmith")["secondary"])
 	rules.start_run()
 	await wait_physics_frames(3)
-	assert_eq(_layer(player).item("n"), "", "a new run clears what was swapped in and goes back to the base goblin")
-	assert_eq(_layer(player).item("f"), "")
+	assert_eq(_layer(player).item("primary"), "", "a new run clears what was swapped in and goes back to the base goblin")
+	assert_eq(_layer(player).item("secondary"), "")
 
 func test_a_form_that_draws_its_armed_still_shows_no_items_and_an_override_survives_it() -> void:
 	await _spawn_player()
 	await _evolve("goblin_tinker")
 	await _evolve("goblin_smith")
-	_layer(player).set_item("n", "axe")
+	_layer(player).set_item("primary", "axe")
 	var still_form := FormDef.new()
 	still_form.id = "goblin_nonesuch"
 	still_form.species = "goblin"
@@ -149,7 +149,7 @@ func test_a_form_that_draws_its_armed_still_shows_no_items_and_an_override_survi
 	assert_false(_sprite(player).get_node("HeldItemN").visible)
 	assert_false(_sprite(player).get_node("HeldItemF").visible)
 	await _evolve("goblin_mastersmith")
-	assert_eq(_layer(player).item("n"), "axe", "the override outlived the form with only a picture")
+	assert_eq(_layer(player).item("primary"), "axe", "the override outlived the form with only a picture")
 	assert_true(_sprite(player).get_node("HeldItemN").visible)
 
 func test_a_player_that_is_not_a_goblin_has_no_layer() -> void:
@@ -171,7 +171,7 @@ func test_the_eating_covers_copy_of_the_prey_keeps_the_items() -> void:
 	assert_false(_sprite(prey).visible, "the prey's own sprite is hidden while it is eaten")
 	var copy_layer := cover.prey_copy.get_node_or_null("HeldItemLayer") as HeldItemLayer
 	assert_not_null(copy_layer)
-	assert_eq(copy_layer.item("n"), "hammer")
+	assert_eq(copy_layer.item("primary"), "hammer")
 	assert_true(cover.prey_copy.get_node("HeldItemN").visible)
 	assert_eq(cover.prey_copy.get_node("HeldItemN").position, _sprite(prey).get_node("HeldItemN").position)
 
@@ -209,7 +209,7 @@ func test_swaps_husk_and_mislead_decoy_leave_the_items_out() -> void:
 	assert_null(husks[0].find_child("HeldItem*", true, false), "Swap's husk is a bare texture: no items")
 	for h in husks:
 		h.free()
-	HeldItemLayer.attach(arena.player.get_node("Sprite")).set_item("n", "axe")
+	HeldItemLayer.attach(arena.player.get_node("Sprite")).set_item("primary", "axe")
 	var puck := arena.verb("goblin_puck")
 	assert_true(puck.activate())
 	husks = get_tree().get_nodes_in_group("verb_husks")
