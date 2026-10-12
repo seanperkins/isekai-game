@@ -17,11 +17,12 @@ from PIL import Image
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 sys.path.insert(0, HERE)
+import goblin_forms  # noqa: E402
 import held  # noqa: E402
 import spike  # noqa: E402
 
 
-def write_item(item, folder, dest):
+def write_item(item, folder, dest, piece=None):
     """Cut an item's lit frame and its normal map to the drawn pixels, write its sheet set into `dest`, and return its entry for the items table."""
     with open(os.path.join(folder, "raw", "meta.json")) as fh:
         meta = json.load(fh)
@@ -41,7 +42,7 @@ def write_item(item, folder, dest):
     with open(os.path.join(dest, name + ".json"), "w") as fh:
         json.dump({"set": name, "image": name + ".png", "normal": name + "_n.png", "frames": {"item": {"rect": [0, 0, lit.width, lit.height], "hurt": [], "attack": []}}}, fh)
     gx, gy = held.local_of(meta["grip"][0], meta["grip"][1], box)
-    return {"set": name, "frame": "item", "grip": [round(gx, 2), round(gy, 2)], "ppu": held.ITEM_PPU}
+    return {"set": name, "frame": "item", "grip": [round(gx, 2), round(gy, 2)], "ppu": held.ITEM_PPU, "two_handed": piece in held.TWO_HANDED}
 
 
 def build_items(ids, out, dest):
@@ -52,9 +53,23 @@ def build_items(ids, out, dest):
         os.makedirs(raw, exist_ok=True)
         spike.render("held_item", raw, variant=item, ss=4)
         spike.process(raw, os.path.join(out, item), outline=True)
-        entries[item] = write_item(item, os.path.join(out, item), dest)
+        entries[item] = write_item(item, os.path.join(out, item), dest, piece=held.all_items()[item][0])
         print("rendered", item, flush=True)
     return entries
+
+
+def rewrite_forms(tree, root=ROOT):
+    """Rewrite data/held_items.json's forms from the pixels per unit of each form's render in `tree` (a goblin_tree.py output): `goblin_<form>`, and `goblin` for the base goblin. The sheets are
+    not touched."""
+    rows = {}
+    for form in sorted(os.listdir(tree)):
+        meta_path = os.path.join(tree, form, "raw", "meta.json")
+        if form not in goblin_forms.FORMS or not os.path.exists(meta_path):
+            continue
+        with open(meta_path) as fh:
+            ppu = json.load(fh)["ppu"]
+        rows["goblin" if form == "goblin" else "goblin_" + form] = held.form_entry(form, ppu)
+    held.update_table(os.path.join(root, "data", "held_items.json"), forms=rows)
 
 
 def main(argv=None):
@@ -62,7 +77,11 @@ def main(argv=None):
     ap.add_argument("items", nargs="*", help="item ids (default: all)")
     ap.add_argument("--out", default=os.path.join(ROOT, ".tmp", "held-items"))
     ap.add_argument("--install", action="store_true", help="write into assets/sheets and data/held_items.json")
+    ap.add_argument("--forms-from", metavar="DIR", help="only rewrite the forms table, from the renders in DIR (a goblin_tree.py output)")
     a = ap.parse_args(argv)
+    if a.forms_from:
+        rewrite_forms(a.forms_from, ROOT if a.install else a.out)
+        return 0
     ids = a.items or sorted(held.all_items())
     unknown = [i for i in ids if i not in held.all_items()]
     if unknown:

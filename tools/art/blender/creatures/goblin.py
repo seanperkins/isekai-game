@@ -44,7 +44,9 @@ WALK_SPEED_RUN = 1.9   # a run covers the ground this many times as fast as the 
 def _form(variant):
     """The form's table entry with the attack it uses: what it holds and the verb it casts decide it (attack_kinds.resolve)."""
     form = forms.FORMS[variant or "goblin"]
-    return dict(form, attack=attack_kinds.resolve(form, "goblin_" + variant if variant else "goblin", motion_.attack_kind(form)))
+    held.validate_form(variant or "goblin", form)
+    # `handed` (which arm is primary) marks a goblin form for the role logic in biped_motion: forms of the other kits do not have it
+    return dict(form, handed=form.get("handed", "n"), attack=attack_kinds.resolve(form, "goblin_" + variant if variant else "goblin", motion_.attack_kind(form)))
 
 
 def build(variant=None, hold=True):
@@ -63,8 +65,11 @@ def build(variant=None, hold=True):
         g.root_parent = "w_spine"
     g.build()
     for name, kw in form["gear"]:
-        if hold or name not in held.HELD:
+        if name not in held.HELD:
             gear.GEAR[name](g, **kw)
+        elif hold:   # a held piece goes on the arm its role is on in this form
+            options = {k: v for k, v in kw.items() if k not in held.PLACEMENT}
+            gear.GEAR[name](g, side=held.physical_side(held.role_of(name, kw), form["handed"]), **options)
     rig.build()
     return rig
 

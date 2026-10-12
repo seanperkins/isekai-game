@@ -172,7 +172,7 @@ class HeldTest(unittest.TestCase):
             with open(os.path.join(tmp, "data", "held_items.json")) as fh:
                 table = json.load(fh)
         self.assertEqual(frames["idle_1"]["hands"], meta["hands"]["idle_1"])
-        self.assertEqual(table["forms"]["goblin_smith"], {"scale": round(held.form_scale(goblin_forms.FORMS["smith"], 40.0), 4), "n": "hammer", "f": "tongs"})
+        self.assertEqual(table["forms"]["goblin_smith"], {"scale": round(held.form_scale(goblin_forms.FORMS["smith"], 40.0), 4), "handed": "n", "primary": "hammer", "secondary": "tongs"})
 
     def test_install_refuses_an_armed_goblin_render_and_does_not_check_a_wolf(self):
         with tempfile.TemporaryDirectory() as tmp:

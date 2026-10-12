@@ -176,7 +176,7 @@ class HeldTest(unittest.TestCase):
         self.assertEqual(by_source["run_2"], "run_1", "the plan renames run_1 to run_2")
         self.assertEqual(frames["run_2"]["hands"], meta["hands"]["run_1"])
         self.assertTrue(all("hands" in f for f in frames.values()))
-        self.assertEqual(table["forms"]["goblin"], {"scale": round(held.form_scale(goblin_forms.FORMS["goblin"], 40.0), 4)})
+        self.assertEqual(table["forms"]["goblin"], {"scale": round(held.form_scale(goblin_forms.FORMS["goblin"], 40.0), 4), "handed": "n"})
 
     def test_an_armed_goblin_render_is_refused_and_a_wolf_is_not_checked(self):
         with tempfile.TemporaryDirectory() as tmp:

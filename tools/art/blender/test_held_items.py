@@ -25,9 +25,9 @@ class ItemSheetTest(unittest.TestCase):
         base = os.path.join(ROOT, ".tmp", "held-items-tests")
         os.makedirs(base, exist_ok=True)
         cls.dir = os.path.join(base, "run-%d" % os.getpid())
-        cls.cyan = held.held_of(forms.FORMS["puck"]["gear"])["n"]
+        cls.cyan = held.held_of(forms.FORMS["puck"]["gear"])["primary"]
         cls.sword = "sword_big"   # no form holds it with default options: a catalogue-only item
-        cls.ids = ["axe", "lantern", cls.cyan, "club", cls.sword]
+        cls.ids = ["axe", "lantern", cls.cyan, "club", cls.sword, "spear", "staff"]
         cls.entries = held_items.build_items(cls.ids, cls.dir, os.path.join(cls.dir, "sheets"))
         cls.sheets = os.path.join(cls.dir, "sheets")
 
@@ -78,6 +78,10 @@ class ItemSheetTest(unittest.TestCase):
         self.assertNotEqual(self.cyan, "lantern")
         self.assertNotEqual(self.image("lantern").tobytes(), self.image(self.cyan).tobytes())
 
+    def test_two_handed_is_written_for_the_spear_and_the_staff_and_not_the_others(self):
+        for item in self.ids:
+            self.assertEqual(self.entries[item]["two_handed"], item in ("spear", "staff"), item)
+
     def test_the_axe_has_pixels_above_and_beside_the_grip(self):
         w, h = self.image("axe").size
         gx, gy = self.entries["axe"]["grip"]
@@ -85,6 +89,26 @@ class ItemSheetTest(unittest.TestCase):
         solid = [(x, y) for x in range(w) for y in range(h) if self.image("axe").getpixel((x, y))[3] == 255]
         self.assertTrue(any(y < row - 10 for _, y in solid), "the haft goes up from the hand")
         self.assertTrue(any(x > col + 5 for x, _ in solid), "the head is in front of the hand")
+
+
+class FormsTableTest(unittest.TestCase):
+    def test_rewrite_forms_writes_each_forms_row_from_its_renders_ppu_and_keeps_the_items(self):
+        import json
+        import tempfile
+        import held_items
+        with tempfile.TemporaryDirectory() as tmp:
+            tree, root = os.path.join(tmp, "tree"), os.path.join(tmp, "root")
+            for form, ppu in (("smith", 40.0), ("goblin", 30.0)):
+                os.makedirs(os.path.join(tree, form, "raw"))
+                with open(os.path.join(tree, form, "raw", "meta.json"), "w") as fh:
+                    json.dump({"ppu": ppu}, fh)
+            held.update_table(os.path.join(root, "data", "held_items.json"), items={"axe": {"set": "held_axe"}})
+            held_items.rewrite_forms(tree, root)
+            with open(os.path.join(root, "data", "held_items.json")) as fh:
+                table = json.load(fh)
+        self.assertEqual(table["forms"]["goblin_smith"], held.form_entry("smith", 40.0))
+        self.assertEqual(table["forms"]["goblin"], held.form_entry("goblin", 30.0))
+        self.assertEqual(table["items"], {"axe": {"set": "held_axe"}})
 
 
 if __name__ == "__main__":

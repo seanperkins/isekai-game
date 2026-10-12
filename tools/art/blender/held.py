@@ -18,13 +18,29 @@ HELD = {"hawk": "n", "club": "n", "dagger": "n", "axe": "n", "spear": "n", "swor
         "trap": "n", "shield": "n", "sling": "n", "coin": "f", "ring": "n", "offering": "n", "spiked_cap_held": "n", "straw": "f", "doll": "n"}
 
 
+# the hand a piece goes in when a form does not say: what a form acts with is its primary hand, an off-hand piece is secondary; `shield` is made for the near arm but is an off-hand piece
+ROLE_OF = {piece: "secondary" if piece in ("tongs", "lantern", "coin", "straw", "shield") else "primary" for piece in HELD}
+TWO_HANDED = frozenset({"spear", "staff"})   # primary only: they fill the primary hand and leave the secondary empty
+PLACEMENT = ("side", "hand")   # the gear options that say where a piece is held, not what it looks like
+
+
+def role_of(piece, kw):
+    """The role a gear entry holds its piece in: its `hand` option, else the piece's default."""
+    return kw.get("hand", ROLE_OF[piece])
+
+
+def physical_side(role, handed):
+    """The arm (`"n"` near, `"f"` far) a role is on in a form whose primary arm is `handed`."""
+    return handed if role == "primary" else ("f" if handed == "n" else "n")
+
+
 def _options(kw):
-    return {k: v for k, v in kw.items() if k != "side"}
+    return {k: v for k, v in kw.items() if k not in PLACEMENT}
 
 
 def item_id(piece, kw):
     """The piece's name, or the name and six hex digits of its options (colour, length, size) when it has any: the same piece with other options is another
-    picture. The hand it is held in is not an option."""
+    picture. The hand it is held in (`side`, `hand`) is not an option."""
     options = _options(kw)
     if not options:
         return piece
@@ -32,16 +48,40 @@ def item_id(piece, kw):
 
 
 def held_of(gear):
-    """{"n": item id or "", "f": ...}: what a form holds in each hand, from its gear list [(name, options)]."""
-    out = {"n": "", "f": ""}
+    """{"primary": item id or "", "secondary": ...}: what a form holds in each role, from its gear list [(name, options)]. Two pieces in one role, a two-handed piece in the secondary
+    role, and a two-handed primary beside a secondary piece are errors."""
+    out, pieces = {"primary": "", "secondary": ""}, {}
     for name, kw in gear:
         if name not in HELD:
             continue
-        side = kw.get("side", HELD[name])
-        if out[side]:
-            raise ValueError("two held pieces in the %s hand: %s and %s" % (side, out[side], name))
-        out[side] = item_id(name, kw)
+        role = role_of(name, kw)
+        if pieces.get(role):
+            raise ValueError("two held pieces in the %s hand: %s and %s" % (role, pieces[role], name))
+        if role == "secondary" and name in TWO_HANDED:
+            raise ValueError("%s is held in two hands: it can only be primary" % name)
+        pieces[role], out[role] = name, item_id(name, kw)
+    if pieces.get("primary") in TWO_HANDED and out["secondary"]:
+        raise ValueError("%s fills both hands: nothing can be held beside it (%s)" % (pieces["primary"], pieces["secondary"]))
     return out
+
+
+def primary_piece(gear):
+    """The name of the piece in the primary role, or None."""
+    for name, kw in gear:
+        if name in HELD and role_of(name, kw) == "primary":
+            return name
+    return None
+
+
+def validate_form(name, form):
+    """Raise a ValueError that names the form if its `handed` is not "n" or "f" or its held pieces break the role rules."""
+    handed = form.get("handed", "n")
+    if handed not in ("n", "f"):
+        raise ValueError("form %s: handed is \"n\" or \"f\", not %r" % (name, handed))
+    try:
+        held_of(form["gear"])
+    except ValueError as err:
+        raise ValueError("form %s: %s" % (name, err)) from None
 
 
 def items_of(gear):
@@ -68,11 +108,12 @@ def form_scale(form, ppu):
 
 
 def form_entry(form_name, ppu):
-    """The form's row of data/held_items.json: the scale of its items at the pixels per unit it was rendered at, and what each hand holds by default
-    (a hand that holds nothing has no key). Every goblin form has one, empty-handed or not: any hand can be given an item."""
+    """The form's row of data/held_items.json: the scale of its items at the pixels per unit it was rendered at, which arm is primary, and what it holds in each role (a role with nothing
+    in it has no key). Every goblin form has one, empty-handed or not: any hand can be given an item."""
     row = goblin_forms.FORMS[form_name]
-    entry = {"scale": round(form_scale(row, ppu), 4)}
-    entry.update({side: item for side, item in held_of(row["gear"]).items() if item})
+    validate_form(form_name, row)
+    entry = {"scale": round(form_scale(row, ppu), 4), "handed": row.get("handed", "n")}
+    entry.update({role: item for role, item in held_of(row["gear"]).items() if item})
     return entry
 
 

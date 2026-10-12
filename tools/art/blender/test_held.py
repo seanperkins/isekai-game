@@ -30,18 +30,65 @@ def item_bone_functions():
     return out
 
 
+# every goblin form's held pieces by the physical side they were built on before roles (captured from goblin_forms.FORMS before the migration)
+OLD_SIDES = {
+    "beastcaller": {'offering': 'n'},
+    "pied_piper": {'pipe': 'n'},
+    "orpheus": {'lyre': 'n'},
+    "beast_rider": {'spear': 'n'},
+    "wolf_lord": {'spear': 'n'},
+    "lord_of_beasts": {'hawk': 'n'},
+    "tinker": {'trap': 'n'},
+    "knocker": {'pick': 'n', 'lantern': 'f'},
+    "gremlin": {'wrench': 'n'},
+    "rumpelstiltskin": {'spindle': 'n', 'straw': 'f'},
+    "smith": {'hammer': 'n', 'tongs': 'f'},
+    "mastersmith": {'hammer': 'n', 'sword_big': 'f'},
+    "ring_maker": {'ring': 'n'},
+    "skulker": {'dagger': 'n'},
+    "redcap": {'axe': 'n'},
+    "bloodcap": {'spiked_cap_held': 'n'},
+    "puck": {'lantern': 'n'},
+    "changeling": {'doll': 'n'},
+    "leprechaun": {'hammer_small': 'n', 'coin': 'f'},
+    "hob": {'bowl': 'n'},
+    "tomte": {'stone': 'n', 'lantern': 'f'},
+    "hearth_god": {'horn': 'f', 'stone': 'n'},
+    "boggart": {'stone': 'n'},
+    "paladin": {'shield': 'n'},
+    "horn_bearer": {'horn': 'n'},
+    "giant_killer": {'sling': 'f', 'sword_big': 'n'},
+}
+
+CYAN = (120, 190, 204)
+
+
 class HeldPiecesTest(unittest.TestCase):
     def test_every_HELD_piece_is_exactly_a_gear_function_bound_to_an_item_bone_with_that_default_side(self):
         self.assertEqual(held.HELD, item_bone_functions())
 
-    def test_item_ids_differ_for_different_options_and_not_for_a_different_hand(self):
+    def test_ROLE_OF_covers_exactly_HELD_with_the_defaults_of_the_off_hand_pieces(self):
+        self.assertEqual(set(held.ROLE_OF), set(held.HELD))
+        self.assertEqual({p for p, r in held.ROLE_OF.items() if r == "secondary"}, {"tongs", "lantern", "coin", "straw", "shield"})
+        self.assertEqual({p for p, r in held.ROLE_OF.items() if r == "primary"}, set(held.HELD) - {"tongs", "lantern", "coin", "straw", "shield"})
+        self.assertEqual(held.TWO_HANDED, {"spear", "staff"})
+
+    def test_role_of_honours_hand_and_physical_side_maps_roles_by_handed(self):
+        self.assertEqual(held.role_of("axe", {}), "primary")
+        self.assertEqual(held.role_of("axe", {"hand": "secondary"}), "secondary")
+        self.assertEqual(held.role_of("lantern", {"side": "n"}), "secondary", "side is not a role")
+        self.assertEqual((held.physical_side("primary", "n"), held.physical_side("secondary", "n")), ("n", "f"))
+        self.assertEqual((held.physical_side("primary", "f"), held.physical_side("secondary", "f")), ("f", "n"))
+
+    def test_item_ids_ignore_side_and_hand_and_the_pucks_lantern_keeps_its_id(self):
         self.assertEqual(held.item_id("hammer", {}), "hammer")
-        self.assertEqual(held.item_id("hammer", {"side": "n"}), "hammer")
-        big = held.item_id("hammer", {"side": "n", "big": 1.15})
+        self.assertEqual(held.item_id("hammer", {"side": "n", "hand": "primary"}), "hammer")
+        big = held.item_id("hammer", {"hand": "primary", "big": 1.15})
         self.assertNotEqual(big, "hammer")
         self.assertTrue(big.startswith("hammer_") and len(big) == len("hammer_") + 6)
         self.assertEqual(big, held.item_id("hammer", {"big": 1.15, "side": "f"}))
-        self.assertEqual(held.item_id("axe", {"side": "n"}), held.item_id("axe", {"side": "f"}))
+        self.assertEqual(held.item_id("axe", {"hand": "primary"}), held.item_id("axe", {"hand": "secondary"}))
+        self.assertEqual(held.held_of(forms.FORMS["puck"]["gear"])["primary"], "lantern_3b1f26")
 
     def test_all_items_covers_every_held_piece_at_default_options_and_every_forms_items_and_gives_big_hammers_and_cyan_lanterns_their_own_ids(self):
         items = held.all_items()
@@ -50,32 +97,60 @@ class HeldPiecesTest(unittest.TestCase):
         for form in forms.FORMS.values():
             for item, (piece, kw) in held.items_of(form["gear"]).items():
                 self.assertEqual(items[item], (piece, kw))
-        mastersmith = held.held_of(forms.FORMS["mastersmith"]["gear"])["n"]
+        mastersmith = held.held_of(forms.FORMS["mastersmith"]["gear"])["primary"]
         self.assertNotEqual(mastersmith, "hammer")
         self.assertEqual(items[mastersmith][1], {"big": 1.15})
-        cyan = held.held_of(forms.FORMS["puck"]["gear"])["n"]
+        cyan = held.held_of(forms.FORMS["puck"]["gear"])["primary"]
         self.assertNotEqual(cyan, "lantern")
         self.assertIn("color", items[cyan][1])
 
-    def test_held_of_reads_the_hands_a_form_holds(self):
-        self.assertEqual(held.held_of(forms.FORMS["smith"]["gear"]), {"n": "hammer", "f": "tongs"})
-        self.assertEqual(held.held_of(forms.FORMS["goblin"]["gear"]), {"n": "", "f": ""})
+    def test_held_of_reads_the_roles_a_form_holds(self):
+        self.assertEqual(held.held_of(forms.FORMS["smith"]["gear"]), {"primary": "hammer", "secondary": "tongs"})
+        self.assertEqual(held.held_of(forms.FORMS["goblin"]["gear"]), {"primary": "", "secondary": ""})
         leprechaun = held.held_of(forms.FORMS["leprechaun"]["gear"])
-        self.assertEqual((leprechaun["n"], leprechaun["f"]), ("hammer_small", "coin"))
+        self.assertEqual((leprechaun["primary"], leprechaun["secondary"]), ("hammer_small", "coin"))
+        self.assertEqual(held.held_of([("tongs", {})]), {"primary": "", "secondary": "tongs"}, "a piece with no hand goes to its default role")
+        self.assertEqual(held.primary_piece(forms.FORMS["smith"]["gear"]), "hammer")
+        self.assertIsNone(held.primary_piece(forms.FORMS["goblin"]["gear"]))
 
-    def test_form_entry_has_the_scale_and_what_each_hand_holds_and_an_empty_handed_form_has_the_scale_only(self):
-        self.assertEqual(held.form_entry("smith", 45.0), {"scale": round(held.form_scale(forms.FORMS["smith"], 45.0), 4), "n": "hammer", "f": "tongs"})
-        self.assertEqual(held.form_entry("goblin", 30.0), {"scale": 1.0})
-
-    def test_a_piece_with_no_side_goes_to_its_default_hand(self):
-        self.assertEqual(held.held_of([("tongs", {})]), {"n": "", "f": "tongs"})
-        self.assertEqual(held.held_of([("shield", {"color": (1, 2, 3)})])["n"][:7], "shield_")
-
-    def test_two_pieces_on_one_hand_is_an_error(self):
+    def test_held_of_refuses_two_pieces_in_a_role_a_two_handed_secondary_and_a_two_handed_primary_beside_a_secondary(self):
         with self.assertRaises(ValueError):
-            held.held_of([("axe", {"side": "n"}), ("club", {"side": "n"})])
+            held.held_of([("axe", {}), ("club", {})])
+        with self.assertRaises(ValueError):
+            held.held_of([("spear", {"hand": "secondary"})])
+        with self.assertRaises(ValueError):
+            held.held_of([("spear", {}), ("lantern", {})])
+        self.assertEqual(held.held_of([("spear", {})]), {"primary": "spear", "secondary": ""})
 
-    def test_gear_that_is_not_held_is_ignored(self):
+    def test_validate_form_names_the_form_and_checks_handed(self):
+        with self.assertRaises(ValueError) as caught:
+            held.validate_form("zz_twice", {"gear": [("axe", {}), ("club", {})]})
+        self.assertIn("zz_twice", str(caught.exception))
+        with self.assertRaises(ValueError) as caught:
+            held.validate_form("zz_hand", {"gear": [], "handed": "x"})
+        self.assertIn("zz_hand", str(caught.exception))
+        held.validate_form("zz_ok", {"gear": [("axe", {})], "handed": "f"})
+        for name, form in forms.FORMS.items():
+            held.validate_form(name, form)
+
+    def test_every_forms_roles_equal_what_its_sides_were(self):
+        for name, form in forms.FORMS.items():
+            sides = OLD_SIDES.get(name, {})
+            handed = form.get("handed", "n")
+            roles = held.held_of(form["gear"])
+            mine = {piece: held.physical_side(held.role_of(piece, kw), handed) for piece, kw in ((g[0], g[1]) for g in form["gear"]) if piece in held.HELD}
+            self.assertEqual(mine, sides, name)
+            self.assertEqual({r: i for r, i in roles.items() if i}, {("primary" if sides[p] == "n" else "secondary"): held.item_id(p, kw) for p, kw in ((g[0], g[1]) for g in form["gear"]) if p in held.HELD}, name)
+
+    def test_armor_keeps_its_physical_side(self):
+        sides = [kw.get("side", "n") for name, kw in forms.FORMS["ironboot"]["gear"] if name == "pauldron"]
+        self.assertEqual(sorted(sides), ["f", "n"], "the pauldrons are on both arms, as they were")
+
+    def test_form_entry_has_handed_scale_and_roles(self):
+        self.assertEqual(held.form_entry("smith", 45.0), {"scale": round(held.form_scale(forms.FORMS["smith"], 45.0), 4), "handed": "n", "primary": "hammer", "secondary": "tongs"})
+        self.assertEqual(held.form_entry("goblin", 30.0), {"scale": 1.0, "handed": "n"})
+
+    def test_two_pieces_of_gear_that_are_not_held_are_ignored(self):
         self.assertEqual(held.items_of([("jerkin", {"color": (1, 2, 3)}), ("pauldron", {"side": "n"})]), {})
 
 

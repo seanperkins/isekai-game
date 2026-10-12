@@ -354,10 +354,12 @@ def trap(g, side="n", **_):
     g.l("spring", (0.31, y, 0.96), (0.31, y, 1.14), 0.03, 0.03, b, STEEL, sides=5)
 
 
-def shield(g, color=STEEL, emblem=GOLD, **_):
-    """Strapped to the forearm: its centre is on the hand (the item bone's head), so the hand is at the middle of it and the forearm runs behind it."""
-    g.e("shield", (0.29, NEAR - 0.07, 0.69), (0.18, 0.04, 0.20), "item_n", color)
-    g.e("sunburst", (0.29, NEAR - 0.11, 0.69), (0.085, 0.02, 0.085), "item_n", emblem, glow=True, seg=8, rings=6)
+def shield(g, color=STEEL, emblem=GOLD, side="n", **_):
+    """Strapped to the forearm: its centre is on the hand (the item bone's head), so the hand is at the middle of it and the forearm runs behind it. It faces out from the arm it is on
+    (toward the camera on the near arm)."""
+    y, b, out = Y[side], "item_" + side, -1.0 if side == "n" else 1.0
+    g.e("shield", (0.29, y + 0.07 * out, 0.69), (0.18, 0.04, 0.20), b, color, far=side == "f")
+    g.e("sunburst", (0.29, y + 0.11 * out, 0.69), (0.085, 0.02, 0.085), b, emblem, far=side == "f", glow=True, seg=8, rings=6)
 
 
 def shield_back(g, color=STEEL, emblem=GOLD, **_):

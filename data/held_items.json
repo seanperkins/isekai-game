@@ -7,7 +7,8 @@
     -2.7,
     0.48
    ],
-   "ppu": 30.0
+   "ppu": 30.0,
+   "two_handed": false
   },
   "bowl": {
    "set": "held_bowl",
@@ -16,7 +17,8 @@
     -2.7,
     0.48
    ],
-   "ppu": 30.0
+   "ppu": 30.0,
+   "two_handed": false
   },
   "club": {
    "set": "held_club",
@@ -25,7 +27,8 @@
     -5.7,
     0.48
    ],
-   "ppu": 30.0
+   "ppu": 30.0,
+   "two_handed": false
   },
   "coin": {
    "set": "held_coin",
@@ -34,7 +37,8 @@
     -2.7,
     4.48
    ],
-   "ppu": 30.0
+   "ppu": 30.0,
+   "two_handed": false
   },
   "dagger": {
    "set": "held_dagger",
@@ -43,7 +47,8 @@
     -0.2,
     -8.52
    ],
-   "ppu": 30.0
+   "ppu": 30.0,
+   "two_handed": false
   },
   "doll": {
    "set": "held_doll",
@@ -52,7 +57,8 @@
     -0.2,
     -10.52
    ],
-   "ppu": 30.0
+   "ppu": 30.0,
+   "two_handed": false
   },
   "hammer": {
    "set": "held_hammer",
@@ -61,7 +67,8 @@
     5.8,
     1.48
    ],
-   "ppu": 30.0
+   "ppu": 30.0,
+   "two_handed": false
   },
   "hammer_925ed5": {
    "set": "held_hammer_925ed5",
@@ -70,7 +77,8 @@
     5.8,
     1.48
    ],
-   "ppu": 30.0
+   "ppu": 30.0,
+   "two_handed": false
   },
   "hammer_small": {
    "set": "held_hammer_small",
@@ -79,7 +87,8 @@
     -0.7,
     0.48
    ],
-   "ppu": 30.0
+   "ppu": 30.0,
+   "two_handed": false
   },
   "hawk": {
    "set": "held_hawk",
@@ -88,7 +97,8 @@
     -1.7,
     5.48
    ],
-   "ppu": 30.0
+   "ppu": 30.0,
+   "two_handed": false
   },
   "horn": {
    "set": "held_horn",
@@ -97,7 +107,8 @@
     -6.7,
     -7.52
    ],
-   "ppu": 30.0
+   "ppu": 30.0,
+   "two_handed": false
   },
   "lantern": {
    "set": "held_lantern",
@@ -106,7 +117,8 @@
     -0.2,
     -7.52
    ],
-   "ppu": 30.0
+   "ppu": 30.0,
+   "two_handed": false
   },
   "lantern_3b1f26": {
    "set": "held_lantern_3b1f26",
@@ -115,7 +127,8 @@
     -0.2,
     -7.52
    ],
-   "ppu": 30.0
+   "ppu": 30.0,
+   "two_handed": false
   },
   "lyre": {
    "set": "held_lyre",
@@ -124,7 +137,8 @@
     -2.2,
     -2.52
    ],
-   "ppu": 30.0
+   "ppu": 30.0,
+   "two_handed": false
   },
   "offering": {
    "set": "held_offering",
@@ -133,7 +147,8 @@
     -1.7,
     0.48
    ],
-   "ppu": 30.0
+   "ppu": 30.0,
+   "two_handed": false
   },
   "pick": {
    "set": "held_pick",
@@ -142,7 +157,8 @@
     -1.2,
     -2.52
    ],
-   "ppu": 30.0
+   "ppu": 30.0,
+   "two_handed": false
   },
   "pipe": {
    "set": "held_pipe",
@@ -151,7 +167,8 @@
     -2.7,
     0.48
    ],
-   "ppu": 30.0
+   "ppu": 30.0,
+   "two_handed": false
   },
   "ring": {
    "set": "held_ring",
@@ -160,7 +177,8 @@
     -1.7,
     3.48
    ],
-   "ppu": 30.0
+   "ppu": 30.0,
+   "two_handed": false
   },
   "shield": {
    "set": "held_shield",
@@ -169,7 +187,8 @@
     -1.2,
     -8.52
    ],
-   "ppu": 30.0
+   "ppu": 30.0,
+   "two_handed": false
   },
   "sling": {
    "set": "held_sling",
@@ -178,7 +197,8 @@
     0.8,
     -12.52
    ],
-   "ppu": 30.0
+   "ppu": 30.0,
+   "two_handed": false
   },
   "spear": {
    "set": "held_spear",
@@ -187,7 +207,8 @@
     -0.7,
     -6.52
    ],
-   "ppu": 30.0
+   "ppu": 30.0,
+   "two_handed": true
   },
   "spear_26b9ab": {
    "set": "held_spear_26b9ab",
@@ -196,7 +217,8 @@
     -7.7,
     -0.52
    ],
-   "ppu": 30.0
+   "ppu": 30.0,
+   "two_handed": true
   },
   "spiked_cap_held": {
    "set": "held_spiked_cap_held",
@@ -205,7 +227,8 @@
     -0.2,
     5.48
    ],
-   "ppu": 30.0
+   "ppu": 30.0,
+   "two_handed": false
   },
   "spindle": {
    "set": "held_spindle",
@@ -214,7 +237,8 @@
     -0.2,
     0.48
    ],
-   "ppu": 30.0
+   "ppu": 30.0,
+   "two_handed": false
   },
   "staff": {
    "set": "held_staff",
@@ -223,7 +247,8 @@
     -2.2,
     -6.52
    ],
-   "ppu": 30.0
+   "ppu": 30.0,
+   "two_handed": true
   },
   "stone": {
    "set": "held_stone",
@@ -232,7 +257,8 @@
     -1.7,
     -0.52
    ],
-   "ppu": 30.0
+   "ppu": 30.0,
+   "two_handed": false
   },
   "stone_04bc88": {
    "set": "held_stone_04bc88",
@@ -241,7 +267,8 @@
     -1.7,
     -0.52
    ],
-   "ppu": 30.0
+   "ppu": 30.0,
+   "two_handed": false
   },
   "stone_f3d8b8": {
    "set": "held_stone_f3d8b8",
@@ -250,7 +277,8 @@
     -1.7,
     -0.52
    ],
-   "ppu": 30.0
+   "ppu": 30.0,
+   "two_handed": false
   },
   "straw": {
    "set": "held_straw",
@@ -259,7 +287,8 @@
     3.3,
     1.48
    ],
-   "ppu": 30.0
+   "ppu": 30.0,
+   "two_handed": false
   },
   "sword_big": {
    "set": "held_sword_big",
@@ -268,7 +297,8 @@
     7.3,
     1.48
    ],
-   "ppu": 30.0
+   "ppu": 30.0,
+   "two_handed": false
   },
   "sword_big_516c38": {
    "set": "held_sword_big_516c38",
@@ -277,7 +307,8 @@
     5.8,
     1.48
    ],
-   "ppu": 30.0
+   "ppu": 30.0,
+   "two_handed": false
   },
   "sword_big_e6f9b7": {
    "set": "held_sword_big_e6f9b7",
@@ -286,7 +317,8 @@
     4.3,
     1.48
    ],
-   "ppu": 30.0
+   "ppu": 30.0,
+   "two_handed": false
   },
   "tongs": {
    "set": "held_tongs",
@@ -295,7 +327,8 @@
     -5.2,
     0.48
    ],
-   "ppu": 30.0
+   "ppu": 30.0,
+   "two_handed": false
   },
   "trap": {
    "set": "held_trap",
@@ -304,7 +337,8 @@
     -2.2,
     2.48
    ],
-   "ppu": 30.0
+   "ppu": 30.0,
+   "two_handed": false
   },
   "wrench": {
    "set": "held_wrench",
@@ -313,130 +347,160 @@
     2.8,
     0.48
    ],
-   "ppu": 30.0
+   "ppu": 30.0,
+   "two_handed": false
   }
  },
  "forms": {
   "goblin": {
-   "scale": 1.0844
+   "scale": 1.0844,
+   "handed": "n"
   },
   "goblin_beast_rider": {
    "scale": 0.4663,
-   "n": "spear"
+   "handed": "n",
+   "primary": "spear"
   },
   "goblin_beastcaller": {
    "scale": 0.5989,
-   "n": "offering"
+   "handed": "n",
+   "primary": "offering"
   },
   "goblin_bloodcap": {
    "scale": 0.7355,
-   "n": "spiked_cap_held"
+   "handed": "n",
+   "primary": "spiked_cap_held"
   },
   "goblin_boggart": {
    "scale": 0.6843,
-   "n": "stone_04bc88"
+   "handed": "n",
+   "primary": "stone_04bc88"
   },
   "goblin_changeling": {
    "scale": 0.7292,
-   "n": "doll"
+   "handed": "n",
+   "primary": "doll"
   },
   "goblin_giant_killer": {
    "scale": 0.7395,
-   "n": "sword_big_516c38",
-   "f": "sling"
+   "handed": "n",
+   "primary": "sword_big_516c38",
+   "secondary": "sling"
   },
   "goblin_gremlin": {
    "scale": 0.7876,
-   "n": "wrench"
+   "handed": "n",
+   "primary": "wrench"
   },
   "goblin_hearth_god": {
    "scale": 0.7663,
-   "n": "stone_f3d8b8",
-   "f": "horn"
+   "handed": "n",
+   "primary": "stone_f3d8b8",
+   "secondary": "horn"
   },
   "goblin_hob": {
    "scale": 0.6902,
-   "n": "bowl"
+   "handed": "n",
+   "primary": "bowl"
   },
   "goblin_horn_bearer": {
    "scale": 0.7897,
-   "n": "horn"
+   "handed": "n",
+   "primary": "horn"
   },
   "goblin_ironboot": {
-   "scale": 1.2996
+   "scale": 1.2996,
+   "handed": "n"
   },
   "goblin_knocker": {
    "scale": 0.6881,
-   "n": "pick",
-   "f": "lantern"
+   "handed": "n",
+   "primary": "pick",
+   "secondary": "lantern"
   },
   "goblin_leprechaun": {
    "scale": 0.6584,
-   "n": "hammer_small",
-   "f": "coin"
+   "handed": "n",
+   "primary": "hammer_small",
+   "secondary": "coin"
   },
   "goblin_lord_of_beasts": {
    "scale": 0.4965,
-   "n": "hawk"
+   "handed": "n",
+   "primary": "hawk"
   },
   "goblin_mastersmith": {
    "scale": 0.9408,
-   "n": "hammer_925ed5",
-   "f": "sword_big_e6f9b7"
+   "handed": "n",
+   "primary": "hammer_925ed5",
+   "secondary": "sword_big_e6f9b7"
   },
   "goblin_orpheus": {
    "scale": 0.7854,
-   "n": "lyre"
+   "handed": "n",
+   "primary": "lyre"
   },
   "goblin_paladin": {
    "scale": 0.9327,
-   "n": "shield"
+   "handed": "n",
+   "primary": "shield"
   },
   "goblin_pied_piper": {
    "scale": 0.6999,
-   "n": "pipe"
+   "handed": "n",
+   "primary": "pipe"
   },
   "goblin_puck": {
    "scale": 0.7608,
-   "n": "lantern_3b1f26"
+   "handed": "n",
+   "primary": "lantern_3b1f26"
   },
   "goblin_rat_king": {
-   "scale": 0.8509
+   "scale": 0.8509,
+   "handed": "n"
   },
   "goblin_redcap": {
    "scale": 0.7332,
-   "n": "axe"
+   "handed": "n",
+   "primary": "axe"
   },
   "goblin_ring_maker": {
    "scale": 0.6688,
-   "n": "ring"
+   "handed": "n",
+   "primary": "ring"
   },
   "goblin_rumpelstiltskin": {
    "scale": 0.6384,
-   "n": "spindle",
-   "f": "straw"
+   "handed": "n",
+   "primary": "spindle",
+   "secondary": "straw"
   },
   "goblin_skulker": {
    "scale": 0.787,
-   "n": "dagger"
+   "handed": "n",
+   "primary": "dagger"
   },
   "goblin_smith": {
    "scale": 0.673,
-   "n": "hammer",
-   "f": "tongs"
+   "handed": "n",
+   "primary": "hammer",
+   "secondary": "tongs"
   },
   "goblin_tinker": {
    "scale": 0.5887,
-   "n": "trap"
+   "handed": "n",
+   "primary": "trap"
   },
   "goblin_tomte": {
    "scale": 0.7154,
-   "n": "stone",
-   "f": "lantern"
+   "handed": "n",
+   "primary": "stone",
+   "secondary": "lantern"
   },
   "goblin_wolf_lord": {
    "scale": 0.4714,
-   "n": "spear_26b9ab"
+   "handed": "n",
+   "primary": "spear_26b9ab"
   }
  }
 }
