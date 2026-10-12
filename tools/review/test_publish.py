@@ -66,6 +66,10 @@ class ListingTest(unittest.TestCase):
         sheet = read_json(publish.ROOT / "assets" / "sheets" / "held_axe.json")["frames"]["item"]["rect"]
         self.assertEqual((axe["w"], axe["h"]), (sheet[2], sheet[3]))
 
+    def test_the_paladin_lists_the_far_hand_as_primary(self):
+        form = publish.sheet_listing("goblin_paladin")["held"]["form"]
+        self.assertEqual((form["handed"], form["primary"], form["secondary"]), ("f", "club", "shield"))
+
     def test_the_base_goblin_lists_its_empty_hands_and_a_scale(self):
         held = publish.sheet_listing("goblin")["held"]
         self.assertEqual((held["form"]["primary"], held["form"]["secondary"], held["form"]["handed"]), ("", "", "n"))

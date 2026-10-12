@@ -133,14 +133,25 @@ class HeldPiecesTest(unittest.TestCase):
         for name, form in forms.FORMS.items():
             held.validate_form(name, form)
 
-    def test_every_forms_roles_equal_what_its_sides_were(self):
+    def test_every_forms_roles_equal_what_its_sides_were_except_the_paladins(self):
         for name, form in forms.FORMS.items():
+            if name == "paladin":   # re-authored: see the next test
+                continue
             sides = OLD_SIDES.get(name, {})
             handed = form.get("handed", "n")
             roles = held.held_of(form["gear"])
             mine = {piece: held.physical_side(held.role_of(piece, kw), handed) for piece, kw in ((g[0], g[1]) for g in form["gear"]) if piece in held.HELD}
             self.assertEqual(mine, sides, name)
             self.assertEqual({r: i for r, i in roles.items() if i}, {("primary" if sides[p] == "n" else "secondary"): held.item_id(p, kw) for p, kw in ((g[0], g[1]) for g in form["gear"]) if p in held.HELD}, name)
+
+    def test_the_paladin_holds_a_mace_in_the_primary_hand_and_the_shield_in_the_secondary_with_the_far_arm_primary(self):
+        paladin = forms.FORMS["paladin"]
+        self.assertEqual(paladin["handed"], "f")
+        self.assertEqual(held.held_of(paladin["gear"]), {"primary": "club", "secondary": "shield"})
+        self.assertNotIn("attack", paladin, "he plays the verb's own gesture, the throw")
+        self.assertEqual(paladin["arms"], "shield_ready")
+        sides = {piece: held.physical_side(held.role_of(piece, kw), paladin["handed"]) for piece, kw in paladin["gear"] if piece in held.HELD}
+        self.assertEqual(sides, {"club": "f", "shield": "n"}, "the mace on the far arm behind his body, the shield on the near arm in front")
 
     def test_armor_keeps_its_physical_side(self):
         sides = [kw.get("side", "n") for name, kw in forms.FORMS["ironboot"]["gear"] if name == "pauldron"]

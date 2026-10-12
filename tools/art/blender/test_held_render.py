@@ -97,6 +97,14 @@ class EmptyHandsTest(unittest.TestCase):
         self.assertFalse(os.path.exists(os.path.join(out, "meta.json")))
         self.assertIn("hold", done.stdout + done.stderr)
 
+    def test_the_paladins_mace_is_on_the_far_arm_and_his_shield_on_the_near(self):
+        done = subprocess.run([BLENDER, "-b", "--factory-startup", "-P", os.path.join(HERE, "probe_hands.py"), "--", "paladin"], capture_output=True, text=True)
+        lines = [line for line in done.stdout.splitlines() if line.startswith("HANDS ")]
+        self.assertTrue(lines, (done.stdout + done.stderr)[-1500:])
+        owners = json.loads(lines[-1][6:])
+        self.assertEqual({owners[n] for n in ("handle", "knob")}, {"item_f"}, "the mace")
+        self.assertEqual({owners[n] for n in ("shield", "sunburst")}, {"item_n"}, "the shield")
+
     def test_an_empty_dying_frame_is_inside_the_canvas_and_never_below_the_ground(self):
         for form in ("giant_killer", "smith"):
             meta = self.meta("goblin", form, "die", True)
