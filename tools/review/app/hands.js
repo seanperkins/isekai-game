@@ -42,6 +42,23 @@ export function clipLayout(frames, held) {
   return { w: Math.ceil(x1) - left, h: Math.ceil(y1) - top, ax: -left, ay: -top };
 }
 
+// Which physical arm a role is on in a form whose primary arm is `handed` ("n" near, "f" far).
+export function sideOf(role, handed) {
+  return role === "primary" ? handed : handed === "n" ? "f" : "n";
+}
+
+// What the two hands show for the stored choices: a two-handed primary item leaves the secondary hand empty. The stored choices are not changed, so putting another item in the primary
+// hand brings the secondary one back.
+export function shownPicks(picks, items) {
+  const two = picks.primary && items[picks.primary] && items[picks.primary].two_handed;
+  return { primary: picks.primary, secondary: two ? "" : picks.secondary };
+}
+
+// The item ids a hand's picker offers, sorted: a two-handed item is primary only.
+export function offered(role, items) {
+  return Object.keys(items).filter((id) => role === "primary" || !items[id].two_handed).sort();
+}
+
 // Where a frame's hand is on the canvas of `layout`.
 export function handAt(layout, hand) {
   return [layout.ax + hand.x, layout.ay + hand.y];

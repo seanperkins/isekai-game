@@ -57,7 +57,9 @@ class ListingTest(unittest.TestCase):
                 self.assertEqual(set(frame["hands"]["n"]), {"x", "y", "a"})
         table = read_json(publish.ROOT / "data" / "held_items.json")
         held = listing["held"]
-        self.assertEqual(held["form"], {"n": "hammer", "f": "tongs", "scale": table["forms"]["goblin_smith"]["scale"]})
+        self.assertEqual(held["form"], {"primary": "hammer", "secondary": "tongs", "handed": "n", "scale": table["forms"]["goblin_smith"]["scale"]})
+        self.assertIs(held["items"]["spear"]["two_handed"], True)
+        self.assertIs(held["items"]["axe"]["two_handed"], False)
         self.assertEqual(set(held["items"]), set(table["items"]), "every item can be tried")
         axe = held["items"]["axe"]
         self.assertEqual((axe["image"], axe["grip"]), ("items/axe.png", table["items"]["axe"]["grip"]))
@@ -66,7 +68,7 @@ class ListingTest(unittest.TestCase):
 
     def test_the_base_goblin_lists_its_empty_hands_and_a_scale(self):
         held = publish.sheet_listing("goblin")["held"]
-        self.assertEqual((held["form"]["n"], held["form"]["f"]), ("", ""))
+        self.assertEqual((held["form"]["primary"], held["form"]["secondary"], held["form"]["handed"]), ("", "", "n"))
         self.assertGreater(held["form"]["scale"], 0)
 
     def test_sheet_media_publishes_the_item_sheets_it_names(self):
@@ -92,9 +94,9 @@ class ListingTest(unittest.TestCase):
             (root / "assets/sheets/held_axe.json").write_text(json.dumps({"frames": {"item": {"rect": [0, 0, 7, 9]}}}))
             (root / "assets/sheets/held_axe.png").write_bytes(b"png")
             (root / "data/form_clips.json").write_text(json.dumps({"goblin_x": {"idle": {"frames": ["a"], "fps": 5, "loop": True}}}))
-            (root / "data/held_items.json").write_text(json.dumps({"items": {"axe": {"set": "held_axe", "frame": "item", "grip": [1.5, -2.0], "ppu": 30.0}}, "forms": {"goblin_x": {"scale": 0.5, "n": "axe"}}}))
+            (root / "data/held_items.json").write_text(json.dumps({"items": {"axe": {"set": "held_axe", "frame": "item", "grip": [1.5, -2.0], "ppu": 30.0}}, "forms": {"goblin_x": {"scale": 0.5, "handed": "f", "primary": "axe"}}}))
             listing = publish.sheet_listing("goblin_x", root)
-            self.assertEqual(listing["held"], {"form": {"n": "axe", "f": "", "scale": 0.5}, "items": {"axe": {"image": "items/axe.png", "grip": [1.5, -2.0], "w": 7, "h": 9}}})
+            self.assertEqual(listing["held"], {"form": {"primary": "axe", "secondary": "", "handed": "f", "scale": 0.5}, "items": {"axe": {"image": "items/axe.png", "grip": [1.5, -2.0], "w": 7, "h": 9, "two_handed": False}}})
             self.assertEqual(listing["clips"]["idle"]["frames"][0]["hands"]["n"], {"x": 1, "y": -5, "a": 0})
             self.assertEqual(publish.sheet_media("goblin_x", root)["items/axe.png"], root / "assets/sheets/held_axe.png")
 

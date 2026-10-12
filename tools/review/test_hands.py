@@ -111,5 +111,23 @@ class MergeTest(unittest.TestCase):
         self.assertEqual(got, {"w": 52, "h": 30, "ax": 26, "ay": 30})
 
 
+@unittest.skipUnless(NODE, "needs Node")
+class RolesTest(unittest.TestCase):
+    def test_sideOf_maps_roles_by_handed(self):
+        self.assertEqual(run("[hands.sideOf('primary', 'n'), hands.sideOf('secondary', 'n'), hands.sideOf('primary', 'f'), hands.sideOf('secondary', 'f')]"), ["n", "f", "f", "n"])
+
+    def test_shownPicks_hides_the_secondary_under_a_two_handed_primary_and_keeps_the_stored_choice(self):
+        items = {"spear": {"two_handed": True}, "axe": {"two_handed": False}, "lantern": {"two_handed": False}}
+        picks = {"primary": "spear", "secondary": "lantern"}
+        self.assertEqual(run("hands.shownPicks(a0, a1)", picks, items), {"primary": "spear", "secondary": ""})
+        self.assertEqual(run("hands.shownPicks(a0, a1)", {"primary": "axe", "secondary": "lantern"}, items), {"primary": "axe", "secondary": "lantern"})
+        self.assertEqual(picks, {"primary": "spear", "secondary": "lantern"}, "the stored choices are not changed")
+
+    def test_a_two_handed_item_is_not_offered_for_the_secondary_hand(self):
+        items = {"spear": {"two_handed": True}, "axe": {"two_handed": False}}
+        self.assertEqual(run("hands.offered('secondary', a0)", items), ["axe"])
+        self.assertEqual(run("hands.offered('primary', a0)", items), ["axe", "spear"])
+
+
 if __name__ == "__main__":
     unittest.main()

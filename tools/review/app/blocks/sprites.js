@@ -4,7 +4,7 @@ import { registerBlock } from "../registry.js";
 import { frameAt, durationsOf } from "../player.js";
 import { h, notice } from "../dom.js";
 import { loadImage, frameSource, trimToUnion } from "./sprite-set.js";
-import { clipLayout } from "../hands.js";
+import { clipLayout, sideOf, shownPicks, offered } from "../hands.js";
 import { drawItem } from "./held-draw.js";
 import { flagBar } from "./feedback.js";
 
@@ -21,15 +21,17 @@ registerBlock("sprites", async (el, data, ctx) => {
   const sheet = listing.image ? await loadImage(ctx.url(listing.image)) : null;
   const set = { sheet, url: (rel) => ctx.url(rel) };
   const held = listing.held || null;   // a goblin form drawn empty-handed: what it holds, and every item that could be put in a hand
-  const picked = held ? { n: held.form.n, f: held.form.f } : { n: "", f: "" };
+  const picked = held ? { primary: held.form.primary, secondary: held.form.secondary } : { primary: "", secondary: "" };   // the stored choices; shownPicks says what the hands show
   const loaded = {};   // item id -> its picture, once it has been loaded
   const ensureItem = async (id) => { if (id && !loaded[id]) loaded[id] = await loadImage(ctx.url(held.items[id].image)); };
-  for (const side of ["n", "f"]) await ensureItem(picked[side]);
-  const chosen = () => {
+  for (const role of ["primary", "secondary"]) await ensureItem(picked[role]);
+  const chosen = () => {   // by the arm each role is on: the frames' hands are keyed by arm
     const out = {};
-    for (const side of ["n", "f"]) {
-      const id = picked[side];
-      if (id && loaded[id]) out[side] = { ...held.items[id], scale: held.form.scale, image: loaded[id] };
+    if (!held) return out;
+    const shown = shownPicks(picked, held.items);
+    for (const role of ["primary", "secondary"]) {
+      const id = shown[role];
+      if (id && loaded[id]) out[sideOf(role, held.form.handed)] = { ...held.items[id], scale: held.form.scale, image: loaded[id] };
     }
     return out;
   };
@@ -77,17 +79,27 @@ registerBlock("sprites", async (el, data, ctx) => {
     paint(ctx.time());
   };
   if (held) {
-    const picker = (label, side) => {
-      const select = h("select", { title: label, "data-hand": side }, h("option", { value: "" }, "nothing"), Object.keys(held.items).map((id) => h("option", { value: id }, id)));
-      select.value = picked[side];
+    const selects = {};
+    const sync = () => {   // what each picker shows: a two-handed primary item empties the secondary hand and disables its picker; the stored choice comes back with another primary item
+      const shown = shownPicks(picked, held.items);
+      const blocked = !!picked.primary && held.items[picked.primary].two_handed;
+      for (const role of ["primary", "secondary"]) selects[role].value = shown[role];
+      selects.secondary.disabled = blocked;
+    };
+    const picker = (label, role) => {
+      const select = h("select", { title: label, "data-hand": role }, h("option", { value: "" }, "nothing"), offered(role, held.items).map((id) => h("option", { value: id }, id)));
+      selects[role] = select;
       select.addEventListener("change", async () => {
-        picked[side] = select.value;
+        picked[role] = select.value;
         await ensureItem(select.value);
+        await ensureItem(picked.secondary);
+        sync();
         relayout();
       });
       return h("label", { class: "pick" }, `${label} `, select);
     };
-    el.prepend(h("div", { class: "tools" }, picker("near hand", "n"), picker("far hand", "f")));
+    el.prepend(h("div", { class: "tools" }, picker("primary hand", "primary"), picker("secondary hand", "secondary")));
+    sync();
   }
   if (listing.normal) {
     const toggle = h("button", { type: "button", class: "toggle" }, "normals: off");

@@ -1,7 +1,7 @@
 // Drawing the things a goblin holds on a canvas, shared by the blocks that draw sprites (see ../hands.js for the layout). An item is drawn with its grip on the hand, turned with
 // it and scaled by the form's scale; the far hand's is behind the body and a little darker, as the game draws it.
 import { loadImage } from "./sprite-set.js";
-import { handAt } from "../hands.js";
+import { handAt, sideOf } from "../hands.js";
 
 const FAR_BRIGHTNESS = 0.8;
 
@@ -32,9 +32,9 @@ export async function defaultItems(set) {
   const held = set.listing.held;
   const out = {};
   if (!held) return out;
-  for (const side of ["n", "f"]) {
-    const id = held.form[side];
-    if (id && held.items[id]) out[side] = { ...held.items[id], scale: held.form.scale, image: await loadImage(set.url(held.items[id].image)) };
+  for (const role of ["primary", "secondary"]) {   // by the arm each role is on, which is what the frames' hands are keyed by
+    const id = held.form[role];
+    if (id && held.items[id]) out[sideOf(role, held.form.handed)] = { ...held.items[id], scale: held.form.scale, image: await loadImage(set.url(held.items[id].image)) };
   }
   return out;
 }

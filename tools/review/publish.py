@@ -77,8 +77,8 @@ def _sheet_files(form_id, root):
 
 
 def _held(form_id, root):
-    """({"form": {"n", "f", "scale"}, "items": {id: {"image", "grip", "w", "h"}}}, {media name: file}) for a goblin form that has a row in data/held_items.json: what it holds
-    by default, how much its items are scaled, and every item there is, so the page can put another in a hand. (None, {}) for a creature the table does not know."""
+    """({"form": {"primary", "secondary", "handed", "scale"}, "items": {id: {"image", "grip", "w", "h", "two_handed"}}}, {media name: file}) for a goblin form that has a row in
+    data/held_items.json: what it holds in each hand by default, which arm is primary, how much its items are scaled, and every item there is, so the page can put another in a hand. (None, {}) for a creature the table does not know."""
     table_path = Path(root) / "data" / "held_items.json"
     if not table_path.is_file():
         return None, {}
@@ -94,9 +94,9 @@ def _held(form_id, root):
             continue
         rect = _read(sheet_path)["frames"][item.get("frame", "item")]["rect"]
         name = "items/%s.png" % item_id
-        items[item_id] = {"image": name, "grip": list(item["grip"]), "w": rect[2], "h": rect[3]}
+        items[item_id] = {"image": name, "grip": list(item["grip"]), "w": rect[2], "h": rect[3], "two_handed": bool(item.get("two_handed", False))}
         media[name] = sheets / (item["set"] + ".png")
-    return {"form": {"n": entry.get("n", ""), "f": entry.get("f", ""), "scale": entry["scale"]}, "items": items}, media
+    return {"form": {"primary": entry.get("primary", ""), "secondary": entry.get("secondary", ""), "handed": entry.get("handed", "n"), "scale": entry["scale"]}, "items": items}, media
 
 
 def sheet_listing(form_id, root=ROOT):
